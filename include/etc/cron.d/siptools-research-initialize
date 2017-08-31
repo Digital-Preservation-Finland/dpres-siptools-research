@@ -1,0 +1,16 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+HOME=/var/lib/siptools_research
+# .---------------- minute (0 - 59)
+# | .------------- hour (0 - 23)
+# | | .---------- day of month (1 - 31)
+# | | | .------- month (1 - 12) OR jan,feb,mar,apr ...
+# | | | | .---- day of week (0 - 6) (Sunday=0 or 7) OR
+# sun,mon,tue,wed,thu,fri,sat
+# | | | | |
+#* * * * * siptools_research luigi --module
+siptools_research.process.initialize ProcessTransfers
+--scheduler-host=localhost --number-of-hosts=1 --workers=2
+--number-of-subtasks=50 --workspace-root /var/spool/siptools_research
+--home-path /home --min-age=0 &>> /var/log/siptools_research/process-transfers.log

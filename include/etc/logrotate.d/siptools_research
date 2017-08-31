@@ -1,0 +1,10 @@
+/var/log/siptools_research/*.log {
+    missingok
+    notifempty
+    compress
+    delaycompress
+    daily
+	rotate 60
+    dateext
+    copytruncate
+}

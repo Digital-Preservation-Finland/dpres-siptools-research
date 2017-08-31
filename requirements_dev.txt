@@ -1,0 +1,13 @@
+pytest
+coverage
+pytest-cov
+git+https://github.com/Digital-Preservation-Finland/dpres-ipt.git#egg=ipt
+git+https://github.com/Digital-Preservation-Finland/dpres-siptools.git#egg=siptools
+git+https://source.csc.fi/scm/git/pas/dpres-signature@develop#egg=dpres_signature
+lxml
+wand
+scandir
+luigi
+pymongo
+M2Crypto
+python-magic
