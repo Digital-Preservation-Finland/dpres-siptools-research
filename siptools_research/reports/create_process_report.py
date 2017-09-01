@@ -41,7 +41,7 @@ def parse_arguments(arguments):
 
 def db_wf_collection():
     """Defines the database and the collection"""
-    mongo_db = database.connection(host='localhost')['siptools-archives']
+    mongo_db = database.connection(host='localhost')['siptools-research']
     collection = mongo_db['workflow']
     return collection
 

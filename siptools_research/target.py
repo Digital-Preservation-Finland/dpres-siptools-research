@@ -35,7 +35,7 @@ class TaskFileTarget(LocalTarget):
 def mongo_settings():
     """Variables for mongo_db"""
     host = 'localhost'
-    mongo_db = 'siptools-archives'
+    mongo_db = 'siptools-research'
     mongo_col = 'workflow'
     mongo_client = MongoClient(host)
 
