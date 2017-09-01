@@ -4,7 +4,7 @@ import os
 def scripts_list():
     """Return list of command line tools from package pas.scripts"""
     scripts = []
-    for modulename in os.listdir('siptools_archives/scripts'):
+    for modulename in os.listdir('siptools_research/scripts'):
         if modulename == '__init__.py':
             continue
         if not modulename.endswith('.py'):
@@ -12,14 +12,14 @@ def scripts_list():
         modulename = modulename.replace('.py','')
         scriptname = modulename.replace('_','-')
         scripts.append('%s = ipt.scripts.%s:main' % (scriptname, modulename))
-        #scripts.append('%s = siptools_archives.scripts.%s:main' % (scriptname, modulename))
+        #scripts.append('%s = siptools_research.scripts.%s:main' % (scriptname, modulename))
     print scripts
     return scripts
 
 def main():
-    """Install siptools-archives"""
+    """Install siptools-research"""
     setup(
-        name='siptools_archives',
+        name='siptools_research',
 	packages=find_packages(exclude=['tests', 'tests.*']),
         version='dev',
         entry_points = {'console_scripts': scripts_list()})

@@ -14,7 +14,7 @@
 %define user_gid 335
 %define user_uid 335
 
-Name:           dpres-siptools-archives
+Name:           dpres-siptools-research
 Version:        %{file_version}
 Release:        %{file_release_number}%{file_release_tag}.%{file_build_number}.git%{file_commit_ref}%{?dist}
 Summary:        Workflow to create KDK-PAS compatible SIP packages from SAHKE2 packages
@@ -44,9 +44,10 @@ Workflow to create KDK-PAS compatible SIP packages from SAHKE2 packages
 getent group %{user_group} >/dev/null || groupadd -f -g %{user_gid} -r %{user_group}
 if ! getent passwd %{user_name} >/dev/null ; then
     if ! getent passwd %{user_uid} >/dev/null ; then
-      useradd -r -m -K UMASK=0027 -u %{user_uid} -g %{user_group} -s /sbin/nologin -c "SIP Tools Archives user" -d /var/lib/%{user_name} %{user_name}
+      useradd -r -m -K UMASK=0027 -u %{user_uid} -g %{user_group} -s
+/sbin/nologin -c "SIP Tools Research user" -d /var/lib/%{user_name} %{user_name}
     else
-      useradd -r -g %{user_group} -s /sbin/nologin -c "SIP Tools Archives group" %{user_name}
+      useradd -r -g %{user_group} -s /sbin/nologin -c "SIP Tools Research group" %{user_name}
     fi
 fi
 

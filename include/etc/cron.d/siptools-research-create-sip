@@ -9,7 +9,6 @@ HOME=/var/lib/siptools_research
 # | | | | .---- day of week (0 - 6) (Sunday=0 or 7) OR
 # sun,mon,tue,wed,thu,fri,sat
 # | | | | |
-#* * * * * siptools_archives luigi --module siptools_archives.process.create_sip ProcessSIP --scheduler-host=localhost --number-of-hosts=1 --workers=2 --number-of-subtasks=50 --workspace-root /var/spool/siptools_archives --home-path /home --min-age=0 &>> /var/log/siptools_archives/create-sip.log
 * * * * * siptools_research luigi --module siptools_research.process.initialize
 * ProcessTransfers --scheduler-host=localhost --number-of-hosts=1 --workers=2
 * --number-of-subtasks=50 --workspace-root /var/spool/siptools-research
