@@ -1,5 +1,5 @@
-"""Search for SIPs (transfers) in the users' home directories and call
-MoveSipToWorkspace on them.
+"""Search for files in the users' home/transfers directories and
+call MoveSipToWorkspace on them.
 
 To run this automatically add the following lines to
 /etc/cron.d/initialize::
@@ -39,21 +39,10 @@ from siptools_research.transfer.transfer import MoveTransferToWorkspace
 LOGGER = logging.getLogger('siptools_research.scripts.process_transfers')
 
 
-def touch_file(output_target):
-    """Create empty file to output target
-
-    :outfile: Luigi LocalTarget instance
-    :returns: None
-
-    """
-    with output_target.open('w') as outfile:
-        outfile.write('')
-
 
 def get_transfers(home_path):
     """A generator, which yields the transfers under
-       <home_path>/<username>/transfer and
-       <home_path>/<username>/approved
+       <home_path>/<username>/transfer
 
     :home_path: The path where the users' home directories are
     :returns: yields a tuple of (username, path)
@@ -66,40 +55,24 @@ def get_transfers(home_path):
         if not os.path.isdir(transfer_path):
             continue
 
+        # NOTE: Why don't we just write:
+        #   for filename in listdir(transfer_path):
+        #       filepath = os.path.join(path, filename)
+        #       yield {'username': username, 'path': filepath}
+
         transfer_iter = iter_files(transfer_path)
 
         for path in itertools.chain(transfer_iter):
-            if not is_sip(path):
-                continue
             yield {'username': username, 'path': path}
 
 
-def is_sip(path):
-    """A path is believed to be a SIP if it's a directory with a
-    sahke2.xml file in it or if it's a file with the .tar or .tar.gz
-    suffix
-
-    :path: The path to the file or directory
-    :returns: boolean
-    """
-    if os.path.isdir(path):
-        if os.path.exists(os.path.join(path, 'sahke2.xml')):
-            return True
-    if os.path.isfile(path) and (path.endswith('.tar.gz') or
-                                 path.endswith('.tar')):
-        return True
-    return False
-
-
 class ProcessTransfers(luigi.WrapperTask):
-    """Search for SIPs (transfers) in the users' home directories and
+    """Search for files in the users' home directories and
     call MoveSipToWorkspace on them.
 
-    :workspace_root: Path for SIP workspaces
-    (eq. /var/spool/siptools_research)
+    :workspace_root: Path for workspaces (eq. /var/spool/siptools_research)
     :home_path: Path to user home directories (eq. /home)
-    :min_age: Minimum st_ctime for transferred SIP before processing
-
+    :min_age: Minimum st_ctime for transferred file before processing
     """
 
     workspace_root = luigi.Parameter()
@@ -114,27 +87,25 @@ class ProcessTransfers(luigi.WrapperTask):
     path_cache = []
 
     def requires(self):
-        """The actual run method. Loops through the transfers and, if
-        they are older than min_age seconds, calls
-        MoveTransferToWorkspace
-
+        """The actual run method. Loops through the transfers and, if they are
+        older than min_age seconds, calls MoveTransferToWorkspace
         """
 
-        for sip in cache_items(
+        for dataset_file in cache_items(
                 select_items_distribute(
                     get_transfers(self.home_path),
                     number_of_hosts=self.number_of_hosts,
                     host_number=self.host_number),
                 self.path_cache, self.number_of_subtasks):
 
-            LOGGER.info("Transfer SIP to processing %s", sip)
+            LOGGER.info("Transfer file to processing %s", dataset_file)
 
             yield MoveTransferToWorkspace(
-                filename=sip["path"],
+                filename=dataset_file["path"],
                 workspace_root=self.workspace_root,
                 min_age=self.min_age,
                 home_path=self.home_path,
-                username=sip["username"])
+                username=dataset_file["username"])
 
 
 if __name__ == '__main__':
