@@ -3,6 +3,7 @@
 import pprint                   # For printing dict
 from json import loads, dumps   # For printing orderedDict
 import coreapi
+import sys
 
 
 def pprint_ordereddict(input_ordered_dict):
@@ -27,14 +28,14 @@ class Metax(object):
 
 
 
-def main():
+def main(arg):
     """Test extracting some data from Metax"""
     metax = Metax()
-    dataset = metax.get_dataset("1")
+    dataset = metax.get_dataset(arg[1])
     pprint_ordereddict(dataset)
     print '\nTitle:', dataset['research_dataset']['title'][0]['en']
     print '\nDescription:', dataset['research_dataset']['description'][0]['en']
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
