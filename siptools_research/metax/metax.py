@@ -1,14 +1,15 @@
 """Metax interface class"""
 
+import sys
 import pprint                   # For printing dict
 from json import loads, dumps   # For printing orderedDict
 import coreapi
-import sys
 
 
 def pprint_ordereddict(input_ordered_dict):
     """Convert orderedDict to normal dict"""
     pprint.PrettyPrinter(indent=4).pprint(loads(dumps(input_ordered_dict)))
+
 
 class Metax(object):
     """Metax interface class"""
@@ -27,14 +28,11 @@ class Metax(object):
         return self.client.get(self.baseurl + self.datasetsurl + contract_id)
 
 
-
 def main(arg):
-    """Test extracting some data from Metax"""
+    """Print metadata from Metax"""
     metax = Metax()
     dataset = metax.get_dataset(arg[1])
     pprint_ordereddict(dataset)
-    print '\nTitle:', dataset['research_dataset']['title'][0]['en']
-    print '\nDescription:', dataset['research_dataset']['description'][0]['en']
 
 
 if __name__ == "__main__":
