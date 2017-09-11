@@ -11,3 +11,4 @@ luigi
 pymongo
 M2Crypto
 python-magic
+httpretty
