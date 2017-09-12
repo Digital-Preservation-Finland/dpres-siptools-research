@@ -1,2 +1,2 @@
-def pipe = new org.dpres.siptools_research.Pipeline()
+def pipe = new org.dpres.siptools_archives.Pipeline()
 pipe.execute()
