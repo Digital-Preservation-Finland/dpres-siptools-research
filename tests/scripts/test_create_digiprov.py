@@ -1,17 +1,18 @@
 """Tests for create_digiprov script"""
 import os
-import tempfile
 import httpretty
 from siptools_research.scripts import create_digiprov
 
 DATASET_PATH = "tests/data/metax_datasets/"
 SAMPLE_CREATION_EVENT_PATH = "tests/data/sample_creation_event.xml"
 
-@httpretty.activate
-def test_get_dataset():
+def test_get_dataset(testpath):
     """Test get_dataset function"""
 
     # Use fake http-server and local sample JSON-file instead real Metax-API.
+    # @httpretty.activate decorator is not used because it does not work with
+    # fixture
+    httpretty.enable()
     data_file_name = "provenance_data.json"
     with open(os.path.join(DATASET_PATH, data_file_name)) as data_file:
         data = data_file.read()
@@ -23,9 +24,12 @@ def test_get_dataset():
                            content_type='application/json'
                           )
 
-    # Put output xml-file to tempdir
-    workspace = tempfile.mkdtemp()
+    # Create provenance info xml-file to tempdir
+    workspace = testpath
     create_digiprov.main(['1', '--workspace', workspace])
+
+    # Disable fake http-server
+    httpretty.disable()
 
     # Check that one arbitrary line in the created xml-file is what it should
     # be. (The file is not always exactly the same.)
