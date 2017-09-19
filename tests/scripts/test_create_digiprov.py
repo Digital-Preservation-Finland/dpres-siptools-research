@@ -1,6 +1,7 @@
 """Tests for create_digiprov script"""
 import os
 import httpretty
+from lxml import etree
 from siptools_research.scripts import create_digiprov
 
 DATASET_PATH = "tests/data/metax_datasets/"
@@ -31,10 +32,41 @@ def test_get_dataset(testpath):
     # Disable fake http-server
     httpretty.disable()
 
-    # Check that one arbitrary line in the created xml-file is what it should
-    # be. (The file is not always exactly the same.)
-    with open(os.path.join(workspace, 'creation-event.xml')) as xmlfile:
-        for i, line in enumerate(xmlfile):
-            if i == 13:
-                assert line.strip() == "<premis:eventDetail>Description of "\
-                                       "provenance</premis:eventDetail>"
+    # Check that the created xml-file contains correct elements.
+    tree = etree.parse(os.path.join(testpath, 'creation-event.xml'))
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].attrib["MDTYPE"] == "PREMIS:EVENT"
+    assert elements[0].attrib["MDTYPEVERSION"] == "2.3"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventIdentifier'\
+                          '/premis:eventIdentifierType',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].text == "UUID"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventType',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].text == "creation"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventDateTime',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].text == "2014-01-01T08:19:58Z"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventDetail',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].text == "Description of provenance"
