@@ -24,7 +24,7 @@ def parse_arguments(arguments):
 def create_premis_event(dataset_id, workspace):
     """Gets metada from Metax and calls siptools premis_event script."""
 
-    metadata = Metax().get_dataset(dataset_id)
+    metadata = Metax().get_data('datasets/', dataset_id)
     event_type = metadata["research_dataset"]["provenance"][0]["type"]\
         ["pref_label"][0]["en"]
     event_datetime = metadata["research_dataset"]["provenance"][0]\

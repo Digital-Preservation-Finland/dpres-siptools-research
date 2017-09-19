@@ -5,6 +5,8 @@ import pprint                   # For printing dict
 from json import loads, dumps   # For printing orderedDict
 import coreapi
 
+METAX_ENTITIES = ['datasets', 'contracts', 'files']
+
 
 def pprint_ordereddict(input_ordered_dict):
     """Convert orderedDict to normal dict"""
@@ -12,48 +14,41 @@ def pprint_ordereddict(input_ordered_dict):
 
 
 class Metax(object):
-    """Metax interface class"""
+    """Metax interface class.""" 
     baseurl = "https://metax-test.csc.fi/rest/v1/"
-    datasetsurl = "datasets/"
-    contractsurl = "contracts/"
 
     def __init__(self):
         self.client = coreapi.Client()
 
-    def get_dataset(self, dataset_id):
+    def get_data(self, entity_url, entity_id):
         """Get dataset with id"""
-        return self.client.get(self.baseurl + self.datasetsurl + dataset_id)
-
-    def get_contract(self, contract_id):
-        """Get contract with id"""
-        return self.client.get(self.baseurl + self.contractsurl + contract_id)
+        url = self.baseurl + entity_url + '/' + entity_id
+        return self.client.get(url)
 
 
-def main():
-    """Print metadata from Metax"""
-
+def parse_arguments(arguments):
+    """ Create arguments parser and return parsed
+    command line arguments.
+    """
     parser = argparse.ArgumentParser(description="Print dataset or contract "
                                      "information from Metax.")
-    parser.add_argument('--dataset',
-                        metavar='dataset_id',
-                        help='Print dataset with ID: dataset_id')
-    parser.add_argument('--contract',
-                        metavar='contract_id',
-                        help='Print contract with ID: contract_id')
-    args = vars(parser.parse_args())
+    parser.add_argument('entity_url', type=str, choices=METAX_ENTITIES,
+            help='Entity url to be retrieved: %s' % METAX_ENTITIES)
+    parser.add_argument('entity_id',
+                        metavar='entity_id',
+                        help='Print entity data with ID: entity_id')
+    return parser.parse_args(arguments)
+
+
+def main(arguments=None):
+    """Print metadata from Metax"""
+
+    args = parse_arguments(arguments)
 
     metax = Metax()
 
-    if args['dataset'] and not args['contract']:
-        dataset = metax.get_dataset(args['dataset'])
-        pprint_ordereddict(dataset)
-    elif args['contract'] and not args['dataset']:
-        dataset = metax.get_dataset(args['contract'])
-        pprint_ordereddict(dataset)
-    elif args['contract'] and args['dataset']:
-        print '--contract and  --dataset can not be user together.'
-    else:
-        print 'No dataset ID or contract ID given.'
+    dataset = metax.get_data(args.entity_url, args.entity_id)
+    pprint_ordereddict(dataset)
 
 
 if __name__ == "__main__":
