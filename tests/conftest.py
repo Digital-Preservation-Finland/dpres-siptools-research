@@ -29,8 +29,11 @@ import siptools_research.shell
 from siptools_research.utils import Directory
 
 @pytest.fixture(scope="function")
-def _mkdtemp(request):
-    """Create and cleanup a temporary directory"""
+def testpath(request):
+    """Create and cleanup a temporary directory
+
+    :request: Pytest request fixture
+    """
 
     temp_path = '.tmp'
     if not os.path.isdir(temp_path):
@@ -50,17 +53,6 @@ def _mkdtemp(request):
     request.addfinalizer(fin)
 
     return _makedirs
-
-
-@pytest.fixture(scope="function")
-def testpath(_mkdtemp):
-    """Creates temporary directory and clean up after testing.
-
-    :request: Pytest request fixture
-    :returns: Path to temporary directory
-
-    """
-    return Directory(tempfile.mkdtemp(dir=_mkdtemp()))
 
 
 @pytest.fixture(scope="function")
