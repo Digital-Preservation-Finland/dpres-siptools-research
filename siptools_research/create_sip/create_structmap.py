@@ -68,9 +68,9 @@ class CreateStructMap(WorkflowTask):
             log = open(structmap_log, 'w')
             sys.stdout = log
 
- """            main([self.sip_creation_path, ead3_location, s2_name,
-                  '--workspace', self.sip_creation_path, '--clean'])
- """
+            # main([self.sip_creation_path, ead3_location, s2_name,
+            #   '--workspace', self.sip_creation_path, '--clean'])
+
             compile_structmap.main([
                             '--dmdsec_loc', struct_folder,
                             '--workspace', workspace])
