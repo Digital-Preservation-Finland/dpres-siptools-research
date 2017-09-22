@@ -14,7 +14,7 @@ def pprint_ordereddict(input_ordered_dict):
 
 
 class Metax(object):
-    """Metax interface class.""" 
+    """Metax interface class."""
     baseurl = "https://metax-test.csc.fi/rest/v1/"
 
     def __init__(self):
@@ -33,7 +33,7 @@ def parse_arguments(arguments):
     parser = argparse.ArgumentParser(description="Print dataset or contract "
                                      "information from Metax.")
     parser.add_argument('entity_url', type=str, choices=METAX_ENTITIES,
-            help='Entity url to be retrieved: %s' % METAX_ENTITIES)
+                        help='Entity url to be retrieved: %s' % METAX_ENTITIES)
     parser.add_argument('entity_id',
                         metavar='entity_id',
                         help='Print entity data with ID: entity_id')
