@@ -26,7 +26,6 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 
 import siptools_research.shell
 
-from siptools_research.utils import Directory
 
 @pytest.fixture(scope="function")
 def testpath(request):
@@ -52,7 +51,7 @@ def testpath(request):
 
     request.addfinalizer(fin)
 
-    return _makedirs
+    return _makedirs()
 
 
 @pytest.fixture(scope="function")
