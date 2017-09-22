@@ -8,6 +8,8 @@ import datetime
 
 from luigi import Parameter
 
+from siptools.scripts import compile_structmap
+
 from siptools_research.move_sip import MoveSipToUser, FailureLog
 from siptools_research.target import TaskFileTarget, MongoDBTarget
 from siptools_research.utils import touch_file
@@ -18,7 +20,6 @@ from siptools_research.create_sip.create_dmdsec import DmdsecComplete
 from siptools_research.create_sip.create_digiprov import DigiprovComplete
 from siptools_research.create_sip.create_techmd import TechMDComplete
 
-from siptools_research.scripts.compile_ead3_structmap import main
 
 
 class CreateStructMap(WorkflowTask):
@@ -44,9 +45,7 @@ class CreateStructMap(WorkflowTask):
         return TaskFileTarget(self.workspace, 'create-structmap')
 
     def run(self):
-        """Creates a METS structural map file from the composition of
-        EAD3 strucutral elements and a METS file section file from the
-        list of files in the SÄHKE2 files.
+        """Creates a METS structural map file based on a folder structure. Top folder is given as a parameter.
         If unsuccessful writes an error message into mongoDB, updates
         the status of the document and rejects the package. The rejected
         package is moved to the users home/rejected directory.
@@ -54,8 +53,6 @@ class CreateStructMap(WorkflowTask):
         :returns: None
 
         """
-        s2_name = 'sahke2.xml'
-        ead3_location = os.path.join(self.sip_creation_path, 'sahke2-ead3.xml')
 
         document_id = os.path.basename(self.workspace)
         mongo_task = MongoDBTarget(document_id,
@@ -71,8 +68,13 @@ class CreateStructMap(WorkflowTask):
             log = open(structmap_log, 'w')
             sys.stdout = log
 
-            main([self.sip_creation_path, ead3_location, s2_name,
+ """            main([self.sip_creation_path, ead3_location, s2_name,
                   '--workspace', self.sip_creation_path, '--clean'])
+ """
+            compile_structmap.main([
+                            '--dmdsec_loc', struct_folder,
+                            '--workspace', workspace])
+
 
             sys.stdout = save_stdout
             log.close()
