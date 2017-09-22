@@ -19,10 +19,10 @@ def test_get_dataset():
                            content_type='application/json'
                           )
 
-    dataset = Metax().get_dataset("1")
+    dataset = Metax().get_data('datasets', "1")
     print dataset
     print type(dataset)
     assert dataset["research_dataset"]["provenance"][0]['type']['pref_label']\
         [0]['en'] == 'creation'
 
-#TODO: test for get_contracts
+#TODO: test for other entities: contracts, files...
