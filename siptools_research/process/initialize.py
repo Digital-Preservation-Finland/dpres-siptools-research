@@ -23,7 +23,6 @@ To run this automatically add the following lines to
 """
 
 import os
-import socket
 import logging
 import itertools
 
@@ -78,7 +77,6 @@ class ProcessTransfers(luigi.WrapperTask):
     workspace_root = luigi.Parameter()
     home_path = luigi.Parameter()
     min_age = luigi.Parameter()
-    hostname = luigi.Parameter(default=socket.gethostname())
 
     number_of_subtasks = luigi.IntParameter(default=10, significant=False)
     number_of_hosts = luigi.IntParameter(default=5, significant=False)
@@ -104,7 +102,6 @@ class ProcessTransfers(luigi.WrapperTask):
                 filename=dataset_file["path"],
                 workspace_root=self.workspace_root,
                 min_age=self.min_age,
-                home_path=self.home_path,
                 username=dataset_file["username"])
 
 
