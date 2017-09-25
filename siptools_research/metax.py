@@ -1,4 +1,4 @@
-"""Metax interface class"""
+"""Metax interface class."""
 
 import argparse
 import pprint                   # For printing dict
@@ -14,29 +14,33 @@ def pprint_ordereddict(input_ordered_dict):
 
 
 class Metax(object):
-    """Metax interface class."""
+    """Get metadata from metax as OrderedDict object."""
     baseurl = "https://metax-test.csc.fi/rest/v1/"
 
     def __init__(self):
         self.client = coreapi.Client()
 
     def get_data(self, entity_url, entity_id):
-        """Get dataset with id"""
+        """Get metadata of dataset, contract or file with id from Metax.
+        :entity_url: "datasets", "contracts" or "files"
+        :entity_id: ID number of object
+        :returns: OrderedDict"""
         url = self.baseurl + entity_url + '/' + entity_id
         return self.client.get(url)
 
 
 def parse_arguments(arguments):
-    """ Create arguments parser and return parsed
+    """Create arguments parser and return parsed
     command line arguments.
     """
-    parser = argparse.ArgumentParser(description="Print dataset or contract "
-                                     "information from Metax.")
+    parser = argparse.ArgumentParser(description="Print dataset, contract, or "
+                                     "file metada from Metax in pretty "
+                                     "format.")
     parser.add_argument('entity_url', type=str, choices=METAX_ENTITIES,
-                        help='Entity url to be retrieved: %s' % METAX_ENTITIES)
+                        help='Entity url to be retrieved')
     parser.add_argument('entity_id',
                         metavar='entity_id',
-                        help='Print entity data with ID: entity_id')
+                        help='Entity ID')
     return parser.parse_args(arguments)
 
 
