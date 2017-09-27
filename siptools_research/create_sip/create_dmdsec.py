@@ -5,7 +5,7 @@ import sys
 import traceback
 import datetime
 
-from luigi import Parameter
+from luigi import Parameter, IntParameter
 
 from siptools_research.move_sip import MoveSipToUser, FailureLog
 from siptools_research.target import TaskFileTarget, MongoDBTarget
@@ -99,9 +99,8 @@ class CreateDescriptiveMetadata(WorkflowTask):
                 home_path=self.home_path)
 
 
-class ReadyForThis(ExternalTask):
+class ReadyForThis(WorkflowExternalTask):
     """Check that the workspace is older than min_age."""
-    workspace = Parameter()
     min_age = IntParameter()
 
     def output(self):

@@ -68,14 +68,15 @@ class ProcessMetadata(luigi.WrapperTask):
                 select_items_distribute(
                     items=iter_workspaces(workspace_root=self.workspace_root),
                     number_of_hosts=self.number_of_hosts,
-                    host_number=self.host_number),
-                self.path_cache, self.number_of_subtasks):
+                    host_number=self.host_number
+                ),
+                self.path_cache, self.number_of_subtasks
+        ):
 
             yield CreateProvenanceInformation(
                 workspace=workspace_path,
-                sip_creation_path=os.path.join(workspace_path,
-                                               'sip-in-progress'),
-                home_path=self.home_path)
+                home_path=self.home_path
+            )
 
 
 if __name__ == '__main__':
