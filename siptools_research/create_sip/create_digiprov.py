@@ -25,6 +25,8 @@ class CreateProvenanceInformation(WorkflowTask):
     files in METS digiprov wrappers.
     """
 
+    # TODO: Why workspace must be defined here? It is aready defined in
+    # WorkflowTask baseclass.
     workspace = Parameter()
     home_path = Parameter()
 
