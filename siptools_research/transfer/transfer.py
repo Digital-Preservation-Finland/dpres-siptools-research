@@ -2,11 +2,16 @@
 """
 
 import os
+import shutil
 import datetime
 
 from uuid import uuid4
 
 from luigi import Parameter, IntParameter, Task, ExternalTask, LocalTarget
+
+from siptools_research.target import MongoDBTarget, mongo_settings
+from siptools_research.utils import date_str
+
 from siptools_research.workflow.utils import file_age
 
 
@@ -37,6 +42,7 @@ class MoveTransferToWorkspace(Task):
     filename = Parameter()
     workspace_root = Parameter()
     min_age = IntParameter()
+    home_path = Parameter()
     username = Parameter()
 
     def requires(self):
@@ -60,6 +66,7 @@ class MoveTransferToWorkspace(Task):
 
         """
         unique = str(uuid4())
+        username = self.username
 
         # get basename without externsions
         transfer_name = os.path.basename(self.filename)
@@ -86,6 +93,16 @@ class MoveTransferToWorkspace(Task):
                 transfers_path,
                 os.path.basename(self.filename)))
 
+        # Create mongoDB document
+        mongo_status = 'transfer received'
+        mongo_task = {
+            'result': 'success',
+            'messages': 'Transfer moved to workspace.',
+            'timestamp': datetime.datetime.utcnow().isoformat()
+        }
+        create_mongodb_document(document_id, username, mongo_status,
+                                transfer_name, mongo_task)
+
 
 class ReadyForTransfer(ExternalTask):
     """Check that the file is older than min_age."""
@@ -100,3 +117,27 @@ class ReadyForTransfer(ExternalTask):
         # to int.
         self.min_age = int(self.min_age)
         return file_age(self.filename) > self.min_age
+
+
+def create_mongodb_document(document_id, username, mongo_status,
+                            transfer_name, mongo_task):
+    """Creates a document in MongoDB, writes data"""
+
+    mongo_doc_status = MongoDBTarget(document_id, 'status')
+    mongo_transfer_name = MongoDBTarget(document_id,
+                                        'transfer_name')
+    mongo_mets_objid = MongoDBTarget(document_id,
+                                     'mets_objid')
+    mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
+    mongo_username = MongoDBTarget(document_id, 'username')
+    mongo_wf_task = MongoDBTarget(document_id,
+                                  'wf_tasks.move-transfer-to-workspace')
+
+    mongo_transfer_name.write(transfer_name)
+    mongo_mets_objid.write('')
+    mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
+    mongo_username.write(username)
+    mongo_doc_status.write(mongo_status)
+    mongo_wf_task.write(mongo_task)
+
+    return 0
