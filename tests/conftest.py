@@ -34,24 +34,15 @@ def testpath(request):
     :request: Pytest request fixture
     """
 
-    temp_path = '.tmp'
-    if not os.path.isdir(temp_path):
-        os.makedirs(temp_path)
+    temp_path = tempfile.mkdtemp()
 
     def fin():
         """remove temporary path"""
         shutil.rmtree(temp_path)
 
-    def _makedirs(path=''):
-        """Create directory under temp path and return it"""
-        destination_path = os.path.join(temp_path, path)
-        if not os.path.isdir(destination_path):
-            os.makedirs(destination_path)
-        return destination_path
-
     request.addfinalizer(fin)
 
-    return _makedirs()
+    return temp_path
 
 
 @pytest.fixture(scope="function")
