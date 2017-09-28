@@ -2,15 +2,13 @@
 """
 
 import os
-import shutil
 import datetime
 
 from uuid import uuid4
 
 from luigi import Parameter, IntParameter, Task, ExternalTask, LocalTarget
 
-from siptools_research.target import MongoDBTarget, mongo_settings
-from siptools_research.utils import date_str
+from siptools_research.target import MongoDBTarget
 
 from siptools_research.workflow.utils import file_age
 
@@ -42,7 +40,6 @@ class MoveTransferToWorkspace(Task):
     filename = Parameter()
     workspace_root = Parameter()
     min_age = IntParameter()
-    home_path = Parameter()
     username = Parameter()
 
     def requires(self):
