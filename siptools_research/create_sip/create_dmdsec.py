@@ -84,6 +84,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
                                       'create-descriptive-metadata'))
 
         except Exception as ex:
+            print ex.message
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),
                 'result': 'failure',
