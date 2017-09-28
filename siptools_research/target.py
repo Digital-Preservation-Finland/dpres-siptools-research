@@ -63,27 +63,3 @@ class TaskLogTarget(LocalTarget):
         path = os.path.join(workspace, 'logs', filename)
         print "*** TaskLogTarget:%s" % path
         LocalTarget.__init__(self, path)
-
-
-class IngestReportTarget(LocalTarget):
-
-    """Luigi target for ingest XML reports"""
-
-    def __init__(self, workspace, event_name):
-        """Setup LocalTarget with custom report path"""
-
-        filename = 'ingest-report-%s.xml' % event_name
-        path = os.path.join(workspace, 'reports', filename)
-        LocalTarget.__init__(self, path)
-
-
-class IngestReportTargetHtml(LocalTarget):
-
-    """Luigi target for ingest HTML reports"""
-
-    def __init__(self, workspace, event_name):
-        """Setup LocalTarget with custom report path"""
-
-        filename = 'ingest-report-%s.html' % event_name
-        path = os.path.join(workspace, 'reports-html', filename)
-        LocalTarget.__init__(self, path)
