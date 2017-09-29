@@ -30,14 +30,16 @@ def test_createprovenanceinformation(testpath):
                           )
 
 
-    # Create workspace with "logs" directory in temporary directory
+    # Create workspace with "logs" and "transfers" directories in temporary
+    # directory
     workspace = os.path.join(testpath, 'workspace')
     os.makedirs(workspace)
     os.makedirs(os.path.join(workspace, 'logs'))
+    os.makedirs(os.path.join(workspace, 'transfers'))
 
     # Create file in workspace directory
     testfilename = "aineisto"
-    testfilepath = os.path.join(workspace, testfilename)
+    testfilepath = os.path.join(workspace, 'transfers', testfilename)
     with open(testfilepath, 'w') as testfile:
         testfile.write('1')
     assert os.path.isfile(testfilepath)

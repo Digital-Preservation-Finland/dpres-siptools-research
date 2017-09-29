@@ -55,7 +55,9 @@ class CreateProvenanceInformation(WorkflowTask):
         mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
 
         try:
-            with open(os.path.join(self.workspace, 'aineisto')) as infile:
+            with open(os.path.join(self.workspace,
+                                   'transfers',
+                                   'aineisto')) as infile:
                 dataset_id = infile.read()
             digiprov_log = os.path.join(self.workspace, 'logs',
                                         ('task-create-provenance-'
