@@ -14,9 +14,9 @@ from siptools_research.utils import touch_file
 
 from siptools_research.workflow.task import WorkflowTask, WorkflowExternalTask
 
-from siptools_research.create_sip.virus import ScanVirus
+from siptools_research.create_sip.create_dmdsec import ReadyForThis
 
-from siptools_research.scripts.import_objects_sahke2 import main
+from siptools_research.scripts.import_objects import main
 
 
 class CreateTechnicalMetadata(WorkflowTask):
@@ -27,11 +27,12 @@ class CreateTechnicalMetadata(WorkflowTask):
     home_path = Parameter()
 
     def requires(self):
-        """Requires completed virus check"""
-        return {"Virus scan":
-                ScanVirus(workspace=self.workspace,
-                          sip_creation_path=self.sip_creation_path,
-                          home_path=self.home_path)}
+        """Return required tasks.-1
+
+        :returns: Files must have been transferred to workspace
+        """
+
+        return ReadyForThis(workspace=self.workspace, min_age=0)
 
     def output(self):
         """Outputs a task file"""
@@ -46,8 +47,6 @@ class CreateTechnicalMetadata(WorkflowTask):
         :returns: None
 
         """
-        s2_location = os.path.join(self.sip_creation_path, 'sahke2.xml')
-        print 'create_techmd.s2_location %s' % s2_location
 
         document_id = os.path.basename(self.workspace)
         mongo_task = MongoDBTarget(document_id,
@@ -56,14 +55,16 @@ class CreateTechnicalMetadata(WorkflowTask):
         mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
 
         try:
+            with open(os.path.join(self.workspace, 'transfers', 'aineisto')) as infile:
+                dataset_id = infile.read()
+
             techmd_log = os.path.join(self.workspace, 'logs',
                                       'task-create-technical-metadata.log')
             save_stdout = sys.stdout
             log = open(techmd_log, 'w')
             sys.stdout = log
 
-            main([self.sip_creation_path,
-                  '--sahke2', 'sahke2.xml',
+            main([dataset_id,
                   '--workspace', self.sip_creation_path])
             sys.stdout = save_stdout
             log.close()
