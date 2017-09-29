@@ -9,7 +9,7 @@
         </creator>
     </creators>
     <titles>
-        <title xml:lang="en-us">ExampleDataCite XML </title>
+        <title xml:lang="en-us">ExampleDataCite XML</title>
         <title xml:lang="en-us" titleType="Subtitle">Sample file for TPAS testing</title>
     </titles>
     <publisher>CSC Digital Preservation</publisher>
