@@ -49,8 +49,11 @@ def test_createprovenanceinformation(testpath):
                                        workspace=workspace)
     assert not task.complete()
 
-    # Run task
-    task.run()
+    # Run task. Task returns generator, so it must be iterated to really run
+    # the code
+    returned_tasks = task.run()
+    for task in returned_tasks:
+        pass
     assert task.complete()
 
     # Check that XML is created

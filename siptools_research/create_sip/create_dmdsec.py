@@ -97,12 +97,9 @@ class CreateDescriptiveMetadata(WorkflowTask):
             with failed_log.open('w') as outfile:
                 outfile.write('Task create-dmdsec failed.')
 
-            #-------------------
-            # This breaks tests
-            # yield MoveSipToUser(
-                # workspace=self.workspace,
-                # home_path=self.home_path)
-            #-------------------
+            yield MoveSipToUser(
+                workspace=self.workspace,
+                home_path=self.home_path)
 
 
 class ReadyForThis(WorkflowExternalTask):

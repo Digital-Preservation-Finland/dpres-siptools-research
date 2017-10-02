@@ -47,6 +47,7 @@ class CreateProvenanceInformation(WorkflowTask):
 
         """
 
+
         sip_creation_path = os.path.join(self.workspace, 'sip-in-progress')
         document_id = os.path.basename(self.workspace)
         mongo_task = MongoDBTarget(document_id,
@@ -99,12 +100,9 @@ class CreateProvenanceInformation(WorkflowTask):
             with failed_log.open('w') as outfile:
                 outfile.write('Task create-digiprov failed.')
 
-            #------------------------------
-            # This breaks tests
-            # yield MoveSipToUser(
-                # workspace=self.workspace,
-                # home_path=self.home_path)
-            #------------------------------
+            yield MoveSipToUser(
+                workspace=self.workspace,
+                home_path=self.home_path)
 
             # TODO: task output missing? luigi thinks this task has failed
 
