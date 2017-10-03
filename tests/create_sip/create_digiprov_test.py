@@ -3,26 +3,17 @@
 import os
 import pymongo
 import httpretty
-import mongomock
 from siptools_research.create_sip.create_digiprov \
     import CreateProvenanceInformation
 
 DATASET_PATH = "tests/data/metax_datasets/"
 
-def test_createprovenanceinformation(testpath, monkeypatch):
+def test_createprovenanceinformation(testpath, testmongoclient):
     """Test `CreateProvenanceInformation` task.
 
     :testpath: Testpath fixture
     :returns: None
     """
-
-    mongoclient = mongomock.MongoClient()
-    def mock_mongoclient(*args):
-        """Returns already initialized mongomock.MongoClient"""
-        return mongoclient
-
-    monkeypatch.setattr(pymongo, 'MongoClient', mock_mongoclient)
-
 
     # Use fake http-server and local sample JSON-file instead real Metax-API.
     # @httpretty.activate decorator is not used because it does not work with
@@ -73,6 +64,7 @@ def test_createprovenanceinformation(testpath, monkeypatch):
 
     # Check that new log entry is found in mongodb, and that there is no extra
     # entries
+    mongoclient = pymongo.MongoClient()
     doc = mongoclient['siptools-research'].workflow.find_one(
         {'_id':'workspace'}
     )

@@ -5,6 +5,8 @@ import sys
 import logging
 import tempfile
 import subprocess
+import mongomock
+import pymongo
 import shutil
 
 import pytest
@@ -26,6 +28,18 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 
 import siptools_research.shell
 
+@pytest.fixture(scope="function")
+def testmongoclient(monkeypatch):
+    """Monkeypatch pymongo.MongoClient class. An instance of
+    mongomock.MongoClient is created in beginning of test. Whenever
+    pymongo.MongoClient() is called during the test, the already initialized
+    mongomoc.MongoClient is used instead.
+    """
+    mongoclient = mongomock.MongoClient()
+    def mock_mongoclient(*args):
+        """Returns already initialized mongomock.MongoClient"""
+        return mongoclient
+    monkeypatch.setattr(pymongo, 'MongoClient', mock_mongoclient)
 
 @pytest.fixture(scope="function")
 def testpath(request):
