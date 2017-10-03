@@ -12,6 +12,7 @@ def test_createprovenanceinformation(testpath, testmongoclient):
     """Test `CreateProvenanceInformation` task.
 
     :testpath: Testpath fixture
+    :testmongoclient: Pymongo mock fixture
     :returns: None
     """
 
@@ -76,9 +77,48 @@ def test_createprovenanceinformation(testpath, testmongoclient):
         == 'success'
     assert mongoclient['siptools-research'].workflow.count() == 1
 
-
     # Disable fake http-server
     httpretty.disable()
+
+
+def test_failed_createprovenanceinformation(testpath, testmongoclient):
+    """Test case where `CreateProvenanceInformation` task should fail.
+    The workspace is empty, which should cause exception. However, the task
+    should write new log entry to mongodb.
+
+    :testpath: Testpath fixture
+    :testmongoclient: Pymongo mock fixture
+    :returns: None
+    """
+
+    # Create empty workspace
+    workspace = os.path.join(testpath, 'workspace')
+
+    # Init task
+    task = CreateProvenanceInformation(home_path=workspace,
+                                       workspace=workspace)
+
+    # Run task. Task returns generator, so it must be iterated to really run
+    # the code
+    returned_tasks = task.run()
+    for task in returned_tasks:
+        pass
+    assert not task.complete()
+
+    # Check that new log entry is found in mongodb, and that there is no extra
+    # entries
+    mongoclient = pymongo.MongoClient()
+    doc = mongoclient['siptools-research'].workflow.find_one(
+        {'_id':'workspace'}
+    )
+    print doc
+    assert doc['_id'] == 'workspace'
+    assert 'IOError: [Errno 2] No such file or directory: ' in\
+        doc['wf_tasks']['create-provenance-information']['messages']
+    assert doc['wf_tasks']['create-provenance-information']['result']\
+        == 'failure'
+    assert mongoclient['siptools-research'].workflow.count() == 1
+
 
     # TODO: Test for CreateProvenanceInformation.requires()
 
