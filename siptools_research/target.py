@@ -4,7 +4,7 @@ import os
 
 from luigi import LocalTarget
 from luigi.contrib.mongodb import MongoCellTarget
-from pymongo import MongoClient
+import pymongo
 
 
 class TaskReportTarget(LocalTarget):
@@ -37,7 +37,7 @@ def mongo_settings():
     host = 'localhost'
     mongo_db = 'siptools-research'
     mongo_col = 'workflow'
-    mongo_client = MongoClient(host)
+    mongo_client = pymongo.MongoClient(host)
 
     return mongo_client, mongo_db, mongo_col
 
