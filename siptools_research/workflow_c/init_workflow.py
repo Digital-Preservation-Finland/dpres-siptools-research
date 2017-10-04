@@ -24,10 +24,10 @@ import socket
 
 import luigi
 
-from siptools_research.utils import iter_workspaces, select_items_distribute, \
+from siptools_research.utils.utils import  iter_workspaces, select_items_distribute, \
     cache_items
 
-from siptools_research.cleanup.cleanup import CleanupWorkspace
+from siptools_research.workflow_c.cleanup import CleanupWorkspace
 
 
 class Finalize(luigi.WrapperTask):

@@ -10,15 +10,15 @@ from luigi import Parameter
 
 from siptools.scripts import compile_structmap
 
-from siptools_research.move_sip import MoveSipToUser, FailureLog
-from siptools_research.target import TaskFileTarget, MongoDBTarget
-from siptools_research.utils import touch_file
+from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
+from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
+from siptools_research.utils.utils import  touch_file
 
-from siptools_research.workflow.task import WorkflowTask
+from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.create_sip.create_dmdsec import DmdsecComplete
-from siptools_research.create_sip.create_digiprov import DigiprovComplete
-from siptools_research.create_sip.create_techmd import TechMDComplete
+from siptools_research.workflow_c.create_dmdsec import DmdsecComplete
+from siptools_research.workflow_c.create_digiprov import DigiprovComplete
+from siptools_research.workflow_c.create_techmd import TechMDComplete
 
 
 
