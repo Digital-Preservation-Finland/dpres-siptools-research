@@ -1,1 +1,1 @@
-"""Tests module for the `preservation` package"""
+"""Tests module for the `siptools_research` package"""
