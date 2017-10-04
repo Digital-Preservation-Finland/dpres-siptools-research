@@ -4,7 +4,7 @@
 import os
 import shutil
 from lxml import etree
-from siptools_research.create_sip.create_dmdsec\
+from siptools_research.workflow_b.create_dmdsec\
     import CreateDescriptiveMetadata
 DATASET_PATH = "tests/data/metax_datasets/"
 

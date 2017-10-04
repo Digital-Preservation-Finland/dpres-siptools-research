@@ -2,8 +2,8 @@
 
 import os
 import time
-from siptools_research.transfer.transfer import MoveTransferToWorkspace
-from siptools_research.transfer.transfer import ReadyForTransfer
+from siptools_research.workflow_0.transfer import MoveTransferToWorkspace
+from siptools_research.workflow_0.transfer import ReadyForTransfer
 
 
 def test_movetransfertoworkspace(testpath):

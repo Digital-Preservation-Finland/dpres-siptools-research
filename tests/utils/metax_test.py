@@ -1,7 +1,7 @@
 """Tests for Metax-class"""
 import os
 import httpretty
-from siptools_research.metax import Metax
+from siptools_research.utils.metax import Metax
 
 DATASET_PATH = "tests/data/metax_datasets/"
 

@@ -3,7 +3,7 @@
 import os
 import pymongo
 import httpretty
-from siptools_research.create_sip.create_digiprov \
+from siptools_research.workflow_b.create_digiprov \
     import CreateProvenanceInformation
 
 DATASET_PATH = "tests/data/metax_datasets/"

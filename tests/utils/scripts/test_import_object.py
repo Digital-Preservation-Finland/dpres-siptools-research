@@ -1,6 +1,6 @@
 from tempfile import NamedTemporaryFile
 import lxml.etree as ET
-from siptools_research.scripts import import_objects
+from siptools_research.utils.scripts import import_objects
 from siptools.xml.namespaces import NAMESPACES
 import pytest
 import os
