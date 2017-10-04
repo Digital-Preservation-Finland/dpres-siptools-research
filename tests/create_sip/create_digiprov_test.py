@@ -36,6 +36,8 @@ def test_createprovenanceinformation(testpath, testmongoclient):
     # directory
     workspace = os.path.join(testpath, 'workspace')
     os.makedirs(workspace)
+    # TODO: The task should be able to create 'logs' directory if it does not
+    # exist. Therefore this line should be unnecessary.
     os.makedirs(os.path.join(workspace, 'logs'))
     os.makedirs(os.path.join(workspace, 'transfers'))
 
@@ -47,7 +49,7 @@ def test_createprovenanceinformation(testpath, testmongoclient):
     assert os.path.isfile(testfilepath)
 
     # Init task
-    task = CreateProvenanceInformation(home_path=workspace,
+    task = CreateProvenanceInformation(home_path=testpath,
                                        workspace=workspace)
     assert not task.complete()
 
@@ -63,13 +65,24 @@ def test_createprovenanceinformation(testpath, testmongoclient):
                                        'sip-in-progress',
                                        'creation-event.xml'))
 
+    # Check that task output file is created
+    assert os.path.isfile(os.path.join(workspace,
+                                       'task-output-files',
+                                       'create-provenance-information'))
+
+    # Check that log is created
+    with open(os.path.join(workspace,
+                           'logs',
+                           'task-create-provenance-information.log'))\
+            as open_file:
+        assert open_file.read().startswith("premis_event created")
+
     # Check that new log entry is found in mongodb, and that there is no extra
     # entries
     mongoclient = pymongo.MongoClient()
     doc = mongoclient['siptools-research'].workflow.find_one(
         {'_id':'workspace'}
     )
-    print doc
     assert doc['_id'] == 'workspace'
     assert doc['wf_tasks']['create-provenance-information']['messages']\
         == 'Provenance metadata created.'
@@ -95,7 +108,7 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
     workspace = os.path.join(testpath, 'workspace')
 
     # Init task
-    task = CreateProvenanceInformation(home_path=workspace,
+    task = CreateProvenanceInformation(home_path=testpath,
                                        workspace=workspace)
 
     # Run task. Task returns generator, so it must be iterated to really run
@@ -105,13 +118,22 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
         pass
     assert not task.complete()
 
+    # Check that log is created
+    with open(os.path.join(workspace,
+                           'logs',
+                           'task-failure.log')) as open_file:
+        assert open_file.read() == "Task create-digiprov failed."
+
+    # There should not be anything else in the workspace
+    assert os.listdir(workspace) == ['logs']
+    assert os.listdir(os.path.join(workspace, 'logs')) == ['task-failure.log']
+
     # Check that new log entry is found in mongodb, and that there is no extra
     # entries
     mongoclient = pymongo.MongoClient()
     doc = mongoclient['siptools-research'].workflow.find_one(
         {'_id':'workspace'}
     )
-    print doc
     assert doc['_id'] == 'workspace'
     assert 'IOError: [Errno 2] No such file or directory: ' in\
         doc['wf_tasks']['create-provenance-information']['messages']
