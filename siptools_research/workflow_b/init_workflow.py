@@ -31,6 +31,7 @@ from siptools_research.utils import iter_workspaces, select_items_distribute, \
 from siptools_research.create_sip.create_digiprov \
     import CreateProvenanceInformation
 
+from siptools_research.create_sip.create_techmd import CreateTechnicalMetadata
 
 class ProcessMetadata(luigi.WrapperTask):
     """Process all SIP workspaces in `workspace_root`.
@@ -77,6 +78,11 @@ class ProcessMetadata(luigi.WrapperTask):
                 workspace=workspace_path,
                 home_path=self.home_path
             )
+            yield CreateTechnicalMetadata(
+                workspace=workspace_path,
+                sip_creation_path=os.path.join(workspace_path,
+                                               'sip-in-progress'),
+                home_path=self.home_path)
 
 
 if __name__ == '__main__':
