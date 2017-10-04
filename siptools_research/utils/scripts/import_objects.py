@@ -17,7 +17,7 @@ from siptools.xml.namespaces import NAMESPACES
 import siptools.xml.mets as m
 import siptools.xml.premis as p
 import siptools.xml.mix as mix
-from siptools_research.metax import Metax
+from siptools_research.utils.metax import Metax
 
 
 def parse_arguments(arguments):

@@ -8,7 +8,7 @@ import argparse
 
 from datetime import datetime
 
-from siptools_research import json2xml, database
+from siptools_research.utils import json2xml, database
 
 
 def parse_arguments(arguments):

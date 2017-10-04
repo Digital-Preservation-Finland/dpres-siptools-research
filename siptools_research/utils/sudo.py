@@ -1,6 +1,6 @@
 """Filesystem operations with sudo permissions"""
 
-from siptools_research.shell import Shell
+from siptools_research.utils.shell import Shell
 
 
 def add_write_if_read_or_write(st_mode):

@@ -8,9 +8,9 @@ from uuid import uuid4
 
 from luigi import Parameter, IntParameter, Task, ExternalTask, LocalTarget
 
-from siptools_research.target import MongoDBTarget
+from siptools_research.luigi.target import MongoDBTarget
 
-from siptools_research.workflow.utils import file_age
+from siptools_research.luigi.utils import file_age
 
 
 class MoveTransferToWorkspace(Task):

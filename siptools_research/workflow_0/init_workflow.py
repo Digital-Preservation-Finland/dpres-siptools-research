@@ -28,11 +28,11 @@ import itertools
 
 import luigi
 
-from siptools_research.utils import select_items_distribute, cache_items
+from siptools_research.utils.utils import select_items_distribute, cache_items
 
-from siptools_research.workflow.utils import iter_files
+from siptools_research.luigi.utils import iter_files
 
-from siptools_research.transfer.transfer import MoveTransferToWorkspace
+from siptools_research.workflow_0.transfer import MoveTransferToWorkspace
 
 
 LOGGER = logging.getLogger('siptools_research.scripts.process_transfers')

@@ -25,13 +25,13 @@ import socket
 
 import luigi
 
-from siptools_research.utils import iter_workspaces, select_items_distribute, \
-    cache_items
+from siptools_research.utils.utils import iter_workspaces,\
+    select_items_distribute, cache_items
 
-from siptools_research.create_sip.create_digiprov \
+from siptools_research.workflow_b.create_digiprov \
     import CreateProvenanceInformation
 
-from siptools_research.create_sip.create_techmd import CreateTechnicalMetadata
+from siptools_research.workflow_b.create_techmd import CreateTechnicalMetadata
 
 class ProcessMetadata(luigi.WrapperTask):
     """Process all SIP workspaces in `workspace_root`.

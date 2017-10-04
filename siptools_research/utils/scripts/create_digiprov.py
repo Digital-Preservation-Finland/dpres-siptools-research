@@ -6,7 +6,7 @@ files from Metax metadata using siptools premis_event script.
 import sys
 import argparse
 from siptools.scripts import premis_event
-from siptools_research.metax import Metax
+from siptools_research.utils.metax import Metax
 
 
 def parse_arguments(arguments):

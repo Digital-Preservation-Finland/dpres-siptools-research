@@ -8,16 +8,16 @@ import datetime
 
 from luigi import Parameter
 
-from siptools_research.move_sip import MoveSipToUser, FailureLog
-from siptools_research.target import TaskFileTarget, MongoDBTarget
-from siptools_research.utils import touch_file
+from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
+from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
+from siptools_research.utils.utils import touch_file
 
-from siptools_research.workflow.task import WorkflowTask, WorkflowExternalTask
+from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
 
-from siptools_research.create_sip.create_dmdsec \
+from siptools_research.workflow_b.create_dmdsec \
     import CreateDescriptiveMetadata
 
-from siptools_research.scripts import create_digiprov
+from siptools_research.utils.scripts import create_digiprov
 
 
 class CreateProvenanceInformation(WorkflowTask):

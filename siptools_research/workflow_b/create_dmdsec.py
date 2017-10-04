@@ -7,12 +7,12 @@ import datetime
 
 from luigi import Parameter, IntParameter, LocalTarget
 
-from siptools_research.move_sip import MoveSipToUser, FailureLog
-from siptools_research.target import TaskFileTarget, MongoDBTarget
-from siptools_research.utils import touch_file
+from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
+from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
+from siptools_research.utils.utils import touch_file
 
-from siptools_research.workflow.task import WorkflowTask, WorkflowExternalTask
-from siptools_research.workflow.utils import file_age
+from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
+from siptools_research.luigi.utils import file_age
 
 from siptools.scripts import import_description
 
