@@ -15,6 +15,7 @@ from luigi.scheduler import Scheduler
 from luigi.rpc import RemoteScheduler
 
 from uuid import uuid4
+import siptools_research.utils.shell
 
 
 LOGGER = logging.getLogger('tests.conftest')
@@ -26,7 +27,6 @@ PROJECT_ROOT_PATH = os.path.abspath(
 sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
-import siptools_research.shell
 
 @pytest.fixture(scope="function")
 def testmongoclient(monkeypatch):
