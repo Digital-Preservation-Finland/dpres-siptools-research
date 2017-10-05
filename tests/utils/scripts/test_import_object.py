@@ -4,10 +4,17 @@ from siptools_research.utils.scripts import import_objects
 from siptools.xml.namespaces import NAMESPACES
 import pytest
 import os
+import shutil
 from urllib import quote_plus
 
 
 def test_import_object_ok(testpath):
+
+    # Create 'files' directory with testfile in workspace
+    testbasepath = os.path.join(testpath, 'files','some', 'path')
+    os.makedirs(testbasepath)
+    testfilepath = os.path.join(testbasepath, 'file_name_11')
+    shutil.copy('tests/data/file_name_11', testfilepath)
 
     return_code = import_objects.main(['11', '--workspace', testpath])
     output_file = os.path.join(testpath, 'file_name_11-techmd.xml')

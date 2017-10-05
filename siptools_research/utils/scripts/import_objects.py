@@ -54,7 +54,10 @@ def main(arguments=None):
     metadata = Metax().get_data('files', args.file_id)
 
     filename = metadata["file_name"]
-    filepath = metadata["file_path"]
+    # Assume that files are found in 'files' directory in workspave
+    filepath = os.path.join(
+        args.workspace, 'files', metadata["file_path"].strip('/')
+    )
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
@@ -78,7 +81,6 @@ def main(arguments=None):
         hashalgorithm = allowed_hashs[hash_bit_length]
     else:
         hashalgorithm = 'ERROR'
-
 
     create_premis_object(filename, filepath, formatname,
                          creation_date, hashalgorithm,
