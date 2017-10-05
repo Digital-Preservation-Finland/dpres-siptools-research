@@ -11,13 +11,14 @@ from luigi import Parameter
 from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
 from siptools_research.utils.utils import touch_file
+from siptools_research.utils.metax import Metax
 
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
 
 from siptools_research.workflow_b.create_dmdsec \
     import CreateDescriptiveMetadata
 
-from siptools_research.utils.scripts import create_digiprov
+from siptools.scripts import premis_event
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -69,8 +70,7 @@ class CreateProvenanceInformation(WorkflowTask):
             log = open(digiprov_log, 'w')
             sys.stdout = log
 
-            create_digiprov.create_premis_event(dataset_id,
-                                                sip_creation_path)
+            create_premis_event(dataset_id, sip_creation_path)
 
             sys.stdout = save_stdout
             log.close()
@@ -105,6 +105,25 @@ class CreateProvenanceInformation(WorkflowTask):
                 home_path=self.home_path)
 
             # TODO: task output missing? luigi thinks this task has failed
+
+
+def create_premis_event(dataset_id, workspace):
+    """Gets metada from Metax and calls siptools premis_event script."""
+
+    metadata = Metax().get_data('datasets', dataset_id)
+    event_type = metadata["research_dataset"]["provenance"][0]["type"]\
+        ["pref_label"][0]["en"]
+    event_datetime = metadata["research_dataset"]["provenance"][0]\
+        ["temporal"][0]["start_date"]
+    event_detail = metadata["research_dataset"]["provenance"][0]\
+        ["description"]["en"]
+
+    premis_event.main([
+        event_type, event_datetime,
+        "--event_detail", event_detail,
+        "--workspace", workspace
+    ])
+
 
 
 
