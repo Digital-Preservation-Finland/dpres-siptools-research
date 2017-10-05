@@ -3,14 +3,21 @@
 import os
 import pymongo
 import httpretty
-from lxml import etree
+import lxml
 from siptools_research.workflow_b import create_digiprov
 
 DATASET_PATH = "tests/data/metax_datasets/"
 SAMPLE_CREATION_EVENT_PATH = "tests/data/sample_creation_event.xml"
 
 def test_createprovenanceinformation(testpath, testmongoclient):
-    """Test `CreateProvenanceInformation` task.
+    """Tests for `CreateProvenanceInformation` task.
+
+    - `Task.complete()` is true after `Task.run()`
+    - XML file created
+    - Task output file is created
+    - Log file is created
+    - Log entry is created to mongodb
+
 
     :testpath: Testpath fixture
     :testmongoclient: Pymongo mock fixture
@@ -61,17 +68,20 @@ def test_createprovenanceinformation(testpath, testmongoclient):
         pass
     assert task.complete()
 
-    # Check that XML is created
+    # Disable fake http-server
+    httpretty.disable()
+
+    # Check that XML is created in workspace/sip-inprogrss/
     assert os.path.isfile(os.path.join(workspace,
                                        'sip-in-progress',
                                        'creation-event.xml'))
 
-    # Check that task output file is created
+    # Check that task output file is created in workspace/task-output-files/
     assert os.path.isfile(os.path.join(workspace,
                                        'task-output-files',
                                        'create-provenance-information'))
 
-    # Check that log is created
+    # Check that log is created in workspace/logs/
     with open(os.path.join(workspace,
                            'logs',
                            'task-create-provenance-information.log'))\
@@ -90,9 +100,6 @@ def test_createprovenanceinformation(testpath, testmongoclient):
     assert doc['wf_tasks']['create-provenance-information']['result']\
         == 'success'
     assert mongoclient['siptools-research'].workflow.count() == 1
-
-    # Disable fake http-server
-    httpretty.disable()
 
 
 def test_failed_createprovenanceinformation(testpath, testmongoclient):
@@ -144,7 +151,8 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
 
 
 def test_create_premis_event(testpath):
-    """Test create_premis_event function
+    """Test `create_premis_event` function. Output XML file should be produced
+    and it should contain some specified elements.
 
     :testpath: Testpath fixture
     :returns: None
@@ -173,7 +181,7 @@ def test_create_premis_event(testpath):
     httpretty.disable()
 
     # Check that the created xml-file contains correct elements.
-    tree = etree.parse(os.path.join(testpath, 'creation-event.xml'))
+    tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
                           namespaces={'mets': "http://www.loc.gov/METS/",
