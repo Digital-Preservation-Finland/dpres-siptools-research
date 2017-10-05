@@ -4,7 +4,7 @@ import os
 def scripts_list():
     """Return list of command line tools from package pas.scripts"""
     scripts = []
-    for modulename in os.listdir('siptools_research/scripts'):
+    for modulename in os.listdir('siptools_research/utils/scripts'):
         if modulename == '__init__.py':
             continue
         if not modulename.endswith('.py'):
