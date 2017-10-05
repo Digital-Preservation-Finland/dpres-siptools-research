@@ -14,6 +14,10 @@ Install required packages for testing::
 
    pip install -r requirements_dev.txt
 
+Start mongodb::
+
+   mongod --dbpath /path/to/data
+
 Run tests::
 
    make test
