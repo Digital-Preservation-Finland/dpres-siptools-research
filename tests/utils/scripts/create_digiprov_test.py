@@ -1,4 +1,4 @@
-"""Tests for create_digiprov script"""
+"""Tests `siptools_research.utils.scripts.create_digiprov` module"""
 import os
 import httpretty
 from lxml import etree

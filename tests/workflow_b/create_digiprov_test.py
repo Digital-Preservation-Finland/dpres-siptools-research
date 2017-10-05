@@ -1,4 +1,4 @@
-"""Test the `siptools_research.create_sip.create_digiprov` module"""
+"""Test the `siptools_research.workflow_b.create_digiprov` module"""
 
 import os
 import pymongo

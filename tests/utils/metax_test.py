@@ -1,4 +1,4 @@
-"""Tests for Metax-class"""
+"""Tests for `siptools_research.utils.metax` module"""
 import os
 import httpretty
 from siptools_research.utils.metax import Metax

@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Test the `siptools_research.create_sip.create_dmdsec` module"""
+"""Tests for `siptools_research.workflow_b.create_dmdsec` module"""
 
 import os
 import shutil

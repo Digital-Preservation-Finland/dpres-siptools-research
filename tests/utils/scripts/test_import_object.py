@@ -1,3 +1,4 @@
+"""Tests for `siptools_research.utils.scripts.import_objects` module"""
 from tempfile import NamedTemporaryFile
 import lxml.etree as ET
 from siptools_research.utils.scripts import import_objects

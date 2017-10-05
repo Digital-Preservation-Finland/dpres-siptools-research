@@ -1,4 +1,4 @@
-"""Test the `siptools_research.transfer.transfer` module"""
+"""Test the `siptools_research.workflow_0.transfer` module"""
 
 import os
 import time
