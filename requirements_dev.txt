@@ -13,3 +13,4 @@ M2Crypto
 python-magic
 httpretty
 coreapi
+mongomock
