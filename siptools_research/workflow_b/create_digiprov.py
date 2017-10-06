@@ -57,10 +57,12 @@ class CreateProvenanceInformation(WorkflowTask):
         mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
 
         try:
+            # Should the dataset_id be a luigi Parameter?
             with open(os.path.join(self.workspace,
                                    'transfers',
                                    'aineisto')) as infile:
                 dataset_id = infile.read()
+            # Why TaskLogTarget is not used?
             digiprov_log = os.path.join(self.workspace, 'logs',
                                         ('task-create-provenance-'
                                          'information.log'))
