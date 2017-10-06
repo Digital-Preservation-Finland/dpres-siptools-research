@@ -11,8 +11,6 @@ def scripts_list():
             continue
         modulename = modulename.replace('.py','')
         scriptname = modulename.replace('_','-')
-        scripts.append('%s = ipt.scripts.%s:main' % (scriptname, modulename))
-        #scripts.append('%s = siptools_research.scripts.%s:main' % (scriptname, modulename))
     print scripts
     return scripts
 

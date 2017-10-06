@@ -1,16 +1,13 @@
 pytest
 coverage
 pytest-cov
-git+https://github.com/Digital-Preservation-Finland/dpres-ipt.git#egg=ipt
+git+https://source.csc.fi/scm/git/pas/dpres-ipt
 git+https://source.csc.fi/scm/git/pas/dpres-siptools@TPASPKT-6#egg=siptools
-git+https://source.csc.fi/scm/git/pas/dpres-signature@develop#egg=dpres_signature
 lxml
 wand
 scandir
 luigi
 pymongo
-M2Crypto
-python-magic
 httpretty
 coreapi
 mongomock
