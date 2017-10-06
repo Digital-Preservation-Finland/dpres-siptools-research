@@ -143,7 +143,7 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
         {'_id':'workspace'}
     )
     assert doc['_id'] == 'workspace'
-    assert 'IOError: [Errno 2] No such file or directory: ' in\
+    assert 'No such file or directory' in\
         doc['wf_tasks']['create-provenance-information']['messages']
     assert doc['wf_tasks']['create-provenance-information']['result']\
         == 'failure'

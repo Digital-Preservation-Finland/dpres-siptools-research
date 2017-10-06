@@ -80,22 +80,17 @@ class CreateProvenanceInformation(WorkflowTask):
                 'result': 'success',
                 'messages': "Provenance metadata created."
             }
-            mongo_task.write(task_result)
 
             # task output
             touch_file(TaskFileTarget(self.workspace,
                                       'create-provenance-information'))
 
-        except Exception as ex:
+        except IOError as exc:
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),
                 'result': 'failure',
-                'messages': traceback.format_exc()
+                'messages': exc.strerror
             }
-            mongo_status.write('rejected')
-            mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
-            mongo_task.write(task_result)
-
             failed_log = FailureLog(self.workspace).output()
             with failed_log.open('w') as outfile:
                 outfile.write('Task create-digiprov failed.')
@@ -104,7 +99,17 @@ class CreateProvenanceInformation(WorkflowTask):
                 workspace=self.workspace,
                 home_path=self.home_path)
 
-            # TODO: task output missing? luigi thinks this task has failed
+        finally:
+            if not 'task_result' in locals():
+                task_result = {
+                    'timestamp': datetime.datetime.utcnow().isoformat(),
+                    'result': 'failure',
+                    'messages': traceback.format_exc()
+                }
+            mongo_status.write('rejected')
+            mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
+            mongo_task.write(task_result)
+
 
 
 def create_premis_event(dataset_id, workspace):
