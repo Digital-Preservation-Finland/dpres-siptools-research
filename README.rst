@@ -30,6 +30,26 @@ Run some workflow::
 
    luigi --module siptools_research.workflow_b.init_workflow ProcessMetadata --scheduler-host=localhost  --workspace-root /var/spool/siptools-research --home-path /home
 
+Testing in virtualenv
+^^^^^^^^^^^^^^^^^^^^^
+Install some packages dependecies (Centos 7)::
+
+   yum install libxslt-devel libxml2-devel openssl-devel
+
+Create and activate virtualenv::
+
+   virtualenv venv
+   source venv/bin/activate
+
+Luigi will not install with old versions of pip, so upgrade pip::
+
+   pip install --upgrade pip
+
+Run pytest::
+
+   python -m pytest -v tests
+
+
 Building
 --------
 Build RPM::
