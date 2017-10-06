@@ -11,3 +11,4 @@ pymongo
 httpretty
 coreapi
 mongomock
+mimeparse
