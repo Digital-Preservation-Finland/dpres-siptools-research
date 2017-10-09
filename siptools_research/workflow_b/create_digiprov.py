@@ -3,7 +3,6 @@ CreateDescriptiveMetadata."""
 
 import os
 import sys
-import traceback
 import datetime
 
 from luigi import Parameter
@@ -56,62 +55,60 @@ class CreateProvenanceInformation(WorkflowTask):
         mongo_status = MongoDBTarget(document_id, 'status')
         mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
 
+        # Should the dataset_id be a luigi Parameter?
+        with open(os.path.join(self.workspace,
+                               'transfers',
+                               'aineisto')) as infile:
+            dataset_id = infile.read()
+        # Why TaskLogTarget is not used?
+        digiprov_log = os.path.join(self.workspace, 'logs',
+                                    ('task-create-provenance-'
+                                     'information.log'))
+
+        # TODO: There must a better way to write stdout to "digiprov_log"
+        save_stdout = sys.stdout
+        log = open(digiprov_log, 'w')
+        sys.stdout = log
+
         try:
-            # Should the dataset_id be a luigi Parameter?
-            with open(os.path.join(self.workspace,
-                                   'transfers',
-                                   'aineisto')) as infile:
-                dataset_id = infile.read()
-            # Why TaskLogTarget is not used?
-            digiprov_log = os.path.join(self.workspace, 'logs',
-                                        ('task-create-provenance-'
-                                         'information.log'))
-
-            # TODO: There must a better way to write stdout to "digiprov_log"
-            save_stdout = sys.stdout
-            log = open(digiprov_log, 'w')
-            sys.stdout = log
-
             create_premis_event(dataset_id, sip_creation_path)
-
-            sys.stdout = save_stdout
-            log.close()
-
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),
                 'result': 'success',
                 'messages': "Provenance metadata created."
             }
-
             # task output
             touch_file(TaskFileTarget(self.workspace,
                                       'create-provenance-information'))
-
-        except IOError as exc:
+        except KeyError as exc:
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),
                 'result': 'failure',
-                'messages': exc.strerror
+                'messages': 'Could not create procenance metada, '\
+                            'element "%s" not found from metadata.'\
+                            % exc.message
             }
             failed_log = FailureLog(self.workspace).output()
             with failed_log.open('w') as outfile:
                 outfile.write('Task create-digiprov failed.')
 
+            mongo_status.write('rejected')
             yield MoveSipToUser(
                 workspace=self.workspace,
-                home_path=self.home_path)
-
+                home_path=self.home_path
+            )
         finally:
             if not 'task_result' in locals():
                 task_result = {
                     'timestamp': datetime.datetime.utcnow().isoformat(),
-                    'result': 'failure',
-                    'messages': traceback.format_exc()
+                    'result': 'success',
+                    'messages': "Creation of provenance metadata failed due "\
+                                " to unknown error."
                 }
-            mongo_status.write('rejected')
+            sys.stdout = save_stdout
+            log.close()
             mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
             mongo_task.write(task_result)
-
 
 
 def create_premis_event(dataset_id, workspace):

@@ -114,10 +114,19 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
 
     # Create empty workspace
     workspace = os.path.join(testpath, 'workspace')
+    os.makedirs(os.path.join(workspace, 'transfers'))
+    os.makedirs(os.path.join(workspace, 'logs'))
+
+    # Create file in workspace directory
+    testfilename = "aineisto"
+    testfilepath = os.path.join(workspace, 'transfers', testfilename)
+    with open(testfilepath, 'w') as testfile:
+        testfile.write('1')
+    assert os.path.isfile(testfilepath)
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(home_path=testpath,
-                                       workspace=workspace)
+                                                       workspace=workspace)
 
     # Run task. Task returns generator, so it must be iterated to really run
     # the code
@@ -133,8 +142,11 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
         assert open_file.read() == "Task create-digiprov failed."
 
     # There should not be anything else in the workspace
-    assert os.listdir(workspace) == ['logs']
-    assert os.listdir(os.path.join(workspace, 'logs')) == ['task-failure.log']
+    assert os.listdir(workspace) == ['transfers', 'logs']
+    assert os.listdir(os.path.join(workspace, 'logs')) == [
+        'task-create-provenance-information.log',
+        'task-failure.log'
+    ]
 
     # Check that new log entry is found in mongodb, and that there is no extra
     # entries
@@ -143,7 +155,8 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
         {'_id':'workspace'}
     )
     assert doc['_id'] == 'workspace'
-    assert 'No such file or directory' in\
+    assert 'Could not create procenance metada, element "provenance" not '\
+            'found from metadata.' in\
         doc['wf_tasks']['create-provenance-information']['messages']
     assert doc['wf_tasks']['create-provenance-information']['result']\
         == 'failure'
