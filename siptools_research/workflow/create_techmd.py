@@ -14,7 +14,7 @@ from siptools_research.utils.utils import touch_file
 
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
 
-from siptools_research.workflow_b.create_dmdsec import ReadyForThis
+from siptools_research.workflow.create_dmdsec import ReadyForThis
 
 from siptools_research.utils.scripts.import_objects import main
 

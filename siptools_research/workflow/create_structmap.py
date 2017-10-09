@@ -16,9 +16,9 @@ from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.workflow_c.create_dmdsec import DmdsecComplete
-from siptools_research.workflow_c.create_digiprov import DigiprovComplete
-from siptools_research.workflow_c.create_techmd import TechMDComplete
+from siptools_research.workflow.create_dmdsec import DmdsecComplete
+from siptools_research.workflow.create_digiprov import DigiprovComplete
+from siptools_research.workflow.create_techmd import TechMDComplete
 
 
 

@@ -14,7 +14,7 @@ from siptools_research.utils.metax import Metax
 
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
 
-from siptools_research.workflow_b.create_dmdsec \
+from siptools_research.workflow.create_dmdsec \
     import CreateDescriptiveMetadata
 
 from siptools.scripts import premis_event

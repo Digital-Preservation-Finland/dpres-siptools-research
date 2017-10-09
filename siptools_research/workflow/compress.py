@@ -13,7 +13,7 @@ from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.workflow_c.sign import SignSIP
+from siptools_research.workflow.sign import SignSIP
 
 from siptools.scripts.compress import main
 

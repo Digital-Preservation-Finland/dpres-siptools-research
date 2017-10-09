@@ -15,7 +15,7 @@ from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.workflow_c.poll_reports import PollValidationReports
+from siptools_research.workflow.poll_reports import PollValidationReports
 
 
 class SetSIPStatus(WorkflowTask):

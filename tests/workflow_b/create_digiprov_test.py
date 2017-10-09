@@ -1,10 +1,10 @@
-"""Test the `siptools_research.workflow_b.create_digiprov` module"""
+"""Test the `siptools_research.workflow.create_digiprov` module"""
 
 import os
 import pymongo
 import httpretty
 import lxml
-from siptools_research.workflow_b import create_digiprov
+from siptools_research.workflow import create_digiprov
 
 DATASET_PATH = "tests/data/metax_datasets/"
 SAMPLE_CREATION_EVENT_PATH = "tests/data/sample_creation_event.xml"

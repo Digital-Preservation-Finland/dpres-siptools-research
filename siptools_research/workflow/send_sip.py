@@ -14,7 +14,7 @@ from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
 
-from siptools_research.workflow_c.compress import CompressSIP
+from siptools_research.workflow.compress import CompressSIP
 
 
 class SendSIPToDP(WorkflowTask):

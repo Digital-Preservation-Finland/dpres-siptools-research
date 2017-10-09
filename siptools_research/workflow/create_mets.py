@@ -16,7 +16,7 @@ from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.workflow_c.create_structmap import CreateStructMap
+from siptools_research.workflow.create_structmap import CreateStructMap
 
 from siptools.scripts.compile_mets import main
 

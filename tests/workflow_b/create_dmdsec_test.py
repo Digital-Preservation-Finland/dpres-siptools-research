@@ -1,10 +1,10 @@
 # coding=utf-8
-"""Tests for `siptools_research.workflow_b.create_dmdsec` module"""
+"""Tests for `siptools_research.workflow.create_dmdsec` module"""
 
 import os
 import shutil
 from lxml import etree
-from siptools_research.workflow_b.create_dmdsec\
+from siptools_research.workflow.create_dmdsec\
     import CreateDescriptiveMetadata
 DATASET_PATH = "tests/data/metax_datasets/"
 

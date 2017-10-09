@@ -13,7 +13,7 @@ from siptools_research.luigi.target import MongoDBTarget
 
 from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.workflow_c.set_status import SetSIPStatus
+from siptools_research.workflow.set_status import SetSIPStatus
 
 
 class CleanupWorkspace(WorkflowTask):

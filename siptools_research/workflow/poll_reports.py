@@ -15,7 +15,7 @@ from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.workflow_c.send_sip import SendSIPComplete
+from siptools_research.workflow.send_sip import SendSIPComplete
 
 
 class PollValidationReports(WorkflowTask):
