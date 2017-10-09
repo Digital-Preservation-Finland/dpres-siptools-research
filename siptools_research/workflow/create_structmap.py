@@ -16,9 +16,10 @@ from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.workflow.create_dmdsec import DmdsecComplete
-from siptools_research.workflow.create_digiprov import DigiprovComplete
-from siptools_research.workflow.create_techmd import TechMDComplete
+from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
+from siptools_research.workflow.create_digiprov\
+    import CreateProvenanceInformation
+from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 
 
 
@@ -34,11 +35,11 @@ class CreateStructMap(WorkflowTask):
         event files and PREMIS agent files
         """
         return {"Create descriptive metadata completed":
-                DmdsecComplete(workspace=self.workspace),
+                CreateDescriptiveMetadata(workspace=self.workspace),
                 "Create provenance information completed":
-                DigiprovComplete(workspace=self.workspace),
+                CreateProvenanceInformation(workspace=self.workspace),
                 "Create technical metadata completed":
-                TechMDComplete(workspace=self.workspace)}
+                CreateTechnicalMetadata(workspace=self.workspace)}
 
     def output(self):
         """Outputs a task file"""

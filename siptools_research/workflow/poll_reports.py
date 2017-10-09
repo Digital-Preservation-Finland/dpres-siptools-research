@@ -15,7 +15,7 @@ from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.workflow.send_sip import SendSIPComplete
+from siptools_research.workflow.send_sip import SendSIPToDP
 
 
 class PollValidationReports(WorkflowTask):
@@ -31,7 +31,7 @@ class PollValidationReports(WorkflowTask):
         """Requires completed transfer of SIP to DP service.
         """
         return {
-            "SIP sent to DP service": SendSIPComplete(
+            "SIP sent to DP service": SendSIPToDP(
                 workspace=self.workspace)}
 
     def output(self):
