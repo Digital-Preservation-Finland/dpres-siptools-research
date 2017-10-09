@@ -142,11 +142,11 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
         assert open_file.read() == "Task create-digiprov failed."
 
     # There should not be anything else in the workspace
-    assert os.listdir(workspace) == ['transfers', 'logs']
-    assert os.listdir(os.path.join(workspace, 'logs')) == [
+    assert set(os.listdir(workspace)) == {'transfers', 'logs'}
+    assert set(os.listdir(os.path.join(workspace, 'logs'))) == {
         'task-create-provenance-information.log',
         'task-failure.log'
-    ]
+    }
 
     # Check that new log entry is found in mongodb, and that there is no extra
     # entries
