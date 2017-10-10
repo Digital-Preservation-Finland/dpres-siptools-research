@@ -9,6 +9,7 @@ import mongomock
 import pymongo
 import shutil
 import httpretty
+import posixpath
 
 import pytest
 
@@ -20,7 +21,8 @@ import siptools_research.utils.shell
 
 
 LOGGER = logging.getLogger('tests.conftest')
-DATASET_PATH = "tests/data/metax_datasets/"
+METAX_PATH = "tests/data/metax/"
+METAX_URL = "https://metax-test.csc.fi/rest/v1/"
 
 
 # Prefer modules from source directory rather than from site-python
@@ -31,20 +33,35 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 
 @pytest.fixture(scope="function")
 def testmetax(request):
-    """Use fake http-server and local sample JSON-file instead of real
+    """Use fake http-server and local sample JSON files instead of real
     Metax-API.
-    """
-    httpretty.enable()
-    data_file_name = "provenance_data.json"
-    with open(os.path.join(DATASET_PATH, data_file_name)) as data_file:
-        data = data_file.read()
 
-    httpretty.register_uri(httpretty.GET,
-                           "https://metax-test.csc.fi/rest/v1/datasets/1",
-                           body=data,
-                           status=200,
-                           content_type='application/json'
-                          )
+    Files are searched from subdirectories of ``METAX_PATH``. When
+    https://metax-test.csc.fi/rest/v1/``subdir``/``filename`` is requested
+    using HTTP GET method, a HTTP response with contents of file:
+    ``METAX_PATH/subdir/filename`` as message body is retrieved. The status of
+    message is always *HTTP/1.1 200 OK* and the Content-Type is
+    *application/json*. To add new test responses just add new JSON file to
+    some subdirectory of ``METAX_PATH``.
+    """
+
+    httpretty.enable()
+
+    # Register all files in subdirectories of ``METAX_PATH`` to httpretty.
+    for subdir in os.listdir(METAX_PATH):
+        for jsonfile in os.listdir(os.path.join(METAX_PATH, subdir)):
+            with open(os.path.join(METAX_PATH, subdir, jsonfile)) as open_file:
+                body = open_file.read()
+                httpretty.register_uri(
+                    httpretty.GET,
+                    # Join url using posixpath because urlparse.urljoin does
+                    # not work with multiple arguments (and os.path.join would
+                    # not work on windows, for example)
+                    posixpath.join(METAX_URL, subdir, jsonfile),
+                    body=body,
+                    status=200,
+                    content_type='application/json'
+                )
 
     def fin():
         """Disable fake http-server"""
@@ -266,7 +283,7 @@ def scheduler():
 
 @pytest.fixture(scope='function')
 def popen_fx(monkeypatch):
-    """Monkeypatch the `subprocess.Popen()` class.
+    """Monkeypatch the ``subprocess.Popen()`` class.
 
     Example usage::
 
