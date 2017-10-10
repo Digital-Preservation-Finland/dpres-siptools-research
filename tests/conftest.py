@@ -8,6 +8,7 @@ import subprocess
 import mongomock
 import pymongo
 import shutil
+import httpretty
 
 import pytest
 
@@ -19,6 +20,7 @@ import siptools_research.utils.shell
 
 
 LOGGER = logging.getLogger('tests.conftest')
+DATASET_PATH = "tests/data/metax_datasets/"
 
 
 # Prefer modules from source directory rather than from site-python
@@ -26,6 +28,29 @@ PROJECT_ROOT_PATH = os.path.abspath(
             os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, PROJECT_ROOT_PATH)
 
+
+@pytest.fixture(scope="function")
+def testmetax(request):
+    """Use fake http-server and local sample JSON-file instead of real
+    Metax-API.
+    """
+    httpretty.enable()
+    data_file_name = "provenance_data.json"
+    with open(os.path.join(DATASET_PATH, data_file_name)) as data_file:
+        data = data_file.read()
+
+    httpretty.register_uri(httpretty.GET,
+                           "https://metax-test.csc.fi/rest/v1/datasets/1",
+                           body=data,
+                           status=200,
+                           content_type='application/json'
+                          )
+
+    def fin():
+        """Disable fake http-server"""
+        httpretty.disable()
+
+    request.addfinalizer(fin)
 
 
 @pytest.fixture(scope="function")
@@ -40,6 +65,7 @@ def testmongoclient(monkeypatch):
         """Returns already initialized mongomock.MongoClient"""
         return mongoclient
     monkeypatch.setattr(pymongo, 'MongoClient', mock_mongoclient)
+
 
 @pytest.fixture(scope="function")
 def testpath(request):

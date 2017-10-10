@@ -2,14 +2,14 @@
 
 import os
 import pymongo
-import httpretty
 import lxml
 from siptools_research.workflow import create_digiprov
 
 DATASET_PATH = "tests/data/metax_datasets/"
 SAMPLE_CREATION_EVENT_PATH = "tests/data/sample_creation_event.xml"
 
-def test_createprovenanceinformation(testpath, testmongoclient):
+# pylint: disable=unused-argument,invalid-name,fixme
+def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     """Tests for `CreateProvenanceInformation` task.
 
     - `Task.complete()` is true after `Task.run()`
@@ -21,24 +21,9 @@ def test_createprovenanceinformation(testpath, testmongoclient):
 
     :testpath: Testpath fixture
     :testmongoclient: Pymongo mock fixture
+    :testmetax: Fake metax fixture
     :returns: None
     """
-
-    # Use fake http-server and local sample JSON-file instead real Metax-API.
-    # @httpretty.activate decorator is not used because it does not work with
-    # fixture
-    httpretty.enable()
-    data_file_name = "provenance_data.json"
-    with open(os.path.join(DATASET_PATH, data_file_name)) as data_file:
-        data = data_file.read()
-
-    httpretty.register_uri(httpretty.GET,
-                           "https://metax-test.csc.fi/rest/v1/datasets/1",
-                           body=data,
-                           status=200,
-                           content_type='application/json'
-                          )
-
 
     # Create workspace with "logs" and "transfers" directories in temporary
     # directory
@@ -67,9 +52,6 @@ def test_createprovenanceinformation(testpath, testmongoclient):
     for task in returned_tasks:
         pass
     assert task.complete()
-
-    # Disable fake http-server
-    httpretty.disable()
 
     # Check that XML is created in workspace/sip-inprogrss/
     assert os.path.isfile(os.path.join(workspace,
@@ -163,35 +145,18 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
     assert mongoclient['siptools-research'].workflow.count() == 1
 
 
-def test_create_premis_event(testpath):
+def test_create_premis_event(testpath, testmetax):
     """Test `create_premis_event` function. Output XML file should be produced
     and it should contain some specified elements.
 
     :testpath: Testpath fixture
+    :testmetax: Fake metax fixture
     :returns: None
     """
-
-    # Use fake http-server and local sample JSON-file instead real Metax-API.
-    # @httpretty.activate decorator is not used because it does not work with
-    # fixture
-    httpretty.enable()
-    data_file_name = "provenance_data.json"
-    with open(os.path.join(DATASET_PATH, data_file_name)) as data_file:
-        data = data_file.read()
-
-    httpretty.register_uri(httpretty.GET,
-                           "https://metax-test.csc.fi/rest/v1/datasets/1",
-                           body=data,
-                           status=200,
-                           content_type='application/json'
-                          )
 
     # Create provenance info xml-file to tempdir
     workspace = testpath
     create_digiprov.create_premis_event('1', workspace)
-
-    # Disable fake http-server
-    httpretty.disable()
 
     # Check that the created xml-file contains correct elements.
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))
