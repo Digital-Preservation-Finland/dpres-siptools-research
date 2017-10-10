@@ -5,18 +5,17 @@ import sys
 import logging
 import tempfile
 import subprocess
+import shutil
+import posixpath
+from uuid import uuid4
 import mongomock
 import pymongo
-import shutil
 import httpretty
-import posixpath
-
 import pytest
 
 from luigi.scheduler import Scheduler
 from luigi.rpc import RemoteScheduler
 
-from uuid import uuid4
 import siptools_research.utils.shell
 
 
@@ -27,7 +26,8 @@ METAX_URL = "https://metax-test.csc.fi/rest/v1/"
 
 # Prefer modules from source directory rather than from site-python
 PROJECT_ROOT_PATH = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..'))
+    os.path.join(os.path.dirname(__file__), '..')
+)
 sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
@@ -78,6 +78,7 @@ def testmongoclient(monkeypatch):
     mongomoc.MongoClient is used instead.
     """
     mongoclient = mongomock.MongoClient()
+    # pylint: disable=unused-argument
     def mock_mongoclient(*args):
         """Returns already initialized mongomock.MongoClient"""
         return mongoclient
@@ -152,7 +153,7 @@ def packagefile(request):
             temp_path,
             '%s-%s.%s' % (sip_name, unique, packagetype))
 
-        proc = siptools_research.shell.Shell(
+        proc = siptools_research.utils.shell.Shell(
             [command, param, os.path.join(temp_path, package_filename),
              sip_name], cwd=os.path.dirname(sip_path))
         proc.check_call()
@@ -209,7 +210,7 @@ def tarfile(request):
     request.addfinalizer(fin)
 
     def make_tarfile(tar_path='tests/data/transfer/transfer.tar.gz',
-                         packagetype='tar.gz'):
+                     packagetype='tar.gz'):
         """Returns created archive"""
 
         tar_path = os.path.abspath(tar_path)
