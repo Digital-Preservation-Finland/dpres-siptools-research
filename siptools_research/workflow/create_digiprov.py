@@ -63,53 +63,53 @@ class CreateProvenanceInformation(WorkflowTask):
                                'transfers',
                                'aineisto')) as infile:
             dataset_id = infile.read()
+
         digiprov_log = TaskLogTarget(self.workspace,
                                      'create-provenance-information')
 
         # TODO: There must a better way to write stdout to "digiprov_log"
         save_stdout = sys.stdout
-        log = digiprov_log.open('w')
-        sys.stdout = log
+        with digiprov_log.open('w') as log:
+            sys.stdout = log
 
-        try:
-            create_premis_event(dataset_id, sip_creation_path)
+            try:
+                create_premis_event(dataset_id, sip_creation_path)
 
-            task_result = 'success'
-            task_messages = "Provenance metadata created."
+                task_result = 'success'
+                task_messages = "Provenance metadata created."
 
-            # task output
-            touch_file(TaskFileTarget(self.workspace,
-                                      'create-provenance-information'))
-        except KeyError as exc:
-            task_result = 'failure'
-            task_messages = 'Could not create procenance metada, element '\
-                            '"%s" not found from metadata.' % exc.message
-
-            failed_log = FailureLog(self.workspace).output()
-            with failed_log.open('w') as outfile:
-                outfile.write('Task create-digiprov failed.')
-
-            mongo_status.write('rejected')
-
-            yield MoveSipToUser(
-                workspace=self.workspace,
-                home_path=self.home_path
-            )
-        finally:
-            sys.stdout = save_stdout
-            log.close()
-            if not task_result:
+                # task output
+                touch_file(TaskFileTarget(self.workspace,
+                                          'create-provenance-information'))
+            except KeyError as exc:
                 task_result = 'failure'
-                task_messages = "Creation of provenance metadata failed due "\
-                                "to unknown error."
-            mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
-            mongo_task.write(
-                {
-                    'timestamp': datetime.datetime.utcnow().isoformat(),
-                    'result': task_result,
-                    'messages': task_messages
-                }
-            )
+                task_messages = 'Could not create procenance metada, element '\
+                                '"%s" not found from metadata.' % exc.message
+
+                failed_log = FailureLog(self.workspace).output()
+                with failed_log.open('w') as outfile:
+                    outfile.write('Task create-digiprov failed.')
+
+                mongo_status.write('rejected')
+
+                yield MoveSipToUser(
+                    workspace=self.workspace,
+                    home_path=self.home_path
+                )
+            finally:
+                sys.stdout = save_stdout
+                if not task_result:
+                    task_result = 'failure'
+                    task_messages = "Creation of provenance metadata failed due "\
+                                    "to unknown error."
+                mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
+                mongo_task.write(
+                    {
+                        'timestamp': datetime.datetime.utcnow().isoformat(),
+                        'result': task_result,
+                        'messages': task_messages
+                    }
+                )
 
 
 def create_premis_event(dataset_id, workspace):
