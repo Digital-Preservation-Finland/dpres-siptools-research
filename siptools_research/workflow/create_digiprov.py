@@ -13,7 +13,7 @@ from siptools_research.utils.utils import touch_file
 from siptools_research.utils.metax import Metax
 
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
-
+from siptools_research.luigi.target import TaskLogTarget
 from siptools_research.workflow.create_dmdsec \
     import CreateDescriptiveMetadata
 
@@ -39,6 +39,7 @@ class CreateProvenanceInformation(WorkflowTask):
 
     def output(self):
         """Outputs task file"""
+        # Also MongoDBTarget should be returned
         return TaskFileTarget(self.workspace, 'create-provenance-information')
 
     def run(self):
@@ -62,14 +63,12 @@ class CreateProvenanceInformation(WorkflowTask):
                                'transfers',
                                'aineisto')) as infile:
             dataset_id = infile.read()
-        # Why TaskLogTarget is not used?
-        digiprov_log = os.path.join(self.workspace, 'logs',
-                                    ('task-create-provenance-'
-                                     'information.log'))
+        digiprov_log = TaskLogTarget(self.workspace,
+                                     'create-provenance-information')
 
         # TODO: There must a better way to write stdout to "digiprov_log"
         save_stdout = sys.stdout
-        log = open(digiprov_log, 'w')
+        log = digiprov_log.open('w')
         sys.stdout = log
 
         try:
