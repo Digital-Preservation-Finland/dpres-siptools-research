@@ -2,22 +2,18 @@
 CreateDescriptiveMetadata."""
 
 import os
-import datetime
-
+from datetime import datetime
 from luigi import Parameter
-
-from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
-from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
+from siptools.scripts import premis_event
 from siptools_research.utils.utils import touch_file
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
-
+from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, \
+    TaskLogTarget
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
-from siptools_research.luigi.target import TaskLogTarget
+from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
 from siptools_research.workflow.create_dmdsec \
     import CreateDescriptiveMetadata
-
-from siptools.scripts import premis_event
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -45,10 +41,7 @@ class CreateProvenanceInformation(WorkflowTask):
     def run(self):
         """Gets file metadata from Metax.
         :returns: None
-
         """
-
-
         sip_creation_path = os.path.join(self.workspace, 'sip-in-progress')
         document_id = os.path.basename(self.workspace)
         mongo_task = MongoDBTarget(document_id,
@@ -82,8 +75,9 @@ class CreateProvenanceInformation(WorkflowTask):
                                               'create-provenance-information'))
                 except KeyError as exc:
                     task_result = 'failure'
-                    task_messages = 'Could not create procenance metada, element '\
-                                    '"%s" not found from metadata.' % exc.message
+                    task_messages = 'Could not create procenance metada, '\
+                                    'element "%s" not found from metadata.'\
+                                    % exc.message
 
                     failed_log = FailureLog(self.workspace).output()
                     with failed_log.open('w') as outfile:
@@ -98,12 +92,16 @@ class CreateProvenanceInformation(WorkflowTask):
                 finally:
                     if not task_result:
                         task_result = 'failure'
-                        task_messages = "Creation of provenance metadata failed due "\
-                                        "to unknown error."
-                    mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
+                        task_messages = "Creation of provenance metadata "\
+                                        "failed due to unknown error."
+
+                    mongo_timestamp.write(
+                        datetime.utcnow().isoformat()
+                    )
+
                     mongo_task.write(
                         {
-                            'timestamp': datetime.datetime.utcnow().isoformat(),
+                            'timestamp': datetime.utcnow().isoformat(),
                             'result': task_result,
                             'messages': task_messages
                         }
