@@ -18,7 +18,7 @@ from luigi.worker import Worker
 
 from tests.conftest import scheduler
 
-from siptools_research.workflow.utils import iter_transfers
+from siptools_research.luigi.utils import iter_transfers
 
 
 LOGGER = logging.getLogger('tests.assertions')
