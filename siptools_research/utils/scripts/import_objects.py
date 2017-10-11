@@ -26,7 +26,7 @@ def parse_arguments(arguments):
     """
     parser = argparse.ArgumentParser(description='Tool for '
                                      'creating premis events')
-    parser.add_argument("file_id", type=str, help="Metax id of file")
+    parser.add_argument("dataset_id", type=str, help="Metax id of dataset")
     parser.add_argument('--workspace', dest='workspace', type=str,
                         default='./workspace', help="Workspace directory")
 
@@ -47,16 +47,15 @@ def create_premis_object(digital_object, filepath, formatname, creation_date,
                         '--format_version', format_version])
 
 
-def main(arguments=None):
-    """The main method for argparser"""
-    args = parse_arguments(arguments)
+def create_objects(file_id=None, workspace=None):
+    """Gets file metadata from Metax and calls create_premis_object function"""
 
-    metadata = Metax().get_data('files', args.file_id)
+    metadata = Metax().get_data('files', file_id)
 
     filename = metadata["file_name"]
-    # Assume that files are found in 'files' directory in workspave
+    # Assume that files are found in 'files' directory in workspace
     filepath = os.path.join(
-        args.workspace, 'files', metadata["file_path"].strip('/')
+        workspace, 'files', metadata["file_path"].strip('/')
     )
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
@@ -85,7 +84,7 @@ def main(arguments=None):
     create_premis_object(filename, filepath, formatname,
                          creation_date, hashalgorithm,
                          hashvalue, formatversion,
-                         args.workspace)
+                         workspace)
 
     """
     if formatdesignation(filepath, datatype='mimemaintype') == 'image':
@@ -122,7 +121,7 @@ def main(arguments=None):
 
     create_premis_object(s2_name, package_path, s2_formatname,
                          s2_creation_date, 'MD5', s2_md5,
-                         s2_formatversion, args.workspace)
+                         s2_formatversion, workspace)
 
     """
 
@@ -234,6 +233,16 @@ def write_mix(img):
     create_mix = mix.serialize(mix_root)
 
     return create_mix
+
+
+def main(arguments=None):
+    """The main method for argparser"""
+    args = parse_arguments(arguments)
+
+    metax_dataset = Metax().get_data('datasets', args.dataset_id)
+    for i in metax_dataset["research_dataset"]["files"]:
+        file_id = i["identifier"]
+        create_objects(file_id, args.workspace)
 
 
 if __name__ == '__main__':
