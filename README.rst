@@ -28,7 +28,7 @@ Run one test::
 
 Run some workflow::
 
-   luigi --module siptools_research.workflow_b.init_workflow ProcessMetadata --scheduler-host=localhost  --workspace-root /var/spool/siptools-research --home-path /home
+   luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace-root /var/spool/siptools-research --dataset-id 1234
 
 Testing in virtualenv
 ^^^^^^^^^^^^^^^^^^^^^
