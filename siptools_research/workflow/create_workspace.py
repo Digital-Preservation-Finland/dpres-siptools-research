@@ -12,11 +12,6 @@ class CreateWorkspace(WorkflowTask):
     workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
 
-    def __init__(self, *args, **kwargs):
-        super(CreateWorkspace, self).__init__(*args, **kwargs)
-        self.task_name = self.__class__.__name__
-
-
     def output(self):
         """Outputs workflow_tasks.CreateWorkSpace.result:'success'"""
         return MongoTaskResultTarget(self.document_id, self.task_name)
