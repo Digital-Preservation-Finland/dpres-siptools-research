@@ -8,7 +8,7 @@ import os
 import uuid
 import argparse
 import luigi
-from siptools_research.workflow.create_workspace import CreateWorkspace
+from siptools_research.workflow.get_files import GetFiles
 from siptools_research.utils import database
 
 WORKSPACE_ROOT = '/var/spool/siptools-research'
@@ -29,8 +29,8 @@ class InitWorkflow(luigi.WrapperTask):
 
         # TODO: For testing purposes the task is NOT the last task, but the
         #       last IMPLEMENTED task
-        return CreateWorkspace(workspace=self.workspace,
-                               dataset_id=self.dataset_id)
+        return GetFiles(workspace=self.workspace,
+                        dataset_id=self.dataset_id)
 
 def main():
     """Parse command line arguments and start the workflow. Generates unique id
