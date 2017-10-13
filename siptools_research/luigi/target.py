@@ -52,6 +52,29 @@ class MongoDBTarget(MongoCellTarget):
                                  document_id, mongo_field)
 
 
+class MongoTaskResultTarget(MongoCellTarget):
+    """Target that exists when value of mongodb field:
+
+    db.``document_id``.wf_tasks.``mongo_field``.result
+
+    has value "success"
+    """
+
+    # TODO: This is ugly but it works. Should be refactored at some point...
+    def __init__(self, document_id, taskname):
+        (mongo_client, mongo_db, mongo_col) = mongo_settings()
+        MongoCellTarget.__init__(self,
+                                 mongo_client,
+                                 mongo_db,
+                                 mongo_col,
+                                 document_id,
+                                 "workflow_tasks.%s.result" % taskname)
+
+    def exists(self):
+        return self.read() == "success"
+
+
+
 class TaskLogTarget(LocalTarget):
 
     """Luigi target for generic log files"""

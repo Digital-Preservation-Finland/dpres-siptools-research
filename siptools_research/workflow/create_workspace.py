@@ -3,6 +3,8 @@
 import os
 import luigi
 from siptools_research.luigi.task import WorkflowTask
+from siptools_research.luigi.target import MongoTaskResultTarget
+from siptools_research.utils import database
 
 class CreateWorkspace(WorkflowTask):
     """Creates empty workspace directory."""
@@ -12,20 +14,21 @@ class CreateWorkspace(WorkflowTask):
 
     def __init__(self, *args, **kwargs):
         super(CreateWorkspace, self).__init__(*args, **kwargs)
-        self.transfers_path = os.path.join(self.workspace, 'transfers')
-        self.aineisto_path = os.path.join(self.transfers_path, 'aineisto')
+        self.task_name = self.__class__.__name__
+
 
     def output(self):
-        """Outputs task file"""
-        return luigi.LocalTarget(self.aineisto_path)
+        """Outputs workflow_tasks.CreateWorkSpace.result:'success'"""
+        return MongoTaskResultTarget(self.document_id, self.task_name)
 
     def run(self):
-        """Creates workspace directory and writes dataset id to
-        ``transfers/aineisto`` file.
+        """Creates workspace directory and adds event information to mongodb.
 
         :returns: None
         """
         os.mkdir(self.workspace)
-        os.mkdir(self.transfers_path)
-        with open(self.aineisto_path, 'w') as open_file:
-            open_file.write(self.dataset_id)
+
+        database.add_event(self.document_id,
+                           self.task_name,
+                           'success',
+                           'Workspace directory created')
