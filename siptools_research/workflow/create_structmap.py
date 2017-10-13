@@ -10,16 +10,15 @@ from luigi import Parameter
 
 from siptools.scripts import compile_structmap
 
-from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
+#from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
 from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask
 
-from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
-from siptools_research.workflow.create_digiprov\
-    import CreateProvenanceInformation
-from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
+from siptools_research.workflow.create_dmdsec import DmdsecComplete
+from siptools_research.workflow.create_digiprov import DigiprovComplete
+from siptools_research.workflow.create_techmd import TechMDComplete
 
 
 
@@ -27,25 +26,29 @@ class CreateStructMap(WorkflowTask):
     """Create METS fileSec and structMap files.
     """
     workspace = Parameter()
-    sip_creation_path = Parameter()
-    home_path = Parameter()
+   # sip_creation_path = Parameter()
+    directory = Parameter()
 
     def requires(self):
         """Requires dmdSec file, PREMIS object files, PREMIS
         event files and PREMIS agent files
         """
+        print "*** requires"
         return {"Create descriptive metadata completed":
-                CreateDescriptiveMetadata(workspace=self.workspace),
+                DmdsecComplete(workspace=self.workspace),
                 "Create provenance information completed":
-                CreateProvenanceInformation(workspace=self.workspace),
+                DigiprovComplete(workspace=self.workspace),
                 "Create technical metadata completed":
-                CreateTechnicalMetadata(workspace=self.workspace)}
+                TechMDComplete(workspace=self.workspace)}
 
     def output(self):
         """Outputs a task file"""
+        print "*** output"
         return TaskFileTarget(self.workspace, 'create-structmap')
 
     def run(self):
+        print "run biz logic"
+
         """Creates a METS structural map file based on a folder structure. Top folder is given as a parameter.
         If unsuccessful writes an error message into mongoDB, updates
         the status of the document and rejects the package. The rejected
@@ -61,24 +64,26 @@ class CreateStructMap(WorkflowTask):
                                     '-and-file-section'))
         mongo_status = MongoDBTarget(document_id, 'status')
         mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
-
         try:
             structmap_log = os.path.join(self.workspace, 'logs',
                                          'task-create-struct-map.log')
+            print "moimoimoi"
             save_stdout = sys.stdout
-            log = open(structmap_log, 'w')
-            sys.stdout = log
+            #log = open(structmap_log, 'w')
+            #sys.stdout = log
 
             # main([self.sip_creation_path, ead3_location, s2_name,
             #   '--workspace', self.sip_creation_path, '--clean'])
-
+            print "moi4"
+            workspace = self.workspace
+            directory = self.directory
+            print "*** directory:%s workspace:%s" % (directory,workspace)
             compile_structmap.main([
-                            '--dmdsec_loc', struct_folder,
                             '--workspace', workspace])
 
-
-            sys.stdout = save_stdout
-            log.close()
+            print "*** structmap "
+            #sys.stdout = save_stdout
+            #log.close()
 
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),
@@ -91,6 +96,7 @@ class CreateStructMap(WorkflowTask):
             touch_file(TaskFileTarget(self.workspace, 'create-structmap'))
 
         except Exception as ex:
+            print "Exception %s"%ex
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),
                 'result': 'failure',
@@ -100,10 +106,10 @@ class CreateStructMap(WorkflowTask):
             mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
             mongo_task.write(task_result)
 
-            failed_log = FailureLog(self.workspace).output()
-            with failed_log.open('w') as outfile:
-                outfile.write('Task create-structmap_filesec failed.')
+          #  failed_log = FailureLog(self.workspace).output()
+           # with failed_log.open('w') as outfile:
+            #    outfile.write('Task create-structmap_filesec failed.')
 
-            yield MoveSipToUser(
-                workspace=self.workspace,
-                home_path=self.home_path)
+            #yield MoveSipToUser(
+             #   workspace=self.workspace,
+              #  home_path=self.home_path)
