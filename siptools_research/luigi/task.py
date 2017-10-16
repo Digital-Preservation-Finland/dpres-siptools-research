@@ -1,5 +1,6 @@
 """Base task classes for the workflow tasks"""
 
+import os
 import luigi
 
 
@@ -36,6 +37,8 @@ class WorkflowTask(luigi.Task):
         # parameter
 
         super(WorkflowTask, self).__init__(*args, **kwargs)
+        self.document_id = os.path.basename(self.workspace)
+        self.task_name = self.__class__.__name__
 
 
 class WorkflowExternalTask(luigi.ExternalTask):

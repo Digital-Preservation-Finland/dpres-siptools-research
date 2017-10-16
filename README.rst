@@ -26,9 +26,13 @@ Run one test::
 
    py.test -v tests/utils/metax_test.py
 
-Run some workflow::
+Run workflow::
 
-   luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace-root /var/spool/siptools-research --dataset-id 1234
+   luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace /var/spool/siptools-research/testworkspace_abdc1234 --dataset-id 1234
+
+or::
+
+   python siptools_research/workflow/init_workflow.py 1234
 
 Testing in virtualenv
 ^^^^^^^^^^^^^^^^^^^^^
