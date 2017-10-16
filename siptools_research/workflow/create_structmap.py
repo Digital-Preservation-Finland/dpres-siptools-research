@@ -4,16 +4,17 @@
 import os
 import sys
 import traceback
-import datetime
 
+from datetime import datetime
 from luigi import Parameter
 
 from siptools.scripts import compile_structmap
 
-from siptools_research.workflow_x.move_sip import MoveSipToUser # FailureLog
-from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
-from siptools_research.utils.utils import  touch_file
+from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
+from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, TaskLogTarget
 
+from siptools_research.utils.utils import touch_file
+from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.luigi.task import WorkflowTask
 
 from siptools_research.workflow.create_dmdsec import DmdsecComplete
@@ -59,41 +60,56 @@ class CreateStructMap(WorkflowTask):
                                     '-and-file-section'))
         mongo_status = MongoDBTarget(document_id, 'status')
         mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
-        try:
-            structmap_log = os.path.join(self.workspace, 'logs',
-                                         'task-create-struct-map.log')
-            save_stdout = sys.stdout
-            log = open(structmap_log, 'w')
-            sys.stdout = log
+        task_result = None
 
-            workspace = self.workspace
-            compile_structmap.main([
+        structmap_log = TaskLogTarget(self.workspace,
+                                     'create-struct-map')
+        # Redirect stdout to logfile
+        with structmap_log.open('w') as log:
+            with redirect_stdout(log):
+
+                try:
+
+                    workspace = self.workspace
+                    compile_structmap.main([
                             '--workspace', workspace])
 
-            sys.stdout = save_stdout
-            log.close()
+                    task_result = 'success'
+                    task_messages = "Structrural map and filesec created."
 
-            task_result = {
-                'timestamp': datetime.datetime.utcnow().isoformat(),
-                'result': 'success',
-                'messages': "METS structural map and file section created."
-            }
-            mongo_task.write(task_result)
+                    mongo_task.write(task_result)
 
-            # task output
-            touch_file(TaskFileTarget(self.workspace, 'create-structmap'))
+                    # task output
+                    touch_file(TaskFileTarget(self.workspace, 'create-structmap'))
 
-        except Exception as ex:
-            task_result = {
-                'timestamp': datetime.datetime.utcnow().isoformat(),
-                'result': 'failure',
-                'messages': traceback.format_exc()
-            }
-            mongo_status.write('rejected')
-            mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
-            mongo_task.write(task_result)
+                except KeyError as ex:
+                   task_result = 'failure'
+                   task_messages = 'Could not create structrural map, '\
+                                    'element "%s" not found from metadata.'\
+                                    % exc.message
 
-          #  failed_log = FailureLog(self.workspace).output()
-           # with failed_log.open('w') as outfile:
-            #    outfile.write('Task create-structmap_filesec failed.')
+                   failed_log = FailureLog(self.workspace).output()
+                   with failed_log.open('w') as outfile:
+                       outfile.write('Task create-structmap failed.')
+
+                   mongo_status.write('rejected')
+
+
+                finally:
+                    if not task_result:
+                        task_result = 'failure'
+                        task_messages = "Creation of structmap and filesec "\
+                                        "failed due to unknown error."
+
+                    mongo_timestamp.write(
+                        datetime.utcnow().isoformat()
+                   )
+
+                    mongo_task.write(
+                    {
+                     'timestamp': datetime.utcnow().isoformat(),
+                     'result': task_result,
+                     'messages': task_messages
+                    }
+                    )
 
