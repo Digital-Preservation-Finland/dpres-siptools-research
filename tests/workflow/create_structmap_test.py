@@ -29,64 +29,48 @@ def test_create_structmap_ok(testpath):
     """Test the workflow task CreateStructMap module.
        fixture testpath
     """
-    testpath = './workspace'
     workspace = testpath
-    print "!!! testp :%s " % testpath
 
-     # Create workspace with "logs" and "sip-in-progress' directories in
+     # Clean workspace and create "logs" directory in
     # temporary directory
+    if os.path.exists(workspace):
+        shutil.rmtree(workspace)
     os.makedirs(workspace)
     os.makedirs(os.path.join(workspace, 'logs'))
-    #os.makedirs(os.path.join(workspace, 'sip-in-progress'))
     # Copy sample datacite.xml to workspace directory
     dmdpath = os.path.join(workspace, 'datacite.xml')
     shutil.copy('tests/data/datacite_sample.xml', dmdpath)
-                #os.path.join(workspace, 'sip-in-progress', 'datacite.xml'))
 
     # Create dmdsec
-    #task = CreateDescriptiveMetadata(home_path=workspace,
-     #                                workspace=workspace)
-
     import_description.main([dmdpath, '--workspace', workspace])
 
      # Create provenance
-    #os.makedirs(os.path.join(workspace, 'transfers'))
     testfilename = "aineisto"
-    testfilepath = os.path.join(workspace,  testfilename)#os.path.join(workspace, 'transfers', testfilename)
+    testfilepath = os.path.join(workspace,  testfilename)
     with open(testfilepath, 'w') as testfile:
         testfile.write('1')
     assert os.path.isfile(testfilepath)
 
-    # Init task
-    task = create_digiprov.CreateProvenanceInformation(home_path=testpath,
-                                                       workspace=workspace)
-
-
+    # create provenance
+    # task = create_digiprov.CreateProvenanceInformation(home_path=testpath,
+    #                                                   workspace=workspace)
+    
     # Create tech metadata
     test_data_folder = './tests/data/structured'
 
     import_object.main([test_data_folder, '--workspace', workspace])
-    
-    print "stuff "
-    for lists in os.listdir(workspace): 
-        path = os.path.join(workspace, lists) 
-        print path 
 
-    task = CreateStructMap(directory=test_data_folder, workspace=workspace)
+    # Create structmap
+    task = CreateStructMap( workspace=workspace)
     
     task.run()
-    task.complete()
-    print "stuff2 "
-    for lists in os.listdir(workspace):
-        path = os.path.join(workspace, lists)
-        print path
 
     assert task_ok(task)
-   # assert task.complete()
+    assert task.complete()
     assert os.path.isfile(os.path.join(workspace, 'filesec.xml'))
     assert os.path.isfile(os.path.join(workspace, 'structmap.xml'))
 
-    #:assert_mongodb_data_success(os.listdir(workspace_root)[0])
+    assert_mongodb_data_success(workspace)
 
 
 def assert_mongodb_data_success(document_id):
