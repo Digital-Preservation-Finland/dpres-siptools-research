@@ -8,6 +8,7 @@ def test_getfiles(testpath):
     """Tests for ``GetFiles`` task.
 
     - ``Task.complete()`` is true after ``Task.run()``
+    - File is copied to correct path
 
     :testpath: Testpath fixture
     :returns: None

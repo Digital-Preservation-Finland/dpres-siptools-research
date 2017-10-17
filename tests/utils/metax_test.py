@@ -1,7 +1,5 @@
-"""Tests for `siptools_research.utils.metax` module"""
+"""Tests for ``siptools_research.utils.metax`` module"""
 from siptools_research.utils.metax import Metax
-
-DATASET_PATH = "tests/data/metax_datasets/"
 
 def test_get_dataset(testmetax):
     """Test get_dataset function"""
