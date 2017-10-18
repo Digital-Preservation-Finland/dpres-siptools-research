@@ -4,15 +4,16 @@
 import os
 import sys
 import traceback
-import datetime
 
 import lxml.etree as ET
-
+from datetime import datetime
 from luigi import Parameter
 
 from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
-from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
+from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, TaskLogTarget
 from siptools_research.utils.utils import  touch_file
+from siptools_research.utils.metax import Metax
+from siptools_research.utils.contextmanager import redirect_stdout
 
 from siptools_research.luigi.task import WorkflowTask
 
@@ -25,15 +26,12 @@ class CreateMets(WorkflowTask):
     """Compile METS document
     """
     workspace = Parameter()
-    sip_creation_path = Parameter()
-    home_path = Parameter()
+    dataset_id = Parameter()
 
     def requires(self):
         """Requires METS structMap and METS fileSec"""
         return {"Create StructMap":
-                CreateStructMap(workspace=self.workspace,
-                                sip_creation_path=self.sip_creation_path,
-                                home_path=self.home_path)}
+                CreateStructMap(workspace=self.workspace)}
 
     def output(self):
         """Outputs a task file"""
@@ -42,72 +40,63 @@ class CreateMets(WorkflowTask):
     def run(self):
         """Compiles all metadata files into METS document.
         If unsuccessful writes an error message into mongoDB, updates
-        the status of the document and rejects the package. The rejected
-        package is moved to the users home/rejected directory.
+        the status of the document and rejects the package. 
 
         :returns: None
 
         """
-
-        mets_objid = get_s2_nativeid(os.path.join(self.sip_creation_path,
-                                                  'sahke2.xml'))
-
         document_id = os.path.basename(self.workspace)
         mongo_task = MongoDBTarget(document_id, 'wf_tasks.create-mets')
         mongo_status = MongoDBTarget(document_id, 'status')
         mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
+        task_result = None
+        task_messages = None
+        mets_log = TaskLogTarget(self.workspace,
+                                     'create-mets')
+        # Redirect stdout to logfile
+        with mets_log.open('w') as log:
+            with redirect_stdout(log):        
+                try:
+                    metadata = Metax().get_data('datasets', self.dataset_id)
+                    contract_id = metadata["contract"]["id"]
+                    main(['--workspace', self.workspace,
+                          'tpas', 'tpas', '--clean']) #, --contract_id, contract_id ])
+                    task_result = 'success'
+                    task_messages = "Mets dodument created."
+                    mongo_task.write(task_result)
 
-        try:
-            mets_log = os.path.join(self.workspace, 'logs',
-                                    'task-create-mets.log')
-            save_stdout = sys.stdout
-            log = open(mets_log, 'w')
-            sys.stdout = log
+                   # task output
+                    touch_file(TaskFileTarget(self.workspace, 'create-mets'))
 
-            main(['--objid', mets_objid,
-                  '--workspace', self.sip_creation_path,
-                  'kdk', 'Kansallisarkisto', '--clean'])
+                except KeyError as ex:
+                    task_result = 'failure'
+                    task_messages = 'Could not compile mets, '\
+                                    'element "%s" not found from metadata.'\
+                                    % ex.message
 
-            sys.stdout = save_stdout
-            log.close()
+                    failed_log = FailureLog(self.workspace).output()
+                    with failed_log.open('w') as outfile:
+                       outfile.write('Task compile mets document failed.')
 
-            task_result = {
-                'timestamp': datetime.datetime.utcnow().isoformat(),
-                'result': 'success',
-                'messages': "Metadata compiled into METS document."
-            }
-            mongo_task.write(task_result)
+                    mongo_status.write('rejected')
+                except Exception as e:
+                   print "except %s " % e
+                finally:
+                    print "finally"
+                    if not task_result:
+                        task_result = 'failure'
+                        task_messages = "Compilation of mets document "\
+                                        "failed due to unknown error."
 
-            # task output
-            touch_file(TaskFileTarget(self.workspace, 'create-mets'))
+                    mongo_timestamp.write(
+                        datetime.utcnow().isoformat()
+                   )
 
-        except Exception as ex:
-            task_result = {
-                'timestamp': datetime.datetime.utcnow().isoformat(),
-                'result': 'failure',
-                'messages': traceback.format_exc()
-            }
-            mongo_status.write('rejected')
-            mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
-            mongo_task.write(task_result)
+                    mongo_task.write(
+                    {
+                     'timestamp': datetime.utcnow().isoformat(),
+                     'result': task_result,
+                     'messages': task_messages
+                    }
+                    )
 
-            failed_log = FailureLog(self.workspace).output()
-            with failed_log.open('w') as outfile:
-                outfile.write('Task compile-mets failed.')
-
-            yield MoveSipToUser(
-                workspace=self.workspace,
-                home_path=self.home_path)
-
-
-def get_s2_nativeid(s2_file):
-    """Gets Native Id from Sahke2 document"""
-    tree = ET.parse(s2_file)
-    root = tree.getroot()
-
-    nativeid = root.xpath(
-        './s2:TransferInformation/s2:NativeId',
-        namespaces={'s2':
-                    'http://www.arkisto.fi/skeemat/Sahke2/2011/12/20'})[0].text
-
-    return nativeid
