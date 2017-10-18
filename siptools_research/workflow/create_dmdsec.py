@@ -85,24 +85,3 @@ class CreateDescriptiveMetadata(WorkflowTask):
                     'messages': task_messages
                 }
             )
-
-
-
-class ReadyForThis(WorkflowExternalTask):
-    """Check that the workspace is older than min_age."""
-    min_age = IntParameter()
-
-    def output(self):
-        return LocalTarget(self.workspace)
-
-    def complete(self):
-        return file_age(self.workspace) > self.min_age
-
-
-class DmdsecComplete(WorkflowExternalTask):
-    """Task that completes after dmdSec has been created.
-    """
-    def output(self):
-        """Task output.
-        """
-        return TaskFileTarget(self.workspace, 'create-descriptive-metadata')

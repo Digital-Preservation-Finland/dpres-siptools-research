@@ -97,13 +97,3 @@ class CreateTechnicalMetadata(WorkflowTask):
             yield MoveSipToUser(
                 workspace=self.workspace,
                 home_path=self.home_path)
-
-
-class TechMDComplete(WorkflowExternalTask):
-    """Task that completes after techMD-files have been created.
-    """
-
-    def output(self):
-        """Task output.
-        """
-        return TaskFileTarget(self.workspace, 'create-technical-metadata')
