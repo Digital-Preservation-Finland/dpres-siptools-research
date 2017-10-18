@@ -1,16 +1,12 @@
 """Luigi task that creates workspace directory."""
 
 import os
-import luigi
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.utils import database
 
 class CreateWorkspace(WorkflowTask):
     """Creates empty workspace directory."""
-
-    workspace = luigi.Parameter()
-    dataset_id = luigi.Parameter()
 
     def output(self):
         """Outputs workflow_tasks.CreateWorkSpace.result:'success'"""

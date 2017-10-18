@@ -27,15 +27,12 @@ def test_createdescriptivemetadata(testpath):
                 os.path.join(workspace, 'sip-in-progress', 'datacite.xml'))
 
     # Init task
-    task = CreateDescriptiveMetadata(home_path=workspace,
+    task = CreateDescriptiveMetadata(dataset_id=1,
                                      workspace=workspace)
     assert not task.complete()
 
-    # Run task. Task returns generator, so it must be iterated to really run
-    # the code
-    returned_tasks = task.run()
-    for task in returned_tasks:
-        pass
+    # Run task.
+    task.run()
     assert task.complete()
 
     # Check that XML is created

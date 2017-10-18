@@ -1,18 +1,15 @@
 """Tests for `siptools_research.utils.scripts.import_objects` module"""
-from tempfile import NamedTemporaryFile
+import os
+import shutil
 import lxml.etree as ET
 from siptools_research.utils.scripts import import_objects
 from siptools.xml.namespaces import NAMESPACES
-import pytest
-import os
-import shutil
-from urllib import quote_plus
 
 
 def test_import_object_ok(testpath):
 
     # Create 'files' directory with testfile in workspace
-    testbasepath = os.path.join(testpath, 'files','some', 'path')
+    testbasepath = os.path.join(testpath, 'files', 'some', 'path')
     os.makedirs(testbasepath)
     testfilepath = os.path.join(testbasepath, 'file_name_11')
     shutil.copy('tests/data/file_name_11', testfilepath)
@@ -27,6 +24,3 @@ def test_import_object_ok(testpath):
     assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] == 'premis:file'
     assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text == 'html/text'
     assert root.xpath("//premis:formatVersion", namespaces=NAMESPACES)[0].text == '1.0'
-
-    assert return_code == 0
-

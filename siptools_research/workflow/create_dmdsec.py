@@ -16,8 +16,6 @@ from siptools.scripts import import_description
 class CreateDescriptiveMetadata(WorkflowTask):
     """Create mets dmdSec from DataCite file.
     """
-    workspace = Parameter()
-    home_path = Parameter()
 
     def requires(self):
         """Return required tasks.
@@ -33,8 +31,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
         """
         Creates a METS dmdSec file from existing datacite.xml file. If
         unsuccessful writes an error message into mongoDB, updates the status
-        of the document, and rejects the package. The rejected package is moved
-        to the users home/rejected directory.
+        of the document, and rejects the package.
 
         :returns: None
 
@@ -72,15 +69,6 @@ class CreateDescriptiveMetadata(WorkflowTask):
             task_messages = exc.message
 
             mongo_status.write('rejected')
-
-            failed_log = FailureLog(self.workspace).output()
-            with failed_log.open('w') as outfile:
-                outfile.write('Task create-dmdsec failed.')
-
-            yield MoveSipToUser(
-                workspace=self.workspace,
-                home_path=self.home_path
-            )
 
         finally:
             if not task_result:

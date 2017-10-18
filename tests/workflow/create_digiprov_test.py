@@ -42,15 +42,12 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     assert os.path.isfile(testfilepath)
 
     # Init task
-    task = create_digiprov.CreateProvenanceInformation(home_path=testpath,
-                                                       workspace=workspace)
+    task = create_digiprov.CreateProvenanceInformation(workspace=workspace,
+                                                       dataset_id="1")
     assert not task.complete()
 
-    # Run task. Task returns generator, so it must be iterated to really run
-    # the code
-    returned_tasks = task.run()
-    for task in returned_tasks:
-        pass
+    # Run task.
+    task.run()
     assert task.complete()
 
     # Check that XML is created in workspace/sip-inprogrss/
@@ -107,27 +104,17 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
     assert os.path.isfile(testfilepath)
 
     # Init task
-    task = create_digiprov.CreateProvenanceInformation(home_path=testpath,
+    task = create_digiprov.CreateProvenanceInformation(dataset_id="1",
                                                        workspace=workspace)
 
-    # Run task. Task returns generator, so it must be iterated to really run
-    # the code
-    returned_tasks = task.run()
-    for task in returned_tasks:
-        pass
+    # Run task.
+    task.run()
     assert not task.complete()
-
-    # Check that log is created
-    with open(os.path.join(workspace,
-                           'logs',
-                           'task-failure.log')) as open_file:
-        assert open_file.read() == "Task create-digiprov failed."
 
     # There should not be anything else in the workspace
     assert set(os.listdir(workspace)) == {'transfers', 'logs'}
     assert set(os.listdir(os.path.join(workspace, 'logs'))) == {
-        'task-create-provenance-information.log',
-        'task-failure.log'
+        'task-create-provenance-information.log'
     }
 
     # Check that new log entry is found in mongodb, and that there is no extra
