@@ -8,18 +8,16 @@ import os
 import uuid
 import argparse
 import luigi
+from siptools_research.luigi.task import WorkflowWrapperTask
 from siptools_research.workflow.get_files import GetFiles
 from siptools_research.utils import database
 
 WORKSPACE_ROOT = '/var/spool/siptools-research'
 
-class InitWorkflow(luigi.WrapperTask):
+class InitWorkflow(WorkflowWrapperTask):
     """A wrapper task that starts workflow by requiring the last task of
     workflow.
     """
-
-    workspace = luigi.Parameter()
-    dataset_id = luigi.Parameter()
 
     def requires(self):
         """Only returns last task of the workflow.

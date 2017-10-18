@@ -21,21 +21,14 @@ class CreateProvenanceInformation(WorkflowTask):
     files in METS digiprov wrappers.
     """
 
-    # TODO: Why workspace must be defined here? It is aready defined in
-    # WorkflowTask baseclass.
-    workspace = Parameter()
-    home_path = Parameter()
-
     def requires(self):
         """Requires create dmdSec file task"""
         return CreateDescriptiveMetadata(
             workspace=self.workspace,
-            home_path=self.home_path
         )
 
     def output(self):
         """Outputs task file"""
-        # Also MongoDBTarget should be returned
         return TaskFileTarget(self.workspace, 'create-provenance-information')
 
     def run(self):
@@ -51,11 +44,6 @@ class CreateProvenanceInformation(WorkflowTask):
         task_result = None
         task_messages = None
 
-        # Should the dataset_id be a luigi Parameter?
-        with open(os.path.join(self.workspace,
-                               'transfers',
-                               'aineisto')) as infile:
-            dataset_id = infile.read()
 
         digiprov_log = TaskLogTarget(self.workspace,
                                      'create-provenance-information')
@@ -65,7 +53,7 @@ class CreateProvenanceInformation(WorkflowTask):
             with redirect_stdout(log):
 
                 try:
-                    create_premis_event(dataset_id, sip_creation_path)
+                    create_premis_event(self.dataset_id, sip_creation_path)
 
                     task_result = 'success'
                     task_messages = "Provenance metadata created."
@@ -79,16 +67,8 @@ class CreateProvenanceInformation(WorkflowTask):
                                     'element "%s" not found from metadata.'\
                                     % exc.message
 
-                    failed_log = FailureLog(self.workspace).output()
-                    with failed_log.open('w') as outfile:
-                        outfile.write('Task create-digiprov failed.')
-
                     mongo_status.write('rejected')
 
-                    yield MoveSipToUser(
-                        workspace=self.workspace,
-                        home_path=self.home_path
-                    )
                 finally:
                     if not task_result:
                         task_result = 'failure'

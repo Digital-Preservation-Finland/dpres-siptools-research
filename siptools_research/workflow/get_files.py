@@ -1,7 +1,6 @@
 """Luigi task that gets files from Ida."""
 
 import os
-from luigi import Parameter
 from siptools_research.utils import ida
 from siptools_research.utils import metax
 from siptools_research.utils import database
@@ -14,9 +13,6 @@ class GetFiles(WorkflowTask):
     """Create provenance information as PREMIS event and PREMIS agent
     files in METS digiprov wrappers.
     """
-
-    dataset_id = Parameter()
-    workspace = Parameter()
 
     def requires(self):
         """Required task: CreateWorkspace"""

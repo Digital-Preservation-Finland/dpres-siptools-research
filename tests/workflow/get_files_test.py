@@ -14,13 +14,9 @@ def test_getfiles(testpath):
     :returns: None
     """
 
-    # Create empty workspace
-    workspace = os.path.join(testpath, 'workspace')
-    os.makedirs(workspace)
-
     # Init task
-    task = get_files.GetFiles(workspace=workspace,
-                              dataset_id=1)
+    task = get_files.GetFiles(workspace=testpath,
+                              dataset_id="1")
     assert not task.complete()
 
     # Run task.
@@ -28,6 +24,6 @@ def test_getfiles(testpath):
     assert task.complete()
 
     # Check that correct file is created into correct path
-    with open(os.path.join(workspace,
+    with open(os.path.join(testpath,
                            'files/some/path/file_name_1')) as open_file:
         assert open_file.read() == 'foo\n'
