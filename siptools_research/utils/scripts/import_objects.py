@@ -38,7 +38,9 @@ def create_premis_object(digital_object, filepath, formatname, creation_date,
     """Calls import_object from siptools to create
     PREMIS file metadata.
     """
-    import_object.main([digital_object, '--base_path', filepath,
+    #  For some reason the "files"-argument has to be a directory that is found in
+    #  base_path, not a file. Therefore "files" is set to "./".
+    import_object.main(['./', '--base_path', filepath,
                         '--workspace', workspace, '--skip_inspection',
                         '--format_name', formatname,
                         '--digest_algorithm', hashalgorithm,
