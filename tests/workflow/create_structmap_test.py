@@ -61,7 +61,7 @@ def test_create_structmap_ok(testpath):
     import_object.main([test_data_folder, '--workspace', workspace])
 
     # Create structmap
-    task = CreateStructMap( workspace=workspace)
+    task = CreateStructMap(workspace=workspace, dataset_id='1')
     
     task.run()
 
