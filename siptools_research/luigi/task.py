@@ -22,6 +22,7 @@ class WorkflowTask(luigi.Task):
 
     workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
+    sip_creation_path = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
         """Calls luigi.Task's __init__ and sets additional instance variables.
