@@ -10,7 +10,6 @@ from luigi import Parameter
 
 from siptools.scripts import compile_structmap
 
-from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, TaskLogTarget
 
 from siptools_research.utils.utils import touch_file
@@ -90,10 +89,6 @@ class CreateStructMap(WorkflowTask):
                    task_messages = 'Could not create structrural map, '\
                                     'element "%s" not found from metadata.'\
                                     % exc.message
-
-                   failed_log = FailureLog(self.workspace).output()
-                   with failed_log.open('w') as outfile:
-                       outfile.write('Task create-structmap failed.')
 
                    mongo_status.write('rejected')
 

@@ -8,7 +8,6 @@ import datetime
 
 from luigi import Parameter
 
-from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
 from siptools_research.utils.utils import touch_file
 
@@ -90,11 +89,3 @@ class CreateTechnicalMetadata(WorkflowTask):
             mongo_status.write('rejected')
             mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
             mongo_task.write(task_result)
-
-            failed_log = FailureLog(self.workspace).output()
-            with failed_log.open('w') as outfile:
-                outfile.write('Task create-techmd failed.')
-
-            yield MoveSipToUser(
-                workspace=self.workspace,
-                home_path=self.home_path)

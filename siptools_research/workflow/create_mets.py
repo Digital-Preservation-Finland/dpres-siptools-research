@@ -9,7 +9,6 @@ import lxml.etree as ET
 from datetime import datetime
 from luigi import Parameter
 
-from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, TaskLogTarget
 from siptools_research.utils.utils import  touch_file
 from siptools_research.utils.metax import Metax
@@ -73,10 +72,6 @@ class CreateMets(WorkflowTask):
                     task_messages = 'Could not compile mets, '\
                                     'element "%s" not found from metadata.'\
                                     % ex.message
-
-                    failed_log = FailureLog(self.workspace).output()
-                    with failed_log.open('w') as outfile:
-                       outfile.write('Task compile mets document failed.')
 
                     mongo_status.write('rejected')
                 except Exception as e:
