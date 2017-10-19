@@ -14,7 +14,6 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
 
     - `Task.complete()` is true after `Task.run()`
     - XML file created
-    - Task output file is created
     - Log file is created
     - Log entry is created to mongodb
 
@@ -27,8 +26,7 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
 
     # Create workspace with "logs" and "transfers" directories in temporary
     # directory
-    workspace = os.path.join(testpath, 'workspace')
-    os.makedirs(workspace)
+    workspace = testpath
     # TODO: The task should be able to create 'logs' directory if it does not
     # exist. Therefore this line should be unnecessary.
     os.makedirs(os.path.join(workspace, 'logs'))
@@ -55,11 +53,6 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
                                        'sip-in-progress',
                                        'creation-event.xml'))
 
-    # Check that task output file is created in workspace/task-output-files/
-    assert os.path.isfile(os.path.join(workspace,
-                                       'task-output-files',
-                                       'create-provenance-information'))
-
     # Check that log is created in workspace/logs/
     with open(os.path.join(workspace,
                            'logs',
@@ -71,12 +64,12 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     # entries
     mongoclient = pymongo.MongoClient()
     doc = mongoclient['siptools-research'].workflow.find_one(
-        {'_id':'workspace'}
+        {'_id': os.path.basename(workspace)}
     )
-    assert doc['_id'] == 'workspace'
-    assert doc['wf_tasks']['create-provenance-information']['messages']\
+    assert doc['_id'] == os.path.basename(workspace)
+    assert doc['workflow_tasks']['CreateProvenanceInformation']['messages']\
         == 'Provenance metadata created.'
-    assert doc['wf_tasks']['create-provenance-information']['result']\
+    assert doc['workflow_tasks']['CreateProvenanceInformation']['result']\
         == 'success'
     assert mongoclient['siptools-research'].workflow.count() == 1
 
@@ -121,13 +114,13 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
     # entries
     mongoclient = pymongo.MongoClient()
     doc = mongoclient['siptools-research'].workflow.find_one(
-        {'_id':'workspace'}
+        {'_id': os.path.basename(workspace)}
     )
-    assert doc['_id'] == 'workspace'
+    assert doc['_id'] == os.path.basename(workspace)
     assert 'Could not create procenance metada, element "provenance" not '\
             'found from metadata.' in\
-        doc['wf_tasks']['create-provenance-information']['messages']
-    assert doc['wf_tasks']['create-provenance-information']['result']\
+        doc['workflow_tasks']['CreateProvenanceInformation']['messages']
+    assert doc['workflow_tasks']['CreateProvenanceInformation']['result']\
         == 'failure'
     assert mongoclient['siptools-research'].workflow.count() == 1
 

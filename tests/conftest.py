@@ -79,7 +79,7 @@ def testmongoclient(monkeypatch):
     """
     mongoclient = mongomock.MongoClient()
     # pylint: disable=unused-argument
-    def mock_mongoclient(*args):
+    def mock_mongoclient(*args, **kwargs):
         """Returns already initialized mongomock.MongoClient"""
         return mongoclient
     monkeypatch.setattr(pymongo, 'MongoClient', mock_mongoclient)

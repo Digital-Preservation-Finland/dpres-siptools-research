@@ -8,7 +8,7 @@ from siptools_research.workflow.create_dmdsec\
     import CreateDescriptiveMetadata
 DATASET_PATH = "tests/data/metax_datasets/"
 
-def test_createdescriptivemetadata(testpath):
+def test_createdescriptivemetadata(testpath, testmongoclient):
     """Test `CreateDescriptiveMetadata` task.
 
     :testpath: Testpath fixture

@@ -2,18 +2,14 @@
 CreateDescriptiveMetadata."""
 
 import os
-from datetime import datetime
-from luigi import Parameter
 from siptools.scripts import premis_event
-from siptools_research.utils.utils import touch_file
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
-from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, \
-    TaskLogTarget
-from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
-from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
+from siptools_research.luigi.target import MongoTaskResultTarget
+from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_dmdsec \
     import CreateDescriptiveMetadata
+from siptools_research.utils import database
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -25,49 +21,37 @@ class CreateProvenanceInformation(WorkflowTask):
         """Requires create dmdSec file task"""
         return CreateDescriptiveMetadata(
             workspace=self.workspace,
+            dataset_id=self.dataset_id
         )
 
     def output(self):
         """Outputs task file"""
-        return TaskFileTarget(self.workspace, 'create-provenance-information')
+        return MongoTaskResultTarget(self.document_id, self.task_name)
 
     def run(self):
         """Gets file metadata from Metax.
         :returns: None
         """
         sip_creation_path = os.path.join(self.workspace, 'sip-in-progress')
-        document_id = os.path.basename(self.workspace)
-        mongo_task = MongoDBTarget(document_id,
-                                   'wf_tasks.create-provenance-information')
-        mongo_status = MongoDBTarget(document_id, 'status')
-        mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
-        task_result = None
-        task_messages = None
-
-
-        digiprov_log = TaskLogTarget(self.workspace,
-                                     'create-provenance-information')
+        digiprov_log = os.path.join(self.workspace,
+                                    'logs',
+                                    'task-create-provenance-information.log')
 
         # Redirect stdout to logfile
-        with digiprov_log.open('w') as log:
+        with open(digiprov_log, 'w') as log:
             with redirect_stdout(log):
 
                 try:
                     create_premis_event(self.dataset_id, sip_creation_path)
-
                     task_result = 'success'
                     task_messages = "Provenance metadata created."
-
-                    # task output
-                    touch_file(TaskFileTarget(self.workspace,
-                                              'create-provenance-information'))
                 except KeyError as exc:
                     task_result = 'failure'
                     task_messages = 'Could not create procenance metada, '\
                                     'element "%s" not found from metadata.'\
                                     % exc.message
 
-                    mongo_status.write('rejected')
+                    database.set_status(self.document_id, 'rejected')
 
                 finally:
                     if not task_result:
@@ -75,17 +59,10 @@ class CreateProvenanceInformation(WorkflowTask):
                         task_messages = "Creation of provenance metadata "\
                                         "failed due to unknown error."
 
-                    mongo_timestamp.write(
-                        datetime.utcnow().isoformat()
-                    )
-
-                    mongo_task.write(
-                        {
-                            'timestamp': datetime.utcnow().isoformat(),
-                            'result': task_result,
-                            'messages': task_messages
-                        }
-                    )
+                    database.add_event(self.document_id,
+                                       self.task_name,
+                                       task_result,
+                                       task_messages)
 
 
 def create_premis_event(dataset_id, workspace):
@@ -104,17 +81,3 @@ def create_premis_event(dataset_id, workspace):
         "--event_detail", event_detail,
         "--workspace", workspace
     ])
-
-
-
-
-
-class DigiprovComplete(WorkflowExternalTask):
-    """Task that completes after provencance information has been
-    created.
-    """
-
-    def output(self):
-        """Task output.
-        """
-        return TaskFileTarget(self.workspace, 'create-provenance-information')
