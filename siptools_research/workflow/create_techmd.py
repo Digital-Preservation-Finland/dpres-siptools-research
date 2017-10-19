@@ -14,7 +14,7 @@ from siptools_research.utils.utils import touch_file
 
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
 
-from siptools_research.workflow.create_dmdsec import ReadyForThis
+from siptools_research.workflow.create_workspace import CreateWorkspace
 
 from siptools_research.utils.scripts.import_objects import main
 
@@ -32,7 +32,8 @@ class CreateTechnicalMetadata(WorkflowTask):
         :returns: Files must have been transferred to workspace
         """
 
-        return ReadyForThis(workspace=self.workspace, min_age=0)
+        return CreateWorkspace(workspace=self.workspace,
+                               dataset_id=self.dataset_id)
 
     def output(self):
         """Outputs a task file"""
