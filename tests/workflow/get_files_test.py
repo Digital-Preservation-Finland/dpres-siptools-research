@@ -24,10 +24,10 @@ def test_getfiles(testpath, testmetax, testida):
     assert task.complete()
 
     # Check that correct files are created into correct path
-    with open(os.path.join(testpath,
-                           'files/some/path/file_name_1')) as open_file:
+    with open(os.path.join(testpath, 'sip-in-progress/some/path/file_name_1'))\
+            as open_file:
         assert open_file.read() == 'foo\n'
 
-    with open(os.path.join(testpath,
-                           'files/some/path/file_name_2')) as open_file:
+    with open(os.path.join(testpath, 'sip-in-progress/some/path/file_name_2'))\
+            as open_file:
         assert open_file.read() == 'bar\n'

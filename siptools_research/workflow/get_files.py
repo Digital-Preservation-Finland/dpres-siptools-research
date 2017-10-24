@@ -36,14 +36,19 @@ class GetFiles(WorkflowTask):
         for file_section in dataset_metadata['research_dataset']['files']:
             file_id = file_section['identifier']
 
-            # Get file name and path from Metax file metadata
+            # The path where file should be written in SIP is stored in 'type'
+            # field in datasets files section
+            file_path = os.path.join(
+                self.workspace,
+                'sip-in-progress',
+                file_section['type']['label']['default'].strip('/')
+            )
+
+            # Name of the file comes from file metadata
             file_metadata = metax_client.get_data('files', file_id)
             filename = file_metadata['file_name']
-            file_path = os.path.join(self.workspace,
-                                     'files',
-                                     file_metadata['file_path'].strip('/'))
 
-            # Download file from Ida to 'files' directory in workspace
+            # Download file from Ida to 'sip-in-progress' directory in workspace
             if not os.path.exists(file_path):
                 os.makedirs(file_path)
             ida.download_file(file_id,

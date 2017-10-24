@@ -2,10 +2,20 @@
 	"research_dataset": {
 		"files": [
 		{
-			"identifier": "pid:urn:1"
+			"identifier": "pid:urn:1",
+			"type": {
+				"label": {
+					"default": "some/path"
+				}
+			}
 		},
 		{
-			"identifier": "pid:urn:2"
+			"identifier": "pid:urn:2",
+			"type": {
+				"label": {
+					"default": "some/path"
+				}
+			}
 		}
 		]
 	}
