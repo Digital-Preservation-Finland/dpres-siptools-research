@@ -2,6 +2,7 @@ pytest
 coverage
 pytest-cov
 git+https://source.csc.fi/scm/git/pas/dpres-ipt
+git+https://source.csc.fi/scm/git/pas/dpres-signature
 git+https://source.csc.fi/scm/git/pas/dpres-siptools@TPASPKT-6#egg=siptools
 lxml
 wand
