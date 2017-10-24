@@ -23,7 +23,11 @@ def test_getfiles(testpath, testmetax, testida):
     task.run()
     assert task.complete()
 
-    # Check that correct file is created into correct path
+    # Check that correct files are created into correct path
     with open(os.path.join(testpath,
                            'files/some/path/file_name_1')) as open_file:
         assert open_file.read() == 'foo\n'
+
+    with open(os.path.join(testpath,
+                           'files/some/path/file_name_2')) as open_file:
+        assert open_file.read() == 'bar\n'

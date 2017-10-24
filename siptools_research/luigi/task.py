@@ -29,7 +29,9 @@ class WorkflowTask(luigi.Task):
         super(WorkflowTask, self).__init__(*args, **kwargs)
         self.document_id = os.path.basename(self.workspace)
         self.task_name = self.__class__.__name__
-        self.sip_creation_path = os.path.join(self.workspace, 'sip-in-progress')
+        self.sip_creation_path = os.path.join(self.workspace,
+                                              'sip-in-progress')
+        self.logs_path = os.path.join(self.workspace, 'logs')
 
 class WorkflowExternalTask(luigi.ExternalTask):
     """Common base class for all tasks that are executed externally from this

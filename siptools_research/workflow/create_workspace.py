@@ -18,6 +18,8 @@ class CreateWorkspace(WorkflowTask):
         :returns: None
         """
         os.mkdir(self.workspace)
+        os.mkdir(self.sip_creation_path)
+        os.mkdir(self.logs_path)
 
         database.add_event(self.document_id,
                            self.task_name,

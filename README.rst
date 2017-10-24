@@ -14,6 +14,10 @@ Install required packages for testing::
 
    pip install -r requirements_dev.txt
 
+Start luigid::
+
+   luigid
+
 Start mongodb::
 
    mongod --dbpath /path/to/data

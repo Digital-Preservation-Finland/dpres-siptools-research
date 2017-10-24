@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mets:mets xmlns:mets="http://www.loc.gov/METS/">
+	<mets:metsHdr CREATEDATE="2017-10-18T22:00:00">
+		<mets:agent ROLE="CREATOR" TYPE="ORGANIZATION">
+			<mets:name>CSC - Tieteen tietotekniikan keskus</mets:name>
+		</mets:agent>
+	</mets:metsHdr>
+</mets:mets>
