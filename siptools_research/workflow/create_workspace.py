@@ -1,6 +1,6 @@
 """Luigi task that creates workspace directory."""
 
-import os
+from siptools_research.utils import utils
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.utils import database
@@ -17,9 +17,9 @@ class CreateWorkspace(WorkflowTask):
 
         :returns: None
         """
-        os.mkdir(self.workspace)
-        os.mkdir(self.sip_creation_path)
-        os.mkdir(self.logs_path)
+        utils.makedirs_exist_ok(self.workspace)
+        utils.makedirs_exist_ok(self.sip_creation_path)
+        utils.makedirs_exist_ok(self.logs_path)
 
         database.add_event(self.document_id,
                            self.task_name,

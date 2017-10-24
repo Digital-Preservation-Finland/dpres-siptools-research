@@ -1,12 +1,25 @@
 """Utilities"""
 
 import os
+import errno
 import random
 from itertools import islice
 import datetime
 import time
 
 import scandir
+
+def makedirs_exist_ok(path):
+    """Creates directory if it does not exists already. In python 3.2
+    os.makedirs has parameter ``exist_ok`` that enables same functionality.
+    """
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 
 def touch_file(output_target):
