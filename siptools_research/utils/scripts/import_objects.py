@@ -55,10 +55,8 @@ def create_objects(file_id=None, workspace=None):
     metadata = Metax().get_data('files', file_id)
 
     filename = metadata["file_name"]
-    # Assume that files are found in 'files' directory in workspace
-    filepath = os.path.join(
-        workspace, 'files', metadata["file_path"].strip('/')
-    )
+    # Assume that files are found in 'sip-in-progress' directory in workspace
+    filepath = os.path.join(workspace, 'sip-in-progress')
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]

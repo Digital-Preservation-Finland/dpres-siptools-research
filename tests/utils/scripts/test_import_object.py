@@ -8,8 +8,8 @@ from siptools.xml.namespaces import NAMESPACES
 
 def test_import_object_ok(testpath):
 
-    # Create 'files' directory with testfile in workspace
-    testbasepath = os.path.join(testpath, 'files', 'some', 'path')
+    # Copy sample file to 'sip-in-progress' directory in workspace
+    testbasepath = os.path.join(testpath, 'sip-in-progress')
     os.makedirs(testbasepath)
     testfilepath = os.path.join(testbasepath, 'file_name_11')
     shutil.copy('tests/data/file_name_11', testfilepath)
