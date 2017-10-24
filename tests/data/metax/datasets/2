@@ -1,0 +1,12 @@
+{
+	"research_dataset": {
+		"files": [
+		{
+			"identifier": "pid:urn:1"
+		},
+		{
+			"identifier": "pid:urn:2"
+		}
+		]
+	}
+}

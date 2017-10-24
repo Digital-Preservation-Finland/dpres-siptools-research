@@ -11,6 +11,7 @@ import luigi
 from siptools_research.luigi.task import WorkflowWrapperTask
 from siptools_research.workflow.get_files import GetFiles
 from siptools_research.utils import database
+from siptools_research.workflow.send_sip import SendSIPToDP
 
 WORKSPACE_ROOT = '/var/spool/siptools-research'
 
@@ -57,8 +58,8 @@ def main():
     database.add_dataset(workspace_name, arguments.dataset_id)
 
     # Start luigi workflow
-    luigi.run(['InitWorkflow', '--workspace', workspace,
-               '--dataset-id', arguments.dataset_id])
+    luigi.run(['SendSIPToDP', '--sip-path', workspace,
+               '--dataset-id', arguments.dataset_id, '--workspace', workspace] )
 
 if __name__ == '__main__':
     main()

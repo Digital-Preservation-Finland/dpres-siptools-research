@@ -1,5 +1,4 @@
 # encoding=utf8
-"""required tasks to create SIPs from transfer"""
 
 import os
 import sys
@@ -9,7 +8,6 @@ import lxml.etree as ET
 from datetime import datetime
 from luigi import Parameter
 
-from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, TaskLogTarget
 from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.utils.utils import  touch_file
@@ -26,8 +24,6 @@ from siptools.scripts.compile_mets import main
 class CreateMets(WorkflowTask):
     """Compile METS document
     """
-    workspace = Parameter()
-    dataset_id = Parameter()
 
     def requires(self):
         """Requires METS structMap and METS fileSec"""
@@ -62,18 +58,11 @@ class CreateMets(WorkflowTask):
                     task_result = 'success'
                     task_messages = "Mets dodument created."
 
-                   # task output
-                    touch_file(TaskFileTarget(self.workspace, 'create-mets'))
-
                 except KeyError as ex:
                     task_result = 'failure'
-                    task_messages = 'Could not compile mets, '\
-                                    'element "%s" not found from metadata.'\
+                    task_messages = 'Could not compile mets %s '\
                                     % ex.message
 
-
-                except Exception as e:
-                   print "except %s " % e
                 finally:
            
                     if not task_result:

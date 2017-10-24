@@ -2,7 +2,7 @@
 import os
 from siptools_research.utils import ida
 
-def test_download_file(testpath):
+def test_download_file(testpath, testida):
     """Downloads a file to a temporary directory and checks contents of the
     file"""
     new_file_path = os.path.join(testpath, 'new_file')

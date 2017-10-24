@@ -23,7 +23,7 @@ class CompressSIP(WorkflowTask):
 
     :path: workspace/created_sip
     """
-
+    workspace = Parameter()
     def requires(self):
         """Requires signature file"""
         return {"Sign SIP":

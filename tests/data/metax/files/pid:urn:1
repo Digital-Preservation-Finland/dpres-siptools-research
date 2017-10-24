@@ -1,0 +1,8 @@
+{
+  "id": 1,
+  "download_url": "http://some.url.csc.fi/1",
+  "file_format": "html/text",
+  "file_name": "file_name_1",
+  "file_path": "/some/path/",
+  "identifier": "pid:urn:1"
+}

@@ -10,27 +10,25 @@ from luigi import Parameter
 
 from siptools_research.workflow_x.move_sip import FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
-from siptools_research.utils.utils import  touch_file
 
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
 
 from siptools_research.workflow.compress import CompressSIP
-
+from siptools_research.utils import database
 
 class SendSIPToDP(WorkflowTask):
     """Send SIP to DP.
     """
-    home_path = Parameter()
-
+    retry_count = 10
+    sip_path = Parameter()
+    dataset_id = Parameter()
+    
     def requires(self):
         """Requires compressed SIP archive file.
         """
         return {
             "Compress SIP":
-            CompressSIP(workspace=self.workspace,
-                        sip_creation_path=self.sip_creation_path,
-                        sip_output_path=self.sip_output_path,
-                        home_path=self.home_path)}
+            CompressSIP(workspace=self.workspace)}
 
     def output(self):
         """Returns task output. Task is ready when succesful event has been
@@ -51,19 +49,20 @@ class SendSIPToDP(WorkflowTask):
         :returns: None
         """
 
-        sip_name = os.path.join(self.sip_output_path,
+        sip_name = os.path.join(self.sip_path,
                                 (os.path.basename(self.workspace) + '.tar'))
 
-        # Check how many times task has been run
+        
         sent_log = os.path.join(self.workspace,
                                   "logs",
                                   'task-send-sip-to-dp.log')
-
+            
+        task_result = None
         try:
-             with open(sent_log, 'w') as log:
+             with open(sent_log, 'w+') as log:
                  with redirect_stdout(log):
 
-                   (outcome, err) = send_to_dp(sip_name, sent_log, count)
+                   (outcome, err) = send_to_dp(sip_name, sent_log)
                    if outcome == 'success':
                       task_result = 'success'
                       task_messages = "Send to DP successfully "
@@ -92,10 +91,9 @@ class SendSIPComplete(WorkflowExternalTask):
         return TaskFileTarget(self.workspace, 'send-sip-to-dp')
 
 
-def send_to_dp(sip, sent_log, count):
+def send_to_dp(sip, sent_log):
     """Sends SIP to DP service using sftp.
     """
-    count += 1
     identity = '~/.ssh/id_rsa_tpas_pouta'
     host = '86.50.168.218'
     username = 'tpas'

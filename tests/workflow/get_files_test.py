@@ -4,7 +4,7 @@ import os
 from siptools_research.workflow import get_files
 
 # pylint: disable=unused-argument,invalid-name,fixme
-def test_getfiles(testpath):
+def test_getfiles(testpath, testmetax, testida):
     """Tests for ``GetFiles`` task.
 
     - ``Task.complete()`` is true after ``Task.run()``
@@ -16,7 +16,7 @@ def test_getfiles(testpath):
 
     # Init task
     task = get_files.GetFiles(workspace=testpath,
-                              dataset_id="1")
+                              dataset_id="2")
     assert not task.complete()
 
     # Run task.
