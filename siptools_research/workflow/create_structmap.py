@@ -10,8 +10,8 @@ from luigi import Parameter
 
 from siptools.scripts import compile_structmap
 
-from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, TaskLogTarget
-
+from siptools_research.luigi.target import MongoTaskResultTarget
+from siptools_research.utils import database
 from siptools_research.utils.utils import touch_file
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.luigi.task import WorkflowTask
@@ -43,7 +43,8 @@ class CreateStructMap(WorkflowTask):
 
     def output(self):
         """Outputs a task file"""
-        return TaskFileTarget(self.workspace, 'create-structmap')
+        return MongoTaskResultTarget(document_id=self.document_id,
+                                     taskname=self.task_name)
 
     def run(self):
 
@@ -55,31 +56,25 @@ class CreateStructMap(WorkflowTask):
         :returns: None
 
         """
-
+        sip_creation_path = os.path.join(self.workspace, 'sip-in-progress')
         document_id = os.path.basename(self.workspace)
-        mongo_task = MongoDBTarget(document_id,
-                                   ('wf_tasks.create-structural-map'
-                                    '-and-file-section'))
-        mongo_status = MongoDBTarget(document_id, 'status')
-        mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
         task_result = None
 
-        structmap_log = TaskLogTarget(self.workspace,
-                                     'create-struct-map')
+        structmap_log = os.path.join(self.workspace,
+                                  "logs",
+                                  'create-struct-map')
         # Redirect stdout to logfile
-        with structmap_log.open('w') as log:
+        with open(structmap_log, 'w') as log:
             with redirect_stdout(log):
 
                 try:
 
                     workspace = self.workspace
                     compile_structmap.main([
-                            '--workspace', workspace])
-
+                            '--workspace', sip_creation_path])
+                    print "stuff3 "
                     task_result = 'success'
                     task_messages = "Structrural map and filesec created."
-
-                    mongo_task.write(task_result)
 
 
                 except KeyError as ex:
@@ -88,24 +83,14 @@ class CreateStructMap(WorkflowTask):
                                     'element "%s" not found from metadata.'\
                                     % exc.message
 
-                   mongo_status.write('rejected')
-
 
                 finally:
                     if not task_result:
                         task_result = 'failure'
                         task_messages = "Creation of structmap and filesec "\
                                         "failed due to unknown error."
-
-                    mongo_timestamp.write(
-                        datetime.utcnow().isoformat()
-                   )
-
-                    mongo_task.write(
-                    {
-                     'timestamp': datetime.utcnow().isoformat(),
-                     'result': task_result,
-                     'messages': task_messages
-                    }
-                    )
+                    database.add_event(self.document_id,
+                           self.task_name,
+                           task_result,
+                           task_messages)
 
