@@ -46,6 +46,16 @@ class WorkflowExternalTask(luigi.ExternalTask):
     workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
 
+    def __init__(self, *args, **kwargs):
+        """Calls luigi.Task's __init__ and sets additional instance variables.
+        """
+        super(WorkflowExternalTask, self).__init__(*args, **kwargs)
+        self.document_id = os.path.basename(self.workspace)
+        self.task_name = self.__class__.__name__
+        self.sip_creation_path = os.path.join(self.workspace,
+                                              'sip-in-progress')
+        self.logs_path = os.path.join(self.workspace, 'logs')
+
 
 class WorkflowWrapperTask(luigi.WrapperTask):
     """Common base class for all workflow tasks which execute other tasks, but
