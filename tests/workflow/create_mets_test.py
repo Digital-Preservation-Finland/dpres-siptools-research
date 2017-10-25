@@ -16,8 +16,9 @@ def test_create_mets_ok(testpath):
     """Test the workflow task CreateMets module.
     """
     workspace = testpath
+    create_sip = os.path.join(workspace, 'sip_in_progress')
     #create test data
-    create_test_data(workspace=workspace)
+    create_test_data(workspace=create_sip)
 
     #test create mets task
     task = CreateMets(
@@ -28,7 +29,7 @@ def test_create_mets_ok(testpath):
         print path
     assert task_ok(task)
     assert task.complete()
-    assert os.path.isfile(os.path.join(workspace, 'mets.xml'))
+    assert os.path.isfile(os.path.join(create_sip, 'mets.xml'))
 
     assert_mongodb_data_success(workspace)
 
@@ -39,7 +40,7 @@ def create_test_data(workspace):
     if os.path.exists(workspace):
         shutil.rmtree(workspace)
     os.makedirs(workspace)
-    os.makedirs(os.path.join(workspace, 'logs'))
+   
     # Copy sample datacite.xml to workspace directory
     dmdpath = os.path.join(workspace, 'datacite.xml')
     shutil.copy('tests/data/datacite_sample.xml', dmdpath)

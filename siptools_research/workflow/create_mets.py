@@ -8,9 +8,9 @@ import lxml.etree as ET
 from datetime import datetime
 from luigi import Parameter
 
-from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, TaskLogTarget
+from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
 from siptools_research.luigi.target import MongoTaskResultTarget
-from siptools_research.utils.utils import  touch_file
+from siptools_research.utils import  utils
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils import database
@@ -43,17 +43,20 @@ class CreateMets(WorkflowTask):
 
         """
         document_id = os.path.basename(self.workspace)
+        sip_creation_path = os.path.join(self.workspace, 'sip_in_progress')
+        utils.makedirs_exist_ok(sip_creation_path)
         task_result = None
         task_messages = None
-        mets_log = TaskLogTarget(self.workspace,
-                                     'create-mets')
+        mets_log = os.path.join(self.workspace,
+                                  "logs", 'create-mets.log')
+        utils.makedirs_exist_ok(os.path.join(self.workspace, "logs"))
         # Redirect stdout to logfile
-        with mets_log.open('w') as log:
+        with open(mets_log, 'w') as log:
             with redirect_stdout(log):        
                 try:
                     metadata = Metax().get_data('datasets', self.dataset_id)
                     contract_id = metadata["contract"]["id"]
-                    main(['--workspace', self.workspace,
+                    main(['--workspace', sip_creation_path,
                           'tpas', 'tpas', '--clean']) #, --contract_id, contract_id ])
                     task_result = 'success'
                     task_messages = "Mets dodument created."
