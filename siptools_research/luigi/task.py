@@ -33,6 +33,7 @@ class WorkflowTask(luigi.Task):
                                               'sip-in-progress')
         self.logs_path = os.path.join(self.workspace, 'logs')
 
+
 class WorkflowExternalTask(luigi.ExternalTask):
     """Common base class for all tasks that are executed externally from this
     process and task does not implement the run() method, only output() and
