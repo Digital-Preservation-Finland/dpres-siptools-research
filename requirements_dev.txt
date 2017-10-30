@@ -13,3 +13,4 @@ httpretty
 coreapi
 mongomock
 mimeparse
+Sphinx
