@@ -65,8 +65,8 @@ Build RPM::
    make rpm
 
 Generating documentation
-----------------------
-Documentation for modules is automatically generated from docstrings using Sphinx (`https://wiki.csc.fi/KDK/PythonKoodinDokumentointi`_)::
+------------------------
+Documentation for modules is automatically generated from docstrings using Sphinx (`https://wiki.csc.fi/KDK/PythonKoodinDokumentointi <https://wiki.csc.fi/KDK/PythonKoodinDokumentointi>`_)::
 
    cd doc/
    make html
