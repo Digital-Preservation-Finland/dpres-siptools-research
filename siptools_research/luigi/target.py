@@ -2,6 +2,7 @@
 
 import os
 
+import luigi.contrib.ssh
 from luigi import LocalTarget
 from luigi.contrib.mongodb import MongoCellTarget
 import pymongo
@@ -74,7 +75,6 @@ class MongoTaskResultTarget(MongoCellTarget):
         return self.read() == "success"
 
 
-
 class TaskLogTarget(LocalTarget):
 
     """Luigi target for generic log files"""
@@ -86,3 +86,12 @@ class TaskLogTarget(LocalTarget):
         path = os.path.join(workspace, 'logs', filename)
         print "*** TaskLogTarget:%s" % path
         LocalTarget.__init__(self, path)
+
+
+class RemoteAnyTarget(luigi.contrib.ssh.RemoteTarget):
+    """Modified version of luigi.contrib.ssh.RemoteTarget. A list of possible
+    file paths is given instead of one path. The target exists if any of those
+    paths exist at remote server."""
+    def exists(self):
+        """Returns ``True`` if any of paths exist."""
+        return any([self.fs.exists(p) for p in self.path])
