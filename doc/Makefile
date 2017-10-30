@@ -43,7 +43,7 @@ clean:
 
 modules:
 	mkdir -p source/modules
-	tools/generate_modules.py -m10 -f --dest-dir=source/modules --suffix=rst ../siptools_research
+	sphinx-apidoc --maxdepth=10 --force --output-dir=source/modules --suffix=rst ../siptools_research
 
 html: modules
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
