@@ -8,7 +8,6 @@ import traceback
 
 from luigi import Parameter
 
-from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget, \
         TaskLogTarget
 from siptools_research.utils.utils import  touch_file
@@ -96,14 +95,6 @@ class SetSIPStatus(WorkflowTask):
                 mongo_timestamp.write(datetime.datetime.utcnow().isoformat())
                 mongo_status.write('rejected')
 
-                failed_log = FailureLog(self.workspace).output()
-                with failed_log.open('w') as outfile:
-                    outfile.write(messages)
-
-                yield MoveSipToUser(
-                    workspace=self.workspace,
-                    home_path=self.home_path)
-
                 # task output
                 touch_file(TaskFileTarget(self.workspace, 'ready-for-cleanup'))
 
@@ -115,6 +106,3 @@ class SetSIPStatus(WorkflowTask):
             }
             mongo_task.write(task_result)
 
-            failed_log = FailureLog(self.workspace).output()
-            with failed_log.open('w') as outfile:
-                outfile.write("Reading DP validation report failed.")

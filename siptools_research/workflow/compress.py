@@ -7,7 +7,6 @@ import datetime
 
 from luigi import Parameter
 
-from siptools_research.workflow_x.move_sip import MoveSipToUser, FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
 from siptools_research.utils.utils import  touch_file
 
