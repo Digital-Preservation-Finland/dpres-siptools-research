@@ -67,7 +67,7 @@ class CreateTechnicalMetadata(WorkflowTask):
             sys.stdout = log
             print "!!!3 dataset_id:%s" % self.dataset_id
 
-            main([dataset_id,
+            main([self.dataset_id,
                   '--workspace', self.sip_creation_path])
             print "!!!4 dataset_id:%s" % self.dataset_id
             sys.stdout = save_stdout
@@ -84,9 +84,9 @@ class CreateTechnicalMetadata(WorkflowTask):
 
             # task output
             touch_file(TaskFileTarget(self.workspace,
-                                      'create-technical-metadata'))
+                                          'create-technical-metadata'))
 
-        except Exception as ex:
+        except IOError as ex:
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),
                 'result': 'failure',

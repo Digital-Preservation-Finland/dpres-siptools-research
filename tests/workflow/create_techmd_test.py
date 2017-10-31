@@ -9,7 +9,6 @@ import pytest
 
 #from siptools_research.target import mongo_settings
 
-from siptools_research.workflow.utils import UnknownReturnCode
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 
 DATASET_PATH = "tests/data/metax_datasets/"
