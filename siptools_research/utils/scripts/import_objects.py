@@ -65,9 +65,9 @@ def create_objects(file_id=None, workspace=None):
     #    formatname = formatdesignation(filepath, datatype='name')
     #    formatversion = formatdesignation(filepath, datatype='version')
     formatversion = "1.0"
-    #print "filename:%s, filepath:%s, hashalgorithm:%s, hashvalue:%s, \
-    #creation_date:%s, formatname:%s" % \
-    #(filename,filepath,hashalgorithm,hashvalue,creation_date,formatname)
+    print "filename:%s, filepath:%s, hashalgorithm:%s, hashvalue:%s, \
+    creation_date:%s, formatname:%s" % \
+    (filename,filepath,hashalgorithm,hashvalue,creation_date,formatname)
 
     # Picks name of hashalgorithm from its length if it's not valid
     allowed_hashs = {128: 'MD5', 160: 'SHA-1', 224: 'SHA-224',
@@ -242,6 +242,7 @@ def main(arguments=None):
     metax_dataset = Metax().get_data('datasets', args.dataset_id)
     for i in metax_dataset["research_dataset"]["files"]:
         file_id = i["identifier"]
+        print "file_id:%s" % file_id
         create_objects(file_id, args.workspace)
 
 
