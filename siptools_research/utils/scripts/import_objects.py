@@ -53,10 +53,12 @@ def create_objects(file_id=None, workspace=None):
     """Gets file metadata from Metax and calls create_premis_object function"""
 
     metadata = Metax().get_data('files', file_id)
+    print "!!! !! metadata:%s" % metadata
 
     filename = metadata["file_name"]
     # Assume that files are found in 'sip-in-progress' directory in workspace
     filepath = os.path.join(workspace, 'sip-in-progress')
+    print " metadata[checksum]:%s" % metadata["checksum"]
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
