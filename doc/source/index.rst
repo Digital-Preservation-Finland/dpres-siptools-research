@@ -11,7 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   modules/modules
+   modules/siptools_research
+   modules/tests
 
 
 

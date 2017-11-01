@@ -43,7 +43,7 @@ clean:
 
 modules:
 	mkdir -p source/modules
-	sphinx-apidoc --maxdepth=10 --force --output-dir=source/modules --suffix=rst ../siptools_research
+	sphinx-apidoc --maxdepth=10 --force --output-dir=source/modules --suffix=rst ../
 
 html: modules
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
@@ -158,3 +158,20 @@ doctest:
 
 pdf: latex
 	make -C build/latex all-pdf
+
+docserver: html killdocserver
+	cd build ; python -mSimpleHTTPServer 8090 &
+	sleep 1
+	@echo ""
+	@echo "------------------------------------------------------------"
+	@echo "Documentation SimpleHTTPServer up and running..."
+	@echo ""
+	@echo "Point your browser to http://`hostname`:8090/"
+	@echo ""
+	@echo "You can stop the server with command: make killdocserver"
+	@echo ""
+	@echo "------------------------------------------------------------"
+	@echo ""
+
+killdocserver:
+	kill `ps auxwww | grep "[S]impleHTTPServer 8090" | awk '{print $$2}'` | true
