@@ -3,11 +3,16 @@
 import argparse
 import pprint                   # For printing dict
 from json import loads, dumps   # For printing orderedDict
+import getpass
+import requests
+from requests.auth import HTTPBasicAuth
 import coreapi
 import lxml.etree as ET
 
 METAX_ENTITIES = ['datasets', 'contracts', 'files']
 PRINT_OUTPUT = ['json', 'xml', 'string']
+# TODO: Store username and password somewhere else
+USER = 'tpas'
 
 
 def print_output(dataset, print_output=None):
@@ -36,6 +41,29 @@ class Metax(object):
         :returns: OrderedDict"""
         url = self.baseurl + entity_url + '/' + entity_id
         return self.client.get(url)
+
+    def set_preservation_state(self, dataset_id, state):
+        """Set value of field `preservation_state` for dataset in Metax
+
+        :dataset_id: The ID of dataset in Metax
+        :state: The value for `preservation_state`
+        :returns: None
+
+        """
+        # TODO: To avoid saving Metax password to repository, it is prompted
+        # here (just for testing purposes)
+        password = getpass.getpass()
+
+        url = self.baseurl + 'datasets/' + dataset_id
+        data = {"id": dataset_id, "preservation_state": state}
+        request = requests.patch(
+            url,
+            json=data,
+            auth=HTTPBasicAuth(USER, password)
+        )
+
+        # Raise exception if request fails
+        assert request.status_code == 200
 
 
 def parse_arguments(arguments):
