@@ -2,12 +2,11 @@
 
 from siptools_research.workflow import report_preservation_status
 
-def test_reportpreservationstatus():
+def test_reportpreservationstatus(testmongoclient):
     """Tests that that task is complete after it has been run."""
 
-    testpath = 'workspace'
     task = report_preservation_status.ReportPreservationStatus(
-        workspace=testpath,
+        workspace='workspace',
         dataset_id="1"
     )
     assert not task.complete()
