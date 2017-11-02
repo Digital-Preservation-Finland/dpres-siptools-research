@@ -1,12 +1,12 @@
-"""A workflow task that copies and reads the ingest report from preservation
-service. The preservation status is updated to Metax."""
+"""A workflow task that reads the ingest report locations from preservation
+service and updates preservation status to Metax."""
 
 from ..luigi.task import WorkflowTask
 from ..luigi.target import MongoTaskResultTarget
 from .validate_sip import ValidateSIP
 from ..utils import database
 
-class ReadIngestReport(WorkflowTask):
+class ReportPreservationStatus(WorkflowTask):
     """A luigi task that copies and reads the ingest report from preservation
     service. The preservation status is updated to Metax."""
 
