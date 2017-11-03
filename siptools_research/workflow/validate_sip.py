@@ -8,7 +8,7 @@ from siptools_research.workflow.send_sip import SendSIPToDP
 
 DP_HOST = 'pouta-ingest-tpas'
 DP_USER = 'tpas'
-# TODO: set path to RSA keys
+DP_SSH_KEY = '/home/vagrant/.ssh/id_rsa_tpas_pouta'
 
 class ValidateSIP(WorkflowExternalTask):
     """External task that finishes when SIP is found in ~/rejected/ or
@@ -33,4 +33,6 @@ class ValidateSIP(WorkflowExternalTask):
         date = time.strftime("%Y-%m-%d")
         path = ['accepted/%s/%s' % (date, self.document_id),
                 'rejected/%s/%s' % (date, self.document_id)]
-        return RemoteAnyTarget(path, DP_HOST, username=DP_USER)
+        return RemoteAnyTarget(path, DP_HOST,
+                               username=DP_USER,
+                               key_file=DP_SSH_KEY)

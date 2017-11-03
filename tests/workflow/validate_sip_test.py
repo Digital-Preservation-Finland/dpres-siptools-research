@@ -10,3 +10,4 @@ directory /home/tpas/rejected/2017-10-26/ or /home/tpas/accepted/2017-10-26/ on
 pouta-ingest-tpas server. Then manually run the ``TestTask`` using luigi::
 
    luigi --module siptools_research.workflow.validate_sip ValidateSIP
+"""

@@ -9,7 +9,6 @@ import subprocess
 
 from luigi import Parameter
 
-from siptools_research.workflow_x.move_sip import FailureLog
 from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
 from siptools_research.utils.utils import  touch_file
 
@@ -95,9 +94,6 @@ class PollValidationReports(WorkflowTask):
                 }
                 mongo_task.write(task_result)
 
-                failed_log = FailureLog(self.workspace).output()
-                with failed_log.open('w') as outfile:
-                    outfile.write("Poll DP validation report failed.")
 
         # Complete task and sets status to pending
         elif count == 10:
