@@ -17,6 +17,10 @@ from siptools_research.workflow.create_workspace import CreateWorkspace
 
 from siptools_research.utils.scripts.import_objects import main
 
+# A dummy exception that never raises
+class DummyException(Exception):
+    pass
+
 
 class CreateTechnicalMetadata(WorkflowTask):
     """Create PREMIS object files based on SÄHKE2 contents.
@@ -68,7 +72,7 @@ class CreateTechnicalMetadata(WorkflowTask):
             print "!!!3 dataset_id:%s" % self.dataset_id
 
             main([self.dataset_id,
-                  '--workspace', self.sip_creation_path])
+                  '--workspace', self.workspace])
             print "!!!4 dataset_id:%s" % self.dataset_id
             sys.stdout = save_stdout
             print "!!!5 dataset_id:%s" % self.dataset_id
@@ -86,7 +90,7 @@ class CreateTechnicalMetadata(WorkflowTask):
             touch_file(TaskFileTarget(self.workspace,
                                           'create-technical-metadata'))
 
-        except IOError as ex:
+        except DummyException as ex:
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),
                 'result': 'failure',
