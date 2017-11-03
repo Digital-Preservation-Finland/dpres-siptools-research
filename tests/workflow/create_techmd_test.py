@@ -19,7 +19,7 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
     """Test the workflow task CreateTechnicalMetadata module.
     """
 
-    testpath = "./workspace"
+    testpath = "./"
 
     # Create workspace with "logs" and "transfers" directories in temporary
     # directory
