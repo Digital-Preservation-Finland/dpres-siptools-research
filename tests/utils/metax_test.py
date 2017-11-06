@@ -10,3 +10,5 @@ def test_get_dataset(testmetax):
         [0]['en'] == 'creation'
 
 #TODO: test for other entities: contracts, files...
+
+#TODO: Test for set_preservation_state function
