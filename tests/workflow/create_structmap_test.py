@@ -14,9 +14,9 @@ def test_create_structmap_ok(testpath):
     """
     workspace = testpath
 
-    # Clean workspace and create "logs" directory in
-    # temporary directory
+    # Clean workspace and create "logs" directory in temporary directory
     os.makedirs(os.path.join(workspace, 'logs'))
+    os.makedirs(os.path.join(workspace, 'sip-in-progress'))
     # Copy sample datacite.xml to workspace directory
     dmdpath = os.path.join(workspace, 'datacite.xml')
     shutil.copy('tests/data/datacite_sample.xml', dmdpath)
