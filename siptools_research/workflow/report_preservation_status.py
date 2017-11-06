@@ -5,6 +5,7 @@ from ..luigi.task import WorkflowTask
 from ..luigi.target import MongoTaskResultTarget
 from .validate_sip import ValidateSIP
 from ..utils import database
+from ..utils import metax
 
 class ReportPreservationStatus(WorkflowTask):
     """A luigi task that copies and reads the ingest report from preservation
@@ -26,14 +27,18 @@ class ReportPreservationStatus(WorkflowTask):
         assert len(ingest_report_paths) == 1
 
         # 'accepted' or 'rejected'?
+        metax_client = metax.Metax()
         directory = ingest_report_paths[0].split('/')[0]
-        print directory
         if directory == 'accepted':
-            print 'ACCEPTED'
+            # Set Metax preservation state of this dataset to 6 ("in longterm
+            # preservation")
+            metax_client.set_preservation_state(self.dataset_id, '6')
         elif directory == 'rejected':
-            print 'REJECTED'
+            # Set Metax preservation state of this dataset  to 7  ("Rejected
+            # long-term preservation")
+            metax_client.set_preservation_state(self.dataset_id, '7')
         else:
-            raise  ValueError('Ingest report was found incorrect path: %s'\
+            raise  ValueError('Ingest report was found in incorrect path: %s'\
                               % ingest_report_paths[0])
 
         task_result = "success"
