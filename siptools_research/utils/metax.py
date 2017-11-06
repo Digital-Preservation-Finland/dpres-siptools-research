@@ -3,7 +3,6 @@
 import argparse
 import pprint                   # For printing dict
 from json import loads, dumps   # For printing orderedDict
-import getpass
 import requests
 from requests.auth import HTTPBasicAuth
 import coreapi
@@ -11,8 +10,9 @@ import lxml.etree as ET
 
 METAX_ENTITIES = ['datasets', 'contracts', 'files']
 PRINT_OUTPUT = ['json', 'xml', 'string']
-# TODO: Store username and password somewhere else
+
 USER = 'tpas'
+PASSWORD_FILE = '~/metax_password'
 
 
 def print_output(dataset, print_output=None):
@@ -50,9 +50,10 @@ class Metax(object):
         :returns: None
 
         """
-        # TODO: To avoid saving Metax password to repository, it is prompted
-        # here (just for testing purposes)
-        password = getpass.getpass()
+        # Read password from file
+        with open(PASSWORD_FILE) as open_file:
+            password = open_file.read().strip()
+
 
         url = self.baseurl + 'datasets/' + dataset_id
         data = {"id": dataset_id, "preservation_state": state}
