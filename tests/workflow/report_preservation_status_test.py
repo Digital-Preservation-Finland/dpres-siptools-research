@@ -2,7 +2,7 @@
 
 from siptools_research.workflow import report_preservation_status
 
-def test_reportpreservationstatus(testmongoclient):
+def test_reportpreservationstatus(testmongoclient, testmetax):
     """Tests that that task is complete after it has been run."""
 
     task = report_preservation_status.ReportPreservationStatus(

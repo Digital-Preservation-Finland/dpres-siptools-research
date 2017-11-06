@@ -44,7 +44,8 @@ def testmetax(request):
     ``METAX_PATH/subdir/filename`` as message body is retrieved. The status of
     message is always *HTTP/1.1 200 OK* and the Content-Type is
     *application/json*. To add new test responses just add new JSON file to
-    some subdirectory of ``METAX_PATH``.
+    some subdirectory of ``METAX_PATH``. Using HTTP PATCH method has exactly
+    same effect as HTTP GET methdod.
     """
 
     httpretty.enable()
@@ -54,11 +55,20 @@ def testmetax(request):
         for jsonfile in os.listdir(os.path.join(METAX_PATH, subdir)):
             with open(os.path.join(METAX_PATH, subdir, jsonfile)) as open_file:
                 body = open_file.read()
+                # Register response for GET method
                 httpretty.register_uri(
                     httpretty.GET,
                     # Join url using posixpath because urlparse.urljoin does
                     # not work with multiple arguments (and os.path.join would
                     # not work on windows, for example)
+                    posixpath.join(METAX_URL, subdir, jsonfile),
+                    body=body,
+                    status=200,
+                    content_type='application/json'
+                )
+                # Register response for PATCH method
+                httpretty.register_uri(
+                    httpretty.PATCH,
                     posixpath.join(METAX_URL, subdir, jsonfile),
                     body=body,
                     status=200,
