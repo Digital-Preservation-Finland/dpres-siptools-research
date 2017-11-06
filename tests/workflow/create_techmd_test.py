@@ -4,6 +4,7 @@ import os
 import shutil
 import getpass
 import pytest
+import pymongo
 
 #from tests.assertions import task_ok
 
@@ -15,7 +16,8 @@ DATASET_PATH = "tests/data/metax_datasets/"
 SAMPLE_CREATION_EVENT_PATH = "tests/data/sample_techmd.xml"
 
 
-def test_create_techmd_ok(testpath, testmongoclient, testmetax):
+#def test_create_techmd_ok(testpath, testmongoclient, testmetax):
+def test_create_techmd_ok(testpath, testmongoclient):
     """Test the workflow task CreateTechnicalMetadata module.
     """
 
@@ -69,8 +71,7 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
 
     # Check that XML is created in workspace/sip-inprogrss/
     assert os.path.isfile(os.path.join(workspace,
-        'sip-in-progress',
-        'file_name_1-techmd.xml'))
+        'project_x_FROZEN%2Fsome%2Fpath%2Ffile_name_5-techmd.xml'))
 
     # Check that task output file is created in workspace/task-output-files/
     assert os.path.isfile(os.path.join(workspace,
@@ -91,14 +92,11 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
         {'_id':'workspace'}
     )
     assert doc['_id'] == 'workspace'
-    assert doc['wf_tasks']['create-technical-information']['messages']\
-             == 'Technical metadata created.'
-    assert doc['wf_tasks']['create-provenance-information']['result']\
+    assert doc['wf_tasks']['create-technical-metadata']['messages']\
+             == 'Technical metadata for objects created.'
+    assert doc['wf_tasks']['create-technical-metadata']['result']\
             == 'success'
     assert mongoclient['siptools-research'].workflow.count() == 1
-
-
-
 
 
 def assert_mongodb_data_success(document_id):

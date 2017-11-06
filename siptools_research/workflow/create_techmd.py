@@ -61,23 +61,17 @@ class CreateTechnicalMetadata(WorkflowTask):
         try:
             #with open(os.path.join(self.workspace, 'transfers', 'aineisto')) as infile:
             #    dataset_id = infile.read()
-            print "!!! dataset_id:%s" % self.dataset_id
 
             techmd_log = os.path.join(self.workspace, 'logs',
                                       'task-create-technical-metadata.log')
             save_stdout = sys.stdout
             log = open(techmd_log, 'w')
-            print "!!!2 dataset_id:%s" % self.dataset_id
             sys.stdout = log
-            print "!!!3 dataset_id:%s" % self.dataset_id
 
             main([self.dataset_id,
                   '--workspace', self.workspace])
-            print "!!!4 dataset_id:%s" % self.dataset_id
             sys.stdout = save_stdout
-            print "!!!5 dataset_id:%s" % self.dataset_id
             log.close()
-            print "!!!6 dataset_id:%s" % self.dataset_id
 
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),

@@ -13,7 +13,7 @@ PRINT_OUTPUT = ['json', 'xml', 'string']
 def print_output(dataset, print_output=None):
     """Print dataset as json, xml or string"""
     if print_output == 'json':
-        pprint.PrettyPrinter(indent=4).pprint(loads(dumps(input_ordered_dict)))
+        pprint.PrettyPrinter(indent=4).pprint(loads(dumps(dataset)))
     elif print_output == 'xml':
         tree = ET.parse(dataset)
         root = tree.getroot()

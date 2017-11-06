@@ -68,9 +68,9 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None):
     #    formatname = formatdesignation(filepath, datatype='name')
     #    formatversion = formatdesignation(filepath, datatype='version')
     formatversion = "1.0"
-    print "filename:%s, filepath:%s, hashalgorithm:%s, hashvalue:%s, \
-    creation_date:%s, formatname:%s, metax_filepath %s" % \
-    (filename,filepath,hashalgorithm,hashvalue,creation_date,formatname,metax_filepath)
+    #print "filename:%s, filepath:%s, hashalgorithm:%s, hashvalue:%s, \
+    #creation_date:%s, formatname:%s, metax_filepath %s" % \
+    #(filename,filepath,hashalgorithm,hashvalue,creation_date,formatname,metax_filepath)
 
     # Picks name of hashalgorithm from its length if it's not valid
     allowed_hashs = {128: 'MD5', 160: 'SHA-1', 224: 'SHA-224',
@@ -93,12 +93,13 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None):
     xml = Metax().get_data('files', file_id + '/xml')
     for i in xml:
         if i not in NAMESPACES.values():
-            raise TypeError("Invalid XML namespace: %s" % ns)
+            raise TypeError("Invalid XML namespace: %s" % i)
         xml_data = Metax().get_data('files', file_id + '/xml?namespace=' + i)
         tree = ET.parse(xml_data)
         root = tree.getroot()
 
-        target_filename = quote_plus(metax_filepath + '-mix-techmd.xml')
+        ns_key = next((ns for ns, ns_url in NAMESPACES.items() if ns_url == i), None)
+        target_filename = quote_plus(metax_filepath + '-' + ns_key + '-techmd.xml')
         output_file = os.path.join(workspace, target_filename)
         with open(output_file, 'w+') as outfile:
             outfile.write(ET.tostring(root))
