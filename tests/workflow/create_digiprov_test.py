@@ -55,7 +55,8 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
                            'logs',
                            'task-create-provenance-information.log'))\
             as open_file:
-        assert open_file.read().startswith("premis_event created")
+        # Check last line of log file
+        assert open_file.readlines()[-1].startswith("premis_event created")
 
     # Check that new log entry is found in mongodb, and that there is no extra
     # entries
