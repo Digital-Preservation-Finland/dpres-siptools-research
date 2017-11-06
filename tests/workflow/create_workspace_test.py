@@ -4,9 +4,6 @@ import os
 import pymongo
 from siptools_research.workflow import create_workspace
 
-DATASET_PATH = "tests/data/metax_datasets/"
-SAMPLE_CREATION_EVENT_PATH = "tests/data/sample_creation_event.xml"
-
 def test_createworkspace(testpath, testmongoclient):
     """Tests for `CreateWorkspace` task.
 

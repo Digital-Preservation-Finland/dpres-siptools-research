@@ -5,9 +5,6 @@ import pymongo
 import lxml
 from siptools_research.workflow import create_digiprov
 
-DATASET_PATH = "tests/data/metax_datasets/"
-SAMPLE_CREATION_EVENT_PATH = "tests/data/sample_creation_event.xml"
-
 # pylint: disable=unused-argument,invalid-name,fixme
 def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     """Tests for `CreateProvenanceInformation` task.
