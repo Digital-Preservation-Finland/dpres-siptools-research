@@ -4,13 +4,22 @@ import argparse
 import pprint                   # For printing dict
 from json import loads, dumps   # For printing orderedDict
 import coreapi
+import lxml.etree as ET
 
 METAX_ENTITIES = ['datasets', 'contracts', 'files']
+PRINT_OUTPUT = ['json', 'xml', 'string']
 
 
-def pprint_ordereddict(input_ordered_dict):
-    """Convert orderedDict to normal dict"""
-    pprint.PrettyPrinter(indent=4).pprint(loads(dumps(input_ordered_dict)))
+def print_output(dataset, print_output=None):
+    """Print dataset as json, xml or string"""
+    if print_output == 'json':
+        pprint.PrettyPrinter(indent=4).pprint(loads(dumps(dataset)))
+    elif print_output == 'xml':
+        tree = ET.parse(dataset)
+        root = tree.getroot()
+        print ET.tostring(root)
+    else:
+        print dataset
 
 
 class Metax(object):
@@ -41,6 +50,9 @@ def parse_arguments(arguments):
     parser.add_argument('entity_id',
                         metavar='entity_id',
                         help='Entity ID')
+    parser.add_argument('--print_output',
+                        metavar='print_output', default='json',
+                        help='print output as json/xml/string')
     return parser.parse_args(arguments)
 
 
@@ -52,7 +64,7 @@ def main(arguments=None):
     metax = Metax()
 
     dataset = metax.get_data(args.entity_url, args.entity_id)
-    pprint_ordereddict(dataset)
+    print_output(dataset,args.print_output)
 
 
 if __name__ == "__main__":

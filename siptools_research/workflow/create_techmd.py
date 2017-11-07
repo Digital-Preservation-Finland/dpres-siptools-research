@@ -17,6 +17,10 @@ from siptools_research.workflow.create_workspace import CreateWorkspace
 
 from siptools_research.utils.scripts.import_objects import main
 
+# A dummy exception that never raises
+class DummyException(Exception):
+    pass
+
 
 class CreateTechnicalMetadata(WorkflowTask):
     """Create PREMIS object files based on SÄHKE2 contents.
@@ -26,7 +30,7 @@ class CreateTechnicalMetadata(WorkflowTask):
     home_path = Parameter()
 
     def requires(self):
-        """Return required tasks.-1
+        """Return required tasks.
 
         :returns: Files must have been transferred to workspace
         """
@@ -55,8 +59,8 @@ class CreateTechnicalMetadata(WorkflowTask):
         mongo_timestamp = MongoDBTarget(document_id, 'timestamp')
 
         try:
-            with open(os.path.join(self.workspace, 'transfers', 'aineisto')) as infile:
-                dataset_id = infile.read()
+            #with open(os.path.join(self.workspace, 'transfers', 'aineisto')) as infile:
+            #    dataset_id = infile.read()
 
             techmd_log = os.path.join(self.workspace, 'logs',
                                       'task-create-technical-metadata.log')
@@ -64,8 +68,8 @@ class CreateTechnicalMetadata(WorkflowTask):
             log = open(techmd_log, 'w')
             sys.stdout = log
 
-            main([dataset_id,
-                  '--workspace', self.sip_creation_path])
+            main([self.dataset_id,
+                  '--workspace', self.workspace])
             sys.stdout = save_stdout
             log.close()
 
@@ -78,9 +82,9 @@ class CreateTechnicalMetadata(WorkflowTask):
 
             # task output
             touch_file(TaskFileTarget(self.workspace,
-                                      'create-technical-metadata'))
+                                          'create-technical-metadata'))
 
-        except Exception as ex:
+        except DummyException as ex:
             task_result = {
                 'timestamp': datetime.datetime.utcnow().isoformat(),
                 'result': 'failure',
