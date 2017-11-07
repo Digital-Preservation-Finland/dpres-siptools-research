@@ -12,6 +12,7 @@ Testing
 -------
 Install required packages for testing::
 
+   sudo yum install mongodb-server
    pip install -r requirements_dev.txt
 
 Start luigid::
