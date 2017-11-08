@@ -23,7 +23,7 @@ def test_reportpreservationstatus(testpath, testmongoclient, testmetax,
     with paramiko.SSHClient() as ssh:
         # Initialize SSH connection to digital preservation server
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect('pouta-ingest-tpas',
+        ssh.connect('86.50.168.218',
                     username='tpas',
                     key_filename='tests/data/pas_ssh_key')
 

@@ -6,7 +6,7 @@ from siptools_research.luigi.task import WorkflowExternalTask
 from siptools_research.luigi.target import RemoteAnyTarget
 from siptools_research.workflow.send_sip import SendSIPToDP
 
-DP_HOST = 'pouta-ingest-tpas'
+DP_HOST = '86.50.168.218'
 DP_USER = 'tpas'
 DP_SSH_KEY = '/home/vagrant/.ssh/id_rsa_tpas_pouta'
 
