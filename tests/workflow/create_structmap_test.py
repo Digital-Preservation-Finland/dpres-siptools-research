@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.create_sip.create_structmap` module"""
+"""Test the :mod:`siptools_research.workflow.create_structmap` module"""
 
 import os
 import shutil
@@ -10,7 +10,6 @@ from siptools.scripts import import_description
 
 def test_create_structmap_ok(testpath):
     """Test the workflow task CreateStructMap module.
-       fixture testpath
     """
     workspace = testpath
     sip_creation_path = os.path.join(workspace, "sip-in-progress")
