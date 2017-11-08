@@ -15,9 +15,13 @@ def test_reportpreservationstatus(testpath, testmongoclient, testmetax,
 
     workspace = testpath
 
-    # Use test password file instead of real one
+    # Use test password file instead of real Metax password
     monkeypatch.setattr('siptools_research.utils.metax.PASSWORD_FILE',
                         'tests/data/test_password_file')
+
+    # Force ValidateSIP task to use SSH key from different path
+    monkeypatch.setattr('siptools_research.workflow.validate_sip.DP_SSH_KEY',
+                        'tests/data/pas_ssh_key')
 
     # Create new directory to digital preservation server
     with paramiko.SSHClient() as ssh:
