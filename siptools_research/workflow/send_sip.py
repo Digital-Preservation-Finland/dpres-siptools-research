@@ -15,6 +15,7 @@ from siptools_research.workflow.compress import CompressSIP
 from siptools_research.utils import database, utils
 from siptools_research.utils.contextmanager import redirect_stdout
 
+IDENTITY = '~/.ssh/id_rsa_tpas_pouta'
 class SendSIPToDP(WorkflowTask):
     """Send SIP to DP.
     """
@@ -93,7 +94,7 @@ def send_to_dp(sip, sent_log):
     """Sends SIP to DP service using sftp.
     """
     print "send-to-dp"
-    identity = '~/.ssh/id_rsa_tpas_pouta'
+    identity = IDENTITY
     host = '86.50.168.218'
     username = 'tpas'
 

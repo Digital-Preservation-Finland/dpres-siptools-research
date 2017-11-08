@@ -13,9 +13,15 @@ from siptools.scripts import import_description, premis_event, compile_structmap
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools.scripts.compress import main
 
-def test_send_sip(testpath):
+def test_send_sip(testpath, monkeypatch):
     """Test the workflow task SendSip module.
     """
+
+    # Force SendSIPToDP task to use SSH key from different path
+    os.chmod('tests/data/pas_ssh_key', 0600)
+    monkeypatch.setattr('siptools_research.workflow.send_sip.IDENTITY',
+                        'tests/data/pas_ssh_key')
+
     workspace = testpath
     create_sip = 'tests/data/testsip' #os.path.join(workspace, "sip-in-progress")
     #tar testsip
