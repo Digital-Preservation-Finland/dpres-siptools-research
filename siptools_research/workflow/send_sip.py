@@ -68,9 +68,6 @@ class SendSIPToDP(WorkflowTask):
                        task_result = 'failure'
                        task_messages =  err
 
-        except:
-            print "exception"
-            print  "Exception ", sys.exc_info()[0]
         finally:
             if not task_result:
                  task_result = 'failure'
