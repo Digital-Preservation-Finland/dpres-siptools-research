@@ -14,3 +14,4 @@ coreapi
 mongomock
 mimeparse
 Sphinx
+paramiko
