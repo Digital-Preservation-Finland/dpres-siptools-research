@@ -13,6 +13,7 @@ def test_create_structmap_ok(testpath):
        fixture testpath
     """
     workspace = testpath
+    sip_creation_path = os.path.join(workspace, "sip-in-progress")
 
     # Clean workspace and create "logs" directory in temporary directory
     os.makedirs(os.path.join(workspace, 'logs'))
@@ -22,7 +23,7 @@ def test_create_structmap_ok(testpath):
     shutil.copy('tests/data/datacite_sample.xml', dmdpath)
 
     # Create dmdsec
-    import_description.main([dmdpath, '--workspace', workspace])
+    import_description.main([dmdpath, '--workspace', sip_creation_path])
 
     # Create provenance
     testfilename = "aineisto"
@@ -34,7 +35,7 @@ def test_create_structmap_ok(testpath):
     # Create tech metadata
     test_data_folder = './tests/data/structured'
 
-    import_object.main([test_data_folder, '--workspace', workspace])
+    import_object.main([test_data_folder, '--workspace', sip_creation_path])
 
     # Create structmap
     task = CreateStructMap(workspace=workspace, dataset_id='1')
@@ -43,8 +44,8 @@ def test_create_structmap_ok(testpath):
 
     assert task_ok(task)
     assert task.complete()
-    assert os.path.isfile(os.path.join(workspace, 'filesec.xml'))
-    assert os.path.isfile(os.path.join(workspace, 'structmap.xml'))
+    assert os.path.isfile(os.path.join(sip_creation_path, 'filesec.xml'))
+    assert os.path.isfile(os.path.join(sip_creation_path, 'structmap.xml'))
 
     assert_mongodb_data_success(workspace)
 
