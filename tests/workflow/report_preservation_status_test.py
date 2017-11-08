@@ -20,6 +20,7 @@ def test_reportpreservationstatus(testpath, testmongoclient, testmetax,
                         'tests/data/test_password_file')
 
     # Force ValidateSIP task to use SSH key from different path
+    os.chmod('tests/data/pas_ssh_key', 0600)
     monkeypatch.setattr('siptools_research.workflow.validate_sip.DP_SSH_KEY',
                         'tests/data/pas_ssh_key')
 
