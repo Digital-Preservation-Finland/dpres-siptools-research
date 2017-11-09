@@ -1,4 +1,3 @@
-MOCK_CONFIG=stable-7-x86_64
 ROOT=/
 PREFIX=/usr
 ETC=${ROOT}/etc
@@ -30,7 +29,7 @@ install:
 	# Copy logging config file to etc
 	cp include/etc/siptools_research/* ${LOGGINGCONFDIR}/
 	chmod 644 ${LOGGINGCONFDIR}/logging.conf
-	
+
 	# Copy user management script to share
 	cp include/share/siptools_research_user.sh "${SHAREDIR}"/
 	chmod 644 ${SHAREDIR}/siptools_research_user.sh
@@ -56,7 +55,7 @@ clean: clean-rpm
 clean-rpm:
 	rm -rf rpmbuild
 
-rpm: clean-rpm
+rpm: clean
 	create-archive.sh
 	preprocess-spec-m4-macros.sh include/rhel7
-	build-rpm.sh ${MOCK_CONFIG}
+	build-rpm.sh

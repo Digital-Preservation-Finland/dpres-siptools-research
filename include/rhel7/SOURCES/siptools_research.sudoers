@@ -1,2 +1,0 @@
-siptools_research ALL=(ALL) NOPASSWD:/bin/mv,/bin/touch,/bin/chmod,/bin/chown,/bin/mount,/bin/umount,/sbin/e2label,/usr/local/bin/ltfs
-Defaults:siptools_research !requiretty
