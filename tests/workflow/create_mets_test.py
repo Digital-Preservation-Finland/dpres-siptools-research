@@ -49,7 +49,10 @@ def create_test_data(workspace):
     import_description.main([dmdpath, '--workspace', workspace])
 
      # Create provenance
-    premis_event.main([ 'creation', '2016-10-13T12:30:55', '--workspace', workspace])
+    premis_event.main([ 'creation', '2016-10-13T12:30:55',
+                       '--workspace', workspace,
+                       '--event_outcome', 'success',
+                       '--event_detail', 'Poika, 2.985 kg'])
     
     # Create tech metadata
     test_data_folder = './tests/data/structured'
