@@ -1,8 +1,8 @@
-ROOT=/
-PREFIX=/usr
-ETC=/etc
-SHAREDIR=${PREFIX}/share/siptools_research
-VAR=/var
+DESTDIR ?=
+PREFIX ?= /usr
+ETC=${DESTDIR}/etc
+SHAREDIR=${DESTDIR}${PREFIX}/share/siptools_research
+VAR=${DESTDIR}/var
 
 LOGDIR=${VAR}/log/siptools_research
 PROCESSINGDIR=${VAR}/spool/siptools_research
@@ -18,8 +18,11 @@ install:
 	mkdir -p "${SHAREDIR}"
 	mkdir -p "${CONFDIR}"
 
+	# Copy config file
+	cp include/etc/siptools_research/conf ${CONFDIR}/
+
 	# Use Python setuptools
-	python setup.py build ; python ./setup.py install -O1 --prefix="${PREFIX}" --root="${ROOT}" --record=INSTALLED_FILES
+	python setup.py build ; python ./setup.py install -O1 --prefix="${DESTDIR}${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
 	cat INSTALLED_FILES | sed 's/^/\//g' >> INSTALLED_FILES
 
 test:
