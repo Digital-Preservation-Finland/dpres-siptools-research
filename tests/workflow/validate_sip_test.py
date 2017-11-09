@@ -56,27 +56,6 @@ def test_validatesip_rejected(testpath, patch_ssh_key):
     assert task.complete()
 
 
-def test_accepted_and_rejected(testpath, patch_ssh_key):
-    """Initializes task and tests that it is not complete. Then creates new
-    directories to both "rejected" and "accepted" directories in digital
-    preservation server and tests that task is complete. Task should fail,
-    because it is impossible to deduce if SIP was accepted or rejected."""
-    workspace = testpath
-
-    # Init task
-    task = ValidateSIP(workspace=workspace, dataset_id="1")
-    assert not task.complete()
-
-    # Create new directories to digital preservation server
-    datedir = time.strftime("%Y-%m-%d")
-    workspace_name = os.path.basename(workspace)
-    create_remote_dir("rejected/%s/%s" % (datedir, workspace_name))
-    create_remote_dir("accepted/%s/%s" % (datedir, workspace_name))
-
-    # Check that task is NOT completed after new directories are created
-    assert not task.complete()
-
-
 @pytest.fixture(scope="function")
 def patch_ssh_key(monkeypatch):
     """Fixture that forces ValidateSIP task to use SSH key from different
