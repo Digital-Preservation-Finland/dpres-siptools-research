@@ -19,12 +19,11 @@ class CreateMets(WorkflowTask):
     """
 
     def requires(self):
-        """Requires METS structMap and METS fileSec"""
+        """Requires METS structMap"""
         return {"Create StructMap":
                 CreateStructMap(workspace=self.workspace)}
 
     def output(self):
-        """Outputs a task file"""
         return MongoTaskResultTarget(self.document_id, self.task_name)
 
     def run(self):
@@ -33,13 +32,10 @@ class CreateMets(WorkflowTask):
         the status of the document and rejects the package.
 
         :returns: None
-
         """
-        utils.makedirs_exist_ok(self.sip_creation_path)
-        mets_log = os.path.join(self.workspace,
-                                "logs", 'create-mets.log')
 
         # Redirect stdout to logfile
+        mets_log = os.path.join(self.workspace, "logs", 'create-mets.log')
         with open(mets_log, 'w+') as log:
             with redirect_stdout(log):
                 try:

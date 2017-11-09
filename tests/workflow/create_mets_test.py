@@ -13,7 +13,7 @@ def test_create_mets_ok(testpath):
     # Create workspace with contents required by the tested task
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
-    create_sip = os.path.join(workspace, 'sip_in_progress')
+    create_sip = os.path.join(workspace, 'sip-in-progress')
     os.makedirs(create_sip)
     create_test_data(workspace=create_sip)
 
