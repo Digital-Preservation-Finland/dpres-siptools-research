@@ -1,15 +1,12 @@
 ROOT=/
 PREFIX=/usr
-ETC=${ROOT}/etc
-SHAREDIR=${ROOT}${PREFIX}/share/siptools_research
-CRONDIR=${ETC}/cron.d
+ETC=/etc
+SHAREDIR=${PREFIX}/share/siptools_research
 VAR=/var
 
-LOGDIR=${ROOT}${VAR}/log/siptools_research
-LOGROTATEDIR=${ETC}/logrotate.d
-LOGROTATEFILE=${LOGROTATEDIR}/siptools_research
-PROCESSINGDIR=${ROOT}${VAR}/spool/siptools_research
-LOGGINGCONFDIR=${ETC}/siptools_research
+LOGDIR=${VAR}/log/siptools_research
+PROCESSINGDIR=${VAR}/spool/siptools_research
+CONFDIR=${ETC}/siptools_research
 
 install:
 	# Cleanup temporary files
@@ -18,22 +15,8 @@ install:
 	# Create log, share and processing directories
 	mkdir -p "${LOGDIR}"
 	mkdir -p "${PROCESSINGDIR}"
-	mkdir -p "${LOGROTATEDIR}"
 	mkdir -p "${SHAREDIR}"
-	mkdir -p "${LOGGINGCONFDIR}"
-
-	# Copy logrotate file to etc
-	cp include/etc/logrotate.d/* ${LOGROTATEDIR}/
-	chmod 644 ${LOGROTATEFILE}
-
-	# Copy logging config file to etc
-	cp include/etc/siptools_research/* ${LOGGINGCONFDIR}/
-	chmod 644 ${LOGGINGCONFDIR}/logging.conf
-
-	# Copy user management script to share
-	cp include/share/siptools_research_user.sh "${SHAREDIR}"/
-	chmod 644 ${SHAREDIR}/siptools_research_user.sh
-	chmod +x ${SHAREDIR}/siptools_research_user.sh
+	mkdir -p "${CONFDIR}"
 
 	# Use Python setuptools
 	python setup.py build ; python ./setup.py install -O1 --prefix="${PREFIX}" --root="${ROOT}" --record=INSTALLED_FILES
