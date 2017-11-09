@@ -1,14 +1,7 @@
+"""Workflow task that creates METS document"""
 # encoding=utf8
 
 import os
-import sys
-import traceback
-
-import lxml.etree as ET
-from datetime import datetime
-from luigi import Parameter
-
-from siptools_research.luigi.target import TaskFileTarget, MongoDBTarget
 from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.utils import  utils
 from siptools_research.utils.metax import Metax
@@ -37,36 +30,35 @@ class CreateMets(WorkflowTask):
     def run(self):
         """Compiles all metadata files into METS document.
         If unsuccessful writes an error message into mongoDB, updates
-        the status of the document and rejects the package. 
+        the status of the document and rejects the package.
 
         :returns: None
 
         """
-        document_id = os.path.basename(self.workspace)
         sip_creation_path = os.path.join(self.workspace, 'sip_in_progress')
         utils.makedirs_exist_ok(sip_creation_path)
         task_result = None
         task_messages = None
         mets_log = os.path.join(self.workspace,
-                                  "logs", 'create-mets.log')
+                                "logs", 'create-mets.log')
         utils.makedirs_exist_ok(os.path.join(self.workspace, "logs"))
         open(mets_log, 'a')
         # Redirect stdout to logfile
         with open(mets_log, 'w+') as log:
-            with redirect_stdout(log):        
+            with redirect_stdout(log):
                 try:
                     metadata = Metax().get_data('datasets', self.dataset_id)
                     contract_id = metadata["contract"]["id"]
                     print "????????????? contract %s" %contract_id
                     if contract_id is None:
-                        task_result='failure'
-                        task_message='No contract id'
-                     
+                        task_result = 'failure'
+                        task_messages = 'No contract id'
+
                     if isinstance(contract_id, (int, long)):
-                        contract_id= str(contract_id)
+                        contract_id = str(contract_id)
                     print "contr %s" %contract_id
-                    main(['--workspace', sip_creation_path,
-                          'tpas', 'tpas', '--clean', '--contractid', contract_id ])
+                    main(['--workspace', sip_creation_path, 'tpas', 'tpas',
+                          '--clean', '--contractid', contract_id])
                     task_result = 'success'
                     task_messages = "Mets dodument created."
 
@@ -76,8 +68,8 @@ class CreateMets(WorkflowTask):
                                     % ex.message
 
                 finally:
-                    print " nnnnnnnnnnnnnnnnnnno NO HALOO  1" 
-                    if not task_result:
+                    print " nnnnnnnnnnnnnnnnnnno NO HALOO  1"
+                    if not 'task_result' in locals():
                         task_result = 'failure'
                         task_messages = "Compilation of mets document "\
                                         "failed due to unknown error."
