@@ -79,5 +79,6 @@ def create_premis_event(dataset_id, workspace):
     premis_event.main([
         event_type, event_datetime,
         "--event_detail", event_detail,
+        "--event_outcome", 'success', # TODO: Hardcoded value
         "--workspace", workspace
     ])
