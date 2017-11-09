@@ -11,7 +11,7 @@ from siptools_research.luigi.task import WorkflowTask
 
 from siptools_research.workflow.create_structmap import CreateStructMap
 
-from siptools.scripts.compile_mets import main
+from siptools.scripts import compile_mets
 
 
 class CreateMets(WorkflowTask):
@@ -35,40 +35,36 @@ class CreateMets(WorkflowTask):
         :returns: None
 
         """
-        sip_creation_path = os.path.join(self.workspace, 'sip_in_progress')
-        utils.makedirs_exist_ok(sip_creation_path)
-        task_result = None
-        task_messages = None
+        utils.makedirs_exist_ok(self.sip_creation_path)
         mets_log = os.path.join(self.workspace,
                                 "logs", 'create-mets.log')
-        utils.makedirs_exist_ok(os.path.join(self.workspace, "logs"))
-        open(mets_log, 'a')
+
         # Redirect stdout to logfile
         with open(mets_log, 'w+') as log:
             with redirect_stdout(log):
                 try:
+                    # Get contract id from Metax
                     metadata = Metax().get_data('datasets', self.dataset_id)
                     contract_id = metadata["contract"]["id"]
-                    print "????????????? contract %s" %contract_id
                     if contract_id is None:
                         task_result = 'failure'
                         task_messages = 'No contract id'
-
+                        raise ValueError('Dataset does not have contract id')
                     if isinstance(contract_id, (int, long)):
                         contract_id = str(contract_id)
-                    print "contr %s" %contract_id
-                    main(['--workspace', sip_creation_path, 'tpas', 'tpas',
-                          '--clean', '--contractid', contract_id])
+
+                    # Compile METS
+                    compile_mets.main(['--workspace', self.sip_creation_path,
+                                       'tpas', 'tpas', '--clean',
+                                       '--contractid', contract_id])
                     task_result = 'success'
                     task_messages = "Mets dodument created."
 
                 except KeyError as ex:
                     task_result = 'failure'
-                    task_messages = 'Could not compile mets %s '\
-                                    % ex.message
+                    task_messages = 'Could not compile mets: %s ' % ex.message
 
                 finally:
-                    print " nnnnnnnnnnnnnnnnnnno NO HALOO  1"
                     if not 'task_result' in locals():
                         task_result = 'failure'
                         task_messages = "Compilation of mets document "\
