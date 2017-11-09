@@ -9,18 +9,19 @@ from siptools.scripts import import_description, premis_event, \
     compile_structmap
 
 def test_create_mets_ok(testpath):
-    """Test the workflow task CreateMets module.
-    """
+    """Test the workflow task CreateMets module."""
+    # Create workspace with contents required by the tested task
     workspace = testpath
+    os.makedirs(os.path.join(workspace, 'logs'))
     create_sip = os.path.join(workspace, 'sip_in_progress')
-    #create test data
+    os.makedirs(create_sip)
     create_test_data(workspace=create_sip)
 
-    #test create mets task
+    # Init and run task
     task = CreateMets(workspace=workspace, dataset_id='2')
     task.run()
-    for lists in os.listdir(workspace):
-        path = os.path.join(workspace, lists)
+    for directory in os.listdir(workspace):
+        path = os.path.join(workspace, directory)
         print path
     assert task_ok(task)
     assert task.complete()
@@ -31,11 +32,6 @@ def test_create_mets_ok(testpath):
 
 def create_test_data(workspace):
     """Create data needed to run ``CreateMets`` task"""
-     # Clean workspace and create "logs" directory in
-    # temporary directory
-    if os.path.exists(workspace):
-        shutil.rmtree(workspace)
-    os.makedirs(workspace)
 
     # Copy sample datacite.xml to workspace directory
     dmdpath = os.path.join(workspace, 'datacite.xml')
