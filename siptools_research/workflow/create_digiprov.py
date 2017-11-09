@@ -54,7 +54,7 @@ class CreateProvenanceInformation(WorkflowTask):
                     database.set_status(self.document_id, 'rejected')
 
                 finally:
-                    if not task_result:
+                    if not 'task_result' in locals():
                         task_result = 'failure'
                         task_messages = "Creation of provenance metadata "\
                                         "failed due to unknown error."
