@@ -1,13 +1,105 @@
-"""Test task for testing ``siptools_workflow.validate_sip``.
+"""Test task for testing ``siptools_workflow.validate_sip``."""
+# TODO: Automatic unit testing is complicated, because luigi RemoteTarget is using
+# ssh command to connect remote server [1]. A temporary SSH-server should be
+# created to properly test this module. MockSSH [2] library could do this. It
+# allows definition of output for each command run on remote server (i.e.
+# command: "test -e ~/accepted/..." would return "0" in this case). The problem
+# with MockSSH is that it does not support authentication using SSH keys, so it
+# always prompts for password [3].
+#
+#[1] http://luigi.readthedocs.io/en/stable/_modules/luigi/contrib/ssh.html
+#[2] https://github.com/ncouture/MockSSH
+#[3] https://github.com/ncouture/MockSSH/issues/14
 
-Automatic testing is complicated because RemoteTarget is using ssh command to
-connect remote server (see link below).
+import os
+import time
+import paramiko
+import pytest
+from siptools_research.workflow.validate_sip import ValidateSIP
 
-http://luigi.readthedocs.io/en/stable/_modules/luigi/contrib/ssh.html#RemoteFileSystem
+# pylint: disable=redefined-outer-name,unused-argument
+def test_validatesip_accepted(testpath, patch_ssh_key):
+    """Initializes task and tests that it is not complete. Then creates new
+    directory to "accepted" directory in digital preservation server and tests
+    that task is complete."""
+    workspace = testpath
 
-To manually test the ``validate_sip`` task, add file "testworkspace" to
-directory /home/tpas/rejected/2017-10-26/ or /home/tpas/accepted/2017-10-26/ on
-pouta-ingest-tpas server. Then manually run the ``TestTask`` using luigi::
+    # Init task
+    task = ValidateSIP(workspace=workspace, dataset_id="1")
+    assert not task.complete()
 
-   luigi --module siptools_research.workflow.validate_sip ValidateSIP
-"""
+    # Create new directory to digital preservation server
+    datedir = time.strftime("%Y-%m-%d")
+    workspace_name = os.path.basename(workspace)
+    create_remote_dir("accepted/%s/%s" % (datedir, workspace_name))
+
+    # Check that task is completed after new directory is created
+    assert task.complete()
+
+
+def test_validatesip_rejected(testpath, patch_ssh_key):
+    """Initializes task and tests that it is not complete. Then creates new
+    directory to "rejected" directory in digital preservation server and tests
+    that task is complete."""
+    workspace = testpath
+
+    # Init task
+    task = ValidateSIP(workspace=workspace, dataset_id="1")
+    assert not task.complete()
+
+    # Create new directory to digital preservation server
+    datedir = time.strftime("%Y-%m-%d")
+    workspace_name = os.path.basename(workspace)
+    create_remote_dir("rejected/%s/%s" % (datedir, workspace_name))
+
+    # Check that task is completed after new directory is created
+    assert task.complete()
+
+
+def test_accepted_and_rejected(testpath, patch_ssh_key):
+    """Initializes task and tests that it is not complete. Then creates new
+    directories to both "rejected" and "accepted" directories in digital
+    preservation server and tests that task is complete. Task should fail,
+    because it is impossible to deduce if SIP was accepted or rejected."""
+    workspace = testpath
+
+    # Init task
+    task = ValidateSIP(workspace=workspace, dataset_id="1")
+    assert not task.complete()
+
+    # Create new directories to digital preservation server
+    datedir = time.strftime("%Y-%m-%d")
+    workspace_name = os.path.basename(workspace)
+    create_remote_dir("rejected/%s/%s" % (datedir, workspace_name))
+    create_remote_dir("accepted/%s/%s" % (datedir, workspace_name))
+
+    # Check that task is NOT completed after new directories are created
+    assert not task.complete()
+
+
+@pytest.fixture(scope="function")
+def patch_ssh_key(monkeypatch):
+    """Fixture that forces ValidateSIP task to use SSH key from different
+    path"""
+    os.chmod('tests/data/pas_ssh_key', 0600)
+    monkeypatch.setattr('siptools_research.workflow.validate_sip.DP_SSH_KEY',
+                        'tests/data/pas_ssh_key')
+
+
+def create_remote_dir(path):
+    """Creates new directory to digital preservation server
+
+    :path: Path of new directory
+    :returns: None
+    """
+    with paramiko.SSHClient() as ssh:
+        # Initialize SSH connection to digital preservation server
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect('86.50.168.218',
+                    username='tpas',
+                    key_filename='tests/data/pas_ssh_key')
+
+        # Create directory with name of the workspace to digital preservation
+        # server over SSH, so that the ReportPreservationStatus thinks that
+        # validation has completed.
+        ssh.exec_command("mkdir -p %s" % path)
