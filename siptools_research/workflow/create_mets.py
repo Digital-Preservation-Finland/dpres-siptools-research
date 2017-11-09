@@ -56,7 +56,7 @@ class CreateMets(WorkflowTask):
                     # Compile METS
                     compile_mets.main(['--workspace', self.sip_creation_path,
                                        'tpas', 'tpas', '--clean',
-                                       '--contractid', contract_id])
+                                       '--contract_id', contract_id])
                     task_result = 'success'
                     task_messages = "Mets dodument created."
 
