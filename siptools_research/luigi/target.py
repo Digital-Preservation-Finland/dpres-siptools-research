@@ -43,16 +43,6 @@ def mongo_settings():
     return mongo_client, mongo_db, mongo_col
 
 
-class MongoDBTarget(MongoCellTarget):
-    """MongoCellTarget
-    """
-
-    def __init__(self, document_id, mongo_field):
-        (mongo_client, mongo_db, mongo_col) = mongo_settings()
-        MongoCellTarget.__init__(self, mongo_client, mongo_db, mongo_col,
-                                 document_id, mongo_field)
-
-
 class MongoTaskResultTarget(MongoCellTarget):
     """Target that exists when value of mongodb field:
 
