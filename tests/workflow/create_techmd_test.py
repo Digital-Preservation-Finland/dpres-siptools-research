@@ -12,12 +12,8 @@ import pymongo
 
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 
-DATASET_PATH = "tests/data/metax_datasets/"
-SAMPLE_CREATION_EVENT_PATH = "tests/data/sample_techmd.xml"
-
-
 #def test_create_techmd_ok(testpath, testmongoclient, testmetax):
-def test_create_techmd_ok(testpath, testmongoclient):
+def test_create_techmd_ok(testpath, testmongoclient, testmetax):
     """Test the workflow task CreateTechnicalMetadata module.
     """
 
@@ -47,9 +43,7 @@ def test_create_techmd_ok(testpath, testmongoclient):
     #workspace = os.path.join(workspace_root, os.listdir(workspace_root)[0])
 
     task = CreateTechnicalMetadata(workspace=workspace,
-                                   dataset_id="3",
-                                   sip_creation_path=sip_creation_path,
-                                   home_path=testpath)
+                                   dataset_id="3")
 
     assert not task.complete()
 

@@ -1,9 +1,10 @@
 """Test module ``siptools_research.workflow.create_mets``"""
 import shutil
 import os
+import pymongo
 from tests.assertions import task_ok
-from siptools_research.luigi.target import mongo_settings
 from siptools_research.workflow.create_mets import CreateMets
+from siptools_research.utils import database
 from siptools.scripts import import_object
 from siptools.scripts import import_description, premis_event, \
     compile_structmap
@@ -61,7 +62,9 @@ def assert_mongodb_data_success(document_id):
     MongoDB.
     """
 
-    (mongo_client, mongo_db, mongo_col) = mongo_settings()
+    mongo_client = pymongo.MongoClient(database.HOST)
+    mongo_db = database.DB
+    mongo_col = database.COLLECTION
     mongodb = mongo_client[mongo_db]
     collection = mongodb[mongo_col]
     mongodb_data = collection.find(

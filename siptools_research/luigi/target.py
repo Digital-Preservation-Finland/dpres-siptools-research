@@ -6,6 +6,7 @@ import luigi.contrib.ssh
 from luigi import LocalTarget
 from luigi.contrib.mongodb import MongoCellTarget
 import pymongo
+from siptools_research.utils import database
 
 
 class TaskReportTarget(LocalTarget):
@@ -33,26 +34,6 @@ class TaskFileTarget(LocalTarget):
         LocalTarget.__init__(self, path)
 
 
-def mongo_settings():
-    """Variables for mongo_db"""
-    host = 'localhost'
-    mongo_db = 'siptools-research'
-    mongo_col = 'workflow'
-    mongo_client = pymongo.MongoClient(host)
-
-    return mongo_client, mongo_db, mongo_col
-
-
-class MongoDBTarget(MongoCellTarget):
-    """MongoCellTarget
-    """
-
-    def __init__(self, document_id, mongo_field):
-        (mongo_client, mongo_db, mongo_col) = mongo_settings()
-        MongoCellTarget.__init__(self, mongo_client, mongo_db, mongo_col,
-                                 document_id, mongo_field)
-
-
 class MongoTaskResultTarget(MongoCellTarget):
     """Target that exists when value of mongodb field:
 
@@ -60,14 +41,11 @@ class MongoTaskResultTarget(MongoCellTarget):
 
     has value "success"
     """
-
-    # TODO: This is ugly but it works. Should be refactored at some point...
     def __init__(self, document_id, taskname):
-        (mongo_client, mongo_db, mongo_col) = mongo_settings()
         MongoCellTarget.__init__(self,
-                                 mongo_client,
-                                 mongo_db,
-                                 mongo_col,
+                                 pymongo.MongoClient(database.HOST),
+                                 database.DB,
+                                 database.COLLECTION,
                                  document_id,
                                  "workflow_tasks.%s.result" % taskname)
 
