@@ -34,7 +34,7 @@ def test_signsip(testpath, testmongoclient):
     # Init task
     task = sign.SignSIP(workspace=workspace,
                         dataset_id="1",
-                        sign_key_path='tests/data/sign_keys')
+                        sign_key_path='tests/data/sip_sign_pas.pem')
     assert not task.complete()
 
     # Run task.
