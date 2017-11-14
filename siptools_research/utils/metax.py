@@ -41,7 +41,15 @@ class Metax(object):
         :returns: OrderedDict"""
         url = self.baseurl + entity_url + '/' + entity_id
         return self.client.get(url)
+    
+    def get_elasticsearchdata(self, data_key):
+        elastics_url = "https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty&size=100" 
+        # data = requests.get(elastics_url)
+        data = self.client.get(elastics_url)
+        # print "response %s "%data
+        return data
 
+ 
     def set_preservation_state(self, dataset_id, state):
         """Set value of field `preservation_state` for dataset in Metax
 
