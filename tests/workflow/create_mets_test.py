@@ -9,7 +9,7 @@ from siptools.scripts import import_object
 from siptools.scripts import import_description, premis_event, \
     compile_structmap
 
-def test_create_mets_ok(testpath):
+def test_create_mets_ok(testpath, testmongoclient):
     """Test the workflow task CreateMets module."""
     # Create workspace with contents required by the tested task
     workspace = testpath

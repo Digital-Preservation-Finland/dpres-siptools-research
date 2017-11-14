@@ -9,7 +9,7 @@ from siptools_research.utils import database
 from siptools.scripts import import_object
 from siptools.scripts import import_description
 
-def test_create_structmap_ok(testpath):
+def test_create_structmap_ok(testpath, testmongoclient):
     """Test the workflow task CreateStructMap module.
     """
     workspace = testpath

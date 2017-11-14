@@ -4,7 +4,7 @@ import os
 from siptools_research.workflow import get_files
 
 # pylint: disable=unused-argument,invalid-name,fixme
-def test_getfiles(testpath, testmetax, testida):
+def test_getfiles(testpath, testmetax, testida, testmongoclient):
     """Tests for ``GetFiles`` task.
 
     - ``Task.complete()`` is true after ``Task.run()``
