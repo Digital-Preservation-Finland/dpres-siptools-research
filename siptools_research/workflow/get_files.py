@@ -44,14 +44,19 @@ class GetFiles(WorkflowTask):
                                                  str(self.dataset_id))
         # get values for filecategory from elasticsearch
         categories = metax_client.get_elasticsearchdata('')
-        # get files form ida and create directory structure for files based on filecategories
+        # get files form ida and create directory structure for files based on
+        # filecategories
         try:
-            get_files(self, dataset_metadata['research_dataset']['files'], metax_client, categories)
+            get_files(self, dataset_metadata['research_dataset']['files'],
+                      metax_client, categories)
         except KeyError:
             pass
-    # read metax directories in ida and get these files into directory structure based on directrory categories
-        try: 
-            get_files(self, dataset_metadata['research_dataset']['directories'], metax_client)
+        # read metax directories in ida and get these files into directory
+        # structure based on directrory categories
+        try:
+            get_files(self,
+                      dataset_metadata['research_dataset']['directories'],
+                      metax_client)
 
         except KeyError:
             pass
@@ -63,52 +68,51 @@ class GetFiles(WorkflowTask):
                            'Workspace directory created')
 
 
-
 def get_files(self, dataset_metadata, metax_client, categories):
-    """Reads files from IDA and writes them on a path based on use_category in Metax
+    """Reads files from IDA and writes them on a path based on use_category in
+    Metax
     """
     for file_section in dataset_metadata:
-         metax_file_id = file_section['identifier']
-      
-    # The path to file in logical structmap is stored in 'use_category' in metax
-         filecategorykey = file_section['use_category']['identifier'].strip('/')
-         print "category key %s" %filecategorykey
-         filecategory = get_category(categories['hits']['hits'], filecategorykey)
-         file_path = os.path.join(
-                      self.workspace,
-                      'sip-in-progress',
-                      filecategory
-                      )
-         print "filepath %s" %file_path
-      
-                 # Name of the file comes from file metadata
-         file_metadata = metax_client.get_data('files', metax_file_id)
-         filename = file_metadata['file_name']
-      
-                  # Ida file id comes from file metadata
-         ida_file_id = file_metadata['identifier']
-      
-                 # Download file from Ida to 'sip-in-progress' directory in
-                  # workspace
-         if not os.path.exists(file_path):
-             os.makedirs(file_path)
-         ida.download_file(ida_file_id,
-                                    os.path.join(file_path, filename))
+        metax_file_id = file_section['identifier']
 
+        # The path to file in logical structmap is stored in 'use_category' in
+        # metax
+        filecategorykey = file_section['use_category']['identifier'].strip('/')
+        print "category key %s" %filecategorykey
+        filecategory = get_category(categories['hits']['hits'],
+                                    filecategorykey)
+        file_path = os.path.join(self.workspace,
+                                 'sip-in-progress',
+                                 filecategory)
+        print "filepath %s" %file_path
+
+        # Name of the file comes from file metadata
+        file_metadata = metax_client.get_data('files', metax_file_id)
+        filename = file_metadata['file_name']
+
+        # Ida file id comes from file metadata
+        ida_file_id = file_metadata['identifier']
+
+        # Download file from Ida to 'sip-in-progress' directory in workspace
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        ida.download_file(ida_file_id,
+                          os.path.join(file_path, filename))
 
 
 def get_category(categories, filecategorykey):
-    label = ''  
+    """TODO: What does this function do?"""
+    label = ''
     for hits in categories:
-            found = False
-            for key, value in hits['_source'].iteritems():
-                if value == filecategorykey:
-                      found = True
-                      break;
+        found = False
+        for key, value in hits['_source'].iteritems():
+            if value == filecategorykey:
+                found = True
+                break
     if found:
-                for key, value in hits['_source'].iteritems():
-                     if key == 'label':
-                         label = value['en']
-                         break
-      
+        for key, value in hits['_source'].iteritems():
+            if key == 'label':
+                label = value['en']
+                break
+
     return label
