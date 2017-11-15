@@ -78,13 +78,11 @@ def get_files(self, dataset_metadata, metax_client, categories):
         # The path to file in logical structmap is stored in 'use_category' in
         # metax
         filecategorykey = file_section['use_category']['identifier'].strip('/')
-        print "category key %s" %filecategorykey
         filecategory = get_category(categories['hits']['hits'],
                                     filecategorykey)
         file_path = os.path.join(self.workspace,
                                  'sip-in-progress',
                                  filecategory)
-        print "filepath %s" %file_path
 
         # Name of the file comes from file metadata
         file_metadata = metax_client.get_data('files', metax_file_id)
@@ -101,7 +99,11 @@ def get_files(self, dataset_metadata, metax_client, categories):
 
 
 def get_category(categories, filecategorykey):
-    """TODO: What does this function do?"""
+    """Looks for a value from list of dictionaries. Returns the value of key
+    "label" from last dictionary where the value is found.
+
+    :categories: list of dictionaries
+    :filecategorykey: value to look for from dictionaries"""
     label = ''
     for hits in categories:
         found = False
@@ -109,10 +111,10 @@ def get_category(categories, filecategorykey):
             if value == filecategorykey:
                 found = True
                 break
-    if found:
-        for key, value in hits['_source'].iteritems():
-            if key == 'label':
-                label = value['en']
-                break
+        if found:
+            for key, value in hits['_source'].iteritems():
+                if key == 'label':
+                    label = value['en']
+                    break
 
     return label

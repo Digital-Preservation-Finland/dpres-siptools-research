@@ -75,6 +75,19 @@ def testmetax(request):
                     content_type='application/json'
                 )
 
+    # register response for get_elasticsearchdata-function
+    elasticsearchdata_url = 'https://metax-test.csc.fi/es/reference_data/'\
+                            'use_category/_search?pretty&size=100'
+    with open('tests/data/metax_elastic_search.json') as open_file:
+        body = open_file.read()
+    httpretty.register_uri(
+        httpretty.GET,
+        elasticsearchdata_url,
+        body=body,
+        status=200,
+        content_type='application/json'
+    )
+
     def fin():
         """Disable fake http-server"""
         httpretty.disable()

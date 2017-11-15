@@ -1,0 +1,170 @@
+{
+  "took" : 5,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 2,
+    "successful" : 2,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 7,
+    "max_score" : 1.0,
+    "hits" : [
+      {
+        "_index" : "reference_data",
+        "_type" : "use_category",
+        "_id" : "use_category_source",
+        "_score" : 1.0,
+        "_source" : {
+          "id" : "use_category_source",
+          "code" : "source",
+          "type" : "use_category",
+          "uri" : "http://purl.org/att/es/reference_data/use_category/use_category_source",
+          "wkt" : "",
+          "label" : {
+            "fi" : "Lähdeaineisto",
+            "en" : "Source material",
+            "und" : "Lähdeaineisto"
+          },
+          "parent_ids" : [ ],
+          "child_ids" : [ ],
+          "has_children" : false,
+          "same_as" : [ ]
+        }
+      },
+      {
+        "_index" : "reference_data",
+        "_type" : "use_category",
+        "_id" : "use_category_outcome",
+        "_score" : 1.0,
+        "_source" : {
+          "id" : "use_category_outcome",
+          "code" : "outcome",
+          "type" : "use_category",
+          "uri" : "http://purl.org/att/es/reference_data/use_category/use_category_outcome",
+          "wkt" : "",
+          "label" : {
+            "fi" : "Tulosaineisto",
+            "en" : "Outcome material",
+            "und" : "Tulosaineisto"
+          },
+          "parent_ids" : [ ],
+          "child_ids" : [ ],
+          "has_children" : false,
+          "same_as" : [ ]
+        }
+      },
+      {
+        "_index" : "reference_data",
+        "_type" : "use_category",
+        "_id" : "use_category_publication",
+        "_score" : 1.0,
+        "_source" : {
+          "id" : "use_category_publication",
+          "code" : "publication",
+          "type" : "use_category",
+          "uri" : "http://purl.org/att/es/reference_data/use_category/use_category_publication",
+          "wkt" : "",
+          "label" : {
+            "fi" : "Julkaisu",
+            "en" : "Publication",
+            "und" : "Julkaisu"
+          },
+          "parent_ids" : [ ],
+          "child_ids" : [ ],
+          "has_children" : false,
+          "same_as" : [ ]
+        }
+      },
+      {
+        "_index" : "reference_data",
+        "_type" : "use_category",
+        "_id" : "use_category_documentation",
+        "_score" : 1.0,
+        "_source" : {
+          "id" : "use_category_documentation",
+          "code" : "documentation",
+          "type" : "use_category",
+          "uri" : "http://purl.org/att/es/reference_data/use_category/use_category_documentation",
+          "wkt" : "",
+          "label" : {
+            "fi" : "Dokumentaatio",
+            "en" : "Documentation",
+            "und" : "Dokumentaatio"
+          },
+          "parent_ids" : [ ],
+          "child_ids" : [ ],
+          "has_children" : false,
+          "same_as" : [ ]
+        }
+      },
+      {
+        "_index" : "reference_data",
+        "_type" : "use_category",
+        "_id" : "use_category_configuration",
+        "_score" : 1.0,
+        "_source" : {
+          "id" : "use_category_configuration",
+          "code" : "configuration",
+          "type" : "use_category",
+          "uri" : "http://purl.org/att/es/reference_data/use_category/use_category_configuration",
+          "wkt" : "",
+          "label" : {
+            "fi" : "Konfiguraatiotiedosto",
+            "en" : "Configuration files",
+            "und" : "Konfiguraatiotiedosto"
+          },
+          "parent_ids" : [ ],
+          "child_ids" : [ ],
+          "has_children" : false,
+          "same_as" : [ ]
+        }
+      },
+      {
+        "_index" : "reference_data",
+        "_type" : "use_category",
+        "_id" : "use_category_method",
+        "_score" : 1.0,
+        "_source" : {
+          "id" : "use_category_method",
+          "code" : "method",
+          "type" : "use_category",
+          "uri" : "http://purl.org/att/es/reference_data/use_category/use_category_method",
+          "wkt" : "",
+          "label" : {
+            "fi" : "Metodi",
+            "en" : "Method",
+            "und" : "Metodi"
+          },
+          "parent_ids" : [ ],
+          "child_ids" : [ ],
+          "has_children" : false,
+          "same_as" : [ ]
+        }
+      },
+      {
+        "_index" : "reference_data",
+        "_type" : "use_category",
+        "_id" : "use_category_rights",
+        "_score" : 1.0,
+        "_source" : {
+          "id" : "use_category_rights",
+          "code" : "rights",
+          "type" : "use_category",
+          "uri" : "http://purl.org/att/es/reference_data/use_category/use_category_rights",
+          "wkt" : "",
+          "label" : {
+            "fi" : "Oikeuksien kuvaus",
+            "en" : "Rights statement",
+            "und" : "Oikeuksien kuvaus"
+          },
+          "parent_ids" : [ ],
+          "child_ids" : [ ],
+          "has_children" : false,
+          "same_as" : [ ]
+        }
+      }
+    ]
+  }
+}
