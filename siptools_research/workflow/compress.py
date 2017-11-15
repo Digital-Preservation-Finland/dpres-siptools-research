@@ -7,8 +7,7 @@ import datetime
 
 from luigi import Parameter
 
-from siptools_research.luigi.target import TaskFileTarget
-from siptools_research.utils.utils import  touch_file
+from siptools_research.luigi.target import MongoTaskResultTarget
 
 from siptools_research.luigi.task import WorkflowTask
 
@@ -26,9 +25,8 @@ class CompressSIP(WorkflowTask):
     def requires(self):
         """Requires signature file"""
         return {"Sign SIP":
-                SignSIP(workspace=self.workspace,
-                        sip_creation_path=self.sip_creation_path,
-                        home_path=self.home_path)}
+                SignSIP(workspace=self.workspace, dataset_id = self.dataset_id)}
+                        #sip_creation_path=self.sip_creation_path)}
 
     def output(self):
        """Returns task output. Task is ready when succesful event has been

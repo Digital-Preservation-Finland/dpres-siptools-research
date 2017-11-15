@@ -2,7 +2,8 @@
 """required tasks to create SIPs from transfers"""
 
 import os
-from siptools_research.luigi.target import TaskFileTarget
+#from siptools_research.luigi.target import TaskFileTarget
+from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils import database
 from siptools_research.luigi.task import WorkflowTask
@@ -28,7 +29,9 @@ class CreateTechnicalMetadata(WorkflowTask):
 
     def output(self):
         """Outputs a task file"""
-        return TaskFileTarget(self.workspace, 'create-technical-metadata')
+        return MongoTaskResultTarget(document_id=self.document_id,
+                                          taskname=self.task_name)
+        #return TaskFileTarget(self.workspace, 'create-technical-metadata')
 
     def run(self):
         """Creates PREMIS technical metadata files for files in transfer.

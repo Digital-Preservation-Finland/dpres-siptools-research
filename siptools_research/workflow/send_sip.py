@@ -28,7 +28,7 @@ class SendSIPToDP(WorkflowTask):
         """
         return {
             "Compress SIP":
-            CompressSIP(workspace=self.workspace)}
+            CompressSIP(workspace=self.workspace, dataset_id= self.dataset_id)}
 
     def output(self):
         """Returns task output. Task is ready when succesful event has been
