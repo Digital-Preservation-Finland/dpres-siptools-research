@@ -65,6 +65,7 @@ class CreateMets(WorkflowTask):
                         task_result = 'failure'
                         task_messages = "Compilation of mets document "\
                                         "failed due to unknown error."
+
                     database.add_event(self.document_id,
                                        self.task_name,
                                        task_result,

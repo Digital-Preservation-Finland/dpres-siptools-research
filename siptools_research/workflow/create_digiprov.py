@@ -36,13 +36,13 @@ class CreateProvenanceInformation(WorkflowTask):
         digiprov_log = os.path.join(self.workspace,
                                     'logs',
                                     'task-create-provenance-information.log')
-
         # Redirect stdout to logfile
         with open(digiprov_log, 'w') as log:
             with redirect_stdout(log):
 
                 try:
                     create_premis_event(self.dataset_id, sip_creation_path)
+
                     task_result = 'success'
                     task_messages = "Provenance metadata created."
                 except KeyError as exc:
@@ -50,7 +50,6 @@ class CreateProvenanceInformation(WorkflowTask):
                     task_messages = 'Could not create procenance metada, '\
                                     'element "%s" not found from metadata.'\
                                     % exc.message
-
                     database.set_status(self.document_id, 'rejected')
 
                 finally:
@@ -58,7 +57,6 @@ class CreateProvenanceInformation(WorkflowTask):
                         task_result = 'failure'
                         task_messages = "Creation of provenance metadata "\
                                         "failed due to unknown error."
-
                     database.add_event(self.document_id,
                                        self.task_name,
                                        task_result,
@@ -69,16 +67,14 @@ def create_premis_event(dataset_id, workspace):
     """Gets metada from Metax and calls siptools premis_event script."""
 
     metadata = Metax().get_data('datasets', dataset_id)
-    event_type = metadata["research_dataset"]["provenance"][0]["type"]\
-        ["pref_label"][0]["en"]
-    event_datetime = metadata["research_dataset"]["provenance"][0]\
-        ["temporal"][0]["start_date"]
-    event_detail = metadata["research_dataset"]["provenance"][0]\
-        ["description"]["en"]
 
-    premis_event.main([
+    for provenance in metadata["research_dataset"]["provenance"]:
+        event_type = provenance["type"]["pref_label"]["en"]
+        event_datetime = provenance["temporal"]["start_date"]
+        event_detail = provenance["description"]["en"]
+        premis_event.main([
         event_type, event_datetime,
         "--event_detail", event_detail,
         "--event_outcome", 'success', # TODO: Hardcoded value
         "--workspace", workspace
-    ])
+        ])
