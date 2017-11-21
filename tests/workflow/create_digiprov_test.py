@@ -27,14 +27,7 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     # TODO: The task should be able to create 'logs' directory if it does not
     # exist. Therefore this line should be unnecessary.
     os.makedirs(os.path.join(workspace, 'logs'))
-    os.makedirs(os.path.join(workspace, 'transfers'))
-
-    # Create file in workspace directory
-    testfilename = "aineisto"
-    testfilepath = os.path.join(workspace, 'transfers', testfilename)
-    with open(testfilepath, 'w') as testfile:
-        testfile.write('1')
-    assert os.path.isfile(testfilepath)
+    os.makedirs(os.path.join(workspace, 'sip-in-progress'))
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(workspace=workspace,
@@ -84,15 +77,8 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
 
     # Create empty workspace
     workspace = os.path.join(testpath, 'workspace')
-    os.makedirs(os.path.join(workspace, 'transfers'))
     os.makedirs(os.path.join(workspace, 'logs'))
-
-    # Create file in workspace directory
-    testfilename = "aineisto"
-    testfilepath = os.path.join(workspace, 'transfers', testfilename)
-    with open(testfilepath, 'w') as testfile:
-        testfile.write('1')
-    assert os.path.isfile(testfilepath)
+    os.makedirs(os.path.join(workspace, 'sip-in-progress'))
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(dataset_id="1",
@@ -103,7 +89,7 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
     assert not task.complete()
 
     # There should not be anything else in the workspace
-    assert set(os.listdir(workspace)) == {'transfers', 'logs'}
+    assert set(os.listdir(workspace)) == {'sip-in-progress', 'logs'}
     assert set(os.listdir(os.path.join(workspace, 'logs'))) == {
         'task-create-provenance-information.log'
     }
