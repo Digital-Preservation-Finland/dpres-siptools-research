@@ -32,7 +32,6 @@ class CreateProvenanceInformation(WorkflowTask):
         """Gets file metadata from Metax.
         :returns: None
         """
-        sip_creation_path = os.path.join(self.workspace, 'sip-in-progress')
         digiprov_log = os.path.join(self.workspace,
                                     'logs',
                                     'task-create-provenance-information.log')
@@ -41,7 +40,8 @@ class CreateProvenanceInformation(WorkflowTask):
             with redirect_stdout(log):
 
                 try:
-                    create_premis_event(self.dataset_id, sip_creation_path)
+                    create_premis_event(self.dataset_id,
+                                        self.sip_creation_path)
 
                     task_result = 'success'
                     task_messages = "Provenance metadata created."
@@ -73,8 +73,8 @@ def create_premis_event(dataset_id, workspace):
         event_datetime = provenance["temporal"]["start_date"]
         event_detail = provenance["description"]["en"]
         premis_event.main([
-        event_type, event_datetime,
-        "--event_detail", event_detail,
-        "--event_outcome", 'success', # TODO: Hardcoded value
-        "--workspace", workspace
+            event_type, event_datetime,
+            "--event_detail", event_detail,
+            "--event_outcome", 'success', # TODO: Hardcoded value
+            "--workspace", workspace
         ])
