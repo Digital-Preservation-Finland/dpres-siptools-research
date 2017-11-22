@@ -7,7 +7,7 @@ def test_get_dataset(testmetax):
     print dataset
     print type(dataset)
     assert dataset["research_dataset"]["provenance"][0]['type']['pref_label']\
-        [0]['en'] == 'creation'
+        ['en'] == 'creation'
 
 #TODO: test for other entities: contracts, files...
 
