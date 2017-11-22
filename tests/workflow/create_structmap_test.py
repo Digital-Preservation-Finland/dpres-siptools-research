@@ -3,7 +3,6 @@
 import os
 import shutil
 import pymongo
-from tests.assertions import task_ok
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools_research.utils import database
 from siptools.scripts import import_object
@@ -41,8 +40,6 @@ def test_create_structmap_ok(testpath, testmongoclient):
     task = CreateStructMap(workspace=workspace, dataset_id='1')
 
     task.run()
-
-    assert task_ok(task)
     assert task.complete()
     assert os.path.isfile(os.path.join(sip_creation_path, 'filesec.xml'))
     assert os.path.isfile(os.path.join(sip_creation_path, 'structmap.xml'))

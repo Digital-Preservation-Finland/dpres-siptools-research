@@ -2,7 +2,6 @@
 import shutil
 import os
 import pymongo
-from tests.assertions import task_ok
 from siptools_research.workflow.create_mets import CreateMets
 from siptools_research.utils import database
 from siptools.scripts import import_object
@@ -24,7 +23,6 @@ def test_create_mets_ok(testpath, testmongoclient):
     for directory in os.listdir(workspace):
         path = os.path.join(workspace, directory)
         print path
-    assert task_ok(task)
     assert task.complete()
     assert os.path.isfile(os.path.join(create_sip, 'mets.xml'))
 
