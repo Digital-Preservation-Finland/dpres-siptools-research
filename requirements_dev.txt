@@ -9,7 +9,6 @@ scandir
 luigi
 pymongo
 httpretty
-coreapi
 mongomock
 mimeparse
 Sphinx

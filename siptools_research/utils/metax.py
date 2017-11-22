@@ -2,10 +2,8 @@
 
 import argparse
 import pprint                   # For printing dict
-from json import loads, dumps   # For printing orderedDict
 import requests
 from requests.auth import HTTPBasicAuth
-import coreapi
 import lxml.etree as ET
 
 METAX_ENTITIES = ['datasets', 'contracts', 'files']
@@ -18,7 +16,7 @@ PASSWORD_FILE = '~/metax_password'
 def print_output(dataset, print_output=None):
     """Print dataset as json, xml or string"""
     if print_output == 'json':
-        pprint.PrettyPrinter(indent=4).pprint(loads(dumps(dataset)))
+        pprint.pprint(dataset)
     elif print_output == 'xml':
         tree = ET.parse(dataset)
         root = tree.getroot()
@@ -28,28 +26,24 @@ def print_output(dataset, print_output=None):
 
 
 class Metax(object):
-    """Get metadata from metax as OrderedDict object."""
+    """Get metadata from metax as dict object."""
     baseurl = "https://metax-test.csc.fi/rest/v1/"
-
-    def __init__(self):
-        self.client = coreapi.Client()
 
     def get_data(self, entity_url, entity_id):
         """Get metadata of dataset, contract or file with id from Metax.
+
         :entity_url: "datasets", "contracts" or "files"
         :entity_id: ID number of object
-        :returns: OrderedDict"""
+        :returns: """
         url = self.baseurl + entity_url + '/' + entity_id
-        return self.client.get(url)
-    
-    def get_elasticsearchdata(self, data_key):
-        elastics_url = "https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty&size=100" 
-        # data = requests.get(elastics_url)
-        data = self.client.get(elastics_url)
-        # print "response %s "%data
-        return data
+        return requests.get(url).json()
 
- 
+    def get_elasticsearchdata(self, data_key):
+        """Get elastic search data from Metax"""
+        elastics_url = "https://metax-test.csc.fi/es/reference_data/"\
+                       "use_category/_search?pretty&size=100"
+        return requests.get(elastics_url).json()
+
     def set_preservation_state(self, dataset_id, state):
         """Set value of field `preservation_state` for dataset in Metax
 
