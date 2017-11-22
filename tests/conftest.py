@@ -21,6 +21,7 @@ import siptools_research.utils.shell
 
 LOGGER = logging.getLogger('tests.conftest')
 METAX_PATH = "tests/data/metax/"
+METAX_XML_PATH = "tests/data/metax-files-xml/"
 METAX_URL = "https://metax-test.csc.fi/rest/v1/"
 IDA_PATH = "tests/data/ida/"
 IDA_URL = 'https://86.50.169.61:4433'
@@ -35,19 +36,28 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 
 @pytest.fixture(scope="function")
 def testmetax(request):
-    """Use fake http-server and local sample JSON files instead of real
-    Metax-API.
+    """Use fake http-server and local sample JSON/XML files instead of real
+    Metax-API. Files are searched from subdirectories of ``METAX_PATH`` and
+    ``METAX_XML_PATH``.
 
-    Files are searched from subdirectories of ``METAX_PATH``. When
-    https://metax-test.csc.fi/rest/v1/``subdir``/``filename`` is requested
+    When https://metax-test.csc.fi/rest/v1/<subdir>/<filename> is requested
     using HTTP GET method, a HTTP response with contents of file:
-    ``METAX_PATH/subdir/filename`` as message body is retrieved. The status of
-    message is always *HTTP/1.1 200 OK* and the Content-Type is
+    ``METAX_PATH/<subdir>/<filename>`` as message body is retrieved. The status
+    of message is always *HTTP/1.1 200 OK* and the Content-Type is
     *application/json*. To add new test responses just add new JSON file to
     some subdirectory of ``METAX_PATH``. Using HTTP PATCH method has exactly
     same effect as HTTP GET methdod.
+
+    When url https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty&size=100
+    is requested using HTTP GET method, the response is content of file:
+    'tests/data/metax_elastic_search.json'
+
+    When https://metax-test.csc.fi/rest/v1/files/<filename>/xml is requested
+    using HTTP GET method, the file from path ``METAX_XML_PATH/<filename>`` is
+    retrieved.
     """
 
+    # Enable http-server in beginning of test function
     httpretty.enable()
 
     # Register all files in subdirectories of ``METAX_PATH`` to httpretty.
@@ -88,6 +98,22 @@ def testmetax(request):
         content_type='application/json'
     )
 
+    # Register files in ``METAX_XML_PATH`` to url:
+    # https://metax-test.csc.fi/rest/v1/files/<filename>/xml
+    #
+    for xmlfile in os.listdir(os.path.join(METAX_XML_PATH)):
+        with open(os.path.join(METAX_XML_PATH, xmlfile)) as open_file:
+            body = open_file.read()
+        # Register response for GET method
+        httpretty.register_uri(
+            httpretty.GET,
+            "%s/files/%s/xml" % (METAX_URL, xmlfile),
+            body=body,
+            status=200,
+            content_type='application/xml'
+        )
+
+    # Didable http-server after executing the test function
     def fin():
         """Disable fake http-server"""
         httpretty.disable()
