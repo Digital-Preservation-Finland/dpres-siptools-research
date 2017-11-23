@@ -2,9 +2,14 @@
 
 import argparse
 import pprint                   # For printing dict
+import logging
 import requests
 from requests.auth import HTTPBasicAuth
 import lxml.etree
+
+
+# Print debug messages to stdout
+logging.basicConfig(level=logging.DEBUG)
 
 METAX_ENTITIES = ['datasets', 'contracts', 'files']
 PRINT_OUTPUT = ['json', 'xml', 'string']
@@ -38,6 +43,25 @@ class Metax(object):
         :returns: dict"""
         url = self.baseurl + entity_url + '/' + entity_id
         return requests.get(url).json()
+
+    def get_xml(self, entity_url, entity_id):
+        """Get xml data of dataset, contract or file with id from Metax.
+
+        :entity_url: "datasets", "contracts" or "files"
+        :entity_id: ID number of object
+        :returns: dict with xml namespaces as keys and lxml.etree.ElementTree
+                  objects as values
+        """
+        xml_dict = {}
+        ns_key_url = self.baseurl + entity_url + '/' + entity_id + '/xml'
+        # ns_key_list = requests.get(ns_key_url).json()
+        response = requests.get(ns_key_url)
+        logging.debug("JSON response for namespace list query: %s" % response.text)
+        ns_key_list = response.json()
+        for ns_key in ns_key_list:
+            query = '?namespace=' + ns_key
+            response = requests.get(ns_key_url + query)
+            xml_dict[ns_key] = lxml.etree.fromstring(response.content)
 
     def get_elasticsearchdata(self):
         """Get elastic search data from Metax

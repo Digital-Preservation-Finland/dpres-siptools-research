@@ -2,27 +2,22 @@
 
 import os
 import sys
+import re
 import logging
 import tempfile
-import subprocess
 import shutil
-import posixpath
-from uuid import uuid4
+import urllib
 import mongomock
 import pymongo
 import httpretty
 import pytest
 
-from luigi.scheduler import Scheduler
-from luigi.rpc import RemoteScheduler
 
-import siptools_research.utils.shell
+# Print debug messages to stdout
+logging.basicConfig(level=logging.DEBUG)
 
-
-LOGGER = logging.getLogger('tests.conftest')
-METAX_PATH = "tests/data/metax/"
-METAX_XML_PATH = "tests/data/metax-files-xml/"
-METAX_URL = "https://metax-test.csc.fi/rest/v1/"
+METAX_PATH = "tests/data/metax"
+METAX_URL = "https://metax-test.csc.fi/rest/v1"
 IDA_PATH = "tests/data/ida/"
 IDA_URL = 'https://86.50.169.61:4433'
 
@@ -52,38 +47,61 @@ def testmetax(request):
     is requested using HTTP GET method, the response is content of file:
     'tests/data/metax_elastic_search.json'
 
-    When https://metax-test.csc.fi/rest/v1/files/<filename>/xml is requested
-    using HTTP GET method, the file from path ``METAX_XML_PATH/<filename>`` is
-    retrieved.
+    If file from subsubdirectory is requested, the filename must be url encoded
+    (the files are searched only from subdirectories, not from
+    subsubdirectories). For example, when
+    https://metax-test.csc.fi/rest/v1/<subdir>/<filename>/xml is requested
+    using HTTP GET method, the file from path
+    ``METAX_PATH/<subdir>/<filename>%2Fxml`` is retrieved. Another example:
+    When
+    https://metax-test.csc.fi/rest/v1/<subdir>/<filename>/xml?namespace=http://test.com/ns/
+    is requested using HTTP GET method, the file from path
+    ``METAX_PATH/<subdir>/<filename>%2Fxml%3Fnamespace%3Dhttp%3A%2F%2Ftest.com%2Fns%2F``
+    is retrieved.
     """
+
+    def dynamic_response(request, url, headers):
+        """Return HTTP response according to url and query string"""
+        logging.debug("Dynamic response for HTTP GET url: %s", url)
+        # url without basepath:
+        path = url.split(METAX_URL)[1]
+        # subdirectory to get file from:
+        subdir = path.split('/')[1]
+        # file to be used as response body:
+        body_file = path.split('/')[2]
+        # if url contains query strings or more directories after the filename,
+        # everythind is added to the filename url encoded
+        tail = path.split('/%s/%s' % (subdir, body_file))[1]
+        if tail:
+            body_file += urllib.quote(tail, safe='%')
+
+
+        full_path = "%s/%s/%s" % (METAX_PATH, subdir, body_file)
+        logging.debug("Looking for file: %s", full_path)
+        if not os.path.isfile(full_path):
+            return (403, headers, "File not found")
+
+        with open(full_path) as open_file:
+            body = open_file.read()
+
+        return (200, headers, body)
 
     # Enable http-server in beginning of test function
     httpretty.enable()
 
-    # Register all files in subdirectories of ``METAX_PATH`` to httpretty.
-    for subdir in os.listdir(METAX_PATH):
-        for jsonfile in os.listdir(os.path.join(METAX_PATH, subdir)):
-            with open(os.path.join(METAX_PATH, subdir, jsonfile)) as open_file:
-                body = open_file.read()
-                # Register response for GET method
-                httpretty.register_uri(
-                    httpretty.GET,
-                    # Join url using posixpath because urlparse.urljoin does
-                    # not work with multiple arguments (and os.path.join would
-                    # not work on windows, for example)
-                    posixpath.join(METAX_URL, subdir, jsonfile),
-                    body=body,
-                    status=200,
-                    content_type='application/json'
-                )
-                # Register response for PATCH method
-                httpretty.register_uri(
-                    httpretty.PATCH,
-                    posixpath.join(METAX_URL, subdir, jsonfile),
-                    body=body,
-                    status=200,
-                    content_type='application/json'
-                )
+    # Register response for GET method for any url starting with METAX_URL
+    httpretty.register_uri(
+        httpretty.GET,
+        re.compile(METAX_URL + '/(.*)'),
+        body=dynamic_response,
+    )
+
+    # Register response for PATCH method for any url starting with METAX_URL
+    httpretty.register_uri(
+        httpretty.PATCH,
+        re.compile(METAX_URL + '/(.*)'),
+        body=dynamic_response,
+    )
 
     # register response for get_elasticsearchdata-function
     elasticsearchdata_url = 'https://metax-test.csc.fi/es/reference_data/'\
@@ -97,21 +115,6 @@ def testmetax(request):
         status=200,
         content_type='application/json'
     )
-
-    # Register files in ``METAX_XML_PATH`` to url:
-    # https://metax-test.csc.fi/rest/v1/files/<filename>/xml
-    #
-    for xmlfile in os.listdir(os.path.join(METAX_XML_PATH)):
-        with open(os.path.join(METAX_XML_PATH, xmlfile)) as open_file:
-            body = open_file.read()
-        # Register response for GET method
-        httpretty.register_uri(
-            httpretty.GET,
-            "%s/files/%s/xml" % (METAX_URL, xmlfile),
-            body=body,
-            status=200,
-            content_type='application/xml'
-        )
 
     # Didable http-server after executing the test function
     def fin():

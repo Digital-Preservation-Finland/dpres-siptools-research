@@ -6,7 +6,7 @@ from siptools_research.utils.scripts import import_objects
 from siptools.xml.namespaces import NAMESPACES
 
 
-def test_import_object_ok(testpath):
+def test_import_object_ok(testpath, testmetax):
 
     # Copy sample file to 'sip-in-progress' directory in workspace
     testbasepath = os.path.join(testpath, 'sip-in-progress')
@@ -14,7 +14,7 @@ def test_import_object_ok(testpath):
     testfilepath = os.path.join(testbasepath, 'file_name_11')
     shutil.copy('tests/data/file_name_11', testfilepath)
 
-    return_code = import_objects.main(['11', '--workspace', testpath])
+    return_code = import_objects.main(['3', '--workspace', testpath])
     output_file = os.path.join(testpath, 'file_name_11-techmd.xml')
     tree = ET.parse(output_file)
     root = tree.getroot()

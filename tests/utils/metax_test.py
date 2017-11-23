@@ -9,6 +9,11 @@ def test_get_dataset(testmetax):
     assert dataset["research_dataset"]["provenance"][0]['type']['pref_label']\
         ['en'] == 'creation'
 
+def test_get_xml(testmetax):
+    """Test get_xml function"""
+    xml = Metax().get_xml('files', "metax_xml_test")
+    print xml
+
 #TODO: test for other entities: contracts, files...
 
 #TODO: Test for set_preservation_state function
