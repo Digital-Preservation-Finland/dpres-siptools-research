@@ -5,7 +5,7 @@
 			"identifier": "pid:urn:5",
 			"type": {
 				"pref_label": {
-					"en": "project_x_FROZEN/some/path1"
+					"en": "project_x_FROZEN/some/path/file_name_5"
 				}
 			}
 		},
@@ -13,7 +13,7 @@
 			"identifier": "pid:urn:6",
 			"type": {
 				"pref_label": {
-					"en": "project_x_FROZEN/some/path2"
+					"en": "project_x_FROZEN/some/path/file_name_6"
 				}
 			}
 		}
