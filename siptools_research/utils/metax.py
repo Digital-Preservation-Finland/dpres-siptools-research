@@ -52,23 +52,28 @@ class Metax(object):
         :returns: dict with xml namespaces as keys and lxml.etree.ElementTree
                   objects as values
         """
+        # Init result dict
         xml_dict = {}
+
+        # Get list of xml namespaces
         ns_key_url = self.baseurl + entity_url + '/' + entity_id + '/xml'
-        # ns_key_list = requests.get(ns_key_url).json()
-        response = requests.get(ns_key_url)
-        logging.debug("JSON response for namespace list query: %s" % response.text)
-        ns_key_list = response.json()
+        ns_key_list = requests.get(ns_key_url).json()
+
+        # For each listed namespace, download the xml, create ElementTree, and
+        # add it to result dict
         for ns_key in ns_key_list:
             query = '?namespace=' + ns_key
             response = requests.get(ns_key_url + query)
             xml_dict[ns_key] = lxml.etree.fromstring(response.content)
+
+        return xml_dict
 
     def get_elasticsearchdata(self):
         """Get elastic search data from Metax
 
         :returns: dict"""
         url = self.elasticsearch_url + "reference_data/use_category/_search?"\
-                                  "pretty&size=100"
+                                       "pretty&size=100"
         return requests.get(url).json()
 
     def set_preservation_state(self, dataset_id, state):
