@@ -33,9 +33,7 @@ def create_premis_object(digital_object, filepath, formatname, creation_date,
     """Calls import_object from siptools to create
     PREMIS file metadata.
     """
-    #  For some reason the "files"-argument has to be a directory that is found
-    #  in base_path, not a file. Therefore "files" is set to "./".
-    import_object.main(['./', '--base_path', filepath,
+    import_object.main([digital_object, '--base_path', filepath,
                         '--workspace', workspace, '--skip_inspection',
                         '--format_name', formatname,
                         '--digest_algorithm', hashalgorithm,
@@ -52,8 +50,6 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None):
     filename = metadata["file_name"]
     # Assume that files are found in 'sip-in-progress' directory in workspace
     filepath = os.path.join(workspace, 'sip-in-progress')
-    #Remove this line, when the metax test data is valid
-    metax_filepath = metadata["file_path"].strip('/')
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
@@ -104,10 +100,7 @@ def main(arguments=None):
     metax_dataset = Metax().get_data('datasets', args.dataset_id)
     for file_section in metax_dataset["research_dataset"]["files"]:
         file_id = file_section["identifier"]
-        #get directory structure from Metax.
-        #doesn't work because of invalid test data in metax
-        #metax_filepath = file_section['type']['label']['default'].strip('/')
-        metax_filepath = None
+        metax_filepath = file_section['type']['pref_label']['en'].strip('/')
         create_objects(file_id, metax_filepath, args.workspace)
 
     return 0

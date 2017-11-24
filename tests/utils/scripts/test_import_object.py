@@ -11,11 +11,13 @@ def test_import_object_ok(testpath, testmetax):
     # Copy sample file to 'sip-in-progress' directory in workspace
     testbasepath = os.path.join(testpath, 'sip-in-progress')
     os.makedirs(testbasepath)
-    testfilepath = os.path.join(testbasepath, 'file_name_11')
-    shutil.copy('tests/data/file_name_11', testfilepath)
+    testfilepath = os.path.join(testbasepath, 'file_name_5')
+    shutil.copy('tests/data/file_name_5', testfilepath)
+    testfilepath = os.path.join(testbasepath, 'file_name_6')
+    shutil.copy('tests/data/file_name_6', testfilepath)
 
     return_code = import_objects.main(['3', '--workspace', testpath])
-    output_file = os.path.join(testpath, 'file_name_11-techmd.xml')
+    output_file = os.path.join(testpath, 'file_name_5-techmd.xml')
     tree = ET.parse(output_file)
     root = tree.getroot()
 
