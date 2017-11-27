@@ -21,7 +21,7 @@ git+https://source.csc.fi/scm/git/pas/premis@develop#egg=premis
 git+https://source.csc.fi/scm/git/pas/nisomix@develop#egg=nisomix
 git+https://source.csc.fi/scm/git/pas/dpres-signature@develop#egg=dpres_signature
 git+https://source.csc.fi/scm/git/pas/dpres-ipt@develop#egg=ipt
+file-magic
 
 # mets requirements
 dateutils
-
