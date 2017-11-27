@@ -2,10 +2,11 @@
 
 import datetime
 import pymongo
+from siptools_research.config import OPTIONS
 
-HOST = 'localhost'
-DB = 'siptools-research'
-COLLECTION = 'workflow'
+HOST = OPTIONS['MONGODB_HOST']
+DB = OPTIONS['MONGODB_DATABASE']
+COLLECTION = OPTIONS['MONGODB_COLLECTION']
 
 # TODO: Initializing mongo client as global variable should allow using the
 # same client (same connection) across all modules by importing the
