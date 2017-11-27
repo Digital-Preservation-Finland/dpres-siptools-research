@@ -22,6 +22,12 @@ git+https://source.csc.fi/scm/git/pas/nisomix@develop#egg=nisomix
 git+https://source.csc.fi/scm/git/pas/dpres-signature@develop#egg=dpres_signature
 git+https://source.csc.fi/scm/git/pas/dpres-ipt@develop#egg=ipt
 file-magic
+M2Crypto
+dateutils
+python-mimeparse
+
+file-magic
 
 # mets requirements
 dateutils
+
