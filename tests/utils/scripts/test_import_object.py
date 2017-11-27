@@ -3,7 +3,7 @@ import os
 import shutil
 import lxml.etree as ET
 from siptools_research.utils.scripts import import_objects
-from siptools.xml.namespaces import NAMESPACES
+from siptools.xml.mets import NAMESPACES
 
 
 def test_import_object_ok(testpath, testmetax):
