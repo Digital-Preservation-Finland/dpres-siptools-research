@@ -12,7 +12,6 @@ from siptools.scripts import compile_structmap
 
 from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.utils import database
-from siptools_research.utils.utils import touch_file
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.luigi.task import WorkflowTask
 
