@@ -11,7 +11,7 @@ import urllib
 import lxml.etree
 
 from siptools.scripts import import_object
-from siptools.xml.namespaces import NAMESPACES
+from siptools.xml.mets import NAMESPACES
 from siptools_research.utils.metax import Metax
 
 
