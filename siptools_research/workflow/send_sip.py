@@ -12,6 +12,7 @@ from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
 
 from siptools_research.workflow.compress import CompressSIP
+from siptools_research.workflow.sign import SignSIP
 from siptools_research.utils import database, utils
 from siptools_research.utils.contextmanager import redirect_stdout
 
@@ -26,9 +27,11 @@ class SendSIPToDP(WorkflowTask):
     def requires(self):
         """Requires compressed SIP archive file.
         """
-        return {
-            "Compress SIP":
-            CompressSIP(workspace=self.workspace, dataset_id= self.dataset_id)}
+        return {"Sign SIP":
+                SignSIP(workspace=self.workspace, dataset_id = self.dataset_id)}
+       # return {
+       #     "Compress SIP":
+       #     CompressSIP(workspace=self.workspace, dataset_id= self.dataset_id)}
 
     def output(self):
         """Returns task output. Task is ready when succesful event has been
