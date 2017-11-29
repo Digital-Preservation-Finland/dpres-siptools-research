@@ -6,7 +6,6 @@ VAR=${DESTDIR}/var
 
 LOGDIR=${VAR}/log/siptools_research
 PROCESSINGDIR=${VAR}/spool/siptools_research
-CONFDIR=${ETC}/siptools_research
 
 install:
 	# Cleanup temporary files
@@ -16,10 +15,10 @@ install:
 	mkdir -p "${LOGDIR}"
 	mkdir -p "${PROCESSINGDIR}"
 	mkdir -p "${SHAREDIR}"
-	mkdir -p "${CONFDIR}"
+	mkdir -p "${ETC}"
 
 	# Copy config file
-	cp include/etc/siptools_research/conf ${CONFDIR}/
+	cp include/etc/siptools_research.conf ${ETC}/
 
 	# Use Python setuptools
 	python setup.py build ; python ./setup.py install -O1 --prefix="${DESTDIR}${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
