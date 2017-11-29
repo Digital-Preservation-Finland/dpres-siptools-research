@@ -2,78 +2,74 @@
 
 import datetime
 import pymongo
-from siptools_research.config import OPTIONS
-
-HOST = OPTIONS['MONGODB_HOST']
-DB = OPTIONS['MONGODB_DATABASE']
-COLLECTION = OPTIONS['MONGODB_COLLECTION']
-
-# TODO: Initializing mongo client as global variable should allow using the
-# same client (same connection) across all modules by importing the
-# MONGO_CLIENT variable. For example:
-#   MONGO_CLIENT = pymongo.MongoClient(host=HOST)
-#   MONGO_COLLECTION = MONGO_CLIENT[DB][COLLECTION]
-# However, this will cause some trouble in unit tests, where mongomock is used
-# as replacement for real mongodb. Therefore new mongo_client is created in
-# each function in this module.
+from siptools_research.config import Configuration
 
 def timestamp():
     """Return time now."""
     return datetime.datetime.utcnow().isoformat()
 
 
-def add_event(document_id, taskname, result, messages):
-    """Add information of workflow task to mongodb.
+class Database(object):
+    """Workflow status database"""
 
-    :document_id: Mongo document id
-    :taskname: Name of the task
-    :result: Result string ('failure' or 'success')
-    :messages: Information of the event
-    :returns: None
-    """
+    _collection = None
+    client = None
 
-    mongo_client = pymongo.MongoClient(host=HOST)
-    mongo_collection = mongo_client[DB][COLLECTION]
+    def __init__(self, config_file):
 
-    mongo_collection.update_one(
-        {'_id': document_id},
-        {'$set':{'workflow_tasks.' + taskname:{'timestamp': timestamp(),
-                                               'messages': messages,
-                                               'result': result}}
-        },
-        upsert=True
-    )
+        if self._collection is None:
+            conf = Configuration(config_file)
+            self.client = pymongo.MongoClient(host=conf.get("mongodb_host"),
+                                              port=27017)
+            self._collection = self.client[conf.get("mongodb_database")]\
+                               [conf.get("mongodb_collection")]
 
 
-def set_status(document_id, status):
-    """Add information of workflow task to mongodb.
+    def add_event(self, document_id, taskname, result, messages):
+        """Add information of workflow task to mongodb.
 
-    :document_id: Mongo document id
-    :taskname: Status string
-    """
-    mongo_client = pymongo.MongoClient(host=HOST)
-    mongo_collection = mongo_client[DB][COLLECTION]
+        :document_id: Mongo document id
+        :taskname: Name of the task
+        :result: Result string ('failure' or 'success')
+        :messages: Information of the event
+        :returns: None
+        """
 
-    mongo_collection.update_one(
-        {'_id': document_id},
-        {'$set':{'status': status}},
-        upsert=True
-    )
+        self._collection.update_one(
+            {'_id': document_id},
+            {'$set':{'workflow_tasks.' + taskname:{'timestamp': timestamp(),
+                                                   'messages': messages,
+                                                   'result': result}}
+            },
+            upsert=True
+        )
 
 
-def add_dataset(document_id, dataset_id):
-    """Add new document
+    def set_status(self, document_id, status):
+        """Add information of workflow task to mongodb.
 
-    :document_id: Mongo document id
-    :dataset_id: Dataset identifier
-    :returns: None
-    """
-    mongo_client = pymongo.MongoClient(host=HOST)
-    mongo_collection = mongo_client[DB][COLLECTION]
+        :document_id: Mongo document id
+        :taskname: Status string
+        """
 
-    mongo_collection.update_one(
-        {'_id': document_id},
-        {'$set':{'status': 'Request reveived',
-                 'dataset': dataset_id}},
-        upsert=True
-    )
+        self._collection.update_one(
+            {'_id': document_id},
+            {'$set':{'status': status}},
+            upsert=True
+        )
+
+
+    def add_dataset(self, document_id, dataset_id):
+        """Add new document
+
+        :document_id: Mongo document id
+        :dataset_id: Dataset identifier
+        :returns: None
+        """
+
+        self._collection.update_one(
+            {'_id': document_id},
+            {'$set':{'status': 'Request reveived',
+                     'dataset': dataset_id}},
+            upsert=True
+        )
