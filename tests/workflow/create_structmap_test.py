@@ -93,7 +93,8 @@ def test_create_structmap_get_files_ok(testpath, testmongoclient):
     import_object.main(['./tests/data/text-file.txt', '--workspace', sip_creation_path])
     
      # Create structmap
-    task = CreateStructMap(workspace=workspace, dataset_id='2')
+    task = CreateStructMap(workspace=workspace, dataset_id='2',
+                           config='tests/data/siptools_research.conf')
       
     task.run()
 
