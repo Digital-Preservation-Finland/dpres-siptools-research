@@ -19,3 +19,7 @@ def download_file(identifier, filepath, user=USER, password=PASSWORD):
     response = requests.get(url, auth=(user, password), verify=False)
     with open(filepath, 'w') as new_file:
         new_file.write(response.content)
+
+
+
+

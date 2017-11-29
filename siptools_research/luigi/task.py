@@ -10,6 +10,7 @@ class WorkflowTask(luigi.Task):
 
     :workspace: Full path to unique self.workspace directory for the task.
     :dataset_id: Metax dataset id.
+    :config: Path to configuration file
 
     WorkflowTask also has two extra instance variables that can be used to
     identify the task and current workflow, forexample when storing workflow
@@ -22,6 +23,7 @@ class WorkflowTask(luigi.Task):
 
     workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
+    config = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
         """Calls luigi.Task's __init__ and sets additional instance variables.

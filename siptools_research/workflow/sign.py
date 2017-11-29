@@ -6,7 +6,7 @@ from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_mets import CreateMets
 from siptools_research.utils import contextmanager
-from siptools_research.utils import database
+import siptools_research.utils.database
 from siptools.scripts import sign_mets
 
 SIGN_KEY_PATH = '/home/vagrant/sip_sign_pas.pem'
@@ -28,7 +28,8 @@ class SignSIP(WorkflowTask):
 
         :returns: MongoTaskResultTarget
         """
-        return MongoTaskResultTarget(self.document_id, self.task_name)
+        return MongoTaskResultTarget(self.document_id, self.task_name,
+                                     self.config)
 
     def run(self):
         """Signs METS file and adds event to workflow database.
@@ -48,6 +49,7 @@ class SignSIP(WorkflowTask):
 
         task_result = "success"
         task_messages = "Digital signature for SIP created."
+        database = siptools_research.utils.database.Database(self.config)
         database.add_event(self.document_id,
                            self.task_name,
                            task_result,

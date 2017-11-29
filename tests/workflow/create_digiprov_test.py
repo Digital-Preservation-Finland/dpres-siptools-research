@@ -30,8 +30,11 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     os.makedirs(os.path.join(workspace, 'sip-in-progress'))
 
     # Init task
-    task = create_digiprov.CreateProvenanceInformation(workspace=workspace,
-                                                       dataset_id="1")
+    task = create_digiprov.CreateProvenanceInformation(
+        workspace=workspace,
+        dataset_id="1",
+        config='tests/data/siptools_research.conf'
+    )
     assert not task.complete()
 
     # Run task.
@@ -81,8 +84,11 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
     os.makedirs(os.path.join(workspace, 'sip-in-progress'))
 
     # Init task
-    task = create_digiprov.CreateProvenanceInformation(dataset_id="1",
-                                                       workspace=workspace)
+    task = create_digiprov.CreateProvenanceInformation(
+        dataset_id="1",
+        workspace=workspace,
+        config='tests/data/siptools_research.conf'
+    )
 
     # Run task.
     task.run()

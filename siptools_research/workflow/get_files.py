@@ -3,7 +3,7 @@
 import os
 from siptools_research.utils import ida
 from siptools_research.utils import metax
-from siptools_research.utils import database
+import siptools_research.utils.database
 from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
@@ -30,7 +30,8 @@ class GetFiles(WorkflowTask):
 
         :returns: MongoTaskResult
         """
-        return MongoTaskResultTarget(self.document_id, self.task_name)
+        return MongoTaskResultTarget(self.document_id, self.task_name,
+                                     self.config)
 
     def run(self):
         """Reads list of required files from Metax and downloads them from Ida.
@@ -64,6 +65,7 @@ class GetFiles(WorkflowTask):
             pass
         print "RUN 2"
         # Add task report to mongodb
+        database = siptools_research.utils.database.Database(self.config)
         database.add_event(self.document_id,
                            self.task_name,
                            'success',

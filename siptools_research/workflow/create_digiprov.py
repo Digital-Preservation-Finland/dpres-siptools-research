@@ -9,7 +9,7 @@ from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_dmdsec \
     import CreateDescriptiveMetadata
-from siptools_research.utils import database
+import siptools_research.utils.database
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -26,16 +26,21 @@ class CreateProvenanceInformation(WorkflowTask):
 
     def output(self):
         """Outputs task file"""
-        return MongoTaskResultTarget(self.document_id, self.task_name)
+        return MongoTaskResultTarget(self.document_id, self.task_name,
+                                     self.config)
 
     def run(self):
         """Gets file metadata from Metax.
         :returns: None
         """
+
+        # Init workflow status database
+        database = siptools_research.utils.database.Database(self.config)
+
+        # Redirect stdout to logfile
         digiprov_log = os.path.join(self.workspace,
                                     'logs',
                                     'task-create-provenance-information.log')
-        # Redirect stdout to logfile
         with open(digiprov_log, 'w') as log:
             with redirect_stdout(log):
 

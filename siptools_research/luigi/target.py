@@ -7,6 +7,7 @@ from luigi import LocalTarget
 from luigi.contrib.mongodb import MongoCellTarget
 import pymongo
 from siptools_research.utils import database
+from siptools_research.config import Configuration
 
 
 class TaskReportTarget(LocalTarget):
@@ -20,8 +21,6 @@ class TaskReportTarget(LocalTarget):
         path = os.path.join(workspace, 'reports', filename)
         print "TaskReportTarget:%s" % path
         LocalTarget.__init__(self, path)
-
-
 class TaskFileTarget(LocalTarget):
 
     """Luigi target for task files"""
@@ -41,11 +40,12 @@ class MongoTaskResultTarget(MongoCellTarget):
 
     has value "success"
     """
-    def __init__(self, document_id, taskname):
+    def __init__(self, document_id, taskname, config_file):
+        conf = Configuration(config_file)
         MongoCellTarget.__init__(self,
-                                 pymongo.MongoClient(database.HOST),
-                                 database.DB,
-                                 database.COLLECTION,
+                                 database.Database(config_file).client,
+                                 conf.get('mongodb_database'),
+                                 conf.get('mongodb_collection'),
                                  document_id,
                                  "workflow_tasks.%s.result" % taskname)
 

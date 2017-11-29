@@ -3,7 +3,7 @@ import shutil
 import os
 import pymongo
 from siptools_research.workflow.create_mets import CreateMets
-from siptools_research.utils import database
+from siptools_research import config
 from siptools.scripts import import_object
 from siptools.scripts import import_description, premis_event, \
     compile_structmap
@@ -18,7 +18,8 @@ def test_create_mets_ok(testpath, testmongoclient):
     create_test_data(workspace=create_sip)
 
     # Init and run task
-    task = CreateMets(workspace=workspace, dataset_id='2')
+    task = CreateMets(workspace=workspace, dataset_id='2',
+                      config='tests/data/siptools_research.conf')
     task.run()
     for directory in os.listdir(workspace):
         path = os.path.join(workspace, directory)
@@ -60,9 +61,10 @@ def assert_mongodb_data_success(document_id):
     MongoDB.
     """
 
-    mongo_client = pymongo.MongoClient(database.HOST)
-    mongo_db = database.DB
-    mongo_col = database.COLLECTION
+    conf = config.Configuration('tests/data/siptools_research.conf')
+    mongo_client = pymongo.MongoClient(conf.get('mongodb_host'))
+    mongo_db = conf.get('mongodb_database')
+    mongo_col = conf.get('mongodb_collection')
     mongodb = mongo_client[mongo_db]
     collection = mongodb[mongo_col]
     mongodb_data = collection.find(

@@ -20,8 +20,11 @@ def test_createworkspace(testpath, testmongoclient):
     assert not os.path.isdir(workspace)
 
     # Init task
-    task = create_workspace.CreateWorkspace(workspace=workspace,
-                                            dataset_id="1")
+    task = create_workspace.CreateWorkspace(
+        workspace=workspace,
+        dataset_id="1",
+        config='tests/data/siptools_research.conf'
+    )
     assert not task.complete()
 
     # Run task.

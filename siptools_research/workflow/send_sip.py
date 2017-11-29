@@ -40,7 +40,8 @@ class SendSIPToDP(WorkflowTask):
          :returns: MongoTaskResultTarget
         """  
         return MongoTaskResultTarget(document_id=self.document_id,
-                                     taskname=self.task_name)
+                                     taskname=self.task_name,
+                                     config_file=self.config)
        
 
     def run(self):
@@ -78,6 +79,7 @@ class SendSIPToDP(WorkflowTask):
                  task_messages = "Sending SIP to dp "\
                                 "failed due to unknown error."
 
+            database = siptools_research.utils.database.Database(self.config)
             database.add_event(self.document_id,
                                self.task_name,
                                task_result,
