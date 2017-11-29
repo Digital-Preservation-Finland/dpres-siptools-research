@@ -12,7 +12,8 @@ from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.luigi.task import WorkflowTask, WorkflowExternalTask
 
 from siptools_research.workflow.compress import CompressSIP
-from siptools_research.utils import database, utils
+from siptools_research.utils import utils
+import siptools_research.utils.database
 from siptools_research.utils.contextmanager import redirect_stdout
 
 IDENTITY = '~/.ssh/id_rsa_tpas_pouta'
@@ -37,7 +38,8 @@ class SendSIPToDP(WorkflowTask):
          :returns: MongoTaskResultTarget
         """  
         return MongoTaskResultTarget(document_id=self.document_id,
-                                     taskname=self.task_name)
+                                     taskname=self.task_name,
+                                     config_file=self.config)
        
 
     def run(self):
@@ -75,6 +77,7 @@ class SendSIPToDP(WorkflowTask):
                  task_messages = "Sending SIP to dp "\
                                 "failed due to unknown error."
 
+            database = siptools_research.utils.database.Database(self.config)
             database.add_event(self.document_id,
                                self.task_name,
                                task_result,

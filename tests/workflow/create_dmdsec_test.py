@@ -27,8 +27,11 @@ def test_createdescriptivemetadata(testpath, testmongoclient):
                 os.path.join(workspace, 'sip-in-progress', 'datacite.xml'))
 
     # Init task
-    task = CreateDescriptiveMetadata(dataset_id="1",
-                                     workspace=workspace)
+    task = CreateDescriptiveMetadata(
+        dataset_id="1",
+        workspace=workspace,
+        config='tests/data/siptools_research.conf'
+    )
     assert not task.complete()
 
     # Run task.

@@ -1,11 +1,11 @@
 """A workflow task that reads the ingest report locations from preservation
 service and updates preservation status to Metax."""
 
-from ..luigi.task import WorkflowTask
-from ..luigi.target import MongoTaskResultTarget
-from .validate_sip import ValidateSIP
-from ..utils import database
-from ..utils import metax
+from siptools_research.luigi.task import WorkflowTask
+from siptools_research.luigi.target import MongoTaskResultTarget
+from siptools_research.workflow.validate_sip import ValidateSIP
+import siptools_research.utils.database
+from siptools_research.utils import metax
 
 class ReportPreservationStatus(WorkflowTask):
     """A luigi task that copies and reads the ingest report from preservation
@@ -16,7 +16,8 @@ class ReportPreservationStatus(WorkflowTask):
                            dataset_id=self.dataset_id)
 
     def output(self):
-        return MongoTaskResultTarget(self.document_id, self.task_name)
+        return MongoTaskResultTarget(self.document_id, self.task_name,
+                                     self.config)
 
     def run(self):
 
@@ -43,6 +44,7 @@ class ReportPreservationStatus(WorkflowTask):
 
         task_result = "success"
         task_messages = "Accepted to preservation"
+        database = siptools_research.utils.database.Database(self.config)
         database.add_event(self.document_id,
                            self.task_name,
                            task_result,

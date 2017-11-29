@@ -3,10 +3,9 @@
 
 import os
 from siptools_research.luigi.target import MongoTaskResultTarget
-from siptools_research.utils import  utils
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
-from siptools_research.utils import database
+import siptools_research.utils.database
 from siptools_research.luigi.task import WorkflowTask
 
 from siptools_research.workflow.create_structmap import CreateStructMap
@@ -24,7 +23,8 @@ class CreateMets(WorkflowTask):
                 CreateStructMap(workspace=self.workspace, dataset_id = self.dataset_id)}
 
     def output(self):
-        return MongoTaskResultTarget(self.document_id, self.task_name)
+        return MongoTaskResultTarget(self.document_id, self.task_name,
+                                     self.config)
 
     def run(self):
         """Compiles all metadata files into METS document.
@@ -66,6 +66,9 @@ class CreateMets(WorkflowTask):
                         task_messages = "Compilation of mets document "\
                                         "failed due to unknown error."
 
+                    database = siptools_research.utils.database.Database(
+                        self.config
+                    )
                     database.add_event(self.document_id,
                                        self.task_name,
                                        task_result,

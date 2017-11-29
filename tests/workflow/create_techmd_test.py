@@ -20,7 +20,8 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
 
     # Init task
     task = CreateTechnicalMetadata(workspace=workspace,
-                                   dataset_id="3")
+                                   dataset_id="3",
+                                   config='tests/data/siptools_research.conf')
     assert not task.complete()
 
     # Run task.

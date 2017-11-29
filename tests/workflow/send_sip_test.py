@@ -22,7 +22,8 @@ def test_send_sip(testpath, monkeypatch, testmongoclient):
     # Init and run task
     task = SendSIPToDP(workspace=workspace,
                        sip_path=create_sip,
-                       dataset_id='1')
+                       dataset_id='1',
+                       config='tests/data/siptools_research.conf')
     task.run()
     assert task.complete()
     assert_mongodb_data_success(workspace)
