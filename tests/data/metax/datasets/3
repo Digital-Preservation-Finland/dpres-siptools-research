@@ -4,16 +4,16 @@
 		{
 			"identifier": "pid:urn:5",
 			"type": {
-				"label": {
-					"default": "project_x_FROZEN/some/path"
+				"pref_label": {
+					"en": "project_x_FROZEN/some/path/file_name_5"
 				}
 			}
 		},
 		{
 			"identifier": "pid:urn:6",
 			"type": {
-				"label": {
-					"default": "project_x_FROZEN/some/path"
+				"pref_label": {
+					"en": "project_x_FROZEN/some/path/file_name_6"
 				}
 			}
 		}

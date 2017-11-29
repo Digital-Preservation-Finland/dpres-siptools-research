@@ -2,14 +2,13 @@ pytest
 coverage
 pytest-cov
 git+https://source.csc.fi/scm/git/pas/dpres-signature
-git+https://source.csc.fi/scm/git/pas/dpres-siptools@TPASPKT-6_merge#egg=siptools
+git+https://source.csc.fi/scm/git/pas/dpres-siptools@develop#egg=siptools
 lxml
 wand
 scandir
 luigi
 pymongo
 httpretty
-coreapi
 mongomock
 mimeparse
 Sphinx
@@ -22,3 +21,13 @@ git+https://source.csc.fi/scm/git/pas/premis@develop#egg=premis
 git+https://source.csc.fi/scm/git/pas/nisomix@develop#egg=nisomix
 git+https://source.csc.fi/scm/git/pas/dpres-signature@develop#egg=dpres_signature
 git+https://source.csc.fi/scm/git/pas/dpres-ipt@develop#egg=ipt
+file-magic
+M2Crypto
+dateutils
+python-mimeparse
+
+file-magic
+
+# mets requirements
+dateutils
+

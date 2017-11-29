@@ -2,11 +2,14 @@
 
 import argparse
 import pprint                   # For printing dict
-from json import loads, dumps   # For printing orderedDict
+import logging
 import requests
 from requests.auth import HTTPBasicAuth
-import coreapi
-import lxml.etree as ET
+import lxml.etree
+
+
+# Print debug messages to stdout
+logging.basicConfig(level=logging.DEBUG)
 
 METAX_ENTITIES = ['datasets', 'contracts', 'files']
 PRINT_OUTPUT = ['json', 'xml', 'string']
@@ -15,40 +18,65 @@ USER = 'tpas'
 PASSWORD_FILE = '~/metax_password'
 
 
-def print_output(dataset, print_output=None):
+def print_output(dataset, output_type=None):
     """Print dataset as json, xml or string"""
-    if print_output == 'json':
-        pprint.PrettyPrinter(indent=4).pprint(loads(dumps(dataset)))
-    elif print_output == 'xml':
-        tree = ET.parse(dataset)
+    if output_type == 'json':
+        pprint.pprint(dataset)
+    elif output_type == 'xml':
+        tree = lxml.etree.parse(dataset)
         root = tree.getroot()
-        print ET.tostring(root)
+        print lxml.etree.tostring(root)
     else:
         print dataset
 
 
 class Metax(object):
-    """Get metadata from metax as OrderedDict object."""
+    """Get metadata from metax as dict object."""
     baseurl = "https://metax-test.csc.fi/rest/v1/"
-
-    def __init__(self):
-        self.client = coreapi.Client()
+    elasticsearch_url = "https://metax-test.csc.fi/es/"
 
     def get_data(self, entity_url, entity_id):
         """Get metadata of dataset, contract or file with id from Metax.
+
         :entity_url: "datasets", "contracts" or "files"
         :entity_id: ID number of object
-        :returns: OrderedDict"""
+        :returns: dict"""
         url = self.baseurl + entity_url + '/' + entity_id
-        return self.client.get(url)
-    
-    def get_elasticsearchdata(self, data_key):
-        elastics_url = "https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty" 
-        # data = requests.get(elastics_url)
-        data = self.client.get(elastics_url)
-        return data
-
  
+        return requests.get(url).json()
+
+    def get_xml(self, entity_url, entity_id):
+        """Get xml data of dataset, contract or file with id from Metax.
+
+        :entity_url: "datasets", "contracts" or "files"
+        :entity_id: ID number of object
+        :returns: dict with xml namespaces as keys and lxml.etree.ElementTree
+                  objects as values
+        """
+        # Init result dict
+        xml_dict = {}
+
+        # Get list of xml namespaces
+        ns_key_url = self.baseurl + entity_url + '/' + entity_id + '/xml'
+        ns_key_list = requests.get(ns_key_url).json()
+
+        # For each listed namespace, download the xml, create ElementTree, and
+        # add it to result dict
+        for ns_key in ns_key_list:
+            query = '?namespace=' + ns_key
+            response = requests.get(ns_key_url + query)
+            xml_dict[ns_key] = lxml.etree.fromstring(response.content)
+
+        return xml_dict
+
+    def get_elasticsearchdata(self):
+        """Get elastic search data from Metax
+
+        :returns: dict"""
+        url = self.elasticsearch_url + "reference_data/use_category/_search?"\
+                                       "pretty&size=100"
+        return requests.get(url).json()
+
     def set_preservation_state(self, dataset_id, state):
         """Set value of field `preservation_state` for dataset in Metax
 
@@ -100,7 +128,7 @@ def main(arguments=None):
     metax = Metax()
 
     dataset = metax.get_data(args.entity_url, args.entity_id)
-    print_output(dataset,args.print_output)
+    print_output(dataset, args.print_output)
 
 
 if __name__ == "__main__":

@@ -30,8 +30,7 @@ class CreateTechnicalMetadata(WorkflowTask):
     def output(self):
         """Outputs a task file"""
         return MongoTaskResultTarget(document_id=self.document_id,
-                                          taskname=self.task_name)
-        #return TaskFileTarget(self.workspace, 'create-technical-metadata')
+                                     taskname=self.task_name)
 
     def run(self):
         """Creates PREMIS technical metadata files for files in transfer.

@@ -8,7 +8,7 @@ import lxml.etree as ET
 import mets
 import json
 import xml_helpers.utils as h
-
+from xml_helpers.utils import decode_utf8
 from datetime import datetime
 from luigi import Parameter
 
@@ -19,7 +19,6 @@ from siptools.xml.mets import NAMESPACES
 
 from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.utils import database
-from siptools_research.utils.utils import touch_file
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.luigi.task import WorkflowTask
 
@@ -99,10 +98,10 @@ class CreateStructMap(WorkflowTask):
                     # get dmd id 
                     root = struct.getroot()       
                     old_struct = root[0][0]
-                    dmdsec_id = old_struct.attrib['DMDID']
-                    print "!!!!!!! DMD %s" %dmdsec_id
+                    dmdsec_id = [old_struct.attrib['DMDID']]
+                     
                     wrapper_div = mets.div(type_attr='logical', dmdid=dmdsec_id)
-
+                    print "wrap %s "%ET.tostring(wrapper_div)
                     for category in categories:
                         div_cat = mets.div(type_attr=category, dmdid=dmdsec_id)
                         for file in categories.get(category):

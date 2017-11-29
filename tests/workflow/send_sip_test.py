@@ -1,6 +1,5 @@
 """Test ``siptools_research.workflow.send_sip`` module"""
 import os
-from tests.assertions import task_ok
 from siptools.scripts.compress import main
 from siptools_research.workflow.send_sip import SendSIPToDP
 
@@ -25,7 +24,6 @@ def test_send_sip(testpath, monkeypatch, testmongoclient):
                        sip_path=create_sip,
                        dataset_id='1')
     task.run()
-    assert task_ok(task)
     assert task.complete()
     assert_mongodb_data_success(workspace)
 

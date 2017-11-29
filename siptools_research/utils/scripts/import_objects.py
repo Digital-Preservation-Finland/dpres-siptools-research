@@ -6,19 +6,13 @@ and using siptools for creation of data.
 import os
 import sys
 import argparse
-import subprocess
+import urllib
 
-import lxml.etree as ET
-from wand.image import Image
+import lxml.etree
 
 from siptools.scripts import import_object
-from siptools.utils import encode_path
-from siptools.xml.namespaces import NAMESPACES
-import siptools.xml.mets as m
-import siptools.xml.premis as p
-import siptools.xml.mix as mix
+from siptools.xml.mets import NAMESPACES
 from siptools_research.utils.metax import Metax
-from urllib import quote_plus
 
 
 def parse_arguments(arguments):
@@ -39,9 +33,7 @@ def create_premis_object(digital_object, filepath, formatname, creation_date,
     """Calls import_object from siptools to create
     PREMIS file metadata.
     """
-    #  For some reason the "files"-argument has to be a directory that is found in
-    #  base_path, not a file. Therefore "files" is set to "./".
-    import_object.main(['./', '--base_path', filepath,
+    import_object.main([digital_object, '--base_path', filepath,
                         '--workspace', workspace, '--skip_inspection',
                         '--format_name', formatname,
                         '--digest_algorithm', hashalgorithm,
@@ -53,13 +45,12 @@ def create_premis_object(digital_object, filepath, formatname, creation_date,
 def create_objects(file_id=None, metax_filepath=None, workspace=None):
     """Gets file metadata from Metax and calls create_premis_object function"""
 
-    metadata = Metax().get_data('files', file_id)
+    # Full path to file on packaging service HDD:
+    full_path = os.path.join(workspace, 'sip-in-progress', metax_filepath)
+    filename = os.path.basename(full_path)
+    filepath = os.path.dirname(full_path)
 
-    filename = metadata["file_name"]
-    # Assume that files are found in 'sip-in-progress' directory in workspace
-    filepath = os.path.join(workspace, 'sip-in-progress')
-    #Remove this line, when the metax test data is valid
-    metax_filepath = metadata["file_path"].strip('/')
+    metadata = Metax().get_data('files', file_id)
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
@@ -68,9 +59,6 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None):
     #    formatname = formatdesignation(filepath, datatype='name')
     #    formatversion = formatdesignation(filepath, datatype='version')
     formatversion = "1.0"
-    #print "filename:%s, filepath:%s, hashalgorithm:%s, hashvalue:%s, \
-    #creation_date:%s, formatname:%s, metax_filepath %s" % \
-    #(filename,filepath,hashalgorithm,hashvalue,creation_date,formatname,metax_filepath)
 
     # Picks name of hashalgorithm from its length if it's not valid
     allowed_hashs = {128: 'MD5', 160: 'SHA-1', 224: 'SHA-224',
@@ -84,25 +72,22 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None):
     else:
         hashalgorithm = 'ERROR'
 
-    create_premis_object(filename, filepath, formatname,
-                         creation_date, hashalgorithm,
-                         hashvalue, formatversion,
-                         workspace)
+    create_premis_object(filename, filepath, formatname, creation_date,
+                         hashalgorithm, hashvalue, formatversion, workspace)
 
-    #write xml if it exists
-    xml = Metax().get_data('files', file_id + '/xml')
-    for i in xml:
-        if i not in NAMESPACES.values():
-            raise TypeError("Invalid XML namespace: %s" % i)
-        xml_data = Metax().get_data('files', file_id + '/xml?namespace=' + i)
-        tree = ET.parse(xml_data)
-        root = tree.getroot()
-
-        ns_key = next((ns for ns, ns_url in NAMESPACES.items() if ns_url == i), None)
-        target_filename = quote_plus(metax_filepath + '-' + ns_key + '-techmd.xml')
+    # write xml files if they exist
+    xml = Metax().get_xml('files', file_id)
+    for ns_url in xml:
+        if ns_url not in NAMESPACES.values():
+            raise TypeError("Invalid XML namespace: %s" % ns_url)
+        xml_data = xml[ns_url]
+        ns_key = next((key for key, url in NAMESPACES.items() if url\
+                       == ns_url), None)
+        target_filename = urllib.quote_plus(metax_filepath + '-' + ns_key\
+                                            + '-techmd.xml')
         output_file = os.path.join(workspace, target_filename)
         with open(output_file, 'w+') as outfile:
-            outfile.write(ET.tostring(root))
+            outfile.write(lxml.etree.tostring(xml_data))
 
     return 0
 
@@ -114,11 +99,10 @@ def main(arguments=None):
     metax_dataset = Metax().get_data('datasets', args.dataset_id)
     for file_section in metax_dataset["research_dataset"]["files"]:
         file_id = file_section["identifier"]
-        #get directory structure from Metax. 
-        #doesn't work because of invalid test data in metax
-        #metax_filepath = file_section['type']['label']['default'].strip('/')
-        metax_filepath = None
+        metax_filepath = file_section['type']['pref_label']['en'].strip('/')
         create_objects(file_id, metax_filepath, args.workspace)
+
+    return 0
 
 
 if __name__ == '__main__':

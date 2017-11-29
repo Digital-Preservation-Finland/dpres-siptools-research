@@ -44,7 +44,7 @@ class GetFiles(WorkflowTask):
         dataset_metadata = metax_client.get_data('datasets',
                                                  str(self.dataset_id))
         # get values for filecategory from elasticsearch
-        categories = metax_client.get_elasticsearchdata('')
+        categories = metax_client.get_elasticsearchdata()
         # get files form ida and create directory structure for files based on
         # filecategories
         try:
