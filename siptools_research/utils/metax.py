@@ -43,10 +43,9 @@ class Metax(object):
         return self.client.get(url)
     
     def get_elasticsearchdata(self, data_key):
-        elastics_url = "https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty&size=100" 
+        elastics_url = "https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty" 
         # data = requests.get(elastics_url)
         data = self.client.get(elastics_url)
-        # print "response %s "%data
         return data
 
  
