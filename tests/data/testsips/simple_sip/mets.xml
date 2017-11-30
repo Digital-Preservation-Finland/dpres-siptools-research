@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mets:mets xmlns:fi="http://www.kdk.fi/standards/mets/kdk-extensions" xmlns:mets="http://www.loc.gov/METS/" xmlns:premis="info:lc/xmlns/premis-v2" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd" PROFILE="http://www.digitalpreservation.fi/mets-profiles/research-data" OBJID="433cf3d9-6f64-48a1-82d2-a1071166a2d0" fi:CATALOG="1.6.0" fi:SPECIFICATION="1.6.1" fi:CONTRACTID="contract1"><mets:metsHdr CREATEDATE="2017-11-30T10:00:00" RECORDSTATUS="submission"><mets:agent ROLE="CREATOR" TYPE="ORGANIZATION"><mets:name>CSC</mets:name></mets:agent><mets:agent ROLE="ARCHIVIST" TYPE="ORGANIZATION"><mets:name>CSC</mets:name></mets:agent><mets:agent ROLE="CREATOR" TYPE="OTHER" OTHERTYPE="SOFTWARE"><mets:name>dpres-packaging-service</mets:name></mets:agent></mets:metsHdr><mets:dmdSec ID="_032debda05deca17252a80c12194a1ee" CREATED="2017-11-29T14:24:22.510722">
+    <mets:mdWrap MDTYPE="" MDTYPEVERSION="">
+      <mets:xmlData>
+        <resource xmlns="http://datacite.org/schema/kernel-3" xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd">
+    <identifier identifierType="DOI">10.1234/datacite-example</identifier>
+    <creators>
+        <creator>
+            <creatorName>Puupää, Pekka</creatorName>
+            <nameIdentifier schemeURI="http://orcid.org/" nameIdentifierScheme="ORCID">0000-0001-1234-5678</nameIdentifier>
+            <affiliation>TAMPEREEN EI-tURKULAINEN YLIOPISTO</affiliation>
+        </creator>
+    </creators>
+    <titles>
+        <title xml:lang="en-us">ExampleDataCite XML</title>
+        <title xml:lang="en-us" titleType="Subtitle">Sample file for TPAS testing</title>
+    </titles>
+    <publisher>CSC Digital Preservation</publisher>
+    <publicationYear>2017</publicationYear>
+</resource>
+      </mets:xmlData>
+    </mets:mdWrap>
+  </mets:dmdSec>
+<mets:amdSec>
+    <mets:techMD ID="_297b544672ae12a42632ae96b83f7ed6" CREATED="2017-11-29T14:21:11.150276">
+      <mets:mdWrap MDTYPE="PREMIS:OBJECT" MDTYPEVERSION="2.3">
+        <mets:xmlData>
+          <premis:object xsi:type="premis:file">
+            <premis:objectIdentifier>
+              <premis:objectIdentifierType>UUID</premis:objectIdentifierType>
+              <premis:objectIdentifierValue>59b18bdb-d202-49fd-8392-4813f8b3d421</premis:objectIdentifierValue>
+            </premis:objectIdentifier>
+            <premis:objectCharacteristics>
+              <premis:compositionLevel>0</premis:compositionLevel>
+              <premis:fixity>
+                <premis:messageDigestAlgorithm>MD5</premis:messageDigestAlgorithm>
+                <premis:messageDigest>dbf3662ca277cbcd9481a6612b797594</premis:messageDigest>
+              </premis:fixity>
+              <premis:format>
+                <premis:formatDesignation>
+                  <premis:formatName>text/plain; charset=ISO-8859-15</premis:formatName>
+                </premis:formatDesignation>
+              </premis:format>
+              <premis:creatingApplication>
+                <premis:dateCreatedByApplication>2017-10-12T15:32:43.942346</premis:dateCreatedByApplication>
+              </premis:creatingApplication>
+            </premis:objectCharacteristics>
+          </premis:object>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:techMD>
+  <mets:digiprovMD ID="_4e2c82490710cf09b99c90e2182cc583" CREATED="2017-11-29T14:21:32.228077">
+      <mets:mdWrap MDTYPE="PREMIS:AGENT" MDTYPEVERSION="2.3">
+        <mets:xmlData>
+          <premis:agent>
+            <premis:agentIdentifier>
+              <premis:agentIdentifierType>UUID</premis:agentIdentifierType>
+              <premis:agentIdentifierValue>22eae6a7-58e3-4d94-86bc-62962a72bddc</premis:agentIdentifierValue>
+            </premis:agentIdentifier>
+            <premis:agentName>Demo Application</premis:agentName>
+            <premis:agentType>software</premis:agentType>
+          </premis:agent>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:digiprovMD>
+  <mets:digiprovMD ID="_b2dcc8039b7b814b05ff45b214b01198" CREATED="2017-11-29T14:21:32.228077">
+      <mets:mdWrap MDTYPE="PREMIS:EVENT" MDTYPEVERSION="2.3">
+        <mets:xmlData>
+          <premis:event>
+            <premis:eventIdentifier>
+              <premis:eventIdentifierType>UUID</premis:eventIdentifierType>
+              <premis:eventIdentifierValue>6a2d3038-7666-4658-8584-71300825acbe</premis:eventIdentifierValue>
+            </premis:eventIdentifier>
+            <premis:eventType>creation</premis:eventType>
+            <premis:eventDateTime>2016-10-13T12:30:55</premis:eventDateTime>
+            <premis:eventDetail>Testing</premis:eventDetail>
+            <premis:eventOutcomeInformation>
+              <premis:eventOutcome>success</premis:eventOutcome>
+              <premis:eventOutcomeDetail>
+                <premis:eventOutcomeDetailNote>Outcome detail</premis:eventOutcomeDetailNote>
+              </premis:eventOutcomeDetail>
+            </premis:eventOutcomeInformation>
+            <premis:linkingAgentIdentifier>
+              <premis:linkingAgentIdentifierType>UUID</premis:linkingAgentIdentifierType>
+              <premis:linkingAgentIdentifierValue>22eae6a7-58e3-4d94-86bc-62962a72bddc</premis:linkingAgentIdentifierValue>
+            </premis:linkingAgentIdentifier>
+          </premis:event>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:digiprovMD>
+  </mets:amdSec>
+<mets:fileSec>
+    <mets:fileGrp>
+      <mets:file ID="_51722f0f-3558-4641-b266-d5af536e5761" ADMID="_297b544672ae12a42632ae96b83f7ed6">
+        <mets:FLocat LOCTYPE="URL" xlink:href="file://tests/data/text-file.txt" xlink:type="simple"/>
+      </mets:file>
+    </mets:fileGrp>
+  </mets:fileSec>
+<mets:structMap TYPE="Fairdata-physical">
+    <mets:div TYPE="directory" DMDID="_032debda05deca17252a80c12194a1ee" ADMID="_b2dcc8039b7b814b05ff45b214b01198 _4e2c82490710cf09b99c90e2182cc583">
+      <mets:div TYPE="tests">
+        <mets:div TYPE="data">
+          <mets:fptr FILEID="_51722f0f-3558-4641-b266-d5af536e5761"/>
+        </mets:div>
+      </mets:div>
+    </mets:div>
+  </mets:structMap>
+  </mets:mets>
