@@ -13,7 +13,8 @@ class ReportPreservationStatus(WorkflowTask):
 
     def requires(self):
         return ValidateSIP(workspace=self.workspace,
-                           dataset_id=self.dataset_id)
+                           dataset_id=self.dataset_id,
+                           config=self.config)
 
     def output(self):
         return MongoTaskResultTarget(self.document_id, self.task_name,

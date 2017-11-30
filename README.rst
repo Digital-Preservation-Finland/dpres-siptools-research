@@ -33,11 +33,11 @@ Run one test::
 
 Run workflow::
 
-   luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace /var/spool/siptools-research/testworkspace_abdc1234 --dataset-id 1234
+   luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace /var/spool/siptools-research/testworkspace_abdc1234 --dataset-id 1234 --config tests/data/siptools_research.conf
 
 or::
 
-   python siptools_research/workflow/init_workflow.py 1234
+   python siptools_research/workflow/init_workflow.py 1234 --config tests/data/siptools_research.conf
 
 Testing in virtualenv
 ^^^^^^^^^^^^^^^^^^^^^
