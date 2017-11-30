@@ -127,7 +127,8 @@ def test_create_premis_event(testpath, testmetax):
 
     # Create provenance info xml-file to tempdir
     workspace = testpath
-    create_digiprov.create_premis_event('1', workspace)
+    create_digiprov.create_premis_event('1', workspace,
+                                        'tests/data/siptools_research.conf')
 
     # Check that the created xml-file contains correct elements.
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))

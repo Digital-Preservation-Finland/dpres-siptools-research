@@ -6,6 +6,7 @@ import logging
 import requests
 from requests.auth import HTTPBasicAuth
 import lxml.etree
+from siptools_research.config import Configuration
 
 
 # Print debug messages to stdout
@@ -13,9 +14,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 METAX_ENTITIES = ['datasets', 'contracts', 'files']
 PRINT_OUTPUT = ['json', 'xml', 'string']
-
-USER = 'tpas'
-PASSWORD_FILE = '~/metax_password'
 
 
 def print_output(dataset, output_type=None):
@@ -32,8 +30,18 @@ def print_output(dataset, output_type=None):
 
 class Metax(object):
     """Get metadata from metax as dict object."""
-    baseurl = "https://metax-test.csc.fi/rest/v1/"
-    elasticsearch_url = "https://metax-test.csc.fi/es/"
+
+    def __init__(self, config_file):
+        """ Initialize Metax object.
+
+        :config_file: Global configuration file
+        """
+        configuration = Configuration(config_file)
+        self.metax_url = configuration.get('metax_url')
+        self.username = configuration.get('metax_user')
+        self.password = configuration.get('metax_password')
+        self.baseurl = self.metax_url + '/rest/v1/'
+        self.elasticsearch_url = self.metax_url + '/es/'
 
     def get_data(self, entity_url, entity_id):
         """Get metadata of dataset, contract or file with id from Metax.
@@ -42,7 +50,7 @@ class Metax(object):
         :entity_id: ID number of object
         :returns: dict"""
         url = self.baseurl + entity_url + '/' + entity_id
- 
+
         return requests.get(url).json()
 
     def get_xml(self, entity_url, entity_id):
@@ -85,17 +93,12 @@ class Metax(object):
         :returns: None
 
         """
-        # Read password from file
-        with open(PASSWORD_FILE) as open_file:
-            password = open_file.read().strip()
-
-
         url = self.baseurl + 'datasets/' + dataset_id
         data = {"id": dataset_id, "preservation_state": state}
         request = requests.patch(
             url,
             json=data,
-            auth=HTTPBasicAuth(USER, password)
+            auth=HTTPBasicAuth(self.username, self.password)
         )
 
         # Raise exception if request fails
@@ -117,6 +120,7 @@ def parse_arguments(arguments):
     parser.add_argument('--print_output',
                         metavar='print_output', default='json',
                         help='print output as json/xml/string')
+    parser.add_argument('--config', required=True, help='Configuration file')
     return parser.parse_args(arguments)
 
 
@@ -125,7 +129,7 @@ def main(arguments=None):
 
     args = parse_arguments(arguments)
 
-    metax = Metax()
+    metax = Metax(args.config)
 
     dataset = metax.get_data(args.entity_url, args.entity_id)
     print_output(dataset, args.print_output)

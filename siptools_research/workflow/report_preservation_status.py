@@ -28,7 +28,7 @@ class ReportPreservationStatus(WorkflowTask):
         assert len(ingest_report_paths) == 1
 
         # 'accepted' or 'rejected'?
-        metax_client = metax.Metax()
+        metax_client = metax.Metax(self.config)
         directory = ingest_report_paths[0].split('/')[0]
         if directory == 'accepted':
             # Set Metax preservation state of this dataset to 6 ("in longterm

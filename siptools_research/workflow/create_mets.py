@@ -40,7 +40,7 @@ class CreateMets(WorkflowTask):
             with redirect_stdout(log):
                 try:
                     # Get contract id from Metax
-                    metadata = Metax().get_data('datasets', self.dataset_id)
+                    metadata = Metax(self.config).get_data('datasets', self.dataset_id)
                     contract_id = metadata["contract"]["id"]
                     if contract_id is None:
                         task_result = 'failure'

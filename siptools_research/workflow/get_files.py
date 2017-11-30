@@ -41,7 +41,7 @@ class GetFiles(WorkflowTask):
         """
 
         # Find file identifiers from Metax dataset metadata.
-        metax_client = metax.Metax()
+        metax_client = metax.Metax(self.config)
         dataset_metadata = metax_client.get_data('datasets',
                                                  str(self.dataset_id))
         # get values for filecategory from elasticsearch

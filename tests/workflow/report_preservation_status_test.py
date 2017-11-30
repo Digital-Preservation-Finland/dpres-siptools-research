@@ -15,10 +15,6 @@ def test_reportpreservationstatus(testpath, testmongoclient, testmetax,
 
     workspace = testpath
 
-    # Use test password file instead of real Metax password
-    monkeypatch.setattr('siptools_research.utils.metax.PASSWORD_FILE',
-                        'tests/data/test_password_file')
-
     # Force ValidateSIP task to use SSH key from different path
     os.chmod('tests/data/pas_ssh_key', 0600)
     monkeypatch.setattr('siptools_research.workflow.validate_sip.DP_SSH_KEY',

@@ -7,6 +7,9 @@ DEFAULTS = {
     'mongodb_host': 'localhost',
     'mongodb_database': 'siptools-research',
     'mongodb_collection': 'workflow',
+    'metax_url': 'https://metax-test.csc.fi',
+    'metax_user': 'tpas',
+    'metax_password': '',
 }
 
 class Configuration(object):

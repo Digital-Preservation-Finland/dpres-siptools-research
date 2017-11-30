@@ -13,6 +13,7 @@ import lxml.etree
 from siptools.scripts import import_object
 from siptools.xml.mets import NAMESPACES
 from siptools_research.utils.metax import Metax
+from siptools_research.config import Configuration
 
 
 def parse_arguments(arguments):
@@ -24,6 +25,9 @@ def parse_arguments(arguments):
     parser.add_argument("dataset_id", type=str, help="Metax id of dataset")
     parser.add_argument('--workspace', dest='workspace', type=str,
                         default='./workspace', help="Workspace directory")
+    parser.add_argument('--config', dest='config', type=str,
+                        default='/etc/siptools_research.conf',
+                        help='Configuration file')
 
     return parser.parse_args(arguments)
 
@@ -42,7 +46,8 @@ def create_premis_object(digital_object, filepath, formatname, creation_date,
                         '--format_version', format_version])
 
 
-def create_objects(file_id=None, metax_filepath=None, workspace=None):
+def create_objects(file_id=None, metax_filepath=None, workspace=None,
+                   config=None):
     """Gets file metadata from Metax and calls create_premis_object function"""
 
     # Full path to file on packaging service HDD:
@@ -50,7 +55,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None):
     filename = os.path.basename(full_path)
     filepath = os.path.dirname(full_path)
 
-    metadata = Metax().get_data('files', file_id)
+    metadata = Metax(config).get_data('files', file_id)
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
@@ -76,7 +81,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None):
                          hashalgorithm, hashvalue, formatversion, workspace)
 
     # write xml files if they exist
-    xml = Metax().get_xml('files', file_id)
+    xml = Metax(config).get_xml('files', file_id)
     for ns_url in xml:
         if ns_url not in NAMESPACES.values():
             raise TypeError("Invalid XML namespace: %s" % ns_url)
@@ -96,11 +101,11 @@ def main(arguments=None):
     """The main method for argparser"""
     args = parse_arguments(arguments)
 
-    metax_dataset = Metax().get_data('datasets', args.dataset_id)
+    metax_dataset = Metax(args.config).get_data('datasets', args.dataset_id)
     for file_section in metax_dataset["research_dataset"]["files"]:
         file_id = file_section["identifier"]
         metax_filepath = file_section['type']['pref_label']['en'].strip('/')
-        create_objects(file_id, metax_filepath, args.workspace)
+        create_objects(file_id, metax_filepath, args.workspace, args.config)
 
     return 0
 
