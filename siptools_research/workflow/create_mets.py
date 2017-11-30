@@ -20,7 +20,9 @@ class CreateMets(WorkflowTask):
     def requires(self):
         """Requires METS structMap"""
         return {"Create StructMap":
-                CreateStructMap(workspace=self.workspace, dataset_id = self.dataset_id)}
+                CreateStructMap(workspace=self.workspace,
+                                dataset_id=self.dataset_id,
+                                config=self.config)}
 
     def output(self):
         return MongoTaskResultTarget(self.document_id, self.task_name,

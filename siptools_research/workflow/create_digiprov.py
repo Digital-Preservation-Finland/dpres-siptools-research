@@ -21,7 +21,8 @@ class CreateProvenanceInformation(WorkflowTask):
         """Requires create dmdSec file task"""
         return CreateDescriptiveMetadata(
             workspace=self.workspace,
-            dataset_id=self.dataset_id
+            dataset_id=self.dataset_id,
+            config=self.config
         )
 
     def output(self):

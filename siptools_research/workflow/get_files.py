@@ -22,7 +22,8 @@ class GetFiles(WorkflowTask):
         :returns: CreateWorkspace task
         """
         return CreateWorkspace(workspace=self.workspace,
-                               dataset_id=self.dataset_id)
+                               dataset_id=self.dataset_id,
+                               config=self.config)
 
     def output(self):
         """Returns output target. This task reports to mongodb when task is

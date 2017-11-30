@@ -21,7 +21,9 @@ class SignSIP(WorkflowTask):
 
         :returns: CreateMets task
         """
-        return CreateMets(workspace=self.workspace, dataset_id=self.dataset_id)
+        return CreateMets(workspace=self.workspace,
+                          dataset_id=self.dataset_id,
+                          config=self.config)
 
     def output(self):
         """Returns task output targets.

@@ -25,8 +25,9 @@ class CompressSIP(WorkflowTask):
     def requires(self):
         """Requires signature file"""
         return {"Sign SIP":
-                SignSIP(workspace=self.workspace, dataset_id = self.dataset_id)}
-                        #sip_creation_path=self.sip_creation_path)}
+                SignSIP(workspace=self.workspace,
+                        dataset_id=self.dataset_id,
+                        config=self.config)}
 
     def output(self):
        """Returns task output. Task is ready when succesful event has been

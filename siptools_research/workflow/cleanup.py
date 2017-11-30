@@ -30,7 +30,8 @@ class CleanupWorkspace(WorkflowTask):
         """Require that workspace is ready for cleanup after SIP status
         has been set in previous task."""
         return {"Set SIP status": SetSIPStatus(workspace=self.workspace,
-                                               home_path=self.home_path)}
+                                               home_path=self.home_path,
+                                               config=self.config)}
 
     def run(self):
         """Remove a finished workspace.

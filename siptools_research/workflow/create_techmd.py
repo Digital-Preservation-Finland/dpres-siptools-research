@@ -25,7 +25,8 @@ class CreateTechnicalMetadata(WorkflowTask):
         """
 
         return CreateWorkspace(workspace=self.workspace,
-                               dataset_id=self.dataset_id)
+                               dataset_id=self.dataset_id,
+                               config=self.config)
 
     def output(self):
         """Outputs a task file"""
