@@ -25,7 +25,8 @@ def test_validatesip_accepted(testpath, patch_ssh_key):
     workspace = testpath
 
     # Init task
-    task = ValidateSIP(workspace=workspace, dataset_id="1")
+    task = ValidateSIP(workspace=workspace, dataset_id="1",
+                       config='tests/data/siptools_research.conf')
     assert not task.complete()
 
     # Create new directory to digital preservation server
@@ -44,7 +45,8 @@ def test_validatesip_rejected(testpath, patch_ssh_key):
     workspace = testpath
 
     # Init task
-    task = ValidateSIP(workspace=workspace, dataset_id="1")
+    task = ValidateSIP(workspace=workspace, dataset_id="1",
+                       config='tests/data/siptools_research.conf')
     assert not task.complete()
 
     # Create new directory to digital preservation server
