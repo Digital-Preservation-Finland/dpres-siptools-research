@@ -14,7 +14,10 @@ DEFAULTS = {
     'metax_password': '',
     'ida_url': 'https://86.50.169.61:4433',
     'ida_user': 'testuser_1',
-    'ida_password': ''
+    'ida_password': '',
+    'dp_host': '86.50.168.218',
+    'dp_user': 'tpas',
+    'dp_ssh_key': '/home/tpas/.ssh/id_rsa',
 }
 
 class Configuration(object):
