@@ -2,6 +2,7 @@
 
 import os
 import luigi
+from siptools_research.utils.database import Database
 
 
 class WorkflowTask(luigi.Task):
@@ -93,3 +94,17 @@ class WorkflowWrapperTask(luigi.WrapperTask):
     workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
     config = luigi.Parameter()
+
+
+@WorkflowTask.event_handler(luigi.Event.SUCCESS)
+def report_task_success(task):
+    """This function is triggered after each WorkflowTask is executed
+    succesfully. Adds report of successfull event to workflow database.
+
+    :task: WorkflowTask object
+    """
+    database = Database(task.config)
+    database.add_event(task.document_id,
+                       task.task_name,
+                       'success',
+                       task.success_message)
