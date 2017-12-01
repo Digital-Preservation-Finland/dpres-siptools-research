@@ -35,16 +35,3 @@ def test_createworkspace(testpath, testmongoclient):
     assert os.path.isdir(workspace)
     assert os.path.isdir(os.path.join(workspace, 'logs'))
     assert os.path.isdir(os.path.join(workspace, 'sip-in-progress'))
-
-    # Check that new log entry is found in mongodb, and that there is no extra
-    # entries
-    mongoclient = pymongo.MongoClient()
-    doc = mongoclient['siptools-research'].workflow.find_one(
-        {'_id': os.path.basename(workspace)}
-    )
-    assert doc['_id'] == os.path.basename(workspace)
-    assert doc['workflow_tasks']['CreateWorkspace']['messages']\
-        == 'Workspace directory created'
-    assert doc['workflow_tasks']['CreateWorkspace']['result']\
-        == 'success'
-    assert mongoclient['siptools-research'].workflow.count() == 1
