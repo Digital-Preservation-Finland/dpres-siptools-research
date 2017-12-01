@@ -5,6 +5,7 @@ import subprocess
 
 from luigi import Parameter
 
+from siptools_research.config import Configuration
 from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.luigi.task import WorkflowTask
 
@@ -13,7 +14,6 @@ from siptools_research.utils import utils
 import siptools_research.utils.database
 from siptools_research.utils.contextmanager import redirect_stdout
 
-IDENTITY = '~/.ssh/id_rsa_tpas_pouta'
 class SendSIPToDP(WorkflowTask):
     """Send SIP to DP.
     """
@@ -61,7 +61,7 @@ class SendSIPToDP(WorkflowTask):
         try:
             with open(sent_log, 'w+') as log:
                 with redirect_stdout(log):
-                    (outcome, err) = send_to_dp(sip_name)
+                    (outcome, err) = send_to_dp(sip_name, self.config)
                     if outcome == 'success':
                         task_result = 'success'
                         task_messages = "Send to DP successfully "
@@ -82,13 +82,14 @@ class SendSIPToDP(WorkflowTask):
                                task_messages)
 
 
-def send_to_dp(sip):
+def send_to_dp(sip, config_file):
     """Sends SIP to DP service using sftp.
     """
     print "send-to-dp"
-    identity = IDENTITY
-    host = '86.50.168.218'
-    username = 'tpas'
+    conf = Configuration(config_file)
+    identity = conf.get('dp_ssh_key')
+    host = conf.get('dp_host')
+    username = conf.get('dp_user')
 
     connection = '%s@%s:transfer' % (username, host)
     identityfile = '-oIdentityFile=%s' % identity
