@@ -14,7 +14,6 @@
 import os
 import time
 import paramiko
-import pytest
 from siptools_research.workflow.validate_sip import ValidateSIP
 
 # pylint: disable=redefined-outer-name,unused-argument
