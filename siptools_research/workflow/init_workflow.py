@@ -1,7 +1,9 @@
 """Commandline interface to start the workflow.
 
 To start the workflow for dataset 1234 (for example)::
-   python init_workflow.py  --workspace-root /var/spool/siptools-research  1234
+
+   python init_workflow.py  --config /etc/siptools_research.conf
+   --workspace-root /var/spool/siptools-research 1234
 """
 
 import os
@@ -9,11 +11,10 @@ import uuid
 import argparse
 import luigi
 from siptools_research.luigi.task import WorkflowWrapperTask
+from siptools_research.config import Configuration
 import siptools_research.utils.database
 from siptools_research.workflow.report_preservation_status import \
     ReportPreservationStatus
-
-WORKSPACE_ROOT = '/var/spool/siptools-research'
 
 class InitWorkflow(WorkflowWrapperTask):
     """A wrapper task that starts workflow by requiring the last task of
@@ -41,27 +42,35 @@ def main():
     parser = argparse.ArgumentParser(description='Send to dataset to digital'\
                                      'preservation service.')
     parser.add_argument('dataset_id', help="Metax dataset identifier")
-    parser.add_argument('--workspace_root', default=WORKSPACE_ROOT,
+    parser.add_argument('--workspace_root', default=None,
                         help="Path to directory where new workspaces are "\
                              "created")
-    parser.add_argument('--config', default='/etc/siptools_researc.conf',
+    parser.add_argument('--config', default='/etc/siptools_research.conf',
                         help="Path to configuration file")
-    arguments = parser.parse_args()
+    args = parser.parse_args()
+
+    # Read configuration file
+    conf = Configuration(args.config)
+    workspace_root = conf.get('workspace_root')
+
+    # Override configuration file with commandline arguments
+    if args.workspace_root:
+        workspace_root = args.workspace_root
 
     # Set workspace name and path
-    workspace_name = "aineisto_%s-%s" % (arguments.dataset_id,
+    workspace_name = "aineisto_%s-%s" % (args.dataset_id,
                                          str(uuid.uuid4()))
-    workspace = os.path.join(arguments.workspace_root, workspace_name)
+    workspace = os.path.join(workspace_root, workspace_name)
 
     # Add information to mongodb
-    database = siptools_research.utils.database.Database(arguments.config)
-    database.add_dataset(workspace_name, arguments.dataset_id)
+    database = siptools_research.utils.database.Database(args.config)
+    database.add_dataset(workspace_name, args.dataset_id)
 
     # Start luigi workflow
-    luigi.run(['SendSIPToDP', '--sip-path', workspace,
-               '--dataset-id', arguments.dataset_id,
+    luigi.run(['InitWorkflow',
+               '--dataset-id', args.dataset_id,
                '--workspace', workspace,
-               '--config', arguments.config])
+               '--config', args.config])
 
 
 if __name__ == '__main__':

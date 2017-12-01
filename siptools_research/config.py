@@ -1,9 +1,11 @@
 """Global configuration defaults and config file reader."""
+import os
 import logging
 import ConfigParser
 
 
 DEFAULTS = {
+    'workspace_root': '/var/spool/siptools-research',
     'mongodb_host': 'localhost',
     'mongodb_database': 'siptools-research',
     'mongodb_collection': 'workflow',
@@ -40,7 +42,17 @@ class Configuration(object):
         :returns: None
         """
         # Read options from one section of config file to dictionary.
-        self._parser.read(config_file)
+        if os.path.isfile(config_file) and os.access(config_file, os.R_OK):
+            self._parser.read(config_file)
+        elif not os.path.exists(config_file):
+            raise IOError("Configuration file: %s not found." % \
+                          config_file)
+        elif not os.path.isfile(config_file):
+            raise IOError("Configuration file: %s is not file." % \
+                          config_file)
+        else:
+            raise IOError("Configuration file: %s is not readable." % \
+                          config_file)
 
         # Get list of options for validation
         # pylint: disable=protected-access
