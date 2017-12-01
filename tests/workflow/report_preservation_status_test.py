@@ -6,8 +6,7 @@ import paramiko
 from siptools_research.workflow import report_preservation_status
 
 
-def test_reportpreservationstatus(testpath, testmongoclient, testmetax,
-                                  monkeypatch):
+def test_reportpreservationstatus(testpath, testmongoclient, testmetax):
     """Creates new directory to "accepted" directory in digital preservation
     server, runs ReportPreservationStatus task, and tests that task is complete
     after it has been run. Fake Metax server is used, so it can not be tested
@@ -15,10 +14,8 @@ def test_reportpreservationstatus(testpath, testmongoclient, testmetax,
 
     workspace = testpath
 
-    # Force ValidateSIP task to use SSH key from different path
+    # Set permissions of ssh-key (required by paramiko)
     os.chmod('tests/data/pas_ssh_key', 0600)
-    monkeypatch.setattr('siptools_research.workflow.validate_sip.DP_SSH_KEY',
-                        'tests/data/pas_ssh_key')
 
     # Create new directory to digital preservation server
     with paramiko.SSHClient() as ssh:
