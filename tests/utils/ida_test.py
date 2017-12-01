@@ -6,7 +6,8 @@ def test_download_file(testpath, testida):
     """Downloads a file to a temporary directory and checks contents of the
     file"""
     new_file_path = os.path.join(testpath, 'new_file')
-    ida.download_file('pid:urn:1', new_file_path)
+    ida.download_file('pid:urn:1', new_file_path,
+                      'tests/data/siptools_research.conf')
 
     # The file should be a text file that says: "foo\n"
     with open(new_file_path, 'r') as new_file:

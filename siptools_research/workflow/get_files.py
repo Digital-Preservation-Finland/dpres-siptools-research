@@ -133,8 +133,8 @@ def get_files(self, dataset_metadata, metax_client, categories):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         print "IDA DOWNLOAD %s" %file_path
-        ida.download_file(ida_file_id,
-                          os.path.join(file_path, filename))
+        ida.download_file(ida_file_id, os.path.join(file_path, filename),
+                          self.config)
     with open(os.path.join(self.workspace,
                            'sip-in-progress','logical_struct'), 'w') as new_file:
         new_file.write(dumps(logicalStruct))
