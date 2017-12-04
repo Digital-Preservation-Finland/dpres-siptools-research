@@ -2,20 +2,21 @@
 CreateDescriptiveMetadata."""
 
 import os
+import luigi
 from siptools.scripts import premis_event
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
-from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_dmdsec \
     import CreateDescriptiveMetadata
-import siptools_research.utils.database
 
 
 class CreateProvenanceInformation(WorkflowTask):
     """Create provenance information as PREMIS event and PREMIS agent
     files in METS digiprov wrappers.
     """
+    success_message = "Provenance metadata created."
+    failure_message = "Could not create procenance metada"
 
     def requires(self):
         """Requires create dmdSec file task"""
@@ -27,16 +28,14 @@ class CreateProvenanceInformation(WorkflowTask):
 
     def output(self):
         """Outputs task file"""
-        return MongoTaskResultTarget(self.document_id, self.task_name,
-                                     self.config)
+        return luigi.LocalTarget(
+            os.path.join(self.sip_creation_path, 'creation-event.xml')
+        )
 
     def run(self):
         """Gets file metadata from Metax.
         :returns: None
         """
-
-        # Init workflow status database
-        database = siptools_research.utils.database.Database(self.config)
 
         # Redirect stdout to logfile
         digiprov_log = os.path.join(self.workspace,
@@ -44,30 +43,9 @@ class CreateProvenanceInformation(WorkflowTask):
                                     'task-create-provenance-information.log')
         with open(digiprov_log, 'w') as log:
             with redirect_stdout(log):
-
-                try:
-                    create_premis_event(self.dataset_id,
-                                        self.sip_creation_path,
-                                        self.config)
-
-                    task_result = 'success'
-                    task_messages = "Provenance metadata created."
-                except KeyError as exc:
-                    task_result = 'failure'
-                    task_messages = 'Could not create procenance metada, '\
-                                    'element "%s" not found from metadata.'\
-                                    % exc.message
-                    database.set_status(self.document_id, 'rejected')
-
-                finally:
-                    if not 'task_result' in locals():
-                        task_result = 'failure'
-                        task_messages = "Creation of provenance metadata "\
-                                        "failed due to unknown error."
-                    database.add_event(self.document_id,
-                                       self.task_name,
-                                       task_result,
-                                       task_messages)
+                create_premis_event(self.dataset_id,
+                                    self.sip_creation_path,
+                                    self.config)
 
 
 def create_premis_event(dataset_id, workspace, config):

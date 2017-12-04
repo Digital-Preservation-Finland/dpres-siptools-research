@@ -1,7 +1,7 @@
 """Test the `siptools_research.workflow.create_digiprov` module"""
 
 import os
-import pymongo
+import pytest
 import lxml
 from siptools_research.workflow import create_digiprov
 
@@ -12,8 +12,6 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     - `Task.complete()` is true after `Task.run()`
     - XML file created
     - Log file is created
-    - Log entry is created to mongodb
-
 
     :testpath: Testpath fixture
     :testmongoclient: Pymongo mock fixture
@@ -54,25 +52,13 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
         # Check last line of log file
         assert open_file.readlines()[-1].startswith("premis_event created")
 
-    # Check that new log entry is found in mongodb, and that there is no extra
-    # entries
-    mongoclient = pymongo.MongoClient()
-    doc = mongoclient['siptools-research'].workflow.find_one(
-        {'_id': os.path.basename(workspace)}
-    )
-    assert doc['_id'] == os.path.basename(workspace)
-    assert doc['workflow_tasks']['CreateProvenanceInformation']['messages']\
-        == 'Provenance metadata created.'
-    assert doc['workflow_tasks']['CreateProvenanceInformation']['result']\
-        == 'success'
-    assert mongoclient['siptools-research'].workflow.count() == 1
 
 
 def test_failed_createprovenanceinformation(testpath, testmongoclient,
                                             testmetax):
     """Test case where `CreateProvenanceInformation` task should fail.
     The dataset requested does not have provenance information, which should
-    cause exception. However, the task should write new log entry to mongodb.
+    cause exception.
 
     :testpath: Testpath fixture
     :testmongoclient: Pymongo mock fixture
@@ -92,7 +78,8 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient,
     )
 
     # Run task.
-    task.run()
+    with pytest.raises(KeyError):
+        task.run()
     assert not task.complete()
 
     # There should not be anything else in the workspace
@@ -100,20 +87,6 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient,
     assert set(os.listdir(os.path.join(workspace, 'logs'))) == {
         'task-create-provenance-information.log'
     }
-
-    # Check that new log entry is found in mongodb, and that there is no extra
-    # entries
-    mongoclient = pymongo.MongoClient()
-    doc = mongoclient['siptools-research'].workflow.find_one(
-        {'_id': os.path.basename(workspace)}
-    )
-    assert doc['_id'] == os.path.basename(workspace)
-    assert 'Could not create procenance metada, element "provenance" not '\
-            'found from metadata.' in\
-        doc['workflow_tasks']['CreateProvenanceInformation']['messages']
-    assert doc['workflow_tasks']['CreateProvenanceInformation']['result']\
-        == 'failure'
-    assert mongoclient['siptools-research'].workflow.count() == 1
 
 
 def test_create_premis_event(testpath, testmetax):
