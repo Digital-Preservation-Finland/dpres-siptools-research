@@ -108,3 +108,18 @@ def report_task_success(task):
                        task.task_name,
                        'success',
                        task.success_message)
+
+
+@WorkflowTask.event_handler(luigi.Event.FAILURE)
+def report_task_failure(task, exception):
+    """This function is triggered when a WorkflowTask fails. Adds report of
+    successfull event to workflow database.
+
+    :task: WorkflowTask object
+    :exception: Exception that caused failure
+    """
+    database = Database(task.config)
+    database.add_event(task.document_id,
+                       task.task_name,
+                       'failure',
+                       "%s: %s" % (task.failure_message, str(exception)))
