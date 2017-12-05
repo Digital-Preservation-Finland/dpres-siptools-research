@@ -3,6 +3,7 @@
 import os
 import luigi
 from siptools_research.utils.database import Database
+from siptools_research.utils.metax import Metax
 
 
 class WorkflowTask(luigi.Task):
@@ -110,6 +111,12 @@ def report_task_success(task):
                        task.success_message)
 
 
+class InvalidDataset(Exception):
+    """Exception raised when packaged dataset does not pass validation in
+    digital preservation service"""
+    pass
+
+
 @WorkflowTask.event_handler(luigi.Event.FAILURE)
 def report_task_failure(task, exception):
     """This function is triggered when a WorkflowTask fails. Adds report of
@@ -123,3 +130,7 @@ def report_task_failure(task, exception):
                        task.task_name,
                        'failure',
                        "%s: %s" % (task.failure_message, str(exception)))
+
+    if isinstance(exception, InvalidDataset):
+        metax_client = Metax(task.config)
+        metax_client.set_preservation_state(task.dataset_id, '7')
