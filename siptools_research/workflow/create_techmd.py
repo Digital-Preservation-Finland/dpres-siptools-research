@@ -10,7 +10,7 @@ from siptools_research.utils.scripts.import_objects import main
 
 
 class CreateTechnicalMetadata(WorkflowTask):
-    """Create PREMIS object files based on SÄHKE2 contents.
+    """Create PREMIS object files.
     """
     success_message = 'Technical metadata for objects created'
     failure_message = 'Technical metadata for objects could not be created'
