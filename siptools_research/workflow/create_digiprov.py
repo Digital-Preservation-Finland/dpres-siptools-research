@@ -29,7 +29,8 @@ class CreateProvenanceInformation(WorkflowTask):
     def output(self):
         """Outputs task file"""
         return luigi.LocalTarget(
-            os.path.join(self.sip_creation_path, 'creation-event.xml')
+            os.path.join(self.logs_path,
+                         'task-create-provenance-information.log')
         )
 
     def run(self):
@@ -38,10 +39,7 @@ class CreateProvenanceInformation(WorkflowTask):
         """
 
         # Redirect stdout to logfile
-        digiprov_log = os.path.join(self.workspace,
-                                    'logs',
-                                    'task-create-provenance-information.log')
-        with open(digiprov_log, 'w+') as log:
+        with self.output().open('w') as log:
             with redirect_stdout(log):
                 create_premis_event(self.dataset_id,
                                     self.sip_creation_path,

@@ -84,9 +84,6 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient,
 
     # There should not be anything else in the workspace
     assert set(os.listdir(workspace)) == {'sip-in-progress', 'logs'}
-    assert set(os.listdir(os.path.join(workspace, 'logs'))) == {
-        'task-create-provenance-information.log'
-    }
 
 
 def test_create_premis_event(testpath, testmetax):
