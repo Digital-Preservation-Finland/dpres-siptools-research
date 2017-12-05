@@ -41,7 +41,7 @@ class CreateProvenanceInformation(WorkflowTask):
         digiprov_log = os.path.join(self.workspace,
                                     'logs',
                                     'task-create-provenance-information.log')
-        with open(digiprov_log, 'w') as log:
+        with open(digiprov_log, 'w+') as log:
             with redirect_stdout(log):
                 create_premis_event(self.dataset_id,
                                     self.sip_creation_path,
