@@ -28,6 +28,8 @@ class ValidateSIP(WorkflowExternalTask):
 
         :returns: RemoteAnyTarget
         """
+        # TODO: if day changes between ingest report creation and init of this
+        # target, the target does not exist.
         conf = Configuration(self.config)
         date = time.strftime("%Y-%m-%d")
         path = ['accepted/%s/%s' % (date, self.document_id),
