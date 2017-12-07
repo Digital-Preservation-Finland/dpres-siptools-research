@@ -39,13 +39,16 @@ class CreateStructMap(WorkflowTask):
         """
         return {"Create descriptive metadata completed":
                 CreateDescriptiveMetadata(workspace=self.workspace,
-                                          dataset_id=self.dataset_id),
+                                          dataset_id=self.dataset_id,
+                                          config=self.config),
                 "Create provenance information completed":
                 CreateProvenanceInformation(workspace=self.workspace,
-                                            dataset_id=self.dataset_id),
+                                            dataset_id=self.dataset_id,
+                                            config=self.config),
                 "Create technical metadata completed":
                 CreateTechnicalMetadata(workspace=self.workspace,
-                                        dataset_id=self.dataset_id)}
+                                        dataset_id=self.dataset_id,
+                                        config=self.config)}
 
     def output(self):
         """Outputs a task file"""

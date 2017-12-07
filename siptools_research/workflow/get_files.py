@@ -22,7 +22,8 @@ class GetFiles(WorkflowTask):
         :returns: CreateWorkspace task
         """
         return CreateWorkspace(workspace=self.workspace,
-                               dataset_id=self.dataset_id, config=self.config)
+                               dataset_id=self.dataset_id,
+                               config=self.config)
 
     def output(self):
         """Returns output target. This task reports to mongodb when task is
@@ -41,7 +42,7 @@ class GetFiles(WorkflowTask):
         """
 
         # Find file identifiers from Metax dataset metadata.
-        metax_client = metax.Metax()
+        metax_client = metax.Metax(self.config)
         dataset_metadata = metax_client.get_data('datasets',
                                                  str(self.dataset_id))
         dataset_files = metax_client.get_data('datasets',
@@ -111,8 +112,8 @@ def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         print "IDA DOWNLOAD %s" %file_path
-        ida.download_file(file_id,
-                          os.path.join(file_path, filename))
+        ida.download_file(file_id, os.path.join(file_path, filename),
+                          self.config)
     with open(os.path.join(self.workspace,
                            'sip-in-progress','logical_struct'), 'w') as new_file:
         new_file.write(dumps(logicalStruct))

@@ -20,7 +20,9 @@ class CreateMets(WorkflowTask):
     def requires(self):
         """Requires METS structMap"""
         return {"Create StructMap":
-                CreateStructMap(workspace=self.workspace, dataset_id = self.dataset_id)}
+                CreateStructMap(workspace=self.workspace,
+                                dataset_id=self.dataset_id,
+                                config=self.config)}
 
     def output(self):
         return MongoTaskResultTarget(self.document_id, self.task_name,
@@ -40,7 +42,7 @@ class CreateMets(WorkflowTask):
             with redirect_stdout(log):
                 try:
                     # Get contract id from Metax
-                    metadata = Metax().get_data('datasets', self.dataset_id)
+                    metadata = Metax(self.config).get_data('datasets', self.dataset_id)
                     contract_id = metadata["contract"]["id"]
                     if contract_id is None:
                         task_result = 'failure'

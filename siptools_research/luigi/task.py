@@ -2,23 +2,29 @@
 
 import os
 import luigi
+from siptools_research.utils.database import Database
 
 
 class WorkflowTask(luigi.Task):
     """Common base class for all workflow tasks. In addition to functionality
-    of normal luigi Task, every workflow task has two parameters:
+    of normal luigi Task, every workflow task has some luigi parameters:
 
     :workspace: Full path to unique self.workspace directory for the task.
     :dataset_id: Metax dataset id.
     :config: Path to configuration file
 
-    WorkflowTask also has two extra instance variables that can be used to
+    WorkflowTask also has some extra instance variables that can be used to
     identify the task and current workflow, forexample when storing workflow
     status information to database:
 
+    :document_id: A unique string that is used for identifying workflows (one
+    mongodb document per workflow) in workflow database. The ``document_id`` is
+    the name (not path) of workspace directory.
     :task_name: Automatically generated name for the task.
     :document_id: Identifier of the workflow. Generated from the name of
     workspace, which should be unique
+    :sip_creation_path: A path in the workspace in which the SIP is created
+    :logs_path: A path in the workspace in which the task logs are written
     """
 
     workspace = luigi.Parameter()
@@ -40,14 +46,29 @@ class WorkflowExternalTask(luigi.ExternalTask):
     """Common base class for all tasks that are executed externally from this
     process and task does not implement the run() method, only output() and
     requires() methods. In addition to functionality of normal luigi
-    ExternalTask, every task has two parameters:
+    ExternalTask, every task has some luigi parameters:
 
     :workspace: Full path to unique self.workspace directory for the task.
     :dataset_id: Metax dataset id.
+    :config: Path to configuration file
+
+    WorkflowExternalTask also has some extra instance variables that can be
+    used to identify the task and current workflow, forexample when storing
+    workflow status information to database:
+
+    :document_id: A unique string that is used for identifying workflows (one
+    mongodb document per workflow) in workflow database. The ``document_id`` is
+    the name (not path) of workspace directory.
+    :task_name: Automatically generated name for the task.
+    :document_id: Identifier of the workflow. Generated from the name of
+    workspace, which should be unique
+    :sip_creation_path: A path in the workspace in which the SIP is created
+    :logs_path: A path in the workspace in which the task logs are written
     """
 
     workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
+    config = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
         """Calls luigi.Task's __init__ and sets additional instance variables.
@@ -67,7 +88,38 @@ class WorkflowWrapperTask(luigi.WrapperTask):
 
     :workspace: Full path to unique self.workspace directory for the task.
     :dataset_id: Metax dataset id.
+    :config: Path to configuration file
     """
 
     workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
+    config = luigi.Parameter()
+
+
+@WorkflowTask.event_handler(luigi.Event.SUCCESS)
+def report_task_success(task):
+    """This function is triggered after each WorkflowTask is executed
+    succesfully. Adds report of successfull event to workflow database.
+
+    :task: WorkflowTask object
+    """
+    database = Database(task.config)
+    database.add_event(task.document_id,
+                       task.task_name,
+                       'success',
+                       task.success_message)
+
+
+@WorkflowTask.event_handler(luigi.Event.FAILURE)
+def report_task_failure(task, exception):
+    """This function is triggered when a WorkflowTask fails. Adds report of
+    successfull event to workflow database.
+
+    :task: WorkflowTask object
+    :exception: Exception that caused failure
+    """
+    database = Database(task.config)
+    database.add_event(task.document_id,
+                       task.task_name,
+                       'failure',
+                       "%s: %s" % (task.failure_message, str(exception)))

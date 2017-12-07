@@ -68,10 +68,11 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     assert mongoclient['siptools-research'].workflow.count() == 1
 
 
-def test_failed_createprovenanceinformation(testpath, testmongoclient):
+def test_failed_createprovenanceinformation(testpath, testmongoclient,
+                                            testmetax):
     """Test case where `CreateProvenanceInformation` task should fail.
-    The workspace is empty, which should cause exception. However, the task
-    should write new log entry to mongodb.
+    The dataset requested does not have provenance information, which should
+    cause exception. However, the task should write new log entry to mongodb.
 
     :testpath: Testpath fixture
     :testmongoclient: Pymongo mock fixture
@@ -85,7 +86,7 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient):
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
-        dataset_id="1",
+        dataset_id="2",
         workspace=workspace,
         config='tests/data/siptools_research.conf'
     )
@@ -126,7 +127,8 @@ def test_create_premis_event(testpath, testmetax):
 
     # Create provenance info xml-file to tempdir
     workspace = testpath
-    create_digiprov.create_premis_event('1', workspace)
+    create_digiprov.create_premis_event('1', workspace,
+                                        'tests/data/siptools_research.conf')
 
     # Check that the created xml-file contains correct elements.
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))

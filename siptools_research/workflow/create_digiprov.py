@@ -21,7 +21,8 @@ class CreateProvenanceInformation(WorkflowTask):
         """Requires create dmdSec file task"""
         return CreateDescriptiveMetadata(
             workspace=self.workspace,
-            dataset_id=self.dataset_id
+            dataset_id=self.dataset_id,
+            config=self.config
         )
 
     def output(self):
@@ -46,7 +47,8 @@ class CreateProvenanceInformation(WorkflowTask):
 
                 try:
                     create_premis_event(self.dataset_id,
-                                        self.sip_creation_path)
+                                        self.sip_creation_path,
+                                        self.config)
 
                     task_result = 'success'
                     task_messages = "Provenance metadata created."
@@ -68,10 +70,10 @@ class CreateProvenanceInformation(WorkflowTask):
                                        task_messages)
 
 
-def create_premis_event(dataset_id, workspace):
+def create_premis_event(dataset_id, workspace, config):
     """Gets metada from Metax and calls siptools premis_event script."""
 
-    metadata = Metax().get_data('datasets', dataset_id)
+    metadata = Metax(config).get_data('datasets', dataset_id)
 
     for provenance in metadata["research_dataset"]["provenance"]:
         event_type = provenance["type"]["pref_label"]["en"]

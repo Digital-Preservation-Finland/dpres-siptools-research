@@ -25,7 +25,8 @@ class CreateTechnicalMetadata(WorkflowTask):
         """
 
         return CreateWorkspace(workspace=self.workspace,
-                               dataset_id=self.dataset_id)
+                               dataset_id=self.dataset_id,
+                               config=self.config)
 
     def output(self):
         """Outputs a task file"""
@@ -48,7 +49,8 @@ class CreateTechnicalMetadata(WorkflowTask):
             with open(techmd_log, 'w') as log:
                 with redirect_stdout(log):
                     main([self.dataset_id,
-                          '--workspace', self.workspace])
+                          '--workspace', self.workspace,
+                          '--config', self.config])
                     task_result = 'success'
                     task_messages = "Technical metadata for objects created."
 

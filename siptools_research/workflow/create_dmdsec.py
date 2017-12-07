@@ -20,7 +20,8 @@ class CreateDescriptiveMetadata(WorkflowTask):
         :returns: CreateWorkspace task
         """
         return CreateWorkspace(workspace=self.workspace,
-                               dataset_id=self.dataset_id)
+                               dataset_id=self.dataset_id,
+                               config=self.config)
 
     def output(self):
         """Returns task output. Task is ready when succesful event has been

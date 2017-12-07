@@ -8,8 +8,8 @@ from siptools.scripts import import_object
 from siptools.scripts import import_description, premis_event, \
     compile_structmap
 
-def test_create_mets_ok(testpath, testmongoclient):
-    """Test the workflow task CreateMets module."""
+def test_create_mets_ok(testpath, testmongoclient, testmetax):
+    """Test the workflow task CreateMets."""
     # Create workspace with contents required by the tested task
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
@@ -18,7 +18,7 @@ def test_create_mets_ok(testpath, testmongoclient):
     create_test_data(workspace=create_sip)
 
     # Init and run task
-    task = CreateMets(workspace=workspace, dataset_id='2',
+    task = CreateMets(workspace=workspace, dataset_id='create_mets_dataset_1',
                       config='tests/data/siptools_research.conf')
     task.run()
     for directory in os.listdir(workspace):

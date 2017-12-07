@@ -1,25 +1,31 @@
-"""IDA interface"""
+"""IDA interface module"""
 import requests
+from siptools_research.config import Configuration
 
-BASEURL = 'https://86.50.169.61:4433'
-USER = 'testuser_1'
-PASSWORD = 'testuser'
+def download_file(identifier, filepath, config_file):
+    """Download file from IDA. Options can be read from configuration file, or
+    they can be passed as arguments. If both are given, arguments will
+    override. Possible options are:
 
-def download_file(identifier, filepath, user=USER, password=PASSWORD):
-    """Download file from IDA.
+    Configuration file options:
+    :ida_url: Baseurl of Ida server
+    :ida_user: Username for authentication
+    :ida_password: Password for authentication
 
+    Function arguments:
     :identifier: File identifier (for example "pid:urn:1")
     :filepath: Path to save the file
-    :user: Username for authentication
-    :password: Password for authentication
+    :config_file: Configuration file
     :returns: None
     """
+    if config_file:
+        conf = Configuration(config_file)
+        user = conf.get('ida_user')
+        password = conf.get('ida_password')
+        baseurl = conf.get('ida_url')
 
-    url = '%s/files/%s/download' % (BASEURL, identifier)
+
+    url = '%s/files/%s/download' % (baseurl, identifier)
     response = requests.get(url, auth=(user, password), verify=False)
     with open(filepath, 'w') as new_file:
         new_file.write(response.content)
-
-
-
-

@@ -2,13 +2,10 @@
 service."""
 
 import time
+from siptools_research.config import Configuration
 from siptools_research.luigi.task import WorkflowExternalTask
 from siptools_research.luigi.target import RemoteAnyTarget
 from siptools_research.workflow.send_sip import SendSIPToDP
-
-DP_HOST = '86.50.168.218'
-DP_USER = 'tpas'
-DP_SSH_KEY = '/home/vagrant/.ssh/id_rsa_tpas_pouta'
 
 class ValidateSIP(WorkflowExternalTask):
     """External task that finishes when SIP is found in ~/rejected/ or
@@ -22,7 +19,8 @@ class ValidateSIP(WorkflowExternalTask):
         :returns: CreateWorkspace task
         """
         return SendSIPToDP(workspace=self.workspace,
-                           dataset_id=self.dataset_id)
+                           dataset_id=self.dataset_id,
+                           config=self.config)
 
     def output(self):
         """Returns output target. This task reports to mongodb when task is
@@ -30,9 +28,10 @@ class ValidateSIP(WorkflowExternalTask):
 
         :returns: RemoteAnyTarget
         """
+        conf = Configuration(self.config)
         date = time.strftime("%Y-%m-%d")
         path = ['accepted/%s/%s' % (date, self.document_id),
                 'rejected/%s/%s' % (date, self.document_id)]
-        return RemoteAnyTarget(path, DP_HOST,
-                               username=DP_USER,
-                               key_file=DP_SSH_KEY)
+        return RemoteAnyTarget(path, conf.get('dp_host'),
+                               username=conf.get('dp_user'),
+                               key_file=conf.get('dp_ssh_key'))

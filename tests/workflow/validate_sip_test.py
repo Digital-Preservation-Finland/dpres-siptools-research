@@ -14,18 +14,18 @@
 import os
 import time
 import paramiko
-import pytest
 from siptools_research.workflow.validate_sip import ValidateSIP
 
 # pylint: disable=redefined-outer-name,unused-argument
-def test_validatesip_accepted(testpath, patch_ssh_key):
+def test_validatesip_accepted(testpath):
     """Initializes task and tests that it is not complete. Then creates new
     directory to "accepted" directory in digital preservation server and tests
     that task is complete."""
     workspace = testpath
 
     # Init task
-    task = ValidateSIP(workspace=workspace, dataset_id="1")
+    task = ValidateSIP(workspace=workspace, dataset_id="1",
+                       config='tests/data/siptools_research.conf')
     assert not task.complete()
 
     # Create new directory to digital preservation server
@@ -37,14 +37,15 @@ def test_validatesip_accepted(testpath, patch_ssh_key):
     assert task.complete()
 
 
-def test_validatesip_rejected(testpath, patch_ssh_key):
+def test_validatesip_rejected(testpath):
     """Initializes task and tests that it is not complete. Then creates new
     directory to "rejected" directory in digital preservation server and tests
     that task is complete."""
     workspace = testpath
 
     # Init task
-    task = ValidateSIP(workspace=workspace, dataset_id="1")
+    task = ValidateSIP(workspace=workspace, dataset_id="1",
+                       config='tests/data/siptools_research.conf')
     assert not task.complete()
 
     # Create new directory to digital preservation server
@@ -54,15 +55,6 @@ def test_validatesip_rejected(testpath, patch_ssh_key):
 
     # Check that task is completed after new directory is created
     assert task.complete()
-
-
-@pytest.fixture(scope="function")
-def patch_ssh_key(monkeypatch):
-    """Fixture that forces ValidateSIP task to use SSH key from different
-    path"""
-    os.chmod('tests/data/pas_ssh_key', 0600)
-    monkeypatch.setattr('siptools_research.workflow.validate_sip.DP_SSH_KEY',
-                        'tests/data/pas_ssh_key')
 
 
 def create_remote_dir(path):
