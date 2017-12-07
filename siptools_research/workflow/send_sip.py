@@ -3,8 +3,6 @@
 import os
 import subprocess
 
-from luigi import Parameter
-
 from siptools_research.config import Configuration
 from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.luigi.task import WorkflowTask
@@ -17,9 +15,6 @@ from siptools_research.utils.contextmanager import redirect_stdout
 class SendSIPToDP(WorkflowTask):
     """Send SIP to DP.
     """
-    retry_count = 10
-    sip_path = Parameter()
-    dataset_id = Parameter()
 
     def requires(self):
         """Requires compressed SIP archive file.
@@ -49,7 +44,7 @@ class SendSIPToDP(WorkflowTask):
         :returns: None
         """
 
-        sip_name = os.path.join(self.sip_path,
+        sip_name = os.path.join(self.sip_creation_path,
                                 (os.path.basename(self.workspace) + '.tar'))
 
         sent_log = os.path.join(self.workspace,

@@ -19,15 +19,7 @@ def test_send_sip(testpath, testmongoclient):
 
     # Init and run task
     task = SendSIPToDP(workspace=workspace,
-                       sip_path=create_sip,
                        dataset_id='1',
                        config='tests/data/siptools_research.conf')
     task.run()
     assert task.complete()
-    assert_mongodb_data_success(workspace)
-
-
-def assert_mongodb_data_success(document_id):
-    """Asserts that the task has written a successful outcome to
-    MongoDB.
-    """
