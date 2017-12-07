@@ -1,0 +1,94 @@
+[
+    {
+        "id": 3,
+        "byte_size": 300,
+        "checksum": {
+            "algorithm": "sha2",
+            "checked": "2017-06-23T17:41:59+03:00",
+            "value": "habeebit"
+        },
+        "parent_directory": {
+            "id": 3,
+            "identifier": "pid:urn:dir:3"
+        },
+        "download_url": "http://some.url.csc.fi/3",
+        "file_frozen": "2017-05-21T17:41:59+03:00",
+        "file_format": "html/text",
+        "file_modified": "2017-06-23T17:41:59+03:00",
+        "file_name": "file_name_3",
+        "file_path": "/project_x_FROZEN/Experiment_X/file_name_3",
+        "file_storage": {
+            "id": 1,
+            "file_storage_json": {
+                "url": "https://metax.csc.local/rest/files/",
+                "title": "Title 1",
+                "identifier": "pid:urn:storageidentifier1"
+            },
+            "date_modified": "2017-06-23T13:07:22+03:00",
+            "date_created": "2017-05-23T13:07:22+03:00",
+            "service_created": ""
+        },
+        "file_uploaded": "2017-05-21T17:41:59+03:00",
+        "identifier": "pid:urn:1",
+        "file_characteristics": {
+            "title": "A title 20",
+            "encoding": "utf-8",
+            "description": "A nice description 20",
+            "file_created": "2014-01-17T08:19:31Z",
+            "application_name": "Application Name",
+            "metadata_modified": "2014-01-17T08:19:31Z"
+        },
+        "open_access": false,
+        "project_identifier": "project_x",
+        "replication_path": "/path/to/copy/of/file",
+        "date_modified": "2017-06-27T13:07:22+03:00",
+        "date_created": "2017-05-23T13:07:22+03:00",
+        "service_created": "metax"
+    },
+    {
+        "id": 4,
+        "byte_size": 400,
+        "checksum": {
+            "algorithm": "sha2",
+            "checked": "2017-06-23T17:41:59+03:00",
+            "value": "habeebit"
+        },
+        "parent_directory": {
+            "id": 3,
+            "identifier": "pid:urn:dir:3"
+        },
+        "download_url": "http://some.url.csc.fi/4",
+        "file_frozen": "2017-05-21T17:41:59+03:00",
+        "file_format": "html/text",
+        "file_modified": "2017-06-23T17:41:59+03:00",
+        "file_name": "file_name_4",
+        "file_path": "/project_x_FROZEN/Experiment_X/file_name_4",
+        "file_storage": {
+            "id": 1,
+            "file_storage_json": {
+                "url": "https://metax.csc.local/rest/files/",
+                "title": "Title 1",
+                "identifier": "pid:urn:storageidentifier1"
+            },
+            "date_modified": "2017-06-23T13:07:22+03:00",
+            "date_created": "2017-05-23T13:07:22+03:00",
+            "service_created": ""
+        },
+        "file_uploaded": "2017-05-21T17:41:59+03:00",
+        "identifier": "pid:urn:1",
+        "file_characteristics": {
+            "title": "A title 20",
+            "encoding": "utf-8",
+            "description": "A nice description 20",
+            "file_created": "2014-01-17T08:19:31Z",
+            "application_name": "Application Name",
+            "metadata_modified": "2014-01-17T08:19:31Z"
+        },
+        "open_access": false,
+        "project_identifier": "project_x",
+        "replication_path": "/path/to/copy/of/file",
+        "date_modified": "2017-06-27T13:07:22+03:00",
+        "date_created": "2017-05-23T13:07:22+03:00",
+        "service_created": "metax"
+    }
+]
