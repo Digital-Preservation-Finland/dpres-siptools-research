@@ -11,11 +11,9 @@ def test_signsip(testpath, testmongoclient):
     - `Task.complete()` is true after `Task.run()`
     - Signature file created
     - Log file is created
-    - Log entry is created to mongodb
 
     :testpath: Testpath fixture
     :testmongoclient: Pymongo mock fixture
-    :testmetax: Fake metax fixture
     :returns: None
     """
 
@@ -34,7 +32,6 @@ def test_signsip(testpath, testmongoclient):
     # Init task
     task = sign.SignSIP(workspace=workspace,
                         dataset_id="1",
-                        sign_key_path='tests/data/sip_sign_pas.pem',
                         config='tests/data/siptools_research.conf')
     assert not task.complete()
 
@@ -55,16 +52,3 @@ def test_signsip(testpath, testmongoclient):
                            'task-sign-sip.log'))\
             as open_file:
         assert  open_file.read().startswith("sign_mets created file")
-
-    # Check that new log entry is found in mongodb, and that there is no extra
-    # entries
-    mongoclient = pymongo.MongoClient()
-    doc = mongoclient['siptools-research'].workflow.find_one(
-        {'_id': os.path.basename(workspace)}
-    )
-    assert doc['_id'] == os.path.basename(workspace)
-    assert doc['workflow_tasks']['SignSIP']['messages']\
-        == 'Digital signature for SIP created.'
-    assert doc['workflow_tasks']['SignSIP']['result']\
-        == 'success'
-    assert mongoclient['siptools-research'].workflow.count() == 1
