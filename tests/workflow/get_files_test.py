@@ -25,7 +25,7 @@ def test_getfiles(testpath, testmetax, testida, testmongoclient):
     assert task.complete()
 
     # Check that correct files are created into correct path
-    with open(os.path.join(testpath, 'sip-in-progress/project_x_FROZEN/Experiment_X'\
+    with open(os.path.join(testpath, 'sip-in-progress/project_x_FROZEN/Experiment_X/'\
                            'file_name_3'))\
             as open_file:
         assert open_file.read() == 'foo\n'

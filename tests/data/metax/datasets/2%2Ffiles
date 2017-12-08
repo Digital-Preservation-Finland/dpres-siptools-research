@@ -55,7 +55,7 @@
         },
         "parent_directory": {
             "id": 3,
-            "identifier": "pid:urn:dir:3"
+            "identifier": "directory-identifier-1"
         },
         "download_url": "http://some.url.csc.fi/4",
         "file_frozen": "2017-05-21T17:41:59+03:00",
@@ -75,7 +75,7 @@
             "service_created": ""
         },
         "file_uploaded": "2017-05-21T17:41:59+03:00",
-        "identifier": "pid:urn:1",
+        "identifier": "pid:urn:72",
         "file_characteristics": {
             "title": "A title 20",
             "encoding": "utf-8",

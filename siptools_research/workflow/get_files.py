@@ -47,13 +47,12 @@ class GetFiles(WorkflowTask):
                                                  str(self.dataset_id))
         dataset_files = metax_client.get_data('datasets',
                                                   str(self.dataset_id)+"/files")        
-        print "mita saaartiiib %s "%dataset_files
         # get values for filecategory from elasticsearch
         categories = metax_client.get_elasticsearchdata()
         # get files from ida and create directory structure for files based on
         # filecategories
         try:
-            get_files(self, dataset_metadata['research_dataset']['files'], dataset_files,
+            get_files(self, dataset_metadata['research_dataset'], dataset_files,
                       metax_client, categories)
         except KeyError:
             pass
@@ -76,43 +75,46 @@ def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
         # Get file's use category. The path to the file in logical structmap 
         # is stored in 'use_category' in metax.
         filecategory = None
-        for file_section in dataset_metadata:
+        for file_section in dataset_metadata['files']:
              metax_file_id = file_section['identifier']
              if file_id == metax_file_id:
-                 print "BBB %s " %metax_file_id
                  filecategorykey = file_section['use_category']['identifier'].strip('/')
                  filecategory = get_category(categories['hits']['hits'],
                                     filecategorykey)
                  break
-    
-
+        if filecategory is None:
+            file_folder = file['parent_directory']['identifier']
+            for directory in dataset_metadata['directories']:
+                if file_folder == directory['identifier']:  
+                    categorykey = directory['use_category']['identifier'].strip('/')
+                    filecategory = get_category(categories['hits']['hits'],
+                                                     categorykey)
+                    break
         filename = file['file_name']
         path = file['file_path']
-
         clist = list()
-        if logicalStruct:
-           if logicalStruct[filecategory] is not None:
-               clist = logicalStruct[filecategory]
-        print "struct %s" % clist
-        clist.append(filename+path)
-        print "struct2 %s " %clist        
+        try:
+            if logicalStruct[filecategory] is not None:
+                clist = logicalStruct[filecategory]
+        except KeyError:
+            print "error"
+        clist.append(path)
         logicalStruct[filecategory] = clist
-        print "logicalStruct %s" %logicalStruct
 
 
         if(path.startswith('/')):
             path = path[1:len(path)]
         file_path = os.path.join(self.workspace, 'sip-in-progress', path)
-        print "logical add file %s "%filename
-        print " to path %s "% file_path
 
 
         # Download file from Ida to 'sip-in-progress' directory in workspace
         # Dataset directory structure is the same as in IDA
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)
-        print "IDA DOWNLOAD %s" %file_path
-        ida.download_file(file_id, os.path.join(file_path, filename),
+        folder_path = file_path
+        if filename in folder_path:
+            folder_path = file_path[:file_path.index(filename)]
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+        ida.download_file(file_id, file_path,
                           self.config)
     with open(os.path.join(self.workspace,
                            'sip-in-progress','logical_struct'), 'w') as new_file:
@@ -126,17 +128,10 @@ def get_category(categories, filecategorykey):
 
     :categories: list of dictionaries
     :filecategorykey: value to look for from dictionaries"""
-    label = ''
     for hits in categories:
-        found = False
-        for key, value in hits['_source'].iteritems():
-            if value == filecategorykey:
-                found = True
-                break
-        if found:
-            for key, value in hits['_source'].iteritems():
-                if key == 'label':
-                    label = value['en']
-                    break
+        
+        if hits['_source']['uri'] == filecategorykey:
+             label = hits['_source']['label']['en']
+             break
 
     return label
