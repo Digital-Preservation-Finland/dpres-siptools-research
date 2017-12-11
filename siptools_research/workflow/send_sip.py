@@ -25,7 +25,7 @@ class SendSIPToDP(WorkflowTask):
     def output(self):
         """Returns task output.
 
-        :returns: MongoTaskResultTarget
+        :returns: LocalTarget
         """
         return luigi.LocalTarget(os.path.join(self.logs_path,
                                               'task-send-sip-to-dp.log'))

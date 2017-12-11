@@ -30,7 +30,7 @@ class GetFiles(WorkflowTask):
     def output(self):
         """Returns output target.
 
-        :returns: MongoTaskResult
+        :returns: LocalTarget 
         """
         return luigi.LocalTarget(os.path.join(self.logs_path,
                                               "task-getfiles.log"))

@@ -27,7 +27,7 @@ class SignSIP(WorkflowTask):
     def output(self):
         """Returns task output targets.
 
-        :returns: MongoTaskResultTarget
+        :returns: LocalTarget
         """
         return luigi.LocalTarget(os.path.join(self.sip_creation_path,
                                               "signature.sig"))
