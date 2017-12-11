@@ -2,10 +2,10 @@
 
 import os
 from json import dumps
+import luigi
 from siptools_research.utils import ida
 from siptools_research.utils import metax
-import siptools_research.utils.database
-from siptools_research.luigi.target import MongoTaskResultTarget
+from siptools_research.utils import contextmanager
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 
@@ -14,6 +14,8 @@ class GetFiles(WorkflowTask):
     """A task that reads file metadata from Metax and downloads requred files
     from Ida.
     """
+    success_message = 'Files were downloaded from IDA'
+    failure_message = 'Could not get files from IDA'
 
     def requires(self):
         """Returns list of required tasks. This task requires task:
@@ -26,42 +28,38 @@ class GetFiles(WorkflowTask):
                                config=self.config)
 
     def output(self):
-        """Returns output target. This task reports to mongodb when task is
-        succesfully completed.
+        """Returns output target.
 
         :returns: MongoTaskResult
         """
-        return MongoTaskResultTarget(self.document_id, self.task_name,
-                                     self.config)
+        return luigi.LocalTarget(os.path.join(self.logs_path,
+                                              "task-getfiles.log"))
 
     def run(self):
         """Reads list of required files from Metax and downloads them from Ida.
-        Adds result report to mongodb.
 
         :returns: None
         """
 
-        # Find file identifiers from Metax dataset metadata.
-        metax_client = metax.Metax(self.config)
-        dataset_metadata = metax_client.get_data('datasets',
-                                                 str(self.dataset_id))
-        dataset_files = metax_client.get_data('datasets',
-                                              str(self.dataset_id)+"/files")
-        # get values for filecategory from elasticsearch
-        categories = metax_client.get_elasticsearchdata()
-        # get files from ida and create directory structure for files based on
-        # filecategories
-        try:
-            get_files(self, dataset_metadata['research_dataset'],
-                      dataset_files, metax_client, categories)
-        except KeyError:
-            pass
-        # Add task report to mongodb
-        database = siptools_research.utils.database.Database(self.config)
-        database.add_event(self.document_id,
-                           self.task_name,
-                           'success',
-                           'Workspace directory created')
+        with self.output().open('w') as log:
+            with contextmanager.redirect_stdout(log):
+                # Find file identifiers from Metax dataset metadata.
+                metax_client = metax.Metax(self.config)
+                dataset_metadata = metax_client.get_data('datasets',
+                                                         str(self.dataset_id))
+                dataset_files = metax_client.get_data(
+                    'datasets',
+                    str(self.dataset_id)+"/files"
+                )
+                # get values for filecategory from elasticsearch
+                categories = metax_client.get_elasticsearchdata()
+                # get files from ida and create directory structure for files
+                # based on filecategories
+                try:
+                    get_files(self, dataset_metadata['research_dataset'],
+                              dataset_files, metax_client, categories)
+                except KeyError:
+                    pass
 
 
 def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
