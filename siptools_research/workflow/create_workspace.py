@@ -8,6 +8,7 @@ class CreateWorkspace(WorkflowTask):
     """Creates empty workspace directory."""
 
     success_message = 'Workspace directory create.'
+    failure_message = 'Creating workspace directory failed'
 
     def output(self):
         """Outputs workflow_tasks.CreateWorkSpace.result:'success'"""
