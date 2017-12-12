@@ -58,7 +58,8 @@ def test_validatesip_rejected(testpath):
 
 
 def create_remote_dir(path):
-    """Creates new directory to digital preservation server
+    """Creates new directory to digital preservation server and sets
+    permissions of the new directory and its parent directory.
 
     :path: Path of new directory
     :returns: None
@@ -70,7 +71,16 @@ def create_remote_dir(path):
                     username='tpas',
                     key_filename='tests/data/pas_ssh_key')
 
+        sftp = ssh.open_sftp()
+
         # Create directory with name of the workspace to digital preservation
         # server over SSH, so that the ReportPreservationStatus thinks that
         # validation has completed.
         ssh.exec_command("mkdir -p %s" % path)
+        sftp.chown(path, 9906, 333) # tpas:preservation
+        sftp.chmod(path, 0775)
+
+        # Set parent directory premissions
+        parent_path = os.path.dirname(path.strip('/'))
+        sftp.chown(parent_path, 9906, 333) # tpas:preservation
+        sftp.chmod(parent_path, 0775)
