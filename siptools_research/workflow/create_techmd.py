@@ -1,27 +1,24 @@
+"""Luigi task that creates technical metadata"""
 # encoding=utf8
-"""required tasks to create SIPs from transfers"""
 
 import os
-#from siptools_research.luigi.target import TaskFileTarget
-from siptools_research.luigi.target import MongoTaskResultTarget
+from luigi import LocalTarget
 from siptools_research.utils.contextmanager import redirect_stdout
-import siptools_research.utils.database
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.utils.scripts.import_objects import main
 
-class DummyException(Exception):
-    """A dummy exception that never raises"""
-    pass
-
 
 class CreateTechnicalMetadata(WorkflowTask):
-    """Create PREMIS object files based on SÄHKE2 contents.
+    """Create PREMIS object files.
     """
+    success_message = 'Technical metadata for objects created'
+    failure_message = 'Technical metadata for objects could not be created'
+
     def requires(self):
         """Return required tasks.
 
-        :returns: Files must have been transferred to workspace
+        :returns: CreateWorkspace task
         """
 
         return CreateWorkspace(workspace=self.workspace,
@@ -30,42 +27,17 @@ class CreateTechnicalMetadata(WorkflowTask):
 
     def output(self):
         """Outputs a task file"""
-        return MongoTaskResultTarget(document_id=self.document_id,
-                                     taskname=self.task_name,
-                                     config_file=self.config)
+        return LocalTarget(os.path.join(self.logs_path,
+                                        'task-create-technical-metadata.log'))
 
     def run(self):
         """Creates PREMIS technical metadata files for files in transfer.
-        If unsuccessful writes an error message into mongoDB, updates
-        the status of the document and rejects the package. The rejected
-        package is moved to the users home/rejected directory.
 
         :returns: None
         """
 
-        try:
-            techmd_log = os.path.join(self.workspace, 'logs',
-                                      'task-create-technical-metadata.log')
-            with open(techmd_log, 'w') as log:
-                with redirect_stdout(log):
-                    main([self.dataset_id,
-                          '--workspace', self.workspace,
-                          '--config', self.config])
-                    task_result = 'success'
-                    task_messages = "Technical metadata for objects created."
-
-        except DummyException as ex:
-            task_result = 'failure'
-            task_messages = "Technical metadata for objects could not be "\
-                            "created: %s" % ex
-
-        finally:
-            if not 'task_result' in locals():
-                task_result = 'failure'
-                task_messages = "Creation of technical metadata failed due "\
-                                "to unknown error."
-            database = siptools_research.utils.database.Database(self.config)
-            database.add_event(self.document_id,
-                               self.task_name,
-                               task_result,
-                               task_messages)
+        with self.output().open('w') as log:
+            with redirect_stdout(log):
+                main([self.dataset_id,
+                      '--workspace', self.workspace,
+                      '--config', self.config])

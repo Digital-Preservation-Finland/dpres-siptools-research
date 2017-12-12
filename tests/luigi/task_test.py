@@ -109,3 +109,5 @@ def test_run_failing_task(testpath, testmongoclient):
 #TODO: Test for WorkflowWrapperTask
 
 #TODO: Test for WorkfloExternalTask
+
+#TODO: Test InvalidDataset

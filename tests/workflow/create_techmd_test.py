@@ -2,7 +2,6 @@
 
 import os
 import shutil
-import pymongo
 
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 
@@ -53,16 +52,3 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
         assert open_file.read().startswith(
             "Wrote METS technical metadata to file"
         )
-
-    # Check that new log entry is found in mongodb, and that there is no extra
-    # entries
-    mongoclient = pymongo.MongoClient()
-    doc = mongoclient['siptools-research'].workflow.find_one(
-        {'_id':'workspace'}
-    )
-    assert doc['_id'] == 'workspace'
-    assert doc['workflow_tasks']['CreateTechnicalMetadata']['messages']\
-             == 'Technical metadata for objects created.'
-    assert doc['workflow_tasks']['CreateTechnicalMetadata']['result']\
-            == 'success'
-    assert mongoclient['siptools-research'].workflow.count() == 1

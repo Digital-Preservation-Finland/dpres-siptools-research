@@ -1,25 +1,18 @@
-"""Sends compressed SIP to DP service."""
+"""Luigi task that sends compressed SIP to DP service."""
 
 import os
 import subprocess
-
-from luigi import Parameter
-
+import luigi
 from siptools_research.config import Configuration
-from siptools_research.luigi.target import MongoTaskResultTarget
 from siptools_research.luigi.task import WorkflowTask
-
 from siptools_research.workflow.sign import SignSIP
-from siptools_research.utils import utils
-import siptools_research.utils.database
 from siptools_research.utils.contextmanager import redirect_stdout
 
 class SendSIPToDP(WorkflowTask):
     """Send SIP to DP.
     """
-    retry_count = 10
-    sip_path = Parameter()
-    dataset_id = Parameter()
+    success_message = "SIP was sent to digital preservation"
+    failure_message = "Sending SIP to digital preservation failed"
 
     def requires(self):
         """Requires compressed SIP archive file.
@@ -30,56 +23,28 @@ class SendSIPToDP(WorkflowTask):
                         config=self.config)}
 
     def output(self):
-        """Returns task output. Task is ready when succesful event has been
-         added to worklow database.
+        """Returns task output.
 
-         :returns: MongoTaskResultTarget
+        :returns: LocalTarget
         """
-        return MongoTaskResultTarget(document_id=self.document_id,
-                                     taskname=self.task_name,
-                                     config_file=self.config)
+        return luigi.LocalTarget(os.path.join(self.logs_path,
+                                              'task-send-sip-to-dp.log'))
 
 
     def run(self):
         """Sends SIP file to DP service using sftp.
-        If unsuccessful for more times than the amount specified by
-        count task writes an error message into mongoDB, updates
-        the status of the document to pending and completes itself.
 
         :returns: None
         """
 
-        sip_name = os.path.join(self.sip_path,
+        sip_name = os.path.join(self.sip_creation_path,
                                 (os.path.basename(self.workspace) + '.tar'))
 
-        sent_log = os.path.join(self.workspace,
-                                "logs",
-                                'task-send-sip-to-dp.log')
-        utils.makedirs_exist_ok(os.path.join(self.workspace, "logs"))
-        task_result = None
-        open(sent_log, 'a')
-        try:
-            with open(sent_log, 'w+') as log:
-                with redirect_stdout(log):
-                    (outcome, err) = send_to_dp(sip_name, self.config)
-                    if outcome == 'success':
-                        task_result = 'success'
-                        task_messages = "Send to DP successfully "
-                    else:
-                        task_result = 'failure'
-                        task_messages = err
-
-        finally:
-            if not task_result:
-                task_result = 'failure'
-                task_messages = "Sending SIP to dp "\
-                                "failed due to unknown error."
-
-            database = siptools_research.utils.database.Database(self.config)
-            database.add_event(self.document_id,
-                               self.task_name,
-                               task_result,
-                               task_messages)
+        with self.output().open('w') as log:
+            with redirect_stdout(log):
+                (outcome, err) = send_to_dp(sip_name, self.config)
+                if not outcome == 'success':
+                    raise Exception(err)
 
 
 def send_to_dp(sip, config_file):

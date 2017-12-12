@@ -6,11 +6,13 @@ from siptools_research.workflow.send_sip import SendSIPToDP
 def test_send_sip(testpath, testmongoclient):
     """Test the workflow task SendSip module.
     """
-
-    # Force SendSIPToDP task to use SSH key from different path
+    # Set permissions of ssh key
     os.chmod('tests/data/pas_ssh_key', 0600)
 
+    # Create workspace with directories and files required by the task
     workspace = testpath
+    os.makedirs(os.path.join(workspace, 'sip-in-progress'))
+    os.makedirs(os.path.join(workspace, 'logs'))
     create_sip = 'tests/data/testsip'
     #tar testsip
     sip_name = os.path.join(create_sip,
@@ -19,15 +21,7 @@ def test_send_sip(testpath, testmongoclient):
 
     # Init and run task
     task = SendSIPToDP(workspace=workspace,
-                       sip_path=create_sip,
                        dataset_id='1',
                        config='tests/data/siptools_research.conf')
     task.run()
     assert task.complete()
-    assert_mongodb_data_success(workspace)
-
-
-def assert_mongodb_data_success(document_id):
-    """Asserts that the task has written a successful outcome to
-    MongoDB.
-    """

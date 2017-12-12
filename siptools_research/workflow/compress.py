@@ -1,19 +1,11 @@
 """required tasks to validate SIPs and create AIPs"""
 
 import os
-import sys
-import traceback
-import datetime
-
-from luigi import Parameter
-
-from siptools_research.luigi.target import MongoTaskResultTarget
-
+import tarfile
+import luigi
 from siptools_research.luigi.task import WorkflowTask
-
+from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.workflow.sign import SignSIP
-
-from siptools.scripts.compress import main
 
 
 class CompressSIP(WorkflowTask):
@@ -21,63 +13,35 @@ class CompressSIP(WorkflowTask):
 
     :path: workspace/created_sip
     """
-    workspace = Parameter()
+    success_message = "SIP was compressed"
+    failure_message = "Compressing SIP failed"
+
     def requires(self):
-        """Requires signature file"""
-        return {"Sign SIP":
-                SignSIP(workspace=self.workspace,
-                        dataset_id=self.dataset_id,
-                        config=self.config)}
+        """Requires signature file
+
+        :returns: SignSIP task"""
+        return SignSIP(workspace=self.workspace,
+                       dataset_id=self.dataset_id,
+                       config=self.config)
 
     def output(self):
-       """Returns task output. Task is ready when succesful event has been
-        added to worklow database.
+        """Returns task output.
 
-        :returns: MongoTaskResultTarget
+        :returns: luigi.LocalTarget
         """
-       return MongoTaskResultTarget(document_id=self.document_id,
-                                     taskname=self.task_name)
+        return luigi.LocalTarget(
+            os.path.join(self.workspace, self.document_id) + '.tar'
+        )
+
     def run(self):
-        """Creates a tar archive file conatining mets.xml,
-        signature.sig  and all content files.
-        If unsuccessful writes an error message into mongoDB, updates
-        the status of the document and rejects the package. The rejected
-        package is moved to the users home/rejected directory.
+        """Creates a tar archive file conatining mets.xml, signature.sig and
+        all content files.
 
         :returns: None
-
         """
-
-        sip_name = os.path.join(self.sip_output_path,
-                                (os.path.basename(self.workspace) + '.tar'))
-
-        compress_log = os.path.join(self.workspace,
-                                    'logs',
-                                    'task-compress-sip.log')
-         # Redirect stdout to logfile
+        compress_log = os.path.join(self.logs_path, 'task-compress-sip.log')
+        # Redirect stdout to logfile
         with open(compress_log, 'w') as log:
             with redirect_stdout(log):
-                try:
-
-                    main(['--tar_filename', sip_name, self.sip_creation_path])
-                    task_result = 'success'
-                    task_messages = "SIP archive file compressed"
-
-
-
-                except Exception as ex:
-                   task_result = 'failure'
-                   task_messages = 'Could not compress SIP, '\
-                                    % exc.message
-
-                   database.set_status(self.document_id, 'rejected')
-                finally:
-                    if not task_result:
-                        task_result = 'failure'
-                        task_messages = "Compression of SIP "\
-                                        "failed due to unknown error."
-
-                    database.add_event(self.document_id,
-                                       self.task_name,
-                                       task_result,
-                                       task_messages)
+                with tarfile.open(self.output().path, 'w') as tar:
+                    tar.add(self.sip_creation_path, arcname='.')

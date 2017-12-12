@@ -1,12 +1,11 @@
 """Test module ``siptools_research.workflow.create_mets``"""
 import shutil
 import os
-import pymongo
 from siptools_research.workflow.create_mets import CreateMets
-from siptools_research import config
 from siptools.scripts import import_object
 from siptools.scripts import import_description, premis_event, \
     compile_structmap
+
 
 def test_create_mets_ok(testpath, testmongoclient, testmetax):
     """Test the workflow task CreateMets."""
@@ -21,13 +20,8 @@ def test_create_mets_ok(testpath, testmongoclient, testmetax):
     task = CreateMets(workspace=workspace, dataset_id='create_mets_dataset_1',
                       config='tests/data/siptools_research.conf')
     task.run()
-    for directory in os.listdir(workspace):
-        path = os.path.join(workspace, directory)
-        print path
     assert task.complete()
     assert os.path.isfile(os.path.join(create_sip, 'mets.xml'))
-
-    assert_mongodb_data_success(workspace)
 
 
 def create_test_data(workspace):
@@ -52,27 +46,3 @@ def create_test_data(workspace):
 
     # Create structmap
     compile_structmap.main(['--workspace', workspace])
-
-
-
-
-def assert_mongodb_data_success(document_id):
-    """Asserts that the task has written a successful outcome to
-    MongoDB.
-    """
-
-    conf = config.Configuration('tests/data/siptools_research.conf')
-    mongo_client = pymongo.MongoClient(conf.get('mongodb_host'))
-    mongo_db = conf.get('mongodb_database')
-    mongo_col = conf.get('mongodb_collection')
-    mongodb = mongo_client[mongo_db]
-    collection = mongodb[mongo_col]
-    mongodb_data = collection.find(
-        {"_id": document_id},
-        {"wf_tasks.create-mets.result": 1})
-
-    for item in mongodb_data:
-        assert item["wf_tasks"]["create-mets"]["result"] == "success"
-
-    # remove document from database
-    collection.remove({"_id": document_id})
