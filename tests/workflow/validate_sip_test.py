@@ -76,11 +76,22 @@ def create_remote_dir(path):
         # Create directory with name of the workspace to digital preservation
         # server over SSH, so that the ReportPreservationStatus thinks that
         # validation has completed.
-        ssh.exec_command("mkdir -p %s" % path)
+
+        # Create parent directory
+        parent_path = os.path.dirname(path.strip('/'))
+        try:
+            sftp.mkdir(parent_path)
+        except IOError as exc:
+            if exc.message == 'Failure':
+                # The directory probably exists already
+                pass
+            else:
+                raise
+        sftp.chown(parent_path, 9906, 333) # tpas:preservation
+        sftp.chmod(parent_path, 0775)
+
+        # Create new directory
+        sftp.mkdir(path)
         sftp.chown(path, 9906, 333) # tpas:preservation
         sftp.chmod(path, 0775)
 
-        # Set parent directory premissions
-        parent_path = os.path.dirname(path.strip('/'))
-        sftp.chown(parent_path, 9906, 333) # tpas:preservation
-        sftp.chmod(parent_path, 0775)
