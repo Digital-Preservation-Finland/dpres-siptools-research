@@ -12,7 +12,7 @@ from siptools_research.luigi.task import InvalidMetadataError
 from siptools_research.config import Configuration
 
 
-class TestClass(WorkflowTask):
+class TestTask(WorkflowTask):
     """Test class that only writes an output file."""
     success_message = 'Test task was successfull'
 
@@ -24,7 +24,7 @@ class TestClass(WorkflowTask):
             outputfile.write('Hello world')
 
 
-class FailingTestClass(WorkflowTask):
+class FailingTestTask(WorkflowTask):
     """Test class that always fails."""
     failure_message = 'An error occurred while running a test task'
 
@@ -35,13 +35,13 @@ class FailingTestClass(WorkflowTask):
         raise Exception('Shit hit the fan')
 
 
-class InvalidDatasetClass(FailingTestClass):
+class InvalidDatasetTask(FailingTestTask):
     """Test class that raises InvalidDatasetError"""
 
     def run(self):
         raise InvalidDatasetError('File validation failed')
 
-class InvalidMetadataClass(FailingTestClass):
+class InvalidMetadataTask(FailingTestTask):
     """Test class that raises InvalidDatasetError"""
 
     def run(self):
@@ -49,14 +49,14 @@ class InvalidMetadataClass(FailingTestClass):
 
 
 def test_run_workflowtask(testpath, testmongoclient):
-    """Executes TestClass, checks that output file is created, checks that new
+    """Executes TestTask, checks that output file is created, checks that new
     event field is created to mongo document."""
 
     # Run task like it would be run from command line
     with pytest.raises(SystemExit):
         luigi.cmdline.luigi_run(
             ('--module', 'tests.luigi.task_test',
-             'TestClass',
+             'TestTask',
              '--workspace', testpath,
              '--dataset-id', '1',
              '--config', 'tests/data/siptools_research.conf',
@@ -75,12 +75,12 @@ def test_run_workflowtask(testpath, testmongoclient):
         [conf.get('mongodb_collection')]
     document = collection.find_one()
     # Check 'messages' field
-    assert document['workflow_tasks']['TestClass']['messages'] ==\
+    assert document['workflow_tasks']['TestTask']['messages'] ==\
         'Test task was successfull'
     # Check 'result' field
-    assert document['workflow_tasks']['TestClass']['result'] == 'success'
+    assert document['workflow_tasks']['TestTask']['result'] == 'success'
     # Parse the 'timestamp' field to make sure it is correct format
-    datetime.datetime.strptime(document['workflow_tasks']['TestClass']\
+    datetime.datetime.strptime(document['workflow_tasks']['TestTask']\
                                ['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
 
     # Check that there is no extra documents in mongo collection
@@ -88,14 +88,14 @@ def test_run_workflowtask(testpath, testmongoclient):
 
 
 def test_run_failing_task(testpath, testmongoclient):
-    """Executes FailingTestClass and checks that report of failed event is
+    """Executes FailingTestTask and checks that report of failed event is
     added to mongo document."""
 
     # Run task like it would be run from command line
     with pytest.raises(SystemExit):
         luigi.cmdline.luigi_run(
             ('--module', 'tests.luigi.task_test',
-             'FailingTestClass',
+             'FailingTestTask',
              '--workspace', testpath,
              '--dataset-id', '1',
              '--config', 'tests/data/siptools_research.conf',
@@ -110,13 +110,13 @@ def test_run_failing_task(testpath, testmongoclient):
         [conf.get('mongodb_collection')]
     document = collection.find_one()
     # Check 'messages' field
-    assert document['workflow_tasks']['FailingTestClass']['messages'] ==\
+    assert document['workflow_tasks']['FailingTestTask']['messages'] ==\
         'An error occurred while running a test task: Shit hit the fan'
     # Check 'result' field
-    assert document['workflow_tasks']['FailingTestClass']['result'] ==\
+    assert document['workflow_tasks']['FailingTestTask']['result'] ==\
         'failure'
     # Parse the 'timestamp' field to make sure it is correct format
-    datetime.datetime.strptime(document['workflow_tasks']['FailingTestClass']\
+    datetime.datetime.strptime(document['workflow_tasks']['FailingTestTask']\
                                ['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
 
     # Check that there is no extra documents in mongo collection
@@ -132,7 +132,7 @@ def test_invalidDatasetError(testpath, testmongoclient, testmetax):
     with pytest.raises(SystemExit):
         luigi.cmdline.luigi_run(
             ('--module', 'tests.luigi.task_test',
-             'InvalidDatasetClass',
+             'InvalidDatasetTask',
              '--workspace', testpath,
              '--dataset-id', '1',
              '--config', 'tests/data/siptools_research.conf',
@@ -156,7 +156,7 @@ def test_invalidMetadataError(testpath, testmongoclient, testmetax):
     with pytest.raises(SystemExit):
         luigi.cmdline.luigi_run(
             ('--module', 'tests.luigi.task_test',
-             'InvalidMetadataClass',
+             'InvalidMetadataTask',
              '--workspace', testpath,
              '--dataset-id', '1',
              '--config', 'tests/data/siptools_research.conf',
@@ -169,6 +169,7 @@ def test_invalidMetadataError(testpath, testmongoclient, testmetax):
         == '{"id": "1", "preservation_state": "7"}'
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'
+
 
 #TODO: Test for WorkflowWrapperTask
 
