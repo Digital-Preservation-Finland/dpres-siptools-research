@@ -25,11 +25,20 @@ def test_getfiles(testpath, testmetax, testida, testmongoclient):
     assert task.complete()
 
     # Check that correct files are created into correct path
-    with open(os.path.join(testpath, 'sip-in-progress/project_x_FROZEN/Experiment_X/'\
-                           'file_name_3'))\
+    with open(os.path.join(testpath, 'sip-in-progress/project_x_FROZEN/'\
+                           'Experiment_X/file_name_3'))\
             as open_file:
         assert open_file.read() == 'foo\n'
 
-    with open(os.path.join(testpath, 'sip-in-progress/project_x_FROZEN/Experiment_X/file_name_4'))\
+    with open(os.path.join(testpath, 'sip-in-progress/project_x_FROZEN/'\
+                           'Experiment_X/file_name_4'))\
             as open_file:
         assert open_file.read() == 'bar\n'
+
+    # Check that  logical structmap is created
+    with open(os.path.join(testpath,
+                           'sip-in-progress/logical_struct'))\
+             as open_file:                                                      
+        assert open_file.read() == '{"Source material": '\
+                                   '["/project_x_FROZEN/Experiment_X/file_name_3", '\
+                                   '"/project_x_FROZEN/Experiment_X/file_name_4"]}'
