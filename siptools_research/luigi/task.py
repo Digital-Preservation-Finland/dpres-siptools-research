@@ -117,6 +117,13 @@ class InvalidDataset(Exception):
     pass
 
 
+class InvalidMetadata(Exception):
+    """Exception raised when SIP can not be created for dataset due to missing
+    or invalid metadata.
+    """
+    pass
+
+
 @WorkflowTask.event_handler(luigi.Event.FAILURE)
 def report_task_failure(task, exception):
     """This function is triggered when a WorkflowTask fails. Adds report of
@@ -132,5 +139,8 @@ def report_task_failure(task, exception):
                        "%s: %s" % (task.failure_message, str(exception)))
 
     if isinstance(exception, InvalidDataset):
+        metax_client = Metax(task.config)
+        metax_client.set_preservation_state(task.dataset_id, '7')
+    elif isinstance(exception, InvalidMetadata):
         metax_client = Metax(task.config)
         metax_client.set_preservation_state(task.dataset_id, '7')

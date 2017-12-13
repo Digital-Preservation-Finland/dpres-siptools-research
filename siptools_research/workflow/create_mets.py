@@ -6,6 +6,7 @@ from luigi import LocalTarget
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.luigi.task import WorkflowTask
+from siptools_research.luigi.task import InvalidMetadata
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools.scripts import compile_mets
 
@@ -46,7 +47,7 @@ class CreateMets(WorkflowTask):
                                                        self.dataset_id)
                 contract_id = metadata["contract"]["id"]
                 if contract_id is None:
-                    raise ValueError('Dataset does not have contract id')
+                    raise InvalidMetadata('Dataset does not have contract id')
                 if isinstance(contract_id, (int, long)):
                     contract_id = str(contract_id)
 
