@@ -52,6 +52,12 @@ def test_createdescriptivemetadata(testpath, testmongoclient):
     xpath_namespaces = {'mets': "http://www.loc.gov/METS/",
                         'ns1': "http://datacite.org/schema/kernel-3"}
 
+    elements = tree.xpath('/mets:mets//mets:dmdSec/mets:mdWrap',
+                          namespaces=xpath_namespaces)
+    assert elements[0].attrib["OTHERMDTYPE"] == "DataCite"
+    assert elements[0].attrib["MDTYPEVERSION"] == "4.0"
+
+
     elements = tree.xpath(common_xpath + 'ns1:identifier',
                           namespaces=xpath_namespaces)
     assert elements[0].text == "10.1234/datacite-example"
