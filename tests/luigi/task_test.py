@@ -5,7 +5,10 @@ import datetime
 import pytest
 import luigi.cmdline
 import pymongo
+import httpretty
 from siptools_research.luigi.task import WorkflowTask
+from siptools_research.luigi.task import InvalidDatasetError
+from siptools_research.luigi.task import InvalidMetadataError
 from siptools_research.config import Configuration
 
 
@@ -30,6 +33,19 @@ class FailingTestClass(WorkflowTask):
 
     def run(self):
         raise Exception('Shit hit the fan')
+
+
+class InvalidDatasetClass(FailingTestClass):
+    """Test class that raises InvalidDatasetError"""
+
+    def run(self):
+        raise InvalidDatasetError('File validation failed')
+
+class InvalidMetadataClass(FailingTestClass):
+    """Test class that raises InvalidDatasetError"""
+
+    def run(self):
+        raise InvalidMetadataError('Missing some important metadata')
 
 
 def test_run_workflowtask(testpath, testmongoclient):
@@ -106,8 +122,54 @@ def test_run_failing_task(testpath, testmongoclient):
     # Check that there is no extra documents in mongo collection
     assert collection.count() == 1
 
+
+def test_invalidDatasetError(testpath, testmongoclient, testmetax):
+    """Test that event handler of WorkflowTask correctly deals with
+    InvalidDatasetError risen in a task. Event handler should report
+    preservation state to Metax.
+    """
+    # Run task like it would be run from command line
+    with pytest.raises(SystemExit):
+        luigi.cmdline.luigi_run(
+            ('--module', 'tests.luigi.task_test',
+             'InvalidDatasetClass',
+             '--workspace', testpath,
+             '--dataset-id', '1',
+             '--config', 'tests/data/siptools_research.conf',
+             '--local-scheduler',
+             '--no-lock')
+        )
+
+    # Check the body of last HTTP request
+    assert httpretty.last_request().body \
+        == '{"id": "1", "preservation_state": "7"}'
+    # Check the method of last HTTP request
+    assert httpretty.last_request().method == 'PATCH'
+
+
+def test_invalidMetadataError(testpath, testmongoclient, testmetax):
+    """Test that event handler of WorkflowTask correctly deals with
+    InvalidDatasetError risen in a task. Event handler should report
+    preservation state to Metax.
+    """
+    # Run task like it would be run from command line
+    with pytest.raises(SystemExit):
+        luigi.cmdline.luigi_run(
+            ('--module', 'tests.luigi.task_test',
+             'InvalidMetadataClass',
+             '--workspace', testpath,
+             '--dataset-id', '1',
+             '--config', 'tests/data/siptools_research.conf',
+             '--local-scheduler',
+             '--no-lock')
+        )
+
+    # Check the body of last HTTP request
+    assert httpretty.last_request().body \
+        == '{"id": "1", "preservation_state": "7"}'
+    # Check the method of last HTTP request
+    assert httpretty.last_request().method == 'PATCH'
+
 #TODO: Test for WorkflowWrapperTask
 
 #TODO: Test for WorkfloExternalTask
-
-#TODO: Test InvalidDataset
