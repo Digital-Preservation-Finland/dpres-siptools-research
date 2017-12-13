@@ -1,13 +1,8 @@
 """Luigi targets"""
 
 import os
-
 import luigi.contrib.ssh
 from luigi import LocalTarget
-from luigi.contrib.mongodb import MongoCellTarget
-import pymongo
-from siptools_research.utils import database
-from siptools_research.config import Configuration
 
 
 class TaskReportTarget(LocalTarget):
@@ -21,6 +16,8 @@ class TaskReportTarget(LocalTarget):
         path = os.path.join(workspace, 'reports', filename)
         print "TaskReportTarget:%s" % path
         LocalTarget.__init__(self, path)
+
+
 class TaskFileTarget(LocalTarget):
 
     """Luigi target for task files"""
@@ -31,26 +28,6 @@ class TaskFileTarget(LocalTarget):
         path = os.path.join(workspace, 'task-output-files', event_name)
         print "TaskFileTarget:%s" % path
         LocalTarget.__init__(self, path)
-
-
-class MongoTaskResultTarget(MongoCellTarget):
-    """Target that exists when value of mongodb field:
-
-    db.``document_id``.wf_tasks.``mongo_field``.result
-
-    has value "success"
-    """
-    def __init__(self, document_id, taskname, config_file):
-        conf = Configuration(config_file)
-        MongoCellTarget.__init__(self,
-                                 database.Database(config_file).client,
-                                 conf.get('mongodb_database'),
-                                 conf.get('mongodb_collection'),
-                                 document_id,
-                                 "workflow_tasks.%s.result" % taskname)
-
-    def exists(self):
-        return self.read() == "success"
 
 
 class TaskLogTarget(LocalTarget):
