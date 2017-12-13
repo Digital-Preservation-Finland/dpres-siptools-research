@@ -127,7 +127,13 @@ class InvalidMetadataError(Exception):
 @WorkflowTask.event_handler(luigi.Event.FAILURE)
 def report_task_failure(task, exception):
     """This function is triggered when a WorkflowTask fails. Adds report of
-    successfull event to workflow database.
+    failed event to workflow database.
+
+    If task failed because of ``InvalidDatasetError``, the preservation status
+    of dataset in Metax is updated.
+
+    If task failed because of ``InvalidMetadataError``, the preservation status
+    of dataset in Metax is updated.
 
     :task: WorkflowTask object
     :exception: Exception that caused failure
@@ -139,8 +145,10 @@ def report_task_failure(task, exception):
                        "%s: %s" % (task.failure_message, str(exception)))
 
     if isinstance(exception, InvalidDatasetError):
+        # Set preservation status for dataset in Metax
         metax_client = Metax(task.config)
         metax_client.set_preservation_state(task.dataset_id, '7')
     elif isinstance(exception, InvalidMetadataError):
+        # Set preservation status for dataset in Metax
         metax_client = Metax(task.config)
         metax_client.set_preservation_state(task.dataset_id, '7')
