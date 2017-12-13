@@ -10,8 +10,7 @@ from siptools.scripts import sign_mets
 
 
 class SignSIP(WorkflowTask):
-    """Task that signs METS file.
-    """
+    """Task that signs METS file."""
     success_message = "Signing SIP completed succesfully"
     failure_message = "Could not sign SIP"
 
@@ -25,7 +24,7 @@ class SignSIP(WorkflowTask):
                           config=self.config)
 
     def output(self):
-        """Returns task output targets.
+        """Outputs signature file: ``sip-in-progress/signature.sig``.
 
         :returns: LocalTarget
         """
@@ -33,7 +32,7 @@ class SignSIP(WorkflowTask):
                                               "signature.sig"))
 
     def run(self):
-        """Signs METS file and adds event to workflow database.
+        """Signs METS file using sign_mets from siptools.
 
         :returns: None
         """

@@ -11,7 +11,11 @@ class CreateWorkspace(WorkflowTask):
     failure_message = 'Creating workspace directory failed'
 
     def output(self):
-        """Outputs workflow_tasks.CreateWorkSpace.result:'success'"""
+        """Outputs ``logs`` directory.
+
+        :returns: LocalTarget"""
+
+        # TODO: Could multiple targets be returned?
         return luigi.LocalTarget(self.logs_path)
 
     def run(self):

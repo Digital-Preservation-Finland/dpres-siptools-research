@@ -1,5 +1,4 @@
-"""Luigi task that creates digital provenance information. Requires
-CreateDescriptiveMetadata."""
+"""Luigi task that creates digital provenance information."""
 
 import os
 import luigi
@@ -7,8 +6,7 @@ from siptools.scripts import premis_event
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.luigi.task import WorkflowTask
-from siptools_research.workflow.create_dmdsec \
-    import CreateDescriptiveMetadata
+from siptools_research.workflow.create_workspace import CreateWorkspace
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -19,22 +17,24 @@ class CreateProvenanceInformation(WorkflowTask):
     failure_message = "Could not create procenance metada"
 
     def requires(self):
-        """Requires create dmdSec file task"""
-        return CreateDescriptiveMetadata(
+        """Requires workspace directory to be created."""
+        return CreateWorkspace(
             workspace=self.workspace,
             dataset_id=self.dataset_id,
             config=self.config
         )
 
     def output(self):
-        """Outputs task file"""
+        """Outputs ``logs/task-create-provenance-information.log`` file."""
         return luigi.LocalTarget(
             os.path.join(self.logs_path,
                          'task-create-provenance-information.log')
         )
 
     def run(self):
-        """Gets file metadata from Metax.
+        """Gets file metadata from Metax. Writes digital provenance information
+        to ``sip-in-progress/creation-event.xml`` file.
+
         :returns: None
         """
 

@@ -24,7 +24,7 @@ class InitWorkflow(WorkflowWrapperTask):
     def requires(self):
         """Only returns last task of the workflow.
 
-        :returns: CreateWorkspace luigi task
+        :returns: ReportPreservationStatus task
         """
 
         # TODO: For testing purposes the task is NOT the last task, but the
@@ -36,7 +36,10 @@ class InitWorkflow(WorkflowWrapperTask):
 
 def main():
     """Parse command line arguments and start the workflow. Generates unique id
-    for the workspace. Workspace name is used as document id in MongoDB."""
+    for the workspace. Workspace name is used as document id in MongoDB.
+
+    :returns: None
+    """
 
     # Parse commandline arguments
     parser = argparse.ArgumentParser(description='Send to dataset to digital'\

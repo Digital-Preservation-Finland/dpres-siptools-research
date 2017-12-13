@@ -1,4 +1,4 @@
-"""required tasks to validate SIPs and create AIPs"""
+"""Luigi task that creates tar-archive from SIP directory"""
 
 import os
 import tarfile
@@ -9,15 +9,12 @@ from siptools_research.workflow.sign import SignSIP
 
 
 class CompressSIP(WorkflowTask):
-    """Compresses contents to a tar file as SIP.
-
-    :path: workspace/created_sip
-    """
-    success_message = "SIP was compressed"
-    failure_message = "Compressing SIP failed"
+    """Creates tar-archive from SIP directory."""
+    success_message = "TAR archive was created"
+    failure_message = "Creating TAR archive failed"
 
     def requires(self):
-        """Requires signature file
+        """The signature file ``signature.sig`` is required.
 
         :returns: SignSIP task"""
         return SignSIP(workspace=self.workspace,
@@ -25,16 +22,16 @@ class CompressSIP(WorkflowTask):
                        config=self.config)
 
     def output(self):
-        """Returns task output.
+        """Creates ``<document_id>.tar`` file.
 
-        :returns: luigi.LocalTarget
+        :returns: LocalTarget
         """
         return luigi.LocalTarget(
             os.path.join(self.workspace, self.document_id) + '.tar'
         )
 
     def run(self):
-        """Creates a tar archive file conatining mets.xml, signature.sig and
+        """Creates a tar archive file that contains mets.xml, signature.sig and
         all content files.
 
         :returns: None

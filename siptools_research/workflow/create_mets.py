@@ -1,4 +1,4 @@
-"""Workflow task that creates METS document"""
+"""Luigi task that creates METS document."""
 # encoding=utf8
 
 import os
@@ -11,19 +11,24 @@ from siptools.scripts import compile_mets
 
 
 class CreateMets(WorkflowTask):
-    """Compile METS document
-    """
+    """WorkflowTask that Compiles METS document."""
     success_message = "METS document compiled"
     failure_message = "Compiling METS document failed"
 
     def requires(self):
-        """Requires METS structMap"""
-        return {"Create StructMap":
-                CreateStructMap(workspace=self.workspace,
-                                dataset_id=self.dataset_id,
-                                config=self.config)}
+        """Requires METS structure map to be created.
+
+        :returns: CreateStructMap task
+        """
+        return CreateStructMap(workspace=self.workspace,
+                               dataset_id=self.dataset_id,
+                               config=self.config)
 
     def output(self):
+        """Creates ``sip-in-progress/mets.xml`` file
+
+        :returns: LocalTarget
+        """
         return LocalTarget(os.path.join(self.sip_creation_path, 'mets.xml'))
 
     def run(self):

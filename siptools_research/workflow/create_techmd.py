@@ -10,7 +10,7 @@ from siptools_research.utils.scripts.import_objects import main
 
 
 class CreateTechnicalMetadata(WorkflowTask):
-    """Create PREMIS object files.
+    """Create technical metadata files.
     """
     success_message = 'Technical metadata for objects created'
     failure_message = 'Technical metadata for objects could not be created'
@@ -26,7 +26,9 @@ class CreateTechnicalMetadata(WorkflowTask):
                                config=self.config)
 
     def output(self):
-        """Outputs a task file"""
+        """Outputs log to ``logs/task-create-technical-metadata.log``"
+
+        :returns: LocalTarget"""
         return LocalTarget(os.path.join(self.logs_path,
                                         'task-create-technical-metadata.log'))
 

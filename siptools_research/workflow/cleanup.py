@@ -31,6 +31,6 @@ class CleanupWorkspace(WorkflowTask):
     def complete(self):
         """Task is complete when workspace does not exist.
 
-        :returns: True if workspace does not exist, else False
+        :returns: True, if workspace does not exist, else False
         """
         return not os.path.exists(self.workspace)

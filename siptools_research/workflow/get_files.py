@@ -18,8 +18,7 @@ class GetFiles(WorkflowTask):
     failure_message = 'Could not get files from IDA'
 
     def requires(self):
-        """Returns list of required tasks. This task requires task:
-        CreateWorkspace.
+        """Requires workspace directory to be created.
 
         :returns: CreateWorkspace task
         """
@@ -28,9 +27,9 @@ class GetFiles(WorkflowTask):
                                config=self.config)
 
     def output(self):
-        """Returns output target.
+        """Outputs log to ``logs/task-getfiles.log``
 
-        :returns: LocalTarget 
+        :returns: LocalTarget
         """
         return luigi.LocalTarget(os.path.join(self.logs_path,
                                               "task-getfiles.log"))

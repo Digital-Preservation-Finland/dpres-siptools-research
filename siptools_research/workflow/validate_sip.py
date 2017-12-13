@@ -13,18 +13,18 @@ class ValidateSIP(WorkflowExternalTask):
     """
 
     def requires(self):
-        """Returns list of required tasks. This task requires task:
-        CreateWorkspace.
+        """Requires SIP to be sent to DP service.
 
-        :returns: CreateWorkspace task
+        :returns: SendSIPToDP task
         """
         return SendSIPToDP(workspace=self.workspace,
                            dataset_id=self.dataset_id,
                            config=self.config)
 
     def output(self):
-        """Returns output target. This task reports to mongodb when task is
-        succesfully completed.
+        """Outpus ingest report to
+        dp_service:~/accepted/<datepath>/<document_id>/<document_id>-<uuid> or
+        dp_service:~/rejected/<datepath>/<document_id>/<document_id>-<uuid>
 
         :returns: RemoteAnyTarget
         """

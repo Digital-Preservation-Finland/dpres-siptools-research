@@ -5,25 +5,25 @@ import subprocess
 import luigi
 from siptools_research.config import Configuration
 from siptools_research.luigi.task import WorkflowTask
-from siptools_research.workflow.sign import SignSIP
+from siptools_research.workflow.compress import CompressSIP
 from siptools_research.utils.contextmanager import redirect_stdout
 
 class SendSIPToDP(WorkflowTask):
-    """Send SIP to DP.
-    """
+    """Send SIP to DP."""
     success_message = "SIP was sent to digital preservation"
     failure_message = "Sending SIP to digital preservation failed"
 
     def requires(self):
-        """Requires compressed SIP archive file.
+        """Requires tar-archived SIP file.
+
+        :returns: CompressSIP task
         """
-        return {"Sign SIP":
-                SignSIP(workspace=self.workspace,
-                        dataset_id=self.dataset_id,
-                        config=self.config)}
+        return CompressSIP(workspace=self.workspace,
+                           dataset_id=self.dataset_id,
+                           config=self.config)
 
     def output(self):
-        """Returns task output.
+        """Outputs log file: ``logs/task-send-sip-to-dp``.
 
         :returns: LocalTarget
         """
@@ -49,6 +49,8 @@ class SendSIPToDP(WorkflowTask):
 
 def send_to_dp(sip, config_file):
     """Sends SIP to DP service using sftp.
+
+    returns: subprocess outcome, err
     """
     print "send-to-dp"
     conf = Configuration(config_file)

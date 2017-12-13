@@ -15,7 +15,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
     failure_message = "Creating descriptive metadata failed"
 
     def requires(self):
-        """Return required tasks. Workspace must be created.
+        """Requires workspace must be created.
 
         :returns: CreateWorkspace task
         """
@@ -24,15 +24,14 @@ class CreateDescriptiveMetadata(WorkflowTask):
                                config=self.config)
 
     def output(self):
-        """Returns task output. Task is ready when dmdsec.xml has been created
+        """Task is ready when ``sip-in-progress/dmdsec.xml`` has been created.
 
         :returns: LocalTarget
         """
         return LocalTarget(os.path.join(self.sip_creation_path, 'dmdsec.xml'))
 
     def run(self):
-        """
-        Creates a METS dmdSec file from existing datacite.xml file.
+        """Creates a METS dmdSec file from existing datacite.xml file.
 
         :returns: None
         """

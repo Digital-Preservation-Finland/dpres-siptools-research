@@ -17,15 +17,32 @@ class ReportPreservationStatus(WorkflowTask):
     failure_message = "Dataset was not accepted to preservation"
 
     def requires(self):
+        """Requires SIP validation in digital preservation service to be
+        finished
+
+        :returns: ValidateSIP task"""
         return ValidateSIP(workspace=self.workspace,
                            dataset_id=self.dataset_id,
                            config=self.config)
 
     def output(self):
+        """Outputs log to ``logs/report-preservation-status.log``
+
+        :returns: None
+        """
         return LocalTarget(os.path.join(self.logs_path,
                                         'report-preservation-status.log'))
 
     def run(self):
+        """Checks the path of ingest report file in digital preservation
+        service. If the ingest report is in ~/accepted/.../ directory, the
+        dataset has passed validation. The preservation status is reported to
+        Metax. If the report is found in ~/rejected/.../ directory, or
+        somewhere else, an exception is risen. The event handlers will deal
+        with the exceptions.
+
+        :returns: None
+        """
 
         with self.output().open('w') as log:
             with contextmanager.redirect_stdout(log):

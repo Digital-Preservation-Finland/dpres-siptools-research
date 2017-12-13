@@ -17,6 +17,8 @@ from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 
 class CreateStructMap(WorkflowTask):
     """Create METS fileSec and structMap files.
+
+    :returns: dict
     """
     success_message = "Structure map created"
     failure_message = "Structure map could not be created"
@@ -39,7 +41,10 @@ class CreateStructMap(WorkflowTask):
                                         config=self.config)}
 
     def output(self):
-        """Outputs a task file"""
+        """Writes log to ``logs/create-struct-map`` file
+
+        :returns: LocalTarget
+        """
         return luigi.LocalTarget(os.path.join(self.logs_path,
                                               'create-struct-map'))
 
