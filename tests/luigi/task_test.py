@@ -11,6 +11,24 @@ from siptools_research.luigi.task import InvalidDatasetError
 from siptools_research.luigi.task import InvalidMetadataError
 from siptools_research.config import Configuration
 
+def run_luigi_task(task_name, workspace):
+    """Run a luigi task (using some default parameters) like it would be run
+    from command line.
+
+    :task (str): Name of task to be executed
+    :workspace: Workspace directory for task
+    :returns: None
+    """
+    with pytest.raises(SystemExit):
+        luigi.cmdline.luigi_run(
+            ('--module', 'tests.luigi.task_test',
+             task_name,
+             '--workspace', workspace,
+             '--dataset-id', '1',
+             '--config', 'tests/data/siptools_research.conf',
+             '--local-scheduler',
+             '--no-lock')
+        )
 
 class TestTask(WorkflowTask):
     """Test class that only writes an output file."""
@@ -53,16 +71,7 @@ def test_run_workflowtask(testpath, testmongoclient):
     event field is created to mongo document."""
 
     # Run task like it would be run from command line
-    with pytest.raises(SystemExit):
-        luigi.cmdline.luigi_run(
-            ('--module', 'tests.luigi.task_test',
-             'TestTask',
-             '--workspace', testpath,
-             '--dataset-id', '1',
-             '--config', 'tests/data/siptools_research.conf',
-             '--local-scheduler',
-             '--no-lock')
-        )
+    run_luigi_task('TestTask', testpath)
 
     # Check that output file is created
     with open(os.path.join(testpath, 'output_file')) as output:
@@ -92,16 +101,7 @@ def test_run_failing_task(testpath, testmongoclient):
     added to mongo document."""
 
     # Run task like it would be run from command line
-    with pytest.raises(SystemExit):
-        luigi.cmdline.luigi_run(
-            ('--module', 'tests.luigi.task_test',
-             'FailingTestTask',
-             '--workspace', testpath,
-             '--dataset-id', '1',
-             '--config', 'tests/data/siptools_research.conf',
-             '--local-scheduler',
-             '--no-lock')
-        )
+    run_luigi_task('FailingTestTask', testpath)
 
     # Check that new event is added to workflow database
     conf = Configuration('tests/data/siptools_research.conf')
@@ -123,22 +123,13 @@ def test_run_failing_task(testpath, testmongoclient):
     assert collection.count() == 1
 
 
-def test_invalidDatasetError(testpath, testmongoclient, testmetax):
+def test_invaliddataseterror(testpath, testmongoclient, testmetax):
     """Test that event handler of WorkflowTask correctly deals with
     InvalidDatasetError risen in a task. Event handler should report
     preservation state to Metax.
     """
     # Run task like it would be run from command line
-    with pytest.raises(SystemExit):
-        luigi.cmdline.luigi_run(
-            ('--module', 'tests.luigi.task_test',
-             'InvalidDatasetTask',
-             '--workspace', testpath,
-             '--dataset-id', '1',
-             '--config', 'tests/data/siptools_research.conf',
-             '--local-scheduler',
-             '--no-lock')
-        )
+    run_luigi_task('InvalidDatasetTask', testpath)
 
     # Check the body of last HTTP request
     assert httpretty.last_request().body \
@@ -147,22 +138,13 @@ def test_invalidDatasetError(testpath, testmongoclient, testmetax):
     assert httpretty.last_request().method == 'PATCH'
 
 
-def test_invalidMetadataError(testpath, testmongoclient, testmetax):
+def test_invalidmetadataerror(testpath, testmongoclient, testmetax):
     """Test that event handler of WorkflowTask correctly deals with
     InvalidDatasetError risen in a task. Event handler should report
     preservation state to Metax.
     """
     # Run task like it would be run from command line
-    with pytest.raises(SystemExit):
-        luigi.cmdline.luigi_run(
-            ('--module', 'tests.luigi.task_test',
-             'InvalidMetadataTask',
-             '--workspace', testpath,
-             '--dataset-id', '1',
-             '--config', 'tests/data/siptools_research.conf',
-             '--local-scheduler',
-             '--no-lock')
-        )
+    run_luigi_task('InvalidMetadataTask', testpath)
 
     # Check the body of last HTTP request
     assert httpretty.last_request().body \
