@@ -111,13 +111,13 @@ def report_task_success(task):
                        task.success_message)
 
 
-class InvalidDataset(Exception):
+class InvalidDatasetError(Exception):
     """Exception raised when packaged dataset does not pass validation in
     digital preservation service"""
     pass
 
 
-class InvalidMetadata(Exception):
+class InvalidMetadataError(Exception):
     """Exception raised when SIP can not be created for dataset due to missing
     or invalid metadata.
     """

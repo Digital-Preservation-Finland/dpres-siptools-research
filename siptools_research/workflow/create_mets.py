@@ -6,7 +6,7 @@ from luigi import LocalTarget
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.luigi.task import WorkflowTask
-from siptools_research.luigi.task import InvalidMetadata
+from siptools_research.luigi.task import InvalidMetadataError
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools.scripts import compile_mets
 

@@ -4,7 +4,7 @@ service and updates preservation status to Metax."""
 import os
 from luigi import LocalTarget
 from siptools_research.luigi.task import WorkflowTask
-from siptools_research.luigi.task import InvalidDataset
+from siptools_research.luigi.task import InvalidDatasetError
 from siptools_research.workflow.validate_sip import ValidateSIP
 from siptools_research.utils import metax
 from siptools_research.utils import contextmanager
