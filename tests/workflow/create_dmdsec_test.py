@@ -2,16 +2,17 @@
 """Tests for `siptools_research.workflow.create_dmdsec` module"""
 
 import os
-import shutil
 from lxml import etree
 from siptools_research.workflow.create_dmdsec\
     import CreateDescriptiveMetadata
 DATASET_PATH = "tests/data/metax_datasets/"
 
-def test_createdescriptivemetadata(testpath, testmongoclient):
+def test_createdescriptivemetadata(testpath, testmongoclient, testmetax):
     """Test `CreateDescriptiveMetadata` task.
 
     :testpath: Testpath fixture
+    :testmongoclient: Mock mongoclient fixture
+    :testmmetax: Mock Metax fixture
     :returns: None
     """
 
@@ -22,13 +23,9 @@ def test_createdescriptivemetadata(testpath, testmongoclient):
     os.makedirs(os.path.join(workspace, 'logs'))
     os.makedirs(os.path.join(workspace, 'sip-in-progress'))
 
-    # Copy sample datacite.xml to workspace directory
-    shutil.copy('tests/data/datacite_sample.xml',
-                os.path.join(workspace, 'sip-in-progress', 'datacite.xml'))
-
     # Init task
     task = CreateDescriptiveMetadata(
-        dataset_id="1",
+        dataset_id="datacite_test_1",
         workspace=workspace,
         config='tests/data/siptools_research.conf'
     )
@@ -44,6 +41,7 @@ def test_createdescriptivemetadata(testpath, testmongoclient):
                                        'dmdsec.xml'))
 
     # Check that the created xml-file contains correct elements.
+    # pylint: disable=no-member
     tree = etree.parse(os.path.join(workspace,
                                     'sip-in-progress',
                                     'dmdsec.xml'))

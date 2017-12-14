@@ -21,6 +21,7 @@ def print_output(dataset, output_type=None):
     if output_type == 'json':
         pprint.pprint(dataset)
     elif output_type == 'xml':
+        # pylint: disable=no-member
         tree = lxml.etree.parse(dataset)
         root = tree.getroot()
         print lxml.etree.tostring(root)
@@ -73,7 +74,9 @@ class Metax(object):
         for ns_key in ns_key_list:
             query = '?namespace=' + ns_key
             response = requests.get(ns_key_url + query)
-            xml_dict[ns_key] = lxml.etree.fromstring(response.content)
+            # pylint: disable=no-member
+            xml_dict[ns_key] = lxml.etree.fromstring(response.content)\
+                .getroottree()
 
         return xml_dict
 
@@ -103,6 +106,18 @@ class Metax(object):
 
         # Raise exception if request fails
         assert request.status_code == 200
+
+    def get_datacite(self, dataset_id):
+        """Get descriptive metadata in datacite xml format.
+
+        :dataset_id: ID of dataset
+        :returns: Datacite XML (lxml.etree.ElementTree object)
+        """
+        url = "%sdatasets/%s?dataset_format=datacite" % (self.baseurl,
+                                                         dataset_id)
+        response = requests.get(url)
+        # pylint: disable=no-member
+        return lxml.etree.fromstring(response.content).getroottree()
 
 
 def parse_arguments(arguments):

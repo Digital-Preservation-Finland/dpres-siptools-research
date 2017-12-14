@@ -38,10 +38,9 @@ def testmetax(request):
     When https://metax-test.csc.fi/rest/v1/<subdir>/<filename> is requested
     using HTTP GET method, a HTTP response with contents of file:
     ``METAX_PATH/<subdir>/<filename>`` as message body is retrieved. The status
-    of message is always *HTTP/1.1 200 OK* and the Content-Type is
-    *application/json*. To add new test responses just add new JSON file to
-    some subdirectory of ``METAX_PATH``. Using HTTP PATCH method has exactly
-    same effect as HTTP GET methdod.
+    of message is always *HTTP/1.1 200 OK*. To add new test responses just add
+    new JSON or XML file to some subdirectory of ``METAX_PATH``. Using HTTP
+    PATCH method has exactly same effect as HTTP GET methdod.
 
     When url https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty&size=100
     is requested using HTTP GET method, the response is content of file:
@@ -70,7 +69,7 @@ def testmetax(request):
         # file to be used as response body:
         body_file = path.split('/')[2]
         # if url contains query strings or more directories after the filename,
-        # everythind is added to the filename url encoded
+        # everything is added to the filename url encoded
         tail = path.split('/%s/%s' % (subdir, body_file))[1]
         if tail:
             body_file += urllib.quote(tail, safe='%')
