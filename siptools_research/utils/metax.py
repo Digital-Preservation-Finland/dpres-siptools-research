@@ -116,6 +116,10 @@ class Metax(object):
         url = "%sdatasets/%s?dataset_format=datacite" % (self.baseurl,
                                                          dataset_id)
         response = requests.get(url)
+
+        if not response.status_code == 200:
+            raise Exception("Could not find descriptive metadata.")
+
         # pylint: disable=no-member
         return lxml.etree.fromstring(response.content).getroottree()
 
