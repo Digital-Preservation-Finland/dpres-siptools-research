@@ -14,6 +14,7 @@ from siptools.scripts import import_object
 from siptools.xml.mets import NAMESPACES
 from siptools_research.utils.metax import Metax
 from siptools_research.config import Configuration
+from siptools_research.luigi.task import InvalidMetadataError
 
 
 def parse_arguments(arguments):
@@ -92,6 +93,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
                                             + '-techmd.xml')
         output_file = os.path.join(workspace, target_filename)
         with open(output_file, 'w+') as outfile:
+            # pylint: disable=no-member
             outfile.write(lxml.etree.tostring(xml_data))
 
     return 0
@@ -104,7 +106,14 @@ def main(arguments=None):
     metax_dataset = Metax(args.config).get_data('datasets', args.dataset_id)
     for file_section in metax_dataset["research_dataset"]["files"]:
         file_id = file_section["identifier"]
-        metax_filepath = file_section['type']['pref_label']['en'].strip('/')
+        try:
+            metax_filepath = \
+                file_section['type']['pref_label']['en'].strip('/')
+        except KeyError as exc:
+            if exc.args[0] == 'type':
+                raise InvalidMetadataError('Metadata of file %s is missing '\
+                                           'required attribute: "type"'\
+                                           % file_id)
         create_objects(file_id, metax_filepath, args.workspace, args.config)
 
     return 0
