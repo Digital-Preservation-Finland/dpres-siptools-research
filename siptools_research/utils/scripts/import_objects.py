@@ -105,7 +105,17 @@ def main(arguments=None):
 
     metax_dataset = Metax(args.config).get_data('datasets', args.dataset_id)
     for file_section in metax_dataset["research_dataset"]["files"]:
-        file_id = file_section["identifier"]
+
+        # Read file identifier
+        try:
+            file_id = file_section["identifier"]
+        except KeyError as exc:
+            if exc.args[0] == 'identifier':
+                raise InvalidMetadataError('Metadata of a file is missing '\
+                                           'required attribute: "identifier"')
+            else:
+                raise
+
         try:
             metax_filepath = \
                 file_section['type']['pref_label']['en'].strip('/')
@@ -114,6 +124,12 @@ def main(arguments=None):
                 raise InvalidMetadataError('Metadata of file %s is missing '\
                                            'required attribute: "type"'\
                                            % file_id)
+            elif exc.args[0] == 'en':
+                raise InvalidMetadataError('Metadata of file %s is missing '\
+                                           'required attribute: '\
+                                           '"pref_label:en"' % file_id)
+            else:
+                raise
         create_objects(file_id, metax_filepath, args.workspace, args.config)
 
     return 0
