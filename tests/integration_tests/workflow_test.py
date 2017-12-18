@@ -30,7 +30,7 @@ def run_luigi_task(module, task, workspace):
         ('create_dmdsec', 'CreateDescriptiveMetadata'),
         # ('create_mets', 'CreateMets'),
         # ('create_structmap', 'CreateStructMap'),
-        ('create_techmd', 'CreateTechnicalMetadata'),
+        # ('create_techmd', 'CreateTechnicalMetadata'),
         ('create_workspace', 'CreateWorkspace'),
         # ('get_files', 'GetFiles'),
         # ('report_preservation_status', 'ReportPreservationStatus'),
