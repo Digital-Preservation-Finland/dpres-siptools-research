@@ -16,11 +16,8 @@ DATASET_SCHEMA = \
                         "type": "array", # files is list
                         "items": {
                             "type": "object",
-                            "required": ["title", "identifier", "type"],
+                            "required": ["identifier", "type"],
                             "properties": {
-                                "title": {
-                                    "type": "string"
-                                },
                                 "identifier": {
                                     "type": "string"
                                 },
