@@ -56,7 +56,12 @@ def test_create_structmap_ok(testpath, testmongoclient):
     with open(os.path.join(sip_creation_path,
                            'structmap.xml'))\
              as open_file:
-        assert 'Fairdata-logical' in open_file.read()
+        file_content = open_file.read()
+        assert 'Fairdata-logical' in file_content
+        print "structmap %s"%file_content
+     
+        for line in open_file:
+            print line
 
     assert_mongodb_data_success(workspace)
 
