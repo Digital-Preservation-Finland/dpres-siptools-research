@@ -52,7 +52,7 @@ def test_createdescriptivemetadata(testpath, testmongoclient, testmetax):
 
     elements = tree.xpath('/mets:mets//mets:dmdSec/mets:mdWrap',
                           namespaces=xpath_namespaces)
-    assert elements[0].attrib["OTHERMDTYPE"] == "DataCite"
+    assert elements[0].attrib["OTHERMDTYPE"] == "DATACITE"
     assert elements[0].attrib["MDTYPEVERSION"] == "4.0"
 
 
