@@ -5,4 +5,5 @@
   "file_name": "file_name_1",
   "file_path": "/some/path/",
   "identifier": "pid:urn:1"
+  "type":"t"
 }
