@@ -13,6 +13,7 @@ mongomock
 mimeparse
 Sphinx
 paramiko
+jsonschema
 
 # siptools requirements
 git+https://source.csc.fi/scm/git/pas/xml-helpers@develop#egg=xml_helpers
@@ -30,4 +31,3 @@ file-magic
 
 # mets requirements
 dateutils
-
