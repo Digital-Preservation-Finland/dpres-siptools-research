@@ -2,9 +2,9 @@
 
 import os
 from luigi import LocalTarget
-from jsonschema import ValidationError
+import jsonschema
+import siptools_research.utils.validate_metadata
 from siptools_research.utils.contextmanager import redirect_stdout
-from siptools_research.utils.validate_metadata import validate_dataset_metadata
 from siptools_research.utils.metax import Metax
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.luigi.task import WorkflowTask
@@ -34,6 +34,10 @@ class ValidateMetadata(WorkflowTask):
                 dataset_metadata = metax_client.get_data('datasets',
                                                          self.dataset_id)
                 try:
-                    validate_dataset_metadata(dataset_metadata)
-                except ValidationError as exc:
+                    jsonschema.validate(
+                        dataset_metadata,
+                        siptools_research.utils.validate_metadata.\
+                                           DATASET_METADATA_SCHEMA
+                    )
+                except jsonschema.ValidationError as exc:
                     raise InvalidMetadataError(exc)
