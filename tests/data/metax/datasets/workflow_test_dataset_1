@@ -18,21 +18,21 @@
         ],
         "files": [
             {
-		"identifier": "pid:urn:1",
+		"identifier": "pid:urn:wf_test_1a",
 	    	"type": {
 			"pref_label": {
 				"en": "label1"
 			},
-			"identifier": "pid:urn:1"
+			"identifier": "wf_test_id1"
 		}
             },
             {
-		"identifier": "pid:urn:2",
+		"identifier": "pid:urn:wf_test_1b",
 	    	"type": {
 			"pref_label": {
 				"en": "label2"
 			},
-			"identifier": "pid:urn:2"
+			"identifier": "wf_test_id2"
 		}
             }
         ]

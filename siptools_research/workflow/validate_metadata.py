@@ -30,9 +30,12 @@ class ValidateMetadata(WorkflowTask):
         with self.output().open('w') as log:
             with redirect_stdout(log):
 
+                # Get dataset metadata from Metax
                 metax_client = Metax(self.config)
                 dataset_metadata = metax_client.get_data('datasets',
                                                          self.dataset_id)
+
+                # Validate dataset metadata
                 try:
                     jsonschema.validate(
                         dataset_metadata,
@@ -41,3 +44,19 @@ class ValidateMetadata(WorkflowTask):
                     )
                 except jsonschema.ValidationError as exc:
                     raise InvalidMetadataError(exc)
+
+                # Get dataset metadata for each listed file, and validate file
+                # metadata
+                for dataset_file in \
+                        dataset_metadata['research_dataset']['files']:
+                    file_id = dataset_file['identifier']
+                    file_metadata = metax_client.get_data('files', file_id)
+                    # Validate dataset metadata
+                    try:
+                        jsonschema.validate(
+                            file_metadata,
+                            siptools_research.utils.validate_metadata.\
+                                               FILE_METADATA_SCHEMA
+                        )
+                    except jsonschema.ValidationError as exc:
+                        raise InvalidMetadataError(exc)

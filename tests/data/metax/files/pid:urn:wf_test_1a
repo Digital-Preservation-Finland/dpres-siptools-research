@@ -1,0 +1,13 @@
+{
+  "file_format": "application/xml",
+  "identifier": "pid:urn:wf_test_1a",
+  "checksum":
+  {
+    "algorithm": "SHA-1",
+    "value": "1234asdf"
+  },
+  "file_characteristics":
+  {
+    "file_created": "2014-01-17T08:19:31Z"
+  }
+}
