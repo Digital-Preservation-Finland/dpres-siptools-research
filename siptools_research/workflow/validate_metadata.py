@@ -3,7 +3,7 @@
 import os
 from luigi import LocalTarget
 import jsonschema
-import siptools_research.utils.validate_metadata
+import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
 from siptools_research.workflow.create_workspace import CreateWorkspace
@@ -37,11 +37,8 @@ class ValidateMetadata(WorkflowTask):
 
                 # Validate dataset metadata
                 try:
-                    jsonschema.validate(
-                        dataset_metadata,
-                        siptools_research.utils.validate_metadata.\
-                                           DATASET_METADATA_SCHEMA
-                    )
+                    jsonschema.validate(dataset_metadata,
+                                        metax_schemas.DATASET_METADATA_SCHEMA)
                 except jsonschema.ValidationError as exc:
                     raise InvalidMetadataError(exc)
 
@@ -53,10 +50,7 @@ class ValidateMetadata(WorkflowTask):
                     file_metadata = metax_client.get_data('files', file_id)
                     # Validate dataset metadata
                     try:
-                        jsonschema.validate(
-                            file_metadata,
-                            siptools_research.utils.validate_metadata.\
-                                               FILE_METADATA_SCHEMA
-                        )
+                        jsonschema.validate(file_metadata,
+                                            metax_schemas.FILE_METADATA_SCHEMA)
                     except jsonschema.ValidationError as exc:
                         raise InvalidMetadataError(exc)

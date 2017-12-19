@@ -1,7 +1,7 @@
-"""Tests for ``siptools_research.utils.validate_metadata`` module"""
+"""Tests for ``siptools_research.utils.metax_schemas`` module"""
 import pytest
 import jsonschema
-import siptools_research.utils.validate_metadata
+import siptools_research.utils.metax_schemas as metax_schemas
 
 
 # pylint: disable=invalid-name
@@ -34,10 +34,8 @@ def test_validate_valid_dataset_metadata():
         }
 
     # Validation of valid dataset should return 'None'
-    assert jsonschema.validate(
-        valid_dataset_metadata,
-        siptools_research.utils.validate_metadata.DATASET_METADATA_SCHEMA
-    ) is None
+    assert jsonschema.validate(valid_dataset_metadata,
+                               metax_schemas.DATASET_METADATA_SCHEMA) is None
 
 
 def test_validate_invalid_dataset_metadata():
@@ -65,10 +63,8 @@ def test_validate_invalid_dataset_metadata():
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError):
-        assert not jsonschema.validate(
-            invalid_dataset_metadata,
-            siptools_research.utils.validate_metadata.DATASET_METADATA_SCHEMA
-        )
+        assert not jsonschema.validate(invalid_dataset_metadata,
+                                       metax_schemas.DATASET_METADATA_SCHEMA)
 
 
 def test_validate_valid_file_metadata():
@@ -86,10 +82,8 @@ def test_validate_valid_file_metadata():
         }
 
     # Validation of valid dataset should return 'None'
-    assert jsonschema.validate(
-        valid_file_metadata,
-        siptools_research.utils.validate_metadata.FILE_METADATA_SCHEMA
-    ) is None
+    assert jsonschema.validate(valid_file_metadata,
+                               metax_schemas.FILE_METADATA_SCHEMA) is None
 
 
 def test_validate_invalid_file_metadata():
@@ -107,7 +101,5 @@ def test_validate_invalid_file_metadata():
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError):
-        assert not jsonschema.validate(
-            invalid_file_metadata,
-            siptools_research.utils.validate_metadata.FILE_METADATA_SCHEMA
-        )
+        assert not jsonschema.validate(invalid_file_metadata,
+                                       metax_schemas.FILE_METADATA_SCHEMA)
