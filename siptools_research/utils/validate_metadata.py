@@ -44,6 +44,23 @@ DATASET_SCHEMA = \
         }
     }
 
+FILE_SCHEMA = \
+    {
+        "type": "object",
+        "required": ["checksum", "file_characteristics", "file_format"],
+        "properties": {
+            "checksum": {
+                "type": "object",
+                "required": ["algorithm", "value"]
+            },
+            "file_characteristics": {
+                "type": "object",
+                "required": ["file_created"]
+            }
+        }
+    }
+
+
 def validate_dataset_metadata(metadata):
     """Validate dataset metadata retrieved from Metax. Returns ``True`` if
     dataset has all attributes required by tasks of packaging workflow.
@@ -53,3 +70,14 @@ def validate_dataset_metadata(metadata):
     """
 
     return bool(validate(metadata, DATASET_SCHEMA) is None)
+
+
+def validate_file_metadata(metadata):
+    """Validate file metadata retrieved from Metax. Returns ``True`` if
+    dataset has all attributes required by tasks of packaging workflow.
+
+    :metadata: File metadata from metax (dict)
+    :returns: ``True`` or ``False``
+    """
+
+    return bool(validate(metadata, FILE_SCHEMA) is None)
