@@ -6,6 +6,7 @@ from siptools_research.luigi.task import WorkflowTask
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
 from siptools_research.workflow.create_workspace import CreateWorkspace
+from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools.scripts import import_description
 
 
@@ -16,13 +17,16 @@ class CreateDescriptiveMetadata(WorkflowTask):
     failure_message = "Creating descriptive metadata failed"
 
     def requires(self):
-        """Requires workspace must be created.
+        """Workspace must created and Metax metadata must be validated.
 
-        :returns: CreateWorkspace task
+        :returns: list of tasks: [CreateWorkspace, ValidateMetadata]
         """
-        return CreateWorkspace(workspace=self.workspace,
-                               dataset_id=self.dataset_id,
-                               config=self.config)
+        return [CreateWorkspace(workspace=self.workspace,
+                                dataset_id=self.dataset_id,
+                                config=self.config),
+                ValidateMetadata(workspace=self.workspace,
+                                 dataset_id=self.dataset_id,
+                                 config=self.config)]
 
     def output(self):
         """Task is ready when ``sip-in-progress/dmdsec.xml`` has been created.

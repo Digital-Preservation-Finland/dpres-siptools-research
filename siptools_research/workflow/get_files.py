@@ -8,6 +8,7 @@ from siptools_research.utils import metax
 from siptools_research.utils import contextmanager
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
+from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
 class GetFiles(WorkflowTask):
@@ -22,9 +23,12 @@ class GetFiles(WorkflowTask):
 
         :returns: CreateWorkspace task
         """
-        return CreateWorkspace(workspace=self.workspace,
-                               dataset_id=self.dataset_id,
-                               config=self.config)
+        return [CreateWorkspace(workspace=self.workspace,
+                                dataset_id=self.dataset_id,
+                                config=self.config),
+                ValidateMetadata(workspace=self.workspace,
+                                 dataset_id=self.dataset_id,
+                                 config=self.config)]
 
     def output(self):
         """Outputs log to ``logs/task-getfiles.log``

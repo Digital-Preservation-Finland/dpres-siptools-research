@@ -6,6 +6,7 @@ from luigi import LocalTarget
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
+from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.utils.scripts.import_objects import main
 
 
@@ -21,9 +22,12 @@ class CreateTechnicalMetadata(WorkflowTask):
         :returns: CreateWorkspace task
         """
 
-        return CreateWorkspace(workspace=self.workspace,
+        return [CreateWorkspace(workspace=self.workspace,
                                dataset_id=self.dataset_id,
-                               config=self.config)
+                               config=self.config),
+                ValidateMetadata(workspace=self.workspace,
+                                 dataset_id=self.dataset_id,
+                                 config=self.config)]
 
     def output(self):
         """Outputs log to ``logs/task-create-technical-metadata.log``"
