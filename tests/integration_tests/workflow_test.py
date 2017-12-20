@@ -24,18 +24,20 @@ def run_luigi_task(module, task, workspace):
 # Run every task as it would be run from commandline
 @pytest.mark.parametrize(
     "module,task", [
-        # ('cleanup', 'CleanupWorkspace'),
-        # ('compress', 'CompressSIP'),
+        ('create_workspace', 'CreateWorkspace'),
+        ('validate_metadata', 'ValidateMetadata'),
         ('create_digiprov', 'CreateProvenanceInformation'),
         ('create_dmdsec', 'CreateDescriptiveMetadata'),
-        # ('create_mets', 'CreateMets'),
-        # ('create_structmap', 'CreateStructMap'),
-        # ('create_techmd', 'CreateTechnicalMetadata'),
-        ('create_workspace', 'CreateWorkspace'),
         # ('get_files', 'GetFiles'),
-        # ('report_preservation_status', 'ReportPreservationStatus'),
-        # ('send_sip', 'SendSIPToDP'),
+        # These tests do not work yet:
+        # ('create_techmd', 'CreateTechnicalMetadata'),
+        # ('create_structmap', 'CreateStructMap'),
+        # ('create_mets', 'CreateMets'),
         # ('sign', 'SignSIP'),
+        # ('compress', 'CompressSIP'),
+        # ('send_sip', 'SendSIPToDP'),
+        # ('report_preservation_status', 'ReportPreservationStatus'),
+        # ('cleanup', 'CleanupWorkspace'),
     ]
 )
 def test_workflow(testpath, testmetax, testmongoclient, module, task):
@@ -53,5 +55,4 @@ def test_workflow(testpath, testmetax, testmongoclient, module, task):
         [conf.get('mongodb_collection')]
     document = collection.find_one()
     # Check 'result' field
-    assert document['workflow_tasks'][task]['result'] ==\
-        'success'
+    assert document['workflow_tasks'][task]['result'] == 'success'
