@@ -1,26 +1,11 @@
+"""Install siptools-research package"""
 from setuptools import setup, find_packages
-import os
-
-def scripts_list():
-    """Return list of command line tools from package pas.scripts"""
-    scripts = []
-    for modulename in os.listdir('siptools_research/utils/scripts'):
-        if modulename == '__init__.py':
-            continue
-        if not modulename.endswith('.py'):
-            continue
-        modulename = modulename.replace('.py','')
-        scriptname = modulename.replace('_','-')
-    print scripts
-    return scripts
 
 def main():
     """Install siptools-research"""
-    setup(
-        name='siptools_research',
-	packages=find_packages(exclude=['tests', 'tests.*']),
-        version='dev',
-        entry_points = {'console_scripts': scripts_list()})
+    setup(name='siptools_research',
+          packages=find_packages(exclude=['tests', 'tests.*']),
+          version='dev')
 
 if __name__ == '__main__':
     main()
