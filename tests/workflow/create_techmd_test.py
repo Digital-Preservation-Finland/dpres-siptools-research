@@ -3,7 +3,7 @@
 import os
 import shutil
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
-from siptools_research.workflow.create_techmd import main
+from siptools_research.workflow.create_techmd import import_objects
 import lxml.etree as ET
 from siptools.xml.mets import NAMESPACES
 
@@ -69,7 +69,7 @@ def test_import_object_ok(testpath, testmetax):
                 os.path.join(testbasepath, metax_filepath, 'file_name_6'))
 
     # Run import_objects script for a sample dataset
-    main('3', testpath, 'tests/data/siptools_research.conf')
+    import_objects('3', testpath, 'tests/data/siptools_research.conf')
 
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(testpath, 'file_name_5-techmd.xml')

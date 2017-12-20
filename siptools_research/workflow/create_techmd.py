@@ -49,7 +49,7 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         with self.output().open('w') as log:
             with redirect_stdout(log):
-                main(self.dataset_id, self.workspace, self.config)
+                import_objects(self.dataset_id, self.workspace, self.config)
 
 
 # pylint: disable=too-many-arguments
@@ -122,7 +122,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     return 0
 
 
-def main(dataset_id, workspace, config):
+def import_objects(dataset_id, workspace, config):
     """Main function of import_objects script """
 
     metax_dataset = Metax(config).get_data('datasets', dataset_id)
