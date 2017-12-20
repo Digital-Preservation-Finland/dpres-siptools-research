@@ -28,7 +28,7 @@ def run_luigi_task(module, task, workspace):
         ('validate_metadata', 'ValidateMetadata'),
         ('create_digiprov', 'CreateProvenanceInformation'),
         ('create_dmdsec', 'CreateDescriptiveMetadata'),
-        # ('get_files', 'GetFiles'),
+        ('get_files', 'GetFiles'),
         # These tests do not work yet:
         # ('create_techmd', 'CreateTechnicalMetadata'),
         # ('create_structmap', 'CreateStructMap'),
