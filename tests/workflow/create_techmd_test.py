@@ -69,8 +69,7 @@ def test_import_object_ok(testpath, testmetax):
                 os.path.join(testbasepath, metax_filepath, 'file_name_6'))
 
     # Run import_objects script for a sample dataset
-    main(['3', '--workspace', testpath,
-          '--config', 'tests/data/siptools_research.conf'])
+    main('3', testpath, 'tests/data/siptools_research.conf')
 
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(testpath, 'file_name_5-techmd.xml')

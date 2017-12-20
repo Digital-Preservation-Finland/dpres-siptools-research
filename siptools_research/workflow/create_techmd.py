@@ -2,7 +2,6 @@
 # encoding=utf8
 
 import os
-import argparse
 import urllib
 import lxml
 from luigi import LocalTarget
@@ -50,25 +49,7 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         with self.output().open('w') as log:
             with redirect_stdout(log):
-                main([self.dataset_id,
-                      '--workspace', self.workspace,
-                      '--config', self.config])
-
-
-def parse_arguments(arguments):
-    """ Create arguments parser and return parsed command line
-    arguments.
-    """
-    parser = argparse.ArgumentParser(description='Tool for '
-                                     'creating premis events')
-    parser.add_argument("dataset_id", type=str, help="Metax id of dataset")
-    parser.add_argument('--workspace', dest='workspace', type=str,
-                        default='./workspace', help="Workspace directory")
-    parser.add_argument('--config', dest='config', type=str,
-                        default='/etc/siptools_research.conf',
-                        help='Configuration file')
-
-    return parser.parse_args(arguments)
+                main(self.dataset_id, self.workspace, self.config)
 
 
 # pylint: disable=too-many-arguments
@@ -141,11 +122,10 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     return 0
 
 
-def main(arguments=None):
-    """The main method for argparser"""
-    args = parse_arguments(arguments)
+def main(dataset_id, workspace, config):
+    """Main function of import_objects script """
 
-    metax_dataset = Metax(args.config).get_data('datasets', args.dataset_id)
+    metax_dataset = Metax(config).get_data('datasets', dataset_id)
     for file_section in metax_dataset["research_dataset"]["files"]:
 
         # Read file identifier
@@ -172,6 +152,6 @@ def main(arguments=None):
                                            '"pref_label:en"' % file_id)
             else:
                 raise
-        create_objects(file_id, metax_filepath, args.workspace, args.config)
+        create_objects(file_id, metax_filepath, workspace, config)
 
     return 0
