@@ -27,5 +27,14 @@ def download_file(identifier, filepath, config_file):
 
     url = '%s/files/%s/download' % (baseurl, identifier)
     response = requests.get(url, auth=(user, password), verify=False)
+
+    # Raise error if file is not found
+    if response.status_code == 404:
+        raise Exception("File not found in Ida.")
+    if response.status_code == 403:
+        raise Exception("Access to file forbidden.")
+    elif not response.status_code == 200:
+        raise Exception("File could not be retrieved.")
+
     with open(filepath, 'w') as new_file:
         new_file.write(response.content)
