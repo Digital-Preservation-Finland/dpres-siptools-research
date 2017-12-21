@@ -1,6 +1,7 @@
 """Luigi task that gets files from Ida."""
 
 import os
+import logging
 from json import dumps
 import luigi
 from siptools_research.utils import ida
@@ -9,6 +10,9 @@ from siptools_research.utils import contextmanager
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
+
+# Print debug messages to stdout
+logging.basicConfig(level=logging.DEBUG)
 
 
 class GetFiles(WorkflowTask):
@@ -73,6 +77,8 @@ def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
     for dataset_file in dataset_files:
 
         file_id = dataset_file['identifier']
+        logging.debug("Creating structmap mapping for file: %s", file_id)
+
         # Get file's use category. The path to the file in logical structmap
         # is stored in 'use_category' in metax.
         filecategory = None
@@ -84,6 +90,10 @@ def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
                 filecategory = get_category(categories['hits']['hits'],
                                             filecategorykey)
                 break
+
+        # If file listed in datasets/<id>/files is not listed in 'files'
+        # section of dataset metadata, the use category from 'directories'
+        # section is used
         if filecategory is None:
             file_folder = dataset_file['parent_directory']['identifier']
             for directory in dataset_metadata['directories']:
@@ -93,28 +103,44 @@ def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
                     filecategory = get_category(categories['hits']['hits'],
                                                 categorykey)
                     break
+
+        # Get filename and path for file
         filename = dataset_file['file_name']
         path = dataset_file['file_path']
+
+        # Do something(?) that always raises KeyError (because locical_struct
+        # is wmpty at this point).
         clist = list()
         try:
             if locical_struct[filecategory] is not None:
                 clist = locical_struct[filecategory]
         except KeyError:
             print "error"
+
+        # Add filepath to a list and add the list (that always contains only
+        # one filepath) to 'locical_struct' dictionary
         clist.append(path)
         locical_struct[filecategory] = clist
 
+        # Remove leading '/' from 'path'
         if path.startswith('/'):
             path = path[1:len(path)]
+
+        # Target path for downloaded file
         file_path = os.path.join(self.workspace, 'sip-in-progress', path)
 
-        # Download file from Ida to 'sip-in-progress' directory in workspace
-        # Dataset directory structure is the same as in IDA
+        # Download file from Ida to 'sip-in-progress' directory in workspace.
+        # Dataset directory structure is the same as in IDA.
         folder_path = file_path
         if filename in folder_path:
+            # Remove filename from folder_path
             folder_path = file_path[:file_path.index(filename)]
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
+
+        logging.debug("Fetching file from Ida: %s", file_id)
+
+        # Download file to file_path
         ida.download_file(file_id, file_path,
                           self.config)
 
