@@ -147,6 +147,14 @@ def testida(request):
                 status=200,
             )
 
+    # Register a "404 Not found" response for url:
+    # https://86.50.169.61:4433/pid:urn:does_not_exist/download
+    httpretty.register_uri(
+        httpretty.GET,
+        '%s/files/%s/download' % (IDA_URL, 'pid:urn:does_not_exist'),
+        status=404,
+    )
+
     def fin():
         """Disable fake http-server"""
         httpretty.disable()

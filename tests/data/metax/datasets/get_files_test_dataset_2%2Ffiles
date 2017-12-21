@@ -1,0 +1,12 @@
+[
+    {
+        "file_name": "file_name_3",
+	"file_path": "/project_x_FROZEN/Experiment_X/file_name_3",
+        "identifier": "pid:urn:1"
+    },
+    {
+        "file_name": "file_name_4",
+        "file_path": "/project_x_FROZEN/Experiment_X/file_name_4",
+        "identifier": "pid:urn:does_not_exist"
+    }
+]
