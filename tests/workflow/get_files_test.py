@@ -3,12 +3,12 @@
 import os
 from siptools_research.workflow import get_files
 
-# pylint: disable=unused-argument,invalid-name,fixme
+# pylint: disable=unused-argument
 def test_getfiles(testpath, testmetax, testida, testmongoclient):
     """Tests for ``GetFiles`` task.
 
     - ``Task.complete()`` is true after ``Task.run()``
-    - File is copied to correct path
+    - Files are copied to correct path
 
     :testpath: Testpath fixture
     :returns: None
@@ -37,8 +37,8 @@ def test_getfiles(testpath, testmetax, testida, testmongoclient):
 
     # Check that  logical structmap is created
     with open(os.path.join(testpath,
-                           'sip-in-progress/logical_struct'))\
-             as open_file:                                                      
-        assert open_file.read() == '{"Source material": '\
-                                   '["/project_x_FROZEN/Experiment_X/file_name_3", '\
-                                   '"/project_x_FROZEN/Experiment_X/file_name_4"]}'
+                           'sip-in-progress/logical_struct')) as open_file:
+        assert open_file.read() == '{"Source material": ["/project_x_FROZEN/'\
+                                   'Experiment_X/file_name_3", "'\
+                                   '/project_x_FROZEN/Experiment_X/'\
+                                   'file_name_4"]}'
