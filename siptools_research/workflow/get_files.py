@@ -2,7 +2,6 @@
 
 import os
 import logging
-from json import dumps
 import luigi
 from siptools_research.utils import ida
 from siptools_research.utils import metax
@@ -52,60 +51,10 @@ class GetFiles(WorkflowTask):
             with contextmanager.redirect_stdout(log):
                 # Find file identifiers from Metax dataset metadata.
                 metax_client = metax.Metax(self.config)
-                dataset_metadata = metax_client.get_data('datasets',
-                                                         self.dataset_id)
                 dataset_files = metax_client.get_dataset_files(self.dataset_id)
 
                 # get files from ida
                 download_files(self, dataset_files)
-
-                # and create directory structure for files based on
-                # filecategories
-                create_logical_structmap(self,
-                                         dataset_metadata['research_dataset'],
-                                         dataset_files)
-
-
-def create_logical_structmap(self, dataset_metadata, dataset_files):
-    """Reads files from IDA and writes them on a path based on use_category in
-    Metax
-    """
-    locical_struct = dict()
-    for dataset_file in dataset_files:
-
-        file_id = dataset_file['identifier']
-        logging.debug("Creating structmap mapping for file: %s", file_id)
-
-        # Get file's use category. The path to the file in logical structmap
-        # is stored in 'use_category' in metax.
-        filecategory = None
-        for file_ in dataset_metadata['files']:
-            if file_id == file_['identifier']:
-                filecategory = file_['use_category']['pref_label']['en']
-                break
-
-        # If file listed in datasets/<id>/files is not listed in 'files'
-        # section of dataset metadata, look for parent_directory of the file
-        # from  'directories' section. The "use_category" of file is the
-        # "use_category" of the parent directory.
-        if filecategory is None:
-            file_directory = dataset_file['parent_directory']['identifier']
-            for directory in dataset_metadata['directories']:
-                if file_directory == directory['identifier']:
-                    filecategory = directory['use_category']['pref_label']\
-                                   ['en']
-                    break
-
-        # Append path to logical_struct[filecategory] list. Create list if it
-        # does not exist already
-        if filecategory not in locical_struct.keys():
-            locical_struct[filecategory] = []
-        locical_struct[filecategory].append(dataset_file['file_path'])
-
-    with open(os.path.join(self.workspace,
-                           'sip-in-progress',
-                           'logical_struct'), 'w') as new_file:
-        new_file.write(dumps(locical_struct))
 
 
 def download_files(self, dataset_files):

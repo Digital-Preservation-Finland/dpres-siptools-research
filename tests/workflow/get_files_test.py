@@ -41,14 +41,6 @@ def test_getfiles(testpath, testmetax, testida, testmongoclient):
             as open_file:
         assert open_file.read() == 'bar\n'
 
-    # Check that  logical structmap is created
-    with open(os.path.join(testpath,
-                           'sip-in-progress/logical_struct')) as open_file:
-        assert open_file.read() == '{"Source material": ["/project_x_FROZEN/'\
-                                   'Experiment_X/file_name_3", "'\
-                                   '/project_x_FROZEN/Experiment_X/'\
-                                   'file_name_4"]}'
-
 
 def test_missing_files(testpath, testmetax, testida):
     """Test case where a file can not be found from Ida. The first file should
