@@ -10,7 +10,7 @@
 			}
 		},
 		{
-			"identifier": "pid:urn:does_not_exist",
+			"identifier": "pid:urn:2",
 			"use_category": {
 				"pref_label": {
 					"en": "Source material"

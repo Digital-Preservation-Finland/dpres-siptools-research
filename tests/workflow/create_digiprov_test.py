@@ -72,7 +72,7 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient,
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
-        dataset_id="2",
+        dataset_id="create_digiprov_test_dataset_2",
         workspace=workspace,
         config='tests/data/siptools_research.conf'
     )

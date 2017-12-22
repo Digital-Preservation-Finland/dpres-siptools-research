@@ -62,11 +62,8 @@ class GetFiles(WorkflowTask):
                 categories = metax_client.get_elasticsearchdata()
                 # get files from ida and create directory structure for files
                 # based on filecategories
-                try:
-                    get_files(self, dataset_metadata['research_dataset'],
-                              dataset_files, metax_client, categories)
-                except KeyError:
-                    pass
+                get_files(self, dataset_metadata['research_dataset'],
+                          dataset_files, metax_client, categories)
 
 
 def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
@@ -82,26 +79,21 @@ def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
         # Get file's use category. The path to the file in logical structmap
         # is stored in 'use_category' in metax.
         filecategory = None
-        for file_section in dataset_metadata['files']:
-            metax_file_id = file_section['identifier']
-            if file_id == metax_file_id:
-                filecategorykey = file_section['use_category']['identifier']\
-                    .strip('/')
-                filecategory = get_category(categories['hits']['hits'],
-                                            filecategorykey)
+        for file_ in dataset_metadata['files']:
+            if file_id == file_['identifier']:
+                filecategory = file_['use_category']['pref_label']['en']
                 break
 
         # If file listed in datasets/<id>/files is not listed in 'files'
-        # section of dataset metadata, the use category from 'directories'
-        # section is used
+        # section of dataset metadata, look for parent_directory of the file
+        # from  'directories' section. The "use_category" of file is the
+        # "use_category" of the parent directory.
         if filecategory is None:
-            file_folder = dataset_file['parent_directory']['identifier']
+            file_directory = dataset_file['parent_directory']['identifier']
             for directory in dataset_metadata['directories']:
-                if file_folder == directory['identifier']:
-                    categorykey = directory['use_category']['identifier']\
-                        .strip('/')
-                    filecategory = get_category(categories['hits']['hits'],
-                                                categorykey)
+                if file_directory == directory['identifier']:
+                    filecategory = directory['use_category']['pref_label']\
+                                   ['en']
                     break
 
         # Get filename and path for file
@@ -140,19 +132,3 @@ def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
                            'sip-in-progress',
                            'logical_struct'), 'w') as new_file:
         new_file.write(dumps(locical_struct))
-
-
-
-def get_category(categories, filecategorykey):
-    """Looks for a value from list of dictionaries. Returns the value of key
-    "label" from last dictionary where the value is found.
-
-    :categories: list of dictionaries
-    :filecategorykey: value to look for from dictionaries"""
-    for hits in categories:
-
-        if hits['_source']['uri'] == filecategorykey:
-            label = hits['_source']['label']['en']
-            break
-
-    return label

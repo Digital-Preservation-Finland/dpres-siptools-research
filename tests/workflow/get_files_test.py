@@ -17,7 +17,7 @@ def test_getfiles(testpath, testmetax, testida, testmongoclient):
 
     # Init task
     task = get_files.GetFiles(workspace=testpath,
-                              dataset_id="2",
+                              dataset_id="get_files_test_dataset_1",
                               config='tests/data/siptools_research.conf')
     assert not task.complete()
 
