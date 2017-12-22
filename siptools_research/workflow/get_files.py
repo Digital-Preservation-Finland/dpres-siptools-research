@@ -58,15 +58,13 @@ class GetFiles(WorkflowTask):
                     'datasets',
                     str(self.dataset_id)+"/files"
                 )
-                # get values for filecategory from elasticsearch
-                categories = metax_client.get_elasticsearchdata()
                 # get files from ida and create directory structure for files
                 # based on filecategories
                 get_files(self, dataset_metadata['research_dataset'],
-                          dataset_files, metax_client, categories)
+                          dataset_files)
 
 
-def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
+def get_files(self, dataset_metadata, dataset_files):
     """Reads files from IDA and writes them on a path based on use_category in
     Metax
     """
