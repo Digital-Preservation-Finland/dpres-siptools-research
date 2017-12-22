@@ -55,13 +55,18 @@ class GetFiles(WorkflowTask):
                 dataset_metadata = metax_client.get_data('datasets',
                                                          self.dataset_id)
                 dataset_files = metax_client.get_dataset_files(self.dataset_id)
-                # get files from ida and create directory structure for files
-                # based on filecategories
-                get_files(self, dataset_metadata['research_dataset'],
-                          dataset_files)
+
+                # get files from ida
+                download_files(self, dataset_files)
+
+                # and create directory structure for files based on
+                # filecategories
+                create_logical_structmap(self,
+                                         dataset_metadata['research_dataset'],
+                                         dataset_files)
 
 
-def get_files(self, dataset_metadata, dataset_files):
+def create_logical_structmap(self, dataset_metadata, dataset_files):
     """Reads files from IDA and writes them on a path based on use_category in
     Metax
     """
@@ -91,15 +96,27 @@ def get_files(self, dataset_metadata, dataset_files):
                                    ['en']
                     break
 
+        # Append path to logical_struct[filecategory] list. Create list if it
+        # does not exist already
+        if filecategory not in locical_struct.keys():
+            locical_struct[filecategory] = []
+        locical_struct[filecategory].append(dataset_file['file_path'])
+
+    with open(os.path.join(self.workspace,
+                           'sip-in-progress',
+                           'logical_struct'), 'w') as new_file:
+        new_file.write(dumps(locical_struct))
+
+
+def download_files(self, dataset_files):
+    """Reads files from IDA and writes them on a path based on use_category in
+    Metax
+    """
+    for dataset_file in dataset_files:
+
         # Get filename and path for file
         filename = dataset_file['file_name']
         path = dataset_file['file_path']
-
-        # Append path to logical_struct[filecategory] list. Create list if it
-        # does not exist
-        if filecategory not in locical_struct.keys():
-            locical_struct[filecategory] = []
-        locical_struct[filecategory].append(path)
 
         # Remove leading '/' from 'path'
         if path.startswith('/'):
@@ -117,13 +134,6 @@ def get_files(self, dataset_metadata, dataset_files):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-        logging.debug("Fetching file from Ida: %s", file_id)
-
         # Download file to file_path
-        ida.download_file(file_id, file_path,
+        ida.download_file(dataset_file['identifier'], file_path,
                           self.config)
-
-    with open(os.path.join(self.workspace,
-                           'sip-in-progress',
-                           'logical_struct'), 'w') as new_file:
-        new_file.write(dumps(locical_struct))
