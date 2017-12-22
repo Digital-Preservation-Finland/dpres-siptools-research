@@ -15,6 +15,11 @@ def test_getfiles(testpath, testmetax, testida, testmongoclient):
     :returns: None
     """
 
+    # Create required directories to  workspace
+    os.makedirs(os.path.join(testpath, 'sip-in-progress'))
+    os.makedirs(os.path.join(testpath, 'logs'))
+
+
     # Init task
     task = get_files.GetFiles(workspace=testpath,
                               dataset_id="get_files_test_dataset_1",

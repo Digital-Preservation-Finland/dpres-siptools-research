@@ -114,26 +114,15 @@ def download_files(self, dataset_files):
     """
     for dataset_file in dataset_files:
 
-        # Get filename and path for file
-        filename = dataset_file['file_name']
-        path = dataset_file['file_path']
+        # Full path to file
+        target_path = os.path.join(self.sip_creation_path,
+                                   dataset_file['file_path'].strip('/'))
 
-        # Remove leading '/' from 'path'
-        if path.startswith('/'):
-            path = path[1:len(path)]
+        # Create the download directory for file if it does not exist already
+        if not os.path.isdir(os.path.dirname(target_path)):
+            os.makedirs(os.path.dirname(target_path))
 
-        # Target path for downloaded file
-        file_path = os.path.join(self.workspace, 'sip-in-progress', path)
-
-        # Download file from Ida to 'sip-in-progress' directory in workspace.
-        # Dataset directory structure is the same as in IDA.
-        folder_path = file_path
-        if filename in folder_path:
-            # Remove filename from folder_path
-            folder_path = file_path[:file_path.index(filename)]
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-
-        # Download file to file_path
-        ida.download_file(dataset_file['identifier'], file_path,
+        # Download file
+        ida.download_file(dataset_file['identifier'],
+                          target_path,
                           self.config)
