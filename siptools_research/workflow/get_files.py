@@ -108,16 +108,11 @@ def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
         filename = dataset_file['file_name']
         path = dataset_file['file_path']
 
-        # Appen path to logical_struct[filecategory] list. Create list if it
+        # Append path to logical_struct[filecategory] list. Create list if it
         # does not exist
-        clist = list()
-        try:
-            if locical_struct[filecategory] is not None:
-                clist = locical_struct[filecategory]
-        except KeyError:
-            print "error"
-        clist.append(path)
-        locical_struct[filecategory] = clist
+        if filecategory not in locical_struct.keys():
+            locical_struct[filecategory] = []
+        locical_struct[filecategory].append(path)
 
         # Remove leading '/' from 'path'
         if path.startswith('/'):
