@@ -53,11 +53,8 @@ class GetFiles(WorkflowTask):
                 # Find file identifiers from Metax dataset metadata.
                 metax_client = metax.Metax(self.config)
                 dataset_metadata = metax_client.get_data('datasets',
-                                                         str(self.dataset_id))
-                dataset_files = metax_client.get_data(
-                    'datasets',
-                    str(self.dataset_id)+"/files"
-                )
+                                                         self.dataset_id)
+                dataset_files = metax_client.get_dataset_files(self.dataset_id)
                 # get files from ida and create directory structure for files
                 # based on filecategories
                 get_files(self, dataset_metadata['research_dataset'],

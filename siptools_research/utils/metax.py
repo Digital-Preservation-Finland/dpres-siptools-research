@@ -123,6 +123,15 @@ class Metax(object):
         # pylint: disable=no-member
         return lxml.etree.fromstring(response.content).getroottree()
 
+    def get_dataset_files(self, dataset_id):
+        """Get file metadata of dataset from Metax.
+
+        :dataset_id: ID number of object
+        :returns: dict"""
+        url = self.baseurl + 'datasets/' + dataset_id + '/files'
+
+        return requests.get(url).json()
+
 
 def parse_arguments(arguments):
     """Create arguments parser and return parsed
