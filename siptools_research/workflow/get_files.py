@@ -108,17 +108,14 @@ def get_files(self, dataset_metadata, dataset_files, metax_client, categories):
         filename = dataset_file['file_name']
         path = dataset_file['file_path']
 
-        # Do something(?) that always raises KeyError (because locical_struct
-        # is wmpty at this point).
+        # Appen path to logical_struct[filecategory] list. Create list if it
+        # does not exist
         clist = list()
         try:
             if locical_struct[filecategory] is not None:
                 clist = locical_struct[filecategory]
         except KeyError:
             print "error"
-
-        # Add filepath to a list and add the list (that always contains only
-        # one filepath) to 'locical_struct' dictionary
         clist.append(path)
         locical_struct[filecategory] = clist
 
