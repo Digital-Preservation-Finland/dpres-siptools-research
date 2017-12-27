@@ -28,8 +28,8 @@ def run_luigi_task(module, task, workspace):
         ('validate_metadata', 'ValidateMetadata'),
         ('create_digiprov', 'CreateProvenanceInformation'),
         ('create_dmdsec', 'CreateDescriptiveMetadata'),
+        ('get_files', 'GetFiles'),
         # These tests do not work yet:
-        # ('get_files', 'GetFiles'),
         # ('create_techmd', 'CreateTechnicalMetadata'),
         # ('create_structmap', 'CreateStructMap'),
         # ('create_mets', 'CreateMets'),
@@ -40,7 +40,7 @@ def run_luigi_task(module, task, workspace):
         # ('cleanup', 'CleanupWorkspace'),
     ]
 )
-def test_workflow(testpath, testmetax, testmongoclient, module, task):
+def test_workflow(testpath, testmetax, testida, testmongoclient, module, task):
     """Run a task (and all tasks it requires) and check that check that report
     of successfull task is added to mongodb.
     """

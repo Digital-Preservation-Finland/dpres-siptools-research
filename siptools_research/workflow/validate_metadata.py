@@ -54,3 +54,12 @@ class ValidateMetadata(WorkflowTask):
                                             metax_schemas.FILE_METADATA_SCHEMA)
                     except jsonschema.ValidationError as exc:
                         raise InvalidMetadataError(exc)
+
+                # Validate file metadata for each file in dataset files
+                for file_metadata \
+                        in metax_client.get_dataset_files(self.dataset_id):
+                    try:
+                        jsonschema.validate(file_metadata,
+                                            metax_schemas.FILE_METADATA_SCHEMA)
+                    except jsonschema.ValidationError as exc:
+                        raise InvalidMetadataError(exc)

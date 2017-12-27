@@ -48,7 +48,8 @@ DATASET_METADATA_SCHEMA = \
 FILE_METADATA_SCHEMA = \
     {
         "type": "object",
-        "required": ["checksum", "file_characteristics", "file_format"],
+        "required": ["checksum", "file_characteristics", "file_format",
+                     "file_path"],
         "properties": {
             "checksum": {
                 "type": "object",
