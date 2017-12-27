@@ -8,6 +8,7 @@ import mets
 import luigi
 from siptools.scripts import compile_structmap
 from siptools_research.utils.contextmanager import redirect_stdout
+from siptools_research.utils.metax import Metax
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 from siptools_research.workflow.create_digiprov import \
@@ -65,13 +66,8 @@ class CreateStructMap(WorkflowTask):
                 filesec_xml = ET.parse(os.path.join(self.sip_creation_path,
                                                     'filesec.xml'))
 
-                # in getfiles task the files are mapped with categories and
-                # wrote in 'logical_struct' file 'logical_struct' file is read
-                # and the logical struct map is generated based on it
-
-                cat_file = open(os.path.join(self.sip_creation_path,
-                                             'logical_struct'))
-                categories = json.loads(cat_file.read())
+                # Get filecategories for each file
+                categories = self.find_file_categories()
                 # create logical structmap
                 structmap = mets.structmap(type_attr='Fairdata-logical')
 
@@ -109,6 +105,52 @@ class CreateStructMap(WorkflowTask):
                                        'structmap.xml'), 'r+') as struct_file:
                     struct_file.write(new_struct)
                     struct_file.close()
+
+    def find_file_categories(self):
+        """Creates logical structure map of dataset files. Returns dictionary
+        with filecategories as keys and filepaths as values.
+
+        :returns: dict
+        """
+        metax_client = Metax(self.config)
+        dataset_files = metax_client.get_dataset_files(self.dataset_id)
+        dataset_metadata = metax_client.get_data('datasets', self.dataset_id)\
+            ['research_dataset']
+        locical_struct = dict()
+
+        for dataset_file in dataset_files:
+
+            file_id = dataset_file['identifier']
+
+            # Get file's use category. The path to the file in logical
+            # structmap is stored in 'use_category' in metax.
+            filecategory = None
+            if 'files' in dataset_metadata:
+                for file_ in dataset_metadata['files']:
+                    if file_id == file_['identifier']:
+                        filecategory = file_['use_category']['pref_label']\
+                            ['en']
+                    break
+
+            # If file listed in datasets/<id>/files is not listed in 'files'
+            # section of dataset metadata, look for parent_directory of the
+            # file from  'directories' section. The "use_category" of file is
+            # the "use_category" of the parent directory.
+            if filecategory is None:
+                file_directory = dataset_file['parent_directory']['identifier']
+                for directory in dataset_metadata['directories']:
+                    if file_directory == directory['identifier']:
+                        filecategory = directory['use_category']['pref_label']\
+                                       ['en']
+                        break
+
+            # Append path to logical_struct[filecategory] list. Create list if
+            # it does not exist already
+            if filecategory not in locical_struct.keys():
+                locical_struct[filecategory] = []
+            locical_struct[filecategory].append(dataset_file['file_path'])
+
+        return locical_struct
 
 
 def get_fileid(filename, filesec_xml):
