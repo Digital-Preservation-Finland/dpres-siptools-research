@@ -2,7 +2,6 @@
 """Luigi task that creates structure map."""
 
 import os
-import json
 import lxml.etree as ET
 import mets
 import luigi
@@ -50,8 +49,9 @@ class CreateStructMap(WorkflowTask):
                                               'create-struct-map'))
 
     def run(self):
-        """Creates a METS structural map file based on a folder structure. Top
-        folder is given as a parameter.
+        """Creates a METS structural map file with two distinct structural
+        maps. Physical structural map is created based on a folder structure.
+        Logical structural map is based on dataset metada retrieved from Metax.
 
         :returns: None
 
@@ -60,18 +60,21 @@ class CreateStructMap(WorkflowTask):
         with self.output().open('w') as log:
             with redirect_stdout(log):
 
-                # create physical structmap
+                # Create physical structmap using siptools script
                 compile_structmap.main(['--workspace',
                                         self.sip_creation_path])
 
-                # Read the previously (in compile_structmap) generated
-                # physical structmap from file
+                # Read the generated physical structmap from file
                 # pylint: disable=no-member
-                struct = ET.parse(os.path.join(self.sip_creation_path,
-                                               'structmap.xml'))
-                # Get dmdsec id
-                old_struct = struct.getroot()[0][0]
-                dmdsec_id = [old_struct.attrib['DMDID']]
+                structmap = ET.parse(os.path.join(self.sip_creation_path,
+                                                  'structmap.xml'))
+
+                # Add 'TYPE' attribute to physical structmap
+                structmap.getroot()[0].attrib['TYPE'] \
+                    = 'Fairdata-physical'
+
+                # Get dmdsec id from physical_structmap
+                dmdsec_id = structmap.getroot()[0][0].attrib['DMDID']
 
                 # Init logical structmap
                 logical_structmap = \
@@ -79,28 +82,29 @@ class CreateStructMap(WorkflowTask):
 
                 # Create logical structmap
                 categories = self.find_file_categories()
-                wrapper_div = mets.div(type_attr='logical', dmdid=dmdsec_id)
+                wrapper_div = mets.div(type_attr='logical', dmdid=[dmdsec_id])
                 for category in categories:
-                    div = mets.div(type_attr=category, dmdid=dmdsec_id)
+                    div = mets.div(type_attr=category, dmdid=[dmdsec_id])
                     for filename in categories.get(category):
                         fileid = self.get_fileid(filename)
                         div.append(mets.fptr(fileid))
                     wrapper_div.append(div)
                 logical_structmap.append(wrapper_div)
 
-                # Add the logical structmap into the same file where physical
-                # struct map already is
-                start = mets.structmap(type_attr='Fairdata-physical')
-                start.append(old_struct)
-                new_struct = ET.tostring(start)
-                new_struct += ET.tostring(logical_structmap, pretty_print=True,
-                                          xml_declaration=False,
-                                          encoding='UTF-8')
+                # Logical structmap element must be reparsed by lxml.etree to
+                # make "pretty_printing" work
+                logical_structmap = ET.fromstring(
+                    ET.tostring(logical_structmap, pretty_print=True)
+                )
 
-                with open(os.path.join(self.sip_creation_path,
-                                       'structmap.xml'), 'r+') as struct_file:
-                    struct_file.write(new_struct)
-                    struct_file.close()
+                # Append the logical structmap into the element tree after
+                # physical struct map
+                structmap.getroot().append(logical_structmap)
+
+                # Write new structmap to file
+                structmap.write(os.path.join(self.sip_creation_path,
+                                             'structmap.xml'),
+                                encoding='UTF-8')
 
     def find_file_categories(self):
         """Creates logical structure map of dataset files. Returns dictionary
