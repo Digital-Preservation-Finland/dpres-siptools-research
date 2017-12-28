@@ -10,6 +10,7 @@ from siptools_research.utils.metax import Metax
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
+from siptools_research.workflow.get_files import GetFiles
 import siptools.scripts.import_object
 from siptools.xml.mets import NAMESPACES
 
@@ -31,7 +32,10 @@ class CreateTechnicalMetadata(WorkflowTask):
                                 config=self.config),
                 ValidateMetadata(workspace=self.workspace,
                                  dataset_id=self.dataset_id,
-                                 config=self.config)]
+                                 config=self.config),
+                GetFiles(workspace=self.workspace,
+                         dataset_id=self.dataset_id,
+                         config=self.config)]
 
     def output(self):
         """Outputs log to ``logs/task-create-technical-metadata.log``"
