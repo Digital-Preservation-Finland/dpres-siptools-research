@@ -64,7 +64,7 @@ class Metax(object):
 
         :entity_url: "datasets", "contracts" or "files"
         :entity_id: ID number of object
-        :returns: dict with xml namespaces as keys and lxml.etree.ElementTree
+        :returns: dict with XML namespace strings as keys and lxml.etree.ElementTree
                   objects as values
         """
         # Init result dict
@@ -72,6 +72,10 @@ class Metax(object):
 
         # Get list of xml namespaces
         ns_key_url = self.baseurl + entity_url + '/' + entity_id + '/xml'
+        response = requests.get(ns_key_url)
+        if not response.status_code == 200:
+            raise Exception("Could not retrieve list of additional metadata "\
+                            "XML for dataset %s: %s" % (entity_id, ns_key_url))
         ns_key_list = requests.get(ns_key_url).json()
 
         # For each listed namespace, download the xml, create ElementTree, and
@@ -79,6 +83,10 @@ class Metax(object):
         for ns_key in ns_key_list:
             query = '?namespace=' + ns_key
             response = requests.get(ns_key_url + query)
+            if not response.status_code == 200:
+                raise Exception("Could not retrieve additional metadata XML "\
+                                "for dataset %s: %s" % (entity_id,
+                                                        ns_key_url + query))
             # pylint: disable=no-member
             xml_dict[ns_key] = lxml.etree.fromstring(response.content)\
                 .getroottree()
