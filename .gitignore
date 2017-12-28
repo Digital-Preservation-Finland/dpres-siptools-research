@@ -1,1 +1,3 @@
 *.pyc
+rpmbuild
+.cache
