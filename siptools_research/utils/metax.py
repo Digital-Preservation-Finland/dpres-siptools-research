@@ -52,7 +52,12 @@ class Metax(object):
         :returns: dict"""
         url = self.baseurl + entity_url + '/' + entity_id
 
-        return requests.get(url).json()
+        response = requests.get(url)
+
+        if not response.status_code == 200:
+            raise Exception("Could not find metadata.")
+
+        return response.json()
 
     def get_xml(self, entity_url, entity_id):
         """Get xml data of dataset, contract or file with id from Metax.
@@ -86,7 +91,12 @@ class Metax(object):
         :returns: dict"""
         url = self.elasticsearch_url + "reference_data/use_category/_search?"\
                                        "pretty&size=100"
-        return requests.get(url).json()
+        response = requests.get(url)
+
+        if not response.status_code == 200:
+            raise Exception("Could not find elastic search data.")
+
+        return response.json()
 
     def set_preservation_state(self, dataset_id, state):
         """Set value of field `preservation_state` for dataset in Metax
@@ -130,7 +140,12 @@ class Metax(object):
         :returns: dict"""
         url = self.baseurl + 'datasets/' + dataset_id + '/files'
 
-        return requests.get(url).json()
+        response = requests.get(url)
+
+        if not response.status_code == 200:
+            raise Exception("Could not dataset files metadata.")
+
+        return response.json()
 
 
 def parse_arguments(arguments):
