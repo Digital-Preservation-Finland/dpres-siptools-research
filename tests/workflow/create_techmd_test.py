@@ -61,15 +61,16 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
 def test_import_object_ok(testpath, testmetax):
     """Test import object function"""
 
-    # Copy sample files to 'sip-in-progress' directory in workspace
-    testbasepath = os.path.join(testpath, 'sip-in-progress')
-    os.makedirs(testbasepath)
-    metax_filepath = os.path.join(testbasepath, 'project_x/some/path')
-    os.makedirs(os.path.join(metax_filepath))
-    shutil.copy('tests/data/file_name_5',
-                os.path.join(testbasepath, metax_filepath, 'file_name_5'))
-    shutil.copy('tests/data/file_name_6',
-                os.path.join(testbasepath, metax_filepath, 'file_name_6'))
+    # Create workspace with empty "logs" and "sip-in-progress' directories in
+    # temporary directory
+    workspace = testpath
+    os.makedirs(os.path.join(workspace, 'logs'))
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sipdirectory)
+
+    # Copy sample directory with some files to SIP
+    shutil.copytree('tests/data/sample_dataset_directories/project_x',
+                    os.path.join(sipdirectory, 'project_x'))
 
     # Run import_objects script for a sample dataset
     import_objects('create_techmd_test_dataset_1',
@@ -78,7 +79,7 @@ def test_import_object_ok(testpath, testmetax):
 
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
-        testbasepath,
+        sipdirectory,
         'project_x%2Fsome%2Fpath%2Ffile_name_5-techmd.xml'
     )
     # pylint: disable=no-member
