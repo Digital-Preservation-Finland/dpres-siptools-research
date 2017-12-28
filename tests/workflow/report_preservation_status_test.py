@@ -35,7 +35,7 @@ def test_reportpreservationstatus(testpath, testmongoclient, testmetax):
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
         workspace=workspace,
-        dataset_id="1",
+        dataset_id="report_preservation_status_test_dataset_1",
         config='tests/data/siptools_research.conf'
     )
     assert not task.complete()
