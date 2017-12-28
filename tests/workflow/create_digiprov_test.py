@@ -30,7 +30,7 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
         workspace=workspace,
-        dataset_id="1",
+        dataset_id="create_digiprov_test_dataset_1",
         config='tests/data/siptools_research.conf'
     )
     assert not task.complete()
@@ -97,7 +97,7 @@ def test_create_premis_event(testpath, testmetax):
 
     # Create provenance info xml-file to tempdir
     workspace = testpath
-    create_digiprov.create_premis_event('1', workspace,
+    create_digiprov.create_premis_event('create_digiprov_test_dataset_3', workspace,
                                         'tests/data/siptools_research.conf')
 
     # Check that the created xml-file contains correct elements.

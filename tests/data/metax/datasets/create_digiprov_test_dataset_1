@@ -15,14 +15,6 @@
 			"en": "Description of provenance"
                 }
             }
-        ],
-        "files": [
-            {
-                "identifier": "pid:urn:1"
-            },
-            {
-                "identifier": "pid:urn:2"
-            }
         ]
     }
 }

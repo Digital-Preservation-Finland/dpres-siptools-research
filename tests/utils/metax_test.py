@@ -7,7 +7,7 @@ def test_get_dataset(testmetax):
     """Test get_dataset function. Reads sample dataset JSON from testmetax and
     checks that returned dict contains the correct values."""
     client = Metax('tests/data/siptools_research.conf')
-    dataset = client.get_data('datasets', "1")
+    dataset = client.get_data('datasets', "mets_test_dataset_1")
     print dataset
     print type(dataset)
     assert dataset["research_dataset"]["provenance"][0]['type']['pref_label']\
