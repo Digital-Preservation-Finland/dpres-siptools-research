@@ -2,6 +2,9 @@
 	"file_format": "application/xml",
 	"identifier": "pid:urn:wf_test_1a",
 	"file_path": "path/to/file1",
+	"parent_directory": {
+		"identifier": "pid:urn:dir:wf1"
+	},
 	"checksum":
 	{
 		"algorithm": "SHA-1",

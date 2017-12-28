@@ -14,7 +14,7 @@ def test_validatemetadata(testpath, testmetax, testmongoclient):
 
     # Init task
     task = ValidateMetadata(workspace=testpath,
-                            dataset_id='workflow_test_dataset_1',
+                            dataset_id='validate_metadata_test_dataset_1',
                             config='tests/data/siptools_research.conf')
     assert not task.complete()
 
@@ -32,7 +32,7 @@ def test_invalid_metadata(testpath, testmetax, testmongoclient):
 
     # Init task
     task = ValidateMetadata(workspace=testpath,
-                            dataset_id='1',
+                            dataset_id='validate_metadata_test_dataset_2',
                             config='tests/data/siptools_research.conf')
     assert not task.complete()
 
@@ -41,5 +41,5 @@ def test_invalid_metadata(testpath, testmetax, testmongoclient):
         task.run()
 
     # run should fail the following error message:
-    assert "'type' is a required property" in exc.value[0]
+    assert "'use_category' is a required property" in exc.value[0]
     assert not task.complete()

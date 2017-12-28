@@ -151,7 +151,7 @@ class Metax(object):
         response = requests.get(url)
 
         if not response.status_code == 200:
-            raise Exception("Could not dataset files metadata.")
+            raise Exception("Could not find dataset files metadata.")
 
         return response.json()
 

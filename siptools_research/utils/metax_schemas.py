@@ -15,12 +15,12 @@ DATASET_METADATA_SCHEMA = \
                         "type": "array", # files is list
                         "items": {
                             "type": "object",
-                            "required": ["identifier", "type"],
+                            "required": ["identifier", "use_category"],
                             "properties": {
                                 "identifier": {
                                     "type": "string"
                                 },
-                                "type": {
+                                "use_category": {
                                     "type": "object",
                                     "required": ["pref_label"],
                                     "properties": {
@@ -49,7 +49,7 @@ FILE_METADATA_SCHEMA = \
     {
         "type": "object",
         "required": ["checksum", "file_characteristics", "file_format",
-                     "file_path"],
+                     "file_path", "parent_directory"],
         "properties": {
             "checksum": {
                 "type": "object",
@@ -58,6 +58,10 @@ FILE_METADATA_SCHEMA = \
             "file_characteristics": {
                 "type": "object",
                 "required": ["file_created"]
+            },
+            "parent_directory": {
+                "type": "object",
+                "required": ["identifier"]
             }
         }
     }
