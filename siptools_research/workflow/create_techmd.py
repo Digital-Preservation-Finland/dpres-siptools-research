@@ -8,7 +8,6 @@ from luigi import LocalTarget
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
 from siptools_research.luigi.task import WorkflowTask
-from siptools_research.luigi.task import InvalidMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 import siptools.scripts.import_object
@@ -53,13 +52,13 @@ class CreateTechnicalMetadata(WorkflowTask):
 
 
 # pylint: disable=too-many-arguments
-def create_premis_object(digital_object, filepath, formatname, creation_date,
+def create_premis_object(digital_object, formatname, creation_date,
                          hashalgorithm, hashvalue, format_version, workspace):
     """Calls import_object from siptools to create
     PREMIS file metadata.
     """
     siptools.scripts.import_object.main([digital_object,
-                                         '--base_path', filepath,
+                                         '--base_path', workspace,
                                          '--workspace', workspace,
                                          '--skip_inspection',
                                          '--format_name', formatname,
@@ -73,11 +72,6 @@ def create_premis_object(digital_object, filepath, formatname, creation_date,
 def create_objects(file_id=None, metax_filepath=None, workspace=None,
                    config=None):
     """Gets file metadata from Metax and calls create_premis_object function"""
-
-    # Full path to file on packaging service HDD:
-    full_path = os.path.join(workspace, 'sip-in-progress', metax_filepath)
-    filename = os.path.basename(full_path)
-    filepath = os.path.dirname(full_path)
 
     metadata = Metax(config).get_data('files', file_id)
     hashalgorithm = metadata["checksum"]["algorithm"]
@@ -101,10 +95,12 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     else:
         hashalgorithm = 'ERROR'
 
-    create_premis_object(filename, filepath, formatname, creation_date,
-                         hashalgorithm, hashvalue, formatversion, workspace)
+    # Create PREMIS file metadata XML
+    create_premis_object(metax_filepath.strip('/'), formatname, creation_date,
+                         hashalgorithm, hashvalue, formatversion,
+                         os.path.join(workspace, 'sip-in-progress'))
 
-    # write xml files if they exist
+    # Copy additional metadata XML files from Metax if they exist
     xml = Metax(config).get_xml('files', file_id)
     for ns_url in xml:
         if ns_url not in NAMESPACES.values():
@@ -114,44 +110,24 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
                        == ns_url), None)
         target_filename = urllib.quote_plus(metax_filepath + '-' + ns_key\
                                             + '-techmd.xml')
-        output_file = os.path.join(workspace, target_filename)
+        output_file = os.path.join(workspace, 'sip-in-progress',
+                                   target_filename)
         with open(output_file, 'w+') as outfile:
             # pylint: disable=no-member
             outfile.write(lxml.etree.tostring(xml_data))
-
-    return 0
 
 
 def import_objects(dataset_id, workspace, config):
     """Main function of import_objects script """
 
-    metax_dataset = Metax(config).get_data('datasets', dataset_id)
-    for file_section in metax_dataset["research_dataset"]["files"]:
+    metax_client = Metax(config)
+    file_metadata = metax_client.get_dataset_files(dataset_id)
+    for file_ in file_metadata:
 
         # Read file identifier
-        try:
-            file_id = file_section["identifier"]
-        except KeyError as exc:
-            if exc.args[0] == 'identifier':
-                raise InvalidMetadataError('Metadata of a file is missing '\
-                                           'required attribute: "identifier"')
-            else:
-                raise
+        file_id = file_["identifier"]
 
-        try:
-            metax_filepath = \
-                file_section['type']['pref_label']['en'].strip('/')
-        except KeyError as exc:
-            if exc.args[0] == 'type':
-                raise InvalidMetadataError('Metadata of file %s is missing '\
-                                           'required attribute: "type"'\
-                                           % file_id)
-            elif exc.args[0] == 'en':
-                raise InvalidMetadataError('Metadata of file %s is missing '\
-                                           'required attribute: '\
-                                           '"pref_label:en"' % file_id)
-            else:
-                raise
+        # Read file path from dataset file metadata
+        file_metadata = metax_client.get_dataset_files
+        metax_filepath = file_['file_path'].strip('/')
         create_objects(file_id, metax_filepath, workspace, config)
-
-    return 0

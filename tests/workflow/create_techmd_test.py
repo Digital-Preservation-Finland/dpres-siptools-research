@@ -4,24 +4,26 @@ import os
 import shutil
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 from siptools_research.workflow.create_techmd import import_objects
-import lxml.etree as ET
+import lxml.etree
 from siptools.xml.mets import NAMESPACES
 
 def test_create_techmd_ok(testpath, testmongoclient, testmetax):
     """Test the workflow task CreateTechnicalMetadata module.
     """
-    # Create workspace with "logs" directory in temporary directory
-    workspace = os.path.join(testpath, 'workspace')
-    os.makedirs(workspace)
+    # Create workspace with empty "logs" and "sip-in-progress' directories in
+    # temporary directory
+    workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sipdirectory)
 
-    # Copy sample files to workspace directory "sip-in-progress" directory
-    shutil.copytree('tests/data/files/',
-                    os.path.join(workspace, 'sip-in-progress'))
+    # Copy sample directory with some files to SIP
+    shutil.copytree('tests/data/sample_dataset_directories/project_x',
+                    os.path.join(sipdirectory, 'project_x'))
 
     # Init task
     task = CreateTechnicalMetadata(workspace=workspace,
-                                   dataset_id="3",
+                                   dataset_id="create_techmd_test_dataset_1",
                                    config='tests/data/siptools_research.conf')
     assert not task.complete()
 
@@ -31,20 +33,20 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
 
     # Check that XML files are created in workspace
     assert os.path.isfile(os.path.join(
-        workspace,
-        'project_x_FROZEN%2Fsome%2Fpath%2Ffile_name_5-mets-techmd.xml'
+        sipdirectory,
+        'project_x%2Fsome%2Fpath%2Ffile_name_5-techmd.xml'
     ))
     assert os.path.isfile(os.path.join(
-        workspace,
-        'project_x_FROZEN%2Fsome%2Fpath%2Ffile_name_6-mets-techmd.xml'
+        sipdirectory,
+        'project_x%2Fsome%2Fpath%2Ffile_name_6-techmd.xml'
     ))
     assert os.path.isfile(os.path.join(
-        workspace,
-        'file_name_5-techmd.xml'
+        sipdirectory,
+        'project_x%2Fsome%2Fpath%2Ffile_name_5-mets-techmd.xml'
     ))
     assert os.path.isfile(os.path.join(
-        workspace,
-        'file_name_6-techmd.xml'
+        sipdirectory,
+        'project_x%2Fsome%2Fpath%2Ffile_name_6-mets-techmd.xml'
     ))
 
     # Check that log is created in workspace/logs/
@@ -57,11 +59,12 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
 
 
 def test_import_object_ok(testpath, testmetax):
+    """Test import object function"""
 
     # Copy sample files to 'sip-in-progress' directory in workspace
     testbasepath = os.path.join(testpath, 'sip-in-progress')
     os.makedirs(testbasepath)
-    metax_filepath = os.path.join(testbasepath, 'project_x_FROZEN/some/path')
+    metax_filepath = os.path.join(testbasepath, 'project_x/some/path')
     os.makedirs(os.path.join(metax_filepath))
     shutil.copy('tests/data/file_name_5',
                 os.path.join(testbasepath, metax_filepath, 'file_name_5'))
@@ -69,14 +72,23 @@ def test_import_object_ok(testpath, testmetax):
                 os.path.join(testbasepath, metax_filepath, 'file_name_6'))
 
     # Run import_objects script for a sample dataset
-    import_objects('3', testpath, 'tests/data/siptools_research.conf')
+    import_objects('create_techmd_test_dataset_1',
+                   testpath,
+                   'tests/data/siptools_research.conf')
 
     # Check that output file is created, and it has desired properties
-    output_file = os.path.join(testpath, 'file_name_5-techmd.xml')
-    tree = ET.parse(output_file)
+    output_file = os.path.join(
+        testbasepath,
+        'project_x%2Fsome%2Fpath%2Ffile_name_5-techmd.xml'
+    )
+    # pylint: disable=no-member
+    tree = lxml.etree.parse(output_file)
     root = tree.getroot()
     assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1
     assert len(root.xpath("//premis:object", namespaces=NAMESPACES)) == 1
-    assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] == 'premis:file'
-    assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text == 'html/text'
-    assert root.xpath("//premis:formatVersion", namespaces=NAMESPACES)[0].text == '1.0'
+    assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] \
+        == 'premis:file'
+    assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
+        == 'html/text'
+    assert root.xpath("//premis:formatVersion", namespaces=NAMESPACES)[0].text\
+        == '1.0'
