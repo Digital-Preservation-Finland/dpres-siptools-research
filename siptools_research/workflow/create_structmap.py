@@ -151,7 +151,6 @@ class CreateStructMap(WorkflowTask):
         filesec_xml = ET.parse(os.path.join(self.sip_creation_path,
                                             'filesec.xml'))
 
-        fileid = None
         root = filesec_xml.getroot()
 
         files = root[0][0]
@@ -159,11 +158,7 @@ class CreateStructMap(WorkflowTask):
             for file__ in file_:
                 if str(file__.get('{http://www.w3.org/1999/xlink}href'))[7:] \
                         == filename:
-                    print "file found %s " % file_.get('ID')
-                    fileid = file_.get('ID')
-                    break
-
-        return fileid
+                    return file_.get('ID')
 
 
 def find_file_use_category(identifier, dataset_metadata):
