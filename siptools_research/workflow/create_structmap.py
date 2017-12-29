@@ -114,47 +114,38 @@ class CreateStructMap(WorkflowTask):
         """
         metax_client = Metax(self.config)
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
-        dataset_metadata = metax_client.get_data('datasets', self.dataset_id)\
-            ['research_dataset']
-        locical_struct = dict()
+        dataset_metadata = metax_client.get_data('datasets', self.dataset_id)
+        logical_struct = dict()
 
         for dataset_file in dataset_files:
 
             file_id = dataset_file['identifier']
 
-            # Get file's use category. The path to the file in logical
+            # Get the use category of file. The path to the file in logical
             # structmap is stored in 'use_category' in metax.
-            filecategory = None
-            if 'files' in dataset_metadata:
-                for file_ in dataset_metadata['files']:
-                    if file_id == file_['identifier']:
-                        filecategory = file_['use_category']['pref_label']\
-                            ['en']
-                    break
+            filecategory = find_file_use_category(file_id, dataset_metadata)
 
             # If file listed in datasets/<id>/files is not listed in 'files'
             # section of dataset metadata, look for parent_directory of the
             # file from  'directories' section. The "use_category" of file is
             # the "use_category" of the parent directory.
             if filecategory is None:
-                file_directory = dataset_file['parent_directory']['identifier']
-                for directory in dataset_metadata['directories']:
-                    if file_directory == directory['identifier']:
-                        filecategory = directory['use_category']['pref_label']\
-                                       ['en']
-                        break
+                filecategory = find_dir_use_category(
+                    dataset_file['parent_directory']['identifier'],
+                    dataset_metadata
+                )
 
             # Append path to logical_struct[filecategory] list. Create list if
             # it does not exist already
-            if filecategory not in locical_struct.keys():
-                locical_struct[filecategory] = []
-            locical_struct[filecategory].append(dataset_file['file_path'])
+            if filecategory not in logical_struct.keys():
+                logical_struct[filecategory] = []
+            logical_struct[filecategory].append(dataset_file['file_path'])
 
-        return locical_struct
+        return logical_struct
 
 
     def get_fileid(self, filename):
-        """get file id from filesec by filename"""
+        """get file id from filesec.xml by filename"""
 
         # pylint: disable=no-member
         filesec_xml = ET.parse(os.path.join(self.sip_creation_path,
@@ -173,3 +164,32 @@ class CreateStructMap(WorkflowTask):
                     break
 
         return fileid
+
+
+def find_file_use_category(identifier, dataset_metadata):
+    """Looks for file with identifier from list. Returns the "use_category"
+    of file if it is found. If file is not found from list, return None.
+
+    :identifier (string): File ID
+    :dataset_metadata (dict): Dataset metadata from Metax
+    :returns (string): Use category attribute
+    """
+    if 'files' in dataset_metadata['research_dataset']:
+        for file_ in dataset_metadata['research_dataset']['files']:
+            if file_['identifier'] == identifier:
+                return file_['use_category']['pref_label']['en']
+
+    # Nothing found
+    return None
+
+
+def find_dir_use_category(identifier, dataset_metadata):
+    """Looks for file with identifier from list. Returns the "use_category"
+    of file if it is found. If file is not found from list, return None.
+    """
+    for directory in dataset_metadata['research_dataset']['directories']:
+        if directory['identifier'] == identifier:
+            return directory['use_category']['pref_label']['en']
+
+    # Nothing found
+    return None
