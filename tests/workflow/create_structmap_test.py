@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import distutils.dir_util
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools.scripts import import_object
 from siptools.scripts import import_description
@@ -48,7 +49,8 @@ def test_create_structmap_without_directories(testpath, testmongoclient,
     """Test creating structmap for dataset that does not have directories.
     """
     # Copy workspace directory
-    shutil.copytree('tests/data/workspaces/create_structmap_2', testpath)
+    distutils.dir_util.copy_tree('tests/data/workspaces/create_structmap_2',
+                                 testpath)
 
     # Init task
     task = CreateStructMap(workspace=testpath,
