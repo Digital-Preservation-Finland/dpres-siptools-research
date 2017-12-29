@@ -167,8 +167,9 @@ class CreateStructMap(WorkflowTask):
 
 
 def find_file_use_category(identifier, dataset_metadata):
-    """Looks for file with identifier from list. Returns the "use_category"
-    of file if it is found. If file is not found from list, return None.
+    """Looks for file with identifier from dataset metadata. Returns the
+    "use_category" of file if it is found. If file is not found from list,
+    return None.
 
     :identifier (string): File ID
     :dataset_metadata (dict): Dataset metadata from Metax
@@ -184,8 +185,9 @@ def find_file_use_category(identifier, dataset_metadata):
 
 
 def find_dir_use_category(identifier, dataset_metadata):
-    """Looks for file with identifier from list. Returns the "use_category"
-    of file if it is found. If file is not found from list, return None.
+    """Looks for file with identifier from dataset metadata. Returns the
+    "use_category" of file if it is found. If file is not found from list,
+    return None.
     """
     for directory in dataset_metadata['research_dataset']['directories']:
         if directory['identifier'] == identifier:
