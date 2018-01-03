@@ -1,5 +1,6 @@
 """Tests running parts of workflow"""
 
+import os
 import pytest
 import luigi.cmdline
 import pymongo
@@ -44,15 +45,20 @@ def test_workflow(testpath, testmetax, testida, testmongoclient, module, task):
     """Run a task (and all tasks it requires) and check that check that report
     of successfull task is added to mongodb.
     """
+    # Set permissions of ssh key (required by SendSIPToDP task)
+    os.chmod('tests/data/pas_ssh_key', 0600)
+
     workspace = testpath
     run_luigi_task('siptools_research.workflow.' + module,
                    task,
                    workspace)
 
+    # Init pymongo client
     conf = Configuration('tests/data/siptools_research.conf')
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
     collection = mongoclient[conf.get('mongodb_database')]\
         [conf.get('mongodb_collection')]
     document = collection.find_one()
+
     # Check 'result' field
     assert document['workflow_tasks'][task]['result'] == 'success'
