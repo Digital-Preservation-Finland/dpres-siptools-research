@@ -34,8 +34,8 @@ def run_luigi_task(module, task, workspace):
         ('create_mets', 'CreateMets'),
         ('sign', 'SignSIP'),
         ('compress', 'CompressSIP'),
+        ('send_sip', 'SendSIPToDP'),
         # These tests do not work yet:
-        # ('send_sip', 'SendSIPToDP'),
         # ('report_preservation_status', 'ReportPreservationStatus'),
         # ('cleanup', 'CleanupWorkspace'),
     ]
