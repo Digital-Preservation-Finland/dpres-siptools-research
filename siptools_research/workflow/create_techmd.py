@@ -112,8 +112,8 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         xml_data = xml[ns_url]
         ns_key = next((key for key, url in NAMESPACES.items() if url\
                        == ns_url), None)
-        target_filename = urllib.quote_plus(metax_filepath + '-' + ns_key\
-                                            + '-techmd.xml')
+        target_filename = urllib.quote_plus(metax_filepath + ns_key\
+                                            + 'file.xml')
         output_file = os.path.join(workspace, 'sip-in-progress',
                                    target_filename)
         with open(output_file, 'w+') as outfile:

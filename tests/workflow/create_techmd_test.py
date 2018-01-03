@@ -42,11 +42,11 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_5-mets-techmd.xml'
+        'project_x%2Fsome%2Fpath%2Ffile_name_5metsfile.xml'
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_6-mets-techmd.xml'
+        'project_x%2Fsome%2Fpath%2Ffile_name_6metsfile.xml'
     ))
 
     # Check that log is created in workspace/logs/
