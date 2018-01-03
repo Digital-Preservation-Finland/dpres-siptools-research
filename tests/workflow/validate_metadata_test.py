@@ -41,5 +41,5 @@ def test_invalid_metadata(testpath, testmetax, testmongoclient):
         task.run()
 
     # run should fail the following error message:
-    assert "'use_category' is a required property" in exc.value[0]
+    assert "'contract' is a required property" in exc.value[0]
     assert not task.complete()

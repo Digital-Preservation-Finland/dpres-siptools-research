@@ -1,4 +1,7 @@
 {
+    "contract": {
+	"id": 1
+    },
     "research_dataset": {
         "provenance": [
             {
