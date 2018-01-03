@@ -31,8 +31,8 @@ def run_luigi_task(module, task, workspace):
         ('get_files', 'GetFiles'),
         ('create_techmd', 'CreateTechnicalMetadata'),
         ('create_structmap', 'CreateStructMap'),
+        ('create_mets', 'CreateMets'),
         # These tests do not work yet:
-        # ('create_mets', 'CreateMets'),
         # ('sign', 'SignSIP'),
         # ('compress', 'CompressSIP'),
         # ('send_sip', 'SendSIPToDP'),
