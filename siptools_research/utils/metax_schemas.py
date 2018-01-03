@@ -5,8 +5,12 @@
 DATASET_METADATA_SCHEMA = \
     {
         "type": "object",
-        "required": ["research_dataset"], # JSON must have "research_dataset"
+        "required": ["research_dataset", "contract"],
         "properties": {
+            "contract": {
+                "type": "object",
+                "required": ["id"]
+            },
             "research_dataset": {
                 "type": "object", # "research_dataset" is dict
                 "required": ["files"], # "research_dataset" must have "files"
