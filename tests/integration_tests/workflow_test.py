@@ -33,8 +33,8 @@ def run_luigi_task(module, task, workspace):
         ('create_structmap', 'CreateStructMap'),
         ('create_mets', 'CreateMets'),
         ('sign', 'SignSIP'),
+        ('compress', 'CompressSIP'),
         # These tests do not work yet:
-        # ('compress', 'CompressSIP'),
         # ('send_sip', 'SendSIPToDP'),
         # ('report_preservation_status', 'ReportPreservationStatus'),
         # ('cleanup', 'CleanupWorkspace'),
