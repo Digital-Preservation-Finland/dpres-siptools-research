@@ -10,49 +10,54 @@ On Centos 7 siptools_research can be installed from `DPres RPM repository <https
 
 Testing
 -------
-Install required packages for testing::
+Install required RPM packages::
 
-   sudo yum install mongodb-server
+   yum install libxslt-devel libxml2-devel openssl-devel mongodb-server gcc ImageMagic
+
+Luigi will not install with old versions of pip, so upgrade pip::
+
+   pip install --upgrade pip
+
+Install required python packages for testing::
    pip install -r requirements_dev.txt
 
+Run tests that do not require running luigi/mongo::
+
+   make test
+
+Run one unit test::
+
+   py.test -v tests/utils/metax_test.py
+
+Testing workflow
+^^^^^^^^^^^^^^^^
 Start luigid::
 
    luigid
 
 Start mongodb::
 
-   mongod --dbpath /path/to/data
+   mkdir -p ~/.mongodata
+   mongod --dbpath ~/.mongodata
 
-Run tests::
-
-   make test
-
-Run one test::
-
-   py.test -v tests/utils/metax_test.py
-
-Run workflow::
+Start workflow using luigi::
 
    luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace /var/spool/siptools-research/testworkspace_abdc1234 --dataset-id 1234 --config tests/data/siptools_research.conf
 
-or::
+or start workflow from init script::
 
    python siptools_research/workflow/init_workflow.py 1234 --config tests/data/siptools_research.conf
 
 Testing in virtualenv
 ^^^^^^^^^^^^^^^^^^^^^
-Install some packages dependecies (Centos 7)::
-
-   yum install libxslt-devel libxml2-devel openssl-devel
-
 Create and activate virtualenv::
 
    virtualenv venv
    source venv/bin/activate
 
-Luigi will not install with old versions of pip, so upgrade pip::
+Install required python packages to virtual environment::
 
-   pip install --upgrade pip
+   pip install -r requirements_dev.txt
 
 Run pytest::
 
