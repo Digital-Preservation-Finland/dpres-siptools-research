@@ -44,12 +44,30 @@ def test_create_structmap_ok(testpath, testmongoclient, testmetax):
         file_content = open_file.read()
         assert 'Fairdata-logical' in file_content
 
+
 def test_create_structmap_without_directories(testpath, testmongoclient,
                                               testmetax):
     """Test creating structmap for dataset that does not have directories.
     """
     # Copy workspace directory
     distutils.dir_util.copy_tree('tests/data/workspaces/create_structmap_2',
+                                 testpath)
+
+    # Init task
+    task = CreateStructMap(workspace=testpath,
+                           dataset_id='create_structmap_test_dataset_2',
+                           config='tests/data/siptools_research.conf')
+
+    # Run task
+    task.run()
+    assert task.complete()
+
+
+def test_filesec_othermd(testpath, testmongoclient, testmetax):
+    """Test CreateStructMap task with dataset that has some othermd metadata
+    for files.  """
+    # Copy workspace directory
+    distutils.dir_util.copy_tree('tests/data/workspaces/create_structmap_3',
                                  testpath)
 
     # Init task
