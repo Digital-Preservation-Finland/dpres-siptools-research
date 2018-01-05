@@ -1,2 +1,5 @@
-<root xmlns:addml="http://www.arkivverket.no/standarder/addml">
-</root>
+<addml:addml xmlns:addml="http://www.arkivverket.no/standarder/addml">
+    <addml:dataset>
+        <addml:reference name="Sample"/>
+    </addml:dataset>
+</addml:addml>
