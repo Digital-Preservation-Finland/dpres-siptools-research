@@ -106,16 +106,18 @@ class Metax(object):
 
         return response.json()
 
-    def set_preservation_state(self, dataset_id, state):
+    def set_preservation_state(self, dataset_id, state, message):
         """Set value of field `preservation_state` for dataset in Metax
 
         :dataset_id: The ID of dataset in Metax
-        :state: The value for `preservation_state`
+        :state (integer): The value for `preservation_state`
+        :message (string): The value for `preservation_system_description`
         :returns: None
 
         """
         url = self.baseurl + 'datasets/' + dataset_id
-        data = {"id": dataset_id, "preservation_state": state}
+        data = {"preservation_state": state,
+                "preservation_state_description": message}
         request = requests.patch(
             url,
             json=data,

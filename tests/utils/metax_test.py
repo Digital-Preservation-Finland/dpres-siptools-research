@@ -1,7 +1,8 @@
 # coding=utf-8
 """Tests for ``siptools_research.utils.metax`` module"""
+import json
 from siptools_research.utils.metax import Metax
-import lxml.etree
+import httpretty
 
 def test_get_dataset(testmetax):
     """Test get_dataset function. Reads sample dataset JSON from testmetax and
@@ -12,6 +13,7 @@ def test_get_dataset(testmetax):
     print type(dataset)
     assert dataset["research_dataset"]["provenance"][0]['type']['pref_label']\
         ['en'] == 'creation'
+
 
 def test_get_xml(testmetax):
     """Test get_xml function. Reads some test xml from testmetax checks that
@@ -49,6 +51,7 @@ def test_reading_config_file():
     assert metax_client2.username == "teppo"
     assert metax_client2.password == "VerySecret123"
 
+
 def test_get_datacite(testmetax):
     """Test get_datacite function. Read one field from returned etree object
     and check its correctness"""
@@ -63,6 +66,23 @@ def test_get_datacite(testmetax):
     assert creatorname == u"Puupää, Pekka"
 
 
-#TODO: test for other entities: contracts, files...
+def test_set_preservation_state(testmetax):
+    """Test set_preservation_state function. Metadata in Metax is modified by
+    sending HTTP PATCH request with modified metadata in JSON format. This test
+    checks that correct HTTP request is sent to Metax. The effect of the
+    request is not tested.
+    """
+    client = Metax('tests/data/siptools_research.conf')
+    client.set_preservation_state("mets_test_dataset_1", 7,
+                                  'Accepted to preservation')
 
-#TODO: Test for set_preservation_state function
+    # Check the body of last HTTP request
+    request_body = json.loads(httpretty.last_request().body)
+    assert request_body["preservation_state"] == 7
+    assert request_body["preservation_state_description"] \
+        == "Accepted to preservation"
+
+    # Check the method of last HTTP request
+    assert httpretty.last_request().method == 'PATCH'
+
+#TODO: test for retrieving other entities: contracts, files...

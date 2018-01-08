@@ -1,6 +1,7 @@
 """Tests for siptools_research.luigi.task module"""
 
 import os
+import json
 import datetime
 import pytest
 import luigi.cmdline
@@ -66,6 +67,7 @@ class InvalidMetadataTask(FailingTestTask):
         raise InvalidMetadataError('Missing some important metadata')
 
 
+# pylint: disable=unused-argument
 def test_run_workflowtask(testpath, testmongoclient):
     """Executes TestTask, checks that output file is created, checks that new
     event field is created to mongo document."""
@@ -132,8 +134,11 @@ def test_invaliddataseterror(testpath, testmongoclient, testmetax):
     run_luigi_task('InvalidDatasetTask', testpath)
 
     # Check the body of last HTTP request
-    assert httpretty.last_request().body \
-        == '{"id": "1", "preservation_state": "7"}'
+    request_body = json.loads(httpretty.last_request().body)
+    assert request_body['preservation_state'] == 7
+    assert request_body['preservation_state_description'] == 'An error '\
+        'occurred while running a test task: File validation failed'
+
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'
 
@@ -147,8 +152,11 @@ def test_invalidmetadataerror(testpath, testmongoclient, testmetax):
     run_luigi_task('InvalidMetadataTask', testpath)
 
     # Check the body of last HTTP request
-    assert httpretty.last_request().body \
-        == '{"id": "1", "preservation_state": "7"}'
+    request_body = json.loads(httpretty.last_request().body)
+    assert request_body['preservation_state'] == 7
+    assert request_body['preservation_state_description'] == 'An error '\
+        'occurred while running a test task: Missing some important metadata'
+
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'
 

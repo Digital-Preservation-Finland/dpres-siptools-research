@@ -147,8 +147,14 @@ def report_task_failure(task, exception):
     if isinstance(exception, InvalidDatasetError):
         # Set preservation status for dataset in Metax
         metax_client = Metax(task.config)
-        metax_client.set_preservation_state(task.dataset_id, '7')
+        metax_client.set_preservation_state(
+            task.dataset_id, 7,
+            "%s: %s" % (task.failure_message, str(exception))
+        )
     elif isinstance(exception, InvalidMetadataError):
         # Set preservation status for dataset in Metax
         metax_client = Metax(task.config)
-        metax_client.set_preservation_state(task.dataset_id, '7')
+        metax_client.set_preservation_state(
+            task.dataset_id, 7,
+            "%s: %s" % (task.failure_message, str(exception))
+        )
