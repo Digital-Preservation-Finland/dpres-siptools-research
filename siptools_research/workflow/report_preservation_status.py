@@ -4,8 +4,8 @@ service and updates preservation status to Metax."""
 import os
 from luigi import LocalTarget
 from siptools_research.luigi.task import WorkflowTask
-from siptools_research.luigi.task import InvalidDatasetError
 from siptools_research.workflow.validate_sip import ValidateSIP
+from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.utils import metax
 from siptools_research.utils import contextmanager
 
@@ -17,13 +17,16 @@ class ReportPreservationStatus(WorkflowTask):
     failure_message = "Dataset was not accepted to preservation"
 
     def requires(self):
-        """Requires SIP validation in digital preservation service to be
-        finished
+        """Requires SIP to be sent to digital preservation service and the
+        validation to be finished
 
-        :returns: ValidateSIP task"""
-        return ValidateSIP(workspace=self.workspace,
-                           dataset_id=self.dataset_id,
-                           config=self.config)
+        :returns: list of required tasks"""
+        return [ValidateSIP(workspace=self.workspace,
+                            dataset_id=self.dataset_id,
+                            config=self.config),
+                SendSIPToDP(workspace=self.workspace,
+                            dataset_id=self.dataset_id,
+                            config=self.config)]
 
     def output(self):
         """Outputs log to ``logs/report-preservation-status.log``
@@ -47,7 +50,7 @@ class ReportPreservationStatus(WorkflowTask):
         with self.output().open('w') as log:
             with contextmanager.redirect_stdout(log):
                 # List of all matching paths ValidateSIP found
-                ingest_report_paths = self.input().existing_paths()
+                ingest_report_paths = self.input()[0].existing_paths()
 
                 # Only one ingest report should be found
                 assert len(ingest_report_paths) == 1
