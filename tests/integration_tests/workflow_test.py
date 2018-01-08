@@ -17,6 +17,9 @@ def run_luigi_task(module, task, workspace):
              '--workspace', workspace,
              '--dataset-id', 'workflow_test_dataset_1',
              '--config', 'tests/data/siptools_research.conf',
+             '--worker-keep-alive',
+             '--worker-retry-external-tasks',
+             '--scheduler-retry-delay', '20',
              '--local-scheduler',
              '--no-lock')
         )
