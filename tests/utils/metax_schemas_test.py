@@ -9,12 +9,15 @@ def test_validate_valid_dataset_metadata():
     """Test validation of valid dataset metadata"""
     valid_dataset_metadata = \
         {
+            "contract":{
+                "id":1
+            },
             "research_dataset": {
                 "files": [
                     {
                         "title": "File 1",
                         "identifier": "pid1",
-                        "type": {
+                        "use_category": {
                             "pref_label": {
                                 "en": "label1"
                             }
@@ -23,7 +26,7 @@ def test_validate_valid_dataset_metadata():
                     {
                         "title": "File 2",
                         "identifier": "pid2",
-                        "type": {
+                        "use_category": {
                             "pref_label": {
                                 "en": "label1"
                             }
@@ -74,6 +77,10 @@ def test_validate_valid_file_metadata():
             "checksum": {
                 "algorithm": "sha2",
                 "value": "habeebit"
+            },
+            "file_path": "path/to/file",
+            "parent_directory": {
+                "identifier": "pid:urn:dir:1",
             },
             "file_format": "html/text",
             "file_characteristics": {
