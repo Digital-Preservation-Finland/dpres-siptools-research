@@ -9,23 +9,6 @@ def timestamp():
     return datetime.datetime.utcnow().isoformat()
 
 
-def set_status(document_id, status):
-    """Add information of workflow task to mongodb.
-
-    :document_id: Mongo document id
-    :taskname: Status string
-    """
-    mongo_client = pymongo.MongoClient(host=HOST)
-    mongo_collection = mongo_client[DB][COLLECTION]
-
-    mongo_collection.update_one(
-        {'_id': document_id},
-        {'$set':{'status': status}},
-        upsert=True
-    )
-
-
-    
 class Database(object):
     """Workflow status database"""
 
