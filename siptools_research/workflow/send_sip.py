@@ -1,15 +1,17 @@
 """Luigi task that sends compressed SIP to DP service."""
 
 import os
-import subprocess
+import paramiko
 import luigi
 from siptools_research.config import Configuration
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.compress import CompressSIP
 from siptools_research.utils.contextmanager import redirect_stdout
 
+
 class SendSIPToDP(WorkflowTask):
-    """Send SIP to DP."""
+    """Copy compressed SIP to ~/transfer directory in digital preservation
+    server using SFTP."""
     success_message = "SIP was sent to digital preservation"
     failure_message = "Sending SIP to digital preservation failed"
 
@@ -37,42 +39,21 @@ class SendSIPToDP(WorkflowTask):
         :returns: None
         """
 
-        sip_name = os.path.join(self.sip_creation_path,
-                                (os.path.basename(self.workspace) + '.tar'))
-
         with self.output().open('w') as log:
             with redirect_stdout(log):
-                (outcome, err) = send_to_dp(sip_name, self.config)
-                if not outcome == 'success':
-                    raise Exception(err)
+                # Read host/user/ssh_key_path from onfiguration file
+                conf = Configuration(self.config)
 
+                # Init SFTP connection
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(conf.get('dp_host'),
+                            username=conf.get('dp_user'),
+                            key_filename=conf.get('dp_ssh_key'))
+                sftp = ssh.open_sftp()
 
-def send_to_dp(sip, config_file):
-    """Sends SIP to DP service using sftp.
-
-    returns: subprocess outcome, err
-    """
-    print "send-to-dp"
-    conf = Configuration(config_file)
-    identity = conf.get('dp_ssh_key')
-    host = conf.get('dp_host')
-    username = conf.get('dp_user')
-
-    connection = '%s@%s:transfer' % (username, host)
-    identityfile = '-oIdentityFile=%s' % identity
-    outcome = 'failure'
-
-    command = 'put %s' % sip
-    cmd = 'sftp %s %s' % (identityfile, connection)
-
-    ssh = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE, shell=True)
-    out, err = ssh.communicate(command)
-    returncode = ssh.returncode
-
-    if returncode == 0:
-        print 'Transfer completed successfully.'
-        outcome = 'success'
-        print "return 0"
-
-    return outcome, err
+                # Copy tar to remote host
+                tar_file_name = os.path.basename(self.workspace) + '.tar'
+                sftp.put(os.path.join(self.workspace, tar_file_name),
+                         '/home/tpas/transfer/' + tar_file_name,
+                         confirm=False)
