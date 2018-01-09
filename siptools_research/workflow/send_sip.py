@@ -45,15 +45,15 @@ class SendSIPToDP(WorkflowTask):
                 conf = Configuration(self.config)
 
                 # Init SFTP connection
-                ssh = paramiko.SSHClient()
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(conf.get('dp_host'),
-                            username=conf.get('dp_user'),
-                            key_filename=conf.get('dp_ssh_key'))
-                sftp = ssh.open_sftp()
+                with paramiko.SSHClient() as ssh:
+                    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    ssh.connect(conf.get('dp_host'),
+                                username=conf.get('dp_user'),
+                                key_filename=conf.get('dp_ssh_key'))
 
-                # Copy tar to remote host
-                tar_file_name = os.path.basename(self.workspace) + '.tar'
-                sftp.put(os.path.join(self.workspace, tar_file_name),
-                         '/home/tpas/transfer/' + tar_file_name,
-                         confirm=False)
+                    with ssh.open_sftp() as sftp:
+                        # Copy tar to remote host
+                        tar_file = os.path.basename(self.workspace) + '.tar'
+                        sftp.put(os.path.join(self.workspace, tar_file),
+                                 '/home/tpas/transfer/' + tar_file,
+                                 confirm=False)
