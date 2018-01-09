@@ -1,3 +1,4 @@
 *.pyc
 rpmbuild
+junit.xml
 .cache
