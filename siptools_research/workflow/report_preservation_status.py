@@ -14,6 +14,9 @@ class ReportPreservationStatus(WorkflowTask):
     """A luigi task that copies and reads the ingest report from preservation
     service. The preservation status is updated to Metax."""
 
+    # If this task fails, it almost always means that SIP was rejected, so this
+    # task should not be retried if it fails.
+    retry_count = 1
     success_message = "Dataset was accepted to preservation"
     failure_message = "Dataset was not accepted to preservation"
 
