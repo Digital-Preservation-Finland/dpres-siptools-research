@@ -10,7 +10,7 @@ def test_reportpreservationstatus(testpath, testmongoclient, testmetax):
     """Creates new directory to "accepted" directory in digital preservation
     server, runs ReportPreservationStatus task, and tests that task is complete
     after it has been run. Fake Metax server is used, so it can not be tested
-    if preservation status really is updtated in Metax."""
+    if preservation status really is updated in Metax."""
 
     workspace = testpath
 
@@ -29,8 +29,8 @@ def test_reportpreservationstatus(testpath, testmongoclient, testmetax):
         # server over SSH, so that the ReportPreservationStatus thinks that
         # validation has completed.
         datedir = time.strftime("%Y-%m-%d")
-        workspace_name = os.path.basename(workspace)
-        ssh.exec_command("mkdir -p accepted/%s/%s" % (datedir, workspace_name))
+        tar_name = os.path.basename(workspace) + '.tar'
+        ssh.exec_command("mkdir -p accepted/%s/%s" % (datedir, tar_name))
 
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(

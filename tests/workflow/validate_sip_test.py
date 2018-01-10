@@ -30,8 +30,8 @@ def test_validatesip_accepted(testpath):
 
     # Create new directory to digital preservation server
     datedir = time.strftime("%Y-%m-%d")
-    workspace_name = os.path.basename(workspace)
-    create_remote_dir("accepted/%s/%s" % (datedir, workspace_name))
+    tar_name = os.path.basename(workspace) + '.tar'
+    create_remote_dir("accepted/%s/%s" % (datedir, tar_name))
 
     # Check that task is completed after new directory is created
     assert task.complete()
@@ -50,8 +50,8 @@ def test_validatesip_rejected(testpath):
 
     # Create new directory to digital preservation server
     datedir = time.strftime("%Y-%m-%d")
-    workspace_name = os.path.basename(workspace)
-    create_remote_dir("rejected/%s/%s" % (datedir, workspace_name))
+    tar_name = os.path.basename(workspace) + '.tar'
+    create_remote_dir("rejected/%s/%s" % (datedir, tar_name))
 
     # Check that task is completed after new directory is created
     assert task.complete()

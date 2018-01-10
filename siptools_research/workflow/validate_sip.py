@@ -32,8 +32,8 @@ class ValidateSIP(WorkflowExternalTask):
         # target, the target does not exist.
         conf = Configuration(self.config)
         date = time.strftime("%Y-%m-%d")
-        path = ['accepted/%s/%s' % (date, self.document_id),
-                'rejected/%s/%s' % (date, self.document_id)]
+        path = ['accepted/%s/%s.tar' % (date, self.document_id),
+                'rejected/%s/%s.tar' % (date, self.document_id)]
         return RemoteAnyTarget(path, conf.get('dp_host'),
                                username=conf.get('dp_user'),
                                key_file=conf.get('dp_ssh_key'))
