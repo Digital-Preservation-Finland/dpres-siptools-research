@@ -36,7 +36,8 @@ class CreateDescriptiveMetadata(WorkflowTask):
         return LocalTarget(os.path.join(self.sip_creation_path, 'dmdsec.xml'))
 
     def run(self):
-        """Creates a METS dmdSec file from existing datacite.xml file.
+        """Copies datacite.xml metadatafile from Metax. Creates dmdSec XML from
+        datacite.xml using siptools import_description script.
 
         :returns: None
         """
@@ -49,7 +50,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
                 datacite = Metax(self.config).get_datacite(self.dataset_id)
 
                 # Write datacite.xml to file
-                datacite_path = os.path.join(self.sip_creation_path,
+                datacite_path = os.path.join(self.workspace,
                                              'datacite.xml')
                 datacite.write(datacite_path)
 

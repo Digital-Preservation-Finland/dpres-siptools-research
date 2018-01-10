@@ -35,7 +35,10 @@ def test_createdescriptivemetadata(testpath, testmongoclient, testmetax):
     task.run()
     assert task.complete()
 
-    # Check that XML is created
+    # datacite.xml should be in workspace directory
+    assert os.path.isfile(os.path.join(workspace, 'datacite.xml'))
+
+    # Check that XML is created in sip creation directory
     assert os.path.isfile(os.path.join(workspace,
                                        'sip-in-progress',
                                        'dmdsec.xml'))
