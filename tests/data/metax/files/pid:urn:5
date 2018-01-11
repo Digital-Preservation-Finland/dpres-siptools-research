@@ -2,7 +2,7 @@
   "identifier": "pid:urn:5",
   "file_name": "file_name_5",
   "file_format": "html/text",
-  "file_path": "/project_x/some/path/",
+  "file_path": "/project_x/some/path/file_name_5",
   "checksum":
     {
       "algorithm": "SHA-1",

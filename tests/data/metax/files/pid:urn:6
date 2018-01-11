@@ -3,7 +3,7 @@
   "download_url": "http://project_x.some.url.csc.fi/6",
   "file_format": "application/xml",
   "file_name": "file_name_6",
-  "file_path": "/project_x/some/path/",
+  "file_path": "/project_x/some/path/file_name_6",
   "identifier": "pid:urn:6",
   "checksum":
   {

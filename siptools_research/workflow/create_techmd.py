@@ -105,8 +105,8 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
 
     # create ADDML if formatname = 'text/csv
     if formatname == 'text/csv':
-        csv_file_path = os.path.join (file_path,
-                file_name).strip('/')
+        #csv_file_path = os.path.join (file_path,
+        #        file_name).strip('/')
 
         # hardcoded. Not in METAX yet
         csv_delimiter = ";"
@@ -117,16 +117,15 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         # Metadata type and version
         mdtype = 'ADDML'
         mdtypeversion = '8.3'
-        mddata = create_addml(os.path.join(workspace, 'sip-in-progress'), csv_file_path,
+        mddata = create_addml(os.path.join(workspace, 'sip-in-progress'), file_path,
                 csv_delimiter, csv_isheader, charset, csv_record_separator,
                 csv_quoting_char)
 
         create_techmdfile(os.path.join(workspace, 'sip-in-progress'), mdtype,
-                mdtypeversion, mddata, csv_file_path)
+                mdtypeversion, mddata, file_path)
 
     # Create PREMIS file metadata XML
-    create_premis_object(os.path.join(metax_filepath.strip('/'), file_name),
-                         formatname, creation_date,
+    create_premis_object(file_path, formatname, creation_date,
                          hashalgorithm, hashvalue, formatversion,
                          os.path.join(workspace, 'sip-in-progress'))
 

@@ -2,7 +2,7 @@
 	{
 		"identifier": "pid:urn:5",
 		"file_name": "file_name_5",
-		"file_path": "/project_x/some/path",
+		"file_path": "/project_x/some/path/file_name_5",
 		"file_format": "html/text",
 		"checksum":
 		{
@@ -18,7 +18,7 @@
 	{
 		"identifier": "pid:urn:6",
 		"file_name": "file_name_6",
-		"file_path": "/project_x/some/path",
+		"file_path": "/project_x/some/path/file_name_6",
 		"file_format": "application/xml",
 		"checksum":
 		{
@@ -34,7 +34,7 @@
 	{
 		"identifier": "pid:urn:999",
 		"file_name": "file.csv",
-		"file_path": "/project_x/some/path",
+		"file_path": "/project_x/some/path/file.csv",
 		"file_format": "text/csv",
 		"checksum":
 		{
