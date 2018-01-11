@@ -3,6 +3,7 @@ coverage
 pytest-cov
 git+https://source.csc.fi/scm/git/pas/dpres-signature
 git+https://source.csc.fi/scm/git/pas/dpres-siptools@develop#egg=siptools
+git+https://source.csc.fi/scm/git/pas/addml@develop
 lxml
 wand
 scandir
