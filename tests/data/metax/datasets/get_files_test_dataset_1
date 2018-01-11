@@ -17,6 +17,14 @@
 				}
 			}
 		}
+		{
+			"identifier": "pid:urn:999",
+			"use_category": {
+				"pref_label": {
+					"en": "Source material"
+				}
+			}
+		}
 		]
 	}
 }

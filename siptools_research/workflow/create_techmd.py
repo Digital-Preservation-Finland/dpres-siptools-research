@@ -13,6 +13,7 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.get_files import GetFiles
 import siptools.scripts.import_object
 from siptools.xml.mets import NAMESPACES
+from siptools_research.utils.create_addml import create_addml, create_techmdfile
 
 
 class CreateTechnicalMetadata(WorkflowTask):
@@ -82,6 +83,9 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
     formatname = metadata["file_format"]
+    file_name = metadata["file_name"]
+    file_path = metadata["file_path"].strip('/')
+    charset = metadata["file_characteristics"]["encoding"]
     # formatversion hardcoded. Not in METAX yet. could be retrieved from file:
     #    formatname = formatdesignation(filepath, datatype='name')
     #    formatversion = formatdesignation(filepath, datatype='version')
@@ -99,8 +103,30 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     else:
         hashalgorithm = 'ERROR'
 
+    # create ADDML if formatname = 'text/csv
+    if formatname == 'text/csv':
+        csv_file_path = os.path.join (file_path,
+                file_name).strip('/')
+
+        # hardcoded. Not in METAX yet
+        csv_delimiter = ";"
+        csv_record_separator = "CR+LF"
+        csv_quoting_char = '"'
+        csv_isheader = 'False'
+
+        # Metadata type and version
+        mdtype = 'ADDML'
+        mdtypeversion = '8.3'
+        mddata = create_addml(os.path.join(workspace, 'sip-in-progress'), csv_file_path,
+                csv_delimiter, csv_isheader, charset, csv_record_separator,
+                csv_quoting_char)
+
+        create_techmdfile(os.path.join(workspace, 'sip-in-progress'), mdtype,
+                mdtypeversion, mddata, csv_file_path)
+
     # Create PREMIS file metadata XML
-    create_premis_object(metax_filepath.strip('/'), formatname, creation_date,
+    create_premis_object(os.path.join(metax_filepath.strip('/'), file_name),
+                         formatname, creation_date,
                          hashalgorithm, hashvalue, formatversion,
                          os.path.join(workspace, 'sip-in-progress'))
 
@@ -113,7 +139,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         ns_key = next((key for key, url in NAMESPACES.items() if url\
                        == ns_url), None)
         target_filename = urllib.quote_plus(metax_filepath + ns_key\
-                                            + 'file.xml')
+                                            + '-othermd.xml')
         output_file = os.path.join(workspace, 'sip-in-progress',
                                    target_filename)
         with open(output_file, 'w+') as outfile:
@@ -123,7 +149,6 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
 
 def import_objects(dataset_id, workspace, config):
     """Main function of import_objects script """
-
     metax_client = Metax(config)
     file_metadata = metax_client.get_dataset_files(dataset_id)
     for file_ in file_metadata:

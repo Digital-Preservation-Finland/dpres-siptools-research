@@ -16,6 +16,14 @@
 					"en": "project_x_FROZEN/some/path/file_name_6"
 				}
 			}
+		},
+		{
+			"identifier": "pid:urn:999",
+			"type": {
+				"pref_label": {
+					"en": "project_x_FROZEN/some/path/file.csv"
+				}
+			}
 		}
 		]
 	}

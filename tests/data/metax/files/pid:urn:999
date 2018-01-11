@@ -1,8 +1,8 @@
 {
-  "identifier": "pid:urn:5",
-  "file_name": "file_name_5",
-  "file_format": "html/text",
-  "file_path": "/project_x/some/path/",
+  "identifier": "pid:urn:999",
+  "file_name": "file.csv",
+  "file_format": "text/csv",
+  "file_path": "/project_x/some/path",
   "checksum":
     {
       "algorithm": "SHA-1",

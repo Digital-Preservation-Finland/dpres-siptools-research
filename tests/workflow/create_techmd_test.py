@@ -42,11 +42,11 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_5metsfile.xml'
+        'ADDML-project_x%2Fsome%2Fpath%2Ffile.csv-othermd.xml'
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_6metsfile.xml'
+        'project_x%2Fsome%2Fpath%2Ffile.csv-techmd.xml'
     ))
 
     # Check that log is created in workspace/logs/
@@ -63,9 +63,8 @@ def test_import_object_ok(testpath, testmetax):
 
     # Create workspace with empty "logs" and "sip-in-progress' directories in
     # temporary directory
-    workspace = testpath
-    os.makedirs(os.path.join(workspace, 'logs'))
-    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(os.path.join(testpath, 'logs'))
+    sipdirectory = os.path.join(testpath, 'sip-in-progress')
     os.makedirs(sipdirectory)
 
     # Copy sample directory with some files to SIP
