@@ -70,10 +70,11 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     except KeyError:
         charset = None
     formatname = metadata["file_format"]
-    # formatversion hardcoded. Not in METAX yet. could be retrieved from file:
-    #    formatname = formatdesignation(filepath, datatype='name')
-    #    formatversion = formatdesignation(filepath, datatype='version')
-    formatversion = "1.0"
+    # TODO: formatversion hardcoded. Not in METAX yet. could be retrieved from
+    # file:
+    #   formatname = formatdesignation(filepath, datatype='name')
+    #   formatversion = formatdesignation(filepath, datatype='version')
+    formatversion = ""
 
     # Picks name of hashalgorithm from its length if it's not valid
     allowed_hashs = {128: 'MD5', 160: 'SHA-1', 224: 'SHA-224',
