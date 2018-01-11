@@ -89,6 +89,6 @@ def test_import_object_ok(testpath, testmetax):
     assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] \
         == 'premis:file'
     assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-        == 'html/text'
+        == 'html/text; charset=utf-8'
     assert root.xpath("//premis:formatVersion", namespaces=NAMESPACES)[0].text\
         == '1.0'

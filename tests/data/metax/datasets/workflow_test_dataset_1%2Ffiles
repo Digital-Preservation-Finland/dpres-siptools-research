@@ -1,6 +1,6 @@
 [
 	{
-		"file_format": "application/xml",
+		"file_format": "text/plain",
 		"identifier": "pid:urn:wf_test_1a",
 		"file_path": "path/to/file1",
 		"parent_directory": "path/to",
@@ -18,7 +18,7 @@
 		}
 	},
 	{
-		"file_format": "application/xml",
+		"file_format": "text/plain",
 		"identifier": "pid:urn:wf_test_1b",
 		"file_path": "path/to/file2",
 		"parent_directory": {

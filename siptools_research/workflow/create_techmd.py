@@ -56,23 +56,6 @@ class CreateTechnicalMetadata(WorkflowTask):
                 import_objects(self.dataset_id, self.workspace, self.config)
 
 
-# pylint: disable=too-many-arguments
-def create_premis_object(digital_object, formatname, creation_date,
-                         hashalgorithm, hashvalue, format_version, workspace):
-    """Calls import_object from siptools to create
-    PREMIS file metadata.
-    """
-    siptools.scripts.import_object.main([digital_object,
-                                         '--base_path', workspace,
-                                         '--workspace', workspace,
-                                         '--skip_inspection',
-                                         '--format_name', formatname,
-                                         '--digest_algorithm', hashalgorithm,
-                                         '--message_digest', hashvalue,
-                                         '--date_created', creation_date,
-                                         '--format_version', format_version])
-
-
 # pylint: disable=too-many-locals
 def create_objects(file_id=None, metax_filepath=None, workspace=None,
                    config=None):
@@ -82,6 +65,10 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
+    try:
+        charset = metadata["file_characteristics"]["encoding"]
+    except KeyError:
+        charset = None
     formatname = metadata["file_format"]
     # formatversion hardcoded. Not in METAX yet. could be retrieved from file:
     #    formatname = formatdesignation(filepath, datatype='name')
@@ -121,10 +108,23 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         create_techmdfile(os.path.join(workspace, 'sip-in-progress'), mdtype,
                 mdtypeversion, mddata, file_path)
 
+    # Build parameter list for import_objects script
+    import_object_parameters = [
+        metax_filepath.strip('/'),
+        '--base_path', os.path.join(workspace, 'sip-in-progress'),
+        '--workspace', os.path.join(workspace, 'sip-in-progress'),
+        '--skip_inspection',
+        '--format_name', formatname,
+        '--digest_algorithm', hashalgorithm,
+        '--message_digest', hashvalue,
+        '--date_created', creation_date,
+        '--format_version', formatversion
+    ]
+    if charset is not None:
+        import_object_parameters += ['--charset', charset]
+
     # Create PREMIS file metadata XML
-    create_premis_object(metax_filepath.strip('/'), formatname, creation_date,
-                         hashalgorithm, hashvalue, formatversion,
-                         os.path.join(workspace, 'sip-in-progress'))
+    siptools.scripts.import_object.main(import_object_parameters)
 
     # Copy additional metadata XML files from Metax if they exist
     xml = Metax(config).get_xml('files', file_id)
