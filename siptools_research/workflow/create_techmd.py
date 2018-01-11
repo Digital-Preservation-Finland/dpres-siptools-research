@@ -7,7 +7,7 @@ import lxml
 from luigi import LocalTarget
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
-from siptools_research.luigi.task import WorkflowTask
+from siptools_research.luigi.task import WorkflowTask, InvalidMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.get_files import GetFiles
@@ -65,10 +65,28 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
+
+    # Read character set if it defined for this file
     try:
         charset = metadata["file_characteristics"]["encoding"]
     except KeyError:
         charset = None
+
+    if charset is not None:
+        # TODO: Should we allow sligthly different spelling of charsets names
+        # than those allowed in PAS? What are allowed charset names in Metax?
+        allowed_charsets = ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']
+        # convert charset string to uppercase
+        charset = charset.upper()
+        if charset not in allowed_charsets:
+            raise InvalidMetadataError(
+                'Character set: %s is not allowed. \
+                The allowed character sets are %s and %s.',
+                charset,
+                ", ".join(allowed_charsets[:-1]),
+                allowed_charsets[-1]
+            )
+
     formatname = metadata["file_format"]
     # TODO: formatversion hardcoded. Not in METAX yet. could be retrieved from
     # file:
