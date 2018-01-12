@@ -59,5 +59,6 @@ def create_premis_event(dataset_id, workspace, config):
             event_type, event_datetime,
             "--event_detail", event_detail,
             "--event_outcome", 'success', # TODO: Hardcoded value
+            "--event_outcome_detail", 'blah blah', # TODO: Hardcoded value
             "--workspace", workspace
         ])
