@@ -83,9 +83,6 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
     formatname = metadata["file_format"]
-    file_name = metadata["file_name"]
-    file_path = metadata["file_path"].strip('/')
-    charset = metadata["file_characteristics"]["encoding"]
     # formatversion hardcoded. Not in METAX yet. could be retrieved from file:
     #    formatname = formatdesignation(filepath, datatype='name')
     #    formatversion = formatdesignation(filepath, datatype='version')
@@ -125,7 +122,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
                 mdtypeversion, mddata, file_path)
 
     # Create PREMIS file metadata XML
-    create_premis_object(file_path, formatname, creation_date,
+    create_premis_object(metax_filepath.strip('/'), formatname, creation_date,
                          hashalgorithm, hashvalue, formatversion,
                          os.path.join(workspace, 'sip-in-progress'))
 
