@@ -1,5 +1,0 @@
-<addml:addml xmlns:addml="http://www.arkivverket.no/standarder/addml">
-    <addml:dataset>
-        <addml:reference name="Sample"/>
-    </addml:dataset>
-</addml:addml>
