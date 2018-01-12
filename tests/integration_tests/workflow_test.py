@@ -44,7 +44,7 @@ def run_luigi_task(module, task, workspace):
         ('compress', 'CompressSIP'),
         ('send_sip', 'SendSIPToDP'),
         # These tests do not work yet:
-        # ('report_preservation_status', 'ReportPreservationStatus'),
+        ('report_preservation_status', 'ReportPreservationStatus'),
         # ('cleanup', 'CleanupWorkspace'),
     ]
 )
