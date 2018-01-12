@@ -120,12 +120,13 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         # Metadata type and version
         mdtype = 'ADDML'
         mdtypeversion = '8.3'
-        mddata = create_addml(os.path.join(workspace, 'sip-in-progress'), file_path,
-                csv_delimiter, csv_isheader, charset, csv_record_separator,
-                csv_quoting_char)
+        mddata = create_addml(os.path.join(workspace, 'sip-in-progress'),
+                              metax_filepath.strip('/'), csv_delimiter,
+                              csv_isheader, charset, csv_record_separator,
+                              csv_quoting_char)
 
         create_techmdfile(os.path.join(workspace, 'sip-in-progress'), mdtype,
-                mdtypeversion, mddata, file_path)
+                          mdtypeversion, mddata, metax_filepath.strip('/'))
 
     # Build parameter list for import_objects script
     import_object_parameters = [
