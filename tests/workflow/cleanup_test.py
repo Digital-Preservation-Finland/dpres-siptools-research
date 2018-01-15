@@ -1,8 +1,9 @@
 """Tests for ``siptools_research.workflow.cleanup`` module"""
 import os
+from siptools_research.utils.database import Database
 from siptools_research.workflow.cleanup import CleanupWorkspace
 
-def test_cleanupworkspace(testpath):
+def test_cleanupworkspace(testpath, testmongoclient):
     """Test that task.run() removes workspace."""
 
     # Create a workspace directory and some content into it
@@ -16,12 +17,25 @@ def test_cleanupworkspace(testpath):
                             dataset_id='1',
                             config='tests/data/siptools_research.conf')
 
-    # The workspace should exists before task hasbeen run
+    # The workspace should exists before task has been run
     assert not task.complete()
     assert os.path.exists(workspace)
 
+    # Task should not yet be complete, because ReportPreservationStatus task
+    # has not been run succesfully
     task.run()
-    assert task.complete()
+    assert not task.complete()
 
     # After running task the workspace directory should have disappeared
     assert not os.path.exists(workspace)
+
+    # Manipulate workflow database
+    Database('tests/data/siptools_research.conf').add_event(
+        os.path.basename(workspace),
+        'ReportPreservationStatus',
+        'success',
+        'Lets pretend that all other wf-tasks are completed'
+    )
+
+    # Now task should be complete
+    assert not task.complete()

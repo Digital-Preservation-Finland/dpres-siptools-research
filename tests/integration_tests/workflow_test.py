@@ -44,8 +44,7 @@ def run_luigi_task(module, task, workspace):
         ('compress', 'CompressSIP'),
         ('send_sip', 'SendSIPToDP'),
         ('report_preservation_status', 'ReportPreservationStatus'),
-        # These tests do not work yet:
-        # ('cleanup', 'CleanupWorkspace'),
+        ('cleanup', 'CleanupWorkspace'),
     ]
 )
 @pytest.mark.timeout(200)
@@ -56,7 +55,7 @@ def test_workflow(testpath, testmetax, testida, testmongoclient, module, task):
     # Set permissions of ssh key (required by SendSIPToDP task)
     os.chmod('tests/data/pas_ssh_key', 0600)
 
-    workspace = testpath
+    workspace = os.path.join(testpath, 'workspace_'+os.path.basename(testpath))
     run_luigi_task('siptools_research.workflow.' + module,
                    task,
                    workspace)

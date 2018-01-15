@@ -74,3 +74,12 @@ class Database(object):
             upsert=True
         )
 
+
+    def get_event_result(self, document_id, taskname):
+        """Read event result for a workflow.
+
+        :document_id: Mongo document id
+        :taskname: Name of task
+        """
+        document = self._collection.find({'_id': document_id})
+        return document['result']

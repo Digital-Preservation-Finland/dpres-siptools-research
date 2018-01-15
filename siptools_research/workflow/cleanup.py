@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from siptools_research.utils.database import Database
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.workflow.report_preservation_status\
     import ReportPreservationStatus
@@ -29,8 +30,23 @@ class CleanupWorkspace(WorkflowTask):
         shutil.rmtree(self.workspace)
 
     def complete(self):
-        """Task is complete when workspace does not exist.
+        """Task is complete when workspace does not exist, but
+        ReportPreservationStatus has finished according to workflow database.
 
-        :returns: True, if workspace does not exist, else False
+        :returns: True or False
         """
+
+        # Check if ReportPreservationStatus has finished
+        database = Database(self.config)
+        try:
+            result = database.get_event_result(self.document_id,
+                                               'ReportPreservationStatus')
+        except TypeError:
+            return False
+
+        if result != 'success':
+            return False
+
+
+        # Check if workspace exists
         return not os.path.exists(self.workspace)
