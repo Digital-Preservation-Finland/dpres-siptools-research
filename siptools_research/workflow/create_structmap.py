@@ -13,6 +13,7 @@ from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 from siptools_research.workflow.create_digiprov import \
     CreateProvenanceInformation
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
+from siptools.xml.mets import NAMESPACES
 
 
 class CreateStructMap(WorkflowTask):
@@ -76,15 +77,19 @@ class CreateStructMap(WorkflowTask):
                 # Get dmdsec id from physical_structmap
                 dmdsec_id = structmap.getroot()[0][0].attrib['DMDID']
 
+                # Get provenance id's
+                provenance_ids = self.get_provenance_ids()
+
                 # Init logical structmap
                 logical_structmap = \
                     mets.structmap(type_attr='Fairdata-logical')
 
                 # Create logical structmap
                 categories = self.find_file_categories()
-                wrapper_div = mets.div(type_attr='logical', dmdid=[dmdsec_id])
+                wrapper_div = mets.div(type_attr='logical', dmdid=[dmdsec_id],
+                        admid=provenance_ids)
                 for category in categories:
-                    div = mets.div(type_attr=category, dmdid=[dmdsec_id])
+                    div = mets.div(type_attr=category)
                     for filename in categories.get(category):
                         fileid = self.get_fileid(filename)
                         div.append(mets.fptr(fileid))
@@ -105,6 +110,23 @@ class CreateStructMap(WorkflowTask):
                 structmap.write(os.path.join(self.sip_creation_path,
                                              'structmap.xml'),
                                 encoding='UTF-8')
+
+
+    def get_provenance_ids (self):
+        metax_client = Metax(self.config)
+        metadata = metax_client.get_data('datasets',
+                self.dataset_id)
+        provenance_ids = []
+        for provenance in metadata["research_dataset"]["provenance"]:
+            event_type = provenance["type"]["pref_label"]["en"]
+            prov_file = '%s-event.xml' % event_type
+            prov_xml = ET.parse(os.path.join(self.sip_creation_path,
+                                                  prov_file))
+            root = prov_xml.getroot()
+            provenance_ids += root.xpath("//mets:digiprovMD/@ID",
+                    namespaces=NAMESPACES)
+        return provenance_ids
+
 
     def find_file_categories(self):
         """Creates logical structure map of dataset files. Returns dictionary

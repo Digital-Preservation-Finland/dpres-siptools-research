@@ -6,6 +6,7 @@ import distutils.dir_util
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools.scripts import import_object
 from siptools.scripts import import_description
+from siptools.scripts import premis_event
 
 def test_create_structmap_ok(testpath, testmongoclient, testmetax):
     """Test the workflow task CreateStructMap.
@@ -23,6 +24,17 @@ def test_create_structmap_ok(testpath, testmongoclient, testmetax):
 
     # Create dmdsec
     import_description.main([dmdpath, '--workspace', sip_creation_path])
+
+    #Create digiprov
+    event_type = 'creation'
+    event_datetime = '2014-12-31T08:19:58Z'
+    event_detail = 'Description of provenance'
+    premis_event.main([
+        event_type, event_datetime,
+        "--event_detail", event_detail,
+        "--event_outcome", 'success', # TODO: Hardcoded value
+        "--workspace", sip_creation_path
+    ])
 
     # Create tech metadata
     test_data_folder = './tests/data/structured'
