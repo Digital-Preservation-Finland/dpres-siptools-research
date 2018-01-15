@@ -2,8 +2,11 @@
 
 import os
 import luigi
+from siptools_research.config import Configuration
 from siptools_research.utils.database import Database
 from siptools_research.utils.metax import Metax
+from siptools_research.utils.metax import MetaxConnectionError
+from siptools_research.utils import mail
 
 
 class WorkflowTask(luigi.Task):
@@ -158,3 +161,7 @@ def report_task_failure(task, exception):
             task.dataset_id, 7,
             "%s: %s" % (task.failure_message, str(exception))
         )
+    elif isinstance(exception, MetaxConnectionError):
+        # send email to admin
+        conf = Configuration(task.config)
+        mail.send(conf.get('tpas_mail_sender'), conf.get('tpas_admin_email'), str(exception), str(exception))

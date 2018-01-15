@@ -18,7 +18,9 @@ DEFAULTS = {
     'dp_host': '86.50.168.218',
     'dp_user': 'tpas',
     'dp_ssh_key': '~/.ssh/id_rsa_tpas_pouta',
-    'sip_sign_key': '~/sip_sign_pas.pem'
+    'sip_sign_key': '~/sip_sign_pas.pem',
+    'tpas_admin_email': 'esa.bister@csc.fi',
+    'tpas_mail_sender': 'test.sender@tpas.fi'
 }
 
 class Configuration(object):

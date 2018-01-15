@@ -28,6 +28,9 @@ def print_output(dataset, output_type=None):
     else:
         print dataset
 
+class MetaxConnectionError(Exception):
+    def __init__(self):
+        super(MetaxConnectionError, self).__init__('No connection to Metax')
 
 class Metax(object):
     """Get metadata from metax as dict object."""
@@ -44,6 +47,12 @@ class Metax(object):
         self.baseurl = self.metax_url + '/rest/v1/'
         self.elasticsearch_url = self.metax_url + '/es/'
 
+    def __do_get_request(self, url):
+        response = requests.get(url)
+        if response.status_code == 503:
+            raise MetaxConnectionError
+        return response
+
     def get_data(self, entity_url, entity_id):
         """Get metadata of dataset, contract or file with id from Metax.
 
@@ -52,7 +61,7 @@ class Metax(object):
         :returns: dict"""
         url = self.baseurl + entity_url + '/' + entity_id
 
-        response = requests.get(url)
+        response = self.__do_get_request(url)
 
         if not response.status_code == 200:
             raise Exception("Could not find metadata.")
@@ -72,7 +81,7 @@ class Metax(object):
 
         # Get list of xml namespaces
         ns_key_url = self.baseurl + entity_url + '/' + entity_id + '/xml'
-        response = requests.get(ns_key_url)
+        response = self.__do_get_request(ns_key_url)
         if not response.status_code == 200:
             raise Exception("Could not retrieve list of additional metadata "\
                             "XML for dataset %s: %s" % (entity_id, ns_key_url))
@@ -82,7 +91,7 @@ class Metax(object):
         # add it to result dict
         for ns_key in ns_key_list:
             query = '?namespace=' + ns_key
-            response = requests.get(ns_key_url + query)
+            response = self.__do_get_request(ns_key_url + query)
             if not response.status_code == 200:
                 raise Exception("Could not retrieve additional metadata XML "\
                                 "for dataset %s: %s" % (entity_id,
@@ -99,7 +108,7 @@ class Metax(object):
         :returns: dict"""
         url = self.elasticsearch_url + "reference_data/use_category/_search?"\
                                        "pretty&size=100"
-        response = requests.get(url)
+        response = self.__do_get_request(url)
 
         if not response.status_code == 200:
             raise Exception("Could not find elastic search data.")
@@ -124,6 +133,8 @@ class Metax(object):
             json=data,
             auth=HTTPBasicAuth(self.username, self.password)
         )
+        if request.status_code == 503:
+            raise MetaxConnectionError
 
         # Raise exception if request fails
         assert request.status_code == 200
@@ -136,7 +147,7 @@ class Metax(object):
         """
         url = "%sdatasets/%s?dataset_format=datacite" % (self.baseurl,
                                                          dataset_id)
-        response = requests.get(url)
+        response = self.__do_get_request(url)
 
         if not response.status_code == 200:
             raise Exception("Could not find descriptive metadata.")
@@ -151,7 +162,7 @@ class Metax(object):
         :returns: dict"""
         url = self.baseurl + 'datasets/' + dataset_id + '/files'
 
-        response = requests.get(url)
+        response = self.__do_get_request(url)
 
         if not response.status_code == 200:
             raise Exception("Could not find dataset files metadata.")

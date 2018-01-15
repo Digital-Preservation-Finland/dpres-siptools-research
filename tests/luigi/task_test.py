@@ -7,10 +7,14 @@ import pytest
 import luigi.cmdline
 import pymongo
 import httpretty
+import mock
+from siptools_research.utils import mail
+
 from siptools_research.luigi.task import WorkflowTask
 from siptools_research.luigi.task import InvalidDatasetError
 from siptools_research.luigi.task import InvalidMetadataError
 from siptools_research.config import Configuration
+from siptools_research.utils.metax import MetaxConnectionError
 
 def run_luigi_task(task_name, workspace):
     """Run a luigi task (using some default parameters) like it would be run
@@ -65,6 +69,12 @@ class InvalidMetadataTask(FailingTestTask):
 
     def run(self):
         raise InvalidMetadataError('Missing some important metadata')
+
+class MetaxConnectionErrorTask(FailingTestTask):
+    """Test class that raises InvalidDatasetError"""
+
+    def run(self):
+        raise MetaxConnectionError
 
 
 # pylint: disable=unused-argument
@@ -160,6 +170,21 @@ def test_invalidmetadataerror(testpath, testmongoclient, testmetax):
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'
 
+
+def test_metaxconnectionerror(testpath, testmongoclient, testmetax):
+    """Test that event handler of WorkflowTask correctly deals with
+    MetaxConnectionError risen in a task. Event handler should send
+    an email to configured address.
+    """
+
+    with mock.patch('siptools_research.luigi.task.mail.send') as mock_sendmail:
+        # Run task like it would be run from command line
+        run_luigi_task('MetaxConnectionErrorTask', testpath)
+        mock_sendmail.assert_called_once_with('test.sender@tpas.fi', \
+            'esa.bister@csc.fi', str(MetaxConnectionError()), \
+            str(MetaxConnectionError()))
+        # Check the body of last HTTP request
+        assert httpretty.last_request().method == 'PATCH'
 
 #TODO: Test for WorkflowWrapperTask
 
