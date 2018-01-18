@@ -4,6 +4,7 @@
 import os
 import lxml.etree as ET
 import mets
+import xml_helpers.utils as h
 import luigi
 from siptools.scripts import compile_structmap
 from siptools_research.utils.contextmanager import redirect_stdout
@@ -63,16 +64,12 @@ class CreateStructMap(WorkflowTask):
 
                 # Create physical structmap using siptools script
                 compile_structmap.main(['--workspace',
-                                        self.sip_creation_path])
-
+                                        self.sip_creation_path,
+                                       '--type_attr', 'Fairdata-physical'])
                 # Read the generated physical structmap from file
                 # pylint: disable=no-member
                 structmap = ET.parse(os.path.join(self.sip_creation_path,
                                                   'structmap.xml'))
-
-                # Add 'TYPE' attribute to physical structmap
-                structmap.getroot()[0].attrib['TYPE'] \
-                    = 'Fairdata-physical'
 
                 # Get dmdsec id from physical_structmap
                 dmdsec_id = structmap.getroot()[0][0].attrib['DMDID']
@@ -83,6 +80,8 @@ class CreateStructMap(WorkflowTask):
                 # Init logical structmap
                 logical_structmap = \
                     mets.structmap(type_attr='Fairdata-logical')
+
+                mets_structmap = mets.mets(child_elements=[logical_structmap])
 
                 # Create logical structmap
                 categories = self.find_file_categories()
@@ -96,20 +95,8 @@ class CreateStructMap(WorkflowTask):
                     wrapper_div.append(div)
                 logical_structmap.append(wrapper_div)
 
-                # Logical structmap element must be reparsed by lxml.etree to
-                # make "pretty_printing" work
-                logical_structmap = ET.fromstring(
-                    ET.tostring(logical_structmap, pretty_print=True)
-                )
-
-                # Append the logical structmap into the element tree after
-                # physical struct map
-                structmap.getroot().append(logical_structmap)
-
-                # Write new structmap to file
-                structmap.write(os.path.join(self.sip_creation_path,
-                                             'structmap.xml'),
-                                encoding='UTF-8')
+                with open(os.path.join(self.sip_creation_path, 'logical_structmap.xml'), 'w+') as outfile:
+                    outfile.write(h.serialize(mets_structmap))
 
 
     def get_provenance_ids (self):

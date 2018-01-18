@@ -49,9 +49,10 @@ def test_create_structmap_ok(testpath, testmongoclient, testmetax):
     assert task.complete()
     assert os.path.isfile(os.path.join(sip_creation_path, 'filesec.xml'))
     assert os.path.isfile(os.path.join(sip_creation_path, 'structmap.xml'))
+    assert os.path.isfile(os.path.join(sip_creation_path, 'logical_structmap.xml'))
 
     with open(os.path.join(sip_creation_path,
-                           'structmap.xml'))\
+                           'logical_structmap.xml'))\
              as open_file:
         file_content = open_file.read()
         assert 'Fairdata-logical' in file_content
