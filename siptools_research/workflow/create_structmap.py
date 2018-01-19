@@ -166,8 +166,11 @@ class CreateStructMap(WorkflowTask):
         for file_ in files:
             for file__ in file_:
                 if str(file__.get('{http://www.w3.org/1999/xlink}href'))[7:] \
-                        == filename:
+                        == filename.strip('/'):
                     return file_.get('ID')
+
+        raise Exception("File ID for file %s not found from fileSec: %s" % \
+                        (filename, filesec_xml))
 
 
 def find_file_use_category(identifier, dataset_metadata):
