@@ -7,6 +7,7 @@ import pytest
 import luigi.cmdline
 import pymongo
 import requests
+import requests_mock
 from siptools_research.config import Configuration
 
 
@@ -22,7 +23,7 @@ def run_luigi_task(module, task, workspace, dataset_id):
         )
 
 
-def test_workflow(testpath, testmongoclient, testida):
+def test_workflow(testpath, testmongoclient):
     """Add test dataset metadata and associated file metadata to Metax. Run
     partial workflow by calling CreateMets task with luigi.
     """
@@ -38,12 +39,20 @@ def test_workflow(testpath, testmongoclient, testida):
     dataset_metadata = 'tests/data/integration_tests/metax_dataset.json'
     dataset_id = post_metax_dataset(dataset_metadata, [file1_id, file2_id])
 
-    # Run partial workflow for dataset just added to Metax
-    workspace = os.path.join(testpath, 'workspace_'+os.path.basename(testpath))
-    run_luigi_task('siptools_research.workflow.create_mets',
-                   'CreateMets',
-                   workspace,
-                   dataset_id)
+    with requests_mock.Mocker(real_http=True) as ida_mock:
+        # Mock Ida
+        ida_mock.get("https://86.50.169.61:4433/files/%s/download" % file1_id,
+                     text='adsf')
+        ida_mock.get("https://86.50.169.61:4433/files/%s/download" % file2_id,
+                     text='adsf')
+
+        # Run partial workflow for dataset just added to Metax
+        workspace = os.path.join(testpath,
+                                 'workspace_'+os.path.basename(testpath))
+        run_luigi_task('siptools_research.workflow.create_mets',
+                       'CreateMets',
+                       workspace,
+                       str(dataset_id))
 
     # Init pymongo client
     conf = Configuration('tests/data/siptools_research.conf')
