@@ -8,6 +8,7 @@ import luigi.cmdline
 import pymongo
 import requests
 import requests_mock
+import getpass
 from siptools_research.config import Configuration
 
 
@@ -73,7 +74,13 @@ def post_metax_file(identifier, metadatafile):
     :returns: None
     """
     # Read Metax configuration
-    conf = Configuration('siptools_research.conf')
+    conf = Configuration('tests/data/siptools_research.conf')
+    # Ask Metax password from user
+    # pylint: disable=protected-access
+    conf._parser.set(
+        'siptools_research', 'metax_password',
+        getpass.getpass(prompt='Metax password for user \'tpas\':')
+    )
 
     # Replace file identifier in metadata with identifier given as parameter
     with open(metadatafile) as open_file:
@@ -97,7 +104,13 @@ def post_metax_dataset(metadatafile, file_ids):
     :returns: Id of added dataset
     """
     # Read Metax configuration
-    conf = Configuration('siptools_research.conf')
+    conf = Configuration('tests/data/siptools_research.conf')
+    # Ask Metax password from user
+    # pylint: disable=protected-access
+    conf._parser.set(
+        'siptools_research', 'metax_password',
+        getpass.getpass(prompt='Metax password for user \'tpas\':')
+    )
 
     # Edit metadata
     with open(metadatafile) as open_file:
