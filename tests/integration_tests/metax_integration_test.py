@@ -1,14 +1,16 @@
-"""Test that the workflow can produce SIP using metax test server"""
+"""Test that the workflow can produce SIP using Metax test server. This test
+requires writing dataset and file metadata to Metax. Therefore the password for
+Metax user 'tpas' is prompted during the test."""
 
 import os
 import json
+import getpass
 import random
 import pytest
 import luigi.cmdline
 import pymongo
 import requests
 import requests_mock
-import getpass
 from siptools_research.config import Configuration
 
 
@@ -28,17 +30,29 @@ def test_workflow(testpath, testmongoclient):
     """Add test dataset metadata and associated file metadata to Metax. Run
     partial workflow by calling CreateMets task with luigi.
     """
+    # Read configuration file
+    conf = Configuration('tests/data/siptools_research.conf')
+    # Override Metax password in configuration file with real password from
+    # the user
+    # pylint: disable=protected-access
+    conf._parser.set(
+        'siptools_research', 'metax_password',
+        getpass.getpass(prompt='Metax password for user \'tpas\':')
+    )
+
     # Post files to Metax
     file1_metadata = 'tests/data/integration_tests/metax_file_1.json'
     file2_metadata = 'tests/data/integration_tests/metax_file_2.json'
     file1_id = 'tpas_test_'+ str(random.randint(1, 1000000))
     file2_id = 'tpas_test_'+ str(random.randint(1, 1000000))
-    post_metax_file(file1_id, file1_metadata)
-    post_metax_file(file2_id, file2_metadata)
+    post_metax_file(file1_id, file1_metadata, conf)
+    post_metax_file(file2_id, file2_metadata, conf)
 
     # Post dataset to Metax
     dataset_metadata = 'tests/data/integration_tests/metax_dataset.json'
-    dataset_id = post_metax_dataset(dataset_metadata, [file1_id, file2_id])
+    dataset_id = post_metax_dataset(dataset_metadata,
+                                    [file1_id, file2_id],
+                                    conf)
 
     with requests_mock.Mocker(real_http=True) as ida_mock:
         # Mock Ida
@@ -66,22 +80,13 @@ def test_workflow(testpath, testmongoclient):
     assert document['workflow_tasks']['CreateMets']['result'] == 'success'
 
 
-def post_metax_file(identifier, metadatafile):
+def post_metax_file(identifier, metadatafile, conf):
     """Post file metadata to Metax using HTTP POST method.
 
     :identifier: unique identifier for file
     :metadatafile: JSON file from which the metadata is read
     :returns: None
     """
-    # Read Metax configuration
-    conf = Configuration('tests/data/siptools_research.conf')
-    # Ask Metax password from user
-    # pylint: disable=protected-access
-    conf._parser.set(
-        'siptools_research', 'metax_password',
-        getpass.getpass(prompt='Metax password for user \'tpas\':')
-    )
-
     # Replace file identifier in metadata with identifier given as parameter
     with open(metadatafile) as open_file:
         data = json.load(open_file)
@@ -96,22 +101,13 @@ def post_metax_file(identifier, metadatafile):
     assert response.status_code == 201
 
 
-def post_metax_dataset(metadatafile, file_ids):
+def post_metax_dataset(metadatafile, file_ids, conf):
     """Post dataset metadata to Metax using HTTP POST method.
 
     :identifier: unique identifier for file
     :metadatafile: JSON file from which the metadata is read
     :returns: Id of added dataset
     """
-    # Read Metax configuration
-    conf = Configuration('tests/data/siptools_research.conf')
-    # Ask Metax password from user
-    # pylint: disable=protected-access
-    conf._parser.set(
-        'siptools_research', 'metax_password',
-        getpass.getpass(prompt='Metax password for user \'tpas\':')
-    )
-
     # Edit metadata
     with open(metadatafile) as open_file:
         data = json.load(open_file)
