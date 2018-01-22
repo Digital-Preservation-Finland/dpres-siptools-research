@@ -3,6 +3,8 @@
 import json
 from siptools_research.utils.metax import Metax
 import httpretty
+import mock
+from siptools_research.utils.metax import MetaxConnectionError
 
 def test_get_dataset(testmetax):
     """Test get_dataset function. Reads sample dataset JSON from testmetax and
@@ -84,5 +86,102 @@ def test_set_preservation_state(testmetax):
 
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'
+
+
+def mocked_requests_get(*args, **kwargs):
+    class MockResponse:
+        def __init__(self, status_code):
+            self.status_code = status_code
+
+    return MockResponse(503)
+
+
+def test_get_data_returns_correct_error_when_http_503_error():
+    """Test that get_data function throws a MetaxConnectionError exception
+    when requests.get() returns http 503 error
+    """
+    with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
+        # Run task like it would be run from command line
+        exceptionThrown = False
+        client = Metax('tests/data/siptools_research.conf')
+        try:
+            client.get_data('who', 'cares')
+        except MetaxConnectionError:
+            exceptionThrown = True
+        assert exceptionThrown is True
+
+
+def test_get_xml_returns_correct_error_when_http_503_error():
+    """Test that get_xml function throws a MetaxConnectionError exception
+    when requests.get() returns http 503 error
+    """
+    with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
+        exceptionThrown = False
+        client = Metax('tests/data/siptools_research.conf')
+        try:
+            client.get_xml('who', 'cares')
+        except MetaxConnectionError:
+            exceptionThrown = True
+        assert exceptionThrown is True
+
+
+def test_set_preservation_state_returns_correct_error_when_http_503_error():
+    """Test that set_preservation_state function throws a MetaxConnectionError exception
+    when requests.get() returns http 503 error
+    """
+    with mock.patch('siptools_research.utils.metax.requests.patch', side_effect=mocked_requests_get):
+        exceptionThrown = False
+        client = Metax('tests/data/siptools_research.conf')
+        try:
+            client.set_preservation_state('who', '0', 'cares')
+        except MetaxConnectionError:
+            exceptionThrown = True
+        assert exceptionThrown is True
+
+
+def test_get_elasticsearchdata_returns_correct_error_when_http_503_error():
+    """Test that get_elasticsearchdata function throws a MetaxConnectionError exception
+    when requests.get() returns http 503 error
+    """
+    with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
+        # Run task like it would be run from command line
+        exceptionThrown=False
+        client = Metax('tests/data/siptools_research.conf')
+        try:
+            client.get_elasticsearchdata()
+        except MetaxConnectionError:
+            exceptionThrown = True
+        assert exceptionThrown is True
+
+
+def test_get_datacite_returns_correct_error_when_http_503_error():
+    """Test that get_datacite function throws a MetaxConnectionError exception
+    when requests.get() returns http 503 error
+    """
+    with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
+        # Run task like it would be run from command line
+        exceptionThrown=False
+        client = Metax('tests/data/siptools_research.conf')
+        try:
+            client.get_datacite("x")
+        except MetaxConnectionError:
+            exceptionThrown = True
+        assert exceptionThrown is True
+
+
+def test_get_dataset_files_returns_correct_error_when_http_503_error():
+    """Test that get_dataset_files function throws a MetaxConnectionError exception
+    when requests.get() returns http 503 error
+    """
+    with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
+        # Run task like it would be run from command line
+        exceptionThrown=False
+        client = Metax('tests/data/siptools_research.conf')
+        try:
+            client.get_dataset_files("x")
+        except MetaxConnectionError:
+            exceptionThrown = True
+        assert exceptionThrown is True
+
 
 #TODO: test for retrieving other entities: contracts, files...
