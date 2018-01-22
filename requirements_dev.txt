@@ -15,6 +15,7 @@ mimeparse
 Sphinx
 paramiko
 jsonschema
+requests_mock
 
 # siptools requirements
 git+https://source.csc.fi/scm/git/pas/xml-helpers@develop#egg=xml_helpers
