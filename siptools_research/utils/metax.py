@@ -65,7 +65,9 @@ class Metax(object):
 
         if not response.status_code == 200:
             raise Exception("Could not find metadata.")
-
+        print '================================================================'
+        print response.json()
+        print '================================================================'
         return response.json()
 
     def get_xml(self, entity_url, entity_id):

@@ -1,0 +1,22 @@
+{
+    "research_dataset": {
+        "rights_holder": {
+            "name": {
+                "und": "Helsingin yliopisto"
+            },
+            "@type": "Organization",
+            "email": "right.holder@company.com",
+            "telephone": [
+                "+358501231235"
+            ],
+            "identifier": "http://purl.org/att/es/organization_data/organization/organization_1901",
+            "is_part_of": {
+                "name": {
+                    "und": "Aalto yliopisto"
+                },
+                "@type": "Organization",
+                "identifier": "http://purl.org/att/es/organization_data/organization/organization_10076"
+            }
+        }
+    }
+}

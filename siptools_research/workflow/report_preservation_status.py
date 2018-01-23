@@ -9,6 +9,8 @@ from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.utils import metax
 from siptools_research.utils import contextmanager
 from siptools_research.luigi.task import InvalidDatasetError
+from siptools_research.config import Configuration
+from siptools_research.utils import mail
 
 class ReportPreservationStatus(WorkflowTask):
     """A luigi task that copies and reads the ingest report from preservation
@@ -69,6 +71,16 @@ class ReportPreservationStatus(WorkflowTask):
                         self.dataset_id, '6', 'Accepted to preservation'
                     )
                 elif directory == 'rejected':
+                    print '\n*********************************************'
+                    dataset_metadata = metax_client.get_data('datasets',\
+                                                             self.dataset_id)
+                    print '\n*********************************************'
+                    print dataset_metadata
+                    email = dataset_metadata['research_dataset']\
+                                            ['rights_holder']['email']
+                    conf = Configuration(self.config)
+                    mail.send(conf.get('tpas_mail_sender'), email,\
+                              'SIP was rejected', 'SIP was rejected')
                     # Raise exception that informs event handler to set Metax
                     # preservation state of this dataset to 7 ("Rejected
                     # long-term preservation")
