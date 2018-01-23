@@ -47,6 +47,10 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
+        'project_x%2Fsome%2Fpath%2Fvalid_tiff.tiffmix-othermd.xml'
+    ))
+    assert os.path.isfile(os.path.join(
+        sipdirectory,
         'project_x%2Fsome%2Fpath%2Ffile.csv-techmd.xml'
     ))
 

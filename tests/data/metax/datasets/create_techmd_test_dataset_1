@@ -24,6 +24,14 @@
 					"en": "project_x_FROZEN/some/path/file.csv"
 				}
 			}
+		},
+		{
+			"identifier": "pid:urn:888",
+			"type": {
+				"pref_label": {
+					"en": "project_x_FROZEN/some/path/valid_tiff.tiff"
+				}
+			}
 		}
 		]
 	}
