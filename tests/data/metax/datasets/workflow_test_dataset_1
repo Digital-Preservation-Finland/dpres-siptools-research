@@ -35,6 +35,14 @@
 				"en": "label2"
 			}
 		}
+            },
+            {
+		"identifier": "pid:urn:889",
+	    	"use_category": {
+			"pref_label": {
+				"en": "label3"
+			}
+		}
             }
         ]
     }

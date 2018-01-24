@@ -1,13 +1,13 @@
 {
-  "id": 888,
-  "download_url": "http://project_x.some.url.csc.fi/888",
+  "id": 889,
+  "download_url": "http://path.to.csc.fi/889",
   "file_format": "image/tiff",
   "file_name": "valid_tiff.tiff",
-  "file_path": "/project_x/some/path/valid_tiff.tiff",
+  "file_path": "/path/to/valid_tiff.tiff",
   "parent_directory": {
-  "identifier": "pid:urn:dir:wf1"
+    "identifier": "pid:urn:dir:wf1"
   },
-  "identifier": "pid:urn:888",
+  "identifier": "pid:urn:889",
   "checksum":
   {
     "algorithm": "SHA-1",
