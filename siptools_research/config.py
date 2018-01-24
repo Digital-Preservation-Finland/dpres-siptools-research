@@ -27,7 +27,7 @@ class Configuration(object):
     """Reads and stores configuration from configuration file."""
 
     config_section = 'siptools_research'
-    _parser = None
+    config_file = None
     __shared_state = {}
 
     def __init__(self, config_file):
@@ -36,7 +36,7 @@ class Configuration(object):
         self.__dict__ = self.__shared_state
 
         # Read config file if it has not been read yet
-        if self._parser is None:
+        if self.config_file != config_file:
             self._parser = ConfigParser.RawConfigParser()
             self.read_config_file(config_file)
 
@@ -83,6 +83,9 @@ class Configuration(object):
                 logging.warning('Using default value  %s = %s',
                                 option, DEFAULTS[option])
                 self._parser.set(self.config_section, option, DEFAULTS[option])
+
+        # Set config_file parameter
+        self.config_file = config_file
 
 
     def get(self, option):
