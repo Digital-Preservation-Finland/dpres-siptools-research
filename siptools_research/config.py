@@ -20,7 +20,10 @@ DEFAULTS = {
     'dp_ssh_key': '~/.ssh/id_rsa_tpas_pouta',
     'sip_sign_key': '~/sip_sign_pas.pem',
     'tpas_admin_email': 'esa.bister@csc.fi',
-    'tpas_mail_sender': 'test.sender@tpas.fi'
+    'tpas_mail_sender': 'test.sender@tpas.fi',
+    'sip_rejected_mail_subject': 'SIP hylätty',
+    'sip_rejected_mail_msg': 'Aineistoa ei hyväksytty PASiin virheiden vuoksi. \
+    Liitteenä virheraportti. \n\nOta tarvittaessa yhteyttä PAS-tukeen: {0}'
 }
 
 class Configuration(object):

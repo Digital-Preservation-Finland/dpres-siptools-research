@@ -79,12 +79,15 @@ class ReportPreservationStatus(WorkflowTask):
                     email = dataset_metadata['research_dataset']\
                                             ['rights_holder']['email']
                     conf = Configuration(self.config)
-                    mail.send(conf.get('tpas_mail_sender'), email,\
-                              'SIP was rejected', 'SIP was rejected')
+                    email_subject = conf.get('sip_rejected_mail_subject')
+                    email_message = conf.get('sip_rejected_mail_msg').format(conf.get('tpas_admin_email'))
+                    email_sender = conf.get('tpas_mail_sender')
+                    mail.send(email_sender, email,\
+                              email_subject, email_message)
                     # Raise exception that informs event handler to set Metax
                     # preservation state of this dataset to 7 ("Rejected
                     # long-term preservation")
                     raise InvalidDatasetError("SIP was rejected")
                 else:
-                    raise ValueError('Ingest report was found in incorrect'\
+                    raise ValueError(' report was found in incorrect'\
                                      'path: %s' % ingest_report_paths[0])
