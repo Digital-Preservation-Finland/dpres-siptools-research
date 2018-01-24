@@ -23,8 +23,8 @@ class ValidateSIP(WorkflowExternalTask):
 
     def output(self):
         """Outpus ingest report to
-        dp_service:~/accepted/<datepath>/<document_id>/<document_id>-<uuid> or
-        dp_service:~/rejected/<datepath>/<document_id>/<document_id>-<uuid>
+        dp_service:~/accepted/<datepath>/<document_id>.tar/<document_id>-<uuid>.tar.xml or
+        dp_service:~/rejected/<datepath>/<document_id>.tar/<document_id>-<uuid>.tar.xml
 
         :returns: RemoteAnyTarget
         """
