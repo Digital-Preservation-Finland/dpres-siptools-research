@@ -28,9 +28,14 @@ class Configuration(object):
 
     config_section = 'siptools_research'
     _parser = None
-
+    __shared_state = {}
 
     def __init__(self, config_file):
+
+        # Share class state between instances (Borg design pattern)
+        self.__dict__ = self.__shared_state
+
+        # Read config file if it has not been read yet
         if self._parser is None:
             self._parser = ConfigParser.RawConfigParser()
             self.read_config_file(config_file)
