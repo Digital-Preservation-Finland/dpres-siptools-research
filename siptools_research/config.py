@@ -19,7 +19,7 @@ DEFAULTS = {
     'dp_user': 'tpas',
     'dp_ssh_key': '~/.ssh/id_rsa_tpas_pouta',
     'sip_sign_key': '~/sip_sign_pas.pem',
-    'tpas_admin_email': 'esa.bister@csc.fi',
+    'tpas_admin_email': 'tpas.admin@csc.fi',
     'tpas_mail_sender': 'test.sender@tpas.fi',
     'sip_rejected_mail_subject': 'SIP was rejected',
     'sip_rejected_mail_msg': 'SIP was not approved for Digital Preservation \

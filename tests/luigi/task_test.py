@@ -180,12 +180,14 @@ def test_metaxconnectionerror(testpath, testmongoclient, testmetax):
     with mock.patch('siptools_research.luigi.task.mail.send') as mock_sendmail:
         # Run task like it would be run from command line
         run_luigi_task('MetaxConnectionErrorTask', testpath)
-        mock_sendmail.assert_called_once_with('test.sender@tpas.fi', \
-            'esa.bister@csc.fi', str(MetaxConnectionError()), \
-            str(MetaxConnectionError()))
+        mock_sendmail.assert_called_once_with('test.sender@tpas.fi',
+                                              'tpas.admin@csc.fi',
+                                              str(MetaxConnectionError()),
+                                              str(MetaxConnectionError()))
         # Check the body of last HTTP request
         assert httpretty.last_request().method == 'PATCH'
 
-#TODO: Test for WorkflowWrapperTask
 
-#TODO: Test for WorkfloExternalTask
+# TODO: Test for WorkflowWrapperTask
+
+# TODO: Test for WorkfloExternalTask
