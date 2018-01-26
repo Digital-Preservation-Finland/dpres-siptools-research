@@ -11,6 +11,8 @@ from siptools_research.utils import contextmanager
 from siptools_research.luigi.task import InvalidDatasetError
 from siptools_research.config import Configuration
 from siptools_research.utils import mail
+import paramiko
+
 
 class ReportPreservationStatus(WorkflowTask):
     """A luigi task that copies and reads the ingest report from preservation
@@ -71,23 +73,58 @@ class ReportPreservationStatus(WorkflowTask):
                         self.dataset_id, '6', 'Accepted to preservation'
                     )
                 elif directory == 'rejected':
-                    print '\n*********************************************'
-                    dataset_metadata = metax_client.get_data('datasets',\
-                                                             self.dataset_id)
-                    print '\n*********************************************'
-                    print dataset_metadata
-                    email = dataset_metadata['research_dataset']\
-                                            ['rights_holder']['email']
-                    conf = Configuration(self.config)
-                    email_subject = conf.get('sip_rejected_mail_subject')
-                    email_message = conf.get('sip_rejected_mail_msg').format(conf.get('tpas_admin_email'))
-                    email_sender = conf.get('tpas_mail_sender')
-                    mail.send(email_sender, email,\
-                              email_subject, email_message)
-                    # Raise exception that informs event handler to set Metax
-                    # preservation state of this dataset to 7 ("Rejected
-                    # long-term preservation")
-                    raise InvalidDatasetError("SIP was rejected")
+                    self.__handle_rejected_sip__(ingest_report_paths,
+                                                 metax_client)
                 else:
-                    raise ValueError(' report was found in incorrect'\
-                                     'path: %s' % ingest_report_paths[0])
+                    raise ValueError('Report was found in incorrect.'
+                                     ' Path: %s' % ingest_report_paths[0])
+
+    def __handle_rejected_sip__(self, ingest_report_paths, metax_client):
+        dataset_metadata = metax_client.get_data('datasets', self.dataset_id)
+        email_address = dataset_metadata['research_dataset']\
+            ['rights_holder']['email']
+        conf = Configuration(self.config)
+        report_file = get_report_file(ingest_report_paths[0],
+                                      self.workspace,
+                                      conf)
+        if os.path.isfile(report_file):
+            mail.send(conf.get('tpas_mail_sender'),
+                      email_address,
+                      conf.get('sip_rejected_mail_subject'),
+                      conf.get('sip_rejected_mail_msg').
+                      format(conf.get('tpas_admin_email')), report_file)
+        else:
+            msg = 'Report file conflict. Path: %s' % ingest_report_paths[0]
+            raise ValueError(msg)
+        # Raise exception that informs event handler to set Metax
+        # preservation state of this dataset to 7 ("Rejected
+        # long-term preservation")
+        raise InvalidDatasetError("SIP was rejected")
+
+
+def get_report_file(remote_dir, local_dir, configuration):
+    """ Copies a report file from the PAS server.
+    :remote_dir directory path where the report file is copied from
+    :local_directry directory path to the directory the report file is copied
+    to
+    :configuration parameters for creating SSH connection to remote server
+    :returns full path of the report file or empty string if not found or
+    several report files found
+    """
+    reportfile = ''
+    with paramiko.SSHClient() as ssh:
+        # Initialize SSH connection to digital preservation server
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(configuration.get('dp_host'),
+                    username=configuration.get('dp_user'),
+                    key_filename=configuration.get('dp_ssh_key'))
+        rawcommand = 'find {path} -name {pattern}'
+        command = rawcommand.format(path=remote_dir, pattern='"*.html"')
+        stdin, stdout, stderr = ssh.exec_command(command)
+        flist = stdout.read().splitlines()
+        with ssh.open_sftp() as sftp_client:
+            if len(flist) == 1:
+                local_file = local_dir + "/" + os.path.basename(flist[0])
+                sftp_client.get(flist[0], local_file)
+                reportfile = local_dir + "/" + os.path.basename(flist[0])
+    return reportfile

@@ -21,10 +21,12 @@ DEFAULTS = {
     'sip_sign_key': '~/sip_sign_pas.pem',
     'tpas_admin_email': 'esa.bister@csc.fi',
     'tpas_mail_sender': 'test.sender@tpas.fi',
-    'sip_rejected_mail_subject': 'SIP hylätty',
-    'sip_rejected_mail_msg': 'Aineistoa ei hyväksytty PASiin virheiden vuoksi. \
-    Liitteenä virheraportti. \n\nOta tarvittaessa yhteyttä PAS-tukeen: {0}'
+    'sip_rejected_mail_subject': 'SIP was rejected',
+    'sip_rejected_mail_msg': 'SIP was not approved for Digital Preservation \
+due to errors. Error report attached. \n\nPlease \
+contact DPRES support: {0}'
 }
+
 
 class Configuration(object):
     """Reads and stores configuration from configuration file."""

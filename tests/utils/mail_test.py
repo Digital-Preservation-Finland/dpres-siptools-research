@@ -16,8 +16,8 @@ class BasicMailTest(unittest.TestCase):
     def test_sendmail_with_correct_parameter(self):
         with mock.patch('siptools_research.utils.mail.SMTP.sendmail') as mock_smtp_sendmail, \
             mock.patch('siptools_research.utils.mail.SMTP.quit') as mock_smtp_quit, \
-                mock.patch('siptools_research.utils.mail.MIMEText.as_string') as mock_mimetext_as_string:
-            mock_mimetext_as_string.return_value = BasicMailTest.message
+                mock.patch('siptools_research.utils.mail.MIMEMultipart.as_string') as mock_mimemultipart_as_string:
+            mock_mimemultipart_as_string.return_value = BasicMailTest.message
             mail.send(BasicMailTest.sender, BasicMailTest.receiver, BasicMailTest.subject, BasicMailTest.message)
             mock_smtp_sendmail.assert_called_once_with(BasicMailTest.sender, BasicMailTest.receiver , BasicMailTest.message)
             mock_smtp_quit.assert_called_once()
@@ -26,8 +26,8 @@ class BasicMailTest(unittest.TestCase):
         exceptionThrown=False
         with mock.patch('siptools_research.utils.mail.SMTP.sendmail') as mock_smtp_sendmail, \
             mock.patch('siptools_research.utils.mail.SMTP.quit') as mock_smtp_quit, \
-                mock.patch('siptools_research.utils.mail.MIMEText.as_string') as mock_mimetext_as_string:
-            mock_mimetext_as_string.return_value = BasicMailTest.message
+                mock.patch('siptools_research.utils.mail.MIMEMultipart.as_string') as mock_mimemultipart_as_string:
+            mock_mimemultipart_as_string.return_value = BasicMailTest.message
             mock_smtp_sendmail.side_effect = SMTPSenderRefused(1, BasicMailTest.message, BasicMailTest.sender)
             try:
                 mail.send(BasicMailTest.sender, BasicMailTest.receiver, BasicMailTest.subject, BasicMailTest.message)
