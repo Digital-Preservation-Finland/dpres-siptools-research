@@ -58,9 +58,7 @@ def test_create_techmd_ok(testpath, testmongoclient, testmetax):
     with open(os.path.join(workspace,
                            'logs',
                            'task-create-technical-metadata.log')) as open_file:
-        assert open_file.read().startswith(
-            "Wrote METS technical metadata to file"
-        )
+        assert "Wrote METS technical metadata to file" in open_file.read()
 
 
 def test_import_object_ok(testpath, testmetax):
