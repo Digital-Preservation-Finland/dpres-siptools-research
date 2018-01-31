@@ -53,6 +53,7 @@ usermod -aG %{user_group} %{user_name}
 rm -rf $RPM_BUILD_ROOT
 make install PREFIX="%{_prefix}" DESTDIR="%{buildroot}"
 mkdir -p  %{buildroot}/var/lib/siptools_research
+mkdir -p /var/spool/siptools-research
 
 
 %post
