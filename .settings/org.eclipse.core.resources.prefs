@@ -4,3 +4,4 @@ encoding//siptools_research/workflow/create_mets.py=utf8
 encoding//siptools_research/workflow/create_structmap.py=utf8
 encoding//siptools_research/workflow/create_techmd.py=utf8
 encoding//tests/utils/metax_test.py=utf-8
+encoding//tests/workflow/create_dmdsec_test.py=utf-8

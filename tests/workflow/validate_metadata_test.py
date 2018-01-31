@@ -5,6 +5,7 @@ import pytest
 from siptools_research.luigi.task import InvalidMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
+
 def test_validatemetadata(testpath, testmetax, testmongoclient):
     """Test ValidateMetadata class. Run task for dataset that has valid
     metadata."""
@@ -21,6 +22,7 @@ def test_validatemetadata(testpath, testmetax, testmongoclient):
     # Run task
     task.run()
     assert task.complete()
+
 
 def test_invalid_metadata(testpath, testmetax, testmongoclient):
     """Test ValidateMetadata class. Run task for dataset that has invalid

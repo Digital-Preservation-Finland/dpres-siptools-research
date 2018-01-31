@@ -1,40 +1,48 @@
 {
     "contract": {
-	"id": 1
+		"id": 1
     },
     "research_dataset": {
         "provenance": [
             {
                 "type": {
-			"pref_label": {
-				"en": "creation"
-		    }
+					"pref_label": {
+						"en": "creation"
+		    		}
                 },
                 "temporal": {
-			"end_date": "2014-12-31T08:19:58Z",
-                        "start_date": "2014-01-01T08:19:58Z"
-		},
+					"end_date": "2014-12-31T08:19:58Z",
+                    "start_date": "2014-01-01T08:19:58Z"
+				},
                 "description": {
-			"en": "Description of provenance"
+					"en": "Description of provenance"
                 }
             }
         ],
         "files": [
             {
-		"identifier": "pid:urn:wf_test_1a",
-	    	"use_category": {
-			"pref_label": {
-				"en": "label1"
-			}
-		}
+				"identifier": "pid:urn:wf_test_1a",
+	    		"use_category": {
+					"pref_label": {
+						"en": "label1"
+					}
+				}
             },
             {
-		"identifier": "pid:urn:wf_test_1b",
-	    	"use_category": {
-			"pref_label": {
-				"en": "label2"
-			}
-		}
+				"identifier": "pid:urn:wf_test_1b",
+	    		"use_category": {
+					"pref_label": {
+						"en": "label2"
+					}
+				}
+            },
+            {
+                "identifier": "pid:urn:889",
+                "use_category": {
+                	"pref_label": {
+                    	"en": "label3"
+                	}
+                }
             }
         ]
     }
