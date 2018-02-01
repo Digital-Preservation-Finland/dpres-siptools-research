@@ -67,17 +67,15 @@ class ValidateMetadata(WorkflowTask):
                 self.__validate_xml_file_metadata()
 
     def __validate_dataset_metadata_files(self, dataset_metadata):
-                for dataset_file in \
-                        dataset_metadata['research_dataset']['files']:
-                    file_id = dataset_file['identifier']
-                    file_metadata = self.metax_client.get_data('files',
-                                                               file_id)
-                    # Validate dataset metadata
-                    try:
-                        jsonschema.validate(file_metadata,
-                                            metax_schemas.FILE_METADATA_SCHEMA)
-                    except jsonschema.ValidationError as exc:
-                        raise InvalidMetadataError(exc)
+        for dataset_file in dataset_metadata['research_dataset']['files']:
+            file_id = dataset_file['identifier']
+            file_metadata = self.metax_client.get_data('files', file_id)
+            # Validate dataset metadata
+            try:
+                jsonschema.validate(file_metadata,
+                                    metax_schemas.FILE_METADATA_SCHEMA)
+            except jsonschema.ValidationError as exc:
+                raise InvalidMetadataError(exc)
 
     def __validate_xml_file_metadata(self):
         for file_metadata in \
