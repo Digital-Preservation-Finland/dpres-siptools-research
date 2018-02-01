@@ -100,8 +100,7 @@ class ValidateMetadata(WorkflowTask):
                                                 xmls)
 
     def __validate_with_schematron(self, file_format_prefix, file_id, xmls):
-        try:
-            temp = tempfile.NamedTemporaryFile()
+        with tempfile.NamedTemporaryFile() as temp:
             ns = xmls[SCHEMATRONS[file_format_prefix]['ns']]
             temp.write(lxml.etree.tostring(ns).strip())
             temp.seek(0)
@@ -117,5 +116,3 @@ class ValidateMetadata(WorkflowTask):
             if proc.returncode != 0:
                 raise InvalidMetadataError(
                     SHEM_ERR % (proc.returncode, file_id))
-        finally:
-            temp.close()
