@@ -14,20 +14,23 @@ from subprocess import Popen, PIPE
 from siptools.xml.mets import NAMESPACES
 import tempfile
 
-SCHEMATRONS = {
-    'image': {'ns': NAMESPACES['mix'], 'schematron':
-              '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch'}
-    }
-
-SHEM_ERR = "Schematron metadata validation failed: %s. File: %s"
-MISS_XML_ERR = "Missing XML metadata for file: %s"
-INV_NS_ERR = "Invalid XML namespace: %s"
-
 
 class ValidateMetadata(WorkflowTask):
     """Gets metadata from Metax and validates it. Requires workspace directory
     to be created. Writes log to ``logs/validate-metadata.log``
     """
+
+    """ SCHEMATRONS is a dictionary containing mapping:
+    file_format_prefix=>xml_metadata_namespace_and_schematron_file
+    """
+    SCHEMATRONS = {
+        'image': {'ns': NAMESPACES['mix'], 'schematron':
+                  '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch'}
+    }
+
+    SHEM_ERR = "Schematron metadata validation failed: %s. File: %s"
+    MISS_XML_ERR = "Missing XML metadata for file: %s"
+    INV_NS_ERR = "Invalid XML namespace: %s"
 
     success_message = "Metax metadata is valid"
     failure_message = "Metax metadata could not be validated"
@@ -85,15 +88,15 @@ class ValidateMetadata(WorkflowTask):
             except jsonschema.ValidationError as exc:
                 raise InvalidMetadataError(exc)
             file_format_prefix = file_metadata['file_format'].split('/')[0]
-            if file_format_prefix in SCHEMATRONS:
+            if file_format_prefix in self.SCHEMATRONS:
                 file_id = file_metadata['identifier']
                 xmls = self.metax_client.get_xml('files',
                                                  file_id)
                 for ns_url in xmls:
                     if ns_url not in NAMESPACES.values():
-                        raise TypeError(INV_NS_ERR % ns_url)
-                if SCHEMATRONS[file_format_prefix]['ns'] not in xmls:
-                    raise InvalidMetadataError(MISS_XML_ERR %
+                        raise TypeError(self.INV_NS_ERR % ns_url)
+                if self.SCHEMATRONS[file_format_prefix]['ns'] not in xmls:
+                    raise InvalidMetadataError(self.MISS_XML_ERR %
                                                file_id)
                 self.__validate_with_schematron(file_format_prefix,
                                                 file_id,
@@ -101,10 +104,10 @@ class ValidateMetadata(WorkflowTask):
 
     def __validate_with_schematron(self, file_format_prefix, file_id, xmls):
         with tempfile.NamedTemporaryFile() as temp:
-            ns = xmls[SCHEMATRONS[file_format_prefix]['ns']]
+            ns = xmls[self.SCHEMATRONS[file_format_prefix]['ns']]
             temp.write(lxml.etree.tostring(ns).strip())
             temp.seek(0)
-            schem = SCHEMATRONS[file_format_prefix]['schematron']
+            schem = self.SCHEMATRONS[file_format_prefix]['schematron']
             proc = Popen(['check-xml-schematron-features', '-s',
                           schem, temp.name],
                          stdout=PIPE,
@@ -115,4 +118,4 @@ class ValidateMetadata(WorkflowTask):
             proc.communicate()
             if proc.returncode != 0:
                 raise InvalidMetadataError(
-                    SHEM_ERR % (proc.returncode, file_id))
+                    self.SHEM_ERR % (proc.returncode, file_id))
