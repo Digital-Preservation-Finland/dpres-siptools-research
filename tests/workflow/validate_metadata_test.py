@@ -61,7 +61,8 @@ def test_missing_xml_metadata(testpath, testmetax, testmongoclient):
     assert not task.complete()
 
     # Run task
-    with pytest.raises(InvalidMetadataError):
+    with pytest.raises(InvalidMetadataError) as exc:
         task.run()
 
+    assert "Missing XML metadata for file: pid:urn:890" in exc.value[0]
     assert not task.complete()
