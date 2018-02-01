@@ -108,11 +108,11 @@ class ValidateMetadata(WorkflowTask):
             schem = SCHEMATRONS[file_format_prefix]['schematron']
             proc = Popen(['check-xml-schematron-features', '-s',
                           schem, temp.name],
-                        stdout=PIPE,
-                        stderr=PIPE,
-                        shell=False,
-                        cwd=None,
-                        env=None)
+                         stdout=PIPE,
+                         stderr=PIPE,
+                         shell=False,
+                         cwd=None,
+                         env=None)
             proc.communicate()
             if proc.returncode != 0:
                 raise InvalidMetadataError(
