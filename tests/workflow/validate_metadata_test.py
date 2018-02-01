@@ -45,3 +45,23 @@ def test_invalid_metadata(testpath, testmetax, testmongoclient):
     # run should fail the following error message:
     assert "'contract' is a required property" in exc.value[0]
     assert not task.complete()
+
+
+def test_missing_xml_metadata(testpath, testmetax, testmongoclient):
+    """Test ValidateMetadata class. Run task for dataset missing a
+    xml metadata file for an image file."""
+
+    # Create "logs" directory
+    os.mkdir(os.path.join(testpath, 'logs'))
+
+    # Init task
+    task = ValidateMetadata(workspace=testpath,
+                            dataset_id='validate_metadata_test_dataset_3',
+                            config='tests/data/siptools_research.conf')
+    assert not task.complete()
+
+    # Run task
+    with pytest.raises(InvalidMetadataError):
+        task.run()
+
+    assert not task.complete()
