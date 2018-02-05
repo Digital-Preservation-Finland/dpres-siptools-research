@@ -40,6 +40,22 @@ def create_techmdfile(sip_creation_path, mdtype, mdtypeversion, mddata, filename
     return fileid
 
 
+def add_to_tempfile(root, othermdfile, sourcefilepath, mdtype, mdfile_loc):
+    """Adds the name of the metadatafile and the source file to be
+    paired in METS fileSec.
+    """
+    prefix = '%s-' % mdtype
+    fileid = ET.Element('fileid')
+    root.append(fileid)
+    filename = encode_path(othermdfile, prefix=prefix, suffix="-othermd.xml")
+    if mdfile_loc:
+        sourcefilepath = os.path.join(mdfile_loc, sourcefilepath)
+    fileid.text = encode_id(filename)
+    fileid.set('path', sourcefilepath)
+
+    return root
+
+
 def csv_header(csv_file_path, delimiter, isheader=False, headername='header'):
     """Returns header of CSV file if there is one. 
     Otherwise generaters a header and returns it"""

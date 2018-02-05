@@ -4,6 +4,8 @@
 import os
 import urllib
 import lxml
+import lxml.etree as ET
+import xml_helpers.utils as h
 from luigi import LocalTarget
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
@@ -13,7 +15,8 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.get_files import GetFiles
 import siptools.scripts.import_object
 from siptools.xml.mets import NAMESPACES
-from siptools_research.utils.create_addml import create_addml, create_techmdfile
+from siptools_research.utils.create_addml import create_addml, create_techmdfile, add_to_tempfile
+from siptools.utils import encode_path, encode_id
 
 
 class CreateTechnicalMetadata(WorkflowTask):
@@ -66,6 +69,10 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
 
+    # TODO
+    #(formatname, formatversion, mimemaintype) = formatdesignation(
+    #     os.path.join(workspace, 'sip-in-progress', metax_filepath.strip('/'))
+
     # Read character set if it defined for this file
     try:
         charset = metadata["file_characteristics"]["encoding"]
@@ -88,11 +95,12 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
             )
 
     formatname = metadata["file_format"]
-    # TODO: formatversion hardcoded. Not in METAX yet. could be retrieved from
-    # file:
-    #   formatname = formatdesignation(filepath, datatype='name')
-    #   formatversion = formatdesignation(filepath, datatype='version')
+    # TODO: formatversion hardcoded. Not in METAX yet.
     formatversion = ""
+    # If it's a TIFF-file, return fixed version
+    if formatname == 'image/tiff':
+        formatversion = '6.0'
+
 
     # Picks name of hashalgorithm from its length if it's not valid
     allowed_hashs = {128: 'MD5', 160: 'SHA-1', 224: 'SHA-224',
@@ -146,6 +154,9 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     # Create PREMIS file metadata XML
     siptools.scripts.import_object.main(import_object_parameters)
 
+    # tempfile to pair metadata files
+    tempfile_root = ET.Element('contents')
+
     # Copy additional metadata XML files from Metax if they exist
     xml = Metax(config).get_xml('files', file_id)
     for ns_url in xml:
@@ -154,13 +165,26 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         xml_data = xml[ns_url]
         ns_key = next((key for key, url in NAMESPACES.items() if url\
                        == ns_url), None)
+        #add_to_tempfile(tempfile_root, metax_filepath, metax_filepath, '')
         target_filename = urllib.quote_plus(metax_filepath + ns_key\
                                             + '-othermd.xml')
         output_file = os.path.join(workspace, 'sip-in-progress',
                                    target_filename)
         with open(output_file, 'w+') as outfile:
             # pylint: disable=no-member
-            outfile.write(lxml.etree.tostring(xml_data))
+            #outfile.write(ET.tostring(xml_data))
+            outfile.write(h.serialize(xml_data))
+
+        techmd_id = xml_data.xpath("/mets:mets/mets:amdSec/mets:techMD/@ID", namespaces=NAMESPACES)
+        fileid = ET.Element('fileid')
+        tempfile_root.append(fileid)
+        fileid.text = techmd_id[0]
+        fileid.set('path', metax_filepath)
+
+        tempfilename = encode_path(ns_key, suffix='file.xml')
+        with open(os.path.join(workspace, 'sip-in-progress', tempfilename), 'w+') as outfile:
+            outfile.write(h.serialize(tempfile_root))
+            print "Wrote md pairings to tempfile %s" % outfile.name
 
 
 def import_objects(dataset_id, workspace, config):
