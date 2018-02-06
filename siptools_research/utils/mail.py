@@ -27,12 +27,3 @@ def send(sender, receiver, subject, message, attachments=None):
         smtpObj.sendmail(sender, receiver, msg.as_string())
     finally:
         smtpObj.quit()
-
-
-def main():
-    send('test.sender@tpas.fi', 'esa.bister@csc.fi', 'Postia',
-         'Postia pukkaa')
-
-
-if __name__ == '__main__':
-    main()
