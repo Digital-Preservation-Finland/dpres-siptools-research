@@ -43,7 +43,24 @@
                     	"en": "label3"
                 	}
                 }
+            },
+            {
+                "identifier": "pid:urn:891",
+                "use_category": {
+                	"pref_label": {
+                    	"en": "label4"
+                	}
+                }
+            },
+            {
+                "identifier": "pid:urn:892",
+                "use_category": {
+                	"pref_label": {
+                    	"en": "label5"
+                	}
+                }
             }
+
         ]
     }
 }

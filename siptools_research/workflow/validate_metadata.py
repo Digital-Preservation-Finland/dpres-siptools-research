@@ -24,8 +24,12 @@ class ValidateMetadata(WorkflowTask):
     file_format_prefix=>xml_metadata_namespace_and_schematron_file
     """
     SCHEMATRONS = {
-        'image': {'ns': NAMESPACES['mix'], 'schematron':
-                  '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch'}
+        'image': {'ns': 'http://www.loc.gov/mix/v20', 'schematron':
+                  '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch'},
+        'audio': {'ns': 'http://www.loc.gov/audioMD/', 'schematron':
+                  '/usr/share/dpres-xml-schemas/schematron/mets_avmd.sch'},
+        'video': {'ns': 'http://www.loc.gov/videoMD/', 'schematron':
+                  '/usr/share/dpres-xml-schemas/schematron/mets_avmd.sch'}
     }
 
     SHEM_ERR = "Schematron metadata validation failed: %s. File: %s"
@@ -102,6 +106,9 @@ class ValidateMetadata(WorkflowTask):
 
     def __validate_with_schematron(self, file_format_prefix, file_id, xmls):
         with tempfile.NamedTemporaryFile() as temp:
+            log_file = open('schem.txt', 'a')
+            log_file.write(file_id);
+            log_file.close()
             ns = xmls[self.SCHEMATRONS[file_format_prefix]['ns']]
             temp.write(lxml.etree.tostring(ns).strip())
             temp.seek(0)
