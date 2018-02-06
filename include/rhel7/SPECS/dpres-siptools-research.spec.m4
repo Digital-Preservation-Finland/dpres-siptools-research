@@ -23,7 +23,7 @@ URL:            http://www.csc.fi
 Source0:        %{file_prefix}-v%{file_version}%{?file_release_tag}-%{file_build_number}-g%{file_commit_ref}.%{file_ext}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
-Requires:       python python-luigi python-pymongo dpres-siptools addml mets python-lxml python2-paramiko python2-jsonschema python-requests python-scandir mongodb-server
+Requires:       python python-luigi python-pymongo dpres-siptools addml mets python-lxml python2-paramiko python2-jsonschema python-requests python-scandir mongodb-org-server
 BuildRequires:  python-setuptools pytest
 
 %description
