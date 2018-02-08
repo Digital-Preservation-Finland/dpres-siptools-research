@@ -1,4 +1,4 @@
-DESTDIR ?=
+DESTDIR ?= /
 PREFIX ?= /usr
 ETC=${DESTDIR}/etc
 SHAREDIR=${DESTDIR}${PREFIX}/share/siptools_research
@@ -21,7 +21,7 @@ install:
 	cp include/etc/siptools_research.conf ${ETC}/
 
 	# Use Python setuptools
-	python setup.py build ; python ./setup.py install -O1 --prefix="${DESTDIR}${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
+	python ./setup.py install -O1 --prefix="${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
 	cat INSTALLED_FILES | sed 's/^/\//g' >> INSTALLED_FILES
 
 test:
