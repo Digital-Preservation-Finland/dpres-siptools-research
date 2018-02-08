@@ -15,8 +15,8 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.get_files import GetFiles
 import siptools.scripts.import_object
 from siptools.xml.mets import NAMESPACES
-from siptools_research.utils.create_addml import create_addml, create_techmdfile, add_to_tempfile
-from siptools.utils import encode_path, encode_id
+from siptools_research.utils.create_addml import create_addml, create_techmdfile
+from siptools.utils import encode_path
 
 
 class CreateTechnicalMetadata(WorkflowTask):

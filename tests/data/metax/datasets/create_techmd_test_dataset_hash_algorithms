@@ -1,0 +1,22 @@
+{
+	"research_dataset": {
+		"files": [
+		{
+			"identifier": "pid:urn:9",
+			"type": {
+				"pref_label": {
+					"en": "project_hash_algorithms_FROZEN/some/path/valid_tiff_1.tiff"
+				}
+			}
+		},
+		{
+			"identifier": "pid:urn:10",
+			"type": {
+				"pref_label": {
+					"en": "project_hash_algorithms_FROZEN/some/path/valid_tiff_2.tiff"
+				}
+			}
+		}
+		]
+	}
+}

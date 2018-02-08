@@ -32,6 +32,22 @@
 		}
 	},
 	{
+		"identifier": "pid:urn:7",
+		"file_name": "file_name_7.txt",
+		"file_path": "/project_x/some/path/file_name_7.txt",
+		"file_format": "text/plain",
+		"checksum":
+		{
+			"algorithm": "SHA-1",
+			"value": "habeebit"
+		},
+		"file_characteristics":
+		{
+			"file_created": "2014-01-17T08:19:31Z",
+			"encoding": "utf-8"
+		}
+	},
+	{
 		"identifier": "pid:urn:999",
 		"file_name": "file.csv",
 		"file_path": "/project_x/some/path/file.csv",
@@ -47,21 +63,19 @@
 			"encoding": "utf-8"
 		}
 	},
-        {
-                "id": 888,
-                "download_url": "http://project_x.some.url.csc.fi/888",
-                "file_format": "image/tiff",
-                "file_name": "valid_tiff.tiff",
-                "file_path": "/project_x/some/path/valid_tiff.tiff",
-                "identifier": "pid:urn:888",
-                "checksum":
-                {
-                        "algorithm": "SHA-1",
-                        "value": "habeebit"
-                },
-                "file_characteristics":
-                {
-                        "file_created": "2018-01-17T08:19:31Z"
-                }
-        }
+    {
+        "id": 888,
+        "download_url": "http://project_x.some.url.csc.fi/888",
+        "file_format": "image/tiff",
+        "file_name": "valid_tiff.tiff",
+        "file_path": "/project_x/some/path/valid_tiff.tiff",
+        "identifier": "pid:urn:888",
+        "checksum": {
+            "algorithm": "SHA-1",
+            "value": "habeebit"
+         },
+         "file_characteristics": {
+            "file_created": "2018-01-17T08:19:31Z"
+         }
+    }
 ]

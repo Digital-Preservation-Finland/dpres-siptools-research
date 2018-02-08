@@ -18,6 +18,14 @@
 			}
 		},
 		{
+			"identifier": "pid:urn:7",
+			"type": {
+				"pref_label": {
+					"en": "project_x_FROZEN/some/path/file_name_7.txt"
+				}
+			}
+		},
+		{
 			"identifier": "pid:urn:999",
 			"type": {
 				"pref_label": {

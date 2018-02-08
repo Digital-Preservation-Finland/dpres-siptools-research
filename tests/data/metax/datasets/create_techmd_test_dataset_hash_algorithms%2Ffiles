@@ -1,0 +1,32 @@
+[
+    {
+        "id": 9,
+        "download_url": "http://project_hash_algorithms.some.url.csc.fi/9",
+        "file_format": "image/tiff",
+        "file_name": "valid_tiff_1.tiff",
+        "file_path": "/project_hash_algorithms/some/path/valid_tiff_1.tiff",
+        "identifier": "pid:urn:9",
+        "checksum": {
+            "algorithm": "sha2",
+            "value": "habeebit"
+         },
+         "file_characteristics": {
+            "file_created": "2019-01-17T09:19:31Z"
+         }
+    },
+    {
+        "id": 10,
+        "download_url": "http://project_hash_algorithms.some.url.csc.fi/10",
+        "file_format": "image/tiff",
+        "file_name": "valid_tiff_2.tiff",
+        "file_path": "/project_hash_algorithms/some/path/valid_tiff_2.tiff",
+        "identifier": "pid:urn:10",
+        "checksum": {
+            "algorithm": "unknown",
+            "value": "54ebe2f9f6e7e78fe5f523887eb55517"
+         },
+         "file_characteristics": {
+            "file_created": "2019-01-17T09:19:31Z"
+         }
+    }
+]

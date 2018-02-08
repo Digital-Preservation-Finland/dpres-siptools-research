@@ -1,0 +1,18 @@
+{
+	"id": 9,
+	"download_url": "http://project_x.some.url.csc.fi/9",
+	"file_format": "image/tiff",
+	"file_name": "valid_tiff.tiff",
+	"file_path": "/project_x/some/path/valid_tiff.tiff",
+	"parent_directory": {
+		"identifier": "pid:urn:dir:wf1"
+	},
+	"identifier": "pid:urn:9",
+	"checksum": {
+		"algorithm": "sha2",
+		"value": "habeebit"
+	},
+	"file_characteristics": {
+		"file_created": "2019-01-17T09:19:31Z"
+	}
+}
