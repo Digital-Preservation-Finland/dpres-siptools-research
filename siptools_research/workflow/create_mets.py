@@ -47,11 +47,13 @@ class CreateMets(WorkflowTask):
                                                        self.dataset_id)
                 contract_id = metadata["contract"]["id"]
                 if contract_id is None:
-                    raise InvalidMetadata('Dataset does not have contract id')
+                    raise InvalidMetadataError(
+                        'Dataset does not have contract id'
+                    )
                 if isinstance(contract_id, (int, long)):
                     contract_id = str(contract_id)
 
                 # Compile METS
                 compile_mets.main(['--workspace', self.sip_creation_path,
-                                   'tpas', 'tpas', '--clean',
-                                   '--contract_id', contract_id])
+                                   '--clean',
+                                   'tpas', 'tpas', contract_id])
