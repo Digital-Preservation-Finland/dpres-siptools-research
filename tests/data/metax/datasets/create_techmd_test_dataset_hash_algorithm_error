@@ -1,0 +1,14 @@
+{
+	"research_dataset": {
+		"files": [
+		{
+			"identifier": "pid:urn:10",
+			"type": {
+				"pref_label": {
+					"en": "project_hash_algorithm_error_FROZEN/some/path/valid_tiff.tiff"
+				}
+			}
+		}
+		]
+	}
+}

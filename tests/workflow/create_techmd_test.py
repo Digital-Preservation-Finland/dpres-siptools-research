@@ -212,14 +212,7 @@ def test_hash_algorithm_selection_logic(testpath, testmongoclient, testmetax):
     # Run task.
     task.run()
     assert task.complete()
-    techmd_filename = 'project_hash_algorithms%2Fsome%2Fpath%2Fvalid_tiff_1.tiff-techmd.xml'
-    techmd_file = open(os.path.join(sipdirectory, techmd_filename))
-    tree = lxml.etree.parse(techmd_file)
-    root = tree.getroot()
-    assert root.xpath("//premis:messageDigestAlgorithm",
-                      namespaces=NAMESPACES)[0].text == 'ERROR'
-    assert root.xpath("//premis:messageDigest", namespaces=NAMESPACES)[0].text == 'habeebit'
-    techmd_filename = 'project_hash_algorithms%2Fsome%2Fpath%2Fvalid_tiff_2.tiff-techmd.xml'
+    techmd_filename = 'project_hash_algorithms%2Fsome%2Fpath%2Fvalid_tiff.tiff-techmd.xml'
     techmd_file = open(os.path.join(sipdirectory, techmd_filename))
     tree = lxml.etree.parse(techmd_file)
     root = tree.getroot()
@@ -228,3 +221,33 @@ def test_hash_algorithm_selection_logic(testpath, testmongoclient, testmetax):
     assert root.xpath("//premis:messageDigest",
                       namespaces=NAMESPACES)[0].text == '54ebe2f9f6e7e78fe5f523887eb55517'
 
+
+def test_hash_algorithm_error(testpath, testmongoclient, testmetax):
+    """Test the workflow task CreateTechnicalMetadata's hash algorithm
+    selection logic. If checksum configuration contains invalid data
+    an exception is thrown
+    """
+    # Create workspace with empty "logs" and "sip-in-progress' directories in
+    # temporary directory
+    workspace = testpath
+    os.makedirs(os.path.join(workspace, 'logs'))
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sipdirectory)
+
+    # Copy sample directory with some files to SIP
+    shutil.copytree(
+        'tests/data/sample_dataset_directories/project_hash_algorithm_error',
+        os.path.join(sipdirectory, 'project_hash_algorithms'))
+
+    # Init task
+    task = CreateTechnicalMetadata(workspace=workspace,
+                                   dataset_id="create_techmd_test_dataset_hash_algorithm_error",
+                                   config='tests/data/siptools_research.conf')
+    assert not task.complete()
+
+    # Run task.
+    with pytest.raises(Exception) as exc:
+        task.run()
+    assert 'Invalid checksum data (algorithm: sha2, value: habeebit) for file: pid:urn:10' \
+        in str(exc)
+    assert not task.complete()

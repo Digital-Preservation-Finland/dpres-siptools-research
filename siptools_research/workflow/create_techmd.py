@@ -3,7 +3,6 @@
 
 import os
 import urllib
-import lxml
 import lxml.etree as ET
 import xml_helpers.utils as h
 from luigi import LocalTarget
@@ -18,12 +17,15 @@ from siptools.xml.mets import NAMESPACES
 from siptools_research.utils.create_addml import create_addml, create_techmdfile
 from siptools.utils import encode_path
 
+ALLOWED_HASHS = {128: 'MD5', 160: 'SHA-1', 224: 'SHA-224',
+                 256: 'SHA-256', 384: 'SHA-384', 512: 'SHA-512'}
 
 class CreateTechnicalMetadata(WorkflowTask):
     """Create technical metadata files.
     """
     success_message = 'Technical metadata for objects created'
     failure_message = 'Technical metadata for objects could not be created'
+
 
     def requires(self):
         """Return required tasks.
@@ -101,18 +103,17 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     if formatname == 'image/tiff':
         formatversion = '6.0'
 
-
     # Picks name of hashalgorithm from its length if it's not valid
-    allowed_hashs = {128: 'MD5', 160: 'SHA-1', 224: 'SHA-224',
-                     256: 'SHA-256', 384: 'SHA-384', 512: 'SHA-512'}
     hash_bit_length = len(hashvalue) * 4
 
-    if hashalgorithm in allowed_hashs.values():
+    if hashalgorithm in ALLOWED_HASHS.values():
         hashalgorithm = hashalgorithm
-    elif hash_bit_length in allowed_hashs:
-        hashalgorithm = allowed_hashs[hash_bit_length]
+    elif hash_bit_length in ALLOWED_HASHS:
+        hashalgorithm = ALLOWED_HASHS[hash_bit_length]
     else:
-        hashalgorithm = 'ERROR'
+        raise InvalidMetadataError(
+            'Invalid checksum data (algorithm: %s, value: %s) for file: %s' %
+            (hashalgorithm, hashvalue, file_id))
 
     # create ADDML if formatname = 'text/csv
     if formatname == 'text/csv':

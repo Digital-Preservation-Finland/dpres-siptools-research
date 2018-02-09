@@ -9,8 +9,8 @@
 	},
 	"identifier": "pid:urn:10",
 	"checksum": {
-		"algorithm": "uknown",
-		"value": "54ebe2f9f6e7e78fe5f523887eb55517"
+		"algorithm": "sha2",
+		"value": "habeebit"
 	},
 	"file_characteristics": {
 		"file_created": "20110-01-17T08:19:31Z"
