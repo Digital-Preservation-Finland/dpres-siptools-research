@@ -10,7 +10,7 @@ import os
 import uuid
 import argparse
 import luigi
-from siptools_research.luigi.task import WorkflowWrapperTask
+from siptools_research.workflowtask import WorkflowWrapperTask
 from siptools_research.config import Configuration
 import siptools_research.utils.database
 from siptools_research.workflow.report_preservation_status import \

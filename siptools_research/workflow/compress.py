@@ -3,7 +3,7 @@
 import os
 import tarfile
 import luigi
-from siptools_research.luigi.task import WorkflowTask
+from siptools_research.workflowtask import WorkflowTask
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.workflow.sign import SignSIP
 

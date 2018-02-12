@@ -4,7 +4,7 @@ import os
 import time
 import paramiko
 from siptools_research.workflow import report_preservation_status
-from siptools_research.luigi.task import InvalidDatasetError
+from siptools_research.workflowtask import InvalidDatasetError
 import mock
 
 

@@ -1,21 +1,21 @@
-"""A workflow task that reads the ingest report locations from preservation
+"""A luigi task that reads the ingest report locations from preservation
 service and updates preservation status to Metax."""
 
 import os
 from luigi import LocalTarget
-from siptools_research.luigi.task import WorkflowTask
+from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_sip import ValidateSIP
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.utils import metax
 from siptools_research.utils import contextmanager
-from siptools_research.luigi.task import InvalidDatasetError
+from siptools_research.workflowtask import InvalidDatasetError
 from siptools_research.config import Configuration
 from siptools_research.utils import mail
 import paramiko
 
 
 class ReportPreservationStatus(WorkflowTask):
-    """A luigi task that copies and reads the ingest report from preservation
+    """A workflowtask that copies and reads the ingest report from preservation
     service. The preservation status is updated to Metax."""
 
     # If this task fails, it almost always means that SIP was rejected, so this

@@ -9,7 +9,7 @@ import luigi
 from siptools.scripts import compile_structmap
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
-from siptools_research.luigi.task import WorkflowTask
+from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 from siptools_research.workflow.create_digiprov import \
     CreateProvenanceInformation

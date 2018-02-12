@@ -3,8 +3,8 @@ service."""
 
 import time
 from siptools_research.config import Configuration
-from siptools_research.luigi.task import WorkflowExternalTask
-from siptools_research.luigi.target import RemoteAnyTarget
+from siptools_research.workflowtask import WorkflowExternalTask
+from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.workflow.send_sip import SendSIPToDP
 
 class ValidateSIP(WorkflowExternalTask):

@@ -2,7 +2,7 @@
 
 import luigi
 from siptools_research.utils import utils
-from siptools_research.luigi.task import WorkflowTask
+from siptools_research.workflowtask import WorkflowTask
 
 class CreateWorkspace(WorkflowTask):
     """Creates empty workspace directory."""

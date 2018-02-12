@@ -3,7 +3,7 @@
 import os
 import luigi
 from siptools_research.config import Configuration
-from siptools_research.luigi.task import WorkflowTask
+from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_mets import CreateMets
 from siptools_research.utils import contextmanager
 from siptools.scripts import sign_mets

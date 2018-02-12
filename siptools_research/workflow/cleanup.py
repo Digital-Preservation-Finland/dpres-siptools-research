@@ -4,7 +4,7 @@
 import os
 import shutil
 from siptools_research.utils.database import Database
-from siptools_research.luigi.task import WorkflowTask
+from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.report_preservation_status\
     import ReportPreservationStatus
 

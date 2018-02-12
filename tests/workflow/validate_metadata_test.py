@@ -2,7 +2,7 @@
 
 import os
 import pytest
-from siptools_research.luigi.task import InvalidMetadataError
+from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 

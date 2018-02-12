@@ -1,4 +1,4 @@
-"""Tests for siptools_research.luigi.task module"""
+"""Tests for siptools_research.workflowtask module"""
 
 import os
 import json
@@ -10,9 +10,9 @@ import httpretty
 import mock
 from siptools_research.utils import mail
 
-from siptools_research.luigi.task import WorkflowTask
-from siptools_research.luigi.task import InvalidDatasetError
-from siptools_research.luigi.task import InvalidMetadataError
+from siptools_research.workflowtask import WorkflowTask
+from siptools_research.workflowtask import InvalidDatasetError
+from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
 from siptools_research.utils.metax import MetaxConnectionError
 
@@ -26,7 +26,7 @@ def run_luigi_task(task_name, workspace):
     """
     with pytest.raises(SystemExit):
         luigi.cmdline.luigi_run(
-            ('--module', 'tests.luigi.task_test',
+            ('--module', 'tests.workflowtask_test',
              task_name,
              '--workspace', workspace,
              '--dataset-id', '1',
@@ -177,7 +177,7 @@ def test_metaxconnectionerror(testpath, testmongoclient, testmetax):
     an email to configured address.
     """
 
-    with mock.patch('siptools_research.luigi.task.mail.send') as mock_sendmail:
+    with mock.patch('siptools_research.workflowtask.mail.send') as mock_sendmail:
         # Run task like it would be run from command line
         run_luigi_task('MetaxConnectionErrorTask', testpath)
         mock_sendmail.assert_called_once_with('test.sender@tpas.fi',

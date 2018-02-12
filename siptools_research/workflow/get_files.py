@@ -6,7 +6,7 @@ import luigi
 from siptools_research.utils import ida
 from siptools_research.utils import metax
 from siptools_research.utils import contextmanager
-from siptools_research.luigi.task import WorkflowTask
+from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 

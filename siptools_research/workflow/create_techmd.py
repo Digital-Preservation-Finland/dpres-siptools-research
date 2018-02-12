@@ -8,7 +8,7 @@ import xml_helpers.utils as h
 from luigi import LocalTarget
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
-from siptools_research.luigi.task import WorkflowTask, InvalidMetadataError
+from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.get_files import GetFiles
