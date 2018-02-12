@@ -10,7 +10,7 @@ def main():
         entry_points={
             'console_scripts': [
                 'siptools_research = '\
-                'siptools_research.__main__.py:main'
+                'siptools_research.__main__:main'
             ]
         }
     )
