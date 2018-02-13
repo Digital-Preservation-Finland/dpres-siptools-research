@@ -13,7 +13,21 @@ def test_validate_valid_dataset_metadata():
                 "id":1
             },
             "research_dataset": {
-                "provenance": "test",
+                "provenance": [
+                    {
+                        "type": {
+                            "pref_label": {
+                                "en": "en_pref_label"
+                            }
+                        },
+                        "description": {
+                            "en": "en_description"
+                        },
+                        "temporal": {
+                            "start_date": "17.9.1991"
+                        }
+                    }
+                ],
                 "files": [
                     {
                         "title": "File 1",
