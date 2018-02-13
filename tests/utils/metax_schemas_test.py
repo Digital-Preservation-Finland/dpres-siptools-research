@@ -13,6 +13,7 @@ def test_validate_valid_dataset_metadata():
                 "id":1
             },
             "research_dataset": {
+                "provenance": "test",
                 "files": [
                     {
                         "title": "File 1",
