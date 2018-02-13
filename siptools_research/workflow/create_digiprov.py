@@ -15,7 +15,7 @@ class CreateProvenanceInformation(WorkflowTask):
     files in METS digiprov wrappers.
     """
     success_message = "Provenance metadata created."
-    failure_message = "Could not create procenance metada"
+    failure_message = "Could not create provenance metadata"
 
     def requires(self):
         """Requires workspace directory to be created and Metax metadata to be
