@@ -7,6 +7,7 @@ from siptools_research.utils.metax import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
+from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -17,12 +18,20 @@ class CreateProvenanceInformation(WorkflowTask):
     failure_message = "Could not create procenance metada"
 
     def requires(self):
-        """Requires workspace directory to be created."""
-        return CreateWorkspace(
-            workspace=self.workspace,
-            dataset_id=self.dataset_id,
-            config=self.config
-        )
+        """Requires workspace directory to be created and Metax metadata to be
+        validated."""
+        return [
+            CreateWorkspace(
+                workspace=self.workspace,
+                dataset_id=self.dataset_id,
+                config=self.config
+            ),
+            ValidateMetadata(
+                workspace=self.workspace,
+                dataset_id=self.dataset_id,
+                config=self.config
+            )
+        ]
 
     def output(self):
         """Outputs ``logs/task-create-provenance-information.log`` file."""
