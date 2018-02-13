@@ -85,14 +85,18 @@ class CreateStructMap(WorkflowTask):
 
                 # Create logical structmap
                 categories = self.find_file_categories()
-                wrapper_div = mets.div(type_attr='logical', dmdid=[dmdsec_id],
-                        admid=provenance_ids)
+                wrapper_div = mets.div(type_attr='logical',
+                                       dmdid=[dmdsec_id],
+                                       admid=provenance_ids)
+                debug_text = open("debug.txt", 'w')
                 for category in categories:
                     div = mets.div(type_attr=category)
                     for filename in categories.get(category):
                         fileid = self.get_fileid(filename)
+                        debug_text.write(fileid + ":" + filename + "\n")
                         div.append(mets.fptr(fileid))
                     wrapper_div.append(div)
+                debug_text.close()
                 logical_structmap.append(wrapper_div)
 
                 with open(os.path.join(self.sip_creation_path, 'logical_structmap.xml'), 'w+') as outfile:

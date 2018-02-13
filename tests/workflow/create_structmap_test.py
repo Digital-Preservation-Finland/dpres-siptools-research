@@ -7,6 +7,9 @@ from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools.scripts import import_object
 from siptools.scripts import import_description
 from siptools.scripts import premis_event
+import lxml.etree
+from siptools.xml.mets import NAMESPACES
+
 
 def test_create_structmap_ok(testpath, testmongoclient, testmetax):
     """Test the workflow task CreateStructMap.
@@ -25,14 +28,14 @@ def test_create_structmap_ok(testpath, testmongoclient, testmetax):
     # Create dmdsec
     import_description.main([dmdpath, '--workspace', sip_creation_path])
 
-    #Create digiprov
+    # Create digiprov
     event_type = 'creation'
     event_datetime = '2014-12-31T08:19:58Z'
     event_detail = 'Description of provenance'
     premis_event.main([
         event_type, event_datetime,
         "--event_detail", event_detail,
-        "--event_outcome", 'success', # TODO: Hardcoded value
+        "--event_outcome", 'success',  # TODO: Hardcoded value
         "--workspace", sip_creation_path
     ])
 
@@ -48,18 +51,23 @@ def test_create_structmap_ok(testpath, testmongoclient, testmetax):
     task.run()
     assert task.complete()
     assert os.path.isfile(os.path.join(sip_creation_path, 'filesec.xml'))
+    validate_filesec_file(os.path.join(sip_creation_path, 'filesec.xml'))
     assert os.path.isfile(os.path.join(sip_creation_path, 'structmap.xml'))
-    assert os.path.isfile(os.path.join(sip_creation_path, 'logical_structmap.xml'))
+    validate_structmap_file(os.path.join(sip_creation_path, 'structmap.xml'))
+    assert os.path.isfile(os.path.join(sip_creation_path,
+                                       'logical_structmap.xml'))
+    validate_logical_structmap_file(os.path.join(sip_creation_path,
+                                                 'logical_structmap.xml'))
 
     with open(os.path.join(sip_creation_path,
                            'logical_structmap.xml'))\
-             as open_file:
+            as open_file:
         file_content = open_file.read()
         assert 'Fairdata-logical' in file_content
 
 
 def test_create_structmap_without_directories(testpath, testmongoclient,
-                                              testmetax):
+                                                  testmetax):
     """Test creating structmap for dataset that does not have directories.
     """
     # Copy workspace directory
@@ -91,3 +99,83 @@ def test_filesec_othermd(testpath, testmongoclient, testmetax):
     # Run task
     task.run()
     assert task.complete()
+
+
+def validate_logical_structmap_file(logical_structmap_file):
+    tree = lxml.etree.parse(logical_structmap_file)
+    root = tree.getroot()
+    directories = root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
+    /@TYPE', namespaces=NAMESPACES)
+    assert len(directories) == 5
+    assert 'Documentation files' in directories
+    assert 'Machine-readable metadata' in directories
+    assert 'Access and use rights files' in directories
+    assert 'Software files' in directories
+    assert 'Publication files' in directories
+    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
+    [@TYPE="Documentation files"]/mets:fptr/@FILEID',
+    namespaces=NAMESPACES)) == 5
+    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
+    [@TYPE="Machine-readable metadata"]/mets:fptr[@FILEID]',
+    namespaces=NAMESPACES)) == 1
+    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
+    [@TYPE="Access and use rights files"]/mets:fptr/@FILEID',
+    namespaces=NAMESPACES)) == 1
+    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
+    [@TYPE="Software files"]/mets:fptr/@FILEID',
+    namespaces=NAMESPACES)) == 1
+    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
+    [@TYPE="Publication files"]/mets:fptr/@FILEID',
+    namespaces=NAMESPACES)) == 1
+
+
+def validate_filesec_file(filesec_file):
+    tree = lxml.etree.parse(filesec_file)
+    root = tree.getroot()
+    files = root.xpath('//mets:mets/mets:fileSec/mets:fileGrp/mets:file/\
+    mets:FLocat/@xlink:href', namespaces=NAMESPACES)
+    assert len(files) == 9
+    assert 'file://tests/data/structured/Documentation files/\
+Configuration files/properties.txt' in files
+    assert 'file://tests/data/structured/Documentation files/\
+Other files/this.txt' in files
+    assert 'file://tests/data/structured/Documentation files/\
+readme.txt' in files
+    assert 'file://tests/data/structured/Documentation files/Notebook/\
+notes.txt' in files
+    assert 'file://tests/data/structured/Documentation files/Method files/\
+method_putkisto.txt' in files
+    assert 'file://tests/data/structured/Machine-readable metadata/\
+metadata.txt' in files
+    assert 'file://tests/data/structured/Access and use rights files/\
+access_file.txt' in files
+    assert 'file://tests/data/structured/Software files/koodi.java' in files
+    assert 'file://tests/data/structured/Publication files/\
+publication.txt' in files
+
+
+def validate_structmap_file(structmap_file):
+    tree = lxml.etree.parse(structmap_file)
+    root = tree.getroot()
+    assert root.xpath("//mets:mets/mets:structMap/mets:div/@TYPE",
+                      namespaces=NAMESPACES)[0] == 'directory'
+    assert root.xpath("//mets:mets/mets:structMap/mets:div/mets:div/@TYPE",
+                      namespaces=NAMESPACES)[0] == 'tests'
+    assert root.xpath("//mets:mets/mets:structMap/mets:div/mets:div/mets:div\
+    /@TYPE", namespaces=NAMESPACES)[0] == 'data'
+    assert root.xpath("//mets:mets/mets:structMap/mets:div/mets:div/mets:div\
+    /mets:div/@TYPE", namespaces=NAMESPACES)[0] == 'structured'
+    directories = root.xpath("//mets:mets/mets:structMap/mets:div/mets:div\
+    /mets:div/mets:div/mets:div/@TYPE", namespaces=NAMESPACES)
+    assert 'Documentation files' in directories
+    assert 'Machine-readable metadata' in directories
+    assert 'Access and use rights files' in directories
+    assert 'Software files' in directories
+    assert 'Publication files' in directories
+    sub_dirs = root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
+    /mets:div/mets:div/mets:div[@TYPE="Documentation files"]/mets:div/@TYPE',
+        namespaces=NAMESPACES)
+    assert 'Configuration files' in sub_dirs
+    assert 'Other files' in sub_dirs
+    assert 'Notebook' in sub_dirs
+    assert 'Method files' in sub_dirs
