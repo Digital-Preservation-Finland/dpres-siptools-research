@@ -88,36 +88,33 @@ class CreateStructMap(WorkflowTask):
                 wrapper_div = mets.div(type_attr='logical',
                                        dmdid=[dmdsec_id],
                                        admid=provenance_ids)
-                debug_text = open("debug.txt", 'w')
                 for category in categories:
                     div = mets.div(type_attr=category)
                     for filename in categories.get(category):
                         fileid = self.get_fileid(filename)
-                        debug_text.write(fileid + ":" + filename + "\n")
                         div.append(mets.fptr(fileid))
                     wrapper_div.append(div)
-                debug_text.close()
                 logical_structmap.append(wrapper_div)
 
-                with open(os.path.join(self.sip_creation_path, 'logical_structmap.xml'), 'w+') as outfile:
+                with open(os.path.join(self.sip_creation_path,
+                                       'logical_structmap.xml'), 'w+') \
+                        as outfile:
                     outfile.write(h.serialize(mets_structmap))
 
-
-    def get_provenance_ids (self):
+    def get_provenance_ids(self):
         metax_client = Metax(self.config)
         metadata = metax_client.get_data('datasets',
-                self.dataset_id)
+                                         self.dataset_id)
         provenance_ids = []
         for provenance in metadata["research_dataset"]["provenance"]:
             event_type = provenance["type"]["pref_label"]["en"]
             prov_file = '%s-event.xml' % event_type
             prov_xml = ET.parse(os.path.join(self.sip_creation_path,
-                                                  prov_file))
+                                             prov_file))
             root = prov_xml.getroot()
             provenance_ids += root.xpath("//mets:digiprovMD/@ID",
-                    namespaces=NAMESPACES)
+                                         namespaces=NAMESPACES)
         return provenance_ids
-
 
     def find_file_categories(self):
         """Creates logical structure map of dataset files. Returns dictionary
@@ -156,7 +153,6 @@ class CreateStructMap(WorkflowTask):
 
         return logical_struct
 
-
     def get_fileid(self, filename):
         """get file id from filesec.xml by filename"""
 
@@ -173,7 +169,7 @@ class CreateStructMap(WorkflowTask):
                         == filename.strip('/'):
                     return file_.get('ID')
 
-        raise Exception("File ID for file %s not found from fileSec: %s" % \
+        raise Exception("File ID for file %s not found from fileSec: %s" %
                         (filename, filesec_xml))
 
 
