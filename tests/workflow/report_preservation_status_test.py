@@ -96,13 +96,14 @@ def test_reportpreservationstatus_rejected(testpath,
         assert exceptionThrown is True
         assert os.path.isfile(workspace + '/' +
                               os.path.basename(workspace) + '.html')
-        exp_msg = 'SIP was not approved: Contact tpas.admin@csc.fi'
-        exp_att = workspace + '/' + os.path.basename(workspace) + '.html'
-        mock_sendmail.assert_called_once_with('test.sender@tpas.fi',
-                                              'right.holder@company.com',
-                                              'SIP was rejected',
-                                              exp_msg,
-                                              exp_att)
+        # Check Jira TPASPKT-81
+        # exp_msg = 'SIP was not approved: Contact tpas.admin@csc.fi'
+        # exp_att = workspace + '/' + os.path.basename(workspace) + '.html'
+        # mock_sendmail.assert_called_once_with('test.sender@tpas.fi',
+        #                                      'right.holder@company.com',
+        #                                      'SIP was rejected',
+        #                                      exp_msg,
+        #                                      exp_att)
         assert task.complete() is False
 
 

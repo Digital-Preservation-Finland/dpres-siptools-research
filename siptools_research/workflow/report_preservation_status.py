@@ -88,11 +88,13 @@ class ReportPreservationStatus(WorkflowTask):
                                       self.workspace,
                                       conf)
         if os.path.isfile(report_file):
-            mail.send(conf.get('tpas_mail_sender'),
-                      email_address,
-                      conf.get('sip_rejected_mail_subject'),
-                      conf.get('sip_rejected_mail_msg').
-                      format(conf.get('tpas_admin_email')), report_file)
+            pass
+            # Check Jira TPASPKT-81
+            # mail.send(conf.get('tpas_mail_sender'),
+            #          email_address,
+            #          conf.get('sip_rejected_mail_subject'),
+            #          conf.get('sip_rejected_mail_msg').
+            #          format(conf.get('tpas_admin_email')), report_file)
         else:
             msg = 'Report file conflict. Path: %s' % ingest_report_paths[0]
             raise ValueError(msg)
