@@ -147,7 +147,7 @@ def test_invaliddataseterror(testpath, testmongoclient, testmetax):
     request_body = json.loads(httpretty.last_request().body)
     assert request_body['preservation_state'] == 7
     assert request_body['preservation_state_description'] == 'An error '\
-        'occurred while running a test task: File validation failed'
+        'occurred while running a test task: InvalidDatasetError: File validation failed'
 
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'
