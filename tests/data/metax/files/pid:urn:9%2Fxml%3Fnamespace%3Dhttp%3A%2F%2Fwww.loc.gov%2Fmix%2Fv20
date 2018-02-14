@@ -1,53 +1,40 @@
-<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:mix="http://www.loc.gov/mix/v20" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="38acf0b3-7edd-4a73-9dbd-ea67fd3c9c21" PROFILE="http://www.kdk.fi/kdk-mets-profile" fi:CATALOG="1.6.0" fi:SPECIFICATION="1.6.1" xmlns:fi="http://www.kdk.fi/standards/mets/kdk-extensions" xmlns:xlink="http://www.w3.org/1999/xlink">
- <mets:amdSec>
-  <mets:techMD CREATED="2017-10-27T07:21:27.005383" ID="techmd-mix-tests/data/structured">
-    <mix:mix xsi:schemaLocation="http://www.loc.gov/mix/v20 http://www.loc.gov/mix/mix.xsd">
-      <mix:BasicDigitalObjectInformation>
-        <mix:byteOrder>big endian</mix:byteOrder>
-        <mix:Compression>
-          <mix:compressionScheme>JPEG 2000 Lossless</mix:compressionScheme>
-          <mix:compressionRatio>10</mix:compressionRatio>
-        </mix:Compression>
-      </mix:BasicDigitalObjectInformation>
-      <mix:BasicImageInformation>
-        <mix:BasicImageCharacteristics>
-          <mix:imageWidth>1024</mix:imageWidth>
-          <mix:imageHeight>768</mix:imageHeight>
-          <mix:PhotometricInterpretation>
-            <mix:colorSpace>ICCBased</mix:colorSpace>
-            <mix:ColorProfile>
-              <mix:IccProfile>
-                <mix:iccProfileName>Adobe RGB</mix:iccProfileName>
-                <mix:iccProfileVersion>1998</mix:iccProfileVersion>
-                <mix:iccProfileURI>http://www.adobe.com/digitalimag/adobergb.html</mix:iccProfileURI>
-              </mix:IccProfile>
-            </mix:ColorProfile>
-          </mix:PhotometricInterpretation>
-        </mix:BasicImageCharacteristics>
-        <mix:SpecialFormatCharacteristics>
-          <mix:JPEG2000>
-            <mix:EncodingOptions>
-              <mix:qualityLayers>12</mix:qualityLayers>
-              <mix:resolutionLevels>6</mix:resolutionLevels>
-            </mix:EncodingOptions>
-          </mix:JPEG2000>
-        </mix:SpecialFormatCharacteristics>
-      </mix:BasicImageInformation>
-      <mix:ImageAssessmentMetadata>
-        <mix:SpatialMetrics />
-        <mix:ImageColorEncoding>
-          <mix:BitsPerSample>
-            <mix:bitsPerSampleValue>16, 16, 16</mix:bitsPerSampleValue>
-            <mix:bitsPerSampleUnit>integer</mix:bitsPerSampleUnit>
-          </mix:BitsPerSample>
-          <mix:samplesPerPixel>4</mix:samplesPerPixel>
-          <mix:extraSamples>unspecified data</mix:extraSamples>
-          <mix:Colormap>
-            <mix:colormapReference>http://foo.bar</mix:colormapReference>
-          </mix:Colormap>
-        </mix:ImageColorEncoding>
-      </mix:ImageAssessmentMetadata>
-    </mix:mix>
-  </mets:techMD>
- </mets:amdSec>
+<?xml version='1.0' encoding='UTF-8'?>
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd" PROFILE="local" OBJID="3c3fe81c-b689-46f3-9e67-abf58905df1f">
+  <mets:amdSec>
+    <mets:techMD ID="_edf581cbd4145e3cca9225fe0583b931" CREATED="2018-02-13T07:28:11.150039">
+      <mets:mdWrap MDTYPE="OTHER" MDTYPEVERSION="2.0" OTHERMDTYPE="MIX">
+        <mets:xmlData>
+          <ns0:mix xmlns:ns0="http://www.loc.gov/mix/v20" xsi:schemaLocation="http://www.loc.gov/mix/v20 http://www.loc.gov/mix/mix.xsd">
+            <ns0:BasicDigitalObjectInformation>
+              <ns0:byteOrder>little endian</ns0:byteOrder>
+              <ns0:Compression>
+                <ns0:compressionScheme>b44a</ns0:compressionScheme>
+                <ns0:compressionRatio/>
+              </ns0:Compression>
+            </ns0:BasicDigitalObjectInformation>
+            <ns0:BasicImageInformation>
+              <ns0:BasicImageCharacteristics>
+                <ns0:imageWidth>640</ns0:imageWidth>
+                <ns0:imageHeight>400</ns0:imageHeight>
+                <ns0:PhotometricInterpretation>
+                  <ns0:colorSpace>srgb</ns0:colorSpace>
+                </ns0:PhotometricInterpretation>
+              </ns0:BasicImageCharacteristics>
+            </ns0:BasicImageInformation>
+            <ns0:ImageAssessmentMetadata>
+              <ns0:SpatialMetrics/>
+              <ns0:ImageColorEncoding>
+                <ns0:BitsPerSample>
+                  <ns0:bitsPerSampleValue>8</ns0:bitsPerSampleValue>
+                  <ns0:bitsPerSampleUnit>integer</ns0:bitsPerSampleUnit>
+                </ns0:BitsPerSample>
+                <ns0:samplesPerPixel>3</ns0:samplesPerPixel>
+                <ns0:Colormap/>
+              </ns0:ImageColorEncoding>
+            </ns0:ImageAssessmentMetadata>
+          </ns0:mix>
+        </mets:xmlData>
+      </mets:mdWrap>
+    </mets:techMD>
+  </mets:amdSec>
 </mets:mets>
