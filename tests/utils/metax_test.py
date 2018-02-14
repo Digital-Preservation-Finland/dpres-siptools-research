@@ -61,7 +61,7 @@ def test_get_datacite(testmetax):
     xml = client.get_datacite("datacite_test_1")
 
     # Read field "creatorName" from xml file
-    ns_string = 'http://datacite.org/schema/kernel-3'
+    ns_string = 'http://datacite.org/schema/kernel-4'
     xpath_str = '/ns:resource/ns:creators/ns:creator/ns:creatorName'
     creatorname = xml.xpath(xpath_str, namespaces={'ns': ns_string})[0].text
     # Check that "creatorName" is same as in the original XML file
