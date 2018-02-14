@@ -51,7 +51,7 @@ def test_createdescriptivemetadata(testpath, testmongoclient, testmetax):
     common_xpath = '/mets:mets//mets:dmdSec/mets:mdWrap/mets:xmlData/'\
         'ns1:resource/'
     xpath_namespaces = {'mets': "http://www.loc.gov/METS/",
-                        'ns1': "http://datacite.org/schema/kernel-3"}
+                        'ns1': "http://datacite.org/schema/kernel-4"}
 
     elements = tree.xpath('/mets:mets//mets:dmdSec/mets:mdWrap',
                           namespaces=xpath_namespaces)
