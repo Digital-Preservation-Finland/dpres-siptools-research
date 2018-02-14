@@ -12,11 +12,38 @@ DATASET_METADATA_SCHEMA = \
                 "required": ["id"]
             },
             "research_dataset": {
-                "type": "object", # "research_dataset" is dict
-                "required": ["files"], # "research_dataset" must have "files"
-                "properties": { # "research_dataset" has attributes
-                    "files": { # "research_dataset" has attribute "files"
-                        "type": "array", # files is list
+                "type": "object",
+                "required": ["files", "provenance"],
+                "properties": {
+                    "provenance": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["type", "temporal", "description"],
+                            "properties": {
+                                "temporal": {
+                                    "type": "object",
+                                    "required": ["start_date"]
+                                },
+                                "description": {
+                                    "type": "object",
+                                    "required": ["en"]
+                                },
+                                "type": {
+                                    "type": "object",
+                                    "required": ["pref_label"],
+                                    "properties": {
+                                        "pref_label": {
+                                            "type": "object",
+                                            "required": ["en"]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "files": {
+                        "type": "array",
                         "items": {
                             "type": "object",
                             "required": ["identifier", "use_category"],
