@@ -18,7 +18,10 @@ def download_file(identifier, filepath, config_file):
     baseurl = conf.get('ida_url')
 
     url = '%s/files/%s/download' % (baseurl, identifier)
-    response = requests.get(url, auth=(user, password), verify=False)
+    try:
+        response = requests.get(url, auth=(user, password), verify=False)
+    except requests.exceptions.ConnectionError as exc:
+        raise Exception("Could not connect to Ida: %s" % exc.message)
 
     # Raise error if file is not found
     if response.status_code == 404:
