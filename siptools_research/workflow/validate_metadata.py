@@ -39,22 +39,18 @@ class ValidateMetadata(WorkflowTask):
     success_message = "Metax metadata is valid"
     failure_message = "Metax metadata could not be validated"
 
-
     def __init__(self, *args, **kwargs):
         super(ValidateMetadata, self).__init__(*args, **kwargs)
         self.metax_client = Metax(self.config)
-
 
     def requires(self):
         return CreateWorkspace(workspace=self.workspace,
                                dataset_id=self.dataset_id,
                                config=self.config)
 
-
     def output(self):
         return LocalTarget(os.path.join(self.logs_path,
                                         'validate-metadata.log'))
-
 
     def run(self):
         with self.output().open('w') as log:
@@ -77,7 +73,6 @@ class ValidateMetadata(WorkflowTask):
                 # Validate file metadata for each file in dataset files
                 self._validate_xml_file_metadata()
 
-
     # pylint: disable=invalid-name
     def _validate_dataset_metadata_files(self, dataset_metadata):
         for dataset_file in dataset_metadata['research_dataset']['files']:
@@ -89,7 +84,6 @@ class ValidateMetadata(WorkflowTask):
                                     metax_schemas.FILE_METADATA_SCHEMA)
             except jsonschema.ValidationError as exc:
                 raise InvalidMetadataError(exc)
-
 
     def _validate_xml_file_metadata(self):
         for file_metadata in \
@@ -114,12 +108,8 @@ class ValidateMetadata(WorkflowTask):
                                                file_id,
                                                xmls)
 
-
     def _validate_with_schematron(self, file_format_prefix, file_id, xmls):
         with tempfile.NamedTemporaryFile() as temp:
-            log_file = open('schem.txt', 'a')
-            log_file.write(file_id)
-            log_file.close()
             namespace = xmls[self.SCHEMATRONS[file_format_prefix]['ns']]
             temp.write(lxml.etree.tostring(namespace).strip())
             temp.seek(0)
