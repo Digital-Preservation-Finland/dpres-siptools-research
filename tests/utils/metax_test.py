@@ -1,14 +1,20 @@
 # coding=utf-8
 """Tests for ``siptools_research.utils.metax`` module"""
 import json
-from siptools_research.utils.metax import Metax
+import pytest
 import httpretty
 import mock
+from siptools_research.utils.metax import Metax
 from siptools_research.utils.metax import MetaxConnectionError
 
-def test_get_dataset(testmetax):
+
+@pytest.mark.usefixtures('testmetax')
+def test_get_dataset():
     """Test get_dataset function. Reads sample dataset JSON from testmetax and
-    checks that returned dict contains the correct values."""
+    checks that returned dict contains the correct values.
+
+    :returns: None
+    """
     client = Metax('tests/data/siptools_research.conf')
     dataset = client.get_data('datasets', "mets_test_dataset_1")
     print dataset
@@ -17,9 +23,12 @@ def test_get_dataset(testmetax):
         ['en'] == 'creation'
 
 
-def test_get_xml(testmetax):
+@pytest.mark.usefixtures('testmetax')
+def test_get_xml():
     """Test get_xml function. Reads some test xml from testmetax checks that
     the function returns dictionary with correct items
+
+    :returns: None
     """
     # Get XML objects from Metax
     client = Metax('tests/data/siptools_research.conf')
@@ -37,8 +46,10 @@ def test_get_xml(testmetax):
 
 def test_reading_config_file():
     """Test that options from configuration file are used instead of default
-    values."""
+    values.
 
+    :returns: None
+    """
     # Init metax using config file that has no metax-related options
     metax_client1 = Metax("tests/data/configuration_files/metax_test1.conf")
     # The client should have default values for each options
@@ -54,9 +65,12 @@ def test_reading_config_file():
     assert metax_client2.password == "VerySecret123"
 
 
-def test_get_datacite(testmetax):
+@pytest.mark.usefixtures('testmetax')
+def test_get_datacite():
     """Test get_datacite function. Read one field from returned etree object
-    and check its correctness"""
+    and check its correctness.
+    :returns: None
+    """
     client = Metax('tests/data/siptools_research.conf')
     xml = client.get_datacite("datacite_test_1")
 
@@ -68,11 +82,14 @@ def test_get_datacite(testmetax):
     assert creatorname == u"Puupää, Pekka"
 
 
-def test_set_preservation_state(testmetax):
+@pytest.mark.usefixtures('testmetax')
+def test_set_preservation_state():
     """Test set_preservation_state function. Metadata in Metax is modified by
     sending HTTP PATCH request with modified metadata in JSON format. This test
     checks that correct HTTP request is sent to Metax. The effect of the
     request is not tested.
+
+    :returns: None
     """
     client = Metax('tests/data/siptools_research.conf')
     client.set_preservation_state("mets_test_dataset_1", 7,

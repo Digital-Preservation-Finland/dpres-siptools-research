@@ -4,8 +4,8 @@ import os
 import pytest
 from siptools_research.workflow import get_files
 
-# pylint: disable=unused-argument
-def test_getfiles(testpath, testmetax, testida, testmongoclient):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'testida')
+def test_getfiles(testpath):
     """Tests for ``GetFiles`` task.
 
     - ``Task.complete()`` is true after ``Task.run()``
@@ -42,10 +42,14 @@ def test_getfiles(testpath, testmetax, testida, testmongoclient):
         assert open_file.read() == 'bar\n'
 
 
-def test_missing_files(testpath, testmetax, testida):
+@pytest.mark.usefixtures('testmetax', 'testida')
+def test_missing_files(testpath):
     """Test case where a file can not be found from Ida. The first file should
     successfully downloaded, but the second file is not found in Ida. Task
-    should fail with Exception."""
+    should fail with Exception.
+
+    :testpath: Temporary directory fixture
+    """
 
     # Init task
     task = get_files.GetFiles(workspace=testpath,

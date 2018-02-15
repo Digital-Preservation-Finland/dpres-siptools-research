@@ -6,9 +6,14 @@ from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
-def test_validatemetadata(testpath, testmetax, testmongoclient):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+def test_validatemetadata(testpath):
     """Test ValidateMetadata class. Run task for dataset that has valid
-    metadata."""
+    metadata.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
 
     # Create "logs" directory
     os.mkdir(os.path.join(testpath, 'logs'))
@@ -24,10 +29,15 @@ def test_validatemetadata(testpath, testmetax, testmongoclient):
     assert task.complete()
 
 
-def test_invalid_metadata(testpath, testmetax, testmongoclient):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+def test_invalid_metadata(testpath):
     """Test ValidateMetadata class. Run task for dataset that has invalid
     metadata. The dataset is missing attribute: 'type' for each object in files
-    list."""
+    list.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
 
     # Create "logs" directory
     os.mkdir(os.path.join(testpath, 'logs'))
@@ -47,9 +57,14 @@ def test_invalid_metadata(testpath, testmetax, testmongoclient):
     assert not task.complete()
 
 
-def test_missing_xml_metadata(testpath, testmetax, testmongoclient):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+def test_missing_xml_metadata(testpath):
     """Test ValidateMetadata class. Run task for dataset missing a
-    xml metadata file for an image file."""
+    xml metadata file for an image file.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
 
     # Create "logs" directory
     os.mkdir(os.path.join(testpath, 'logs'))

@@ -1,10 +1,11 @@
 """Test the `siptools_research.workflow.create_workspace` module"""
 
 import os
-import pymongo
+import pytest
 from siptools_research.workflow import create_workspace
 
-def test_createworkspace(testpath, testmongoclient):
+@pytest.mark.usefixtures('testmongoclient')
+def test_createworkspace(testpath):
     """Tests for `CreateWorkspace` task.
 
     - `Task.complete()` is true after `Task.run()`
@@ -12,7 +13,6 @@ def test_createworkspace(testpath, testmongoclient):
     - Log entry is created to mongodb
 
     :testpath: Testpath fixture
-    :testmongoclient: Pymongo mock fixture
     :returns: None
     """
 

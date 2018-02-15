@@ -2,17 +2,16 @@
 """Tests for `siptools_research.workflow.create_dmdsec` module"""
 
 import os
+import pytest
 from lxml import etree
 from siptools_research.workflow.create_dmdsec\
     import CreateDescriptiveMetadata
-DATASET_PATH = "tests/data/metax_datasets/"
 
-def test_createdescriptivemetadata(testpath, testmongoclient, testmetax):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+def test_createdescriptivemetadata(testpath):
     """Test `CreateDescriptiveMetadata` task.
 
     :testpath: Testpath fixture
-    :testmongoclient: Mock mongoclient fixture
-    :testmmetax: Mock Metax fixture
     :returns: None
     """
 
@@ -44,7 +43,6 @@ def test_createdescriptivemetadata(testpath, testmongoclient, testmetax):
                                        'dmdsec.xml'))
 
     # Check that the created xml-file contains correct elements.
-    # pylint: disable=no-member
     tree = etree.parse(os.path.join(workspace,
                                     'sip-in-progress',
                                     'dmdsec.xml'))
@@ -101,10 +99,3 @@ def test_createdescriptivemetadata(testpath, testmongoclient, testmetax):
     elements = tree.xpath(common_xpath + "ns1:publicationYear",
                           namespaces=xpath_namespaces)
     assert elements[0].text == "2017"
-
-
-# TODO: Test for CreateDescriptiveMetadata.requires()
-
-# TODO: Test for ReadyForThis
-
-# TODO: Test for DmdsecComplete

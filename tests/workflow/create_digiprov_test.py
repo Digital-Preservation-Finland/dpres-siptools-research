@@ -5,8 +5,9 @@ import pytest
 import lxml
 from siptools_research.workflow import create_digiprov
 
-# pylint: disable=unused-argument,invalid-name,fixme
-def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
+@pytest.mark.usefixtures("testmongoclient", "testmetax")
+# pylint: disable=invalid-name
+def test_createprovenanceinformation(testpath):
     """Tests for `CreateProvenanceInformation` task.
 
     - `Task.complete()` is true after `Task.run()`
@@ -14,16 +15,12 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
     - Log file is created
 
     :testpath: Testpath fixture
-    :testmongoclient: Pymongo mock fixture
-    :testmetax: Fake metax fixture
     :returns: None
     """
 
     # Create workspace with "logs" and "transfers" directories in temporary
     # directory
     workspace = testpath
-    # TODO: The task should be able to create 'logs' directory if it does not
-    # exist. Therefore this line should be unnecessary.
     os.makedirs(os.path.join(workspace, 'logs'))
     os.makedirs(os.path.join(workspace, 'sip-in-progress'))
 
@@ -54,14 +51,14 @@ def test_createprovenanceinformation(testpath, testmongoclient, testmetax):
 
 
 
-def test_failed_createprovenanceinformation(testpath, testmongoclient,
-                                            testmetax):
+@pytest.mark.usefixtures("testmongoclient", "testmetax")
+# pylint: disable=invalid-name
+def test_failed_createprovenanceinformation(testpath):
     """Test case where `CreateProvenanceInformation` task should fail.
     The dataset requested does not have provenance information, which should
     cause exception.
 
     :testpath: Testpath fixture
-    :testmongoclient: Pymongo mock fixture
     :returns: None
     """
 
@@ -86,18 +83,19 @@ def test_failed_createprovenanceinformation(testpath, testmongoclient,
     assert set(os.listdir(workspace)) == {'sip-in-progress', 'logs'}
 
 
-def test_create_premis_event(testpath, testmetax):
+@pytest.mark.usefixtures("testmetax")
+def test_create_premis_event(testpath):
     """Test `create_premis_event` function. Output XML file should be produced
     and it should contain some specified elements.
 
     :testpath: Testpath fixture
-    :testmetax: Fake metax fixture
     :returns: None
     """
 
     # Create provenance info xml-file to tempdir
     workspace = testpath
-    create_digiprov.create_premis_event('create_digiprov_test_dataset_3', workspace,
+    create_digiprov.create_premis_event('create_digiprov_test_dataset_3',
+                                        workspace,
                                         'tests/data/siptools_research.conf')
 
     # Check that the created xml-file contains correct elements.
@@ -138,10 +136,3 @@ def test_create_premis_event(testpath, testmetax):
                                       'premis': "info:lc/xmlns/premis-v2"}
                          )
     assert elements[0].text == "Description of provenance"
-
-
-    # TODO: Test for CreateProvenanceInformation.requires()
-
-    # TODO: Test for CreateProvenanceInformation.output()
-
-    # TODO: Test for DigiprovComplete.output()

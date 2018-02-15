@@ -1,11 +1,16 @@
 """Tests for ``siptools_research.utils.database`` module"""
 import uuid
+import pytest
 import siptools_research.utils.database
 import pymongo
 
-def test_add_event(testmongoclient):
+@pytest.mark.usefixtures('testmongoclient')
+def test_add_event():
     """Test add_event function. Adds sample event to empty database and checks
-    that new document is created."""
+    that new document is created.
+
+    :returns: None
+    """
 
     # Init database client
     database = siptools_research.utils.database.Database(

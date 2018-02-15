@@ -1,4 +1,4 @@
-"""Test task for testing ``siptools_workflow.validate_sip``."""
+"""Test task for testing ``siptools_research.workflow.validate_sip``."""
 # TODO: Automatic unit testing is complicated, because luigi RemoteTarget is using
 # ssh command to connect remote server [1]. A temporary SSH-server should be
 # created to properly test this module. MockSSH [2] library could do this. It
@@ -16,11 +16,14 @@ import time
 import paramiko
 from siptools_research.workflow.validate_sip import ValidateSIP
 
-# pylint: disable=redefined-outer-name,unused-argument
 def test_validatesip_accepted(testpath):
     """Initializes task and tests that it is not complete. Then creates new
     directory to "accepted" directory in digital preservation server and tests
-    that task is complete."""
+    that task is complete.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
     workspace = testpath
 
     # Init task
@@ -40,7 +43,11 @@ def test_validatesip_accepted(testpath):
 def test_validatesip_rejected(testpath):
     """Initializes task and tests that it is not complete. Then creates new
     directory to "rejected" directory in digital preservation server and tests
-    that task is complete."""
+    that task is complete.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
     workspace = testpath
 
     # Init task

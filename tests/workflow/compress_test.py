@@ -6,7 +6,9 @@ from siptools_research.workflow.compress import CompressSIP
 
 def test_compresssip(testpath):
     """Test that run-function of CompresSIP task creates tar-file
-    complete-function returns True when tar-file exists."""
+    complete-function returns True when tar-file exists.
+
+    :testpath: Temporary directory fixture"""
     # Create required contents to workspace
     os.makedirs(os.path.join(testpath, 'logs'))
     shutil.copytree('tests/data/testsips/simple_sip',

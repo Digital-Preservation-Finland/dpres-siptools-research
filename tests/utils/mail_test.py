@@ -1,13 +1,15 @@
+"""Tests for ``siptools_research.utils.mail`` module"""
 try:
     import mock
 except ImportError:
     from unittest import mock
 import unittest
-from siptools_research.utils import mail
 from smtplib import SMTPSenderRefused
+from siptools_research.utils import mail
 
 
 class BasicMailTest(unittest.TestCase):
+    """Test class for testing ``siptools_research.utils.mail`` functions"""
     message = 'Jotain potaskaa'
     sender = 'test.sender@tpas.fi'
     receiver = 'test.receiver@tpas.fi'

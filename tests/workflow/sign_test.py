@@ -2,10 +2,11 @@
 
 import os
 import shutil
-import pymongo
+import pytest
 from siptools_research.workflow import sign
 
-def test_signsip(testpath, testmongoclient):
+@pytest.mark.usefixtures('testmetax')
+def test_signsip(testpath):
     """Tests for `SignSIP` task.
 
     - `Task.complete()` is true after `Task.run()`
@@ -13,7 +14,6 @@ def test_signsip(testpath, testmongoclient):
     - Log file is created
 
     :testpath: Testpath fixture
-    :testmongoclient: Pymongo mock fixture
     :returns: None
     """
 

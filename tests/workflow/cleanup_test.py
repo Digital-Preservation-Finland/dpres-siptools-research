@@ -1,10 +1,14 @@
 """Tests for ``siptools_research.workflow.cleanup`` module"""
 import os
+import pytest
 from siptools_research.utils.database import Database
 from siptools_research.workflow.cleanup import CleanupWorkspace
 
-def test_cleanupworkspace(testpath, testmongoclient):
-    """Test that task.run() removes workspace."""
+@pytest.mark.usefixtures("testmongoclient")
+def test_cleanupworkspace(testpath):
+    """Test that task.run() removes workspace.
+
+    :testpath: Temporary directory fixture"""
 
     # Create a workspace directory and some content into it
     workspace = os.path.join(testpath, 'test_workspace')

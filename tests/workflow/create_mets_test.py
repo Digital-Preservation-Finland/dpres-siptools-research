@@ -1,14 +1,20 @@
 """Test module ``siptools_research.workflow.create_mets``"""
 import shutil
 import os
+import pytest
 from siptools_research.workflow.create_mets import CreateMets
 from siptools.scripts import import_object
 from siptools.scripts import import_description, premis_event, \
     compile_structmap
 
 
-def test_create_mets_ok(testpath, testmongoclient, testmetax):
-    """Test the workflow task CreateMets."""
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+def test_create_mets_ok(testpath):
+    """Test the workflow task CreateMets.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
     # Create workspace with contents required by the tested task
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
@@ -25,7 +31,10 @@ def test_create_mets_ok(testpath, testmongoclient, testmetax):
 
 
 def create_test_data(workspace):
-    """Create data needed to run ``CreateMets`` task"""
+    """Create data needed to run ``CreateMets`` task
+
+    :workspace: Workspace directory in which the data is created.
+    """
 
     # Copy sample datacite.xml to workspace directory
     dmdpath = os.path.join(workspace, 'datacite.xml')

@@ -2,17 +2,23 @@
 
 import os
 import time
+import pytest
 import paramiko
 from siptools_research.workflow import report_preservation_status
 from siptools_research.workflowtask import InvalidDatasetError
 import mock
 
 
-def test_reportpreservationstatus(testpath, testmongoclient, testmetax):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+def test_reportpreservationstatus(testpath):
     """Creates new directory to "accepted" directory in digital preservation
     server, runs ReportPreservationStatus task, and tests that task is complete
     after it has been run. Fake Metax server is used, so it can not be tested
-    if preservation status really is updated in Metax."""
+    if preservation status really is updated in Metax.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
 
     workspace = testpath
 
@@ -45,14 +51,18 @@ def test_reportpreservationstatus(testpath, testmongoclient, testmetax):
     assert task.complete()
 
 
-def test_reportpreservationstatus_rejected(testpath,
-                                           testmongoclient,
-                                           testmetax):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+# pylint: disable=invalid-name
+def test_reportpreservationstatus_rejected(testpath):
     """Creates new directory to "rejected" directory with a report file
     in digital preservation server, runs ReportPreservationStatus task,
     and tests that the report file is sent along with a email message
     to the address defined in Metax. Metax server is used, so it can
-    not be tested if preservation status really is updated in Metax."""
+    not be tested if preservation status really is updated in Metax.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
 
     workspace = testpath
 
@@ -107,13 +117,17 @@ def test_reportpreservationstatus_rejected(testpath,
         assert task.complete() is False
 
 
-def test_reportpreservationstatus_rejected_int_error(testpath,
-                                                     testmongoclient,
-                                                     testmetax):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+# pylint: disable=invalid-name
+def test_reportpreservationstatus_rejected_int_error(testpath):
     """Creates new directory to "rejected" directory with two report files
     in digital preservation server, runs ReportPreservationStatus task,
     and tests that the report file is NOT sent. Metax server is used, so it can
-    not be tested if preservation status really is updated in Metax."""
+    not be tested if preservation status really is updated in Metax.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
 
     workspace = testpath
 
@@ -160,6 +174,6 @@ def test_reportpreservationstatus_rejected_int_error(testpath,
         mock_sendmail.assert_not_called()
         assert exceptionThrown is True
         assert task.complete() is False
-# TODO: Test for case where SIP is rejected
+
 
 # TODO: Check which requests were sent to httpretty

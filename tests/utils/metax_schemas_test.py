@@ -6,7 +6,12 @@ import siptools_research.utils.metax_schemas as metax_schemas
 
 # pylint: disable=invalid-name
 def test_validate_valid_dataset_metadata():
-    """Test validation of valid dataset metadata"""
+    """Test validation of valid dataset metadata. Defines a sample metadata
+    dictionary that is known to be valid. The dictionary is then validated
+    against ``DATASET_METADA_SCHEMA``.
+
+    :returns: None
+    """
     valid_dataset_metadata = \
         {
             "contract":{
@@ -57,7 +62,11 @@ def test_validate_valid_dataset_metadata():
 
 
 def test_validate_invalid_dataset_metadata():
-    """Test validation of invalid dataset metadata"""
+    """Test validation of invalid dataset metadata. The validation should raise
+    ``ValidationError``.
+
+    :returns: None
+    """
     invalid_dataset_metadata = \
         {
             "research_dataset": {
@@ -86,7 +95,12 @@ def test_validate_invalid_dataset_metadata():
 
 
 def test_validate_valid_file_metadata():
-    """Test validation of valid file metadata."""
+    """Test validation of valid file metadata. Defines a sample metadata
+    dictionary that is known to be valid. The dictionary is then validated
+    against ``FILE_METADA_SCHEMA``.
+
+    :returns: None
+    """
     valid_file_metadata = \
         {
             "checksum": {
@@ -109,7 +123,11 @@ def test_validate_valid_file_metadata():
 
 
 def test_validate_invalid_file_metadata():
-    """Test validation of invalid file metadata."""
+    """Test validation of invalid file metadata. The validation should raise
+    ``ValidationError``.
+
+    :returns: None
+    """
     invalid_file_metadata = \
         {
             "checksum": {

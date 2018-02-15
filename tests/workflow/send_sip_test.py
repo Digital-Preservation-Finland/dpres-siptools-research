@@ -2,6 +2,7 @@
 import os
 import shutil
 import logging
+import pytest
 import paramiko
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.config import Configuration
@@ -9,10 +10,13 @@ from siptools_research.config import Configuration
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
 
-# pylint: disable=unused-argument
-def test_send_sip(testpath, testmongoclient):
+@pytest.mark.usefixtures('testmongoclient')
+def test_send_sip(testpath):
     """Test the workflow task SendSip module. Run task and check that .tar is
     copied to digital preservation server.
+
+    :testpath: Temporary directory fixture
+    :returns: None
     """
     # Set permissions of ssh key
     os.chmod('tests/data/pas_ssh_key', 0600)

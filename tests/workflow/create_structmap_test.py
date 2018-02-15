@@ -3,16 +3,21 @@
 import os
 import shutil
 import distutils.dir_util
+import pytest
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools.scripts import import_object
 from siptools.scripts import import_description
 from siptools.scripts import premis_event
-import lxml.etree
 from siptools.xml.mets import NAMESPACES
+import lxml.etree
 
 
-def test_create_structmap_ok(testpath, testmongoclient, testmetax):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+def test_create_structmap_ok(testpath):
     """Test the workflow task CreateStructMap.
+
+    :testpath: Temporary directory fixture
+    :returns: None
     """
     workspace = testpath
     sip_creation_path = os.path.join(workspace, "sip-in-progress")
@@ -35,7 +40,7 @@ def test_create_structmap_ok(testpath, testmongoclient, testmetax):
     premis_event.main([
         event_type, event_datetime,
         "--event_detail", event_detail,
-        "--event_outcome", 'success',  # TODO: Hardcoded value
+        "--event_outcome", 'success',
         "--workspace", sip_creation_path
     ])
 
@@ -66,9 +71,13 @@ def test_create_structmap_ok(testpath, testmongoclient, testmetax):
         assert 'Fairdata-logical' in file_content
 
 
-def test_create_structmap_without_directories(testpath, testmongoclient,
-                                                  testmetax):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+# pylint: disable=invalid-name
+def test_create_structmap_without_directories(testpath):
     """Test creating structmap for dataset that does not have directories.
+
+    :testpath: Temporary directory fixture
+    :returns: None
     """
     # Copy workspace directory
     distutils.dir_util.copy_tree('tests/data/workspaces/create_structmap_2',
@@ -84,9 +93,14 @@ def test_create_structmap_without_directories(testpath, testmongoclient,
     assert task.complete()
 
 
-def test_filesec_othermd(testpath, testmongoclient, testmetax):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+def test_filesec_othermd(testpath):
     """Test CreateStructMap task with dataset that has some othermd metadata
-    for files.  """
+    for files.
+
+    :testpath: Temporary directory fixture
+    :returns: None
+    """
     # Copy workspace directory
     distutils.dir_util.copy_tree('tests/data/workspaces/create_structmap_3',
                                  testpath)
@@ -102,6 +116,12 @@ def test_filesec_othermd(testpath, testmongoclient, testmetax):
 
 
 def validate_logical_structmap_file(logical_structmap_file):
+    """Validates logical structuremap XML-file. Checks that XML-file has the
+    correct elements. Raises exception if XML is not valid.
+
+    :logical_structmap_file: XML file to be validated
+    :returns: None
+    """
     tree = lxml.etree.parse(logical_structmap_file)
     root = tree.getroot()
     directories = root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
@@ -114,22 +134,28 @@ def validate_logical_structmap_file(logical_structmap_file):
     assert 'Publication files' in directories
     assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
     [@TYPE="Documentation files"]/mets:fptr/@FILEID',
-    namespaces=NAMESPACES)) == 5
+                          namespaces=NAMESPACES)) == 5
     assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
     [@TYPE="Machine-readable metadata"]/mets:fptr[@FILEID]',
-    namespaces=NAMESPACES)) == 1
+                          namespaces=NAMESPACES)) == 1
     assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
     [@TYPE="Access and use rights files"]/mets:fptr/@FILEID',
-    namespaces=NAMESPACES)) == 1
+                          namespaces=NAMESPACES)) == 1
     assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
     [@TYPE="Software files"]/mets:fptr/@FILEID',
-    namespaces=NAMESPACES)) == 1
+                          namespaces=NAMESPACES)) == 1
     assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
     [@TYPE="Publication files"]/mets:fptr/@FILEID',
-    namespaces=NAMESPACES)) == 1
+                          namespaces=NAMESPACES)) == 1
 
 
 def validate_filesec_file(filesec_file):
+    """Validates logical filesec XML-file. Checks that XML-file has the
+    correct elements. Raises exception if XML is not valid.
+
+    :filesec_file: XML file to be validated
+    :returns: None
+    """
     tree = lxml.etree.parse(filesec_file)
     root = tree.getroot()
     files = root.xpath('//mets:mets/mets:fileSec/mets:fileGrp/mets:file/\
@@ -155,6 +181,12 @@ publication.txt' in files
 
 
 def validate_structmap_file(structmap_file):
+    """Validates logical structuremap XML-file. Checks that XML-file has the
+    correct elements. Raises exception if XML is not valid.
+
+    :filesec_file: XML file to be validated
+    :returns: None
+    """
     tree = lxml.etree.parse(structmap_file)
     root = tree.getroot()
     assert root.xpath("//mets:mets/mets:structMap/mets:div/@TYPE",
@@ -174,7 +206,7 @@ def validate_structmap_file(structmap_file):
     assert 'Publication files' in directories
     sub_dirs = root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
     /mets:div/mets:div/mets:div[@TYPE="Documentation files"]/mets:div/@TYPE',
-        namespaces=NAMESPACES)
+                          namespaces=NAMESPACES)
     assert 'Configuration files' in sub_dirs
     assert 'Other files' in sub_dirs
     assert 'Notebook' in sub_dirs
