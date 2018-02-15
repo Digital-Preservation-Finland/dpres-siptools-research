@@ -26,7 +26,7 @@ def run_luigi_task(task_name, workspace):
     """
     with pytest.raises(SystemExit):
         luigi.cmdline.luigi_run(
-            ('--module', 'tests.workflowtask_test',
+            ('--module', 'tests.unit_tests.workflowtask_test',
              task_name,
              '--workspace', workspace,
              '--dataset-id', '1',

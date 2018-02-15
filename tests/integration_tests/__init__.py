@@ -1,0 +1,1 @@
+"""This package contains integration tests for ``siptools_research`` package. The integration of workflow tasks is tested in ``workflow_test`` submodule. Integration with Metax service is tested in ``metax_integration_test`` module. Integration with Ida service is tested in ``ida_integration_test`` module."""
