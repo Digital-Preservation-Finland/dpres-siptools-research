@@ -1,6 +1,8 @@
 """Luigi task that validates metadata provided by Metax."""
 
 import os
+import tempfile
+from subprocess import Popen, PIPE
 from luigi import LocalTarget
 import jsonschema
 import siptools_research.utils.metax_schemas as metax_schemas
@@ -10,9 +12,7 @@ from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflowtask import InvalidMetadataError
 import lxml
-from subprocess import Popen, PIPE
 from siptools.xml.mets import NAMESPACES
-import tempfile
 
 
 class ValidateMetadata(WorkflowTask):
@@ -39,6 +39,10 @@ class ValidateMetadata(WorkflowTask):
     success_message = "Metax metadata is valid"
     failure_message = "Metax metadata could not be validated"
 
+    def __init__(self, *args, **kwargs):
+        super(ValidateMetadata, self).__init__(*args, **kwargs)
+        self.metax_client = Metax(self.config)
+
     def requires(self):
         return CreateWorkspace(workspace=self.workspace,
                                dataset_id=self.dataset_id,
@@ -53,7 +57,6 @@ class ValidateMetadata(WorkflowTask):
             with redirect_stdout(log):
 
                 # Get dataset metadata from Metax
-                self.metax_client = Metax(self.config)
                 dataset_metadata = self.metax_client.get_data('datasets',
                                                               self.dataset_id)
 
@@ -70,6 +73,7 @@ class ValidateMetadata(WorkflowTask):
                 # Validate file metadata for each file in dataset files
                 self.__validate_xml_file_metadata()
 
+    # pylint: disable=invalid-name
     def __validate_dataset_metadata_files(self, dataset_metadata):
         for dataset_file in dataset_metadata['research_dataset']['files']:
             file_id = dataset_file['identifier']
@@ -107,10 +111,10 @@ class ValidateMetadata(WorkflowTask):
     def __validate_with_schematron(self, file_format_prefix, file_id, xmls):
         with tempfile.NamedTemporaryFile() as temp:
             log_file = open('schem.txt', 'a')
-            log_file.write(file_id);
+            log_file.write(file_id)
             log_file.close()
-            ns = xmls[self.SCHEMATRONS[file_format_prefix]['ns']]
-            temp.write(lxml.etree.tostring(ns).strip())
+            namespace = xmls[self.SCHEMATRONS[file_format_prefix]['ns']]
+            temp.write(lxml.etree.tostring(namespace).strip())
             temp.seek(0)
             schem = self.SCHEMATRONS[file_format_prefix]['schematron']
             proc = Popen(['check-xml-schematron-features', '-s',
