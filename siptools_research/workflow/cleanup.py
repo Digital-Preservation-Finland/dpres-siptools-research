@@ -18,6 +18,7 @@ class CleanupWorkspace(WorkflowTask):
     failure_message = 'Cleaning workspace failed'
 
     def requires(self):
+        """Requires that preservation status has been reported"""
         return ReportPreservationStatus(workspace=self.workspace,
                                         dataset_id=self.dataset_id,
                                         config=self.config)

@@ -22,11 +22,11 @@ class WorkflowTask(luigi.Task):
     status information to database:
 
     :document_id: A unique string that is used for identifying workflows (one
-    mongodb document per workflow) in workflow database. The ``document_id`` is
-    the name (not path) of workspace directory.
+       mongodb document per workflow) in workflow database. The ``document_id``
+       is the name (not path) of workspace directory.
     :task_name: Automatically generated name for the task.
     :document_id: Identifier of the workflow. Generated from the name of
-    workspace, which should be unique
+       workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is created
     :logs_path: A path in the workspace in which the task logs are written
     """
@@ -61,11 +61,11 @@ class WorkflowExternalTask(luigi.ExternalTask):
     workflow status information to database:
 
     :document_id: A unique string that is used for identifying workflows (one
-    mongodb document per workflow) in workflow database. The ``document_id`` is
-    the name (not path) of workspace directory.
+       mongodb document per workflow) in workflow database. The ``document_id``
+       is the name (not path) of workspace directory.
     :task_name: Automatically generated name for the task.
     :document_id: Identifier of the workflow. Generated from the name of
-    workspace, which should be unique
+       workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is created
     :logs_path: A path in the workspace in which the task logs are written
     """
@@ -166,4 +166,6 @@ def report_task_failure(task, exception):
     elif isinstance(exception, MetaxConnectionError):
         # send email to admin
         conf = Configuration(task.config)
-        mail.send(conf.get('tpas_mail_sender'), conf.get('tpas_admin_email'), str(exception), str(exception))
+        mail.send(conf.get('tpas_mail_sender'),
+                  conf.get('tpas_admin_email'),
+                  str(exception), str(exception))

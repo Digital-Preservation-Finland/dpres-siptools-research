@@ -40,6 +40,7 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
+	-rm -rf source/modules
 
 modules:
 	mkdir -p source/modules

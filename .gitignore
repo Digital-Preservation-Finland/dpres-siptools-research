@@ -2,3 +2,8 @@
 rpmbuild
 junit.xml
 .cache
+.coverage
+.pytest_cache/
+doc/build/
+doc/source/modules/
+htmlcov/

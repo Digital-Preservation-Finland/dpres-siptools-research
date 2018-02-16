@@ -8,7 +8,6 @@ import luigi.cmdline
 import pymongo
 import httpretty
 import mock
-from siptools_research.utils import mail
 
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflowtask import InvalidDatasetError
@@ -40,9 +39,11 @@ class TestTask(WorkflowTask):
     success_message = 'Test task was successfull'
 
     def output(self):
+        """Creates output file"""
         return luigi.LocalTarget(os.path.join(self.workspace, 'output_file'))
 
     def run(self):
+        """Writes something to output file"""
         with self.output().open('w') as outputfile:
             outputfile.write('Hello world')
 
@@ -52,9 +53,11 @@ class FailingTestTask(WorkflowTask):
     failure_message = 'An error occurred while running a test task'
 
     def output(self):
+        """Creates output file"""
         return luigi.LocalTarget(os.path.join(self.workspace, 'output_file'))
 
     def run(self):
+        """Raises exception"""
         raise Exception('Shit hit the fan')
 
 
@@ -147,7 +150,8 @@ def test_invaliddataseterror(testpath, testmongoclient, testmetax):
     request_body = json.loads(httpretty.last_request().body)
     assert request_body['preservation_state'] == 7
     assert request_body['preservation_state_description'] == 'An error '\
-        'occurred while running a test task: InvalidDatasetError: File validation failed'
+        'occurred while running a test task: InvalidDatasetError: '\
+        'File validation failed'
 
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'
@@ -177,7 +181,8 @@ def test_metaxconnectionerror(testpath, testmongoclient, testmetax):
     an email to configured address.
     """
 
-    with mock.patch('siptools_research.workflowtask.mail.send') as mock_sendmail:
+    with mock.patch('siptools_research.workflowtask.mail.send') \
+            as mock_sendmail:
         # Run task like it would be run from command line
         run_luigi_task('MetaxConnectionErrorTask', testpath)
         mock_sendmail.assert_called_once_with('test.sender@tpas.fi',
