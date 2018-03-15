@@ -2,8 +2,7 @@
 
 To start the workflow for dataset 1234 (for example)::
 
-   python init_workflow.py  --config /etc/siptools_research.conf
-   --workspace-root /var/spool/siptools-research 1234
+   python __main__.py  --config /etc/siptools_research.conf 1234
 """
 
 import os
@@ -34,7 +33,7 @@ class InitWorkflow(WorkflowWrapperTask):
                                         config=self.config)
 
 
-def preserve_dataset(dataset_id, config, workspace_root):
+def preserve_dataset(dataset_id, config):
     """Generates unique id for the workspace and initates packaging workflow.
     Workspace name is used as document id in MongoDB.
 
@@ -43,10 +42,6 @@ def preserve_dataset(dataset_id, config, workspace_root):
     # Read configuration file
     conf = Configuration(config)
     workspace_root = conf.get('workspace_root')
-
-    # Override configuration file with commandline arguments
-    if workspace_root:
-        workspace_root = workspace_root
 
     # Set workspace name and path
     workspace_name = "aineisto_%s-%s" % (dataset_id,
@@ -74,14 +69,11 @@ def main():
     parser = argparse.ArgumentParser(description='Send to dataset to digital'\
                                      'preservation service.')
     parser.add_argument('dataset_id', help="Metax dataset identifier")
-    parser.add_argument('--workspace_root', default=None,
-                        help="Path to directory where new workspaces are "\
-                             "created")
     parser.add_argument('--config', default='/etc/siptools_research.conf',
                         help="Path to configuration file")
     args = parser.parse_args()
 
-    preserve_dataset(args.dataset_id, args.config, args.workspace_root)
+    preserve_dataset(args.dataset_id, args.config)
 
 
 if __name__ == '__main__':
