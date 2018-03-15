@@ -34,9 +34,38 @@ class InitWorkflow(WorkflowWrapperTask):
                                         config=self.config)
 
 
+def preserve_dataset(dataset_id, config, workspace_root):
+    """Generates unique id for the workspace and initates packaging workflow.
+    Workspace name is used as document id in MongoDB.
+
+    :returns: None
+    """
+    # Read configuration file
+    conf = Configuration(config)
+    workspace_root = conf.get('workspace_root')
+
+    # Override configuration file with commandline arguments
+    if workspace_root:
+        workspace_root = workspace_root
+
+    # Set workspace name and path
+    workspace_name = "aineisto_%s-%s" % (dataset_id,
+                                         str(uuid.uuid4()))
+    workspace = os.path.join(workspace_root, workspace_name)
+
+    # Add information to mongodb
+    database = siptools_research.utils.database.Database(config)
+    database.add_dataset(workspace_name, dataset_id)
+
+    # Start luigi workflow
+    luigi.run(['InitWorkflow',
+               '--dataset-id', dataset_id,
+               '--workspace', workspace,
+               '--config', config])
+
+
 def main():
-    """Parse command line arguments and start the workflow. Generates unique id
-    for the workspace. Workspace name is used as document id in MongoDB.
+    """Parse command line arguments and start the workflow.
 
     :returns: None
     """
@@ -52,28 +81,7 @@ def main():
                         help="Path to configuration file")
     args = parser.parse_args()
 
-    # Read configuration file
-    conf = Configuration(args.config)
-    workspace_root = conf.get('workspace_root')
-
-    # Override configuration file with commandline arguments
-    if args.workspace_root:
-        workspace_root = args.workspace_root
-
-    # Set workspace name and path
-    workspace_name = "aineisto_%s-%s" % (args.dataset_id,
-                                         str(uuid.uuid4()))
-    workspace = os.path.join(workspace_root, workspace_name)
-
-    # Add information to mongodb
-    database = siptools_research.utils.database.Database(args.config)
-    database.add_dataset(workspace_name, args.dataset_id)
-
-    # Start luigi workflow
-    luigi.run(['InitWorkflow',
-               '--dataset-id', args.dataset_id,
-               '--workspace', workspace,
-               '--config', args.config])
+    preserve_dataset(args.dataset_id, args.config, args.workspace_root)
 
 
 if __name__ == '__main__':
