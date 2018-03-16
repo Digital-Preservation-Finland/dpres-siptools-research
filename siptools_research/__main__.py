@@ -33,9 +33,10 @@ class InitWorkflow(WorkflowWrapperTask):
                                         config=self.config)
 
 
-def preserve_dataset(dataset_id, config):
+def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     """Generates unique id for the workspace and initates packaging workflow.
-    Workspace name is used as document id in MongoDB.
+    Workspace name is used as document id in MongoDB. This function can be
+    imported to other python modules.
 
     :returns: None
     """
