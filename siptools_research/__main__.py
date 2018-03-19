@@ -54,10 +54,9 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     database.add_dataset(workspace_name, dataset_id)
 
     # Start luigi workflow
-    luigi.run(['InitWorkflow',
-               '--dataset-id', dataset_id,
-               '--workspace', workspace,
-               '--config', config])
+    luigi.build([InitWorkflow(dataset_id=dataset_id,
+                              workspace=workspace,
+                              config=config)])
 
 
 def main():
