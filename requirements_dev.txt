@@ -19,6 +19,7 @@ requests_mock
 mock
 
 # siptools requirements
+# TODO: These should be installed automatically installed as requirements of dpres-siptools
 git+https://source.csc.fi/scm/git/pas/xml-helpers@develop#egg=xml_helpers
 git+https://source.csc.fi/scm/git/pas/mets@develop#egg=mets
 git+https://source.csc.fi/scm/git/pas/premis@develop#egg=premis
@@ -30,7 +31,6 @@ M2Crypto
 dateutils
 python-mimeparse
 
-file-magic
-
 # mets requirements
+# TODO: These should be installed automatically installed as requirements of mets
 dateutils

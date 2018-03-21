@@ -7,6 +7,16 @@ def main():
         name='siptools_research',
         packages=find_packages(exclude=['tests', 'tests.*']),
         version='dev',
+        install_requires=[
+            "luigi",
+            "pymongo",
+            "paramiko",
+            "requests",
+            "lxml",
+            "scandir",
+            "jsonschema",
+            "wand"
+        ],
         entry_points={
             'console_scripts': [
                 'siptools_research = '\
