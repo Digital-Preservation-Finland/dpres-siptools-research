@@ -8,7 +8,7 @@ To start the workflow for dataset 1234 (for example)::
 import os
 import uuid
 import argparse
-import luigi
+import subprocess
 from siptools_research.workflowtask import WorkflowWrapperTask
 from siptools_research.config import Configuration
 import siptools_research.utils.database
@@ -53,10 +53,12 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     database = siptools_research.utils.database.Database(config)
     database.add_dataset(workspace_name, dataset_id)
 
-    # Start luigi workflow
-    luigi.build([InitWorkflow(dataset_id=dataset_id,
-                              workspace=workspace,
-                              config=config)])
+    # Start luigi workflow. Run in background.
+    subprocess.Popen(["luigi",
+                      "--module", "siptools_research.__main__", "InitWorkflow",
+                      "--dataset-id", dataset_id,
+                      "--workspace", workspace,
+                      "--config", config])
 
 
 def main():
