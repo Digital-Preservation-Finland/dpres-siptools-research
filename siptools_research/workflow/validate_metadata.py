@@ -7,6 +7,7 @@ from siptools_research.utils.metax import Metax
 from siptools_research.validate_metadata import validate_metadata
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflowtask import WorkflowTask
+from siptools_research.workflowtask import InvalidMetadataError
 
 
 class ValidateMetadata(WorkflowTask):
@@ -45,4 +46,6 @@ class ValidateMetadata(WorkflowTask):
         with self.output().open('w') as log:
             with redirect_stdout(log):
                 # Validate dataset metadata
-                validate_metadata(self.dataset_id, self.config)
+                result = validate_metadata(self.dataset_id, self.config)
+                if result is not True:
+                    raise InvalidMetadataError(result)

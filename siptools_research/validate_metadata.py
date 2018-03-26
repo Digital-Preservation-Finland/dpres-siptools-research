@@ -37,17 +37,20 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     dataset_metadata = metax_client.get_data('datasets',
                                              dataset_id)
 
-    # Validate dataset metadata
-    _validate_dataset_metadata(dataset_metadata)
+    try:
+        # Validate dataset metadata
+        _validate_dataset_metadata(dataset_metadata)
 
-    # Get dataset metadata for each listed file, and validates file metadata
-    _validate_dataset_metadata_files(dataset_metadata, metax_client)
+        # Get dataset metadata for each listed file, and validates file metadata
+        _validate_dataset_metadata_files(dataset_metadata, metax_client)
 
-    # Validate file metadata for each file in dataset files
-    _validate_file_metadata(dataset_id, metax_client)
+        # Validate file metadata for each file in dataset files
+        _validate_file_metadata(dataset_id, metax_client)
 
-    # Validate XML metadata for each file in dataset files
-    _validate_xml_file_metadata(dataset_id, metax_client)
+        # Validate XML metadata for each file in dataset files
+        _validate_xml_file_metadata(dataset_id, metax_client)
+    except InvalidMetadataError as exc:
+        return exc.message
 
     return True
 
