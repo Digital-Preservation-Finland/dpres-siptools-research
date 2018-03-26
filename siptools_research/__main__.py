@@ -7,6 +7,7 @@ To start the workflow for dataset 1234 (for example)::
 
 import argparse
 from siptools_research.preserve_dataset import preserve_dataset
+from siptools_research.validate_metadata import validate_metadata
 
 def main():
     """Parse command line arguments and start the workflow.
@@ -20,9 +21,14 @@ def main():
     parser.add_argument('dataset_id', help="Metax dataset identifier")
     parser.add_argument('--config', default='/etc/siptools_research.conf',
                         help="Path to configuration file")
+    parser.add_argument('--validate', action='store_true',
+                        help="Just validate the dataset metadata")
     args = parser.parse_args()
 
-    preserve_dataset(args.dataset_id, args.config)
+    if args.validate:
+        validate_metadata(args.dataset_id, args.config)
+    else:
+        preserve_dataset(args.dataset_id, args.config)
 
 
 if __name__ == '__main__':

@@ -26,7 +26,7 @@ MISS_XML_ERR = "Missing XML metadata for file: %s"
 INV_NS_ERR = "Invalid XML namespace: %s"
 
 
-def validate_metadata(dataset_id, config):
+def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Reads dataset metadata, file metadata, and additional XML metadata
     from Metax and validates them against schemas.
 
@@ -49,6 +49,7 @@ def validate_metadata(dataset_id, config):
     # Validate file metadata for each file in dataset files
     _validate_xml_file_metadata(dataset_id, metax_client)
 
+
 # pylint: disable=invalid-name
 def _validate_dataset_metadata_files(dataset_metadata, metax_client):
     for dataset_file in dataset_metadata['research_dataset']['files']:
@@ -60,6 +61,7 @@ def _validate_dataset_metadata_files(dataset_metadata, metax_client):
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
             raise InvalidMetadataError(exc)
+
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
     for file_metadata in metax_client.get_dataset_files(dataset_id):
@@ -79,6 +81,7 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
                 raise InvalidMetadataError(MISS_XML_ERR %
                                            file_id)
             _validate_with_schematron(file_format_prefix, file_id, xmls)
+
 
 def _validate_with_schematron(file_format_prefix, file_id, xmls):
     with tempfile.NamedTemporaryFile() as temp:
