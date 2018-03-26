@@ -38,18 +38,27 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                                              dataset_id)
 
     # Validate dataset metadata
+    _validate_dataset_metadata(dataset_metadata)
+
+    # Get dataset metadata for each listed file, and validates file metadata
+    _validate_dataset_metadata_files(dataset_metadata, metax_client)
+
+    # Validate file metadata for each file in dataset files
+    _validate_file_metadata(dataset_id, metax_client)
+
+    # Validate XML metadata for each file in dataset files
+    _validate_xml_file_metadata(dataset_id, metax_client)
+
+    return True
+
+
+def _validate_dataset_metadata(dataset_metadata):
+    # Validate dataset metadata
     try:
         jsonschema.validate(dataset_metadata,
                             metax_schemas.DATASET_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
         raise InvalidMetadataError(exc)
-
-    # Get dataset metadata for each listed file, and validates file metadata
-    _validate_dataset_metadata_files(dataset_metadata, metax_client)
-    # Validate file metadata for each file in dataset files
-    _validate_xml_file_metadata(dataset_id, metax_client)
-
-    return True
 
 
 # pylint: disable=invalid-name
@@ -65,13 +74,17 @@ def _validate_dataset_metadata_files(dataset_metadata, metax_client):
             raise InvalidMetadataError(exc)
 
 
-def _validate_xml_file_metadata(dataset_id, metax_client):
+def _validate_file_metadata(dataset_id, metax_client):
     for file_metadata in metax_client.get_dataset_files(dataset_id):
         try:
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
             raise InvalidMetadataError(exc)
+
+
+def _validate_xml_file_metadata(dataset_id, metax_client):
+    for file_metadata in metax_client.get_dataset_files(dataset_id):
         file_format_prefix = file_metadata['file_format'].split('/')[0]
         if file_format_prefix in SCHEMATRONS:
             file_id = file_metadata['identifier']
