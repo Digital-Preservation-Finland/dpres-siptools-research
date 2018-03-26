@@ -3,4 +3,4 @@
 # example:
 
 #    from siptools_research import preserve_dataset
-from siptools_research.__main__ import preserve_dataset
+from siptools_research.preserve_dataset import preserve_dataset
