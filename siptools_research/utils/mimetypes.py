@@ -4,8 +4,6 @@ Created on 22 Mar 2018
 @author: vagrant
 '''
 import json
-import os
-import sys
 
 
 def is_supported(input_file_format, output_format_version):
