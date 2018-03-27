@@ -21,9 +21,9 @@ SCHEMATRONS = {
               '/usr/share/dpres-xml-schemas/schematron/mets_avmd.sch'}
 }
 
-SHEM_ERR = "Schematron metadata validation failed: %s. File: %s"
-MISS_XML_ERR = "Missing XML metadata for file: %s"
-INV_NS_ERR = "Invalid XML namespace: %s"
+SCHEMATRON_ERROR = "Schematron metadata validation failed: %s. File: %s"
+MISSING_XML_METADATA_ERROR = "Missing XML metadata for file: %s"
+INVALID_NS_ERROR = "Invalid XML namespace: %s"
 
 
 def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
@@ -113,9 +113,11 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
             xmls = metax_client.get_xml('files', file_id)
             for ns_url in xmls:
                 if ns_url not in NAMESPACES.values():
-                    raise TypeError(INV_NS_ERR % ns_url)
+                    raise TypeError(INVALID_NS_ERROR % ns_url)
             if SCHEMATRONS[file_format_prefix]['ns'] not in xmls:
-                raise InvalidMetadataError(MISS_XML_ERR % file_id)
+                raise InvalidMetadataError(
+                    MISSING_XML_METADATA_ERROR % file_id
+                )
             _validate_with_schematron(file_format_prefix, file_id, xmls)
 
 
@@ -137,4 +139,6 @@ def _validate_with_schematron(file_format_prefix, file_id, xmls):
                      env=None)
         proc.communicate()
         if proc.returncode != 0:
-            raise InvalidMetadataError(SHEM_ERR % (proc.returncode, file_id))
+            raise InvalidMetadataError(
+                SCHEMATRON_ERROR % (proc.returncode, file_id)
+            )
