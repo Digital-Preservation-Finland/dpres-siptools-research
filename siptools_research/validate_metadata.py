@@ -1,4 +1,4 @@
-"""Luigi task that validates metadata provided by Metax."""
+"""Dataset metadata validation tools."""
 
 import tempfile
 from subprocess import Popen, PIPE
@@ -56,7 +56,10 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
 
 def _validate_dataset_metadata(dataset_metadata):
-    # Validate dataset metadata
+    """Validates dataset metadata from /rest/v1/datasets/<dataset_id>
+
+    :returns: None
+    """
     try:
         jsonschema.validate(dataset_metadata,
                             metax_schemas.DATASET_METADATA_SCHEMA)
@@ -66,10 +69,17 @@ def _validate_dataset_metadata(dataset_metadata):
 
 # pylint: disable=invalid-name
 def _validate_dataset_metadata_files(dataset_metadata, metax_client):
+    """Reads file identifiers of each file listed in dataset metadata, and
+    validates file metadata found by file identidier from
+    /rest/v1/files/<file_id>.
+
+    :returns: None
+    """
     for dataset_file in dataset_metadata['research_dataset']['files']:
+
         file_id = dataset_file['identifier']
         file_metadata = metax_client.get_data('files', file_id)
-        # Validate dataset file metadata
+
         try:
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)
@@ -78,6 +88,10 @@ def _validate_dataset_metadata_files(dataset_metadata, metax_client):
 
 
 def _validate_file_metadata(dataset_id, metax_client):
+    """Validates file metadata found from /rest/v1/datasets/<dataset_id>/files.
+
+    :returns: None
+    """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
         try:
             jsonschema.validate(file_metadata,
@@ -87,6 +101,11 @@ def _validate_file_metadata(dataset_id, metax_client):
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
+    """Validates additional XML file metadata found from
+    /rest/v1/files/<file_id>/xml.
+
+    :returns: None
+    """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
         file_format_prefix = file_metadata['file_format'].split('/')[0]
         if file_format_prefix in SCHEMATRONS:
@@ -96,19 +115,21 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
                 if ns_url not in NAMESPACES.values():
                     raise TypeError(INV_NS_ERR % ns_url)
             if SCHEMATRONS[file_format_prefix]['ns'] not in xmls:
-                raise InvalidMetadataError(MISS_XML_ERR %
-                                           file_id)
+                raise InvalidMetadataError(MISS_XML_ERR % file_id)
             _validate_with_schematron(file_format_prefix, file_id, xmls)
 
 
 def _validate_with_schematron(file_format_prefix, file_id, xmls):
+    """Validates XML file with schematron.
+
+    :returns: None
+    """
     with tempfile.NamedTemporaryFile() as temp:
         namespace = xmls[SCHEMATRONS[file_format_prefix]['ns']]
         temp.write(lxml.etree.tostring(namespace).strip())
         temp.seek(0)
         schem = SCHEMATRONS[file_format_prefix]['schematron']
-        proc = Popen(['check-xml-schematron-features', '-s',
-                      schem, temp.name],
+        proc = Popen(['check-xml-schematron-features', '-s', schem, temp.name],
                      stdout=PIPE,
                      stderr=PIPE,
                      shell=False,
@@ -116,5 +137,4 @@ def _validate_with_schematron(file_format_prefix, file_id, xmls):
                      env=None)
         proc.communicate()
         if proc.returncode != 0:
-            raise InvalidMetadataError(
-                SHEM_ERR % (proc.returncode, file_id))
+            raise InvalidMetadataError(SHEM_ERR % (proc.returncode, file_id))
