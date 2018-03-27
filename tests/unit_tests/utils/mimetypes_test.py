@@ -8,6 +8,16 @@ import mock
 
 
 @mock.patch.object(mimetypes, "_get_mimetypes_filepath")
+def test_do_consistency_check(mock__get_mimetypes_filepath):
+    """Test that file having mime type text/garbage and
+    is not supported
+    """
+    mock__get_mimetypes_filepath.return_value = \
+        "include/etc/dpres_mimetypes.json"
+    assert mimetypes._check_consistency() is True
+
+
+@mock.patch.object(mimetypes, "_get_mimetypes_filepath")
 def test_text_csv_is_supported(mock__get_mimetypes_filepath):
     """Test that file having mime type text/csv with
     empty version
