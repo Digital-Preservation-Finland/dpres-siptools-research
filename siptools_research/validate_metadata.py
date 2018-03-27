@@ -66,7 +66,7 @@ def _validate_dataset_metadata(dataset_metadata):
         jsonschema.validate(dataset_metadata,
                             metax_schemas.DATASET_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
-        raise InvalidMetadataError(exc)
+        raise InvalidMetadataError(exc.message)
 
 
 # pylint: disable=invalid-name
@@ -86,7 +86,7 @@ def _validate_dataset_metadata_files(dataset_metadata, metax_client):
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
-            raise InvalidMetadataError(exc)
+            raise InvalidMetadataError(exc.message)
 
 
 def _check_mimetype(file_metadata):
@@ -114,7 +114,7 @@ def _validate_file_metadata(dataset_id, metax_client):
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
-            raise InvalidMetadataError(exc)
+            raise InvalidMetadataError(exc.message)
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
