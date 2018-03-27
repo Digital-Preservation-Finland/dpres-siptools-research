@@ -8,6 +8,7 @@ from siptools_research.utils.metax import Metax
 from siptools_research.workflowtask import InvalidMetadataError
 import lxml
 from siptools.xml.mets import NAMESPACES
+from siptools_research.utils import mimetypes
 
 
 # SCHEMATRONS is a dictionary that contains mapping:
@@ -41,7 +42,8 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         # Validate dataset metadata
         _validate_dataset_metadata(dataset_metadata)
 
-        # Get dataset metadata for each listed file, and validates file metadata
+        # Get dataset metadata for each listed file, and validates
+        # file metadata
         _validate_dataset_metadata_files(dataset_metadata, metax_client)
 
         # Validate file metadata for each file in dataset files
@@ -87,12 +89,27 @@ def _validate_dataset_metadata_files(dataset_metadata, metax_client):
             raise InvalidMetadataError(exc)
 
 
+def _check_mimetype(file_metadata):
+    ''' Remove try-except as soon as Metax supports file_format and
+    format_version attributes
+    '''
+    try:
+        file_format = file_metadata["file_characteristics"]["file_format"]
+        format_version = file_metadata["file_characteristics"]["format_version"]
+        if mimetypes.is_supported(file_format, format_version) is False:
+            raise InvalidMetadataError("Incorrect file format: %s, version %s" %
+                                       (file_format, format_version))
+    except KeyError:
+        pass
+
+
 def _validate_file_metadata(dataset_id, metax_client):
     """Validates file metadata found from /rest/v1/datasets/<dataset_id>/files.
 
     :returns: None
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
+        _check_mimetype(file_metadata)
         try:
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)

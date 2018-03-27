@@ -67,6 +67,7 @@ rm -rf $RPM_BUILD_ROOT
 %files -f INSTALLED_FILES
 %defattr(-,root,root,-)
 %config(noreplace) /etc/siptools_research.conf
+%config /etc/dpres_mimetypes.conf
 %attr(-,siptools_research,siptools_research) /var/log/siptools_research
 %attr(-,siptools_research,siptools_research) /var/spool/siptools_research
 

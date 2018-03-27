@@ -17,8 +17,9 @@ install:
 	mkdir -p "${SHAREDIR}"
 	mkdir -p "${ETC}"
 
-	# Copy config file
+	# Copy config files
 	cp include/etc/siptools_research.conf ${ETC}/
+	cp include/etc/dpres_mimetypes.json ${ETC}/
 
 	# Use Python setuptools
 	python ./setup.py install -O1 --prefix="${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
