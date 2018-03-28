@@ -5,6 +5,8 @@ Created on 22 Mar 2018
 '''
 import json
 
+DEFAULT_CONFIG = '/etc/dpres_mimetypes.json'
+
 
 def is_supported(input_file_format, output_format_version):
     for mime_type in _get_supported_mimetypes():
@@ -14,7 +16,7 @@ def is_supported(input_file_format, output_format_version):
     return False
 
 
-def _check_consistency(file_path="/etc/dpres_mimetypes.json"):
+def _check_consistency(file_path=DEFAULT_CONFIG):
     for mime_type in _get_supported_mimetypes(file_path):
         ffv = "file_format_version_" + \
             mime_type["input_file_format"].replace('/', '_')
@@ -36,10 +38,10 @@ def _check_consistency(file_path="/etc/dpres_mimetypes.json"):
     return True
 
 
-def _get_supported_mimetypes(file_path="/etc/dpres_mimetypes.json"):
+def _get_supported_mimetypes(file_path=DEFAULT_CONFIG):
     with open(_get_mimetypes_filepath(file_path)) as json_data_file:
         return json.load(json_data_file)
 
 
-def _get_mimetypes_filepath(file_path="/etc/dpres_mimetypes.json"):
+def _get_mimetypes_filepath(file_path=DEFAULT_CONFIG):
     return file_path
