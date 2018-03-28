@@ -9,7 +9,7 @@ def test_validate_metadata():
     dataset.
     """
     assert validate_metadata('validate_metadata_test_dataset_1',
-                             'tests/data/siptools_research.conf') is True
+                             pytest.TEST_CONFIG_FILE) is True
 
 @pytest.mark.usefixtures('testmetax')
 def test_validate_invalid():
@@ -18,6 +18,6 @@ def test_validate_invalid():
     """
     # with pytest.raises
     result = validate_metadata('validate_metadata_test_dataset_2',
-                               'tests/data/siptools_research.conf')
+                               pytest.TEST_CONFIG_FILE)
     assert result is not True
     assert result.startswith("'contract' is a required property")

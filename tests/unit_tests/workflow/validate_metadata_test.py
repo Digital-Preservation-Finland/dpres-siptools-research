@@ -21,7 +21,7 @@ def test_validatemetadata(testpath):
     # Init task
     task = ValidateMetadata(workspace=testpath,
                             dataset_id='validate_metadata_test_dataset_1',
-                            config='tests/data/siptools_research.conf')
+                            config=pytest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task
@@ -45,7 +45,7 @@ def test_invalid_metadata(testpath):
     # Init task
     task = ValidateMetadata(workspace=testpath,
                             dataset_id='validate_metadata_test_dataset_2',
-                            config='tests/data/siptools_research.conf')
+                            config=pytest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task
@@ -72,7 +72,7 @@ def test_missing_xml_metadata(testpath):
     # Init task
     task = ValidateMetadata(workspace=testpath,
                             dataset_id='validate_metadata_test_dataset_3',
-                            config='tests/data/siptools_research.conf')
+                            config=pytest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task

@@ -32,12 +32,12 @@ def test_send_sip(testpath):
     # Init and run task
     task = SendSIPToDP(workspace=workspace,
                        dataset_id='1',
-                       config='tests/data/siptools_research.conf')
+                       config=pytest.TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
 
     # Init sftp connection to digital preservation server
-    conf = Configuration('tests/data/siptools_research.conf')
+    conf = Configuration(pytest.TEST_CONFIG_FILE)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(conf.get('dp_host'),

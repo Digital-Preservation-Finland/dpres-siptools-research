@@ -51,7 +51,7 @@ def test_create_structmap_ok(testpath):
     # Create structmap
     task = CreateStructMap(workspace=workspace,
                            dataset_id='create_structmap_test_dataset_1',
-                           config='tests/data/siptools_research.conf')
+                           config=pytest.TEST_CONFIG_FILE)
 
     task.run()
     assert task.complete()
@@ -86,7 +86,7 @@ def test_create_structmap_without_directories(testpath):
     # Init task
     task = CreateStructMap(workspace=testpath,
                            dataset_id='create_structmap_test_dataset_2',
-                           config='tests/data/siptools_research.conf')
+                           config=pytest.TEST_CONFIG_FILE)
 
     # Run task
     task.run()
@@ -108,7 +108,7 @@ def test_filesec_othermd(testpath):
     # Init task
     task = CreateStructMap(workspace=testpath,
                            dataset_id='create_structmap_test_dataset_2',
-                           config='tests/data/siptools_research.conf')
+                           config=pytest.TEST_CONFIG_FILE)
 
     # Run task
     task.run()

@@ -2,6 +2,7 @@
 import os
 import shutil
 import tarfile
+import pytest
 from siptools_research.workflow.compress import CompressSIP
 
 def test_compresssip(testpath):
@@ -17,7 +18,7 @@ def test_compresssip(testpath):
     # Init task
     task = CompressSIP(workspace=testpath,
                        dataset_id="1",
-                       config="tests/data/siptools_research.conf")
+                       config=pytest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task

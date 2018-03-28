@@ -19,7 +19,7 @@ def test_cleanupworkspace(testpath):
     # Init task
     task = CleanupWorkspace(workspace=workspace,
                             dataset_id='1',
-                            config='tests/data/siptools_research.conf')
+                            config=pytest.TEST_CONFIG_FILE)
 
     # The workspace should exists before task has been run
     assert not task.complete()
@@ -34,7 +34,7 @@ def test_cleanupworkspace(testpath):
     assert not os.path.exists(workspace)
 
     # Manipulate workflow database
-    Database('tests/data/siptools_research.conf').add_event(
+    Database(pytest.TEST_CONFIG_FILE).add_event(
         os.path.basename(workspace),
         'ReportPreservationStatus',
         'success',

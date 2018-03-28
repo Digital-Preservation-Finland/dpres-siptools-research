@@ -14,7 +14,7 @@ def test_add_event():
 
     # Init database client
     database = siptools_research.utils.database.Database(
-        'tests/data/siptools_research.conf'
+        pytest.TEST_CONFIG_FILE
     )
 
     # Add event for random document

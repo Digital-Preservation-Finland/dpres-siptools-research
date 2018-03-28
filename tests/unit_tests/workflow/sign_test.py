@@ -32,7 +32,7 @@ def test_signsip(testpath):
     # Init task
     task = sign.SignSIP(workspace=workspace,
                         dataset_id="1",
-                        config='tests/data/siptools_research.conf')
+                        config=pytest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task.

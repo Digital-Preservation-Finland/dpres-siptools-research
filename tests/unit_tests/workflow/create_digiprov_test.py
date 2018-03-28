@@ -28,7 +28,7 @@ def test_createprovenanceinformation(testpath):
     task = create_digiprov.CreateProvenanceInformation(
         workspace=workspace,
         dataset_id="create_digiprov_test_dataset_1",
-        config='tests/data/siptools_research.conf'
+        config=pytest.TEST_CONFIG_FILE
     )
     assert not task.complete()
 
@@ -71,7 +71,7 @@ def test_failed_createprovenanceinformation(testpath):
     task = create_digiprov.CreateProvenanceInformation(
         dataset_id="create_digiprov_test_dataset_2",
         workspace=workspace,
-        config='tests/data/siptools_research.conf'
+        config=pytest.TEST_CONFIG_FILE
     )
 
     # Run task.
@@ -96,7 +96,7 @@ def test_create_premis_event(testpath):
     workspace = testpath
     create_digiprov.create_premis_event('create_digiprov_test_dataset_3',
                                         workspace,
-                                        'tests/data/siptools_research.conf')
+                                        pytest.TEST_CONFIG_FILE)
 
     # Check that the created xml-file contains correct elements.
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))

@@ -44,7 +44,7 @@ def test_reportpreservationstatus(testpath):
     task = report_preservation_status.ReportPreservationStatus(
         workspace=workspace,
         dataset_id="report_preservation_status_test_dataset_1",
-        config='tests/data/siptools_research.conf'
+        config=pytest.TEST_CONFIG_FILE
     )
     assert not task.complete()
     task.run()
@@ -96,7 +96,7 @@ def test_reportpreservationstatus_rejected(testpath):
         task = report_preservation_status.ReportPreservationStatus(
             workspace=workspace,
             dataset_id="report_preservation_status_test_dataset_rejected",
-            config='tests/data/siptools_research.conf'
+            config=pytest.TEST_CONFIG_FILE
         )
         assert not task.complete()
         try:
@@ -164,7 +164,7 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
         task = report_preservation_status.ReportPreservationStatus(
             workspace=workspace,
             dataset_id="report_preservation_status_test_dataset_rejected",
-            config='tests/data/siptools_research.conf'
+            config=pytest.TEST_CONFIG_FILE
         )
         assert not task.complete()
         try:

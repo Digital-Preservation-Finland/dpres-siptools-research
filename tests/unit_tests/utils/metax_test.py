@@ -15,7 +15,7 @@ def test_get_dataset():
 
     :returns: None
     """
-    client = Metax('tests/data/siptools_research.conf')
+    client = Metax(pytest.TEST_CONFIG_FILE)
     dataset = client.get_data('datasets', "mets_test_dataset_1")
     print dataset
     print type(dataset)
@@ -31,7 +31,7 @@ def test_get_xml():
     :returns: None
     """
     # Get XML objects from Metax
-    client = Metax('tests/data/siptools_research.conf')
+    client = Metax(pytest.TEST_CONFIG_FILE)
     xml_dict = client.get_xml('files', "metax_xml_test")
     assert isinstance(xml_dict, dict)
 
@@ -71,7 +71,7 @@ def test_get_datacite():
     and check its correctness.
     :returns: None
     """
-    client = Metax('tests/data/siptools_research.conf')
+    client = Metax(pytest.TEST_CONFIG_FILE)
     xml = client.get_datacite("datacite_test_1")
 
     # Read field "creatorName" from xml file
@@ -91,7 +91,7 @@ def test_set_preservation_state():
 
     :returns: None
     """
-    client = Metax('tests/data/siptools_research.conf')
+    client = Metax(pytest.TEST_CONFIG_FILE)
     client.set_preservation_state("mets_test_dataset_1", 7,
                                   'Accepted to preservation')
 
@@ -120,7 +120,7 @@ def test_get_data_returns_correct_error_when_http_503_error():
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
         exceptionThrown = False
-        client = Metax('tests/data/siptools_research.conf')
+        client = Metax(pytest.TEST_CONFIG_FILE)
         try:
             client.get_data('who', 'cares')
         except MetaxConnectionError:
@@ -134,7 +134,7 @@ def test_get_xml_returns_correct_error_when_http_503_error():
     """
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         exceptionThrown = False
-        client = Metax('tests/data/siptools_research.conf')
+        client = Metax(pytest.TEST_CONFIG_FILE)
         try:
             client.get_xml('who', 'cares')
         except MetaxConnectionError:
@@ -148,7 +148,7 @@ def test_set_preservation_state_returns_correct_error_when_http_503_error():
     """
     with mock.patch('siptools_research.utils.metax.requests.patch', side_effect=mocked_requests_get):
         exceptionThrown = False
-        client = Metax('tests/data/siptools_research.conf')
+        client = Metax(pytest.TEST_CONFIG_FILE)
         try:
             client.set_preservation_state('who', '0', 'cares')
         except MetaxConnectionError:
@@ -163,7 +163,7 @@ def test_get_elasticsearchdata_returns_correct_error_when_http_503_error():
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
         exceptionThrown=False
-        client = Metax('tests/data/siptools_research.conf')
+        client = Metax(pytest.TEST_CONFIG_FILE)
         try:
             client.get_elasticsearchdata()
         except MetaxConnectionError:
@@ -178,7 +178,7 @@ def test_get_datacite_returns_correct_error_when_http_503_error():
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
         exceptionThrown=False
-        client = Metax('tests/data/siptools_research.conf')
+        client = Metax(pytest.TEST_CONFIG_FILE)
         try:
             client.get_datacite("x")
         except MetaxConnectionError:
@@ -193,7 +193,7 @@ def test_get_dataset_files_returns_correct_error_when_http_503_error():
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
         exceptionThrown=False
-        client = Metax('tests/data/siptools_research.conf')
+        client = Metax(pytest.TEST_CONFIG_FILE)
         try:
             client.get_dataset_files("x")
         except MetaxConnectionError:

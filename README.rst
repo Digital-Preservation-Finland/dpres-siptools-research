@@ -71,7 +71,7 @@ Start mongodb::
 
 Start workflow using luigi::
 
-   luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace /var/spool/siptools-research/testworkspace_abdc1234 --dataset-id 1234 --config tests/data/siptools_research.conf
+   luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace /var/spool/siptools-research/testworkspace_abdc1234 --dataset-id 1234 --config tests/data/configuration_files/siptools_research.conf
 
 Testing in virtualenv
 ^^^^^^^^^^^^^^^^^^^^^

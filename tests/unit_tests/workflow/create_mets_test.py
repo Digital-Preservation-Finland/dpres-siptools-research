@@ -24,7 +24,7 @@ def test_create_mets_ok(testpath):
 
     # Init and run task
     task = CreateMets(workspace=workspace, dataset_id='create_mets_dataset_1',
-                      config='tests/data/siptools_research.conf')
+                      config=pytest.TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
     assert os.path.isfile(os.path.join(create_sip, 'mets.xml'))

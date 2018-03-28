@@ -30,7 +30,7 @@ def test_create_techmd_ok(testpath):
     # Init task
     task = CreateTechnicalMetadata(workspace=workspace,
                                    dataset_id="create_techmd_test_dataset_1",
-                                   config='tests/data/siptools_research.conf')
+                                   config=pytest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task.
@@ -111,7 +111,7 @@ def test_import_object_ok(testpath):
     # Run import_objects function for a sample dataset
     import_objects('create_techmd_test_dataset_1',
                    testpath,
-                   'tests/data/siptools_research.conf')
+                   pytest.TEST_CONFIG_FILE)
 
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
@@ -151,7 +151,7 @@ def test_import_object_without_charset(testpath):
     # Run import_objects function for a sample dataset
     import_objects('create_techmd_test_dataset_2',
                    testpath,
-                   'tests/data/siptools_research.conf')
+                   pytest.TEST_CONFIG_FILE)
 
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
@@ -187,7 +187,7 @@ def test_xml_metadata_file_missing(testpath):
     task = CreateTechnicalMetadata(
         workspace=workspace,
         dataset_id="create_techmd_test_dataset_xml_metadata_missing",
-        config='tests/data/siptools_research.conf'
+        config=pytest.TEST_CONFIG_FILE
     )
     assert not task.complete()
 
@@ -222,7 +222,7 @@ def test_hash_algorithm_selection_logic(testpath):
     task = CreateTechnicalMetadata(
         workspace=workspace,
         dataset_id="create_techmd_test_dataset_hash_algorithms",
-        config='tests/data/siptools_research.conf'
+        config=pytest.TEST_CONFIG_FILE
     )
     assert not task.complete()
 
@@ -267,7 +267,7 @@ def test_hash_algorithm_error(testpath):
     task = CreateTechnicalMetadata(
         workspace=workspace,
         dataset_id="create_techmd_test_dataset_hash_algorithm_error",
-        config='tests/data/siptools_research.conf'
+        config=pytest.TEST_CONFIG_FILE
     )
     assert not task.complete()
 

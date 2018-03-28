@@ -12,7 +12,7 @@ def test_download_file(testpath):
     :testpath: Temporary directory fixture"""
     new_file_path = os.path.join(testpath, 'new_file')
     ida.download_file('pid:urn:1', new_file_path,
-                      'tests/data/siptools_research.conf')
+                      pytest.TEST_CONFIG_FILE)
 
     # The file should be a text file that says: "foo\n"
     with open(new_file_path, 'r') as new_file:

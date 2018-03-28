@@ -26,7 +26,7 @@ def test_createdescriptivemetadata(testpath):
     task = CreateDescriptiveMetadata(
         dataset_id="datacite_test_1",
         workspace=workspace,
-        config='tests/data/siptools_research.conf'
+        config=pytest.TEST_CONFIG_FILE
     )
     assert not task.complete()
 

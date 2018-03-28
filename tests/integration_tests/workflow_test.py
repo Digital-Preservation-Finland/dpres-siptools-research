@@ -20,7 +20,7 @@ def run_luigi_task(module, task, workspace):
             ('--module', module, task,
              '--workspace', workspace,
              '--dataset-id', 'workflow_test_dataset_1',
-             '--config', 'tests/data/siptools_research.conf',
+             '--config', pytest.TEST_CONFIG_FILE,
              '--worker-keep-alive',
              '--worker-retry-external-tasks',
              '--scheduler-retry-delay', '20',
@@ -61,7 +61,7 @@ def test_workflow(testpath, testmetax, testida, testmongoclient, module, task):
                    workspace)
 
     # Init pymongo client
-    conf = Configuration('tests/data/siptools_research.conf')
+    conf = Configuration(pytest.TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
     collection = mongoclient[conf.get('mongodb_database')]\
         [conf.get('mongodb_collection')]

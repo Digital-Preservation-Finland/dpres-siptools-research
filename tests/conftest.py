@@ -29,6 +29,10 @@ PROJECT_ROOT_PATH = os.path.abspath(
 sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
+def pytest_namespace():
+    return {'TEST_CONFIG_FILE':
+            "tests/data/configuration_files/siptools_research.conf"}
+
 @pytest.fixture(scope="function")
 def testmetax(request):
     """Use fake http-server and local sample JSON/XML files instead of real
