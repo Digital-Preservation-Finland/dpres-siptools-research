@@ -3,7 +3,6 @@
 import os
 from luigi import LocalTarget
 from siptools_research.utils.contextmanager import redirect_stdout
-from siptools_research.utils.metax import Metax
 from siptools_research.validate_metadata import validate_metadata
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflowtask import WorkflowTask
@@ -14,10 +13,8 @@ class ValidateMetadata(WorkflowTask):
     """Gets metadata from Metax and validates it. Requires workspace directory
     to be created. Writes log to ``logs/validate-metadata.log``.
     """
-
-    def __init__(self, *args, **kwargs):
-        super(ValidateMetadata, self).__init__(*args, **kwargs)
-        self.metax_client = Metax(self.config)
+    success_message = "Metax metadata is valid"
+    failure_message = "Metax metadata could not be validated"
 
     def requires(self):
         """Requires workspace to be created
