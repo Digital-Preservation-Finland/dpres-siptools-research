@@ -16,9 +16,9 @@ import pytest
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
 
-METAX_PATH = "tests/data/metax"
+METAX_PATH = "tests/httpretty_data/metax"
 METAX_URL = "https://metax-test.csc.fi/rest/v1"
-IDA_PATH = "tests/data/ida/"
+IDA_PATH = "tests/httpretty_data/ida/"
 IDA_URL = 'https://86.50.169.61:4433'
 
 
@@ -44,7 +44,7 @@ def testmetax(request):
 
     When url https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty&size=100
     is requested using HTTP GET method, the response is content of file:
-    'tests/data/metax_elastic_search.json'
+    'tests/httpretty_data/metax_elastic_search.json'
 
     If file from subsubdirectory is requested, the filename must be url encoded
     (the files are searched only from subdirectories, not from
@@ -105,7 +105,7 @@ def testmetax(request):
     # register response for get_elasticsearchdata-function
     elasticsearchdata_url = 'https://metax-test.csc.fi/es/reference_data/'\
                             'use_category/_search?pretty&size=100'
-    with open('tests/data/metax_elastic_search.json') as open_file:
+    with open('tests/httpretty_data/metax_elastic_search.json') as open_file:
         body = open_file.read()
     httpretty.register_uri(
         httpretty.GET,
