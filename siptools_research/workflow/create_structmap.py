@@ -103,8 +103,7 @@ class CreateStructMap(WorkflowTask):
 
     def get_provenance_ids(self):
         metax_client = Metax(self.config)
-        metadata = metax_client.get_data('datasets',
-                                         self.dataset_id)
+        metadata = metax_client.get_dataset(self.dataset_id)
         provenance_ids = []
         for provenance in metadata["research_dataset"]["provenance"]:
             event_type = provenance["type"]["pref_label"]["en"]
@@ -124,7 +123,7 @@ class CreateStructMap(WorkflowTask):
         """
         metax_client = Metax(self.config)
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
-        dataset_metadata = metax_client.get_data('datasets', self.dataset_id)
+        dataset_metadata = metax_client.get_dataset(self.dataset_id)
         logical_struct = dict()
 
         for dataset_file in dataset_files:

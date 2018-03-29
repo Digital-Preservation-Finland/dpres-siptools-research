@@ -58,7 +58,7 @@ class CreateProvenanceInformation(WorkflowTask):
 def create_premis_event(dataset_id, workspace, config):
     """Gets metada from Metax and calls siptools premis_event script."""
 
-    metadata = Metax(config).get_data('datasets', dataset_id)
+    metadata = Metax(config).get_dataset(dataset_id)
 
     for provenance in metadata["research_dataset"]["provenance"]:
         event_type = provenance["type"]["pref_label"]["en"]

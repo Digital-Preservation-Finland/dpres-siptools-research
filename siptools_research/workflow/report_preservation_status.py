@@ -80,7 +80,7 @@ class ReportPreservationStatus(WorkflowTask):
                                      ' Path: %s' % ingest_report_paths[0])
 
     def __handle_rejected_sip__(self, ingest_report_paths, metax_client):
-        dataset_metadata = metax_client.get_data('datasets', self.dataset_id)
+        dataset_metadata = metax_client.get_dataset(self.dataset_id)
         email_address = dataset_metadata['research_dataset']\
             ['rights_holder']['email']
         conf = Configuration(self.config)

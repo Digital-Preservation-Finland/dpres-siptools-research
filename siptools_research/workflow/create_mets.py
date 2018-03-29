@@ -43,8 +43,7 @@ class CreateMets(WorkflowTask):
         with open(mets_log, 'w+') as log:
             with redirect_stdout(log):
                 # Get contract id from Metax
-                metadata = Metax(self.config).get_data('datasets',
-                                                       self.dataset_id)
+                metadata = Metax(self.config).get_dataset(self.dataset_id)
                 contract_id = metadata["contract"]["id"]
                 if contract_id is None:
                     raise InvalidMetadataError(

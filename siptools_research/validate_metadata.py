@@ -4,11 +4,11 @@ import tempfile
 from subprocess import Popen, PIPE
 import jsonschema
 import siptools_research.utils.metax_schemas as metax_schemas
+from siptools_research.utils import mimetypes
 from siptools_research.utils.metax import Metax
 from siptools_research.workflowtask import InvalidMetadataError
 import lxml
 from siptools.xml.mets import NAMESPACES
-from siptools_research.utils import mimetypes
 
 
 # SCHEMATRONS is a dictionary that contains mapping:
@@ -35,8 +35,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """
     # Get dataset metadata from Metax
     metax_client = Metax(config)
-    dataset_metadata = metax_client.get_data('datasets',
-                                             dataset_id)
+    dataset_metadata = metax_client.get_dataset(dataset_id)
 
     try:
         # Validate dataset metadata
@@ -80,7 +79,7 @@ def _validate_dataset_metadata_files(dataset_metadata, metax_client):
     for dataset_file in dataset_metadata['research_dataset']['files']:
 
         file_id = dataset_file['identifier']
-        file_metadata = metax_client.get_data('files', file_id)
+        file_metadata = metax_client.get_file(file_id)
 
         try:
             jsonschema.validate(file_metadata,

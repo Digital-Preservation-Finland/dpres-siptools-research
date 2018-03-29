@@ -16,7 +16,7 @@ def test_get_dataset():
     :returns: None
     """
     client = Metax(pytest.TEST_CONFIG_FILE)
-    dataset = client.get_data('datasets', "mets_test_dataset_1")
+    dataset = client.get_dataset("mets_test_dataset_1")
     print dataset
     print type(dataset)
     assert dataset["research_dataset"]["provenance"][0]['type']['pref_label']\
@@ -114,7 +114,7 @@ def mocked_requests_get(*args, **kwargs):
 
 
 def test_get_data_returns_correct_error_when_http_503_error():
-    """Test that get_data function throws a MetaxConnectionError exception
+    """Test that get_dataset function throws a MetaxConnectionError exception
     when requests.get() returns http 503 error
     """
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
@@ -122,7 +122,7 @@ def test_get_data_returns_correct_error_when_http_503_error():
         exceptionThrown = False
         client = Metax(pytest.TEST_CONFIG_FILE)
         try:
-            client.get_data('who', 'cares')
+            client.get_dataset('who_cares')
         except MetaxConnectionError:
             exceptionThrown = True
         assert exceptionThrown is True

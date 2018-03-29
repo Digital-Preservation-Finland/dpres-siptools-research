@@ -66,7 +66,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
                    config=None):
     """Gets file metadata from Metax and calls create_premis_object function"""
 
-    metadata = Metax(config).get_data('files', file_id)
+    metadata = Metax(config).get_file(file_id)
     hashalgorithm = metadata["checksum"]["algorithm"]
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]

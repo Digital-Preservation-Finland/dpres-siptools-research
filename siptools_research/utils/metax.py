@@ -34,18 +34,50 @@ class Metax(object):
         self.baseurl = self.metax_url + '/rest/v1/'
         self.elasticsearch_url = self.metax_url + '/es/'
 
-    def get_data(self, entity_url, entity_id):
-        """Get metadata of dataset, contract or file with id from Metax.
+    def get_dataset(self, dataset_id):
+        """Get dataset metadata from Metax.
 
-        :entity_url: "datasets", "contracts" or "files"
-        :entity_id: ID number of object
-        :returns: dict"""
-        url = self.baseurl + entity_url + '/' + entity_id
+        :dataset_id: ID number of object
+        :returns: dict
+        """
+        url = self.baseurl + 'datasets' + '/' + dataset_id
 
         response = _do_get_request(url)
 
         if not response.status_code == 200:
-            raise Exception("Could not find metadata.")
+            raise Exception(
+                "Could not find metadata for dataset: %s" % dataset_id
+            )
+        return response.json()
+
+    def get_file(self, file_id):
+        """Get file metadata from Metax.
+
+        :file_id: ID number of object
+        :returns: dict
+        """
+        url = self.baseurl + 'files' + '/' + file_id
+
+        response = _do_get_request(url)
+
+        if not response.status_code == 200:
+            raise Exception("Could not find metadata for file: %s" % file_id)
+        return response.json()
+
+    def get_contract(self, contract_id):
+        """Get file metadata from Metax.
+
+        :contract_id: ID number of object
+        :returns: dict
+        """
+        url = self.baseurl + 'contracts' + '/' + contract_id
+
+        response = _do_get_request(url)
+
+        if not response.status_code == 200:
+            raise Exception(
+                "Could not find metadata for contract: %s" % contract_id
+            )
         return response.json()
 
     def get_xml(self, entity_url, entity_id):
