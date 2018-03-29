@@ -6,6 +6,7 @@ import jsonschema
 import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils import mimetypes
 from siptools_research.utils.metax import Metax
+from siptools_research.utils.metax import DatasetNotFoundError
 from siptools_research.workflowtask import InvalidMetadataError
 import lxml
 from siptools.xml.mets import NAMESPACES
@@ -33,11 +34,12 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
     :returns: True, if dataset metada is valid
     """
-    # Get dataset metadata from Metax
     metax_client = Metax(config)
-    dataset_metadata = metax_client.get_dataset(dataset_id)
 
     try:
+        # Get dataset metadata from Metax
+        dataset_metadata = metax_client.get_dataset(dataset_id)
+
         # Validate dataset metadata
         _validate_dataset_metadata(dataset_metadata)
 
@@ -50,7 +52,8 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
         # Validate XML metadata for each file in dataset files
         _validate_xml_file_metadata(dataset_id, metax_client)
-    except InvalidMetadataError as exc:
+
+    except (DatasetNotFoundError, InvalidMetadataError) as exc:
         return exc.message
 
     return True

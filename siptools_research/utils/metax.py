@@ -11,6 +11,10 @@ class MetaxConnectionError(Exception):
     message = 'No connection to Metax'
 
 
+class DatasetNotFoundError(Exception):
+    """Exception raised when dataset is not found from metax"""
+
+
 class Metax(object):
     """Get metadata from metax as dict object."""
 
@@ -37,7 +41,7 @@ class Metax(object):
         response = _do_get_request(url)
 
         if not response.status_code == 200:
-            raise Exception(
+            raise DatasetNotFoundError(
                 "Could not find metadata for dataset: %s" % dataset_id
             )
         return response.json()
