@@ -1,7 +1,5 @@
 """Metax interface class."""
 
-import argparse
-import pprint                   # For printing dict
 import logging
 import requests
 from requests.auth import HTTPBasicAuth
@@ -16,21 +14,10 @@ METAX_ENTITIES = ['datasets', 'contracts', 'files']
 PRINT_OUTPUT = ['json', 'xml', 'string']
 
 
-def print_output(dataset, output_type=None):
-    """Print dataset as json, xml or string"""
-    if output_type == 'json':
-        pprint.pprint(dataset)
-    elif output_type == 'xml':
-        # pylint: disable=no-member
-        tree = lxml.etree.parse(dataset)
-        root = tree.getroot()
-        print lxml.etree.tostring(root)
-    else:
-        print dataset
-
 class MetaxConnectionError(Exception):
-    def __init__(self):
-        super(MetaxConnectionError, self).__init__('No connection to Metax')
+    """Exception raised when Metax is not available"""
+    message = 'No connection to Metax'
+
 
 class Metax(object):
     """Get metadata from metax as dict object."""
@@ -47,12 +34,6 @@ class Metax(object):
         self.baseurl = self.metax_url + '/rest/v1/'
         self.elasticsearch_url = self.metax_url + '/es/'
 
-    def __do_get_request(self, url):
-        response = requests.get(url)
-        if response.status_code == 503:
-            raise MetaxConnectionError
-        return response
-
     def get_data(self, entity_url, entity_id):
         """Get metadata of dataset, contract or file with id from Metax.
 
@@ -61,13 +42,10 @@ class Metax(object):
         :returns: dict"""
         url = self.baseurl + entity_url + '/' + entity_id
 
-        response = self.__do_get_request(url)
+        response = _do_get_request(url)
 
         if not response.status_code == 200:
             raise Exception("Could not find metadata.")
-        print '================================================================'
-        print response.json()
-        print '================================================================'
         return response.json()
 
     def get_xml(self, entity_url, entity_id):
@@ -75,15 +53,15 @@ class Metax(object):
 
         :entity_url: "datasets", "contracts" or "files"
         :entity_id: ID number of object
-        :returns: dict with XML namespace strings as keys and lxml.etree.ElementTree
-                  objects as values
+        :returns: dict with XML namespace strings as keys and
+                  lxml.etree.ElementTree objects as values
         """
         # Init result dict
         xml_dict = {}
 
         # Get list of xml namespaces
         ns_key_url = self.baseurl + entity_url + '/' + entity_id + '/xml'
-        response = self.__do_get_request(ns_key_url)
+        response = _do_get_request(ns_key_url)
         if not response.status_code == 200:
             raise Exception("Could not retrieve list of additional metadata "\
                             "XML for dataset %s: %s" % (entity_id, ns_key_url))
@@ -93,7 +71,7 @@ class Metax(object):
         # add it to result dict
         for ns_key in ns_key_list:
             query = '?namespace=' + ns_key
-            response = self.__do_get_request(ns_key_url + query)
+            response = _do_get_request(ns_key_url + query)
             if not response.status_code == 200:
                 raise Exception("Could not retrieve additional metadata XML "\
                                 "for dataset %s: %s" % (entity_id,
@@ -110,7 +88,7 @@ class Metax(object):
         :returns: dict"""
         url = self.elasticsearch_url + "reference_data/use_category/_search?"\
                                        "pretty&size=100"
-        response = self.__do_get_request(url)
+        response = _do_get_request(url)
 
         if not response.status_code == 200:
             raise Exception("Could not find elastic search data.")
@@ -149,7 +127,7 @@ class Metax(object):
         """
         url = "%sdatasets/%s?dataset_format=datacite" % (self.baseurl,
                                                          dataset_id)
-        response = self.__do_get_request(url)
+        response = _do_get_request(url)
 
         if not response.status_code == 200:
             raise Exception("Could not find descriptive metadata.")
@@ -164,7 +142,7 @@ class Metax(object):
         :returns: dict"""
         url = self.baseurl + 'datasets/' + dataset_id + '/files'
 
-        response = self.__do_get_request(url)
+        response = _do_get_request(url)
 
         if not response.status_code == 200:
             raise Exception("Could not find dataset files metadata.")
@@ -172,35 +150,13 @@ class Metax(object):
         return response.json()
 
 
-def parse_arguments(arguments):
-    """Create arguments parser and return parsed
-    command line arguments.
+def _do_get_request(url):
+    """Wrapper function for requests.get() function. Raises
+    MetaxConnectionError if status code is 503 (Service unavailable
+
+    :returns: requests response
     """
-    parser = argparse.ArgumentParser(description="Print dataset, contract, or "
-                                     "file metada from Metax in pretty "
-                                     "format.")
-    parser.add_argument('entity_url', type=str, choices=METAX_ENTITIES,
-                        help='Entity url to be retrieved')
-    parser.add_argument('entity_id',
-                        metavar='entity_id',
-                        help='Entity ID')
-    parser.add_argument('--print_output',
-                        metavar='print_output', default='json',
-                        help='print output as json/xml/string')
-    parser.add_argument('--config', required=True, help='Configuration file')
-    return parser.parse_args(arguments)
-
-
-def main(arguments=None):
-    """Print metadata from Metax"""
-
-    args = parse_arguments(arguments)
-
-    metax = Metax(args.config)
-
-    dataset = metax.get_data(args.entity_url, args.entity_id)
-    print_output(dataset, args.print_output)
-
-
-if __name__ == "__main__":
-    main()
+    response = requests.get(url)
+    if response.status_code == 503:
+        raise MetaxConnectionError
+    return response
