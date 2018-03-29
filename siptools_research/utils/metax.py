@@ -1,17 +1,9 @@
 """Metax interface class."""
 
-import logging
 import requests
 from requests.auth import HTTPBasicAuth
 import lxml.etree
 from siptools_research.config import Configuration
-
-
-# Print debug messages to stdout
-logging.basicConfig(level=logging.DEBUG)
-
-METAX_ENTITIES = ['datasets', 'contracts', 'files']
-PRINT_OUTPUT = ['json', 'xml', 'string']
 
 
 class MetaxConnectionError(Exception):
