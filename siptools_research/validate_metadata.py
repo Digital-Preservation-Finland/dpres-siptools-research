@@ -32,7 +32,8 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Reads dataset metadata, file metadata, and additional XML metadata
     from Metax and validates them against schemas.
 
-    :returns: True, if dataset metada is valid
+    :returns: ``True``, if dataset metada is valid. If dataset metadata is
+       invalid, the error message is returned.
     """
     metax_client = Metax(config)
 
@@ -53,7 +54,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         # Validate XML metadata for each file in dataset files
         _validate_xml_file_metadata(dataset_id, metax_client)
 
-    except (DatasetNotFoundError, InvalidMetadataError) as exc:
+    except InvalidMetadataError as exc:
         return exc.message
 
     return True
