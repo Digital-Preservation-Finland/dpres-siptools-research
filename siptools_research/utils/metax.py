@@ -127,6 +127,19 @@ class Metax(object):
         """Set values of attributes `preservation_state` and
         `preservation_state_description` for dataset in Metax
 
+         The preservation state is one of the following integers:
+         0 = Not in PAS
+         1 = Proposed for midtterm
+         2 = Proposed for long term
+         3 = in packaging service
+         4 = in dissemination
+         5 = in midterm preservation
+         6 = in longterm preservation
+         7 = Rejected long-term preservation
+         8 = Rejected mid-term preservation
+         9 = Metadata did not pass validation
+         10 = Metadata passed validation
+
         :dataset_id: The ID of dataset in Metax
         :state (integer): The value for `preservation_state`
         :description (string): The value for `preservation_system_description`
