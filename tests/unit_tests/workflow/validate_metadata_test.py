@@ -79,6 +79,5 @@ def test_missing_xml_metadata(testpath):
     with pytest.raises(InvalidMetadataError) as exc:
         task.run()
 
-    assert exc.value[0] == "Metadata did not pass validation: "\
-                             "Missing XML metadata for file: pid:urn:890"
+    assert exc.value[0] == "Missing XML metadata for file: pid:urn:890"
     assert not task.complete()

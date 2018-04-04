@@ -2,6 +2,7 @@
 
 import pytest
 from siptools_research import validate_metadata
+from siptools_research.workflowtask import InvalidMetadataError
 
 @pytest.mark.usefixtures('testmetax')
 def test_validate_metadata():
@@ -13,11 +14,14 @@ def test_validate_metadata():
 
 @pytest.mark.usefixtures('testmetax')
 def test_validate_invalid():
-    """Test that validate_metadata function returns error message for invalid
-    dataset.
+    """Test that validate_metadata function raises exception with correct error
+    message for invalid dataset.
     """
-    # with pytest.raises
-    result = validate_metadata('validate_metadata_test_dataset_2',
-                               pytest.TEST_CONFIG_FILE)
-    assert result is not True
-    assert result.startswith("'contract' is a required property")
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        result = validate_metadata('validate_metadata_test_dataset_2',
+                                   pytest.TEST_CONFIG_FILE)
+
+    # Check exception message
+    exc = exc_info.value
+    assert exc.message.startswith("'contract' is a required property")

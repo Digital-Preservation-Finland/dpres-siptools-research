@@ -30,32 +30,28 @@ INVALID_NS_ERROR = "Invalid XML namespace: %s"
 
 def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Reads dataset metadata, file metadata, and additional XML metadata
-    from Metax and validates them against schemas.
+    from Metax and validates them against schemas. Raises error if dataset is
+    not valid.
 
-    :returns: ``True``, if dataset metada is valid. If dataset metadata is
-       invalid, the error message is returned.
+    :returns: ``True``, if dataset metada is valid.
     """
     metax_client = Metax(config)
 
-    try:
-        # Get dataset metadata from Metax
-        dataset_metadata = metax_client.get_dataset(dataset_id)
+    # Get dataset metadata from Metax
+    dataset_metadata = metax_client.get_dataset(dataset_id)
 
-        # Validate dataset metadata
-        _validate_dataset_metadata(dataset_metadata)
+    # Validate dataset metadata
+    _validate_dataset_metadata(dataset_metadata)
 
-        # Get dataset metadata for each listed file, and validates
-        # file metadata
-        _validate_dataset_metadata_files(dataset_metadata, metax_client)
+    # Get dataset metadata for each listed file, and validates
+    # file metadata
+    _validate_dataset_metadata_files(dataset_metadata, metax_client)
 
-        # Validate file metadata for each file in dataset files
-        _validate_file_metadata(dataset_id, metax_client)
+    # Validate file metadata for each file in dataset files
+    _validate_file_metadata(dataset_id, metax_client)
 
-        # Validate XML metadata for each file in dataset files
-        _validate_xml_file_metadata(dataset_id, metax_client)
-
-    except InvalidMetadataError as exc:
-        return exc.message
+    # Validate XML metadata for each file in dataset files
+    _validate_xml_file_metadata(dataset_id, metax_client)
 
     return True
 
