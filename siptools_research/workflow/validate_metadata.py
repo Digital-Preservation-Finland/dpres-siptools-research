@@ -45,4 +45,6 @@ class ValidateMetadata(WorkflowTask):
                 # Validate dataset metadata
                 result = validate_metadata(self.dataset_id, self.config)
                 if result is not True:
-                    raise InvalidMetadataError(result)
+                    raise InvalidMetadataError(
+                        "Metadata did not pass validation: %s" % result
+                    )

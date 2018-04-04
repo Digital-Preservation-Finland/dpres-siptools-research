@@ -167,7 +167,7 @@ def test_invalidmetadataerror(testpath, testmongoclient, testmetax):
 
     # Check the body of last HTTP request
     request_body = json.loads(httpretty.last_request().body)
-    assert request_body['preservation_state'] == 7
+    assert request_body['preservation_state'] == 9
     assert request_body['preservation_state_description'] == 'An error '\
         'occurred while running a test task: Missing some important metadata'
 
