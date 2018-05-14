@@ -13,6 +13,8 @@
 		"value": "habeebit"
 	},
 	"file_characteristics": {
-		"file_created": "2018-01-17T08:19:31Z"
+		"file_created": "2018-01-17T08:19:31Z",
+	        "file_format": "image/tiff",
+	        "formatversion": "6.0"
 	}
 }

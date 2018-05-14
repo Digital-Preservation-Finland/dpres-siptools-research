@@ -11,6 +11,11 @@
   "file_characteristics":
     {
       "file_created": "2014-01-17T08:19:31Z",
-      "encoding": "utf-8"
+      "file_format": "text/csv",
+      "encoding": "utf-8",
+      "csv_delimiter": ";",
+      "csv_record_separator": "CR+LF",
+      "csv_quoting_char" : "\"",
+      "csv_isheader": "False"
       }
 }

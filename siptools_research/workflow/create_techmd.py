@@ -71,10 +71,6 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     hashvalue = metadata["checksum"]["value"]
     creation_date = metadata["file_characteristics"]["file_created"]
 
-    # TODO
-    #(formatname, formatversion, mimemaintype) = formatdesignation(
-    #     os.path.join(workspace, 'sip-in-progress', metax_filepath.strip('/'))
-
     # Read character set if it defined for this file
     try:
         charset = metadata["file_characteristics"]["encoding"]
@@ -96,12 +92,13 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
                 allowed_charsets[-1]
             )
 
-    formatname = metadata["file_format"]
-    # TODO: formatversion hardcoded. Not in METAX yet.
-    formatversion = ""
-    # If it's a TIFF-file, return fixed version
-    if formatname == 'image/tiff':
-        formatversion = '6.0'
+    formatname = metadata["file_characteristics"]["file_format"]
+    #formatversion = metadata["file_characteristics"]["formatversion"]
+    # Read format version if it defined for this file
+    try:
+        formatversion = metadata["file_characteristics"]["formatversion"]
+    except KeyError:
+        formatversion = None
 
     # Picks name of hashalgorithm from its length if it's not valid
     hash_bit_length = len(hashvalue) * 4
@@ -121,10 +118,14 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         #        file_name).strip('/')
 
         # hardcoded. Not in METAX yet
-        csv_delimiter = ";"
-        csv_record_separator = "CR+LF"
-        csv_quoting_char = '"'
-        csv_isheader = 'False'
+        #csv_delimiter = ";"
+        #csv_record_separator = "CR+LF"
+        #csv_quoting_char = '"'
+        #csv_isheader = 'False'
+        csv_delimiter = metadata["file_characteristics"]["csv_delimiter"]
+        csv_record_separator = metadata["file_characteristics"]["csv_record_separator"]
+        csv_quoting_char = metadata["file_characteristics"]["csv_quoting_char"]
+        csv_isheader = metadata["file_characteristics"]["csv_isheader"]
 
         # Metadata type and version
         mdtype = 'ADDML'

@@ -13,6 +13,8 @@
         "value": "54ebe2f9f6e7e78fe5f523887eb55517"
      },
 	"file_characteristics": {
-		"file_created": "2019-01-17T09:19:31Z"
+		"file_created": "2019-01-17T09:19:31Z",
+	        "file_format": "image/tiff",
+	        "formatversion": "6.0"
 	}
 }
