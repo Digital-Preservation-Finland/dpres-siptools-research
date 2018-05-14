@@ -16,6 +16,6 @@
       "csv_delimiter": ";",
       "csv_record_separator": "CR+LF",
       "csv_quoting_char" : "\"",
-      "csv_isheader": "False"
+      "csv_has_header": "False"
       }
 }

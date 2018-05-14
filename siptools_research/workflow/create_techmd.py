@@ -117,15 +117,10 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         #csv_file_path = os.path.join (file_path,
         #        file_name).strip('/')
 
-        # hardcoded. Not in METAX yet
-        #csv_delimiter = ";"
-        #csv_record_separator = "CR+LF"
-        #csv_quoting_char = '"'
-        #csv_isheader = 'False'
         csv_delimiter = metadata["file_characteristics"]["csv_delimiter"]
         csv_record_separator = metadata["file_characteristics"]["csv_record_separator"]
         csv_quoting_char = metadata["file_characteristics"]["csv_quoting_char"]
-        csv_isheader = metadata["file_characteristics"]["csv_isheader"]
+        csv_isheader = metadata["file_characteristics"]["csv_has_header"]
 
         # Metadata type and version
         mdtype = 'ADDML'
