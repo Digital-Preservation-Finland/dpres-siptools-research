@@ -93,10 +93,9 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
             )
 
     formatname = metadata["file_characteristics"]["file_format"]
-    #formatversion = metadata["file_characteristics"]["formatversion"]
     # Read format version if it defined for this file
     try:
-        formatversion = metadata["file_characteristics"]["formatversion"]
+        formatversion = metadata["file_characteristics"]["format_version"]
     except KeyError:
         formatversion = None
 
