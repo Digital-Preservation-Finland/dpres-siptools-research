@@ -24,7 +24,7 @@ Source0:        %{file_prefix}-v%{file_version}%{?file_release_tag}-%{file_build
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 Requires:       python python-luigi python-pymongo dpres-siptools addml mets python-lxml python-paramiko python2-jsonschema python-requests python-scandir mongodb-org-server ImageMagick
-BuildRequires:  python-setuptools pytest
+BuildRequires:  python-setuptools pytest python-httpretty
 
 %description
 Digital Preservation Packaging Service for Research datasets
