@@ -1,4 +1,5 @@
 # coding=utf-8
+# pylint: disable=no-member
 """Tests for ``siptools_research.utils.metax`` module"""
 import json
 import pytest
@@ -100,6 +101,30 @@ def test_set_preservation_state():
     assert request_body["preservation_state"] == 7
     assert request_body["preservation_state_description"] \
         == "Accepted to preservation"
+
+    # Check the method of last HTTP request
+    assert httpretty.last_request().method == 'PATCH'
+
+
+@pytest.mark.usefixtures('testmetax')
+def test_set_file_characteristics():
+    """Test set_file_characteristics function. Metadata in Metax is modified by
+    sending HTTP PATCH request with modified metadata in JSON format. This test
+    checks that correct HTTP request is sent to Metax. The effect of the
+    request is not tested.
+
+    :returns: None
+    """
+    client = Metax(pytest.TEST_CONFIG_FILE)
+    sample_data = {"file_format": "text/plain",
+                   "format_version": "1.0",
+                   "encoding": "UTF-8"}
+    client.set_file_characteristics('pid:urn:set_file_characteristics_1',
+                                    sample_data)
+
+    # Check the body of last HTTP request
+    request_body = json.loads(httpretty.last_request().body)
+    assert request_body["file_characteristics"] == sample_data
 
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'

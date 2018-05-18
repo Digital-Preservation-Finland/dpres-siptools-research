@@ -160,6 +160,30 @@ class Metax(object):
         # Raise exception if request fails
         assert request.status_code == 200
 
+    def set_file_characteristics(self, file_id, file_characteristics):
+        """Updates `file_characteristics` attribute for a file in Metax.
+
+        :file_id: ID of file
+        :file_characteristics: Dict object that contains new data for
+                               `file_characteristics` attribute
+        :returns: None
+        """
+
+        url = self.baseurl + 'files/' + file_id
+        data = {"file_characteristics": file_characteristics}
+
+        request = requests.patch(
+            url,
+            json=data,
+            auth=HTTPBasicAuth(self.username, self.password)
+        )
+
+        if request.status_code == 503:
+            raise MetaxConnectionError
+
+        # Raise exception if request fails
+        assert request.status_code == 200
+
     def get_datacite(self, dataset_id):
         """Get descriptive metadata in datacite xml format.
 
