@@ -54,9 +54,12 @@ def download_file_header(identifier, config_file):
     """
     response = _getResponse(identifier, config_file, stream=True)
 
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        for chunk in response.iter_content(chunk_size=512):
-            if chunk:  # filter out keep-alive new chunks
-                tmp.write(chunk)
-                break
+    try:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            for chunk in response.iter_content(chunk_size=512):
+                if chunk:  # filter out keep-alive new chunks
+                    tmp.write(chunk)
+                    break
+    finally:
+        response.close()
     return tmp.name
