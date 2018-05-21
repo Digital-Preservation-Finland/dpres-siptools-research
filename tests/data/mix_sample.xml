@@ -1,0 +1,28 @@
+<ns0:mix xmlns:ns0="http://www.loc.gov/mix/v20" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mix/v20 http://www.loc.gov/mix/mix.xsd">
+  <ns0:BasicDigitalObjectInformation>
+    <ns0:Compression>
+      <ns0:compressionScheme>losslessjpeg</ns0:compressionScheme>
+      <ns0:compressionRatio/>
+    </ns0:Compression>
+  </ns0:BasicDigitalObjectInformation>
+  <ns0:BasicImageInformation>
+    <ns0:BasicImageCharacteristics>
+      <ns0:imageWidth>10</ns0:imageWidth>
+      <ns0:imageHeight>10</ns0:imageHeight>
+      <ns0:PhotometricInterpretation>
+        <ns0:colorSpace>srgb</ns0:colorSpace>
+      </ns0:PhotometricInterpretation>
+    </ns0:BasicImageCharacteristics>
+  </ns0:BasicImageInformation>
+  <ns0:ImageAssessmentMetadata>
+    <ns0:SpatialMetrics/>
+    <ns0:ImageColorEncoding>
+      <ns0:BitsPerSample>
+        <ns0:bitsPerSampleValue>8</ns0:bitsPerSampleValue>
+        <ns0:bitsPerSampleUnit>integer</ns0:bitsPerSampleUnit>
+      </ns0:BitsPerSample>
+      <ns0:samplesPerPixel>3</ns0:samplesPerPixel>
+      <ns0:Colormap/>
+    </ns0:ImageColorEncoding>
+  </ns0:ImageAssessmentMetadata>
+</ns0:mix>

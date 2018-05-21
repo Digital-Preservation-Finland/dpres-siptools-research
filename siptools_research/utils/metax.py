@@ -110,6 +110,35 @@ class Metax(object):
 
         return xml_dict
 
+    def set_xml(self, file_id, xml_element):
+        """Add xml data to a file with in Metax.
+
+        :file_id: ID of file
+        :xml_element: XML Element
+        :returns: None
+        """
+        # Read namespace from XML element
+        namespace = \
+            xml_element.attrib[
+                '{http://www.w3.org/2001/XMLSchema-instance}schemaLocation'
+            ].split()[0]
+
+        # Convert XML element to string
+        data = lxml.etree.tostring(xml_element, pretty_print=True)
+
+        # POST to Metax
+        url = '%sfiles/%s/xml?namespace=%s' % (self.baseurl,
+                                               file_id,
+                                               namespace)
+        headers = {'Content-Type': 'application/xml'}
+        response = requests.post(url,
+                                 data=data,
+                                 headers=headers,
+                                 auth=HTTPBasicAuth(self.username,
+                                                    self.password))
+
+        assert response.status_code == 201
+
     def get_elasticsearchdata(self):
         """Get elastic search data from Metax
 

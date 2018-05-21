@@ -44,7 +44,8 @@ def testmetax(request):
     ``METAX_PATH/<subdir>/<filename>`` as message body is retrieved. The status
     of message is always *HTTP/1.1 200 OK*. To add new test responses just add
     new JSON or XML file to some subdirectory of ``METAX_PATH``. Using HTTP
-    PATCH method has exactly same effect as HTTP GET methdod.
+    PATCH method has exactly same effect as HTTP GET methdod. Using HTTP POST
+    method returns empty message with status *HTTP/1.1 201 OK*.
 
     When url https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty&size=100
     is requested using HTTP GET method, the response is content of file:
@@ -104,6 +105,13 @@ def testmetax(request):
         httpretty.PATCH,
         re.compile(METAX_URL + '/(.*)'),
         body=dynamic_response,
+    )
+
+    # Register response for POST method for any url starting with METAX_URL
+    httpretty.register_uri(
+        httpretty.POST,
+        re.compile(METAX_URL + '/(.*)'),
+        status=201
     )
 
     # register response for get_elasticsearchdata-function

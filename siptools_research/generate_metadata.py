@@ -2,7 +2,9 @@
 Metax.
 """
 import uuid
+import lxml.etree
 import siptools.scripts.import_object
+import siptools.scripts.create_mix
 import siptools_research.utils.metax
 import siptools_research.utils.ida
 
@@ -26,7 +28,8 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         file_characteristics = {}
         file_characteristics['file_format'] = metadata['format']['mimetype']
         file_characteristics['format_version'] = metadata['format']['version']
-        file_characteristics['encoding'] = metadata['format']['charset']
+        if 'charset' in metadata['format'].keys():
+            file_characteristics['encoding'] = metadata['format']['charset']
 
         # Merge generated file_characteristics with original data from Metax.
         # If a field was already defined in original data, it will override the
@@ -37,3 +40,8 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
         # Update file_characteristics
         metax_client.set_file_characteristics(file_id, file_characteristics)
+
+        # Generate mix metadata
+        if file_characteristics['file_format'].startswith('image'):
+            mix_element = siptools.scripts.create_mix.write_mix(tmpfile)
+            metax_client.set_xml(file_id, mix_element)

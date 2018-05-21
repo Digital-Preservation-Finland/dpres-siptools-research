@@ -5,6 +5,7 @@ import json
 import pytest
 import httpretty
 import mock
+import lxml.etree
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.metax import MetaxConnectionError
 
@@ -43,6 +44,35 @@ def test_get_xml():
     assert xml_dict[addml_url].getroot().nsmap['addml'] == addml_url
     mets_url = "http://www.loc.gov/METS/"
     assert xml_dict[mets_url].getroot().nsmap['mets'] == mets_url
+
+
+@pytest.mark.usefixtures('testmetax')
+def test_set_xml():
+    """Test set_xml functions. Reads XML file and posts it to Metax. The body
+    and headers of HTTP request are checked.
+
+    :returns: None
+    """
+    # Read sample MIX xml file
+    mix = lxml.etree.parse('./tests/data/mix_sample.xml').getroot()
+
+    # POST XML to Metax
+    client = Metax(pytest.TEST_CONFIG_FILE)
+    client.set_xml('set_xml_1', mix)
+
+    # Check that posted message body is valid XML
+    lxml.etree.fromstring(httpretty.last_request().body)
+
+    # Check message headers
+    assert httpretty.last_request().headers['content-type'] \
+        == 'application/xml'
+
+    # Check that message method is correct
+    assert httpretty.last_request().method == 'POST'
+
+    # Check that message query string has correct parameters
+    assert httpretty.last_request().querystring['namespace'][0] \
+        == 'http://www.loc.gov/mix/v20'
 
 
 def test_reading_config_file():

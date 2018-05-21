@@ -3,6 +3,7 @@
 import json
 import pytest
 import httpretty
+import lxml.etree
 from siptools_research.generate_metadata import generate_metadata
 
 @pytest.mark.usefixtures('testmetax', 'testida')
@@ -30,3 +31,29 @@ def test_generate_metadata():
     # object in Metax
     assert json_message['file_characteristics']['dummy_key'] == \
         'dummy_value'
+
+
+@pytest.mark.usefixtures('testmetax', 'testida')
+def test_generate_metadata_mix():
+    """Tests mix metadata generation for a image file. Generates metadata for a
+    dataset that contains an image file and checks that message sent to Metax
+    is valid XML. The method of last HTTP request should be POST, and the
+    querystring should contain the namespace of XML.
+    """
+    generate_metadata('generate_metadata_test_dataset_2',
+                      'tests/data/configuration_files/siptools_research.conf')
+
+
+    # Read one element from XML to ensure it is valid and contains correct data
+    # The file is 10x10px image, so the metadata should contain image width.
+    xml = lxml.etree.fromstring(httpretty.last_request().body)
+    assert xml.xpath('//ns0:imageWidth',
+                     namespaces={"ns0":"http://www.loc.gov/mix/v20"})[0].text \
+        == '10'
+
+    # Check HTTP request query string
+    assert httpretty.last_request().querystring['namespace'][0] \
+        == 'http://www.loc.gov/mix/v20'
+
+    # Check HTTP request method
+    assert httpretty.last_request().method == "POST"
