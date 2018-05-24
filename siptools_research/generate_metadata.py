@@ -27,7 +27,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         file_characteristics = _generate_techmd(tmpfile, file_metadata)
         metax_client.set_file_characteristics(file_id, file_characteristics)
 
-        # Generate mix metadata
+        # Generate and post mix metadata
         if file_characteristics['file_format'].startswith('image'):
             mix_element = siptools.scripts.create_mix.write_mix(tmpfile)
             metax_client.set_xml(file_id, mix_element)

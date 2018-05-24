@@ -4,5 +4,8 @@
 #
 #    from siptools_research import preserve_dataset
 #    from siptools_research import validate_metadata
+#    from siptools_research import generate_metadata
+
 from siptools_research.preserve_dataset import preserve_dataset
 from siptools_research.validate_metadata import validate_metadata
+from siptools_research.generate_metadata import generate_metadata
