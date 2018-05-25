@@ -23,7 +23,7 @@ def test_download_file(testpath):
 def test_download_big_file_header(testpath):
     """Checks the size of the big file header created is 512 bytes.
     """
-    header = ida.download_file_header('valid_tiff.tiff',
+    header = ida.download_file_header('pid:urn:1024kB_file',
                                       pytest.TEST_CONFIG_FILE)
 
     assert os.path.getsize(header) == 512
