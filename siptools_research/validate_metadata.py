@@ -18,9 +18,9 @@ SCHEMATRONS = {
     'image': {'ns': 'http://www.loc.gov/mix/v20', 'schematron':
               '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch'},
     'audio': {'ns': 'http://www.loc.gov/audioMD/', 'schematron':
-              '/usr/share/dpres-xml-schemas/schematron/mets_avmd.sch'},
+              '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch'},
     'video': {'ns': 'http://www.loc.gov/videoMD/', 'schematron':
-              '/usr/share/dpres-xml-schemas/schematron/mets_avmd.sch'}
+              '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'}
 }
 
 SCHEMATRON_ERROR = "Schematron metadata validation failed: %s. File: %s"
