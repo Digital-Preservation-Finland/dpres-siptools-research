@@ -1,11 +1,10 @@
 """IDA interface module"""
+import tempfile
 import requests
 from siptools_research.config import Configuration
-import tempfile
-from subprocess import Popen, PIPE
 
 
-def _getResponse(identifier, config_file, stream=False):
+def _get_response(identifier, config_file, stream=False):
     conf = Configuration(config_file)
     user = conf.get('ida_user')
     password = conf.get('ida_password')
@@ -16,7 +15,7 @@ def _getResponse(identifier, config_file, stream=False):
                                 stream=stream)
     except requests.exceptions.ConnectionError as exc:
         raise Exception("Could not connect to Ida: %s" % exc.message)
-# Raise error if file is not found
+    # Raise error if file is not found
     if response.status_code == 404:
         raise Exception("File not found in Ida.")
     if response.status_code == 403:
@@ -36,7 +35,7 @@ def download_file(identifier, filepath, config_file):
     :config_file: Configuration file
     :returns: None
     """
-    response = _getResponse(identifier, config_file)
+    response = _get_response(identifier, config_file)
 
     with open(filepath, 'w') as new_file:
         new_file.write(response.content)
@@ -52,7 +51,7 @@ def download_file_header(identifier, config_file):
     :config_file: Configuration file
     :returns: Path to the temp file containing the header of the file in IDA
     """
-    response = _getResponse(identifier, config_file, stream=True)
+    response = _get_response(identifier, config_file, stream=True)
 
     try:
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
