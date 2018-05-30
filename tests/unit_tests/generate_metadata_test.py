@@ -1,5 +1,7 @@
 """Tests for ``siptools_research.generate_metadata`` module"""
 
+import os
+import tempfile
 import json
 import pytest
 import httpretty
@@ -57,3 +59,17 @@ def test_generate_metadata_mix():
 
     # Check HTTP request method
     assert httpretty.last_request().method == "POST"
+
+
+@pytest.mark.usefixtures('testmetax', 'testida')
+def test_generate_metadata_tempfile_removal():
+    """Tests that temporary files downloaded from Ida are removed.
+    """
+    # Check contents of /tmp before calling generate_metadata()
+    tmp_dir_before_test = os.listdir(tempfile.gettempdir())
+
+    generate_metadata('generate_metadata_test_dataset_1',
+                      'tests/data/configuration_files/siptools_research.conf')
+
+    # There should not be new files or directories in /tmp
+    assert os.listdir(tempfile.gettempdir()) == tmp_dir_before_test

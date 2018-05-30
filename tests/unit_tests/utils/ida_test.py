@@ -23,18 +23,19 @@ def test_download_file(testpath):
 def test_download_big_file_header(testpath):
     """Checks the size of the big file header created is 512 bytes.
     """
-    header = ida.download_file_header('pid:urn:1024kB_file',
-                                      pytest.TEST_CONFIG_FILE)
+    new_file_path = os.path.join(testpath, 'new_file')
+    ida.download_file_header('pid:urn:1024kB_file', new_file_path,
+                             pytest.TEST_CONFIG_FILE)
 
-    assert os.path.getsize(header) == 512
+    assert os.path.getsize(new_file_path) == 512
 
 
 @pytest.mark.usefixtures('testida')
 def test_download_short_file_header(testpath):
     """Checks the size of the short file header created is correct.
     """
-    header = ida.download_file_header('pid:urn:1',
-                                      pytest.TEST_CONFIG_FILE)
+    new_file_path = os.path.join(testpath, 'new_file')
+    ida.download_file_header('pid:urn:1', new_file_path,
+                             pytest.TEST_CONFIG_FILE)
 
-    # The file should be a text file that says: "foo\n"
-    assert os.path.getsize(header) == 4
+    assert os.path.getsize(new_file_path) == 4

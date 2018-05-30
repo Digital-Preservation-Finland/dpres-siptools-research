@@ -41,24 +41,24 @@ def download_file(identifier, filepath, config_file):
         new_file.write(response.content)
 
 
-def download_file_header(identifier, config_file):
+def download_file_header(identifier, filepath, config_file):
     """Downloads only the header of the file in IDA and creates a temporary
     file the caller should delete if not needed anymore. Ida url, username,
     and password are read from configuration file.
 
     Function arguments:
     :identifier: File identifier (for example "pid:urn:1")
+    :filepath: Path to save the file
     :config_file: Configuration file
-    :returns: Path to the temp file containing the header of the file in IDA
+    :returns: None
     """
     response = _get_response(identifier, config_file, stream=True)
 
     try:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        with open(filepath, 'w') as file_:
             for chunk in response.iter_content(chunk_size=512):
                 if chunk:  # filter out keep-alive new chunks
-                    tmp.write(chunk)
+                    file_.write(chunk)
                     break
     finally:
         response.close()
-    return tmp.name
