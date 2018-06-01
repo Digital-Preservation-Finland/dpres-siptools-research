@@ -2,7 +2,7 @@
 <mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd" PROFILE="local" OBJID="3c3fe81c-b689-46f3-9e67-abf58905df1f">
   <mets:amdSec>
     <mets:techMD ID="_edf581cbd4145e3cca9225fe0583b931" CREATED="2018-02-13T07:28:11.150039">
-      <mets:mdWrap MDTYPE="OTHER" MDTYPEVERSION="2.0" OTHERMDTYPE="MIX">
+      <mets:mdWrap MDTYPE="NISOIMG" MDTYPEVERSION="2.0">
         <mets:xmlData>
           <ns0:mix xmlns:ns0="http://www.loc.gov/mix/v20" xsi:schemaLocation="http://www.loc.gov/mix/v20 http://www.loc.gov/mix/mix.xsd">
             <ns0:BasicDigitalObjectInformation>
