@@ -23,6 +23,19 @@
 				}
 			}
 		}
-		]
-	}
+		],
+        "provenance": [
+            {
+                "type": {
+			"pref_label": {
+				"en": "creation"
+		    }
+                },
+                "description": {
+			"en": "Description of provenance"
+                }
+            }
+        ]
+    }
 }
+

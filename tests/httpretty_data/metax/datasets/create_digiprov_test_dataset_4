@@ -1,0 +1,16 @@
+{
+    "research_dataset": {
+        "files": [
+            {
+                "identifier": "pid:urn:892",
+                "use_category": {
+                	"pref_label": {
+                    	"en": "label5"
+                	}
+                }
+            }
+
+        ]
+    }
+}
+

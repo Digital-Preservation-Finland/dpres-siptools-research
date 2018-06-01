@@ -55,8 +55,8 @@ def test_createprovenanceinformation(testpath):
 # pylint: disable=invalid-name
 def test_failed_createprovenanceinformation(testpath):
     """Test case where `CreateProvenanceInformation` task should fail.
-    The dataset requested does not have provenance information, which should
-    cause exception.
+    The dataset requested does not have all the required fields (date) in
+    provenance information, which should cause exception.
 
     :testpath: Testpath fixture
     :returns: None
@@ -136,3 +136,68 @@ def test_create_premis_event(testpath):
                                       'premis': "info:lc/xmlns/premis-v2"}
                          )
     assert elements[0].text == "Description of provenance"
+
+
+@pytest.mark.usefixtures("testmetax")
+def test_create_premis_event_unav(testpath):
+    """Test `create_premis_event` function for creating unav-event.
+    The dataset requested does not have provenance information, and
+    therefore unav-event will be created by packaging service.
+    Output XML file should be produced
+    and it should contain some specified elements.
+
+    :testpath: Testpath fixture
+    :returns: None
+    """
+
+    # Create provenance info xml-file to tempdir
+    workspace = testpath
+    create_digiprov.create_premis_event('create_digiprov_test_dataset_4',
+                                        workspace,
+                                        pytest.TEST_CONFIG_FILE)
+
+    # Check that the created xml-file contains correct elements.
+    tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].attrib["MDTYPE"] == "PREMIS:EVENT"
+    assert elements[0].attrib["MDTYPEVERSION"] == "2.3"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventIdentifier'\
+                          '/premis:eventIdentifierType',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].text == "UUID"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventType',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].text == "creation"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventDateTime',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].text == "open"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventDetail',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].text == "Created by packaging service"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventOutcomeInformation/premis:eventOutcome',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                         )
+    assert elements[0].text == "(:unav)"

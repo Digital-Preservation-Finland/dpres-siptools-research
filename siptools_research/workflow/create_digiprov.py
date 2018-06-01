@@ -60,14 +60,33 @@ def create_premis_event(dataset_id, workspace, config):
 
     metadata = Metax(config).get_dataset(dataset_id)
 
-    for provenance in metadata["research_dataset"]["provenance"]:
-        event_type = provenance["type"]["pref_label"]["en"]
-        event_datetime = provenance["temporal"]["start_date"]
-        event_detail = provenance["description"]["en"]
+    try:
+        provenance = metadata["research_dataset"]["provenance"]
+    except KeyError:
+        provenance = None 
+
+    if provenance is None:
+        event_type = "creation"
+        event_datetime = "open"
+        event_detail = "Created by packaging service"
+        event_outcome = "(:unav)"
+        event_outcome_detail = "Value unavailable, possibly unknown"
         premis_event.main([
             event_type, event_datetime,
             "--event_detail", event_detail,
-            "--event_outcome", 'success', # TODO: Hardcoded value
-            "--event_outcome_detail", 'blah blah', # TODO: Hardcoded value
+            "--event_outcome", event_outcome,
+            "--event_outcome_detail", event_outcome_detail,
             "--workspace", workspace
         ])
+    else:
+        for provenance in metadata["research_dataset"]["provenance"]:
+            event_type = provenance["type"]["pref_label"]["en"]
+            event_datetime = provenance["temporal"]["start_date"]
+            event_detail = provenance["description"]["en"]
+            premis_event.main([
+                event_type, event_datetime,
+                "--event_detail", event_detail,
+                "--event_outcome", 'success', # TODO: Hardcoded value
+                "--event_outcome_detail", 'blah blah', # TODO: Hardcoded value
+                "--workspace", workspace
+            ])
