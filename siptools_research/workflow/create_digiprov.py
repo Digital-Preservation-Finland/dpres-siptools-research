@@ -67,7 +67,7 @@ def create_premis_event(dataset_id, workspace, config):
 
     if provenance is None:
         event_type = "creation"
-        event_datetime = "open"
+        event_datetime = "OPEN"
         event_detail = "Created by packaging service"
         event_outcome = "(:unav)"
         event_outcome_detail = "Value unavailable, possibly unknown"
