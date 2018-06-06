@@ -186,7 +186,7 @@ def test_create_premis_event_unav(testpath):
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
                          )
-    assert elements[0].text == "open"
+    assert elements[0].text == "OPEN"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
                           '/mets:xmlData/premis:event/premis:eventDetail',
