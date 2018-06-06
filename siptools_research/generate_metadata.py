@@ -8,6 +8,7 @@ import siptools.scripts.import_object
 import siptools.scripts.create_mix
 import siptools_research.utils.metax
 import siptools_research.utils.ida
+import xml_helpers.utils as h
 
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Generates technical metadata and mix metadata for all files of a given
@@ -34,7 +35,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
             # Generate and post mix metadata
             if file_characteristics['file_format'].startswith('image'):
-                mix_element = siptools.scripts.create_mix.write_mix(tmpfile)
+                mix_element = siptools.scripts.create_mix.create_mix_techmd(tmpfile)
                 metax_client.set_xml(file_id, mix_element)
     finally:
         shutil.rmtree(tmpdir)

@@ -55,7 +55,7 @@ def test_generate_metadata_mix():
 
     # Check HTTP request query string
     assert httpretty.last_request().querystring['namespace'][0] \
-        == 'http://www.loc.gov/mix/v20'
+        == 'http://www.loc.gov/METS/'
 
     # Check HTTP request method
     assert httpretty.last_request().method == "POST"
