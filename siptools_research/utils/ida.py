@@ -17,11 +17,11 @@ def _get_response(identifier, config_file, stream=False):
         raise Exception("Could not connect to Ida: %s" % exc.message)
     # Raise error if file is not found
     if response.status_code == 404:
-        raise Exception("File not found in Ida.")
+        raise Exception("File %s not found in Ida." % identifier)
     if response.status_code == 403:
-        raise Exception("Access to file forbidden.")
+        raise Exception("Access to file %s forbidden." % identifier)
     elif not response.status_code == 200:
-        raise Exception("File could not be retrieved.")
+        raise Exception("File %s could not be retrieved." % identifier)
     return response
 
 
