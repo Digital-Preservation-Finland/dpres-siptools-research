@@ -260,7 +260,7 @@ def _do_get_request(url, auth=None):
 
     :returns: requests response
     """
-    response = requests.get(url, auth)
+    response = requests.get(url, auth=auth)
     if response.status_code == 503:
         raise MetaxConnectionError
     return response

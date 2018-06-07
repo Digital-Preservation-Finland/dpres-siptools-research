@@ -62,7 +62,8 @@ def test_missing_files(testpath):
         task.run()
 
     # Check exception message
-    assert str(excinfo.value) == "File not found in Ida."
+    assert str(excinfo.value) == \
+        "File pid:urn:does_not_exist not found in Ida."
 
     # Task should not be completed
     assert not task.complete()
