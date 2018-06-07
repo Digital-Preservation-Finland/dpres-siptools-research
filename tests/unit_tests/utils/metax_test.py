@@ -123,13 +123,13 @@ def test_set_preservation_state():
     :returns: None
     """
     client = Metax(pytest.TEST_CONFIG_FILE)
-    client.set_preservation_state("mets_test_dataset_1", 7,
+    client.set_preservation_state("mets_test_dataset_1", 130,
                                   'Accepted to preservation')
 
     # Check the body of last HTTP request
     request_body = json.loads(httpretty.last_request().body)
-    assert request_body["preservation_state"] == 7
-    assert request_body["preservation_state_description"] \
+    assert request_body["preservation_state"] == 130
+    assert request_body["preservation_description"] \
         == "Accepted to preservation"
 
     # Check the method of last HTTP request
