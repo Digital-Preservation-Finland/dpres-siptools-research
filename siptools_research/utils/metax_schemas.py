@@ -19,7 +19,7 @@ DATASET_METADATA_SCHEMA = \
                         "type": "array",
                         "items": {
                             "type": "object",
-                            "required": ["type", "temporal", "description"],
+                            "required": ["preservation_event", "temporal", "description"],
                             "properties": {
                                 "temporal": {
                                     "type": "object",
@@ -29,7 +29,7 @@ DATASET_METADATA_SCHEMA = \
                                     "type": "object",
                                     "required": ["en"]
                                 },
-                                "type": {
+                                "preservation_event": {
                                     "type": "object",
                                     "required": ["pref_label"],
                                     "properties": {

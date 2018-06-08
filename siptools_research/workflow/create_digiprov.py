@@ -80,7 +80,7 @@ def create_premis_event(dataset_id, workspace, config):
         ])
     else:
         for provenance in metadata["research_dataset"]["provenance"]:
-            event_type = provenance["type"]["pref_label"]["en"]
+            event_type = provenance["preservation_event"]["pref_label"]["en"]
             event_datetime = provenance["temporal"]["start_date"]
             event_detail = provenance["description"]["en"]
             premis_event.main([

@@ -44,7 +44,7 @@
 		],
         "provenance": [
             {
-                "type": {
+                "preservation_event": {
 			"pref_label": {
 				"en": "creation"
 		    }

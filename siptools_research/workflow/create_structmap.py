@@ -106,7 +106,7 @@ class CreateStructMap(WorkflowTask):
         metadata = metax_client.get_dataset(self.dataset_id)
         provenance_ids = []
         for provenance in metadata["research_dataset"]["provenance"]:
-            event_type = provenance["type"]["pref_label"]["en"]
+            event_type = provenance["preservation_event"]["pref_label"]["en"]
             prov_file = '%s-event.xml' % event_type
             prov_xml = ET.parse(os.path.join(self.sip_creation_path,
                                              prov_file))
