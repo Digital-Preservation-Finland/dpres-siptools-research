@@ -2,6 +2,7 @@
 import shutil
 import os
 import pytest
+import lxml
 from siptools_research.workflow.create_mets import CreateMets
 from siptools.scripts import import_object
 from siptools.scripts import import_description, premis_event, \
@@ -28,6 +29,15 @@ def test_create_mets_ok(testpath):
     task.run()
     assert task.complete()
     assert os.path.isfile(os.path.join(create_sip, 'mets.xml'))
+
+    # Check that the created xml-file contains correct elements.
+    tree = lxml.etree.parse(os.path.join(create_sip, 'mets.xml'))
+
+    elements = tree.xpath('/mets:mets',
+                            namespaces={'mets': "http://www.loc.gov/METS/"}
+                          )
+
+    assert elements[0].attrib["OBJID"] == "create_mets_dataset_1"
 
 
 def create_test_data(workspace):

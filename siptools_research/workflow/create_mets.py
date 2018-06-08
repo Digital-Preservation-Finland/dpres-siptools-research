@@ -55,4 +55,5 @@ class CreateMets(WorkflowTask):
                 # Compile METS
                 compile_mets.main(['--workspace', self.sip_creation_path,
                                    '--clean',
-                                   'tpas', 'tpas', contract_id])
+                                   'tpas', 'tpas', contract_id,
+                                   '--objid', self.dataset_id])
