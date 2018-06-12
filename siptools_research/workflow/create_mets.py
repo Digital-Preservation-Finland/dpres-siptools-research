@@ -58,6 +58,6 @@ class CreateMets(WorkflowTask):
                 # Compile METS
                 compile_mets.main(['--workspace', self.sip_creation_path,
                                    '--clean',
-                                   'tpas', contract_org_name, contract_id,
+                                   'tpas', contract_org_name.encode('utf-8'), contract_id,
                                    '--objid', self.dataset_id,
-                                   '--label', contract_title.encode('utf-8')])
+                                   '--packagingservice', 'Packaging Service'])

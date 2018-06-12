@@ -1,3 +1,4 @@
+# encoding=utf8
 """Metax interface class."""
 
 import requests

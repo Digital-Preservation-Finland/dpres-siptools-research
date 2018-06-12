@@ -16,7 +16,6 @@ def test_create_mets_ok(testpath):
     :testpath: Temporary directory fixture
     :returns: None
     """
-    testpath = "workspace"
     # Create workspace with contents required by the tested task
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
