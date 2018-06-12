@@ -1,0 +1,39 @@
+{
+    "id": 1234,
+    "contract_json": {
+        "quota": 1000000,
+        "title": "Helsingin yliopiston sopimus pitkäaikaissäilyttämisestä",
+        "contact": [
+            {
+                "name": "Taito Tieto",
+                "email": "taito.tieto@helsinki.fi",
+                "phone": "+358501231234"
+            },
+            {
+                "name": "Seppo Pykälä",
+                "email": "seppo.pykala@helsinki.fi",
+                "phone": "+358501231234"
+            }
+        ],
+        "created": "2018-04-05T08:19:58Z",
+        "modified": "2018-04-05T08:19:58Z",
+        "validity": {
+            "start_date": "2018-07-01T00:00:00Z"
+        },
+        "identifier": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
+        "description": "Muuttolintujen laskentatulosten säilytys",
+        "organization": {
+            "name": "Helsingin Yliopisto",
+            "organization_identifier": "1234567-1"
+        },
+        "related_service": [
+            {
+                "name": "Fairdata-PAS",
+                "identifier": "local:service:id"
+            }
+        ]
+    },
+    "date_modified": "2018-04-05T08:19:58+03:00",
+    "date_created": "2018-04-05T08:19:58+03:00",
+    "service_created": "metax"
+}
