@@ -60,4 +60,4 @@ class CreateMets(WorkflowTask):
                                    '--clean',
                                    'tpas', contract_org_name, contract_id,
                                    '--objid', self.dataset_id,
-                                   '--label', contract_title])
+                                   '--label', contract_title.encode('utf-8')])
