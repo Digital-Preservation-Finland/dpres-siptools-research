@@ -16,6 +16,7 @@ def test_create_mets_ok(testpath):
     :testpath: Temporary directory fixture
     :returns: None
     """
+    testpath = "workspace"
     # Create workspace with contents required by the tested task
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
@@ -38,6 +39,11 @@ def test_create_mets_ok(testpath):
                           )
 
     assert elements[0].attrib["OBJID"] == "create_mets_dataset_1"
+
+    elements = tree.xpath('/mets:mets/mets:metsHdr/mets:agent/mets:name',
+                            namespaces={'mets': "http://www.loc.gov/METS/"}
+                          )
+    assert elements[0].text == "Helsingin Yliopisto"
 
 
 def create_test_data(workspace):
