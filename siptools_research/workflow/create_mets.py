@@ -52,12 +52,13 @@ class CreateMets(WorkflowTask):
                 if isinstance(contract_id, (int, long)):
                     contract_id = str(contract_id)
                 metadata = Metax(self.config).get_contract(contract_id)
+                contract_identifier = metadata["contract_json"]["identifier"]
                 contract_org_name = metadata["contract_json"]["organization"]["name"]
                 contract_title = metadata["contract_json"]["title"]
 
                 # Compile METS
                 compile_mets.main(['--workspace', self.sip_creation_path,
                                    '--clean',
-                                   'tpas', contract_org_name.encode('utf-8'), contract_id,
+                                   'tpas', contract_org_name.encode('utf-8'), contract_identifier,
                                    '--objid', self.dataset_id,
                                    '--packagingservice', 'Packaging Service'])

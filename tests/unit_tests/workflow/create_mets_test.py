@@ -39,6 +39,11 @@ def test_create_mets_ok(testpath):
 
     assert elements[0].attrib["OBJID"] == "create_mets_dataset_1"
 
+    assert len(tree.xpath(
+        '/mets:mets[@fi:CONTRACTID="urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001"]', 
+        namespaces={'mets': "http://www.loc.gov/METS/", 
+                    'fi': "http://digitalpreservation.fi/schemas/mets/fi-extensions"})) == 1
+
     elements = tree.xpath('/mets:mets/mets:metsHdr/mets:agent/mets:name',
                             namespaces={'mets': "http://www.loc.gov/METS/"}
                           )
