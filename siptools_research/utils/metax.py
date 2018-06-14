@@ -98,7 +98,7 @@ class Metax(object):
         if not response.status_code == 200:
             raise Exception("Could not retrieve list of additional metadata "\
                             "XML for dataset %s: %s" % (entity_id, ns_key_url))
-        ns_key_list = requests.get(ns_key_url).json()
+        ns_key_list = response.json()
 
         # For each listed namespace, download the xml, create ElementTree, and
         # add it to result dict
