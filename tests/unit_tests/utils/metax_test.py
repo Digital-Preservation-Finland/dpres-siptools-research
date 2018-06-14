@@ -21,8 +21,8 @@ def test_get_dataset():
     dataset = client.get_dataset("mets_test_dataset_1")
     print dataset
     print type(dataset)
-    assert dataset["research_dataset"]["provenance"][0]['type']['pref_label']\
-        ['en'] == 'creation'
+    assert dataset["research_dataset"]["provenance"][0]['preservation_event']\
+        ['pref_label']['en'] == 'creation'
 
 
 @pytest.mark.usefixtures('testmetax')
