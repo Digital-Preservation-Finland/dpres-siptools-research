@@ -41,6 +41,10 @@ def test_createprovenanceinformation(testpath):
                                        'sip-in-progress',
                                        'creation-event.xml'))
 
+    assert os.path.isfile(os.path.join(workspace,
+                                       'sip-in-progress',
+                                       'Another+provenance+event-event.xml'))
+
     # Check that log is created in workspace/logs/
     with open(os.path.join(workspace,
                            'logs',

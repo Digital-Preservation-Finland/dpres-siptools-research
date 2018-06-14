@@ -15,6 +15,7 @@ from siptools_research.workflow.create_digiprov import \
     CreateProvenanceInformation
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 from siptools.xml.mets import NAMESPACES
+from siptools.utils import encode_path
 
 
 class CreateStructMap(WorkflowTask):
@@ -108,8 +109,9 @@ class CreateStructMap(WorkflowTask):
         for provenance in metadata["research_dataset"]["provenance"]:
             event_type = provenance["preservation_event"]["pref_label"]["en"]
             prov_file = '%s-event.xml' % event_type
-            prov_xml = ET.parse(os.path.join(self.sip_creation_path,
-                                             prov_file))
+            prov_file = encode_path(os.path.join(self.sip_creation_path, 
+                                                 prov_file))
+            prov_xml = ET.parse(prov_file)
             root = prov_xml.getroot()
             provenance_ids += root.xpath("//mets:digiprovMD/@ID",
                                          namespaces=NAMESPACES)
