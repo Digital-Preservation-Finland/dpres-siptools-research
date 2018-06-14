@@ -20,7 +20,7 @@
         "validity": {
             "start_date": "2018-07-01T00:00:00Z"
         },
-        "identifier": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
+        "identifier": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83002",
         "description": "Muuttolintujen laskentatulosten säilytys",
         "organization": {
             "name": "Helsingin Yliopisto",
