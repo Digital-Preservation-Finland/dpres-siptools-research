@@ -3,7 +3,7 @@
         "provenance": [
             {
                 "preservation_event": {
-                	"identifier": "identifierURL"
+                	"identifier": "identifierURL",
 					"pref_label": {
 						"en": "creation"
 		    		}
