@@ -19,12 +19,25 @@ def test_validate_metadata_invalid():
     """
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
-        result = validate_metadata('validate_metadata_test_dataset_2',
-                                   pytest.TEST_CONFIG_FILE)
+        validate_metadata('validate_metadata_test_dataset_2',
+                          pytest.TEST_CONFIG_FILE)
 
     # Check exception message
     exc = exc_info.value
     assert exc.message.startswith("'contract' is a required property")
+
+@pytest.mark.usefixtures('testmetax')
+def test_validate_metadata_missing_xml():
+    """Test that validate_metadata function raises exception if dataset
+    contains image file but not XML metadata.
+    """
+    with pytest.raises(InvalidMetadataError) as exc:
+        validate_metadata('validate_metadata_test_dataset_3',
+                          pytest.TEST_CONFIG_FILE)
+
+    assert exc.value[0] == \
+        "Missing XML metadata for file: pid:urn:validate_metadata_test_image"
+
 
 @pytest.mark.usefixtures('testmetax')
 def test_validate_metadata_audiovideo():

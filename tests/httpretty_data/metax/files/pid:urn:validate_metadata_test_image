@@ -1,5 +1,5 @@
 {
-  "id": 890,
+  "id": 123,
   "download_url": "http://path.to.csc.fi/890",
   "file_format": "image/tiff",
   "file_name": "valid_tiff.tiff",
@@ -7,7 +7,7 @@
   "parent_directory": {
     "identifier": "pid:urn:dir:wf1"
   },
-  "identifier": "pid:urn:890",
+  "identifier": "pid:urn:validate_metadata_test_image",
   "checksum":
   {
     "algorithm": "SHA-1",

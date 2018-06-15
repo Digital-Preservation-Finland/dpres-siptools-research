@@ -55,29 +55,3 @@ def test_invalid_metadata(testpath):
     # run should fail the following error message:
     assert "'contract' is a required property" in exc.value[0]
     assert not task.complete()
-
-
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
-def test_missing_xml_metadata(testpath):
-    """Test ValidateMetadata class. Run task for dataset missing a
-    xml metadata file for an image file.
-
-    :testpath: Temporary directory fixture
-    :returns: None
-    """
-
-    # Create "logs" directory
-    os.mkdir(os.path.join(testpath, 'logs'))
-
-    # Init task
-    task = ValidateMetadata(workspace=testpath,
-                            dataset_id='validate_metadata_test_dataset_3',
-                            config=pytest.TEST_CONFIG_FILE)
-    assert not task.complete()
-
-    # Run task
-    with pytest.raises(InvalidMetadataError) as exc:
-        task.run()
-
-    assert exc.value[0] == "Missing XML metadata for file: pid:urn:890"
-    assert not task.complete()

@@ -1,56 +1,21 @@
 [
-	{
-		"file_format": "application/xml",
-		"identifier": "pid:urn:wf_test_1a",
-		"file_path": "path/to/file1",
-		"parent_directory": "path/to",
-		"parent_directory": {
-			"identifier": "pid:urn:dir:wf1"
-		},
-		"checksum":
-		{
-			"algorithm": "SHA-1",
-			"value": "1234asdf"
-		},
-		"file_characteristics":
-		{
-			"file_created": "2014-01-17T08:19:31Z"
-		}
+{
+	"id": 123,
+	"file_format": "image/tiff",
+	"identifier": "pid:urn:validate_metadata_test_image",
+	"file_name": "valid_tiff.tiff",
+	"file_path": "/path/to/valid_tiff.tiff",
+	"parent_directory": {
+		"identifier": "pid:urn:dir:wf1"
 	},
+	"checksum":
 	{
-		"file_format": "application/xml",
-		"identifier": "pid:urn:wf_test_1b",
-		"file_path": "path/to/file2",
-		"parent_directory": {
-			"identifier": "pid:urn:dir:wf1"
-		},
-		"checksum":
-		{
-			"algorithm": "SHA-1",
-			"value": "1234lkjhg"
-		},
-		"file_characteristics":
-		{
-			"file_created": "2014-01-17T08:19:32Z"
-		}
+		"algorithm": "SHA-1",
+		"value": "5d3c637d1e3b4bdffa64374a1dbb321edb678546"
 	},
-        {
-                "id": 890,
-                "file_format": "image/tiff",
-                "identifier": "pid:urn:890",
-                "file_name": "valid_tiff.tiff",
-                "file_path": "/path/to/valid_tiff.tiff",
-                "parent_directory": {
-                        "identifier": "pid:urn:dir:wf1"
-                },
-                "checksum":
-                {
-                        "algorithm": "SHA-1",
-                        "value": "5d3c637d1e3b4bdffa64374a1dbb321edb678546"
-                },
-                "file_characteristics":
-                {
-                        "file_created": "2018-01-17T08:19:31Z"
-                }
-        }
+	"file_characteristics":
+	{
+		"file_created": "2018-01-17T08:19:31Z"
+	}
+}
 ]
