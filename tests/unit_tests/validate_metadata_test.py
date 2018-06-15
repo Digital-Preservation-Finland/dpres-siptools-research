@@ -13,7 +13,7 @@ def test_validate_metadata():
                              pytest.TEST_CONFIG_FILE) is True
 
 @pytest.mark.usefixtures('testmetax')
-def test_validate_invalid():
+def test_validate_metadata_invalid():
     """Test that validate_metadata function raises exception with correct error
     message for invalid dataset.
     """
@@ -25,3 +25,12 @@ def test_validate_invalid():
     # Check exception message
     exc = exc_info.value
     assert exc.message.startswith("'contract' is a required property")
+
+@pytest.mark.usefixtures('testmetax')
+def test_validate_metadata_audiovideo():
+    """Test that validate_metadata function validates AudioMD and VideoMD
+    metadata.
+    """
+    assert validate_metadata('validate_metadata_test_dataset_4',
+                             pytest.TEST_CONFIG_FILE) is True
+

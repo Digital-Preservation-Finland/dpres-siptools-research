@@ -3,6 +3,7 @@ for Ida user 'testuser_1' is prompted during the test."""
 
 import os
 import getpass
+import pytest
 from siptools_research.config import Configuration
 from siptools_research.utils.ida import download_file
 

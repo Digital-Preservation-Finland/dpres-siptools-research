@@ -22,22 +22,21 @@
 		],
 		"files": [
 		{
-			"identifier": "pid:urn:wf_test_1a",
+			"identifier": "pid:urn:891",
 			"use_category": {
 				"pref_label": {
-					"en": "label1"
+					"en": "label4"
 				}
 			}
 		},
 		{
-			"identifier": "pid:urn:wf_test_1b",
+			"identifier": "pid:urn:892",
 			"use_category": {
 				"pref_label": {
-					"en": "label2"
+					"en": "label5"
 				}
 			}
 		}
 		]
 	}
 }
-
