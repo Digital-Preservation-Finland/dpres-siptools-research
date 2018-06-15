@@ -14,15 +14,16 @@ def test_validate_valid_dataset_metadata():
     """
     valid_dataset_metadata = \
         {
-            "contract":{
-                "id":1
+            "contract": {
+                "id": 1
             },
             "research_dataset": {
                 "provenance": [
                     {
-                        "type": {
+                        "preservation_event": {
+                            "identifier": "identifierURL",
                             "pref_label": {
-                                "en": "en_pref_label"
+                                "en": "ProvenanceText",
                             }
                         },
                         "description": {
