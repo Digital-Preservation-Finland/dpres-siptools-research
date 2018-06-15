@@ -1,4 +1,5 @@
-"""Test the `siptools_research.workflow.report_preservation_status` module"""
+"""Integration tests for digital preservation server and
+`siptools_research.workflow.report_preservation_status` module"""
 
 import os
 import time
@@ -54,11 +55,11 @@ def test_reportpreservationstatus(testpath):
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
 # pylint: disable=invalid-name
 def test_reportpreservationstatus_rejected(testpath):
-    """Creates new directory to "rejected" directory with a report file
-    in digital preservation server, runs ReportPreservationStatus task,
-    and tests that the report file is sent along with a email message
-    to the address defined in Metax. Metax server is used, so it can
-    not be tested if preservation status really is updated in Metax.
+    """Creates new directory with a report file to "rejected" directory in
+    digital preservation server. Runs ReportPreservationStatus task, which
+    should raise an exception and write ingest report HTML to workspace. Fake
+    Metax server is used, so it can not be tested if preservation status really
+    is updated in Metax.
 
     :testpath: Temporary directory fixture
     :returns: None
@@ -88,33 +89,24 @@ def test_reportpreservationstatus_rejected(testpath):
                          os.path.basename(workspace) +
                          ".html")
 
-    # Init and run task
-    with mock.patch('siptools_research.workflow.'\
-                    'report_preservation_status.mail.send') as mock_sendmail:
-        # Run task like it would be run from command line
-        exceptionThrown = False
-        task = report_preservation_status.ReportPreservationStatus(
-            workspace=workspace,
-            dataset_id="report_preservation_status_test_dataset_rejected",
-            config=pytest.TEST_CONFIG_FILE
-        )
-        assert not task.complete()
-        try:
-            task.run()
-        except InvalidDatasetError:
-            exceptionThrown = True
-        assert exceptionThrown is True
-        assert os.path.isfile(workspace + '/' +
-                              os.path.basename(workspace) + '.html')
-        # Check Jira TPASPKT-81
-        # exp_msg = 'SIP was not approved: Contact tpas.admin@csc.fi'
-        # exp_att = workspace + '/' + os.path.basename(workspace) + '.html'
-        # mock_sendmail.assert_called_once_with('test.sender@tpas.fi',
-        #                                      'right.holder@company.com',
-        #                                      'SIP was rejected',
-        #                                      exp_msg,
-        #                                      exp_att)
-        assert task.complete() is False
+    # Init task
+    task = report_preservation_status.ReportPreservationStatus(
+        workspace=workspace,
+        dataset_id="report_preservation_status_test_dataset_rejected",
+        config=pytest.TEST_CONFIG_FILE
+    )
+
+    # Running task should raise exception
+    with pytest.raises(InvalidDatasetError) as exc_info:
+        task.run()
+    assert exc_info.value[0] == "SIP was rejected"
+
+    # Ingest report HTML should be copied to workspace
+    assert os.path.isfile(workspace + '/' +
+                          os.path.basename(workspace) + '.html')
+
+    # The task should not be completed
+    assert not task.complete()
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
