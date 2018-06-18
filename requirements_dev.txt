@@ -30,6 +30,7 @@ file-magic
 M2Crypto
 dateutils
 python-mimeparse
+Pillow
 
 # mets requirements
 # TODO: These should be installed automatically installed as requirements of mets
