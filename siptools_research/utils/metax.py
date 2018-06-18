@@ -6,6 +6,35 @@ from requests.auth import HTTPBasicAuth
 import lxml.etree
 from siptools_research.config import Configuration
 
+DS_STATE_INITIALIZED = 0
+DS_STATE_PROPOSED_FOR_DIGITAL_PRESERVATION = 10
+DS_STATE_TECHNICAL_METADATA_GENERATED = 20
+DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED = 30
+DS_STATE_INVALID_METADATA = 40
+DS_STATE_METADATA_VALIDATION_FAILED = 50
+DS_STATE_VALIDATED_METADATA_UPDATED = 60
+DS_STATE_VALID_METADATA = 70
+DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION = 80
+DS_STATE_IN_PACKAGING_SERVICE = 90
+DS_STATE_PACKAGING_FAILED = 100
+DS_STATE_SIP_SENT_TO_INGESTION_IN_DPRES_SERVICE = 110
+DS_STATE_IN_DIGITAL_PRESERVATION = 120
+DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE = 130
+DS_STATE_IN_DISSEMINATION = 140
+
+DS_STATE_ALL_STATES = (
+    DS_STATE_INITIALIZED, DS_STATE_PROPOSED_FOR_DIGITAL_PRESERVATION,
+    DS_STATE_TECHNICAL_METADATA_GENERATED,
+    DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
+    DS_STATE_INVALID_METADATA, DS_STATE_METADATA_VALIDATION_FAILED,
+    DS_STATE_VALIDATED_METADATA_UPDATED, DS_STATE_VALID_METADATA,
+    DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION, DS_STATE_IN_PACKAGING_SERVICE,
+    DS_STATE_PACKAGING_FAILED, DS_STATE_SIP_SENT_TO_INGESTION_IN_DPRES_SERVICE,
+    DS_STATE_IN_DIGITAL_PRESERVATION,
+    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+    DS_STATE_IN_DISSEMINATION
+)
+
 
 class MetaxConnectionError(Exception):
     """Exception raised when Metax is not available"""
@@ -163,18 +192,21 @@ class Metax(object):
         """Set values of attributes `preservation_state` and
         `preservation_state_description` for dataset in Metax
 
-         The preservation state is one of the following integers:
-         0 = Not in PAS
-         1 = Proposed for midtterm
-         2 = Proposed for long term
-         3 = in packaging service
-         4 = in dissemination
-         5 = in midterm preservation
-         6 = in longterm preservation
-         7 = Rejected long-term preservation
-         8 = Rejected mid-term preservation
-         9 = Metadata did not pass validation
-         10 = Metadata passed validation
+        0 = Initialized
+        10 = Proposed for digital preservation
+        20 = Technical metadata generated
+        30 = Technical metadata generation failed
+        40 = Invalid metadata
+        50 = Metadata validation failed
+        60 = Validated metadata updated
+        70 = Valid metadata
+        80 = Accepted to digital preservation
+        90 = in packaging service
+        100 = Packaging failed
+        110 = SIP sent to ingestion in digital preservation service
+        120 = in digital preservation
+        130 = Rejected in digital preservation service
+        140 = in dissemination
 
         :dataset_id: The ID of dataset in Metax
         :state (integer): The value for `preservation_state`

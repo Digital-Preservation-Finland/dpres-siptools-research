@@ -12,6 +12,7 @@ from siptools_research.workflowtask import InvalidDatasetError
 from siptools_research.config import Configuration
 from siptools_research.utils import mail
 import paramiko
+from siptools_research.utils.metax import DS_STATE_IN_DIGITAL_PRESERVATION
 
 
 class ReportPreservationStatus(WorkflowTask):
@@ -70,7 +71,8 @@ class ReportPreservationStatus(WorkflowTask):
                     # Set Metax preservation state of this dataset to 6 ("in
                     # longterm preservation")
                     metax_client.set_preservation_state(
-                        self.dataset_id, '6', 'Accepted to preservation'
+                        self.dataset_id, DS_STATE_IN_DIGITAL_PRESERVATION,
+                        'Accepted to preservation'
                     )
                 elif directory == 'rejected':
                     self.__handle_rejected_sip__(ingest_report_paths,
