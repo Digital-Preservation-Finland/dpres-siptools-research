@@ -7,6 +7,8 @@ import mets
 import xml_helpers.utils as h
 import luigi
 from siptools.scripts import compile_structmap
+from siptools.xml.mets import NAMESPACES
+from siptools.utils import encode_path
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
 from siptools_research.workflowtask import WorkflowTask
@@ -14,8 +16,6 @@ from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 from siptools_research.workflow.create_digiprov import \
     CreateProvenanceInformation
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
-from siptools.xml.mets import NAMESPACES
-from siptools.utils import encode_path
 
 
 class CreateStructMap(WorkflowTask):
@@ -66,7 +66,7 @@ class CreateStructMap(WorkflowTask):
                 # Create physical structmap using siptools script
                 compile_structmap.main(['--workspace',
                                         self.sip_creation_path,
-                                       '--type_attr', 'Fairdata-physical'])
+                                        '--type_attr', 'Fairdata-physical'])
                 # Read the generated physical structmap from file
                 # pylint: disable=no-member
                 structmap = ET.parse(os.path.join(self.sip_creation_path,
@@ -103,13 +103,19 @@ class CreateStructMap(WorkflowTask):
                     outfile.write(h.serialize(mets_structmap))
 
     def get_provenance_ids(self):
+        """Gets list of dataset provenance events from Metax, and reads
+        provenance IDs of the events from event.xml files found in the
+        workspace directory.
+
+        :returns: list of provenance IDs
+        """
         metax_client = Metax(self.config)
         metadata = metax_client.get_dataset(self.dataset_id)
         provenance_ids = []
         for provenance in metadata["research_dataset"]["provenance"]:
             event_type = provenance["preservation_event"]["pref_label"]["en"]
             prov_file = '%s-event.xml' % event_type
-            prov_file = encode_path(os.path.join(self.sip_creation_path, 
+            prov_file = encode_path(os.path.join(self.sip_creation_path,
                                                  prov_file))
             prov_xml = ET.parse(prov_file)
             root = prov_xml.getroot()
@@ -155,7 +161,11 @@ class CreateStructMap(WorkflowTask):
         return logical_struct
 
     def get_fileid(self, filename):
-        """get file id from filesec.xml by filename"""
+        """Get file id from filesec.xml by filename.
+
+        :filename: filename
+        :returns: file ID
+        """
 
         # pylint: disable=no-member
         filesec_xml = ET.parse(os.path.join(self.sip_creation_path,
