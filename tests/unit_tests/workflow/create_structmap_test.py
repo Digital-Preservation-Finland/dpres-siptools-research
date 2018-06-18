@@ -161,23 +161,23 @@ def validate_filesec_file(filesec_file):
     files = root.xpath('//mets:mets/mets:fileSec/mets:fileGrp/mets:file/\
     mets:FLocat/@xlink:href', namespaces=NAMESPACES)
     assert len(files) == 9
-    assert 'file://tests/data/structured/Documentation files/\
-Configuration files/properties.txt' in files
-    assert 'file://tests/data/structured/Documentation files/\
-Other files/this.txt' in files
-    assert 'file://tests/data/structured/Documentation files/\
-readme.txt' in files
-    assert 'file://tests/data/structured/Documentation files/Notebook/\
-notes.txt' in files
-    assert 'file://tests/data/structured/Documentation files/Method files/\
-method_putkisto.txt' in files
-    assert 'file://tests/data/structured/Machine-readable metadata/\
-metadata.txt' in files
-    assert 'file://tests/data/structured/Access and use rights files/\
-access_file.txt' in files
-    assert 'file://tests/data/structured/Software files/koodi.java' in files
-    assert 'file://tests/data/structured/Publication files/\
-publication.txt' in files
+    assert 'file://tests/data/structured/Documentation+files/' \
+           'Configuration+files/properties.txt' in files
+    assert 'file://tests/data/structured/Documentation+files/' \
+           'Other+files/this.txt' in files
+    assert 'file://tests/data/structured/Documentation+files/' \
+           'readme.txt' in files
+    assert 'file://tests/data/structured/Documentation+files/Notebook/' \
+           'notes.txt' in files
+    assert 'file://tests/data/structured/Documentation+files/Method+files/' \
+           'method_putkisto.txt' in files
+    assert 'file://tests/data/structured/Machine-readable+metadata/' \
+           'metadata.txt' in files
+    assert 'file://tests/data/structured/Access+and+use+rights+files/' \
+           'access_file.txt' in files
+    assert 'file://tests/data/structured/Software+files/koodi.java' in files
+    assert 'file://tests/data/structured/Publication+files/' \
+           'publication.txt' in files
 
 
 def validate_structmap_file(structmap_file):

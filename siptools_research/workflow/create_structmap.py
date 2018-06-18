@@ -92,7 +92,8 @@ class CreateStructMap(WorkflowTask):
                 for category in categories:
                     div = mets.div(type_attr=category)
                     for filename in categories.get(category):
-                        fileid = self.get_fileid(filename)
+                        fileid = self.get_fileid(encode_path(filename,
+                                                             safe='/'))
                         div.append(mets.fptr(fileid))
                     wrapper_div.append(div)
                 logical_structmap.append(wrapper_div)
