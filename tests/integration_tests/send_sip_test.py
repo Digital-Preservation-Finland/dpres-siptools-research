@@ -1,4 +1,5 @@
-"""Test ``siptools_research.workflow.send_sip`` module"""
+"""Integration test for ``siptools_research.workflow.send_sip`` module and
+digital preservation service."""
 import os
 import shutil
 import logging
@@ -12,7 +13,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_send_sip(testpath):
-    """Test the workflow task SendSip module. Run task and check that .tar is
+    """Test the SendSipToDP workflow task. Run task and check that .tar is
     copied to digital preservation server.
 
     :testpath: Temporary directory fixture
