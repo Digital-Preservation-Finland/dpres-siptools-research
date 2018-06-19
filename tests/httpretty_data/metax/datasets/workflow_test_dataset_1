@@ -6,6 +6,7 @@
         "provenance": [
             {
                 "preservation_event": {
+	    		"identifier": "1234",
 			"pref_label": {
 				"en": "creation"
 		    }
@@ -33,14 +34,6 @@
 	    	"use_category": {
 			"pref_label": {
 				"en": "label2"
-			}
-		}
-            },
-            {
-		"identifier": "pid:urn:889",
-	    	"use_category": {
-			"pref_label": {
-				"en": "label3"
 			}
 		}
             }

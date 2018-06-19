@@ -97,7 +97,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     try:
         formatversion = metadata["file_characteristics"]["format_version"]
     except KeyError:
-        formatversion = None
+        formatversion = ""
 
     # Picks name of hashalgorithm from its length if it's not valid
     hash_bit_length = len(hashvalue) * 4
