@@ -1,6 +1,7 @@
 """Tests for ``siptools_research.validate_metadata`` module"""
 
 import pytest
+import tests.conftest
 from siptools_research import validate_metadata
 from siptools_research.workflowtask import InvalidMetadataError
 
@@ -10,7 +11,7 @@ def test_validate_metadata():
     dataset.
     """
     assert validate_metadata('validate_metadata_test_dataset_1',
-                             pytest.TEST_CONFIG_FILE) is True
+                             tests.conftest.TEST_CONFIG_FILE) is True
 
 @pytest.mark.usefixtures('testmetax')
 def test_validate_metadata_invalid():
@@ -20,7 +21,7 @@ def test_validate_metadata_invalid():
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata('validate_metadata_test_dataset_2',
-                          pytest.TEST_CONFIG_FILE)
+                          tests.conftest.TEST_CONFIG_FILE)
 
     # Check exception message
     exc = exc_info.value
@@ -33,7 +34,7 @@ def test_validate_metadata_missing_xml():
     """
     with pytest.raises(InvalidMetadataError) as exc:
         validate_metadata('validate_metadata_test_dataset_3',
-                          pytest.TEST_CONFIG_FILE)
+                          tests.conftest.TEST_CONFIG_FILE)
 
     assert exc.value[0] == \
         "Missing XML metadata for file: pid:urn:validate_metadata_test_image"
@@ -45,5 +46,5 @@ def test_validate_metadata_audiovideo():
     metadata.
     """
     assert validate_metadata('validate_metadata_test_dataset_4',
-                             pytest.TEST_CONFIG_FILE) is True
+                             tests.conftest.TEST_CONFIG_FILE) is True
 

@@ -20,6 +20,7 @@ METAX_PATH = "tests/httpretty_data/metax"
 METAX_URL = "https://metax-test.csc.fi/rest/v1"
 IDA_PATH = "tests/httpretty_data/ida/"
 IDA_URL = 'https://86.50.169.61:4433'
+TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
 
 
 # Prefer modules from source directory rather than from site-python
@@ -29,9 +30,6 @@ PROJECT_ROOT_PATH = os.path.abspath(
 sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
-def pytest_namespace():
-    return {'TEST_CONFIG_FILE':
-            "tests/data/configuration_files/siptools_research.conf"}
 
 @pytest.fixture(scope="function")
 def testmetax(request):

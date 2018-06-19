@@ -2,6 +2,7 @@
 
 import os
 import pytest
+import tests.conftest
 from siptools_research.workflow import get_files
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax', 'testida')
@@ -23,7 +24,7 @@ def test_getfiles(testpath):
     # Init task
     task = get_files.GetFiles(workspace=testpath,
                               dataset_id="get_files_test_dataset_1",
-                              config=pytest.TEST_CONFIG_FILE)
+                              config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task.
@@ -54,7 +55,7 @@ def test_missing_files(testpath):
     # Init task
     task = get_files.GetFiles(workspace=testpath,
                               dataset_id="get_files_test_dataset_2",
-                              config=pytest.TEST_CONFIG_FILE)
+                              config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task.

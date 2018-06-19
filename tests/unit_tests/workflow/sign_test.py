@@ -3,6 +3,7 @@
 import os
 import shutil
 import pytest
+import tests.conftest
 from siptools_research.workflow import sign
 
 @pytest.mark.usefixtures('testmetax')
@@ -32,7 +33,7 @@ def test_signsip(testpath):
     # Init task
     task = sign.SignSIP(workspace=workspace,
                         dataset_id="1",
-                        config=pytest.TEST_CONFIG_FILE)
+                        config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task.

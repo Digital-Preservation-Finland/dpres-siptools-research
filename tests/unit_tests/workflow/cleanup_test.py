@@ -1,6 +1,8 @@
 """Tests for ``siptools_research.workflow.cleanup`` module"""
 import os
 import pytest
+import tests.conftest
+import tests.conftest
 from siptools_research.utils.database import Database
 from siptools_research.workflow.cleanup import CleanupWorkspace
 
@@ -19,7 +21,7 @@ def test_cleanupworkspace(testpath):
     # Init task
     task = CleanupWorkspace(workspace=workspace,
                             dataset_id='1',
-                            config=pytest.TEST_CONFIG_FILE)
+                            config=tests.conftest.TEST_CONFIG_FILE)
 
     # The workspace should exists before task has been run
     assert not task.complete()
@@ -34,7 +36,7 @@ def test_cleanupworkspace(testpath):
     assert not os.path.exists(workspace)
 
     # Manipulate workflow database
-    Database(pytest.TEST_CONFIG_FILE).add_event(
+    Database(tests.conftest.TEST_CONFIG_FILE).add_event(
         os.path.basename(workspace),
         'ReportPreservationStatus',
         'success',

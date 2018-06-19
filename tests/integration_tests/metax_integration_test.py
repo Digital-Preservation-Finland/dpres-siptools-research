@@ -7,6 +7,7 @@ import json
 import getpass
 import random
 import pytest
+import tests.conftest
 import luigi.cmdline
 import pymongo
 import requests
@@ -21,7 +22,7 @@ def run_luigi_task(module, task, workspace, dataset_id):
             ('--module', module, task,
              '--workspace', workspace,
              '--dataset-id', dataset_id,
-             '--config', pytest.TEST_CONFIG_FILE,
+             '--config', tests.conftest.TEST_CONFIG_FILE,
              '--local-scheduler')
         )
 
@@ -31,7 +32,7 @@ def test_workflow(testpath, testmongoclient):
     partial workflow by calling CreateMets task with luigi.
     """
     # Read configuration file
-    conf = Configuration(pytest.TEST_CONFIG_FILE)
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     # Override Metax password in configuration file with real password from
     # the user
     # pylint: disable=protected-access
@@ -70,7 +71,7 @@ def test_workflow(testpath, testmongoclient):
                        str(dataset_id))
 
     # Init pymongo client
-    conf = Configuration(pytest.TEST_CONFIG_FILE)
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
     collection = mongoclient[conf.get('mongodb_database')]\
         [conf.get('mongodb_collection')]

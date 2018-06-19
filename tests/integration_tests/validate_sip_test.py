@@ -4,7 +4,7 @@
 
 import os
 import time
-import pytest
+import tests.conftest
 import paramiko
 from siptools_research.workflow.validate_sip import ValidateSIP
 
@@ -20,7 +20,7 @@ def test_validatesip_accepted(testpath):
 
     # Init task
     task = ValidateSIP(workspace=workspace, dataset_id="1",
-                       config=pytest.TEST_CONFIG_FILE)
+                       config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Create new directory to digital preservation server
@@ -44,7 +44,7 @@ def test_validatesip_rejected(testpath):
 
     # Init task
     task = ValidateSIP(workspace=workspace, dataset_id="1",
-                       config=pytest.TEST_CONFIG_FILE)
+                       config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Create new directory to digital preservation server

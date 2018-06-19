@@ -14,7 +14,7 @@
 #[3] https://github.com/ncouture/MockSSH/issues/14
 
 
-import pytest
+import tests.conftest
 from siptools_research.workflow.validate_sip import ValidateSIP
 
 # pylint: disable=unused-argument
@@ -46,7 +46,7 @@ def test_validatesip_accepted(testpath, monkeypatch):
 
     # Init task
     task = ValidateSIP(workspace=workspace, dataset_id="1",
-                       config=pytest.TEST_CONFIG_FILE)
+                       config=tests.conftest.TEST_CONFIG_FILE)
 
     # Monkeypatch RemoteFileSystem.exists to return False. The task should not
     # be completed.

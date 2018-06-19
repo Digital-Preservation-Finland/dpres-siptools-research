@@ -4,6 +4,7 @@ import os
 import tempfile
 import json
 import pytest
+import tests.conftest
 import httpretty
 import lxml.etree
 from siptools_research.generate_metadata import generate_metadata
@@ -14,7 +15,7 @@ def test_generate_metadata():
     that JSON message sent to Metax has correct keys/values.
     """
     generate_metadata('generate_metadata_test_dataset_1',
-                      'tests/data/configuration_files/siptools_research.conf')
+                      tests.conftest.TEST_CONFIG_FILE)
 
     json_message = json.loads(httpretty.last_request().body)
 
@@ -43,7 +44,7 @@ def test_generate_metadata_mix():
     querystring should contain the namespace of XML.
     """
     generate_metadata('generate_metadata_test_dataset_2',
-                      'tests/data/configuration_files/siptools_research.conf')
+                      tests.conftest.TEST_CONFIG_FILE)
 
 
     # Read one element from XML to ensure it is valid and contains correct data
@@ -69,7 +70,7 @@ def test_generate_metadata_tempfile_removal():
     tmp_dir_before_test = os.listdir(tempfile.gettempdir())
 
     generate_metadata('generate_metadata_test_dataset_1',
-                      'tests/data/configuration_files/siptools_research.conf')
+                      tests.conftest.TEST_CONFIG_FILE)
 
     # There should not be new files or directories in /tmp
     assert os.listdir(tempfile.gettempdir()) == tmp_dir_before_test

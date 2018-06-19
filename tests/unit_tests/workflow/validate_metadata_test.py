@@ -2,6 +2,7 @@
 
 import os
 import pytest
+import tests.conftest
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
@@ -21,7 +22,7 @@ def test_validatemetadata(testpath):
     # Init task
     task = ValidateMetadata(workspace=testpath,
                             dataset_id='validate_metadata_test_dataset_1',
-                            config=pytest.TEST_CONFIG_FILE)
+                            config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task
@@ -45,7 +46,7 @@ def test_invalid_metadata(testpath):
     # Init task
     task = ValidateMetadata(workspace=testpath,
                             dataset_id='validate_metadata_test_dataset_2',
-                            config=pytest.TEST_CONFIG_FILE)
+                            config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task

@@ -2,6 +2,7 @@
 
 import os
 import pytest
+import tests.conftest
 from siptools_research.workflow import create_workspace
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -23,7 +24,7 @@ def test_createworkspace(testpath):
     task = create_workspace.CreateWorkspace(
         workspace=workspace,
         dataset_id="1",
-        config=pytest.TEST_CONFIG_FILE
+        config=tests.conftest.TEST_CONFIG_FILE
     )
     assert not task.complete()
 

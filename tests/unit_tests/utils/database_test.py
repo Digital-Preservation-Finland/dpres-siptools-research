@@ -1,6 +1,7 @@
 """Tests for ``siptools_research.utils.database`` module"""
 import uuid
 import pytest
+import tests.conftest
 import siptools_research.utils.database
 import pymongo
 
@@ -14,7 +15,7 @@ def test_add_event():
 
     # Init database client
     database = siptools_research.utils.database.Database(
-        pytest.TEST_CONFIG_FILE
+        tests.conftest.TEST_CONFIG_FILE
     )
 
     # Add event for random document

@@ -8,6 +8,7 @@ that each task willl complete, the output of task is NOT examined.
 
 import os
 import pytest
+import tests.conftest
 import luigi.cmdline
 import pymongo
 from siptools_research.config import Configuration
@@ -20,7 +21,7 @@ def run_luigi_task(module, task, workspace):
             ('--module', module, task,
              '--workspace', workspace,
              '--dataset-id', 'workflow_test_dataset_1',
-             '--config', pytest.TEST_CONFIG_FILE,
+             '--config', tests.conftest.TEST_CONFIG_FILE,
              '--worker-keep-alive',
              '--worker-retry-external-tasks',
              '--scheduler-retry-delay', '20',
@@ -61,7 +62,7 @@ def test_workflow(testpath, testmetax, testida, testmongoclient, module, task):
                    workspace)
 
     # Init pymongo client
-    conf = Configuration(pytest.TEST_CONFIG_FILE)
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
     collection = mongoclient[conf.get('mongodb_database')]\
         [conf.get('mongodb_collection')]

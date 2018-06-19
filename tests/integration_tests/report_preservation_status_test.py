@@ -4,6 +4,7 @@
 import os
 import time
 import pytest
+import tests.conftest
 import paramiko
 from siptools_research.workflow import report_preservation_status
 from siptools_research.workflowtask import InvalidDatasetError
@@ -45,7 +46,7 @@ def test_reportpreservationstatus(testpath):
     task = report_preservation_status.ReportPreservationStatus(
         workspace=workspace,
         dataset_id="report_preservation_status_test_dataset_1",
-        config=pytest.TEST_CONFIG_FILE
+        config=tests.conftest.TEST_CONFIG_FILE
     )
     assert not task.complete()
     task.run()
@@ -93,7 +94,7 @@ def test_reportpreservationstatus_rejected(testpath):
     task = report_preservation_status.ReportPreservationStatus(
         workspace=workspace,
         dataset_id="report_preservation_status_test_dataset_rejected",
-        config=pytest.TEST_CONFIG_FILE
+        config=tests.conftest.TEST_CONFIG_FILE
     )
 
     # Running task should raise exception
@@ -156,7 +157,7 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
         task = report_preservation_status.ReportPreservationStatus(
             workspace=workspace,
             dataset_id="report_preservation_status_test_dataset_rejected",
-            config=pytest.TEST_CONFIG_FILE
+            config=tests.conftest.TEST_CONFIG_FILE
         )
         assert not task.complete()
         try:

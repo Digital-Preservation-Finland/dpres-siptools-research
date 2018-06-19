@@ -4,6 +4,7 @@ import os
 import json
 import datetime
 import pytest
+import tests.conftest
 import luigi.cmdline
 import pymongo
 import httpretty
@@ -31,7 +32,7 @@ def run_luigi_task(task_name, workspace):
              task_name,
              '--workspace', workspace,
              '--dataset-id', '1',
-             '--config', pytest.TEST_CONFIG_FILE,
+             '--config', tests.conftest.TEST_CONFIG_FILE,
              '--local-scheduler',
              '--no-lock')
         )
@@ -95,7 +96,7 @@ def test_run_workflowtask(testpath, testmongoclient):
         assert output.read() == 'Hello world'
 
     # Check that new event is added to workflow database
-    conf = Configuration(pytest.TEST_CONFIG_FILE)
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
     collection = mongoclient[conf.get('mongodb_database')]\
         [conf.get('mongodb_collection')]
@@ -121,7 +122,7 @@ def test_run_failing_task(testpath, testmongoclient):
     run_luigi_task('FailingTestTask', testpath)
 
     # Check that new event is added to workflow database
-    conf = Configuration(pytest.TEST_CONFIG_FILE)
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
     collection = mongoclient[conf.get('mongodb_database')]\
         [conf.get('mongodb_collection')]

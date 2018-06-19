@@ -3,6 +3,7 @@
 """Tests for ``siptools_research.utils.metax`` module"""
 import json
 import pytest
+import tests.conftest
 import httpretty
 import mock
 import lxml.etree
@@ -19,7 +20,7 @@ def test_get_dataset():
 
     :returns: None
     """
-    client = Metax(pytest.TEST_CONFIG_FILE)
+    client = Metax(tests.conftest.TEST_CONFIG_FILE)
     dataset = client.get_dataset("mets_test_dataset_1")
     print dataset
     print type(dataset)
@@ -35,7 +36,7 @@ def test_get_xml():
     :returns: None
     """
     # Get XML objects from Metax
-    client = Metax(pytest.TEST_CONFIG_FILE)
+    client = Metax(tests.conftest.TEST_CONFIG_FILE)
     xml_dict = client.get_xml('files', "metax_xml_test")
     assert isinstance(xml_dict, dict)
 
@@ -59,7 +60,7 @@ def test_set_xml():
     mix = lxml.etree.parse('./tests/data/mix_sample.xml').getroot()
 
     # POST XML to Metax
-    client = Metax(pytest.TEST_CONFIG_FILE)
+    client = Metax(tests.conftest.TEST_CONFIG_FILE)
     client.set_xml('set_xml_1', mix)
 
     # Check that posted message body is valid XML
@@ -104,7 +105,7 @@ def test_get_datacite():
     and check its correctness.
     :returns: None
     """
-    client = Metax(pytest.TEST_CONFIG_FILE)
+    client = Metax(tests.conftest.TEST_CONFIG_FILE)
     xml = client.get_datacite("datacite_test_1")
 
     # Read field "creatorName" from xml file
@@ -124,7 +125,7 @@ def test_set_preservation_state():
 
     :returns: None
     """
-    client = Metax(pytest.TEST_CONFIG_FILE)
+    client = Metax(tests.conftest.TEST_CONFIG_FILE)
     client.set_preservation_state("mets_test_dataset_1",
                                   DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
                                   'Accepted to preservation')
@@ -149,7 +150,7 @@ def test_set_file_characteristics():
 
     :returns: None
     """
-    client = Metax(pytest.TEST_CONFIG_FILE)
+    client = Metax(tests.conftest.TEST_CONFIG_FILE)
     sample_data = {"file_format": "text/plain",
                    "format_version": "1.0",
                    "encoding": "UTF-8"}
@@ -179,7 +180,7 @@ def test_get_data_returns_correct_error_when_http_503_error():
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
         exceptionThrown = False
-        client = Metax(pytest.TEST_CONFIG_FILE)
+        client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_dataset('who_cares')
         except MetaxConnectionError:
@@ -193,7 +194,7 @@ def test_get_xml_returns_correct_error_when_http_503_error():
     """
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         exceptionThrown = False
-        client = Metax(pytest.TEST_CONFIG_FILE)
+        client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_xml('who', 'cares')
         except MetaxConnectionError:
@@ -207,7 +208,7 @@ def test_set_preservation_state_returns_correct_error_when_http_503_error():
     """
     with mock.patch('siptools_research.utils.metax.requests.patch', side_effect=mocked_requests_get):
         exceptionThrown = False
-        client = Metax(pytest.TEST_CONFIG_FILE)
+        client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.set_preservation_state('who', DS_STATE_INITIALIZED, 'cares')
         except MetaxConnectionError:
@@ -222,7 +223,7 @@ def test_get_elasticsearchdata_returns_correct_error_when_http_503_error():
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
         exceptionThrown=False
-        client = Metax(pytest.TEST_CONFIG_FILE)
+        client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_elasticsearchdata()
         except MetaxConnectionError:
@@ -237,7 +238,7 @@ def test_get_datacite_returns_correct_error_when_http_503_error():
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
         exceptionThrown=False
-        client = Metax(pytest.TEST_CONFIG_FILE)
+        client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_datacite("x")
         except MetaxConnectionError:
@@ -252,7 +253,7 @@ def test_get_dataset_files_returns_correct_error_when_http_503_error():
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
         exceptionThrown=False
-        client = Metax(pytest.TEST_CONFIG_FILE)
+        client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_dataset_files("x")
         except MetaxConnectionError:

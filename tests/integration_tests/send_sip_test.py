@@ -4,6 +4,7 @@ import os
 import shutil
 import logging
 import pytest
+import tests.conftest
 import paramiko
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.config import Configuration
@@ -33,12 +34,12 @@ def test_send_sip(testpath):
     # Init and run task
     task = SendSIPToDP(workspace=workspace,
                        dataset_id='1',
-                       config=pytest.TEST_CONFIG_FILE)
+                       config=tests.conftest.TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
 
     # Init sftp connection to digital preservation server
-    conf = Configuration(pytest.TEST_CONFIG_FILE)
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(conf.get('dp_host'),

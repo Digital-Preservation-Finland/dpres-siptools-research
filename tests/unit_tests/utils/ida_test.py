@@ -1,6 +1,7 @@
 """Tests for `siptools_research.utils.ida` module"""
 import os
 import pytest
+import tests.conftest
 from siptools_research.utils import ida
 
 
@@ -12,7 +13,7 @@ def test_download_file(testpath):
     :testpath: Temporary directory fixture"""
     new_file_path = os.path.join(testpath, 'new_file')
     ida.download_file('pid:urn:1', new_file_path,
-                      pytest.TEST_CONFIG_FILE)
+                      tests.conftest.TEST_CONFIG_FILE)
 
     # The file should be a text file that says: "foo\n"
     with open(new_file_path, 'r') as new_file:
@@ -25,7 +26,7 @@ def test_download_big_file_header(testpath):
     """
     new_file_path = os.path.join(testpath, 'new_file')
     ida.download_file_header('pid:urn:1024kB_file', new_file_path,
-                             pytest.TEST_CONFIG_FILE)
+                             tests.conftest.TEST_CONFIG_FILE)
 
     assert os.path.getsize(new_file_path) == 512
 
@@ -36,6 +37,6 @@ def test_download_short_file_header(testpath):
     """
     new_file_path = os.path.join(testpath, 'new_file')
     ida.download_file_header('pid:urn:1', new_file_path,
-                             pytest.TEST_CONFIG_FILE)
+                             tests.conftest.TEST_CONFIG_FILE)
 
     assert os.path.getsize(new_file_path) == 4
