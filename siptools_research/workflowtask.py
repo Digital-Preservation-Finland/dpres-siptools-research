@@ -7,9 +7,7 @@ from siptools_research.utils.database import Database
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.metax import MetaxConnectionError
 from siptools_research.utils import mail
-from siptools_research.utils.metax import DS_STATE_METADATA_VALIDATION_FAILED,\
-    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
-
+import siptools_research.utils.metax as metax
 
 class WorkflowTask(luigi.Task):
     """Common base class for all workflow tasks. In addition to functionality
@@ -153,7 +151,8 @@ def report_task_failure(task, exception):
         # Set preservation status for dataset in Metax
         metax_client = Metax(task.config)
         metax_client.set_preservation_state(
-            task.dataset_id, DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+            task.dataset_id,
+            metax.DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
             "%s: %s: %s" % (task.failure_message,
                             type(exception).__name__,
                             str(exception))
@@ -162,7 +161,7 @@ def report_task_failure(task, exception):
         # Set preservation status for dataset in Metax
         metax_client = Metax(task.config)
         metax_client.set_preservation_state(
-            task.dataset_id, DS_STATE_METADATA_VALIDATION_FAILED,
+            task.dataset_id, metax.DS_STATE_METADATA_VALIDATION_FAILED,
             "%s: %s" % (task.failure_message, str(exception))
         )
     elif isinstance(exception, MetaxConnectionError):

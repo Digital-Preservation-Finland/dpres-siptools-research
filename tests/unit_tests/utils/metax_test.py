@@ -9,9 +9,7 @@ import mock
 import lxml.etree
 from siptools_research.utils.metax import Metax
 from siptools_research.utils.metax import MetaxConnectionError
-from siptools_research.utils.metax import DS_STATE_INITIALIZED,\
-    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
-
+import siptools_research.utils.metax as metax
 
 @pytest.mark.usefixtures('testmetax')
 def test_get_dataset():
@@ -127,13 +125,13 @@ def test_set_preservation_state():
     """
     client = Metax(tests.conftest.TEST_CONFIG_FILE)
     client.set_preservation_state("mets_test_dataset_1",
-                                  DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+                                  metax.DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
                                   'Accepted to preservation')
 
     # Check the body of last HTTP request
     request_body = json.loads(httpretty.last_request().body)
     assert request_body["preservation_state"] ==\
-        DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
+        metax.DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
     assert request_body["preservation_description"] \
         == "Accepted to preservation"
 
@@ -210,7 +208,7 @@ def test_set_preservation_state_returns_correct_error_when_http_503_error():
         exceptionThrown = False
         client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
-            client.set_preservation_state('who', DS_STATE_INITIALIZED, 'cares')
+            client.set_preservation_state('who', metax.DS_STATE_INITIALIZED, 'cares')
         except MetaxConnectionError:
             exceptionThrown = True
         assert exceptionThrown is True
