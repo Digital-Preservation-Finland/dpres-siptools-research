@@ -161,8 +161,10 @@ def test_import_object_without_charset(testpath):
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
+    # If charset is not defined the siptools.import_objects default value is
+    # used. For some reason the default value is set to ISO-8859-15.
     assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-        == 'text/html'
+        == 'text/html; charset=ISO-8859-15'
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
