@@ -55,7 +55,7 @@ def test_createdescriptivemetadata(testpath):
     elements = tree.xpath('/mets:mets//mets:dmdSec/mets:mdWrap',
                           namespaces=xpath_namespaces)
     assert elements[0].attrib["OTHERMDTYPE"] == "DATACITE"
-    assert elements[0].attrib["MDTYPEVERSION"] == "4.0"
+    assert elements[0].attrib["MDTYPEVERSION"] == "4.1"
 
 
     elements = tree.xpath(common_xpath + 'ns1:identifier',
