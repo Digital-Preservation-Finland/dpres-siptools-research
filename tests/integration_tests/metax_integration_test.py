@@ -5,7 +5,6 @@ Metax user 'tpas' is prompted during the test."""
 import os
 import json
 import getpass
-import random
 import pytest
 import tests.conftest
 import luigi.cmdline
@@ -44,10 +43,10 @@ def test_workflow(testpath, testmongoclient):
     # Post files to Metax
     file1_metadata = 'tests/data/integration_tests/metax_file_1.json'
     file2_metadata = 'tests/data/integration_tests/metax_file_2.json'
-    file1_id = 'tpas_test_'+ str(random.randint(1, 1000000))
-    file2_id = 'tpas_test_'+ str(random.randint(1, 1000000))
-    post_metax_file(file1_id, file1_metadata, conf)
-    post_metax_file(file2_id, file2_metadata, conf)
+    file1_id = "pid:urn:wf_test_1a"
+    file2_id = "pid:urn:wf_test_1b"
+    post_metax_file(file1_metadata, conf)
+    post_metax_file(file2_metadata, conf)
 
     # Post dataset to Metax
     dataset_metadata = 'tests/data/integration_tests/metax_dataset.json'
@@ -80,18 +79,20 @@ def test_workflow(testpath, testmongoclient):
     # Check 'result' field
     assert document['workflow_tasks']['CreateMets']['result'] == 'success'
 
+    delete_metax_file(file1_id, conf)
+    delete_metax_file(file2_id, conf)
+    delete_metax_dataset(dataset_id, conf)
 
-def post_metax_file(identifier, metadatafile, conf):
+
+def post_metax_file(metadatafile, conf):
     """Post file metadata to Metax using HTTP POST method.
 
-    :identifier: unique identifier for file
     :metadatafile: JSON file from which the metadata is read
     :returns: None
     """
-    # Replace file identifier in metadata with identifier given as parameter
+    # Read metadata file
     with open(metadatafile) as open_file:
         data = json.load(open_file)
-    data["identifier"] = identifier
 
     # Post metadata
     url = "%s/rest/v1/files/" % conf.get("metax_url")
@@ -128,3 +129,35 @@ def post_metax_dataset(metadatafile, file_ids, conf):
     assert response.status_code == 201
 
     return response.json()['id']
+
+
+def delete_metax_file(identifier, conf):
+    """Delete file metadata from Metax using HTTP DELETE method.
+
+    :identifier: Identifier of file to be deleted
+    :conf: Configuration
+    :returns: None
+    """
+
+    url = "%s/rest/v1/files/%s" % (conf.get("metax_url"), identifier)
+    response = requests.delete(
+        url,
+        auth=(conf.get("metax_user"), conf.get("metax_password"))
+    )
+    assert response.status_code == 200
+
+
+def delete_metax_dataset(identifier, conf):
+    """Delete dataset metadata from Metax using HTTP DELETE method.
+
+    :identifier: Identifier of dataset to be deleted
+    :conf: Configuration
+    :returns: None
+    """
+
+    url = "%s/rest/v1/datasets/%s" % (conf.get("metax_url"), identifier)
+    response = requests.delete(
+        url,
+        auth=(conf.get("metax_user"), conf.get("metax_password"))
+    )
+    assert response.status_code == 204
