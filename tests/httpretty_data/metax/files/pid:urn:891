@@ -1,7 +1,6 @@
 {
   "id": 891,
   "download_url": "http://path.to.csc.fi/891",
-  "file_format": "audio/mp4",
   "file_name": "audio.mp4",
   "file_path": "/path/to/audio.mp4",
   "parent_directory": {

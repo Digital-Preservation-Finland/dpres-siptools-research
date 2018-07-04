@@ -1,7 +1,6 @@
 [
 {
 	"id": 123,
-	"file_format": "image/tiff",
 	"identifier": "pid:urn:validate_metadata_test_image",
 	"file_name": "valid_tiff.tiff",
 	"file_path": "/path/to/valid_tiff.tiff",
@@ -15,7 +14,8 @@
 	},
 	"file_characteristics":
 	{
-		"file_created": "2018-01-17T08:19:31Z"
+		"file_created": "2018-01-17T08:19:31Z",
+		"file_format": "image/tiff"
 	}
 }
 ]

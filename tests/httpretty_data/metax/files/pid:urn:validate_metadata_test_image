@@ -1,7 +1,6 @@
 {
   "id": 123,
   "download_url": "http://path.to.csc.fi/890",
-  "file_format": "image/tiff",
   "file_name": "valid_tiff.tiff",
   "file_path": "/path/to/valid_tiff.tiff",
   "parent_directory": {

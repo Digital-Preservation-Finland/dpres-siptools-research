@@ -1,6 +1,5 @@
 [
 	{
-		"file_format": "text/plain",
 		"identifier": "pid:urn:wf_test_1a",
 		"file_path": "/path/to/file1",
 		"parent_directory": "path/to",
@@ -14,11 +13,11 @@
 		},
 		"file_characteristics":
 		{
-			"file_created": "2014-01-17T08:19:31Z"
+			"file_created": "2014-01-17T08:19:31Z",
+			"file_format": "text/plain"
 		}
 	},
 	{
-		"file_format": "text/plain",
 		"identifier": "pid:urn:wf_test_1b",
 		"file_path": "/path/to/file2",
 		"parent_directory": {
@@ -31,7 +30,8 @@
 		},
 		"file_characteristics":
 		{
-			"file_created": "2014-01-17T08:19:32Z"
+			"file_created": "2014-01-17T08:19:32Z",
+			"file_format": "text/plain"
 		}
 	}
 ]

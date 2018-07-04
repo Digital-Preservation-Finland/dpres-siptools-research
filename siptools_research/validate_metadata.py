@@ -123,7 +123,8 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
     :returns: None
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
-        file_format_prefix = file_metadata['file_format'].split('/')[0]
+        file_format_prefix = file_metadata['file_characteristics'] \
+            ['file_format'].split('/')[0]
         if file_format_prefix in SCHEMATRONS:
             file_id = file_metadata['identifier']
             xmls = metax_client.get_xml('files', file_id)

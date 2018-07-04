@@ -1,5 +1,4 @@
 {
-	"file_format": "text/plain",
 	"identifier": "pid:urn:wf_test_1a",
 	"file_path": "path/to/file1",
 	"parent_directory": {
@@ -14,6 +13,6 @@
 	{
 		"encoding": "utf-8",
 		"file_created": "2014-01-17T08:19:31Z",
-	        "file_format": "text/plain"
+		"file_format": "text/plain"
 	}
 }

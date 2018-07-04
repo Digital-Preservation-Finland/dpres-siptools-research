@@ -1,7 +1,6 @@
 {
   "id": 892,
   "download_url": "http://path.to.csc.fi/892",
-  "file_format": "video/mp4",
   "file_name": "video.mp4",
   "file_path": "/path/to/video.mp4",
   "parent_directory": {

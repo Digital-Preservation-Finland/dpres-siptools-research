@@ -112,9 +112,9 @@ def test_validate_valid_file_metadata():
             "parent_directory": {
                 "identifier": "pid:urn:dir:1",
             },
-            "file_format": "html/text",
             "file_characteristics": {
                 "file_created": "2014-01-17T08:19:31Z",
+                "file_format": "html/text"
             }
         }
 

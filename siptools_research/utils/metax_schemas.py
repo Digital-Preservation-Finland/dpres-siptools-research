@@ -82,7 +82,7 @@ DATASET_METADATA_SCHEMA = \
 FILE_METADATA_SCHEMA = \
     {
         "type": "object",
-        "required": ["checksum", "file_characteristics", "file_format",
+        "required": ["checksum", "file_characteristics",
                      "file_path", "parent_directory"],
         "properties": {
             "checksum": {
@@ -91,7 +91,7 @@ FILE_METADATA_SCHEMA = \
             },
             "file_characteristics": {
                 "type": "object",
-                "required": ["file_created"]
+                "required": ["file_created", "file_format"]
             },
             "parent_directory": {
                 "type": "object",
