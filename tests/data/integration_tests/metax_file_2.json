@@ -1,7 +1,6 @@
 {
 	"project_identifier": "project_x",
 	"file_frozen": "2017-05-21T17:41:59+03:00",
-	"file_format": "text/plain",
 	"identifier": "pid:urn:wf_test_1b",
 	"file_name": "file2",
 	"file_path": "/path/to/file2",
@@ -20,7 +19,8 @@
 	},
 	"file_characteristics":
 	{
-		"encoding": "utf-8",
-		"file_created": "2014-01-17T08:19:32Z"
+		"encoding": "UTF-8",
+		"file_created": "2014-01-17T08:19:32Z",
+		"file_format": "text/plain"
 	}
 }

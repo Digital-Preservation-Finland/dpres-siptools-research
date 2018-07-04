@@ -1,20 +1,28 @@
 {
 	"contract": {
-		"id": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83002"
+		"id": 1
 	},
 	"data_catalog": {
 		"id": 1
 	},
+	"metadata_provider_org": "Test organisation",
+	"metadata_provider_user": "Testuser",
 	"research_dataset": {
+		"access_rights": {
+			"access_type": {
+				"identifier": "http://purl.org/att/es/reference_data/access_type/access_type_open_access"
+			},
+			"restriction_grounds": {
+				"identifier": "http://purl.org/att/es/reference_data/restriction_grounds/restriction_grounds_1"
+			}
+		},
 		"title": {
 			"en":"asdf"
 		},
 		"identifier": "asdf",
-		"description": [
-			{
-				"en": "asdf"
-			}
-		],
+		"description": {
+			"en": "asdf"
+		},
 		"creator": [
 			{
 				"name": "asdf",
@@ -41,8 +49,8 @@
 		],
 		"provenance": [
 			{
-				"type": {
-					"identifier": "http://purl.org/att/es/reference_data/lifecycle_event/lifecycle_event_collected",
+				"preservation_event": {
+					"identifier": "http://purl.org/att/reference_data/preservation_event/preservation_event_upd",
 					"pref_label": {
 						"en": "creation"
 					}
