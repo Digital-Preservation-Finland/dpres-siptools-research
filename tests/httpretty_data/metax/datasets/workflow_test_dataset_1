@@ -1,43 +1,43 @@
 {
-    "contract": {
-	"id": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
-    },
-    "research_dataset": {
-        "provenance": [
-            {
-                "preservation_event": {
-	    		"identifier": "1234",
-			"pref_label": {
-				"en": "creation"
-		    }
-                },
-                "temporal": {
-			"end_date": "2014-12-31T08:19:58Z",
-                        "start_date": "2014-01-01T08:19:58Z"
-		},
-                "description": {
-			"en": "Description of provenance"
-                }
-            }
-        ],
-        "files": [
-            {
-		"identifier": "pid:urn:wf_test_1a",
-	    	"use_category": {
-			"pref_label": {
-				"en": "label1"
+	"contract": {
+		"id": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
+	},
+	"research_dataset": {
+		"provenance": [
+			{
+				"preservation_event": {
+					"identifier": "1234",
+					"pref_label": {
+						"en": "creation"
+					}
+				},
+				"temporal": {
+					"end_date": "2014-12-31T08:19:58Z",
+					"start_date": "2014-01-01T08:19:58Z"
+				},
+				"description": {
+					"en": "Description of provenance"
+				}
 			}
-		}
-            },
-            {
-		"identifier": "pid:urn:wf_test_1b",
-	    	"use_category": {
-			"pref_label": {
-				"en": "label2"
+		],
+		"files": [
+			{
+				"identifier": "pid:urn:wf_test_1a",
+				"use_category": {
+					"pref_label": {
+						"en": "label1"
+					}
+				}
+			},
+			{
+				"identifier": "pid:urn:wf_test_1b",
+				"use_category": {
+					"pref_label": {
+						"en": "label2"
+					}
+				}
 			}
-		}
-            }
-        ]
-    }
+		]
+	}
 }
 
