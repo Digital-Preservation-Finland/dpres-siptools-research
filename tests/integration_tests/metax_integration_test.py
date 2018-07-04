@@ -25,8 +25,8 @@ def run_luigi_task(module, task, workspace, dataset_id):
              '--local-scheduler')
         )
 
-
-def test_workflow(testpath, testmongoclient):
+@pytest.mark.usefixtures('testmongoclient')
+def test_workflow(testpath):
     """Add test dataset metadata and associated file metadata to Metax. Run
     partial workflow by calling CreateMets task with luigi.
     """

@@ -48,8 +48,9 @@ def run_luigi_task(module, task, workspace):
         ('cleanup', 'CleanupWorkspace'),
     ]
 )
+@pytest.mark.usefixtures('testmetax', 'testida', 'testmongoclient')
 @pytest.mark.timeout(600)
-def test_workflow(testpath, testmetax, testida, testmongoclient, module, task):
+def test_workflow(testpath, module, task):
     """Run a task (and all tasks it requires) and check that check that report
     of successfull task is added to mongodb.
     """
