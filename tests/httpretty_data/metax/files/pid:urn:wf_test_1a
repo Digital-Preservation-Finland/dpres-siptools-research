@@ -1,18 +1,16 @@
 {
-	"identifier": "pid:urn:wf_test_1a",
-	"file_path": "path/to/file1",
-	"parent_directory": {
-		"identifier": "pid:urn:dir:wf1"
-	},
-	"checksum":
-	{
-		"algorithm": "SHA-1",
-		"value": "94d3a8f5c206f7572abc5dfcaa1ee9ca2da649e6"
-	},
-	"file_characteristics":
-	{
-		"encoding": "utf-8",
-		"file_created": "2014-01-17T08:19:31Z",
-		"file_format": "text/plain"
-	}
+    "identifier": "pid:urn:wf_test_1a",
+    "file_path": "path/to/file1",
+    "parent_directory": {
+        "identifier": "pid:urn:dir:wf1"
+    },
+    "checksum": {
+        "algorithm": "SHA-1",
+        "value": "94d3a8f5c206f7572abc5dfcaa1ee9ca2da649e6"
+    },
+    "file_characteristics": {
+        "encoding": "utf-8",
+        "file_created": "2014-01-17T08:19:31Z",
+        "file_format": "text/plain"
+    }
 }

@@ -1,17 +1,17 @@
 [
-	{
-		"identifier": "pid:urn:create_techmd_3",
-		"file_name": "file_name_5",
-		"file_path": "/project_x/some/path/file_name_5",
-		"file_format": "html/text",
-		"checksum":
-		{
-			"algorithm": "SHA-1",
-			"value": "habeebit"
-		},
-		"file_characteristics":
-		{
-			"file_created": "2014-01-17T08:19:31Z"
-		}
-	}
+    {
+        "identifier": "pid:urn:create_techmd_3",
+        "file_name": "file_name_5",
+        "file_path": "/project_x/some/path/file_name_5",
+        "file_format": "html/text",
+        "checksum":
+        {
+            "algorithm": "SHA-1",
+            "value": "habeebit"
+        },
+        "file_characteristics":
+        {
+            "file_created": "2014-01-17T08:19:31Z"
+        }
+    }
 ]

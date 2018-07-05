@@ -1,46 +1,46 @@
 {
-	"research_dataset": {
-		"files": [
-		{
-			"identifier": "pid:urn:5",
-			"type": {
-				"pref_label": {
-					"en": "project_x_FROZEN/some/path/file_name_5"
-				}
-			}
-		},
-		{
-			"identifier": "pid:urn:6",
-			"type": {
-				"pref_label": {
-					"en": "project_x_FROZEN/some/path/file_name_6"
-				}
-			}
-		},
-		{
-			"identifier": "pid:urn:7",
-			"type": {
-				"pref_label": {
-					"en": "project_x_FROZEN/some/path/file_name_7.txt"
-				}
-			}
-		},
-		{
-			"identifier": "pid:urn:999",
-			"type": {
-				"pref_label": {
-					"en": "project_x_FROZEN/some/path/file.csv"
-				}
-			}
-		},
-		{
-			"identifier": "pid:urn:888",
-			"type": {
-				"pref_label": {
-					"en": "project_x_FROZEN/some/path/valid_tiff.tiff"
-				}
-			}
-		}
-		]
-	}
+    "research_dataset": {
+        "files": [
+            {
+                "identifier": "pid:urn:5",
+                "type": {
+                    "pref_label": {
+                        "en": "project_x_FROZEN/some/path/file_name_5"
+                    }
+                }
+            },
+            {
+                "identifier": "pid:urn:6",
+                "type": {
+                    "pref_label": {
+                        "en": "project_x_FROZEN/some/path/file_name_6"
+                    }
+                }
+            },
+            {
+                "identifier": "pid:urn:7",
+                "type": {
+                    "pref_label": {
+                        "en": "project_x_FROZEN/some/path/file_name_7.txt"
+                    }
+                }
+            },
+            {
+                "identifier": "pid:urn:999",
+                "type": {
+                    "pref_label": {
+                        "en": "project_x_FROZEN/some/path/file.csv"
+                    }
+                }
+            },
+            {
+                "identifier": "pid:urn:888",
+                "type": {
+                    "pref_label": {
+                        "en": "project_x_FROZEN/some/path/valid_tiff.tiff"
+                    }
+                }
+            }
+        ]
+    }
 }

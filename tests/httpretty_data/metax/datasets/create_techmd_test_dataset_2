@@ -1,14 +1,14 @@
 {
-	"research_dataset": {
-		"files": [
-		{
-			"identifier": "pid:urn:create_techmd_3",
-			"type": {
-				"pref_label": {
-					"en": "project_x_FROZEN/some/path/file_name_5"
-				}
-			}
-		}
-		]
-	}
+    "research_dataset": {
+        "files": [
+        {
+            "identifier": "pid:urn:create_techmd_3",
+            "type": {
+                "pref_label": {
+                    "en": "project_x_FROZEN/some/path/file_name_5"
+                }
+            }
+        }
+        ]
+    }
 }

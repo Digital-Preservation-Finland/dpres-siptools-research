@@ -4,13 +4,11 @@
             {
                 "identifier": "pid:urn:892",
                 "use_category": {
-                	"pref_label": {
-                    	"en": "label5"
-                	}
+                    "pref_label": {
+                        "en": "label5"
+                    }
                 }
             }
-
         ]
     }
 }
-

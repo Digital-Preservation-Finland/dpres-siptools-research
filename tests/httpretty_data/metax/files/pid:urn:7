@@ -1,19 +1,17 @@
 {
-  "id": 7,
-  "download_url": "http://project_x.some.url.csc.fi/7",
-  "file_format": "text/plain",
-  "file_name": "file_name_7.txt",
-  "file_path": "/project_x/some/path/file_name_7.txt",
-  "identifier": "pid:urn:7",
-  "checksum":
-  {
-    "algorithm": "SHA-1",
-    "value": "habeebit"
-  },
-  "file_characteristics":
-  {
-    "file_created": "2014-01-17T08:19:31Z",
+    "id": 7,
+    "download_url": "http://project_x.some.url.csc.fi/7",
     "file_format": "text/plain",
-    "encoding": "utf-8"
-  }
+    "file_name": "file_name_7.txt",
+    "file_path": "/project_x/some/path/file_name_7.txt",
+    "identifier": "pid:urn:7",
+    "checksum": {
+        "algorithm": "SHA-1",
+        "value": "habeebit"
+    },
+    "file_characteristics": {
+        "file_created": "2014-01-17T08:19:31Z",
+        "file_format": "text/plain",
+        "encoding": "utf-8"
+    }
 }

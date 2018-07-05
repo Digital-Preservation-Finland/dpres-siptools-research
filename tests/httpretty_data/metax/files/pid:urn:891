@@ -1,20 +1,18 @@
 {
-  "id": 891,
-  "download_url": "http://path.to.csc.fi/891",
-  "file_name": "audio.mp4",
-  "file_path": "/path/to/audio.mp4",
-  "parent_directory": {
-    "identifier": "pid:urn:dir:wf1"
-  },
-  "identifier": "pid:urn:891",
-  "checksum":
-  {
-    "algorithm": "SHA-1",
-    "value": "5d3c637d1e3b4bdffa64374a1dbb321edb678546"
-  },
-  "file_characteristics":
-  {
-    "file_created": "2018-01-17T08:19:31Z",
-    "file_format": "audio/mp4"
-  }
+    "id": 891,
+    "download_url": "http://path.to.csc.fi/891",
+    "file_name": "audio.mp4",
+    "file_path": "/path/to/audio.mp4",
+    "parent_directory": {
+        "identifier": "pid:urn:dir:wf1"
+    },
+    "identifier": "pid:urn:891",
+    "checksum": {
+        "algorithm": "SHA-1",
+        "value": "5d3c637d1e3b4bdffa64374a1dbb321edb678546"
+    },
+    "file_characteristics": {
+        "file_created": "2018-01-17T08:19:31Z",
+        "file_format": "audio/mp4"
+    }
 }

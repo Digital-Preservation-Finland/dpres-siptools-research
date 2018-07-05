@@ -1,17 +1,15 @@
 {
-  "identifier": "pid:urn:create_techmd_3",
-  "file_name": "file_name_5",
-  "file_format": "html/text",
-  "file_path": "/project_x_FROZEN/some/path/",
-  "checksum":
-    {
-      "algorithm": "SHA-1",
-      "value": "habeebit"
+    "identifier": "pid:urn:create_techmd_3",
+    "file_name": "file_name_5",
+    "file_format": "html/text",
+    "file_path": "/project_x_FROZEN/some/path/",
+    "checksum": {
+        "algorithm": "SHA-1",
+        "value": "habeebit"
     },
-  "file_characteristics":
-    {
-      "file_created": "2014-01-17T08:19:31Z",
-      "file_format": "text/html",
-      "format_version": "4.01"
-      }
+    "file_characteristics": {
+        "file_created": "2014-01-17T08:19:31Z",
+        "file_format": "text/html",
+        "format_version": "4.01"
+    }
 }

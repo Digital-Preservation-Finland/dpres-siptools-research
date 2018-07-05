@@ -5,7 +5,7 @@
             "identifier": "pid:urn:dir:1"
         },
         "file_name": "file_name_1",
-	"file_path": "tests/data/structured/Access and use rights files/access_file.txt"
+        "file_path": "tests/data/structured/Access and use rights files/access_file.txt"
     },
     {
         "identifier": "pid:urn:2",
@@ -13,7 +13,7 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_2",
-	"file_path": "tests/data/structured/Documentation files/readme.txt"
+        "file_path": "tests/data/structured/Documentation files/readme.txt"
     },
     {
         "identifier": "pid:urn:3",
@@ -21,7 +21,7 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_3",
-	"file_path": "tests/data/structured/Documentation files/Configuration files/properties.txt"
+        "file_path": "tests/data/structured/Documentation files/Configuration files/properties.txt"
     },
     {
         "identifier": "pid:urn:4",
@@ -29,7 +29,7 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_4",
-	"file_path": "tests/data/structured/Documentation files/Method files/method_putkisto.txt"
+        "file_path": "tests/data/structured/Documentation files/Method files/method_putkisto.txt"
     },
     {
         "identifier": "pid:urn:5",
@@ -37,7 +37,7 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_5",
-	"file_path": "tests/data/structured/Documentation files/Notebook/notes.txt"
+        "file_path": "tests/data/structured/Documentation files/Notebook/notes.txt"
     },
     {
         "identifier": "pid:urn:6",
@@ -45,7 +45,7 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_6",
-	"file_path": "tests/data/structured/Documentation files/Other files/this.txt"
+        "file_path": "tests/data/structured/Documentation files/Other files/this.txt"
     },
     {
         "identifier": "pid:urn:7",
@@ -53,7 +53,7 @@
             "identifier": "pid:urn:dir:3"
         },
         "file_name": "file_name_7",
-	"file_path": "tests/data/structured/Machine-readable metadata/metadata.txt"
+        "file_path": "tests/data/structured/Machine-readable metadata/metadata.txt"
     },
     {
         "identifier": "pid:urn:8",
@@ -61,7 +61,7 @@
             "identifier": "pid:urn:dir:4"
         },
         "file_name": "file_name_8",
-	"file_path": "tests/data/structured/Publication files/publication.txt"
+        "file_path": "tests/data/structured/Publication files/publication.txt"
     },
     {
         "identifier": "pid:urn:9",
@@ -69,6 +69,6 @@
             "identifier": "pid:urn:dir:5"
         },
         "file_name": "file_name_9",
-	"file_path": "tests/data/structured/Software files/koodi.java"
+        "file_path": "tests/data/structured/Software files/koodi.java"
     }
 ]
