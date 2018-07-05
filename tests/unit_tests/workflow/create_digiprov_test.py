@@ -6,6 +6,7 @@ import tests.conftest
 import lxml
 from siptools_research.workflow import create_digiprov
 
+
 @pytest.mark.usefixtures("testmongoclient", "testmetax")
 # pylint: disable=invalid-name
 def test_createprovenanceinformation(testpath):
@@ -28,7 +29,7 @@ def test_createprovenanceinformation(testpath):
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
         workspace=workspace,
-        dataset_id="create_digiprov_test_dataset_1",
+        dataset_id="create_digiprov_test_dataset_file_and_logging",
         config=tests.conftest.TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -55,7 +56,6 @@ def test_createprovenanceinformation(testpath):
         assert open_file.readlines()[-1].startswith("premis_event created")
 
 
-
 @pytest.mark.usefixtures("testmongoclient", "testmetax")
 # pylint: disable=invalid-name
 def test_failed_createprovenanceinformation(testpath):
@@ -74,7 +74,7 @@ def test_failed_createprovenanceinformation(testpath):
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
-        dataset_id="create_digiprov_test_dataset_2",
+        dataset_id="create_digiprov_test_dataset_date_data_missing",
         workspace=workspace,
         config=tests.conftest.TEST_CONFIG_FILE
     )
@@ -99,9 +99,10 @@ def test_create_premis_event(testpath):
 
     # Create provenance info xml-file to tempdir
     workspace = testpath
-    create_digiprov.create_premis_event('create_digiprov_test_dataset_3',
-                                        workspace,
-                                        tests.conftest.TEST_CONFIG_FILE)
+    create_digiprov.create_premis_event(
+        'create_digiprov_test_dataset_detailed_check',
+        workspace,
+        tests.conftest.TEST_CONFIG_FILE)
 
     # Check that the created xml-file contains correct elements.
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))
@@ -109,7 +110,7 @@ def test_create_premis_event(testpath):
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].attrib["MDTYPE"] == "PREMIS:EVENT"
     assert elements[0].attrib["MDTYPEVERSION"] == "2.3"
 
@@ -118,28 +119,28 @@ def test_create_premis_event(testpath):
                           '/premis:eventIdentifierType',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].text == "UUID"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
                           '/mets:xmlData/premis:event/premis:eventType',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].text == "creation"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
                           '/mets:xmlData/premis:event/premis:eventDateTime',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].text == "2014-01-01T08:19:58Z"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
                           '/mets:xmlData/premis:event/premis:eventDetail',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].text == "Description of provenance"
 
 
@@ -157,9 +158,10 @@ def test_create_premis_event_unav(testpath):
 
     # Create provenance info xml-file to tempdir
     workspace = testpath
-    create_digiprov.create_premis_event('create_digiprov_test_dataset_4',
-                                        workspace,
-                                        tests.conftest.TEST_CONFIG_FILE)
+    create_digiprov.create_premis_event(
+        'create_digiprov_test_dataset_provenance_data_missing',
+        workspace,
+        tests.conftest.TEST_CONFIG_FILE)
 
     # Check that the created xml-file contains correct elements.
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))
@@ -167,7 +169,7 @@ def test_create_premis_event_unav(testpath):
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].attrib["MDTYPE"] == "PREMIS:EVENT"
     assert elements[0].attrib["MDTYPEVERSION"] == "2.3"
 
@@ -176,33 +178,33 @@ def test_create_premis_event_unav(testpath):
                           '/premis:eventIdentifierType',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].text == "UUID"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
                           '/mets:xmlData/premis:event/premis:eventType',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].text == "creation"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
                           '/mets:xmlData/premis:event/premis:eventDateTime',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].text == "OPEN"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
                           '/mets:xmlData/premis:event/premis:eventDetail',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].text == "Created by packaging service"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
                           '/mets:xmlData/premis:event/premis:eventOutcomeInformation/premis:eventOutcome',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"}
-                         )
+                          )
     assert elements[0].text == "(:unav)"
