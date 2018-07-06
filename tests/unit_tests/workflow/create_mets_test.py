@@ -25,7 +25,7 @@ def test_create_mets_ok(testpath):
     create_test_data(workspace=create_sip)
 
     # Init and run task
-    task = CreateMets(workspace=workspace, dataset_id='create_mets_dataset_1',
+    task = CreateMets(workspace=workspace, dataset_id='create_mets_dataset',
                       config=tests.conftest.TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
@@ -38,7 +38,7 @@ def test_create_mets_ok(testpath):
                             namespaces={'mets': "http://www.loc.gov/METS/"}
                           )
 
-    assert elements[0].attrib["OBJID"] == "create_mets_dataset_1"
+    assert elements[0].attrib["OBJID"] == "create_mets_dataset"
 
     assert len(tree.xpath(
         '/mets:mets[@fi:CONTRACTID="urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001"]', 
