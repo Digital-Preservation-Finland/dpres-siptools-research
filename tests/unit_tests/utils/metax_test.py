@@ -11,6 +11,7 @@ from siptools_research.utils.metax import Metax
 from siptools_research.utils.metax import MetaxConnectionError
 import siptools_research.utils.metax as metax
 
+
 @pytest.mark.usefixtures('testmetax')
 def test_get_dataset():
     """Test get_dataset function. Reads sample dataset JSON from testmetax and
@@ -19,11 +20,11 @@ def test_get_dataset():
     :returns: None
     """
     client = Metax(tests.conftest.TEST_CONFIG_FILE)
-    dataset = client.get_dataset("mets_test_dataset_1")
+    dataset = client.get_dataset("mets_test_dataset")
     print dataset
     print type(dataset)
-    assert dataset["research_dataset"]["provenance"][0]['preservation_event']\
-        ['pref_label']['en'] == 'creation'
+    assert dataset["research_dataset"]["provenance"][0]\
+        ['preservation_event']['pref_label']['en'] == 'creation'
 
 
 @pytest.mark.usefixtures('testmetax')
@@ -124,7 +125,7 @@ def test_set_preservation_state():
     :returns: None
     """
     client = Metax(tests.conftest.TEST_CONFIG_FILE)
-    client.set_preservation_state("mets_test_dataset_1",
+    client.set_preservation_state("mets_test_dataset",
                                   metax.DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
                                   'Accepted to preservation')
 

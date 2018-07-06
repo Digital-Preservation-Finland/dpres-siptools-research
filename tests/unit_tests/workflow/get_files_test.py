@@ -23,7 +23,7 @@ def test_getfiles(testpath):
 
     # Init task
     task = get_files.GetFiles(workspace=testpath,
-                              dataset_id="get_files_test_dataset_1",
+                              dataset_id="get_files_test_dataset",
                               config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
@@ -54,7 +54,7 @@ def test_missing_files(testpath):
 
     # Init task
     task = get_files.GetFiles(workspace=testpath,
-                              dataset_id="get_files_test_dataset_2",
+                              dataset_id="get_files_test_dataset_ida_missing_file",
                               config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 

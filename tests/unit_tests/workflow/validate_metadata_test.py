@@ -21,7 +21,7 @@ def test_validatemetadata(testpath):
 
     # Init task
     task = ValidateMetadata(workspace=testpath,
-                            dataset_id='validate_metadata_test_dataset_1',
+                            dataset_id='validate_metadata_test_dataset',
                             config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
@@ -45,7 +45,7 @@ def test_invalid_metadata(testpath):
 
     # Init task
     task = ValidateMetadata(workspace=testpath,
-                            dataset_id='validate_metadata_test_dataset_2',
+                            dataset_id='validate_metadata_test_dataset_invalid_metadata',
                             config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 

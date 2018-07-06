@@ -30,7 +30,7 @@ def test_create_techmd_ok(testpath):
 
     # Init task
     task = CreateTechnicalMetadata(workspace=workspace,
-                                   dataset_id="create_techmd_test_dataset_1",
+                                   dataset_id="create_techmd_test_dataset",
                                    config=tests.conftest.TEST_CONFIG_FILE)
     assert not task.complete()
 
@@ -110,7 +110,7 @@ def test_import_object_ok(testpath):
                     os.path.join(sipdirectory, 'project_x'))
 
     # Run import_objects function for a sample dataset
-    import_objects('create_techmd_test_dataset_1',
+    import_objects('create_techmd_test_dataset',
                    testpath,
                    tests.conftest.TEST_CONFIG_FILE)
 
@@ -150,7 +150,7 @@ def test_import_object_without_charset(testpath):
                     os.path.join(sipdirectory, 'project_x'))
 
     # Run import_objects function for a sample dataset
-    import_objects('create_techmd_test_dataset_2',
+    import_objects('create_techmd_test_dataset_charset_not_defined',
                    testpath,
                    tests.conftest.TEST_CONFIG_FILE)
 

@@ -1,0 +1,12 @@
+[
+    {
+        "identifier": "pid:urn:1",
+        "file_name": "file_name_1",
+        "file_path": "/data/file_name_1"
+    },
+    {
+        "identifier": "pid:urn:2",
+        "file_name": "file_name_2",
+        "file_path": "/data/file_name_1"
+    }
+]

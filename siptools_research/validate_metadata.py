@@ -6,7 +6,6 @@ import jsonschema
 import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils import mimetypes
 from siptools_research.utils.metax import Metax
-from siptools_research.utils.metax import DatasetNotFoundError
 from siptools_research.workflowtask import InvalidMetadataError
 import lxml
 from siptools.xml.mets import NAMESPACES

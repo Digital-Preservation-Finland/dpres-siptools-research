@@ -45,7 +45,7 @@ def test_reportpreservationstatus(testpath):
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
         workspace=workspace,
-        dataset_id="report_preservation_status_test_dataset_1",
+        dataset_id="report_preservation_status_test_dataset_ok",
         config=tests.conftest.TEST_CONFIG_FILE
     )
     assert not task.complete()
