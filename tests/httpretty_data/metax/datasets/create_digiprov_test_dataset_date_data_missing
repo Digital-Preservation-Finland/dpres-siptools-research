@@ -5,22 +5,12 @@
                 "identifier": "pid:urn:1",
                 "use_category": {
                     "identifier": "http://purl.org/att/es/reference_data/use_category/use_category_source"
-                },
-                "type": {
-                    "label": {
-                        "default": "some/path"
-                    }
                 }
             },
             {
                 "identifier": "pid:urn:does_not_exist",
                 "use_category": {
                     "identifier": "http://purl.org/att/es/reference_data/use_category/use_category_source"
-                },
-                "type": {
-                    "label": {
-                        "default": "some/path"
-                    }
                 }
             }
         ],

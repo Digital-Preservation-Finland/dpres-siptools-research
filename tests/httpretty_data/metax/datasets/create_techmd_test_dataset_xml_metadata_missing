@@ -3,11 +3,6 @@
         "files": [
             {
                 "identifier": "pid:urn:8",
-                "type": {
-                    "pref_label": {
-                        "en": "project_xml_metadata_missing_FROZEN/some/path/valid_tiff.tiff"
-                    }
-                }
             }
         ]
     }

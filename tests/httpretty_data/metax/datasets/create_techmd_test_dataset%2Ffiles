@@ -4,13 +4,11 @@
         "file_name": "file_name_5",
         "file_path": "/project_x/some/path/file_name_5",
         "file_format": "html/text",
-        "checksum":
-        {
+        "checksum": {
             "algorithm": "SHA-1",
             "value": "habeebit"
         },
-        "file_characteristics":
-        {
+        "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z",
             "encoding": "utf-8"
         }
@@ -20,13 +18,11 @@
         "file_name": "file_name_6",
         "file_path": "/project_x/some/path/file_name_6",
         "file_format": "application/xml",
-        "checksum":
-        {
+        "checksum": {
             "algorithm": "SHA-1",
             "value": "habeebit"
         },
-        "file_characteristics":
-        {
+        "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z",
             "encoding": "utf-8"
         }
@@ -36,13 +32,11 @@
         "file_name": "file_name_7.txt",
         "file_path": "/project_x/some/path/file_name_7.txt",
         "file_format": "text/plain",
-        "checksum":
-        {
+        "checksum": {
             "algorithm": "SHA-1",
             "value": "habeebit"
         },
-        "file_characteristics":
-        {
+        "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z",
             "encoding": "utf-8"
         }
@@ -52,13 +46,11 @@
         "file_name": "file.csv",
         "file_path": "/project_x/some/path/file.csv",
         "file_format": "text/csv",
-        "checksum":
-        {
+        "checksum": {
                 "algorithm": "SHA-1",
             "value": "habeebit"
         },
-        "file_characteristics":
-        {
+        "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z",
             "encoding": "utf-8"
         }

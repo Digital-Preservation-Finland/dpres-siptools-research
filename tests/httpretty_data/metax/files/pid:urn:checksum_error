@@ -7,7 +7,7 @@
     "parent_directory": {
         "identifier": "pid:urn:dir:wf1"
     },
-    "identifier": "pid:urn:10",
+    "identifier": "pid:urn:checksum_error",
     "checksum": {
         "algorithm": "sha2",
         "value": "habeebit"

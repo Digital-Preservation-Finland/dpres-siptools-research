@@ -278,5 +278,5 @@ def test_hash_algorithm_error(testpath):
     with pytest.raises(Exception) as exc:
         task.run()
     assert 'Invalid checksum data (algorithm: sha2, value: habeebit) for'\
-        ' file: pid:urn:10' in str(exc)
+        ' file: pid:urn:checksum_error' in str(exc)
     assert not task.complete()
