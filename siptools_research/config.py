@@ -45,7 +45,6 @@ class Configuration(object):
             self._parser = ConfigParser.RawConfigParser()
             self.read_config_file(config_file)
 
-
     def read_config_file(self, config_file):
         """Reads config file and checks all options. If an option is missing, a
         default option value is added to options. The configuration file must
@@ -61,13 +60,13 @@ class Configuration(object):
         if os.path.isfile(config_file) and os.access(config_file, os.R_OK):
             self._parser.read(config_file)
         elif not os.path.exists(config_file):
-            raise IOError("Configuration file: %s not found." % \
+            raise IOError("Configuration file: %s not found." %
                           config_file)
         elif not os.path.isfile(config_file):
-            raise IOError("Configuration file: %s is not file." % \
+            raise IOError("Configuration file: %s is not file." %
                           config_file)
         else:
-            raise IOError("Configuration file: %s is not readable." % \
+            raise IOError("Configuration file: %s is not readable." %
                           config_file)
 
         # Get list of options for validation
@@ -91,7 +90,6 @@ class Configuration(object):
 
         # Set config_file parameter
         self.config_file = config_file
-
 
     def get(self, option):
         """Get value for option.

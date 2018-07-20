@@ -1,8 +1,6 @@
 """Luigi targets"""
 
-import os
 import luigi.contrib.ssh
-from luigi import LocalTarget
 
 
 class RemoteAnyTarget(luigi.contrib.ssh.RemoteTarget):

@@ -6,6 +6,7 @@ import pytest
 import tests.conftest
 from siptools_research.workflow import sign
 
+
 @pytest.mark.usefixtures('testmetax')
 def test_signsip(testpath):
     """Tests for `SignSIP` task.
@@ -52,4 +53,4 @@ def test_signsip(testpath):
                            'logs',
                            'task-sign-sip.log'))\
             as open_file:
-        assert  open_file.read().startswith("sign_mets created file")
+        assert open_file.read().startswith("sign_mets created file")

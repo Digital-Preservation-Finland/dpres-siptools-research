@@ -71,7 +71,7 @@ class Metax(object):
         response = _do_get_request(url, HTTPBasicAuth(self.username,
                                                       self.password))
 
-        if not response.status_code == 200:
+        if response.status_code != 200:
             raise DatasetNotFoundError(
                 "Could not find metadata for dataset: %s" % dataset_id
             )
@@ -88,7 +88,7 @@ class Metax(object):
         response = _do_get_request(url, HTTPBasicAuth(self.username,
                                                       self.password))
 
-        if not response.status_code == 200:
+        if response.status_code != 200:
             raise Exception("Could not find metadata for file: %s" % file_id)
         return response.json()
 
@@ -103,7 +103,7 @@ class Metax(object):
         response = _do_get_request(url, HTTPBasicAuth(self.username,
                                                       self.password))
 
-        if not response.status_code == 200:
+        if response.status_code != 200:
             raise Exception(
                 "Could not find metadata for contract: %s" % contract_id
             )
@@ -137,7 +137,7 @@ class Metax(object):
                                        HTTPBasicAuth(self.username,
                                                      self.password))
             if not response.status_code == 200:
-                raise Exception("Could not retrieve additional metadata XML "\
+                raise Exception("Could not retrieve additional metadata XML "
                                 "for dataset %s: %s" % (entity_id,
                                                         ns_key_url + query))
             # pylint: disable=no-member
@@ -265,7 +265,7 @@ class Metax(object):
         response = _do_get_request(url, HTTPBasicAuth(self.username,
                                                       self.password))
 
-        if not response.status_code == 200:
+        if response.status_code != 200:
             raise Exception("Could not find descriptive metadata.")
 
         # pylint: disable=no-member

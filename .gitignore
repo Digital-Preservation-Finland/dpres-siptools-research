@@ -7,3 +7,4 @@ junit.xml
 doc/build/
 doc/source/modules/
 htmlcov/
+venv/

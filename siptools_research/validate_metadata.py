@@ -84,7 +84,12 @@ def _validate_dataset_metadata_files(dataset_metadata, metax_client):
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
-            raise InvalidMetadataError(exc.message)
+            message = (
+                "Validation error in file metadata of {file_id}: "
+                "{message}".format(
+                    file_id=file_id, message=exc.message)
+            )
+            raise InvalidMetadataError(message)
 
 
 def _check_mimetype(file_metadata):
@@ -94,9 +99,16 @@ def _check_mimetype(file_metadata):
     try:
         file_format = file_metadata["file_characteristics"]["file_format"]
         format_version = file_metadata["file_characteristics"]["format_version"]
-        if mimetypes.is_supported(file_format, format_version) is False:
-            raise InvalidMetadataError("Incorrect file format: %s, version %s" %
-                                       (file_format, format_version))
+        if not mimetypes.is_supported(file_format, format_version):
+            message = (
+                "Validation error in file {file_path}: Incorrect file "
+                "format: {file_format}, version {version}"
+            ).format(
+                file_path=file_metadata["file_path"],
+                file_format=file_format,
+                version=format_version
+            )
+            raise InvalidMetadataError(message)
     except KeyError:
         pass
 
@@ -112,7 +124,12 @@ def _validate_file_metadata(dataset_id, metax_client):
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
-            raise InvalidMetadataError(exc.message)
+            message = (
+                "Validation error in file {file_path}: {message}"
+            ).format(
+                file_path=file_metadata["file_path"], message=exc.message
+            )
+            raise InvalidMetadataError(message)
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
@@ -122,8 +139,9 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
     :returns: None
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
-        file_format_prefix = file_metadata['file_characteristics'] \
-            ['file_format'].split('/')[0]
+        file_format_prefix = file_metadata['file_characteristics'][
+            'file_format'].split('/')[0]
+
         if file_format_prefix in SCHEMATRONS:
             file_id = file_metadata['identifier']
             xmls = metax_client.get_xml('files', file_id)

@@ -8,6 +8,7 @@ import tests.conftest
 import paramiko
 from siptools_research.workflow.validate_sip import ValidateSIP
 
+
 def test_validatesip_accepted(testpath):
     """Initializes validate_sip task and tests that it is not complete. Then
     creates new directory to "accepted" directory in digital preservation
@@ -86,7 +87,7 @@ def _create_remote_dir(path):
                 pass
             else:
                 raise
-        sftp.chown(parent_path, 9906, 333) # tpas:preservation
+        sftp.chown(parent_path, 9906, 333)  # tpas:preservation
         sftp.chmod(parent_path, 0775)
 
         # Create new directory

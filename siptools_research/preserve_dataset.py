@@ -1,4 +1,5 @@
-"""A module that provides function to start start the dataset preservation workflow.
+"""A module that provides function to start start the dataset preservation
+workflow.
 """
 
 import os
@@ -8,6 +9,7 @@ from siptools_research.workflowtask import WorkflowWrapperTask
 from siptools_research.config import Configuration
 import siptools_research.utils.database
 from siptools_research.workflow.cleanup import CleanupWorkspace
+
 
 class InitWorkflow(WorkflowWrapperTask):
     """A wrapper task that starts workflow by requiring the last task of

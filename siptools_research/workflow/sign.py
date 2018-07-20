@@ -36,14 +36,11 @@ class SignSIP(WorkflowTask):
 
         :returns: None
         """
-        mets_location = 'mets.xml'
-        signature_file = os.path.join(self.sip_creation_path, 'signature.sig')
-
         log_path = os.path.join(self.workspace, 'logs', 'task-sign-sip.log')
         with open(log_path, 'w+') as log:
             with contextmanager.redirect_stdout(log):
                 sign_mets.main([
-                    mets_location,
-                    signature_file,
+                    "--workspace",
+                    self.sip_creation_path,
                     Configuration(self.config).get("sip_sign_key")
                 ])
