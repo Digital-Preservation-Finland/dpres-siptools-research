@@ -46,17 +46,16 @@ def test_generate_metadata_mix():
     generate_metadata('generate_metadata_test_dataset_2',
                       tests.conftest.TEST_CONFIG_FILE)
 
-
     # Read one element from XML to ensure it is valid and contains correct data
     # The file is 10x10px image, so the metadata should contain image width.
     xml = lxml.etree.fromstring(httpretty.last_request().body)
     assert xml.xpath('//ns0:imageWidth',
-                     namespaces={"ns0":"http://www.loc.gov/mix/v20"})[0].text \
+                     namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
         == '10'
 
     # Check HTTP request query string
     assert httpretty.last_request().querystring['namespace'][0] \
-        == 'http://www.loc.gov/METS/'
+        == 'http://www.loc.gov/mix/v20'
 
     # Check HTTP request method
     assert httpretty.last_request().method == "POST"

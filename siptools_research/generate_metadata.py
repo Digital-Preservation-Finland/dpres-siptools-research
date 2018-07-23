@@ -34,10 +34,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
             # Generate and post mix metadata
             if file_characteristics['file_format'].startswith('image'):
-                mix_element = create_mix.create_mix_techmdfile(
-                    image_file=tmpfile, workspace=str(tmpdir)
-                )
-                # FIXME: Read the MIX data somehow?
+                mix_element = create_mix.create_mix(tmpfile)
                 metax_client.set_xml(file_id, mix_element)
     finally:
         shutil.rmtree(tmpdir)
