@@ -78,21 +78,6 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     except KeyError:
         charset = None
 
-    if charset is not None:
-        # TODO: Should we allow sligthly different spelling of charsets names
-        # than those allowed in PAS? What are allowed charset names in Metax?
-        allowed_charsets = ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']
-        # convert charset string to uppercase
-        charset = charset.upper()
-        if charset not in allowed_charsets:
-            raise InvalidMetadataError(
-                'Character set: %s is not allowed. \
-                The allowed character sets are %s and %s.',
-                charset,
-                ", ".join(allowed_charsets[:-1]),
-                allowed_charsets[-1]
-            )
-
     formatname = metadata["file_characteristics"]["file_format"]
     # Read format version if it defined for this file
     try:

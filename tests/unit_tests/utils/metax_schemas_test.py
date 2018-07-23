@@ -141,6 +141,40 @@ def test_validate_invalid_file_metadata():
         }
 
     # Validation of invalid dataset raise error
-    with pytest.raises(jsonschema.ValidationError):
+    with pytest.raises(jsonschema.ValidationError) as excinfo:
         assert not jsonschema.validate(invalid_file_metadata,
                                        metax_schemas.FILE_METADATA_SCHEMA)
+
+    assert excinfo.value.message == "'file_path' is a required property"
+
+
+def test_validate_invalid_file_charset():
+    """Test validation of file metadata that contains invalid file encoding.
+    The validation should raise ``ValidationError``.
+
+    :returns: None
+    """
+    invalid_file_metadata = \
+        {
+            "checksum": {
+                "algorithm": "sha2",
+                "value": "habeebit"
+            },
+            "file_path": "path/to/file",
+            "parent_directory": {
+                "identifier": "pid:urn:dir:1",
+            },
+            "file_characteristics": {
+                "file_created": "2014-01-17T08:19:31Z",
+                "file_format": "html/text",
+                "file_encoding": "foo"
+            }
+        }
+
+    # Validation of invalid dataset raise error
+    with pytest.raises(jsonschema.ValidationError) as excinfo:
+        assert not jsonschema.validate(invalid_file_metadata,
+                                       metax_schemas.FILE_METADATA_SCHEMA)
+
+    assert excinfo.value.message \
+        == "'foo' is not one of ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']"
