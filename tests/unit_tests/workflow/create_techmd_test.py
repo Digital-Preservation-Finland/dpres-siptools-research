@@ -70,19 +70,20 @@ def test_create_techmd_ok(testpath):
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
     assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1
-    assert len(root.xpath("//mets:techMD/mets:mdWrap/mets:xmlData/mix:mix", namespaces=NAMESPACES)) == 1
+    assert len(root.xpath("//mets:techMD/mets:mdWrap/mets:xmlData/mix:mix",
+                          namespaces=NAMESPACES)) == 1
     assert len(root.xpath("//mix:mix/mix:BasicDigitalObjectInformation",
                           namespaces=NAMESPACES)) == 1
     assert len(root.xpath("//mix:mix/mix:BasicImageInformation",
                           namespaces=NAMESPACES)) == 1
-    assert len(root.xpath("//mix:mix/mix:BasicImageInformation/"\
+    assert len(root.xpath("//mix:mix/mix:BasicImageInformation/"
                           "mix:BasicImageCharacteristics",
                           namespaces=NAMESPACES)) == 1
-    assert len(root.xpath("//mix:mix/mix:BasicImageInformation/"\
-                          "mix:BasicImageCharacteristics/"\
+    assert len(root.xpath("//mix:mix/mix:BasicImageInformation/"
+                          "mix:BasicImageCharacteristics/"
                           "mix:PhotometricInterpretation",
                           namespaces=NAMESPACES)) == 1
-    assert len(root.xpath("//mix:mix/mix:BasicImageInformation/"\
+    assert len(root.xpath("//mix:mix/mix:BasicImageInformation/"
                           "mix:SpecialFormatCharacteristics",
                           namespaces=NAMESPACES)) == 1
     assert len(root.xpath("//mix:mix/mix:ImageAssessmentMetadata",
@@ -127,9 +128,8 @@ def test_import_object_ok(testpath):
         == 'premis:file'
     assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
         == 'text/html; charset=UTF-8'
-    # TODO: reading format version from Metax is not implemented
-    # assert root.xpath("//premis:formatVersion",
-    #                   namespaces=NAMESPACES)[0].text == '1.0'
+    assert root.xpath("//premis:formatVersion",
+                      namespaces=NAMESPACES)[0].text == '4.01'
 
 
 @pytest.mark.usefixtures('testmetax')
