@@ -19,19 +19,10 @@ requests_mock
 mock
 
 # siptools requirements
-# TODO: These should be installed automatically installed as requirements of dpres-siptools
+# TODO: These should be automatically installed as requirements of dpres-siptools
 git+https://gitlab.csc.fi/dpres/xml-helpers.git@develop#egg=xml_helpers
 git+https://gitlab.csc.fi/dpres/mets.git@develop#egg=mets
 git+https://gitlab.csc.fi/dpres/premis.git@develop#egg=premis
 git+https://gitlab.csc.fi/dpres/nisomix.git@develop#egg=nisomix
 git+https://gitlab.csc.fi/dpres/dpres-signature.git@develop#egg=dpres_signature
 git+https://gitlab.csc.fi/dpres/dpres-ipt.git@develop#egg=ipt
-file-magic
-M2Crypto
-dateutils
-python-mimeparse
-Pillow
-
-# mets requirements
-# TODO: These should be installed automatically installed as requirements of mets
-dateutils
