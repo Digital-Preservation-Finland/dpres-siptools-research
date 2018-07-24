@@ -85,9 +85,9 @@ def _validate_dataset_metadata_files(dataset_metadata, metax_client):
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
             message = (
-                "Validation error in file metadata of {file_id}: "
+                "Validation error in file metadata of {file_path}: "
                 "{message}".format(
-                    file_id=file_id, message=exc.message)
+                    file_path=file_metadata["file_path"], message=exc.message)
             )
             raise InvalidMetadataError(message)
 
