@@ -63,9 +63,6 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     """Gets file metadata from Metax and calls create_premis_object function"""
 
     metadata = Metax(config).get_file(file_id)
-    hashalgorithm = metadata["checksum"]["algorithm"]
-    hashvalue = metadata["checksum"]["value"]
-    creation_date = metadata["file_characteristics"]["file_created"]
 
     # Read character set if it defined for this file
     try:
@@ -73,15 +70,14 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     except KeyError:
         charset = None
 
-    formatname = metadata["file_characteristics"]["file_format"]
     # Read format version if it defined for this file
     try:
         formatversion = metadata["file_characteristics"]["format_version"]
     except KeyError:
         formatversion = ""
 
-    # create ADDML if formatname = 'text/csv
-    if formatname == 'text/csv':
+    # create ADDML if file format is 'text/csv
+    if metadata["file_characteristics"]["file_format"] == 'text/csv':
         create_addml(workspace, metax_filepath, charset, metadata)
 
     # Build parameter list for import_objects script
@@ -90,10 +86,10 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         '--base_path', os.path.join(workspace, 'sip-in-progress'),
         '--workspace', os.path.join(workspace, 'sip-in-progress'),
         '--skip_inspection',
-        '--format_name', formatname,
-        '--digest_algorithm', hashalgorithm,
-        '--message_digest', hashvalue,
-        '--date_created', creation_date,
+        '--format_name', metadata["file_characteristics"]["file_format"],
+        '--digest_algorithm', metadata["checksum"]["algorithm"],
+        '--message_digest', metadata["checksum"]["value"],
+        '--date_created', metadata["file_characteristics"]["file_created"],
         '--format_version', formatversion
     ]
     if charset is not None:
