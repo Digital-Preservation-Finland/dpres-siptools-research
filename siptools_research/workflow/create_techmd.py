@@ -6,8 +6,7 @@ import urllib
 import lxml.etree as ET
 import xml_helpers.utils as h
 from luigi import LocalTarget
-from siptools_research.utils.create_addml import create_addml, \
-    create_techmdfile
+import siptools_research.utils.create_addml
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
 from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
@@ -62,7 +61,6 @@ class CreateTechnicalMetadata(WorkflowTask):
                 import_objects(self.dataset_id, self.workspace, self.config)
 
 
-# pylint: disable=too-many-locals
 def create_objects(file_id=None, metax_filepath=None, workspace=None,
                    config=None):
     """Gets file metadata from Metax and calls create_premis_object function"""
@@ -99,25 +97,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
 
     # create ADDML if formatname = 'text/csv
     if formatname == 'text/csv':
-        #csv_file_path = os.path.join (file_path,
-        #        file_name).strip('/')
-
-        csv_delimiter = metadata["file_characteristics"]["csv_delimiter"]
-        csv_record_separator \
-            = metadata["file_characteristics"]["csv_record_separator"]
-        csv_quoting_char = metadata["file_characteristics"]["csv_quoting_char"]
-        csv_isheader = metadata["file_characteristics"]["csv_has_header"]
-
-        # Metadata type and version
-        mdtype = 'ADDML'
-        mdtypeversion = '8.3'
-        mddata = create_addml(os.path.join(workspace, 'sip-in-progress'),
-                              metax_filepath.strip('/'), csv_delimiter,
-                              csv_isheader, charset, csv_record_separator,
-                              csv_quoting_char)
-
-        create_techmdfile(os.path.join(workspace, 'sip-in-progress'), mdtype,
-                          mdtypeversion, mddata, metax_filepath.strip('/'))
+        create_addml(workspace, metax_filepath, charset, metadata)
 
     # Build parameter list for import_objects script
     import_object_parameters = [
@@ -171,6 +151,44 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
                                tempfilename), 'w+') as outfile:
             outfile.write(h.serialize(tempfile_root))
             print "Wrote md pairings to tempfile %s" % outfile.name
+
+
+def create_addml(workspace, metax_filepath, charset, metadata):
+    """Creates addml metadata and writes it to file.
+
+    :workspace: workspace directory where file is written
+    :metax_filepath: path of CSV file
+    :charset: CSV file charset
+    :metadata: dict that contains basic information of CSV file
+    :returns: None
+    """
+    csv_delimiter = metadata["file_characteristics"]["csv_delimiter"]
+    csv_record_separator \
+        = metadata["file_characteristics"]["csv_record_separator"]
+    csv_quoting_char = metadata["file_characteristics"]["csv_quoting_char"]
+    csv_isheader = metadata["file_characteristics"]["csv_has_header"]
+
+    # Create addml metadata
+    mdtype = 'ADDML'
+    mdtypeversion = '8.3'
+    mddata = siptools_research.utils.create_addml.create_addml(
+        os.path.join(workspace, 'sip-in-progress'),
+        metax_filepath.strip('/'),
+        csv_delimiter,
+        csv_isheader,
+        charset,
+        csv_record_separator,
+        csv_quoting_char
+    )
+
+    # Write addml metadata to a file
+    siptools_research.utils.create_addml.create_techmdfile(
+        os.path.join(workspace, 'sip-in-progress'),
+        mdtype,
+        mdtypeversion,
+        mddata,
+        metax_filepath.strip('/')
+    )
 
 
 def import_objects(dataset_id, workspace, config):
