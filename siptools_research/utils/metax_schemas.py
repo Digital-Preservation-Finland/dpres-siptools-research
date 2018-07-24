@@ -87,7 +87,14 @@ FILE_METADATA_SCHEMA = \
         "properties": {
             "checksum": {
                 "type": "object",
-                "required": ["algorithm", "value"]
+                "required": ["algorithm", "value"],
+                "properties": {
+                    "algorithm": {
+                        "type": "string",
+                        "enum": ['MD5', 'SHA-1', 'SHA-224', 'SHA-256',
+                                 'SHA-384', 'SHA-512']
+                    }
+                }
             },
             "file_characteristics": {
                 "type": "object",

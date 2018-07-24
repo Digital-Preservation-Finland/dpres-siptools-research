@@ -17,9 +17,6 @@ import siptools.scripts.import_object
 from siptools.xml.mets import NAMESPACES
 from siptools.utils import encode_path
 
-ALLOWED_HASHS = {128: 'MD5', 160: 'SHA-1', 224: 'SHA-224',
-                 256: 'SHA-256', 384: 'SHA-384', 512: 'SHA-512'}
-
 
 class CreateTechnicalMetadata(WorkflowTask):
     """Create technical metadata files.
@@ -82,18 +79,6 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         formatversion = metadata["file_characteristics"]["format_version"]
     except KeyError:
         formatversion = ""
-
-    # Picks name of hashalgorithm from its length if it's not valid
-    hash_bit_length = len(hashvalue) * 4
-
-    if hashalgorithm in ALLOWED_HASHS.values():
-        hashalgorithm = hashalgorithm
-    elif hash_bit_length in ALLOWED_HASHS:
-        hashalgorithm = ALLOWED_HASHS[hash_bit_length]
-    else:
-        raise InvalidMetadataError(
-            'Invalid checksum data (algorithm: %s, value: %s) for file: %s' %
-            (hashalgorithm, hashvalue, file_id))
 
     # create ADDML if formatname = 'text/csv
     if formatname == 'text/csv':
