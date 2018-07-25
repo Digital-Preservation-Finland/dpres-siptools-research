@@ -1,12 +1,15 @@
 """Install siptools-research package"""
 from setuptools import setup, find_packages
 
+from version import get_version
+
+
 def main():
     """Install siptools-research"""
     setup(
-        name='siptools_research',
+        name='siptools-research',
         packages=find_packages(exclude=['tests', 'tests.*']),
-        version='dev',
+        version=get_version(),
         install_requires=[
             "luigi",
             "pymongo",
@@ -19,8 +22,7 @@ def main():
         ],
         entry_points={
             'console_scripts': [
-                'siptools_research = '\
-                'siptools_research.__main__:main'
+                'siptools-research = siptools_research.__main__:main'
             ]
         }
     )
