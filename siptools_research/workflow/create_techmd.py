@@ -2,20 +2,36 @@
 # encoding=utf8
 
 import os
-import urllib
-import lxml.etree as ET
-import xml_helpers.utils as h
 from luigi import LocalTarget
 import siptools_research.utils.create_addml
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.metax import Metax
-from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
+from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.get_files import GetFiles
 import siptools.scripts.import_object
-from siptools.xml.mets import NAMESPACES
-from siptools.utils import encode_path
+import siptools.utils
+
+
+TECH_ATTR_TYPES = [
+    {'mdtype': 'NISOIMG',
+     'namespace': 'http://www.loc.gov/mix/v20',
+     'mdtypeversion': '2.0',
+     'othermdtype': None},
+    {'mdtype': 'OTHER',
+     'namespace': 'http://www.arkivverket.no/standarder/addml',
+     'mdtypeversion': 'ADDML',
+     'othermdtype': '8.3'},
+    {'mdtype': 'OTHER',
+     'namespace': 'http://www.loc.gov/audioMD/',
+     'mdtypeversion': '2.0',
+     'othermdtype': 'AudioMD'},
+    {'mdtype': 'OTHER',
+     'namespace': 'http://www.loc.gov/videoMD/',
+     'mdtypeversion': '2.0',
+     'othermdtype': 'VideoMD'}
+]
 
 
 class CreateTechnicalMetadata(WorkflowTask):
@@ -76,7 +92,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     except KeyError:
         formatversion = ""
 
-    # create ADDML if file format is 'text/csv
+    # create ADDML if file format is text/csv
     if metadata["file_characteristics"]["file_format"] == 'text/csv':
         create_addml(workspace, metax_filepath, charset, metadata)
 
@@ -98,40 +114,33 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     # Create PREMIS file metadata XML
     siptools.scripts.import_object.main(import_object_parameters)
 
-    # tempfile to pair metadata files
-    tempfile_root = ET.Element('contents')
+    # Create technical attributes XML files
+    create_technical_attributes(config, workspace, file_id, metax_filepath)
 
-    # Copy additional metadata XML files from Metax if they exist
-    xml = Metax(config).get_xml('files', file_id)
-    for ns_url in xml:
-        if ns_url not in NAMESPACES.values():
-            raise TypeError("Invalid XML namespace: %s" % ns_url)
-        xml_data = xml[ns_url]
-        ns_key = next((key for key, url in NAMESPACES.items() if url
-                       == ns_url), None)
-        #add_to_tempfile(tempfile_root, metax_filepath, metax_filepath, '')
-        target_filename = urllib.quote_plus(metax_filepath + ns_key
-                                            + '-othermd.xml')
-        output_file = os.path.join(workspace, 'sip-in-progress',
-                                   target_filename)
-        with open(output_file, 'w+') as outfile:
-            # pylint: disable=no-member
-            #outfile.write(ET.tostring(xml_data))
-            outfile.write(h.serialize(xml_data))
 
-        techmd_id = xml_data.xpath("/mets:mets/mets:amdSec/mets:techMD/@ID",
-                                   namespaces=NAMESPACES)
-        fileid = ET.Element('fileid')
-        tempfile_root.append(fileid)
-        fileid.text = techmd_id[0]
-        fileid.set('path', metax_filepath)
+def create_technical_attributes(config, workspace, file_id, filepath):
+    """Read technical attribute XML from Metax. Create METS TechMD files for
+    each metadata type, if it is available in Metax.
+    """
+    xmls = Metax(config).get_xml('files', file_id)
+    for type_ in TECH_ATTR_TYPES:
+        if type_["namespace"] in xmls:
 
-        tempfilename = encode_path(ns_key, suffix='file.xml')
-        with open(os.path.join(workspace,
-                               'sip-in-progress',
-                               tempfilename), 'w+') as outfile:
-            outfile.write(h.serialize(tempfile_root))
-            print "Wrote md pairings to tempfile %s" % outfile.name
+            # Create METS TechMD file
+            techmd_id = siptools.utils.create_techmdfile(
+                os.path.join(workspace, 'sip-in-progress'),
+                xmls[type_['namespace']].getroot(),
+                type_['mdtype'],
+                type_['mdtypeversion'],
+                type_['othermdtype']
+            )
+
+            # Add reference from fileSec to TechMD
+            siptools.utils.add_techmdreference(
+                os.path.join(workspace, 'sip-in-progress'),
+                techmd_id,
+                filepath
+            )
 
 
 def create_addml(workspace, metax_filepath, charset, metadata):

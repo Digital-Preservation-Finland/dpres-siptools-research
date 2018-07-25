@@ -61,11 +61,15 @@ def test_create_techmd_ok(testpath):
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Fvalid_tiff.tiffmix-othermd.xml'
+        'NISOIMG-8f9f2f6a906e3c3d563b4e1945ee2ba7-othermd.xml'
+    ))
+    assert os.path.isfile(os.path.join(
+        sipdirectory,
+        'techmd-references.xml'
     ))
     output_file = os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Fvalid_tiff.tiffmix-othermd.xml'
+        'NISOIMG-8f9f2f6a906e3c3d563b4e1945ee2ba7-othermd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
