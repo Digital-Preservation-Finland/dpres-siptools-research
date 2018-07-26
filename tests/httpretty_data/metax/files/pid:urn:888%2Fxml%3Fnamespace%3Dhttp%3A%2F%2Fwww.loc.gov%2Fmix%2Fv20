@@ -1,4 +1,4 @@
-<mix:mix xsi:schemaLocation="http://www.loc.gov/mix/v20 http://www.loc.gov/mix/mix.xsd">
+<mix:mix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mix="http://www.loc.gov/mix/v20" xsi:schemaLocation="http://www.loc.gov/mix/v20 http://www.loc.gov/mix/mix.xsd">
     <mix:BasicDigitalObjectInformation>
         <mix:byteOrder>big endian</mix:byteOrder>
         <mix:Compression>
