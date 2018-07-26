@@ -41,15 +41,15 @@ def test_create_techmd_ok(testpath):
     # Check that XML files are created in workspace
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_5-techmd.xml'
+        'project_x%2Fsome%2Fpath%2Ffile_name_5-premis-techmd.xml'
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_6-techmd.xml'
+        'project_x%2Fsome%2Fpath%2Ffile_name_6-premis-techmd.xml'
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile.csv-techmd.xml'
+        'project_x%2Fsome%2Fpath%2Ffile.csv-premis-techmd.xml'
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
@@ -57,11 +57,11 @@ def test_create_techmd_ok(testpath):
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Fvalid_tiff.tiff-techmd.xml'
+        'project_x%2Fsome%2Fpath%2Fvalid_tiff.tiff-premis-techmd.xml'
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'NISOIMG-8f9f2f6a906e3c3d563b4e1945ee2ba7-othermd.xml'
+        '7587176da018ac09fd03bc65975a6678-NISOIMG-techmd.xml'
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
@@ -69,13 +69,12 @@ def test_create_techmd_ok(testpath):
     ))
     output_file = os.path.join(
         sipdirectory,
-        'NISOIMG-8f9f2f6a906e3c3d563b4e1945ee2ba7-othermd.xml'
+        '7587176da018ac09fd03bc65975a6678-NISOIMG-techmd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
     assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1
-    assert len(root.xpath("//mets:techMD/mets:mdWrap/mets:xmlData/mix:mix",
-                          namespaces=NAMESPACES)) == 1
+    assert len(root.xpath("//mix:mix", namespaces=NAMESPACES)) == 1
     assert len(root.xpath("//mix:mix/mix:BasicDigitalObjectInformation",
                           namespaces=NAMESPACES)) == 1
     assert len(root.xpath("//mix:mix/mix:BasicImageInformation",
@@ -122,7 +121,7 @@ def test_import_object_ok(testpath):
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_5-techmd.xml'
+        'project_x%2Fsome%2Fpath%2Ffile_name_5-premis-techmd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
@@ -161,7 +160,7 @@ def test_import_object_without_charset(testpath):
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_5-techmd.xml'
+        'project_x%2Fsome%2Fpath%2Ffile_name_5-premis-techmd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
