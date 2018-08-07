@@ -13,8 +13,8 @@ def get_dataset_languages(dataset):
     try:
         languages = dataset["research_dataset"]["language"]
     except KeyError:
-        # If 'language' list doesn't exist, use 'en' as a default
-        return ["en"]
+        # If 'language' list doesn't exist, use ['en', 'fi'] as a default
+        return ["en", "fi"]
 
     lang_codes = []
 
@@ -57,8 +57,4 @@ def get_localized_value(d, languages=None):
         if lang in d.keys():
             return d[lang]
 
-    # As a last resort, if any key exists in the dict, use it
-    try:
-        return d[d.keys()[0]]
-    except IndexError:
-        raise KeyError("Localized value not found in {}".format(d))
+    raise KeyError("Localized value not found in {}".format(d))

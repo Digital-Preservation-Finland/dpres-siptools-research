@@ -12,6 +12,9 @@ DATASET = {
     "testb": {
         "und": "#1,234,567"
     },
+    "testc": {
+        "invalid": "bleh bleh"
+    },
     "research_dataset": {
         "language": [
             {
@@ -41,9 +44,12 @@ def test_get_localized_value():
     assert get_localized_value(
         DATASET["testa"], languages=["fi", "en"]) == "Testi suomeksi"
 
-    # No localized value exists for 'fi' or 'en'
+    # Use 'und' or 'xzz' if no localized value exists for 'fi' or 'en'
     assert get_localized_value(
         DATASET["testb"], languages=["en", "fi"]) == "#1,234,567"
+
+    with pytest.raises(KeyError):
+        get_localized_value(DATASET["testc"], languages=["en", "fi"])
 
 
 def test_get_dataset_languages():
@@ -53,5 +59,5 @@ def test_get_dataset_languages():
     """
     assert get_dataset_languages(DATASET) == ["en", "fi"]
 
-    # If research_dataset/language doesn't exist, use 'en' as a default
-    assert get_dataset_languages({"research_dataset": {}}) == ["en"]
+    # If research_dataset/language doesn't exist, use 'en' and 'fi' as default
+    assert get_dataset_languages({"research_dataset": {}}) == ["en", "fi"]
