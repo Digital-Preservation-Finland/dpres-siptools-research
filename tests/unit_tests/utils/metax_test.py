@@ -2,14 +2,15 @@
 # pylint: disable=no-member
 """Tests for ``siptools_research.utils.metax`` module"""
 import json
-import pytest
-import tests.conftest
+
 import httpretty
-import mock
 import lxml.etree
-from siptools_research.utils.metax import Metax
-from siptools_research.utils.metax import MetaxConnectionError
+import mock
+import pytest
 import siptools_research.utils.metax as metax
+from siptools_research.utils.metax import Metax, MetaxConnectionError
+
+import tests.conftest
 
 
 @pytest.mark.usefixtures('testmetax')
@@ -178,13 +179,13 @@ def test_get_data_returns_correct_error_when_http_503_error():
     """
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
-        exceptionThrown = False
+        exception_thrown = False
         client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_dataset('who_cares')
         except MetaxConnectionError:
-            exceptionThrown = True
-        assert exceptionThrown is True
+            exception_thrown = True
+        assert exception_thrown is True
 
 
 def test_get_xml_returns_correct_error_when_http_503_error():
@@ -192,13 +193,13 @@ def test_get_xml_returns_correct_error_when_http_503_error():
     when requests.get() returns http 503 error
     """
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
-        exceptionThrown = False
+        exception_thrown = False
         client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_xml('who', 'cares')
         except MetaxConnectionError:
-            exceptionThrown = True
-        assert exceptionThrown is True
+            exception_thrown = True
+        assert exception_thrown is True
 
 
 def test_set_preservation_state_returns_correct_error_when_http_503_error():
@@ -206,13 +207,13 @@ def test_set_preservation_state_returns_correct_error_when_http_503_error():
     when requests.get() returns http 503 error
     """
     with mock.patch('siptools_research.utils.metax.requests.patch', side_effect=mocked_requests_get):
-        exceptionThrown = False
+        exception_thrown = False
         client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.set_preservation_state('who', metax.DS_STATE_INITIALIZED, 'cares')
         except MetaxConnectionError:
-            exceptionThrown = True
-        assert exceptionThrown is True
+            exception_thrown = True
+        assert exception_thrown is True
 
 
 def test_get_elasticsearchdata_returns_correct_error_when_http_503_error():
@@ -221,13 +222,13 @@ def test_get_elasticsearchdata_returns_correct_error_when_http_503_error():
     """
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
-        exceptionThrown=False
+        exception_thrown = False
         client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_elasticsearchdata()
         except MetaxConnectionError:
-            exceptionThrown = True
-        assert exceptionThrown is True
+            exception_thrown = True
+        assert exception_thrown is True
 
 
 def test_get_datacite_returns_correct_error_when_http_503_error():
@@ -236,13 +237,13 @@ def test_get_datacite_returns_correct_error_when_http_503_error():
     """
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
-        exceptionThrown=False
+        exception_thrown = False
         client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_datacite("x")
         except MetaxConnectionError:
-            exceptionThrown = True
-        assert exceptionThrown is True
+            exception_thrown = True
+        assert exception_thrown is True
 
 
 def test_get_dataset_files_returns_correct_error_when_http_503_error():
@@ -251,13 +252,13 @@ def test_get_dataset_files_returns_correct_error_when_http_503_error():
     """
     with mock.patch('siptools_research.utils.metax.requests.get', side_effect=mocked_requests_get):
         # Run task like it would be run from command line
-        exceptionThrown=False
+        exception_thrown = False
         client = Metax(tests.conftest.TEST_CONFIG_FILE)
         try:
             client.get_dataset_files("x")
         except MetaxConnectionError:
-            exceptionThrown = True
-        assert exceptionThrown is True
+            exception_thrown = True
+        assert exception_thrown is True
 
 
-#TODO: test for retrieving other entities: contracts, files...
+# TODO: test for retrieving other entities: contracts, files...

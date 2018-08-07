@@ -1,9 +1,10 @@
 # encoding=utf8
 """Metax interface class."""
 
+import iso639
+import lxml.etree
 import requests
 from requests.auth import HTTPBasicAuth
-import lxml.etree
 from siptools_research.config import Configuration
 
 DS_STATE_INITIALIZED = 0

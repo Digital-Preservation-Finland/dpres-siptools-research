@@ -2,20 +2,23 @@
 """Luigi task that creates structure map."""
 
 import os
+
+import luigi
 import lxml.etree as ET
 import mets
 import xml_helpers.utils as h
-import luigi
 from siptools.scripts import compile_structmap
-from siptools.xml.mets import NAMESPACES
 from siptools.utils import encode_path
+from siptools.xml.mets import NAMESPACES
 from siptools_research.utils.contextmanager import redirect_stdout
+from siptools_research.utils.locale import \
+    get_dataset_languages, get_localized_value
 from siptools_research.utils.metax import Metax
-from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 from siptools_research.workflow.create_digiprov import \
     CreateProvenanceInformation
+from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
+from siptools_research.workflowtask import WorkflowTask
 
 
 class CreateStructMap(WorkflowTask):
@@ -112,9 +115,13 @@ class CreateStructMap(WorkflowTask):
         """
         metax_client = Metax(self.config)
         metadata = metax_client.get_dataset(self.dataset_id)
+        languages = get_dataset_languages(metadata)
+
         provenance_ids = []
         for provenance in metadata["research_dataset"]["provenance"]:
-            event_type = provenance["preservation_event"]["pref_label"]["en"]
+            event_type = get_localized_value(
+                provenance["preservation_event"]["pref_label"],
+                languages=languages)
             prov_file = '%s-event.xml' % event_type
             prov_file = encode_path(os.path.join(self.sip_creation_path,
                                                  prov_file))
@@ -194,10 +201,14 @@ def find_file_use_category(identifier, dataset_metadata):
     :dataset_metadata (dict): Dataset metadata from Metax
     :returns (string): Use category attribute
     """
+    languages = get_dataset_languages(dataset_metadata)
+
     if 'files' in dataset_metadata['research_dataset']:
         for file_ in dataset_metadata['research_dataset']['files']:
             if file_['identifier'] == identifier:
-                return file_['use_category']['pref_label']['en']
+                return get_localized_value(
+                    file_['use_category']['pref_label'],
+                    languages=languages)
 
     # Nothing found
     return None
@@ -208,9 +219,13 @@ def find_dir_use_category(identifier, dataset_metadata):
     "use_category" of file if it is found. If file is not found from list,
     return None.
     """
+    languages = get_dataset_languages(dataset_metadata)
+
     for directory in dataset_metadata['research_dataset']['directories']:
         if directory['identifier'] == identifier:
-            return directory['use_category']['pref_label']['en']
+            return get_localized_value(
+                directory['use_category']['pref_label'],
+                languages=languages)
 
     # Nothing found
     return None

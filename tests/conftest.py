@@ -30,7 +30,6 @@ PROJECT_ROOT_PATH = os.path.abspath(
 sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
-
 @pytest.fixture(scope="function")
 def testmetax(request):
     """Use fake http-server and local sample JSON/XML files instead of real
@@ -76,7 +75,6 @@ def testmetax(request):
         tail = path.split('/%s/%s' % (subdir, body_file))[1]
         if tail:
             body_file += urllib.quote(tail, safe='%')
-
 
         full_path = "%s/%s/%s" % (METAX_PATH, subdir, body_file)
         logging.debug("Looking for file: %s", full_path)
