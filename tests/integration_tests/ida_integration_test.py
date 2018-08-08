@@ -24,7 +24,7 @@ def test_ida_download(testpath):
 
     # Download a file that is should be available
     download_path = os.path.join(testpath, 'ida_file')
-    download_file('pid:urn:1', download_path,
+    download_file('pid:urn:111', download_path,
                   tests.conftest.TEST_CONFIG_FILE)
 
     # Check contents of downloaded file
