@@ -18,7 +18,8 @@ def main():
             "lxml",
             "scandir",
             "jsonschema",
-            "wand"
+            "wand",
+            "iso-639"
         ],
         entry_points={
             'console_scripts': [

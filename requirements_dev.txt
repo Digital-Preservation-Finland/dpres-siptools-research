@@ -17,6 +17,7 @@ paramiko
 jsonschema
 requests_mock
 mock
+iso-639
 
 # siptools requirements
 # TODO: These should be automatically installed as requirements of dpres-siptools
