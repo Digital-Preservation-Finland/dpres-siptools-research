@@ -23,7 +23,10 @@ URL:            http://www.csc.fi
 Source0:        %{file_prefix}-v%{file_version}%{?file_release_tag}-%{file_build_number}-g%{file_commit_ref}.%{file_ext}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
-Requires:       python python-luigi python-pymongo dpres-siptools addml mets python-lxml python-paramiko python2-jsonschema python-requests python-scandir ImageMagick
+Requires:       python python-luigi python-pymongo dpres-siptools addml mets
+Requires:       python-lxml python-paramiko python2-jsonschema python-requests
+Requires:       python-scandir python-iso-639 ImageMagick
+Requires:       python-mongomock
 BuildRequires:  python-setuptools pytest python-httpretty
 
 %description
