@@ -25,63 +25,66 @@ def run_luigi_task(module, task, workspace, dataset_id):
              '--local-scheduler')
         )
 
+
 @pytest.mark.usefixtures('testmongoclient')
 def test_workflow(testpath):
     """Add test dataset metadata and associated file metadata to Metax. Run
     partial workflow by calling CreateMets task with luigi.
     """
-    # Read configuration file
-    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-    # Override Metax password in configuration file with real password from
-    # the user
-    # pylint: disable=protected-access
-    conf._parser.set(
-        'siptools_research', 'metax_password',
-        getpass.getpass(prompt='Metax password for user \'tpas\':')
-    )
-
-    # Post files to Metax
-    file1_metadata = 'tests/data/integration_tests/metax_file_1.json'
-    file2_metadata = 'tests/data/integration_tests/metax_file_2.json'
+    dataset_id = -1
     file1_id = "pid:urn:wf_test_1a"
     file2_id = "pid:urn:wf_test_1b"
-    post_metax_file(file1_metadata, conf)
-    post_metax_file(file2_metadata, conf)
+    try:
+        # Read configuration file
+        conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
+        # Override Metax password in configuration file with real password from
+        # the user
+        # pylint: disable=protected-access
+        conf._parser.set(
+            'siptools_research', 'metax_password',
+            getpass.getpass(prompt='Metax password for user \'tpas\':')
+        )
 
-    # Post dataset to Metax
-    dataset_metadata = 'tests/data/integration_tests/metax_dataset.json'
-    dataset_id = post_metax_dataset(dataset_metadata,
-                                    [file1_id, file2_id],
-                                    conf)
+        # Post files to Metax
+        file1_metadata = 'tests/data/integration_tests/metax_file_1.json'
+        file2_metadata = 'tests/data/integration_tests/metax_file_2.json'
+        post_metax_file(file1_metadata, conf)
+        post_metax_file(file2_metadata, conf)
 
-    with requests_mock.Mocker(real_http=True) as ida_mock:
-        # Mock Ida
-        ida_mock.get("https://86.50.169.61:4433/files/%s/download" % file1_id,
-                     text='adsf')
-        ida_mock.get("https://86.50.169.61:4433/files/%s/download" % file2_id,
-                     text='adsf')
+        # Post dataset to Metax
+        dataset_metadata = 'tests/data/integration_tests/metax_dataset.json'
+        dataset_id = post_metax_dataset(dataset_metadata,
+                                        [file1_id, file2_id],
+                                        conf)
 
-        # Run partial workflow for dataset just added to Metax
-        workspace = os.path.join(testpath,
-                                 'workspace_'+os.path.basename(testpath))
-        run_luigi_task('siptools_research.workflow.create_mets',
-                       'CreateMets',
-                       workspace,
-                       str(dataset_id))
+        with requests_mock.Mocker(real_http=True) as ida_mock:
+            # Mock Ida
+            ida_mock.get(conf.get('ida_url') + "/files/%s/download" % file1_id,
+                         text='adsf')
+            ida_mock.get(conf.get('ida_url') + "/files/%s/download" % file2_id,
+                         text='adsf')
 
-    # Init pymongo client
-    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-    mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-    collection = mongoclient[conf.get('mongodb_database')]\
-        [conf.get('mongodb_collection')]
-    document = collection.find_one()
+            # Run partial workflow for dataset just added to Metax
+            workspace = os.path.join(testpath,
+                                     'workspace_'+os.path.basename(testpath))
+            run_luigi_task('siptools_research.workflow.create_mets',
+                           'CreateMets',
+                           workspace,
+                           str(dataset_id))
 
-    # Check 'result' field
-    assert document['workflow_tasks']['CreateMets']['result'] == 'success'
+        # Init pymongo client
+        conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
+        mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
+        collection = mongoclient[conf.get('mongodb_database')]\
+            [conf.get('mongodb_collection')]
+        document = collection.find_one()
 
-    delete_metax_file(file1_id, conf)
-    delete_metax_file(file2_id, conf)
-    delete_metax_dataset(dataset_id, conf)
+        # Check 'result' field
+        assert document['workflow_tasks']['CreateMets']['result'] == 'success'
+    finally:
+        delete_metax_file(file1_id, conf)
+        delete_metax_file(file2_id, conf)
+        delete_metax_dataset(dataset_id, conf)
 
 
 def post_metax_file(metadatafile, conf):
@@ -138,13 +141,15 @@ def delete_metax_file(identifier, conf):
     :conf: Configuration
     :returns: None
     """
-
     url = "%s/rest/v1/files/%s" % (conf.get("metax_url"), identifier)
     response = requests.delete(
         url,
         auth=(conf.get("metax_user"), conf.get("metax_password"))
     )
-    assert response.status_code == 200
+    filu = open("debug.txt", 'a')
+    filu.write(str(identifier) + ':' + str(response) + '\n')
+    filu.close()
+    assert response.status_code == 200 or response.status_code == 404
 
 
 def delete_metax_dataset(identifier, conf):
@@ -160,4 +165,7 @@ def delete_metax_dataset(identifier, conf):
         url,
         auth=(conf.get("metax_user"), conf.get("metax_password"))
     )
-    assert response.status_code == 204
+    filu = open("debug.txt", 'a')
+    filu.write(str(identifier) + ':' + str(response) + '\n')
+    filu.close()
+    assert response.status_code == 204 or response.status_code == 404

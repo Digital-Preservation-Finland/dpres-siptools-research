@@ -13,9 +13,9 @@
 	},
 	"checksum":
 	{
-		"algorithm": "sha1",
+		"algorithm": "sha2",
 		"checked": "2017-06-23T17:41:59+03:00",
-		"value": "94d3a8f5c206f7572abc5dfcaa1ee9ca2da649e6"
+		"value": "91c9c3ff310a53f8d179461d9af55371c78b67c38ab030bf9c026693ca495399"
 	},
 	"file_characteristics":
 	{
