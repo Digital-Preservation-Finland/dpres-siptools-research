@@ -27,7 +27,7 @@ def test_createdescriptivemetadata(testpath):
     task = CreateDescriptiveMetadata(
         dataset_id="datacite_test_1",
         workspace=workspace,
-        config=tests.conftest.TEST_CONFIG_FILE
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
 

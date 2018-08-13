@@ -12,7 +12,7 @@ def test_validate_metadata():
     dataset.
     """
     assert validate_metadata('validate_metadata_test_dataset',
-                             tests.conftest.TEST_CONFIG_FILE) is True
+                             tests.conftest.UNIT_TEST_CONFIG_FILE) is True
 
 
 @pytest.mark.usefixtures('testmetax')
@@ -23,7 +23,7 @@ def test_validate_metadata_invalid():
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata('validate_metadata_test_dataset_invalid_metadata',
-                          tests.conftest.TEST_CONFIG_FILE)
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Check exception message
     exc = exc_info.value
@@ -37,7 +37,7 @@ def test_validate_metadata_missing_xml():
     """
     with pytest.raises(InvalidMetadataError) as exc:
         validate_metadata('validate_metadata_test_dataset_metadata_missing',
-                          tests.conftest.TEST_CONFIG_FILE)
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     assert exc.value[0] == \
         "Missing XML metadata for file: pid:urn:validate_metadata_test_image"
@@ -50,4 +50,4 @@ def test_validate_metadata_audiovideo():
     """
     assert validate_metadata(
         'validate_metadata_test_dataset_audio_video_metadata',
-        tests.conftest.TEST_CONFIG_FILE) is True
+        tests.conftest.UNIT_TEST_CONFIG_FILE) is True

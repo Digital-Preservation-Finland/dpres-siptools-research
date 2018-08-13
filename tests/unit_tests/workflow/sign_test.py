@@ -34,7 +34,7 @@ def test_signsip(testpath):
     # Init task
     task = sign.SignSIP(workspace=workspace,
                         dataset_id="1",
-                        config=tests.conftest.TEST_CONFIG_FILE)
+                        config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task.

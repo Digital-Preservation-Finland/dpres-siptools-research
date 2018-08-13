@@ -15,7 +15,7 @@ def test_generate_metadata():
     that JSON message sent to Metax has correct keys/values.
     """
     generate_metadata('generate_metadata_test_dataset_1',
-                      tests.conftest.TEST_CONFIG_FILE)
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     json_message = json.loads(httpretty.last_request().body)
 
@@ -44,7 +44,7 @@ def test_generate_metadata_mix():
     querystring should contain the namespace of XML.
     """
     generate_metadata('generate_metadata_test_dataset_2',
-                      tests.conftest.TEST_CONFIG_FILE)
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
     # The file is 10x10px image, so the metadata should contain image width.
@@ -69,7 +69,7 @@ def test_generate_metadata_tempfile_removal():
     tmp_dir_before_test = os.listdir(tempfile.gettempdir())
 
     generate_metadata('generate_metadata_test_dataset_1',
-                      tests.conftest.TEST_CONFIG_FILE)
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # There should not be new files or directories in /tmp
     assert os.listdir(tempfile.gettempdir()) == tmp_dir_before_test

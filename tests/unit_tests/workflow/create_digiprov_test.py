@@ -30,7 +30,7 @@ def test_createprovenanceinformation(testpath):
     task = create_digiprov.CreateProvenanceInformation(
         workspace=workspace,
         dataset_id="create_digiprov_test_dataset_file_and_logging",
-        config=tests.conftest.TEST_CONFIG_FILE
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
 
@@ -76,7 +76,7 @@ def test_failed_createprovenanceinformation(testpath):
     task = create_digiprov.CreateProvenanceInformation(
         dataset_id="create_digiprov_test_dataset_date_data_missing",
         workspace=workspace,
-        config=tests.conftest.TEST_CONFIG_FILE
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
     # Run task.
@@ -102,7 +102,7 @@ def test_create_premis_event(testpath):
     create_digiprov.create_premis_event(
         'create_digiprov_test_dataset_detailed_check',
         workspace,
-        tests.conftest.TEST_CONFIG_FILE)
+        tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Check that the created xml-file contains correct elements.
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))
@@ -161,7 +161,7 @@ def test_create_premis_event_unav(testpath):
     create_digiprov.create_premis_event(
         'create_digiprov_test_dataset_provenance_data_missing',
         workspace,
-        tests.conftest.TEST_CONFIG_FILE)
+        tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Check that the created xml-file contains correct elements.
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))

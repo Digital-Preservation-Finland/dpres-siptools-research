@@ -46,7 +46,7 @@ def test_validatesip_accepted(testpath, monkeypatch):
 
     # Init task
     task = ValidateSIP(workspace=workspace, dataset_id="1",
-                       config=tests.conftest.TEST_CONFIG_FILE)
+                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Monkeypatch RemoteFileSystem.exists to return False. The task should not
     # be completed.

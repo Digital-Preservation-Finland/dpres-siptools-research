@@ -5,6 +5,7 @@ import tests.conftest
 import siptools_research.utils.database
 import pymongo
 
+
 @pytest.mark.usefixtures('testmongoclient')
 def test_add_event():
     """Test add_event function. Adds sample event to empty database and checks
@@ -15,7 +16,7 @@ def test_add_event():
 
     # Init database client
     database = siptools_research.utils.database.Database(
-        tests.conftest.TEST_CONFIG_FILE
+        tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
     # Add event for random document

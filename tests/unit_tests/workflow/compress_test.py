@@ -18,7 +18,7 @@ def test_compresssip(testpath):
     # Init task
     task = CompressSIP(workspace=testpath,
                        dataset_id="1",
-                       config=tests.conftest.TEST_CONFIG_FILE)
+                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task

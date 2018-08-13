@@ -31,7 +31,7 @@ def test_create_techmd_ok(testpath):
     # Init task
     task = CreateTechnicalMetadata(workspace=workspace,
                                    dataset_id="create_techmd_test_dataset",
-                                   config=tests.conftest.TEST_CONFIG_FILE)
+                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
     # Run task.
@@ -116,7 +116,7 @@ def test_import_object_ok(testpath):
     # Run import_objects function for a sample dataset
     import_objects('create_techmd_test_dataset',
                    testpath,
-                   tests.conftest.TEST_CONFIG_FILE)
+                   tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
@@ -155,7 +155,7 @@ def test_import_object_without_charset(testpath):
     # Run import_objects function for a sample dataset
     import_objects('create_techmd_test_dataset_charset_not_defined',
                    testpath,
-                   tests.conftest.TEST_CONFIG_FILE)
+                   tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
@@ -193,7 +193,7 @@ def test_xml_metadata_file_missing(testpath):
     task = CreateTechnicalMetadata(
         workspace=workspace,
         dataset_id="create_techmd_test_dataset_xml_metadata_missing",
-        config=tests.conftest.TEST_CONFIG_FILE
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
 

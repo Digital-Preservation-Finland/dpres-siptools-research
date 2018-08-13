@@ -21,6 +21,8 @@ METAX_URL = "https://metax-test.csc.fi/rest/v1"
 IDA_PATH = "tests/httpretty_data/ida/"
 IDA_URL = 'https://86.50.169.61:4433'
 TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
+UNIT_TEST_CONFIG_FILE = \
+    "tests/data/configuration_files/siptools_research_unit_test.conf"
 
 
 # Prefer modules from source directory rather than from site-python

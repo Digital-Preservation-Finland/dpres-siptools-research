@@ -21,7 +21,7 @@ def test_cleanupworkspace(testpath):
     # Init task
     task = CleanupWorkspace(workspace=workspace,
                             dataset_id='1',
-                            config=tests.conftest.TEST_CONFIG_FILE)
+                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # The workspace should exists before task has been run
     assert not task.complete()
@@ -36,7 +36,7 @@ def test_cleanupworkspace(testpath):
     assert not os.path.exists(workspace)
 
     # Manipulate workflow database
-    Database(tests.conftest.TEST_CONFIG_FILE).add_event(
+    Database(tests.conftest.UNIT_TEST_CONFIG_FILE).add_event(
         os.path.basename(workspace),
         'ReportPreservationStatus',
         'success',
