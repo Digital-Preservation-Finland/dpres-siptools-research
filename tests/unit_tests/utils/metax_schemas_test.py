@@ -105,7 +105,7 @@ def test_validate_valid_file_metadata():
     valid_file_metadata = \
         {
             "checksum": {
-                "algorithm": "MD5",
+                "algorithm": "sha2",
                 "value": "habeebit"
             },
             "file_path": "path/to/file",
@@ -132,7 +132,7 @@ def test_validate_invalid_file_metadata():
     invalid_file_metadata = \
         {
             "checksum": {
-                "algorithm": "MD5",
+                "algorithm": "sha2",
             },
             "file_format": "html/text",
             "file_characteristics": {
@@ -157,7 +157,7 @@ def test_validate_invalid_file_charset():
     invalid_file_metadata = \
         {
             "checksum": {
-                "algorithm": "MD5",
+                "algorithm": "sha2",
                 "value": "habeebit"
             },
             "file_path": "path/to/file",

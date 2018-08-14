@@ -8,7 +8,7 @@
             "identifier": "pid:urn:dir:wf1"
         },
         "checksum": {
-            "algorithm": "SHA-1",
+            "algorithm": "sha2",
             "value": "5d3c637d1e3b4bdffa64374a1dbb321edb678546"
         },
         "file_characteristics": {

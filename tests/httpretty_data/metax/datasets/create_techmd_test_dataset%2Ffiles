@@ -5,8 +5,8 @@
         "file_path": "/project_x/some/path/file_name_5",
         "file_format": "html/text",
         "checksum": {
-            "algorithm": "SHA-1",
-            "value": "habeebit"
+            "algorithm": "sha2",
+            "value": "0000000000000000000000000000000000000000000000000000000000000000"
         },
         "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z",
@@ -19,8 +19,8 @@
         "file_path": "/project_x/some/path/file_name_6",
         "file_format": "application/xml",
         "checksum": {
-            "algorithm": "SHA-1",
-            "value": "habeebit"
+            "algorithm": "sha2",
+            "value": "0000000000000000000000000000000000000000000000000000000000000000"
         },
         "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z",
@@ -33,8 +33,8 @@
         "file_path": "/project_x/some/path/file_name_7.txt",
         "file_format": "text/plain",
         "checksum": {
-            "algorithm": "SHA-1",
-            "value": "habeebit"
+            "algorithm": "sha2",
+            "value": "0000000000000000000000000000000000000000000000000000000000000000"
         },
         "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z",
@@ -47,8 +47,8 @@
         "file_path": "/project_x/some/path/file.csv",
         "file_format": "text/csv",
         "checksum": {
-                "algorithm": "SHA-1",
-            "value": "habeebit"
+                "algorithm": "sha2",
+            "value": "0000000000000000000000000000000000000000000000000000000000000000"
         },
         "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z",
@@ -63,8 +63,8 @@
         "file_path": "/project_x/some/path/valid_tiff.tiff",
         "identifier": "pid:urn:888",
         "checksum": {
-            "algorithm": "SHA-1",
-            "value": "habeebit"
+            "algorithm": "sha2",
+            "value": "0000000000000000000000000000000000000000000000000000000000000000"
          },
          "file_characteristics": {
             "file_created": "2018-01-17T08:19:31Z"

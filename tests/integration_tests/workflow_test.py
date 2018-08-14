@@ -21,7 +21,7 @@ def run_luigi_task(module, task, workspace):
             ('--module', module, task,
              '--workspace', workspace,
              '--dataset-id', 'workflow_test_dataset_1',
-             '--config', tests.conftest.TEST_CONFIG_FILE,
+             '--config', tests.conftest.UNIT_TEST_CONFIG_FILE,
              '--worker-keep-alive',
              '--worker-retry-external-tasks',
              '--scheduler-retry-delay', '20',

@@ -91,8 +91,7 @@ FILE_METADATA_SCHEMA = \
                 "properties": {
                     "algorithm": {
                         "type": "string",
-                        "enum": ['MD5', 'SHA-1', 'SHA-224', 'SHA-256',
-                                 'SHA-384', 'SHA-512']
+                        "enum": ['md5', 'sha2']
                     }
                 }
             },

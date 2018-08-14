@@ -2,8 +2,10 @@
 
 import os
 import shutil
-from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
-from siptools_research.workflow.create_techmd import import_objects
+import hashlib
+from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
+                                                      import_objects,
+                                                      algorithm_name)
 import lxml.etree
 from siptools.xml.mets import NAMESPACES
 import pytest
@@ -203,3 +205,26 @@ def test_xml_metadata_file_missing(testpath):
     assert 'Could not retrieve additional metadata XML for dataset pid:urn:8' \
         in str(exc)
     assert not task.complete()
+
+
+def test_algorithm_name():
+    """Test ``algorithm_name`` function with valid and invalid inputs."""
+
+    # Valid input
+    assert algorithm_name('md5', hashlib.md5('foo').hexdigest()) == 'MD5'
+    assert algorithm_name('sha2', hashlib.sha224('foo').hexdigest()) \
+        == 'SHA-224'
+    assert algorithm_name('sha2', hashlib.sha256('foo').hexdigest()) \
+        == 'SHA-256'
+    assert algorithm_name('sha2', hashlib.sha384('foo').hexdigest()) \
+        == 'SHA-384'
+    assert algorithm_name('sha2', hashlib.sha512('foo').hexdigest()) \
+        == 'SHA-512'
+
+    # invalid algorithm name
+    with pytest.raises(UnboundLocalError):
+        algorithm_name('foo', 'bar')
+
+    # invalid value length
+    with pytest.raises(KeyError):
+        algorithm_name('sha2', 'foobar')

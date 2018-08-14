@@ -8,8 +8,8 @@
         },
         "checksum":
         {
-            "algorithm": "SHA-1",
-            "value": "94d3a8f5c206f7572abc5dfcaa1ee9ca2da649e6"
+            "algorithm": "md5",
+            "value": "58284d6cdd8deaffe082d063580a9df3"
         },
         "file_characteristics":
         {
@@ -25,8 +25,8 @@
         },
         "checksum":
         {
-            "algorithm": "SHA-1",
-            "value": "c18207bd441d8895fd1dd3849cc0343a704e8233"
+            "algorithm": "md5",
+            "value": "90dd1fc82b5d523f6f85716c1c67c0f3"
         },
         "file_characteristics":
         {

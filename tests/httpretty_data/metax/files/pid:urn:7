@@ -6,8 +6,8 @@
     "file_path": "/project_x/some/path/file_name_7.txt",
     "identifier": "pid:urn:7",
     "checksum": {
-        "algorithm": "SHA-1",
-        "value": "habeebit"
+        "algorithm": "sha2",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
     },
     "file_characteristics": {
         "file_created": "2014-01-17T08:19:31Z",

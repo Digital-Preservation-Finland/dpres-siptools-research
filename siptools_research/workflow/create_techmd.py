@@ -96,6 +96,10 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     if metadata["file_characteristics"]["file_format"] == 'text/csv':
         create_addml(workspace, metax_filepath, charset, metadata)
 
+    # figure out the checksum algorithm
+    digest_algorithm = algorithm_name(metadata["checksum"]["algorithm"],
+                                      metadata["checksum"]["value"])
+
     # Build parameter list for import_objects script
     import_object_parameters = [
         metax_filepath.strip('/'),
@@ -103,7 +107,7 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         '--workspace', os.path.join(workspace, 'sip-in-progress'),
         '--skip_inspection',
         '--format_name', metadata["file_characteristics"]["file_format"],
-        '--digest_algorithm', metadata["checksum"]["algorithm"],
+        '--digest_algorithm', digest_algorithm,
         '--message_digest', metadata["checksum"]["value"],
         '--date_created', metadata["file_characteristics"]["file_created"],
         '--format_version', formatversion
@@ -194,3 +198,22 @@ def import_objects(dataset_id, workspace, config):
         file_metadata = metax_client.get_dataset_files
         metax_filepath = file_['file_path'].strip('/')
         create_objects(file_id, metax_filepath, workspace, config)
+
+
+def algorithm_name(algorithm, value):
+    """Guess the checksum algorithm. The name of checksum algorithm in Metax is
+    either 'md5' or 'sha2'. If it is 'sha2' the exact algorithm has to be
+    deduced from the lenght of checksum value.
+
+    :returns: 'MD5', 'SHA-224', 'SHA-256', 'SHA-384', or 'SHA-512'
+    """
+    sha2_bit_lengths \
+        = {224: 'SHA-224', 256: 'SHA-256', 384: 'SHA-384', 512: 'SHA-512'}
+    hash_bit_length = len(value) * 4
+
+    if algorithm == 'md5':
+        algorithm_key = 'MD5'
+    elif algorithm == 'sha2':
+        algorithm_key = sha2_bit_lengths[hash_bit_length]
+
+    return algorithm_key

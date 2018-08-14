@@ -4,8 +4,8 @@
     "file_format": "html/text",
     "file_path": "/project_x_FROZEN/some/path/",
     "checksum": {
-        "algorithm": "SHA-1",
-        "value": "habeebit"
+        "algorithm": "sha2",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
     },
     "file_characteristics": {
         "file_created": "2014-01-17T08:19:31Z",
