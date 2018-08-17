@@ -59,8 +59,9 @@ def _generate_techmd(tmpfile, original_metadata):
     # Merge generated file_characteristics with original data from Metax.
     # If a field was already defined in original data, it will override the
     # generated value.
-    file_characteristics.update(
-        original_metadata['file_characteristics']
-    )
+    if 'file_characteristics' in original_metadata:
+        file_characteristics.update(
+            original_metadata['file_characteristics']
+            )
 
     return file_characteristics

@@ -9,6 +9,7 @@ import httpretty
 import lxml.etree
 from siptools_research.generate_metadata import generate_metadata
 
+
 @pytest.mark.usefixtures('testmetax', 'testida')
 def test_generate_metadata():
     """Tests metadata generation. Generates metadata for a dataset and checks
@@ -34,6 +35,32 @@ def test_generate_metadata():
     # object in Metax
     assert json_message['file_characteristics']['dummy_key'] == \
         'dummy_value'
+
+
+@pytest.mark.usefixtures('testmetax', 'testida')
+def test_generate_metadata_file_characteristics_block_not_present():
+    """Tests metadata generation. Generates metadata for a dataset and checks
+    that JSON message sent to Metax has correct keys/values when
+    file_characteristics block was not present in file metadata
+    """
+    generate_metadata('generate_metadata_test_dataset_' +
+                      'file_characteristics_block_not_present',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    json_message = json.loads(httpretty.last_request().body)
+    filu = open('debug.txt', 'a')
+    filu.write(str(json_message))
+    filu.close()
+    # The file should recognised as plain text file
+    assert json_message['file_characteristics']['file_format'] == 'text/plain'
+
+    # The format version should be set empty string since there is no
+    # different versions of plain text files
+    assert json_message['file_characteristics']['format_version'] == ''
+
+    # Encoding should not be changed since it was already defined by user
+    assert json_message['file_characteristics']['encoding'] == \
+        'ISO-8859-15'
 
 
 @pytest.mark.usefixtures('testmetax', 'testida')
