@@ -6,6 +6,7 @@ import datetime
 import pytest
 import tests.conftest
 import luigi.cmdline
+import luigi.configuration
 import pymongo
 import httpretty
 import mock
@@ -16,6 +17,15 @@ from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
 from siptools_research.utils.metax import MetaxConnectionError
 import siptools_research.utils.metax as metax
+
+
+# Prevent using system luigi configuration file (/etc/luigi/luigi.cfg) in tests
+@pytest.fixture(autouse=True)
+def mock_luigi_config_path(monkeypatch):
+    """Mock luigi config file path"""
+    monkeypatch.setattr(luigi.configuration.LuigiConfigParser,
+                        '_config_paths',
+                        ['tests/data/configuration_files/luigi.cfg'])
 
 
 def run_luigi_task(task_name, workspace):
@@ -36,6 +46,7 @@ def run_luigi_task(task_name, workspace):
              '--local-scheduler',
              '--no-lock')
         )
+
 
 class TestTask(WorkflowTask):
     """Test class that only writes an output file."""
@@ -70,11 +81,13 @@ class InvalidDatasetTask(FailingTestTask):
     def run(self):
         raise InvalidDatasetError('File validation failed')
 
+
 class InvalidMetadataTask(FailingTestTask):
     """Test class that raises InvalidDatasetError"""
 
     def run(self):
         raise InvalidMetadataError('Missing some important metadata')
+
 
 class MetaxConnectionErrorTask(FailingTestTask):
     """Test class that raises InvalidDatasetError"""
@@ -107,7 +120,7 @@ def test_run_workflowtask(testpath, testmongoclient):
     # Check 'result' field
     assert document['workflow_tasks']['TestTask']['result'] == 'success'
     # Parse the 'timestamp' field to make sure it is correct format
-    datetime.datetime.strptime(document['workflow_tasks']['TestTask']\
+    datetime.datetime.strptime(document['workflow_tasks']['TestTask']
                                ['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
 
     # Check that there is no extra documents in mongo collection
@@ -134,7 +147,7 @@ def test_run_failing_task(testpath, testmongoclient):
     assert document['workflow_tasks']['FailingTestTask']['result'] ==\
         'failure'
     # Parse the 'timestamp' field to make sure it is correct format
-    datetime.datetime.strptime(document['workflow_tasks']['FailingTestTask']\
+    datetime.datetime.strptime(document['workflow_tasks']['FailingTestTask']
                                ['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
 
     # Check that there is no extra documents in mongo collection
