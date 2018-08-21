@@ -146,9 +146,6 @@ def delete_metax_file(identifier, conf):
         url,
         auth=(conf.get("metax_user"), conf.get("metax_password"))
     )
-    filu = open("debug.txt", 'a')
-    filu.write(str(identifier) + ':' + str(response) + '\n')
-    filu.close()
     assert response.status_code == 200 or response.status_code == 404
 
 
@@ -165,7 +162,4 @@ def delete_metax_dataset(identifier, conf):
         url,
         auth=(conf.get("metax_user"), conf.get("metax_password"))
     )
-    filu = open("debug.txt", 'a')
-    filu.write(str(identifier) + ':' + str(response) + '\n')
-    filu.close()
     assert response.status_code == 204 or response.status_code == 404
