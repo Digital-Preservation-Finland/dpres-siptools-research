@@ -48,9 +48,6 @@ def test_generate_metadata_file_characteristics_block_not_present():
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     json_message = json.loads(httpretty.last_request().body)
-    filu = open('debug.txt', 'a')
-    filu.write(str(json_message))
-    filu.close()
     # The file should recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
 
