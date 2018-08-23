@@ -51,3 +51,20 @@ def test_validate_metadata_audiovideo():
     assert validate_metadata(
         'validate_metadata_test_dataset_audio_video_metadata',
         tests.conftest.UNIT_TEST_CONFIG_FILE) is True
+
+
+@pytest.mark.usefixtures('testmetax')
+def test_validate_metadata_invalid_datacite():
+    """Test that validate_metadata function raises exception with correct error
+    message for invalid datacite where required attribute identifier is
+    missing.
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        validate_metadata('validate_metadata_test_dataset_invalid_datacite',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check exception message
+    exc = exc_info.value
+    assert exc.message.startswith('Datacite (id=validate_metadata_test_data' +
+                                  'set_invalid_datacite) validation failed')

@@ -25,6 +25,7 @@ SCHEMATRONS = {
 SCHEMATRON_ERROR = "Schematron metadata validation failed: %s. File: %s"
 MISSING_XML_METADATA_ERROR = "Missing XML metadata for file: %s"
 INVALID_NS_ERROR = "Invalid XML namespace: %s"
+DATACITE_VALIDATION_ERROR = 'Datacite (id=%s) validation failed'
 
 
 def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
@@ -51,6 +52,9 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
     # Validate XML metadata for each file in dataset files
     _validate_xml_file_metadata(dataset_id, metax_client)
+
+    # Validate XML metadata for each file in dataset files
+    _validate_datacite(dataset_id, metax_client)
 
     return True
 
@@ -176,3 +180,27 @@ def _validate_with_schematron(file_format_prefix, file_id, xmls):
             raise InvalidMetadataError(
                 SCHEMATRON_ERROR % (proc.returncode, file_id)
             )
+
+
+# pylint: disable=invalid-name
+def _validate_datacite(dataset_metadata, metax_client):
+    """Validates datacite.
+
+    :returns: None
+    """
+    with tempfile.NamedTemporaryFile() as temp:
+        datacite = metax_client.get_datacite(dataset_metadata)
+        datacite.write(temp.name)
+        temp.seek(0)
+        schem = '/etc/xml/dpres-xml-schemas/schema_catalogs/' + \
+                'schemas_external/datacite/4.1/metadata.xsd'
+        proc = Popen(['check-xml-schema-features', '-s', schem, temp.name],
+                     stdout=PIPE,
+                     stderr=PIPE,
+                     shell=False,
+                     cwd=None,
+                     env=None)
+        proc.communicate()
+        if proc.returncode != 0:
+            raise InvalidMetadataError(DATACITE_VALIDATION_ERROR %
+                                       (dataset_metadata))
