@@ -15,6 +15,36 @@ DATASET_METADATA_SCHEMA = \
                 "type": "object",
                 "required": ["files"],
                 "properties": {
+                    "provenance": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["preservation_event", "temporal", "description"],
+                            "properties": {
+                                "temporal": {
+                                    "type": "object",
+                                    "required": ["start_date"]
+                                },
+                                "description": {
+                                    "type": "object",
+                                    "required": ["en"]
+                                },
+                                "preservation_event": {
+                                    "type": "object",
+                                    "required": ["identifier", "pref_label"],
+                                    "properties": {
+                                        "identifier": {
+                                            "type": "string"
+                                        },
+                                        "pref_label": {
+                                            "type": "object",
+                                            "required": ["en"]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
                     "files": {
                         "type": "array",
                         "items": {

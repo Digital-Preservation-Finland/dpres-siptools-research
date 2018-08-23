@@ -103,6 +103,61 @@ def test_validate_valid_dataset_metadata_without_provenance():
                                metax_schemas.DATASET_METADATA_SCHEMA) is None
 
 
+def test_validate_invalid_dataset_metadata_missing_attribute_in_provenance():
+    """Test validation of valid dataset metadata with provenance missing a
+    required prefLabel attribute. Defines a sample metadata dictionary that is
+    known to be valid. The dictionary is then validated against
+    ``DATASET_METADA_SCHEMA``.
+
+    :returns: None
+    """
+    invalid_dataset_metadata = \
+        {
+            "contract": {
+                "id": 1
+            },
+            "research_dataset": {
+                "provenance": [
+                    {
+                        "preservation_event": {
+                            "identifier": "identifierURL",
+                        },
+                        "description": {
+                            "en": "en_description"
+                        },
+                        "temporal": {
+                            "start_date": "17.9.1991"
+                        }
+                    }
+                ],
+                "files": [
+                    {
+                        "title": "File 1",
+                        "identifier": "pid1",
+                        "use_category": {
+                            "pref_label": {
+                                "en": "label1"
+                            }
+                        }
+                    },
+                    {
+                        "title": "File 2",
+                        "identifier": "pid2",
+                        "use_category": {
+                            "pref_label": {
+                                "en": "label1"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    # Validation of invalid dataset raise error
+    with pytest.raises(jsonschema.ValidationError):
+        assert not jsonschema.validate(invalid_dataset_metadata,
+                                       metax_schemas.DATASET_METADATA_SCHEMA)
+
+
 def test_validate_invalid_dataset_metadata():
     """Test validation of invalid dataset metadata. The validation should raise
     ``ValidationError``.
