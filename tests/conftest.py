@@ -9,6 +9,7 @@ import shutil
 import urllib
 import mongomock
 import pymongo
+import luigi.configuration
 import httpretty
 import pytest
 
@@ -203,3 +204,14 @@ def testpath(request):
     request.addfinalizer(fin)
 
     return temp_path
+
+
+# Prevent using system luigi configuration file (/etc/luigi/luigi.cfg) in tests
+@pytest.fixture(scope="function")
+def mock_luigi_config_path(monkeypatch):
+    """Mock luigi config file path"""
+    monkeypatch.setattr(luigi.configuration.LuigiConfigParser,
+                        '_config_paths',
+                        ['tests/data/configuration_files/luigi.cfg'])
+
+

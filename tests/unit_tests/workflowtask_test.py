@@ -6,7 +6,6 @@ import datetime
 import pytest
 import tests.conftest
 import luigi.cmdline
-import luigi.configuration
 import pymongo
 import httpretty
 import mock
@@ -17,15 +16,6 @@ from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
 from siptools_research.utils.metax import MetaxConnectionError
 import siptools_research.utils.metax as metax
-
-
-# Prevent using system luigi configuration file (/etc/luigi/luigi.cfg) in tests
-@pytest.fixture(autouse=True)
-def mock_luigi_config_path(monkeypatch):
-    """Mock luigi config file path"""
-    monkeypatch.setattr(luigi.configuration.LuigiConfigParser,
-                        '_config_paths',
-                        ['tests/data/configuration_files/luigi.cfg'])
 
 
 def run_luigi_task(task_name, workspace):
@@ -97,6 +87,7 @@ class MetaxConnectionErrorTask(FailingTestTask):
 
 
 # pylint: disable=unused-argument
+@pytest.mark.usefixtures('mock_luigi_config_path')
 def test_run_workflowtask(testpath, testmongoclient):
     """Executes TestTask, checks that output file is created, checks that new
     event field is created to mongo document."""
