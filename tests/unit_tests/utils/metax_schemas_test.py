@@ -5,10 +5,10 @@ import siptools_research.utils.metax_schemas as metax_schemas
 
 
 # pylint: disable=invalid-name
-def test_validate_valid_dataset_metadata():
-    """Test validation of valid dataset metadata. Defines a sample metadata
-    dictionary that is known to be valid. The dictionary is then validated
-    against ``DATASET_METADA_SCHEMA``.
+def test_validate_valid_dataset_metadata_with_provenance():
+    """Test validation of valid dataset metadata with provenance. Defines a
+    sample metadata dictionary that is known to be valid. The dictionary is
+    then validated against ``DATASET_METADA_SCHEMA``.
 
     :returns: None
     """
@@ -34,6 +34,47 @@ def test_validate_valid_dataset_metadata():
                         }
                     }
                 ],
+                "files": [
+                    {
+                        "title": "File 1",
+                        "identifier": "pid1",
+                        "use_category": {
+                            "pref_label": {
+                                "en": "label1"
+                            }
+                        }
+                    },
+                    {
+                        "title": "File 2",
+                        "identifier": "pid2",
+                        "use_category": {
+                            "pref_label": {
+                                "en": "label1"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+
+    # Validation of valid dataset should return 'None'
+    assert jsonschema.validate(valid_dataset_metadata,
+                               metax_schemas.DATASET_METADATA_SCHEMA) is None
+
+
+def test_validate_valid_dataset_metadata_without_provenance():
+    """Test validation of valid dataset metadata without provenance. Defines a
+    sample metadata dictionary that is known to be valid. The dictionary is
+    then validated against ``DATASET_METADA_SCHEMA``.
+
+    :returns: None
+    """
+    valid_dataset_metadata = \
+        {
+            "contract": {
+                "id": 1
+            },
+            "research_dataset": {
                 "files": [
                     {
                         "title": "File 1",
