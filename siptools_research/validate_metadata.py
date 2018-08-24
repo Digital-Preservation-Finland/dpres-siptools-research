@@ -53,7 +53,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     # Validate XML metadata for each file in dataset files
     _validate_xml_file_metadata(dataset_id, metax_client)
 
-    # Validate XML metadata for each file in dataset files
+    # Validate datacite provided by Metax
     _validate_datacite(dataset_id, metax_client)
 
     return True
