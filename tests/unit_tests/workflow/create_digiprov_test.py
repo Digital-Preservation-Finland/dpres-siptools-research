@@ -143,6 +143,21 @@ def test_create_premis_event(testpath):
                           )
     assert elements[0].text == "Description of provenance"
 
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventOutcomeInformation/premis:eventOutcome',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                          )
+    assert elements[0].text == "success"
+
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+                          '/mets:xmlData/premis:event/premis:eventOutcomeInformation'\
+                          '/premis:eventOutcomeDetail/premis:eventOutcomeDetailNote',
+                          namespaces={'mets': "http://www.loc.gov/METS/",
+                                      'premis': "info:lc/xmlns/premis-v2"}
+                          )
+    assert elements[0].text == "This is a detail of an successful event"
+
 
 @pytest.mark.usefixtures("testmetax")
 def test_create_premis_event_unav(testpath):

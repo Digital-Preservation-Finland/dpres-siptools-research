@@ -92,10 +92,24 @@ def create_premis_event(dataset_id, workspace, config):
             event_detail = get_localized_value(
                 provenance["description"],
                 languages=dataset_languages)
+            # Read event_outcome if it defined for this dataset
+            try:
+                event_outcome = get_localized_value(
+                    provenance["event_outcome"]["pref_label"],
+                    languages=dataset_languages)
+            except KeyError:
+                event_outcome = "(:unav)"
+            # Read event_outcome_detail if it defined for this dataset
+            try:
+                event_outcome_detail = get_localized_value(
+                    provenance["outcome_description"],
+                    languages=dataset_languages)
+            except KeyError:
+                event_outcome_detail = "Value unavailable, possibly unknown"
             premis_event.main([
                 event_type, event_datetime,
                 "--event_detail", event_detail,
-                "--event_outcome", 'success',  # TODO: Hardcoded value
-                "--event_outcome_detail", 'blah blah',  # TODO: Hardcoded value
+                "--event_outcome", event_outcome,
+                "--event_outcome_detail", event_outcome_detail,
                 "--workspace", workspace
             ])

@@ -13,6 +13,14 @@
                 },
                 "description": {
                     "en": "Description of provenance"
+                },
+                "event_outcome": {
+                    "pref_label": {
+                        "en": "success"
+                    }
+                },
+                "outcome_description": {
+                        "en": "This is a detail of an successful event"
                 }
             }
         ]
