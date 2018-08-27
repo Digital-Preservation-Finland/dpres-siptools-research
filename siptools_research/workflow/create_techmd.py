@@ -198,9 +198,6 @@ def import_objects(dataset_id, workspace, config):
     metax_client = Metax(config)
     file_metadata = metax_client.get_dataset_files(dataset_id)
     for file_ in file_metadata:
-#        filu = open('debug.txt', 'a')
-#        filu.write('file_format' + str(file_) + '\n')
-#        filu.close()
 
         # Read file identifier
         file_id = file_["identifier"]
