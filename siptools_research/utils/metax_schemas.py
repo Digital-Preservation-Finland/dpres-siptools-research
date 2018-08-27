@@ -97,7 +97,7 @@ FILE_METADATA_SCHEMA = \
             },
             "file_characteristics": {
                 "type": "object",
-                "required": ["file_created", "file_format"],
+                "required": ["file_format"],
                 "properties": {
                     "file_encoding": {
                         "type": "string",

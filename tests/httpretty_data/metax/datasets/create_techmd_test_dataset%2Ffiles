@@ -61,13 +61,17 @@
         "file_format": "image/tiff",
         "file_name": "valid_tiff.tiff",
         "file_path": "/project_x/some/path/valid_tiff.tiff",
+        "parent_directory": {
+            "identifier": "pid:urn:dir:wf1"
+        },
         "identifier": "pid:urn:888",
         "checksum": {
             "algorithm": "sha2",
             "value": "0000000000000000000000000000000000000000000000000000000000000000"
-         },
-         "file_characteristics": {
-            "file_created": "2018-01-17T08:19:31Z"
-         }
+        },
+        "file_characteristics": {
+            "file_format": "image/tiff",
+            "format_version": "6.0"
+        }
     }
 ]

@@ -219,6 +219,33 @@ def test_validate_valid_file_metadata():
                                metax_schemas.FILE_METADATA_SCHEMA) is None
 
 
+def test_validate_valid_file_metadata_optional_attribute_missing():
+    """Test validation of valid file metadata. Defines a sample metadata
+    dictionary that is known to be valid. The dictionary is then validated
+    against ``FILE_METADA_SCHEMA``.
+
+    :returns: None
+    """
+    valid_file_metadata = \
+        {
+            "checksum": {
+                "algorithm": "sha2",
+                "value": "habeebit"
+            },
+            "file_path": "path/to/file",
+            "parent_directory": {
+                "identifier": "pid:urn:dir:1",
+            },
+            "file_characteristics": {
+                "file_format": "html/text"
+            }
+        }
+
+    # Validation of valid dataset should return 'None'
+    assert jsonschema.validate(valid_file_metadata,
+                               metax_schemas.FILE_METADATA_SCHEMA) is None
+
+
 def test_validate_invalid_file_metadata():
     """Test validation of invalid file metadata. The validation should raise
     ``ValidationError``.

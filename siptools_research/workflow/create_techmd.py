@@ -100,6 +100,12 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     digest_algorithm = algorithm_name(metadata["checksum"]["algorithm"],
                                       metadata["checksum"]["value"])
 
+    # Read file created if it defined for this file
+    try:
+        file_created = metadata["file_characteristics"]["file_created"]
+    except KeyError:
+        file_created = None
+
     # Build parameter list for import_objects script
     import_object_parameters = [
         metax_filepath.strip('/'),
@@ -109,11 +115,13 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
         '--format_name', metadata["file_characteristics"]["file_format"],
         '--digest_algorithm', digest_algorithm,
         '--message_digest', metadata["checksum"]["value"],
-        '--date_created', metadata["file_characteristics"]["file_created"],
         '--format_version', formatversion
     ]
     if charset is not None:
         import_object_parameters += ['--charset', charset]
+
+    if file_created is not None:
+        import_object_parameters += ['--date_created', file_created]
 
     # Create PREMIS file metadata XML
     siptools.scripts.import_object.main(import_object_parameters)
@@ -190,6 +198,9 @@ def import_objects(dataset_id, workspace, config):
     metax_client = Metax(config)
     file_metadata = metax_client.get_dataset_files(dataset_id)
     for file_ in file_metadata:
+#        filu = open('debug.txt', 'a')
+#        filu.write('file_format' + str(file_) + '\n')
+#        filu.close()
 
         # Read file identifier
         file_id = file_["identifier"]
