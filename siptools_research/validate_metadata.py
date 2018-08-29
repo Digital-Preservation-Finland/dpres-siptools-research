@@ -1,8 +1,9 @@
 """Dataset metadata validation tools."""
 
 import tempfile
-from subprocess import Popen, PIPE
 import jsonschema
+from ipt.scripts import (check_xml_schema_features,
+                         check_xml_schematron_features)
 import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils import mimetypes
 from siptools_research.utils.metax import Metax
@@ -22,7 +23,7 @@ SCHEMATRONS = {
               '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'}
 }
 
-SCHEMATRON_ERROR = "Schematron metadata validation failed: %s. File: %s"
+SCHEMATRON_ERROR = "Schematron metadata validation failed for file: %s"
 MISSING_XML_METADATA_ERROR = "Missing XML metadata for file: %s"
 INVALID_NS_ERROR = "Invalid XML namespace: %s"
 DATACITE_VALIDATION_ERROR = 'Datacite (id=%s) validation failed'
@@ -169,17 +170,8 @@ def _validate_with_schematron(file_format_prefix, file_id, xmls):
         temp.write(lxml.etree.tostring(namespace).strip())
         temp.seek(0)
         schem = SCHEMATRONS[file_format_prefix]['schematron']
-        proc = Popen(['check-xml-schematron-features', '-s', schem, temp.name],
-                     stdout=PIPE,
-                     stderr=PIPE,
-                     shell=False,
-                     cwd=None,
-                     env=None)
-        proc.communicate()
-        if proc.returncode != 0:
-            raise InvalidMetadataError(
-                SCHEMATRON_ERROR % (proc.returncode, file_id)
-            )
+        if check_xml_schematron_features.main(['-s', schem, temp.name]) != 0:
+            raise InvalidMetadataError(SCHEMATRON_ERROR % (file_id))
 
 
 # pylint: disable=invalid-name
@@ -194,13 +186,6 @@ def _validate_datacite(dataset_metadata, metax_client):
         temp.seek(0)
         schem = '/etc/xml/dpres-xml-schemas/schema_catalogs/' + \
                 'schemas_external/datacite/4.1/metadata.xsd'
-        proc = Popen(['check-xml-schema-features', '-s', schem, temp.name],
-                     stdout=PIPE,
-                     stderr=PIPE,
-                     shell=False,
-                     cwd=None,
-                     env=None)
-        proc.communicate()
-        if proc.returncode != 0:
+        if check_xml_schema_features.main(['-s', schem, temp.name]) != 0:
             raise InvalidMetadataError(DATACITE_VALIDATION_ERROR %
                                        (dataset_metadata))
