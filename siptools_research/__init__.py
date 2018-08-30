@@ -6,6 +6,6 @@
 #    from siptools_research import validate_metadata
 #    from siptools_research import generate_metadata
 
-from siptools_research.preserve_dataset import preserve_dataset
-from siptools_research.validate_metadata import validate_metadata
-from siptools_research.generate_metadata import generate_metadata
+from siptools_research.workflow_init import preserve_dataset
+from siptools_research.metadata_validator import validate_metadata
+from siptools_research.metadata_generator import generate_metadata

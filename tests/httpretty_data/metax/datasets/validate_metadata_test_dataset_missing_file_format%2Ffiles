@@ -1,0 +1,19 @@
+[
+    {
+        "file_format": "text/plain",
+        "identifier": "pid:urn:wf_test_1a",
+        "file_path": "path/to/file1",
+        "parent_directory": {
+            "identifier": "pid:urn:dir:wf1"
+        },
+        "checksum":
+        {
+            "algorithm": "sha2",
+            "value": "1234asdf"
+        },
+        "file_characteristics":
+        {
+            "file_created": "2014-01-17T08:19:31Z"
+        }
+    }
+]

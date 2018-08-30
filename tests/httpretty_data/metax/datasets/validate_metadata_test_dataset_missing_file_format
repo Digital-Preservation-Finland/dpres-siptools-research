@@ -1,0 +1,17 @@
+{
+    "contract": {
+        "id": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83002"
+    },
+    "research_dataset": {
+        "files": [
+            {
+                "identifier": "pid:urn:wf_test_1a",
+                "use_category": {
+                    "pref_label": {
+                        "en": "label1"
+                    }
+                }
+            }
+        ]
+    }
+}

@@ -1,9 +1,12 @@
+# pylint: disable=invalid-name
 """Tests for ``siptools_research.validate_metadata`` module"""
 
 import pytest
 import tests.conftest
 from siptools_research import validate_metadata
 from siptools_research.workflowtask import InvalidMetadataError
+import siptools_research.metadata_validator
+import siptools_research.utils.metax
 
 
 @pytest.mark.usefixtures('testmetax')
@@ -68,3 +71,30 @@ def test_validate_metadata_invalid_datacite():
     exc = exc_info.value
     assert exc.message.startswith('Datacite (id=validate_metadata_test_data' +
                                   'set_invalid_datacite) validation failed')
+
+
+@pytest.mark.usefixtures('testmetax')
+def test_validate_file_metadata():
+    """Check that ``_validate_file_metadata`` raises exceptions with
+    descriptive error messages.
+    """
+    # Init metax client
+    client = siptools_research.utils.metax.Metax(
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        # pylint: disable=protected-access
+        siptools_research.metadata_validator._validate_file_metadata(
+            'validate_metadata_test_dataset_missing_file_format', client
+        )
+
+    # TODO: Look at the file metadata validated in this case:
+    # ../httpretty_data/metax/datasets/validate_metadata_test_dataset_missing_file_format%2Ffiles
+    # The metada contains 'file_format' property but not
+    # 'file_characteristics':'file_format' property. This error message is
+    # misleading. It should be mentioned that the property is missing from
+    # 'file_characteristics' property.
+    assert exc_info.value.message \
+        == ("Validation error in file path/to/file1: "
+           "'file_format' is a required property")

@@ -3,10 +3,9 @@
 import os
 from luigi import LocalTarget
 from siptools_research.utils.contextmanager import redirect_stdout
-from siptools_research.validate_metadata import validate_metadata
+from siptools_research.metadata_validator import validate_metadata
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflowtask import InvalidMetadataError
 
 
 class ValidateMetadata(WorkflowTask):

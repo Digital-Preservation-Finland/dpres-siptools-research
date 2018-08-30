@@ -14,9 +14,10 @@ To validate metadata::
 """
 
 import argparse
-from siptools_research.generate_metadata import generate_metadata
-from siptools_research.preserve_dataset import preserve_dataset
-from siptools_research.validate_metadata import validate_metadata
+from siptools_research.metadata_generator import generate_metadata
+from siptools_research.workflow_init import preserve_dataset
+from siptools_research.metadata_validator import validate_metadata
+
 
 def main():
     """Parse command line arguments and start the workflow.
@@ -47,14 +48,12 @@ def main():
     )
     preserve_parser.set_defaults(func=preserve_dataset)
 
-
     # Define arguments common to all commands
     parser.add_argument('dataset_id', help="metax dataset identifier")
     parser.add_argument('--config',
                         default='/etc/siptools_research.conf',
                         metavar='config_file',
                         help="path to configuration file")
-
 
     # Parse arguments and call function defined by chosen subparser.
     args = parser.parse_args()

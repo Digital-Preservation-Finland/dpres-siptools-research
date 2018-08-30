@@ -7,7 +7,7 @@ import pytest
 import tests.conftest
 import httpretty
 import lxml.etree
-from siptools_research.generate_metadata import generate_metadata
+from siptools_research.metadata_generator import generate_metadata
 
 
 @pytest.mark.usefixtures('testmetax', 'testida')
