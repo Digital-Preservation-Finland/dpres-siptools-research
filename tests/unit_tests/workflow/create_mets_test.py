@@ -72,7 +72,9 @@ def create_test_data(workspace):
 
     # Create tech metadata
     test_data_folder = './tests/data/structured'
-    import_object.main([test_data_folder, '--workspace', workspace])
+    import_object.main(['--workspace', workspace,
+                        '--skip_inspection',
+                        test_data_folder])
 
     # Create structmap
     compile_structmap.main(['--workspace', workspace])

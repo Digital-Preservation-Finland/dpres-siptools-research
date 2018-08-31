@@ -47,7 +47,9 @@ def test_create_structmap_ok(testpath):
 
     # Create tech metadata
     test_data_folder = './tests/data/structured'
-    import_object.main([test_data_folder, '--workspace', sip_creation_path])
+    import_object.main(['--workspace', sip_creation_path,
+                        '--skip_inspection',
+                        test_data_folder])
 
     # Create structmap
     task = CreateStructMap(workspace=workspace,
