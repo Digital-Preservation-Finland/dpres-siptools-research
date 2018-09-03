@@ -1,15 +1,11 @@
 stages:
   - rpm-package
   - local-test
-  - e2e-distributed
-  - rpm-stable
 
 rpm-package:
   stage: rpm-package
   script:
     - 'rpm-package.sh'
-  except:
-    - master
 
 unit-test:
   stage: local-test
