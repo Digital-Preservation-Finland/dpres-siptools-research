@@ -13,17 +13,3 @@ unit-test:
     - 'unit-test.sh'
   except:
     - master
-
-e2e-localhost-preservation:
-  stage: local-test
-  script:
-    - 'e2e-localhost.sh preservation'
-  except:
-    - master
-
-e2e-localhost-access-rest-api:
-  stage: local-test
-  script:
-    - 'e2e-localhost.sh access-rest-api'
-  except:
-    - master
