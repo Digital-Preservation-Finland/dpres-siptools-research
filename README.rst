@@ -14,13 +14,17 @@ Commandline interface
 ^^^^^^^^^^^^^^^^^^^^^
 To package and preserve for example dataset 1234, run::
 
-   siptools_research --config ~/siptools_config_file.conf 1234
+   siptools-research --config ~/siptools_config_file.conf 1234
 
 where ``~/siptools_config_file.conf`` is  configuration file. If no config is provided, default config file: ``/etc/siptools_research.conf`` is used.
 
 The dataset metadata can be validated without starting the packaging workflow::
 
    siptools_research --validate 1234
+
+The technical metadata can generated and posted to Metax::
+
+   siptools_research --generate 1234
 
 Python inteface
 ^^^^^^^^^^^^^^^
@@ -40,7 +44,12 @@ Testing
 -------
 Install required RPM packages::
 
-   yum install libxslt-devel libxml2-devel openssl-devel mongodb-server gcc ImageMagic
+   yum install libxslt-devel libxml2-devel openssl-devel mongodb-server gcc ImageMagic dpres-xml-schemas
+
+Create and activate virtualenv::
+
+   virtualenv venv
+   source venv/bin/activate
 
 Luigi will not install with old versions of pip, so upgrade pip::
 
@@ -54,9 +63,10 @@ Run tests that do not require running luigi/mongo::
 
    make test
 
-Run one unit test::
+or run one of the integration tests::
 
-   py.test -v tests/utils/metax_test.py
+   py.test -v tests/integration_tests/workflow_test.py
+
 
 Testing workflow
 ^^^^^^^^^^^^^^^^
@@ -73,20 +83,6 @@ Start workflow using luigi::
 
    luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace /var/spool/siptools-research/testworkspace_abdc1234 --dataset-id 1234 --config tests/data/configuration_files/siptools_research.conf
 
-Testing in virtualenv
-^^^^^^^^^^^^^^^^^^^^^
-Create and activate virtualenv::
-
-   virtualenv venv
-   source venv/bin/activate
-
-Install required python packages to virtual environment::
-
-   pip install -r requirements_dev.txt
-
-Run pytest::
-
-   python -m pytest -v tests
 
 
 Building
