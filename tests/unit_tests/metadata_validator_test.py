@@ -89,12 +89,7 @@ def test_validate_file_metadata():
             'validate_metadata_test_dataset_missing_file_format', client
         )
 
-    # TODO: Look at the file metadata validated in this case:
-    # ../httpretty_data/metax/datasets/validate_metadata_test_dataset_missing_file_format%2Ffiles
-    # The metada contains 'file_format' property but not
-    # 'file_characteristics':'file_format' property. This error message is
-    # misleading. It should be mentioned that the property is missing from
-    # 'file_characteristics' property.
     assert exc_info.value.message \
-        == ("Validation error in file path/to/file1: "
-           "'file_format' is a required property")
+       == ("Validation error in file path/to/file1: "
+          "'file_format' is a required property"
+          " at field /file_characteristics/") 

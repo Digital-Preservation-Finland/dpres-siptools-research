@@ -134,7 +134,7 @@ def _validate_file_metadata(dataset_id, metax_client):
             ).format(
                 file_path=file_metadata["file_path"], message=exc.message
             )
-            raise InvalidMetadataError(message)
+            raise InvalidMetadataError(message, path=exc.absolute_path)
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
