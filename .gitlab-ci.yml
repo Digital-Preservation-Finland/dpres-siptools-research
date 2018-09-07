@@ -11,5 +11,3 @@ unit-test:
   stage: local-test
   script:
     - 'unit-test.sh'
-  except:
-    - master
