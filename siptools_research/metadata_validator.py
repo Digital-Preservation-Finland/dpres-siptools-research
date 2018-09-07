@@ -70,8 +70,8 @@ def _modify_msg(message, path):
     """
 
     path_str = " at field /"
-    for i in range(len(path)):
-        path_str += "%s/" % path.pop()
+    for field in path:
+        path_str += "%s/" % field
 
     return message + path_str
 
@@ -85,7 +85,7 @@ def _validate_dataset_metadata(dataset_metadata):
         jsonschema.validate(dataset_metadata,
                             metax_schemas.DATASET_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
-        
+
         # Modify message only if a required param is missing
         message = (
             _modify_msg(exc.message, exc.path)
@@ -131,7 +131,8 @@ def _check_mimetype(file_metadata):
     '''
     try:
         file_format = file_metadata["file_characteristics"]["file_format"]
-        format_version = file_metadata["file_characteristics"]["format_version"]
+        format_version \
+            = file_metadata["file_characteristics"]["format_version"]
         if not mimetypes.is_supported(file_format, format_version):
             message = (
                 "Validation error in file {file_path}: Incorrect file "
@@ -163,7 +164,7 @@ def _validate_file_metadata(dataset_id, metax_client):
                 file_path=file_metadata["file_path"], message=exc.message
             )
 
-            # Add path to message only if a required param is missing 
+            # Add path to message only if a required param is missing
             if exc.validator == "required":
                 message = _modify_msg(message, exc.path)
 
