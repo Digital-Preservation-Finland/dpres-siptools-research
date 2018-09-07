@@ -124,24 +124,7 @@ class InvalidMetadataError(Exception):
     """Exception raised when SIP can not be created for dataset due to missing
     or invalid metadata.
     """
-
-    def __init__(self, message, path=None):
-        
-        # Modifying the message to be more descriptive if path is provided
-        if path is not None:
-            message = message + self.__get_path(path)
-        
-        # Call the base class constructor
-        super(Exception, self).__init__(message)
-
-    # Get path string from the path deque
-    def __get_path(self, path):
-        path_str = " at field /"
-        
-        for i in range(len(path)):
-            path_str += "%s/" % path.pop()
-
-        return path_str
+    pass
 
 
 @WorkflowTask.event_handler(luigi.Event.FAILURE)

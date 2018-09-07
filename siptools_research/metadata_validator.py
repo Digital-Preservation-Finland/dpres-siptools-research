@@ -60,6 +60,22 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     return True
 
 
+def _modify_msg(message, path):
+    """Modifies error message by appending the path to the failed field.
+
+    :message: The original error message
+    :path: collections.deque object with the path to the failed field
+
+    :returns: Modified message
+    """
+
+    path_str = " at field /"
+    for i in range(len(path)):
+        path_str += "%s/" % path.pop()
+
+    return message + path_str
+
+
 def _validate_dataset_metadata(dataset_metadata):
     """Validates dataset metadata from /rest/v1/datasets/<dataset_id>
 
@@ -69,7 +85,14 @@ def _validate_dataset_metadata(dataset_metadata):
         jsonschema.validate(dataset_metadata,
                             metax_schemas.DATASET_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
-        raise InvalidMetadataError(exc.message)
+        
+        # Modify message only if a required param is missing
+        message = (
+            _modify_msg(exc.message, exc.path)
+            if exc.validator == "required"
+            else exc.message
+        )
+        raise InvalidMetadataError(message)
 
 
 # pylint: disable=invalid-name
@@ -94,6 +117,11 @@ def _validate_dataset_metadata_files(dataset_metadata, metax_client):
                 "{message}".format(
                     file_path=file_metadata["file_path"], message=exc.message)
             )
+
+            # Add path to the message only if a required param is missing
+            if exc.validator == "required":
+                message = _modify_msg(message, exc.path)
+
             raise InvalidMetadataError(message)
 
 
@@ -134,7 +162,12 @@ def _validate_file_metadata(dataset_id, metax_client):
             ).format(
                 file_path=file_metadata["file_path"], message=exc.message
             )
-            raise InvalidMetadataError(message, path=exc.absolute_path)
+
+            # Add path to message only if a required param is missing 
+            if exc.validator == "required":
+                message = _modify_msg(message, exc.path)
+
+            raise InvalidMetadataError(message)
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
