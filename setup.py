@@ -16,9 +16,7 @@ def main():
             "paramiko",
             "requests",
             "lxml",
-            "scandir",
             "jsonschema",
-            "wand",
             "iso-639"
         ],
         entry_points={

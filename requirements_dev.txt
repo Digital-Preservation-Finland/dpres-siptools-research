@@ -1,32 +1,24 @@
+# Testing requirements
 pytest
 coverage
 pytest-cov
-git+https://gitlab.csc.fi/dpres/dpres-signature.git
-git+https://gitlab.csc.fi/dpres/dpres-siptools.git@develop#egg=siptools
-git+https://gitlab.csc.fi/dpres/addml.git@develop
-lxml
-wand
-scandir
-luigi
-pymongo
-httpretty
-mongomock
-mimeparse
-Sphinx
-paramiko
-jsonschema
 requests_mock
 mock
+Sphinx
+httpretty
+
+# Install requirements
+git+https://gitlab.csc.fi/dpres/dpres-siptools.git@develop#egg=siptools
+git+https://gitlab.csc.fi/dpres/addml.git@develop
+git+https://gitlab.csc.fi/dpres/dpres-ipt.git@develop#egg=ipt
+lxml
+luigi
+pymongo
+mongomock
+paramiko
+jsonschema
 iso-639
 
-# siptools requirements
-# TODO: These should be automatically installed as requirements of dpres-siptools
-git+https://gitlab.csc.fi/dpres/xml-helpers.git@develop#egg=xml_helpers
-git+https://gitlab.csc.fi/dpres/mets.git@develop#egg=mets
-git+https://gitlab.csc.fi/dpres/premis.git@develop#egg=premis
-git+https://gitlab.csc.fi/dpres/nisomix.git@develop#egg=nisomix
-git+https://gitlab.csc.fi/dpres/dpres-signature.git@develop#egg=dpres_signature
-git+https://gitlab.csc.fi/dpres/dpres-ipt.git@develop#egg=ipt
 
 # TODO: docutils is required by python-daemon. Can be removed when this issue:
 # https://pagure.io/python-daemon/issue/18 is solved

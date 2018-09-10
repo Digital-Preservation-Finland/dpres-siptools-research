@@ -57,7 +57,7 @@ Luigi will not install with old versions of pip, so upgrade pip::
 
 Install required python packages for testing::
 
-   pip install -r requirements_dev.txt
+   pip install -r requirements_dev.txt --process-dependency-links
 
 Run tests that do not require running luigi/mongo::
 
