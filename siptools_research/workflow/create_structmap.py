@@ -117,6 +117,9 @@ class CreateStructMap(WorkflowTask):
         metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(metadata)
 
+        if not 'provenance' in metadata['research_dataset']:
+            return []
+
         provenance_ids = []
         for provenance in metadata["research_dataset"]["provenance"]:
             event_type = get_localized_value(

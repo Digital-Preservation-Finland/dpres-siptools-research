@@ -1,36 +1,19 @@
 {
     "contract": {
         "id": 1,
-        "identifier": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001"
+        "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
     },
     "data_catalog": {
         "id": 1,
-        "identifier": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83002"
+        "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
     },
-    "metadata_owner_org": "csc.fi",
     "metadata_provider_org": "csc.fi",
     "metadata_provider_user": "teppo.testaaja@csc.fi",
     "research_dataset": {
-        "provenance": [
-            {
-                "preservation_event": {
-                    "identifier": "http://purl.org/att/reference_data/preservation_event/preservation_event_upd",
-                    "pref_label": {
-                        "en": "ProvenanceText"
-                    }
-                },
-                "temporal": {
-                    "start_date": "2018-06-01T17:41:59+03:00"
-                },
-                "description": {
-                    "en": "Provenance description"
-                }
-            }
-        ],
         "files": [
             {
                 "title": "asdf",
-                "identifier": "pid:urn:5b697f7e24861112327677f131241",
+                "identifier": "pid:urn:wf_test_1a",
                 "use_category": {
                     "identifier": "http://purl.org/att/es/reference_data/use_category/use_category_source",
                     "pref_label": {
@@ -64,56 +47,17 @@
                 }
             }
         ],
-        "curator": [
-            {
-                "name": "Rahikainen",
-                "@type": "Person",
-                "member_of": {
-                    "name": {
-                        "fi": "MysteeriOrganisaatio"
-                    },
-                    "@type": "Organization"
-                },
-                "identifier": "id:of:curator:rahikainen"
-            }
-        ],
-        "language": [
-            {
-                "title": {
-                    "en": "English language",
-                    "fi": "Englannin kieli",
-                    "sv": "engelska",
-                    "und": "Englannin kieli"
-                },
-                "identifier": "http://lexvo.org/id/iso639-3/eng"
-            }
-        ],
         "modified": "2014-01-17T08:19:58Z",
         "description": {
             "en": "Dataset for integration testing."
         },
         "access_rights": {
             "access_type": {
-                "in_scheme": "https://metax.fairdata.fi/es/reference_data/access_type/_search?pretty",
-                "identifier": "http://purl.org/att/es/reference_data/access_type/access_type_open_access",
-                "pref_label": {
-                    "en": "Open",
-                    "fi": "Avoin",
-                    "und": "Avoin"
-                }
+                "identifier": "http://purl.org/att/es/reference_data/access_type/access_type_open_access"
             },
             "restriction_grounds": {
-                "in_scheme": "https://metax.fairdata.fi/es/reference_data/restriction_grounds/_search?pretty",
-                "identifier": "http://purl.org/att/es/reference_data/restriction_grounds/restriction_grounds_1",
-                "pref_label": {
-                    "fi": "Avoin, ei tiedossa olevia rajoituksia",
-                    "und": "Avoin, ei tiedossa olevia rajoituksia"
-                }
+                "identifier": "http://purl.org/att/es/reference_data/restriction_grounds/restriction_grounds_1"
             }
-        },
-        "version_notes": [
-            "This version is initial version."
-        ],
-        "total_ida_byte_size": 531
+        }
     }
 }
