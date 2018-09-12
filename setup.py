@@ -11,13 +11,18 @@ def main():
         packages=find_packages(exclude=['tests', 'tests.*']),
         version=get_version(),
         install_requires=[
+            "lxml",
             "luigi",
             "pymongo",
-            "paramiko",
             "requests",
-            "lxml",
+            "paramiko",
             "jsonschema",
-            "iso-639"
+            "iso-639",
+            "siptools",
+        ],
+        dependency_links=[
+            'git+https://gitlab.csc.fi/dpres/dpres-siptools.git'
+            '@develop#egg=siptools-0.0'
         ],
         entry_points={
             'console_scripts': [

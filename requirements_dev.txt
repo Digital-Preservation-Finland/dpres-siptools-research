@@ -6,6 +6,7 @@ requests_mock
 mock
 Sphinx
 httpretty
+mongomock
 
 # Install requirements
 git+https://gitlab.csc.fi/dpres/dpres-siptools.git@develop#egg=siptools
@@ -14,7 +15,7 @@ git+https://gitlab.csc.fi/dpres/dpres-ipt.git@develop#egg=ipt
 lxml
 luigi
 pymongo
-mongomock
+requests
 paramiko
 jsonschema
 iso-639
