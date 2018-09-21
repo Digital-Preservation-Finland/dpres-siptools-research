@@ -4,10 +4,11 @@ import os
 import luigi
 from siptools_research.config import Configuration
 from siptools_research.utils.database import Database
-from siptools_research.utils.metax import Metax
-from siptools_research.utils.metax import MetaxConnectionError
+from metax_access import Metax, MetaxConnectionError,\
+    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,\
+    DS_STATE_METADATA_VALIDATION_FAILED
 from siptools_research.utils import mail
-import siptools_research.utils.metax as metax
+
 
 class WorkflowTask(luigi.Task):
     """Common base class for all workflow tasks. In addition to functionality
@@ -149,20 +150,26 @@ def report_task_failure(task, exception):
 
     if isinstance(exception, InvalidDatasetError):
         # Set preservation status for dataset in Metax
-        metax_client = Metax(task.config)
+        config_object = Configuration(task.config)
+        metax_client = Metax(config_object.get('metax_url'),
+                             config_object.get('metax_user'),
+                             config_object.get('metax_password'))
         metax_client.set_preservation_state(
             task.dataset_id,
-            metax.DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
-            "%s: %s: %s" % (task.failure_message,
-                            type(exception).__name__,
-                            str(exception))
+            DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+            system_description="%s: %s: %s" % (task.failure_message,
+                                               type(exception).__name__,
+                                               str(exception))
         )
     elif isinstance(exception, InvalidMetadataError):
         # Set preservation status for dataset in Metax
-        metax_client = Metax(task.config)
+        config_object = Configuration(task.config)
+        metax_client = Metax(config_object.get('metax_url'),
+                             config_object.get('metax_user'),
+                             config_object.get('metax_password'))
         metax_client.set_preservation_state(
-            task.dataset_id, metax.DS_STATE_METADATA_VALIDATION_FAILED,
-            "%s: %s" % (task.failure_message, str(exception))
+            task.dataset_id, DS_STATE_METADATA_VALIDATION_FAILED,
+            system_description="%s: %s" % (task.failure_message, str(exception))
         )
     elif isinstance(exception, MetaxConnectionError):
         # send email to admin

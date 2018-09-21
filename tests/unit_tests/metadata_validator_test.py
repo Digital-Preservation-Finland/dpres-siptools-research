@@ -6,7 +6,8 @@ import tests.conftest
 from siptools_research import validate_metadata
 from siptools_research.workflowtask import InvalidMetadataError
 import siptools_research.metadata_validator
-import siptools_research.utils.metax
+from siptools_research.config import Configuration
+from metax_access import Metax
 
 
 @pytest.mark.usefixtures('testmetax')
@@ -79,8 +80,10 @@ def test_validate_file_metadata():
     descriptive error messages.
     """
     # Init metax client
-    client = siptools_research.utils.metax.Metax(
-        tests.conftest.UNIT_TEST_CONFIG_FILE
+    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    client = Metax(configuration.get('metax_url'),
+                   configuration.get('metax_user'),
+                   configuration.get('metax_password')
     )
 
     with pytest.raises(InvalidMetadataError) as exc_info:

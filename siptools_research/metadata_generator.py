@@ -7,14 +7,19 @@ import tempfile
 import subprocess
 
 from siptools.scripts import import_object, create_mix
-from siptools_research.utils import metax, ida
+from siptools_research.utils import ida
+from siptools_research.config import Configuration
+from metax_access import Metax
 
 
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Generates technical metadata and mix metadata for all files of a given
     dataset and updates relevant fields in file metadata.
     """
-    metax_client = metax.Metax(config)
+    config_object = Configuration(config)
+    metax_client = Metax(config_object.get('metax_url'),
+                         config_object.get('metax_user'),
+                         config_object.get('metax_password'))
     tmpdir = tempfile.mkdtemp(prefix='generate_metadata-')
     try:
         for file_ in metax_client.get_dataset_files(dataset_id):

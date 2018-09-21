@@ -6,13 +6,11 @@ from luigi import LocalTarget
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_sip import ValidateSIP
 from siptools_research.workflow.send_sip import SendSIPToDP
-from siptools_research.utils import metax
+from metax_access import Metax, DS_STATE_IN_DIGITAL_PRESERVATION
 from siptools_research.utils import contextmanager
 from siptools_research.workflowtask import InvalidDatasetError
 from siptools_research.config import Configuration
-from siptools_research.utils import mail
 import paramiko
-import siptools_research.utils.metax as metax
 
 
 class ReportPreservationStatus(WorkflowTask):
@@ -65,15 +63,18 @@ class ReportPreservationStatus(WorkflowTask):
                 assert len(ingest_report_paths) == 1
 
                 # 'accepted' or 'rejected'?
-                metax_client = metax.Metax(self.config)
+                config_object = Configuration(self.config)
+                metax_client = Metax(config_object.get('metax_url'),
+                                     config_object.get('metax_user'),
+                                     config_object.get('metax_password'))
                 directory = ingest_report_paths[0].split('/')[0]
                 if directory == 'accepted':
                     # Set Metax preservation state of this dataset to 6 ("in
                     # longterm preservation")
                     metax_client.set_preservation_state(
                         self.dataset_id,
-                        metax.DS_STATE_IN_DIGITAL_PRESERVATION,
-                        'Accepted to preservation'
+                        DS_STATE_IN_DIGITAL_PRESERVATION,
+                        system_description='Accepted to preservation'
                     )
                 elif directory == 'rejected':
                     self.__handle_rejected_sip__(ingest_report_paths,

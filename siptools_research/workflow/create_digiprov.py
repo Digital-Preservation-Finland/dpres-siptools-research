@@ -3,7 +3,7 @@
 import os
 import luigi
 from siptools.scripts import premis_event
-from siptools_research.utils.metax import Metax
+from metax_access import Metax
 from siptools_research.utils.locale import (
     get_dataset_languages, get_localized_value
 )
@@ -11,6 +11,7 @@ from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
+from siptools_research.config import Configuration
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -60,8 +61,10 @@ class CreateProvenanceInformation(WorkflowTask):
 
 def create_premis_event(dataset_id, workspace, config):
     """Gets metada from Metax and calls siptools premis_event script."""
-
-    metadata = Metax(config).get_dataset(dataset_id)
+    config_object = Configuration(config)
+    metadata = Metax(config_object.get('metax_url'),
+                     config_object.get('metax_user'),
+                     config_object.get('metax_password')).get_dataset(dataset_id)
 
     dataset_languages = get_dataset_languages(metadata)
 

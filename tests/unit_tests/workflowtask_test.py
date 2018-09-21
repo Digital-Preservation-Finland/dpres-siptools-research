@@ -14,8 +14,9 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflowtask import InvalidDatasetError
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
-from siptools_research.utils.metax import MetaxConnectionError
-import siptools_research.utils.metax as metax
+from metax_access import MetaxConnectionError,\
+    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,\
+    DS_STATE_METADATA_VALIDATION_FAILED
 
 
 def run_luigi_task(task_name, workspace):
@@ -156,7 +157,7 @@ def test_invaliddataseterror(testpath, testmongoclient, testmetax):
     # Check the body of last HTTP request
     request_body = json.loads(httpretty.last_request().body)
     assert request_body['preservation_state'] ==\
-        metax.DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
+        DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
     assert request_body['preservation_description'] == 'An error '\
         'occurred while running a test task: InvalidDatasetError: '\
         'File validation failed'
@@ -176,7 +177,7 @@ def test_invalidmetadataerror(testpath, testmongoclient, testmetax):
     # Check the body of last HTTP request
     request_body = json.loads(httpretty.last_request().body)
     assert request_body['preservation_state'] ==\
-        metax.DS_STATE_METADATA_VALIDATION_FAILED
+        DS_STATE_METADATA_VALIDATION_FAILED
     assert request_body['preservation_description'] == 'An error '\
         'occurred while running a test task: Missing some important metadata'
 

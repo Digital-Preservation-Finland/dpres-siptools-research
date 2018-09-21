@@ -4,11 +4,12 @@ import os
 import logging
 import luigi
 from siptools_research.utils import ida
-from siptools_research.utils import metax
+from metax_access import Metax
 from siptools_research.utils import contextmanager
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
+from siptools_research.config import Configuration
 
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
@@ -50,7 +51,10 @@ class GetFiles(WorkflowTask):
         with self.output().open('w') as log:
             with contextmanager.redirect_stdout(log):
                 # Find file identifiers from Metax dataset metadata.
-                metax_client = metax.Metax(self.config)
+                config_object = Configuration(self.config)
+                metax_client = Metax(config_object.get('metax_url'),
+                                     config_object.get('metax_user'),
+                                     config_object.get('metax_password'))
                 dataset_files = metax_client.get_dataset_files(self.dataset_id)
 
                 # get files from ida

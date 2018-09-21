@@ -27,7 +27,7 @@ Requires:       python python-luigi python-pymongo dpres-siptools addml mets
 Requires:       python-lxml python-paramiko python2-jsonschema python-requests
 Requires:       python-scandir python-iso-639 ImageMagick
 Requires:       python-mongomock
-Requires:       dpres-ipt dpres-xml-schemas
+Requires:       dpres-ipt dpres-xml-schemas metax-access
 BuildRequires:  python-setuptools pytest python-httpretty
 
 %description

@@ -3,12 +3,13 @@
 
 import os
 from luigi import LocalTarget
-from siptools_research.utils.metax import Metax
+from metax_access import Metax
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools.scripts import compile_mets
+from siptools_research.config import Configuration
 
 
 class CreateMets(WorkflowTask):
@@ -43,7 +44,11 @@ class CreateMets(WorkflowTask):
         with open(mets_log, 'w+') as log:
             with redirect_stdout(log):
                 # Get contract id from Metax
-                metadata = Metax(self.config).get_dataset(self.dataset_id)
+                config_object = Configuration(self.config)
+                metax_client = Metax(config_object.get('metax_url'),
+                                     config_object.get('metax_user'),
+                                     config_object.get('metax_password'))
+                metadata = metax_client.get_dataset(self.dataset_id)
                 contract_id = metadata["contract"]["id"]
                 if contract_id is None:
                     raise InvalidMetadataError(
@@ -51,10 +56,10 @@ class CreateMets(WorkflowTask):
                     )
                 if isinstance(contract_id, (int, long)):
                     contract_id = str(contract_id)
-                metadata = Metax(self.config).get_contract(contract_id)
+                metadata = metax_client.get_contract(contract_id)
                 contract_identifier = metadata["contract_json"]["identifier"]
-                contract_org_name = metadata["contract_json"]["organization"]["name"]
-                contract_title = metadata["contract_json"]["title"]
+                contract_org_name = metadata["contract_json"]["organization"]\
+                                            ["name"]
 
                 # Compile METS
                 compile_mets.main(['--workspace', self.sip_creation_path,

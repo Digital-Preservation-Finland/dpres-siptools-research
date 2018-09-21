@@ -5,11 +5,12 @@ import os
 from luigi import LocalTarget
 import siptools_research.utils.create_addml
 from siptools_research.utils.contextmanager import redirect_stdout
-from siptools_research.utils.metax import Metax
+from metax_access import Metax
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.get_files import GetFiles
+from siptools_research.config import Configuration
 import siptools.scripts.import_object
 import siptools.utils
 
@@ -78,7 +79,10 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
                    config=None):
     """Gets file metadata from Metax and calls create_premis_object function"""
 
-    metadata = Metax(config).get_file(file_id)
+    config_object = Configuration(config)
+    metadata = Metax(config_object.get('metax_url'),
+                     config_object.get('metax_user'),
+                     config_object.get('metax_password')).get_file(file_id)
 
     # Read character set if it defined for this file
     try:
@@ -134,7 +138,10 @@ def create_technical_attributes(config, workspace, file_id, filepath):
     """Read technical attribute XML from Metax. Create METS TechMD files for
     each metadata type, if it is available in Metax.
     """
-    xmls = Metax(config).get_xml('files', file_id)
+    config_object = Configuration(config)
+    xmls = Metax(config_object.get('metax_url'),
+                 config_object.get('metax_user'),
+                 config_object.get('metax_password')).get_xml('files', file_id)
     for type_ in TECH_ATTR_TYPES:
         if type_["namespace"] in xmls:
 
@@ -195,7 +202,10 @@ def create_addml(workspace, metax_filepath, charset, metadata):
 
 def import_objects(dataset_id, workspace, config):
     """Main function of import_objects script """
-    metax_client = Metax(config)
+    config_object = Configuration(config)
+    metax_client = Metax(config_object.get('metax_url'),
+                         config_object.get('metax_user'),
+                         config_object.get('metax_password'))
     file_metadata = metax_client.get_dataset_files(dataset_id)
     for file_ in file_metadata:
 

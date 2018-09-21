@@ -13,12 +13,13 @@ from siptools.xml.mets import NAMESPACES
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
-from siptools_research.utils.metax import Metax
+from metax_access import Metax
 from siptools_research.workflow.create_digiprov import \
     CreateProvenanceInformation
 from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 from siptools_research.workflowtask import WorkflowTask
+from siptools_research.config import Configuration
 
 
 class CreateStructMap(WorkflowTask):
@@ -113,7 +114,10 @@ class CreateStructMap(WorkflowTask):
 
         :returns: list of provenance IDs
         """
-        metax_client = Metax(self.config)
+        config_object = Configuration(self.config)
+        metax_client = Metax(config_object.get('metax_url'),
+                             config_object.get('metax_user'),
+                             config_object.get('metax_password'))
         metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(metadata)
 
@@ -140,7 +144,10 @@ class CreateStructMap(WorkflowTask):
 
         :returns: dict
         """
-        metax_client = Metax(self.config)
+        config_object = Configuration(self.config)
+        metax_client = Metax(config_object.get('metax_url'),
+                             config_object.get('metax_user'),
+                             config_object.get('metax_password'))
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
         dataset_metadata = metax_client.get_dataset(self.dataset_id)
         logical_struct = dict()

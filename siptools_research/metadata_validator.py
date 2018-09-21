@@ -6,10 +6,11 @@ from ipt.scripts import (check_xml_schema_features,
                          check_xml_schematron_features)
 import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils import mimetypes
-from siptools_research.utils.metax import Metax
+from metax_access import Metax
 from siptools_research.workflowtask import InvalidMetadataError
 import lxml
 from siptools.xml.mets import NAMESPACES
+from siptools_research.config import Configuration
 
 
 # SCHEMATRONS is a dictionary that contains mapping:
@@ -36,7 +37,10 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
     :returns: ``True``, if dataset metada is valid.
     """
-    metax_client = Metax(config)
+    conf = Configuration(config)
+    metax_client = Metax(conf.get('metax_url'),
+                         conf.get('metax_user'),
+                         conf.get('metax_password'))
 
     # Get dataset metadata from Metax
     dataset_metadata = metax_client.get_dataset(dataset_id)

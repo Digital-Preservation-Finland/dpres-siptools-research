@@ -4,10 +4,11 @@ import os
 from luigi import LocalTarget
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.utils.contextmanager import redirect_stdout
-from siptools_research.utils.metax import Metax
+from metax_access import Metax
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools.scripts import import_description
+from siptools_research.config import Configuration
 
 
 class CreateDescriptiveMetadata(WorkflowTask):
@@ -47,7 +48,11 @@ class CreateDescriptiveMetadata(WorkflowTask):
         with open(dmdsec_log, 'w+') as log:
             with redirect_stdout(log):
                 # Get datacite.xml from Metax
-                datacite = Metax(self.config).get_datacite(self.dataset_id)
+                config_object = Configuration(self.config)
+                datacite = Metax(config_object.get('metax_url'),
+                                 config_object.get('metax_user'),
+                                 config_object.get('metax_password')).\
+                    get_datacite(self.dataset_id)
 
                 # Write datacite.xml to file
                 datacite_path = os.path.join(self.workspace,
