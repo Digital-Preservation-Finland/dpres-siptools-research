@@ -3,7 +3,6 @@
 
 import os
 from luigi import LocalTarget
-import siptools_research.utils.create_addml
 from siptools_research.utils.contextmanager import redirect_stdout
 from metax_access import Metax
 from siptools_research.workflowtask import WorkflowTask
@@ -96,10 +95,6 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
     except KeyError:
         formatversion = ""
 
-    # create ADDML if file format is text/csv
-    if metadata["file_characteristics"]["file_format"] == 'text/csv':
-        create_addml(workspace, metax_filepath, charset, metadata)
-
     # figure out the checksum algorithm
     digest_algorithm = algorithm_name(metadata["checksum"]["algorithm"],
                                       metadata["checksum"]["value"])
@@ -142,12 +137,16 @@ def create_technical_attributes(config, workspace, file_id, filepath):
     xmls = Metax(config_object.get('metax_url'),
                  config_object.get('metax_user'),
                  config_object.get('metax_password')).get_xml('files', file_id)
+    
+    creator = siptools.utils.TechmdCreator(
+        os.path.join(workspace, 'sip-in-progress')
+    )
+
     for type_ in TECH_ATTR_TYPES:
         if type_["namespace"] in xmls:
 
             # Create METS TechMD file
-            techmd_id = siptools.utils.create_techmdfile(
-                os.path.join(workspace, 'sip-in-progress'),
+            techmd_id, techmd_fname = creator.write_md(
                 xmls[type_['namespace']].getroot(),
                 type_['mdtype'],
                 type_['mdtypeversion'],
@@ -155,49 +154,9 @@ def create_technical_attributes(config, workspace, file_id, filepath):
             )
 
             # Add reference from fileSec to TechMD
-            siptools.utils.add_techmdreference(
-                os.path.join(workspace, 'sip-in-progress'),
-                techmd_id,
-                filepath
-            )
+            creator.add_reference(techmd_id, filepath)
 
-
-def create_addml(workspace, metax_filepath, charset, metadata):
-    """Creates addml metadata and writes it to file.
-
-    :workspace: workspace directory where file is written
-    :metax_filepath: path of CSV file
-    :charset: CSV file charset
-    :metadata: dict that contains basic information of CSV file
-    :returns: None
-    """
-    csv_delimiter = metadata["file_characteristics"]["csv_delimiter"]
-    csv_record_separator \
-        = metadata["file_characteristics"]["csv_record_separator"]
-    csv_quoting_char = metadata["file_characteristics"]["csv_quoting_char"]
-    csv_isheader = metadata["file_characteristics"]["csv_has_header"]
-
-    # Create addml metadata
-    mdtype = 'ADDML'
-    mdtypeversion = '8.3'
-    mddata = siptools_research.utils.create_addml.create_addml(
-        os.path.join(workspace, 'sip-in-progress'),
-        metax_filepath.strip('/'),
-        csv_delimiter,
-        csv_isheader,
-        charset,
-        csv_record_separator,
-        csv_quoting_char
-    )
-
-    # Write addml metadata to a file
-    siptools_research.utils.create_addml.create_techmdfile(
-        os.path.join(workspace, 'sip-in-progress'),
-        mdtype,
-        mdtypeversion,
-        mddata,
-        metax_filepath.strip('/')
-    )
+    creator.write()
 
 
 def import_objects(dataset_id, workspace, config):

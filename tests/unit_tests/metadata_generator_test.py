@@ -4,10 +4,12 @@ import os
 import tempfile
 import json
 import pytest
-import tests.conftest
 import httpretty
 import lxml.etree
+
+from siptools.utils import decode_path
 from siptools_research.metadata_generator import generate_metadata
+import tests.conftest
 
 
 @pytest.mark.usefixtures('testmetax', 'testida')
@@ -80,6 +82,35 @@ def test_generate_metadata_mix():
     # Check HTTP request query string
     assert httpretty.last_request().querystring['namespace'][0] \
         == 'http://www.loc.gov/mix/v20'
+
+    # Check HTTP request method
+    assert httpretty.last_request().method == "POST"
+
+
+@pytest.mark.usefixtures('testmetax', 'testida')
+def test_generate_metadata_addml():
+    """Tests addml metadata generation for a CSV file. Generates metadata for a
+    dataset that contains a CSV file and checks that message sent to Metax
+    is valid XML. The method of last HTTP request should be POST, and the
+    querystring should contain the namespace of XML.
+    """
+    generate_metadata('generate_metadata_test_dataset_3',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Read one element from XML to ensure it is valid and contains correct data
+    # The decoded filename should be /testpath/csvfile.csv
+    xml = lxml.etree.fromstring(httpretty.last_request().body)
+
+    flatfile = xml.xpath(
+        '//addml:flatFile',
+        namespaces={"addml": "http://www.arkivverket.no/standarder/addml"}
+    )
+    name = decode_path(flatfile[0].get("name"))
+    assert name == "/testpath/csvfile.csv"
+
+    # Check HTTP request query string
+    assert httpretty.last_request().querystring['namespace'][0] == \
+        'http://www.arkivverket.no/standarder/addml'
 
     # Check HTTP request method
     assert httpretty.last_request().method == "POST"

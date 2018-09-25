@@ -3,14 +3,14 @@
 import os
 import shutil
 import hashlib
+import lxml.etree
+import pytest
+
+from siptools.xml.mets import NAMESPACES
+import tests.conftest
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       import_objects,
                                                       algorithm_name)
-import lxml.etree
-from siptools.xml.mets import NAMESPACES
-import pytest
-import tests.conftest
-
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
 def test_create_techmd_ok(testpath):
@@ -48,14 +48,6 @@ def test_create_techmd_ok(testpath):
     assert os.path.isfile(os.path.join(
         sipdirectory,
         'project_x%2Fsome%2Fpath%2Ffile_name_6-premis-techmd.xml'
-    ))
-    assert os.path.isfile(os.path.join(
-        sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile.csv-premis-techmd.xml'
-    ))
-    assert os.path.isfile(os.path.join(
-        sipdirectory,
-        'ADDML-project_x%2Fsome%2Fpath%2Ffile.csv-othermd.xml'
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
