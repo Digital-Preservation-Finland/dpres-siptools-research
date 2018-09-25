@@ -1,5 +1,6 @@
 [
     {
-        "identifier": "pid:urn:generate_metadata_file_characteristics_block_not_present"
+        "identifier": "pid:urn:generate_metadata_file_characteristics_block_not_present",
+        "file_path": "file_path"
     }
 ]

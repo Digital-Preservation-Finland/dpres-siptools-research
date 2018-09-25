@@ -1,5 +1,6 @@
 [
     {
-        "identifier": "pid:urn:generate_metadata_3"
+        "identifier": "pid:urn:generate_metadata_3",
+        "file_path": "filepath"
     }
 ]

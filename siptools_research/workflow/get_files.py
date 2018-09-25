@@ -76,6 +76,7 @@ def download_files(self, dataset_files):
             os.makedirs(os.path.dirname(target_path))
 
         # Download file
-        ida.download_file(dataset_file['identifier'],
+        ida.download_file(dataset_file['file_path'],
+                          dataset_file['identifier'],
                           target_path,
                           self.config)

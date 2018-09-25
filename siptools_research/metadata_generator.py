@@ -28,10 +28,11 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             # Get file info
             file_id = file_['identifier']
             file_metadata = metax_client.get_file(file_id)
+            file_path = file_['file_path']
 
             # Download file to tmp directory
             tmpfile = os.path.join(tmpdir, file_id)
-            ida.download_file_header(file_id, tmpfile, config)
+            ida.download_file_header(file_path, file_id, tmpfile, config)
 
             # Generate and update file_characteristics
             file_characteristics = _generate_techmd(tmpfile, file_metadata)
