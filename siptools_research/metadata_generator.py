@@ -4,9 +4,8 @@ Metax.
 import os
 import shutil
 import tempfile
-import subprocess
 
-from siptools.scripts import import_object, create_mix
+from siptools.scripts import import_object, create_mix, create_addml
 from siptools_research.utils import metax, ida
 
 
@@ -36,6 +35,25 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             if file_characteristics['file_format'].startswith('image'):
                 mix_element = create_mix.create_mix(tmpfile)
                 metax_client.set_xml(file_id, mix_element)
+
+            # Generate and post ADDML metadata
+            elif file_characteristics['file_format'] == 'text/csv':
+
+                # Get CSV file metadata from METAX
+                delimiter = file_characteristics['csv_delimiter']
+                record_separator = file_characteristics['csv_record_separator']
+                quoting_char = file_characteristics['csv_quoting_char']
+                isheader = file_characteristics['csv_has_header']
+                charset = file_characteristics['encoding']
+                file_path = file_metadata['file_path']
+
+                addml_element = create_addml.create_addml(
+                    tmpfile, delimiter, isheader,
+                    charset, record_separator, quoting_char,
+                    flatfile_name=file_path
+                )
+                metax_client.set_xml(file_id, addml_element)
+
     finally:
         shutil.rmtree(tmpdir)
 
