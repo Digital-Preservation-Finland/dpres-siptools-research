@@ -10,6 +10,7 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
+from requests.exceptions import HTTPError
 
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
@@ -76,7 +77,16 @@ def download_files(self, dataset_files):
             os.makedirs(os.path.dirname(target_path))
 
         # Download file
-        ida.download_file(dataset_file['file_path'],
-                          dataset_file['identifier'],
-                          target_path,
-                          self.config)
+        try:
+            ida.download_file(dataset_file['identifier'],
+                              target_path,
+                              self.config)
+        except HTTPError as e:
+            file_path = dataset_file['file_path']
+            status_code = e.response.status_code
+            if status_code == 404:
+                raise Exception("File %s not found in Ida." % file_path)
+            elif status_code == 403:
+                raise Exception("Access to file %s forbidden." % file_path)
+            else:
+                raise Exception("File %s could not be retrieved." % file_path)

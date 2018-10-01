@@ -10,6 +10,7 @@ from siptools.scripts import import_object, create_mix
 from siptools.scripts import create_addml, create_audiomd
 from siptools_research.utils import ida
 from siptools_research.config import Configuration
+from requests.exceptions import HTTPError
 
 
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
@@ -28,11 +29,21 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             # Get file info
             file_id = file_['identifier']
             file_metadata = metax_client.get_file(file_id)
-            file_path = file_['file_path']
 
             # Download file to tmp directory
             tmpfile = os.path.join(tmpdir, file_id)
-            ida.download_file_header(file_path, file_id, tmpfile, config)
+            try:
+                ida.download_file_header(file_id, tmpfile, config)
+            except HTTPError as e:
+                file_path = file_['file_path']
+                status_code = e.response.status_code
+                if status_code == 404:
+                    raise Exception("File %s not found in Ida." % file_path)
+                elif status_code == 403:
+                    raise Exception("Access to file %s forbidden." % file_path)
+                else:
+                    raise Exception("File %s could not be retrieved." %
+                                    file_path)
 
             # Generate and update file_characteristics
             file_characteristics = _generate_techmd(tmpfile, file_metadata)

@@ -5,6 +5,7 @@ import pytest
 import tests.conftest
 from siptools_research.workflow import get_files
 
+
 @pytest.mark.usefixtures('testmongoclient', 'testmetax', 'testida')
 def test_getfiles(testpath):
     """Tests for ``GetFiles`` task.
@@ -19,7 +20,6 @@ def test_getfiles(testpath):
     # Create required directories to  workspace
     os.makedirs(os.path.join(testpath, 'sip-in-progress'))
     os.makedirs(os.path.join(testpath, 'logs'))
-
 
     # Init task
     task = get_files.GetFiles(workspace=testpath,
