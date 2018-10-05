@@ -35,6 +35,23 @@ def test_validate_metadata_invalid():
 
 
 @pytest.mark.usefixtures('testmetax')
+def test_validate_metadata_invalid_contract_metadata():
+    """Test that validate_metadata function raises exception with correct error
+    message for invalid dataset.
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        validate_metadata(
+            'validate_metadata_test_dataset_invalid_contract_metadata',
+            tests.conftest.UNIT_TEST_CONFIG_FILE
+        )
+
+    # Check exception message
+    assert exc_info.value.message == \
+        "'name' is a required property at field /contract_json/organization/"
+
+
+@pytest.mark.usefixtures('testmetax')
 def test_validate_metadata_missing_xml():
     """Test that validate_metadata function raises exception if dataset
     contains image file but not XML metadata.

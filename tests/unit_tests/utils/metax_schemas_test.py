@@ -301,3 +301,44 @@ def test_validate_invalid_file_charset():
 
     assert excinfo.value.message \
         == "'foo' is not one of ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']"
+
+
+def test_validate_valid_contract():
+    """Test validation of valid contract metadata
+
+    :returns: None
+    """
+    valid_contract_metadata = \
+        {
+            "contract_json": {
+                "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
+                "organization": {
+                    "name": "Testiorganisaatio"
+                }
+            }
+        }
+
+    jsonschema.validate(valid_contract_metadata,
+                        metax_schemas.CONTRACT_METADATA_SCHEMA)
+
+
+def test_validate_invalid_contract():
+    """Test validation of invalid contract metadata (name is not string)
+
+    :returns: None
+    """
+    invalid_contract_metadata = \
+        {
+            "contract_json": {
+                "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
+                "organization": {
+                    "name": 1234
+                }
+            }
+        }
+
+    with pytest.raises(jsonschema.ValidationError) as excinfo:
+        jsonschema.validate(invalid_contract_metadata,
+                            metax_schemas.CONTRACT_METADATA_SCHEMA)
+
+    assert excinfo.value.message == "1234 is not of type 'string'"

@@ -2,15 +2,15 @@
 
 import tempfile
 import jsonschema
+import lxml
 from ipt.scripts import (check_xml_schema_features,
                          check_xml_schematron_features)
+from metax_access import Metax
 import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils import mimetypes
-from metax_access import Metax
 from siptools_research.workflowtask import InvalidMetadataError
-import lxml
-from siptools.xml.mets import NAMESPACES
 from siptools_research.config import Configuration
+from siptools.xml.mets import NAMESPACES
 
 
 # SCHEMATRONS is a dictionary that contains mapping:
@@ -48,9 +48,13 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     # Validate dataset metadata
     _validate_dataset_metadata(dataset_metadata)
 
+    # Validate contract metadata
+    _validate_contract_metadata(dataset_metadata['contract']['id'],
+                                metax_client)
+
     # Get dataset metadata for each listed file, and validates
     # file metadata
-    _validate_dataset_metadata_files(dataset_metadata, metax_client)
+    _validate_dataset_files(dataset_metadata, metax_client)
 
     # Validate file metadata for each file in dataset files
     _validate_file_metadata(dataset_id, metax_client)
@@ -99,8 +103,27 @@ def _validate_dataset_metadata(dataset_metadata):
         raise InvalidMetadataError(message)
 
 
-# pylint: disable=invalid-name
-def _validate_dataset_metadata_files(dataset_metadata, metax_client):
+def _validate_contract_metadata(contract_id, metax_client):
+    """Validates dataset metadata from /rest/v1/datasets/<dataset_id>
+
+    :returns: None
+    """
+    contract_metadata = metax_client.get_contract(contract_id)
+    try:
+        jsonschema.validate(contract_metadata,
+                            metax_schemas.CONTRACT_METADATA_SCHEMA)
+    except jsonschema.ValidationError as exc:
+
+        # Modify message only if a required param is missing
+        message = (
+            _modify_msg(exc.message, exc.path)
+            if exc.validator == "required"
+            else exc.message
+        )
+        raise InvalidMetadataError(message)
+
+
+def _validate_dataset_files(dataset_metadata, metax_client):
     """Reads file identifiers of each file listed in dataset metadata, and
     validates file metadata found by file identidier from
     /rest/v1/files/<file_id>.
@@ -212,7 +235,6 @@ def _validate_with_schematron(file_format_prefix, file_id, xmls):
             raise InvalidMetadataError(SCHEMATRON_ERROR % (file_id))
 
 
-# pylint: disable=invalid-name
 def _validate_datacite(dataset_metadata, metax_client):
     """Validates datacite.
 

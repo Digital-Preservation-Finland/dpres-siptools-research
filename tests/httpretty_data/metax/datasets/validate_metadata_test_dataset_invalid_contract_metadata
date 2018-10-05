@@ -1,6 +1,6 @@
 {
     "contract": {
-        "id": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
+        "id": "contract_with_invalid_metadata"
     },
     "research_dataset": {
         "provenance": [
@@ -20,23 +20,6 @@
                 }
             }
         ],
-        "files": [
-            {
-                "identifier": "pid:urn:wf_test_1a",
-                "use_category": {
-                    "pref_label": {
-                        "en": "label1"
-                    }
-                }
-            },
-            {
-                "identifier": "pid:urn:wf_test_1b",
-                "use_category": {
-                    "pref_label": {
-                        "en": "label2"
-                    }
-                }
-            }
-        ]
+        "files": [ ]
     }
 }

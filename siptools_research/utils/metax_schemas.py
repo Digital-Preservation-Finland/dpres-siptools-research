@@ -19,7 +19,8 @@ DATASET_METADATA_SCHEMA = \
                         "type": "array",
                         "items": {
                             "type": "object",
-                            "required": ["preservation_event", "temporal", "description"],
+                            "required": ["preservation_event", "temporal",
+                                         "description"],
                             "properties": {
                                 "temporal": {
                                     "type": "object",
@@ -108,6 +109,34 @@ FILE_METADATA_SCHEMA = \
             "parent_directory": {
                 "type": "object",
                 "required": ["identifier"]
+            }
+        }
+    }
+
+
+# JSON schema for contract metadata
+CONTRACT_METADATA_SCHEMA = \
+    {
+        "type": "object",
+        "required": ["contract_json"],
+        "properties": {
+            "contract_json": {
+                "type": "object",
+                "required": ["identifier", "organization"],
+                "properties": {
+                    "identifier": {
+                        "type": "string"
+                    },
+                    "organization": {
+                        "type": "object",
+                        "required": ["name"],
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         }
     }
