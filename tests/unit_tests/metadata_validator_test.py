@@ -83,8 +83,7 @@ def test_validate_file_metadata():
     configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
     client = Metax(configuration.get('metax_url'),
                    configuration.get('metax_user'),
-                   configuration.get('metax_password')
-    )
+                   configuration.get('metax_password'))
 
     with pytest.raises(InvalidMetadataError) as exc_info:
         # pylint: disable=protected-access
@@ -93,6 +92,5 @@ def test_validate_file_metadata():
         )
 
     assert exc_info.value.message \
-       == ("Validation error in file path/to/file1: "
-          "'file_format' is a required property"
-          " at field /file_characteristics/") 
+        == ("Validation error in file path/to/file1: 'file_format' is a "
+            "required property at field /file_characteristics/")
