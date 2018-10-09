@@ -48,6 +48,5 @@ class CleanupWorkspace(WorkflowTask):
         if result != 'success':
             return False
 
-
         # Check if workspace exists
         return not os.path.exists(self.workspace)

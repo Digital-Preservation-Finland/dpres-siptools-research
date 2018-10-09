@@ -2,9 +2,9 @@
 import os
 import pytest
 import tests.conftest
-import tests.conftest
 from siptools_research.utils.database import Database
 from siptools_research.workflow.cleanup import CleanupWorkspace
+
 
 @pytest.mark.usefixtures("testmongoclient")
 def test_cleanupworkspace(testpath):
@@ -44,4 +44,4 @@ def test_cleanupworkspace(testpath):
     )
 
     # Now task should be complete
-    assert not task.complete()
+    assert task.complete()
