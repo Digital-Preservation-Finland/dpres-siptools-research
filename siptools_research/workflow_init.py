@@ -1,10 +1,11 @@
-"""A module that provides function to start start the dataset preservation
+"""A module that provides function to start the dataset preservation
 workflow.
 """
 
 import os
 import uuid
 import subprocess
+import luigi
 from siptools_research.workflowtask import WorkflowWrapperTask
 from siptools_research.config import Configuration
 import siptools_research.utils.database
@@ -27,6 +28,28 @@ class InitWorkflow(WorkflowWrapperTask):
                                 config=self.config)
 
 
+class InitWorkflows(luigi.WrapperTask):
+    """A wrapper task that starts/restarts all incomplete workflows.
+    """
+    config = luigi.Parameter()
+
+    def requires(self):
+        """Only returns last task of the workflow.
+
+        :returns: List of CleanupWorkspace tasks
+        """
+
+        workspace_root = Configuration(self.config).get('workspace_root')
+        database = siptools_research.utils.database.Database(self.config)
+
+        for workflow in database.get_incomplete_workflows():
+            workspace = os.path.join(workspace_root, workflow['_id'])
+
+            yield InitWorkflow(workspace=workspace,
+                               dataset_id=workflow['dataset'],
+                               config=self.config)
+
+
 def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     """Generates unique id for the workspace and initates packaging workflow.
     Workspace name is used as document id in MongoDB. This function can be
@@ -45,7 +68,7 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
 
     # Add information to mongodb
     database = siptools_research.utils.database.Database(config)
-    database.add_dataset(workspace_name, dataset_id)
+    database.add_workflow(workspace_name, dataset_id)
 
     # Start luigi workflow. Run in background.
     subprocess.Popen(["luigi",

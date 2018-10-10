@@ -40,6 +40,72 @@ def test_add_event():
     assert mongoclient['siptools-research'].workflow.count() == 1
 
 
-# TODO: test for set_status()
+@pytest.mark.usefixtures('testmongoclient')
+def test_set_status():
+    """Change workflow status twice using ``set_status`` function and check that
+    status is updated.
+    """
 
-# TODO: test for add_dataset()
+    # Init database client
+    database = siptools_research.utils.database.Database(
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+
+    # Set status
+    database.set_status('test_workflow', 'Original status')
+
+    # Check status
+    assert database._collection.find_one({'_id': 'test_workflow'})['status'] \
+        == 'Original status'
+
+    # Change status
+    database.set_status('test_workflow', 'New status')
+
+    # Check that status has changed
+    assert database._collection.find_one({'_id': 'test_workflow'})['status'] \
+        == 'New status'
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_add_workflow():
+    """Add new workflow to database using ``add_workflow`` function and check
+    that new document contains correct information.
+    """
+    # Init database client
+    database = siptools_research.utils.database.Database(
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+
+    # add new workflow
+    database.add_workflow('test_workflow', 'test_dataset')
+
+    # Check result
+    workflow = database._collection.find_one({'_id': 'test_workflow'})
+    workflow['status'] = 'Request received'
+    workflow['dataset'] = 'test_dataset'
+    workflow['incomplete'] = True
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_get_incomplete_datasets():
+    """Populates database with few complete and incomplete datasets and checks
+    that ``get_incomplete_workflows`` function returns list of incomplete
+    workflows.
+    """
+    # Init database client
+    database = siptools_research.utils.database.Database(
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+
+    # Populate database
+    database.add_workflow('test1', '1')
+    database.add_workflow('test2', '2')
+    database.set_complete('test2')
+    database.add_workflow('test3', '3')
+
+    # The workflows found by ``get_incomplete_workflows`` function should be
+    # "test1" and "test3"
+    workflows = database.get_incomplete_workflows()
+    assert set(workflow['_id'] for workflow in workflows) \
+        == set(['test1', 'test3'])
+

@@ -6,7 +6,10 @@ from siptools_research.config import Configuration
 
 
 def timestamp():
-    """Return time now."""
+    """Return time now.
+
+    :returns: Time stamp string
+    """
     return datetime.datetime.utcnow().isoformat()
 
 
@@ -27,19 +30,20 @@ class Database(object):
                 [conf.get("mongodb_collection")]
             )
 
-    def add_event(self, document_id, taskname, result, messages):
+    def add_event(self, workflow_id, taskname, result, messages):
         """Add information of workflow task to mongodb.
 
-        :document_id: Mongo document id
-        :taskname: Name of the task
-        :result: Result string ('failure' or 'success')
-        :messages: Information of the event
+        :param workflow_id: Workflow identifier i.e. the name of workspace
+            directory
+        :param taskname: Name of the task
+        :param result: Result string ('failure' or 'success')
+        :param messages: Information of the event
         :returns: None
         """
 
         self._collection.update_one(
             {
-                '_id': document_id
+                '_id': workflow_id
             },
             {
                 '$set': {
@@ -53,16 +57,17 @@ class Database(object):
             upsert=True
         )
 
-    def set_status(self, document_id, status):
-        """Add information of workflow task to mongodb.
+    def set_status(self, workflow_id, status):
+        """Set the status string for a workflow.
 
-        :document_id: Mongo document id
-        :taskname: Status string
+        :param workflow_id: Workflow identifier
+        :param status: Status string
+        :returns: None
         """
 
         self._collection.update_one(
             {
-                '_id': document_id
+                '_id': workflow_id
             },
             {
                 '$set': {
@@ -72,32 +77,62 @@ class Database(object):
             upsert=True
         )
 
-    def add_dataset(self, document_id, dataset_id):
-        """Add new document
+    def set_complete(self, workflow_id):
+        """Mark workflow completed.
 
-        :document_id: Mongo document id
-        :dataset_id: Dataset identifier
+        :param workflow_id: Workflow identifier
         :returns: None
         """
 
         self._collection.update_one(
             {
-                '_id': document_id
+                '_id': workflow_id
             },
             {
                 '$set': {
-                    'status': 'Request reveived',
-                    'dataset': dataset_id
+                    'completed': True
                 }
             },
             upsert=True
         )
 
-    def get_event_result(self, document_id, taskname):
+    def add_workflow(self, workflow_id, dataset_id):
+        """Add new workflow. The workflow identity will be the primary key
+        ('_id') of the document.
+
+        :param workflow_id: Workflow identifier, i.e. the name of workspace
+            directory
+        :param dataset_id: Dataset identifier
+        :returns: None
+        """
+
+        self._collection.update_one(
+            {
+                '_id': workflow_id
+            },
+            {
+                '$set': {
+                    'status': 'Request reveived',
+                    'dataset': dataset_id,
+                    'completed': False
+                }
+            },
+            upsert=True
+        )
+
+    def get_event_result(self, workflow_id, taskname):
         """Read event result for a workflow.
 
-        :document_id: Mongo document id
-        :taskname: Name of task
+        :param workflow_id: Mongo workflow id
+        :param taskname: Name of task
+        :returns: None
         """
-        document = self._collection.find_one({'_id': document_id})
+        document = self._collection.find_one({'_id': workflow_id})
         return document['workflow_tasks'][taskname]['result']
+
+    def get_incomplete_workflows(self):
+        """Find all incomplete workflows
+
+        :returns: List of incomplete workflows
+        """
+        return list(self._collection.find({'completed': False}))
