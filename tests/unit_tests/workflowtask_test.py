@@ -74,14 +74,14 @@ class InvalidDatasetTask(FailingTestTask):
 
 
 class InvalidMetadataTask(FailingTestTask):
-    """Test class that raises InvalidDatasetError"""
+    """Test class that raises InvalidMetadataError"""
 
     def run(self):
         raise InvalidMetadataError('Missing some important metadata')
 
 
 class MetaxConnectionErrorTask(FailingTestTask):
-    """Test class that raises InvalidDatasetError"""
+    """Test class that raises MetaxConnectionError"""
 
     def run(self):
         raise MetaxConnectionError
@@ -168,7 +168,7 @@ def test_invaliddataseterror(testpath, testmongoclient, testmetax):
 
 def test_invalidmetadataerror(testpath, testmongoclient, testmetax):
     """Test that event handler of WorkflowTask correctly deals with
-    InvalidDatasetError risen in a task. Event handler should report
+    InvalidMetadatatError risen in a task. Event handler should report
     preservation state to Metax.
     """
     # Run task like it would be run from command line
