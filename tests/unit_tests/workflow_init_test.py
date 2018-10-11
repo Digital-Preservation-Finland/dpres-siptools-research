@@ -34,7 +34,7 @@ def test_initworkflows():
     )
     database.add_workflow('workflow1', 'dataset1')
     database.add_workflow('workflow2', 'dataset2')
-    database.set_complete('workflow2')
+    database.set_completed('workflow2')
     database.add_workflow('workflow3', 'dataset3')
 
     # Get list of tasks required by InitWorkflows task

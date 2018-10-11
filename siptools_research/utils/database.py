@@ -77,7 +77,7 @@ class Database(object):
             upsert=True
         )
 
-    def set_complete(self, workflow_id):
+    def set_completed(self, workflow_id):
         """Mark workflow completed.
 
         :param workflow_id: Workflow identifier
@@ -91,6 +91,25 @@ class Database(object):
             {
                 '$set': {
                     'completed': True
+                }
+            },
+            upsert=True
+        )
+
+    def set_disabled(self, workflow_id):
+        """Mark workflow disabled.
+
+        :param workflow_id: Workflow identifier
+        :returns: None
+        """
+
+        self._collection.update_one(
+            {
+                '_id': workflow_id
+            },
+            {
+                '$set': {
+                    'disabled': True
                 }
             },
             upsert=True
@@ -114,7 +133,8 @@ class Database(object):
                 '$set': {
                     'status': 'Request reveived',
                     'dataset': dataset_id,
-                    'completed': False
+                    'completed': False,
+                    'disabled': False
                 }
             },
             upsert=True
@@ -131,8 +151,9 @@ class Database(object):
         return document['workflow_tasks'][taskname]['result']
 
     def get_incomplete_workflows(self):
-        """Find all incomplete workflows
+        """Find all incomplete workflows that are not disabled
 
         :returns: List of incomplete workflows
         """
-        return list(self._collection.find({'completed': False}))
+        return list(self._collection.find({'completed': False,
+                                           'disabled': False}))

@@ -88,9 +88,9 @@ def test_add_workflow():
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_get_incomplete_datasets():
-    """Populates database with few complete and incomplete datasets and checks
-    that ``get_incomplete_workflows`` function returns list of incomplete
-    workflows.
+    """Populates database with few completed, incomplete and disabled datasets
+    and checks that ``get_incomplete_workflows`` function returns list of
+    incomplete workflows.
     """
     # Init database client
     database = siptools_research.utils.database.Database(
@@ -100,12 +100,14 @@ def test_get_incomplete_datasets():
     # Populate database
     database.add_workflow('test1', '1')
     database.add_workflow('test2', '2')
-    database.set_complete('test2')
+    database.set_completed('test2')
     database.add_workflow('test3', '3')
+    database.set_disabled('test3')
+    database.add_workflow('test4', '4')
 
     # The workflows found by ``get_incomplete_workflows`` function should be
-    # "test1" and "test3"
+    # "test1" and "test4"
     workflows = database.get_incomplete_workflows()
     assert set(workflow['_id'] for workflow in workflows) \
-        == set(['test1', 'test3'])
+        == set(['test1', 'test4'])
 

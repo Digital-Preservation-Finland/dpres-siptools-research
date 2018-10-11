@@ -4,10 +4,30 @@ import os
 import luigi
 from siptools_research.config import Configuration
 from siptools_research.utils.database import Database
+from siptools_research.utils import mail
 from metax_access import Metax, MetaxConnectionError,\
     DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,\
     DS_STATE_METADATA_VALIDATION_FAILED
-from siptools_research.utils import mail
+
+
+class FatalWorkflowError(Exception):
+    """Baseclass for errors that make workflow to completion impossible. When
+    error of this type is encountered, the task should not rescheduled.
+    """
+    pass
+
+
+class InvalidDatasetError(FatalWorkflowError):
+    """Exception raised when packaged dataset does not pass validation in
+    digital preservation service"""
+    pass
+
+
+class InvalidMetadataError(FatalWorkflowError):
+    """Exception raised when SIP can not be created for dataset due to missing
+    or invalid metadata.
+    """
+    pass
 
 
 class WorkflowTask(luigi.Task):
@@ -89,7 +109,7 @@ class WorkflowExternalTask(luigi.ExternalTask):
 class WorkflowWrapperTask(luigi.WrapperTask):
     """Common base class for all workflow tasks which execute other tasks, but
     does not have implementation itself.  In addition to functionality of
-    normal luigi WrapperTask, every task has two parameters:
+    normal luigi WrapperTask, every task has three parameters:
 
     :workspace: Full path to unique self.workspace directory for the task.
     :dataset_id: Metax dataset id.
@@ -115,19 +135,6 @@ def report_task_success(task):
                        task.success_message)
 
 
-class InvalidDatasetError(Exception):
-    """Exception raised when packaged dataset does not pass validation in
-    digital preservation service"""
-    pass
-
-
-class InvalidMetadataError(Exception):
-    """Exception raised when SIP can not be created for dataset due to missing
-    or invalid metadata.
-    """
-    pass
-
-
 @WorkflowTask.event_handler(luigi.Event.FAILURE)
 def report_task_failure(task, exception):
     """This function is triggered when a WorkflowTask fails. Adds report of
@@ -147,6 +154,10 @@ def report_task_failure(task, exception):
                        task.task_name,
                        'failure',
                        "%s: %s" % (task.failure_message, str(exception)))
+
+    if isinstance(exception, FatalWorkflowError):
+        # Disable workflow
+        database.set_disabled(task.document_id)
 
     if isinstance(exception, InvalidDatasetError):
         # Set preservation status for dataset in Metax
@@ -169,7 +180,8 @@ def report_task_failure(task, exception):
                              config_object.get('metax_password'))
         metax_client.set_preservation_state(
             task.dataset_id, DS_STATE_METADATA_VALIDATION_FAILED,
-            system_description="%s: %s" % (task.failure_message, str(exception))
+            system_description="%s: %s" % (task.failure_message,
+                                           str(exception))
         )
     elif isinstance(exception, MetaxConnectionError):
         # send email to admin
