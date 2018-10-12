@@ -5,7 +5,8 @@ import os
 import shutil
 import tempfile
 
-from siptools.scripts import import_object, create_mix, create_addml
+from siptools.scripts import import_object, create_mix
+from siptools.scripts import create_addml, create_audiomd
 from siptools_research.utils import ida
 from siptools_research.config import Configuration
 from metax_access import Metax
@@ -58,6 +59,13 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                     flatfile_name=file_path
                 )
                 metax_client.set_xml(file_id, addml_element)
+
+            # Generate and post AudioMD metadata
+            elif file_characteristics['file_format'] == 'audio/x-wav':
+                audiomd_element = create_audiomd.create_audiomd(tmpfile)
+                import lxml.etree as ET
+                print ET.tostring(audiomd_element, pretty_print=True)
+                metax_client.set_xml(file_id, audiomd_element)
 
     finally:
         shutil.rmtree(tmpdir)

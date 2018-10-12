@@ -117,6 +117,33 @@ def test_generate_metadata_addml():
 
 
 @pytest.mark.usefixtures('testmetax', 'testida')
+def test_generate_metadata_audiomd():
+    """Tests addml metadata generation for a WAV file. Generates metadata for a
+    dataset that contains a WAV file and checks that message sent to Metax
+    is valid XML. The method of last HTTP request should be POST, and the
+    querystring should contain the namespace of XML.
+    """
+    generate_metadata('generate_metadata_test_dataset_4',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Read one element from XML to ensure it is valid and contains correct data
+    xml = lxml.etree.fromstring(httpretty.last_request().body)
+
+    freq = xml.xpath(
+        '//amd:samplingFrequency',
+        namespaces={"amd": "http://www.loc.gov/audioMD/"}
+    )[0].text
+
+    assert freq == '48'
+
+    # Check HTTP request query string
+    assert httpretty.last_request().querystring['namespace'][0] == \
+            'http://www.loc.gov/audioMD/'
+
+    # Check HTTP request method
+    assert httpretty.last_request().method == "POST"
+
+@pytest.mark.usefixtures('testmetax', 'testida')
 def test_generate_metadata_tempfile_removal():
     """Tests that temporary files downloaded from Ida are removed.
     """
