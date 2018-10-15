@@ -42,7 +42,14 @@ class CleanupWorkspace(WorkflowTask):
         try:
             result = database.get_event_result(self.document_id,
                                                'ReportPreservationStatus')
+
+        # TODO: Maybe these exceptions should be handled by Database module?
+        except KeyError:
+            # ReportPreservationStatus has not run yet
+            return False
+
         except TypeError:
+            # Workflow is not found in database
             return False
 
         if result != 'success':

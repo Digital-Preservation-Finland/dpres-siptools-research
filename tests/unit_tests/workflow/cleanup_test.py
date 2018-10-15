@@ -12,36 +12,42 @@ def test_cleanupworkspace(testpath):
 
     :testpath: Temporary directory fixture"""
 
-    # Create a workspace directory and some content into it
+    # Create a workspace directory
     workspace = os.path.join(testpath, 'test_workspace')
-    os.makedirs(os.path.join(workspace, 'logs'))
-    with open(os.path.join(workspace, 'logs', 'test.log'), 'w+') as output:
-        output.write('foo')
+    os.makedirs(workspace)
+
+    # Init database client
+    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Init task
     task = CleanupWorkspace(workspace=workspace,
                             dataset_id='1',
                             config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # The workspace should exists before task has been run
-    assert not task.complete()
+    # Running the task should remove the workspace, but the task should not yet
+    # be complete, because no there is no information of workflow in database.
     assert os.path.exists(workspace)
-
-    # Task should not yet be complete, because ReportPreservationStatus task
-    # has not been run succesfully
     task.run()
+    assert not os.path.exists(workspace)
     assert not task.complete()
 
-    # After running task the workspace directory should have disappeared
-    assert not os.path.exists(workspace)
+    # The task should be incomplete when ReportPreservationStatus task has not
+    # yet run
+    database.add_workflow(os.path.basename(workspace), 'test_id')
+    assert not task.complete()
 
-    # Manipulate workflow database
-    Database(tests.conftest.UNIT_TEST_CONFIG_FILE).add_event(
-        os.path.basename(workspace),
-        'ReportPreservationStatus',
-        'success',
-        'Lets pretend that all other wf-tasks are completed'
-    )
+    # The task should be incomplete when ReportPreservationStatus task has
+    # failed
+    database.add_event(os.path.basename(workspace),
+                       'ReportPreservationStatus',
+                       'failure',
+                       'Preservation state could not be reported.')
+    assert not task.complete()
 
-    # Now task should be complete
+    # Task should be complete when ReportPreservationStatus task has run
+    # succesfully
+    database.add_event(os.path.basename(workspace),
+                       'ReportPreservationStatus',
+                       'success',
+                       'Lets pretend that all other wf-tasks are completed')
     assert task.complete()
