@@ -3,6 +3,7 @@ PREFIX ?= /usr
 ETC=${DESTDIR}/etc
 SHAREDIR=${DESTDIR}${PREFIX}/share/siptools_research
 VAR=${DESTDIR}/var
+LIB=${DESTDIR}${PREFIX}/lib
 
 LOGDIR=${VAR}/log/siptools_research
 PROCESSINGDIR=${VAR}/spool/siptools_research
@@ -18,10 +19,14 @@ install:
 	mkdir -p "${PROCESSINGDIR}"
 	mkdir -p "${SHAREDIR}"
 	mkdir -p "${ETC}"
+	mkdir -p "${LIB}"
+	mkdir -p "${LIB}/systemd/system"
 
 	# Copy config files
 	cp include/etc/siptools_research.conf ${ETC}/
 	cp include/etc/dpres_mimetypes.json ${ETC}/
+	cp include/usr/lib/systemd/system/siptools_research.service ${LIB}/systemd/system/siptools_research.service
+	cp include/usr/lib/systemd/system/siptools_research.timer ${LIB}/systemd/system/siptools_research.timer
 
 	# Use Python setuptools
 	python ./setup.py install -O1 --prefix="${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES

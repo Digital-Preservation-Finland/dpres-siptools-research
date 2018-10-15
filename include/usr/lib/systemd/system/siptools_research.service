@@ -1,0 +1,12 @@
+[Unit]
+Description=Start/restart siptools_research workflows
+Requires=luigid.service mongod.service
+After=luigid.service mongod.service
+
+[Service]
+User=siptools_research
+Type=oneshot
+ExecStart=/usr/bin/luigi --module siptools_research.workflow_init InitWorkflows --config /etc/siptools_research.conf
+
+[Install]
+WantedBy=multi-user.target
