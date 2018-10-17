@@ -4,13 +4,13 @@ Metax.
 import os
 import shutil
 import tempfile
+from requests.exceptions import HTTPError
 
 from metax_access import Metax
 from siptools.scripts import import_object, create_mix
 from siptools.scripts import create_addml, create_audiomd
 from siptools_research.utils import ida
 from siptools_research.config import Configuration
-from requests.exceptions import HTTPError
 
 
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
@@ -34,9 +34,9 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             tmpfile = os.path.join(tmpdir, file_id)
             try:
                 ida.download_file_header(file_id, tmpfile, config)
-            except HTTPError as e:
+            except HTTPError as error:
                 file_path = file_['file_path']
-                status_code = e.response.status_code
+                status_code = error.response.status_code
                 if status_code == 404:
                     raise Exception("File %s not found in Ida." % file_path)
                 elif status_code == 403:
@@ -52,6 +52,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
             # Generate and post mix metadata
             if file_characteristics['file_format'].startswith('image'):
+                ida.download_file(file_id, tmpfile, config)
                 mix_element = create_mix.create_mix(tmpfile)
                 metax_client.set_xml(file_id, mix_element)
 
@@ -75,7 +76,18 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
             # Generate and post AudioMD metadata
             elif file_characteristics['file_format'] == 'audio/x-wav':
-                audiomd_element = create_audiomd.create_audiomd(tmpfile)
+
+                # Try generating metadata based on the 512 byte header
+                # returned by ida.download_file_header
+                try:
+                    audiomd_element = create_audiomd.create_audiomd(tmpfile)
+
+                # Download the whole file if metadata generation fails using
+                # only the first 512 bytes
+                except ValueError:
+                    ida.download_file(file_id, tmpfile, config)
+                    audiomd_element = create_audiomd.create_audiomd(tmpfile)
+
                 metax_client.set_xml(file_id, audiomd_element)
 
     finally:

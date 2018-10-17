@@ -94,23 +94,22 @@ def test_generate_metadata_mix_larger_file():
     message sent to Metax is valid XML. The method of last HTTP request should
     be POST, and the querystring should contain the namespace of XML.
     """
-    pass
-    # generate_metadata('generate_metadata_test_dataset_5',
-    #                   tests.conftest.UNIT_TEST_CONFIG_FILE)
+    generate_metadata('generate_metadata_test_dataset_5',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # # Read one element from XML to ensure it is valid and contains correct data
-    # # The file is 10x10px image, so the metadata should contain image width.
-    # xml = lxml.etree.fromstring(httpretty.last_request().body)
-    # assert xml.xpath('//ns0:imageWidth',
-    #                  namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
-    #     == '640'
+    # Read one element from XML to ensure it is valid and contains correct data
+    # The file is 10x10px image, so the metadata should contain image width.
+    xml = lxml.etree.fromstring(httpretty.last_request().body)
+    assert xml.xpath('//ns0:imageWidth',
+                     namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
+        == '640'
 
-    # # Check HTTP request query string
-    # assert httpretty.last_request().querystring['namespace'][0] \
-    #     == 'http://www.loc.gov/mix/v20'
+    # Check HTTP request query string
+    assert httpretty.last_request().querystring['namespace'][0] \
+        == 'http://www.loc.gov/mix/v20'
 
-    # # Check HTTP request method
-    # assert httpretty.last_request().method == "POST"
+    # Check HTTP request method
+    assert httpretty.last_request().method == "POST"
 
 
 @pytest.mark.usefixtures('testmetax', 'testida')
