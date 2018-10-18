@@ -40,6 +40,13 @@ Also dataset metadata validation can be used from python::
 
 The ``validate_dataset`` function returns ``True`` if dataset metadata is valid.
 
+Systemd service
+^^^^^^^^^^^^^^^
+Enable timer that starts/restarts all incomplete and enabled tasks found from database::
+
+   systemctl enable siptools_research.timer
+   systemctl start siptools_research.timer
+
 Testing
 -------
 Install required RPM packages::
