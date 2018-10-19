@@ -55,7 +55,7 @@ def test_create_techmd_ok(testpath):
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        '7587176da018ac09fd03bc65975a6678-NISOIMG-techmd.xml'
+        '1b2eecde68d99171f70613f14cf21f49-NISOIMG-techmd.xml'
     ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
@@ -63,7 +63,7 @@ def test_create_techmd_ok(testpath):
     ))
     output_file = os.path.join(
         sipdirectory,
-        '7587176da018ac09fd03bc65975a6678-NISOIMG-techmd.xml'
+        '1b2eecde68d99171f70613f14cf21f49-NISOIMG-techmd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
