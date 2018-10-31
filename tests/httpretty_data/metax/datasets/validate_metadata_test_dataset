@@ -1,6 +1,7 @@
 {
     "contract": {
-        "id": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
+        "id": 1,
+        "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
     },
     "research_dataset": {
         "provenance": [

@@ -1,6 +1,7 @@
 {
     "contract": {
-        "id": "contract_with_invalid_metadata"
+        "id": 123456,
+        "identifier": "contract_with_invalid_metadata"
     },
     "research_dataset": {
         "provenance": [

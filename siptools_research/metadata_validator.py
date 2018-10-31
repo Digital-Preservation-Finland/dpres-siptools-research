@@ -49,7 +49,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     _validate_dataset_metadata(dataset_metadata)
 
     # Validate contract metadata
-    _validate_contract_metadata(dataset_metadata['contract']['id'],
+    _validate_contract_metadata(dataset_metadata['contract']['identifier'],
                                 metax_client)
 
     # Get dataset metadata for each listed file, and validates
