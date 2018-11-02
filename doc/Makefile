@@ -43,8 +43,7 @@ clean:
 	-rm -rf source/modules
 
 modules:
-	mkdir -p source/modules
-	sphinx-apidoc --maxdepth=10 --force --output-dir=source/modules --suffix=rst ../
+	sphinx-apidoc --no-toc --module-first --maxdepth=10 --force --output-dir=source/modules ../ ../setup.py ../version.py
 
 html: modules
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
