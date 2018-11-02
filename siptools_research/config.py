@@ -53,8 +53,8 @@ class Configuration(object):
 
         https://docs.python.org/2/library/configparser.html
 
-        :config_file: Path to configuration file.
-        :returns: None
+        :param config_file: path to configuration file
+        :returns: ``None``
         """
         # Read options from one section of config file to dictionary.
         if os.path.isfile(config_file) and os.access(config_file, os.R_OK):
@@ -83,7 +83,7 @@ class Configuration(object):
         # Check which options are not found from configuration file. Add
         # default value for those options.
         for option in DEFAULTS:
-            if not option in options:
+            if option not in options:
                 logging.warning('Using default value  %s = %s',
                                 option, DEFAULTS[option])
                 self._parser.set(self.config_section, option, DEFAULTS[option])
@@ -91,9 +91,10 @@ class Configuration(object):
         # Set config_file parameter
         self.config_file = config_file
 
-    def get(self, option):
-        """Get value for option.
+    def get(self, parameter):
+        """Get value for configuration parameter.
 
-        :option: Option
-        :returns: Value for Option"""
-        return self._parser.get(self.config_section, option)
+        :param parameter: parameter
+        :returns: value for parameter
+        """
+        return self._parser.get(self.config_section, parameter)

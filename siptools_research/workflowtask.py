@@ -126,7 +126,8 @@ def report_task_success(task):
     """This function is triggered after each WorkflowTask is executed
     succesfully. Adds report of successfull event to workflow database.
 
-    :task: WorkflowTask object
+    :param task: WorkflowTask object
+    :returns: ``None``
     """
     database = Database(task.config)
     database.add_event(task.document_id,
@@ -146,8 +147,9 @@ def report_task_failure(task, exception):
     If task failed because of ``InvalidMetadataError``, the preservation status
     of dataset in Metax is updated.
 
-    :task: WorkflowTask object
-    :exception: Exception that caused failure
+    :param task: WorkflowTask object
+    :param exception: Exception that caused failure
+    :returns: ``None``
     """
     database = Database(task.config)
     database.add_event(task.document_id,

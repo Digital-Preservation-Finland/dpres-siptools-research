@@ -16,11 +16,11 @@ from siptools.xml.mets import NAMESPACES
 # SCHEMATRONS is a dictionary that contains mapping:
 #    file_format_prefix=>xml_metadata_namespace_and_schematron_file
 SCHEMATRONS = {
-    'image': {'ns': 'http://www.loc.gov/mix/v20', 'schematron':
+    'image': {'ns': 'http://www.loc.gov/mix/v20', 'schema':
               '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch'},
-    'audio': {'ns': 'http://www.loc.gov/audioMD/', 'schematron':
+    'audio': {'ns': 'http://www.loc.gov/audioMD/', 'schema':
               '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch'},
-    'video': {'ns': 'http://www.loc.gov/videoMD/', 'schematron':
+    'video': {'ns': 'http://www.loc.gov/videoMD/', 'schema':
               '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'}
 }
 
@@ -35,6 +35,8 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     from Metax and validates them against schemas. Raises error if dataset is
     not valid.
 
+    :param dataset_id: dataset identifier
+    :param config: configuration file path
     :returns: ``True``, if dataset metada is valid.
     """
     conf = Configuration(config)
@@ -71,10 +73,10 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 def _modify_msg(message, path):
     """Modifies error message by appending the path to the failed field.
 
-    :message: The original error message
-    :path: collections.deque object with the path to the failed field
+    :param message: the original error message
+    :param path: collections.deque object with the path to the failed field
 
-    :returns: Modified message
+    :returns: modified message
     """
 
     path_str = " at field /"
@@ -87,7 +89,8 @@ def _modify_msg(message, path):
 def _validate_dataset_metadata(dataset_metadata):
     """Validates dataset metadata from /rest/v1/datasets/<dataset_id>
 
-    :returns: None
+    :param dataset_metadata: dataset metadata dictionary
+    :returns: ``None``
     """
     try:
         jsonschema.validate(dataset_metadata,
@@ -106,7 +109,9 @@ def _validate_dataset_metadata(dataset_metadata):
 def _validate_contract_metadata(contract_id, metax_client):
     """Validates dataset metadata from /rest/v1/datasets/<dataset_id>
 
-    :returns: None
+    :param contract_id: contract identifier
+    :param metax_clien: metax_access.Metax instance
+    :returns: ``None``
     """
     contract_metadata = metax_client.get_contract(contract_id)
     try:
@@ -128,7 +133,9 @@ def _validate_dataset_files(dataset_metadata, metax_client):
     validates file metadata found by file identidier from
     /rest/v1/files/<file_id>.
 
-    :returns: None
+    :param dataset_metadata: dataset metadata dictionary
+    :param metax_clien: metax_access.Metax instance
+    :returns: ``None``
     """
     for dataset_file in dataset_metadata['research_dataset']['files']:
 
@@ -180,7 +187,9 @@ def _check_mimetype(file_metadata):
 def _validate_file_metadata(dataset_id, metax_client):
     """Validates file metadata found from /rest/v1/datasets/<dataset_id>/files.
 
-    :returns: None
+    :param dataset_id: identifier of file
+    :param metax_client: metax_access.Metax instance
+    :returns: ``None``
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
         try:
@@ -205,7 +214,9 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
     """Validates additional XML file metadata found from
     /rest/v1/files/<file_id>/xml.
 
-    :returns: None
+    :param dataset_id: identifier of file described by XML
+    :param metax_client: metax_access.Metax instance
+    :returns: ``None``
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
         file_format_prefix = file_metadata['file_characteristics'][
@@ -214,26 +225,35 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
         if file_format_prefix in SCHEMATRONS:
             file_id = file_metadata['identifier']
             xmls = metax_client.get_xml('files', file_id)
-            for ns_url in xmls:
-                if ns_url not in NAMESPACES.values():
-                    raise TypeError(INVALID_NS_ERROR % ns_url)
+
+            for namespace in xmls:
+                if namespace not in NAMESPACES.values():
+                    raise TypeError(INVALID_NS_ERROR % namespace)
+
             if SCHEMATRONS[file_format_prefix]['ns'] not in xmls:
                 raise InvalidMetadataError(
                     MISSING_XML_METADATA_ERROR % file_id
                 )
-            _validate_with_schematron(file_format_prefix, file_id, xmls)
+
+            _validate_with_schematron(
+                file_format_prefix,
+                xmls[SCHEMATRONS[file_format_prefix]['ns']],
+                file_id
+            )
 
 
-def _validate_with_schematron(file_format_prefix, file_id, xmls):
+def _validate_with_schematron(filetype, xml, file_id):
     """Validates XML file with schematron.
 
-    :returns: None
+    :param filetype: Type of file described by XML (image, video, or audio)
+    :param xml: XML element
+    :param file_id: identifier of file described by XML
+    :returns: ``None``
     """
     with tempfile.NamedTemporaryFile() as temp:
-        namespace = xmls[SCHEMATRONS[file_format_prefix]['ns']]
-        temp.write(lxml.etree.tostring(namespace).strip())
+        temp.write(lxml.etree.tostring(xml).strip())
         temp.seek(0)
-        schem = SCHEMATRONS[file_format_prefix]['schematron']
+        schem = SCHEMATRONS[filetype]['schema']
         if check_xml_schematron_features.main(['-s', schem, temp.name]) != 0:
             raise InvalidMetadataError(SCHEMATRON_ERROR % (file_id))
 
@@ -241,7 +261,9 @@ def _validate_with_schematron(file_format_prefix, file_id, xmls):
 def _validate_datacite(dataset_metadata, metax_client):
     """Validates datacite.
 
-    :returns: None
+    :param dataset_metadata: dataset metadata dictionary
+    :param metax_client: metax_access.Metax instance
+    :returns: ``None``
     """
     with tempfile.NamedTemporaryFile() as temp:
         datacite = metax_client.get_datacite(dataset_metadata)

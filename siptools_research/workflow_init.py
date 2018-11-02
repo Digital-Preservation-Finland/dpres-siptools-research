@@ -1,6 +1,4 @@
-"""A module that provides function to start the dataset preservation
-workflow.
-"""
+"""Provides function to start the dataset preservation workflow."""
 
 import os
 import uuid
@@ -55,7 +53,9 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     Workspace name is used as document id in MongoDB. This function can be
     imported to other python modules.
 
-    :returns: None
+    :param dataset_id: identifier of dataset
+    :param config: path to configuration file
+    :returns: ``None``
     """
     # Read configuration file
     conf = Configuration(config)

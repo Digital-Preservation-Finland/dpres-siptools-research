@@ -16,6 +16,10 @@ from siptools_research.config import Configuration
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Generates technical metadata and mix metadata for all files of a given
     dataset and updates relevant fields in file metadata.
+
+    :param dataset_id: identifier of dataset
+    :param config: path to configuration file
+    :returns: ``None``
     """
     config_object = Configuration(config)
     metax_client = Metax(config_object.get('metax_url'),
@@ -59,18 +63,14 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             # Generate and post ADDML metadata
             elif file_characteristics['file_format'] == 'text/csv':
 
-                # Get CSV file metadata from METAX
-                delimiter = file_characteristics['csv_delimiter']
-                record_separator = file_characteristics['csv_record_separator']
-                quoting_char = file_characteristics['csv_quoting_char']
-                isheader = file_characteristics['csv_has_header']
-                charset = file_characteristics['encoding']
-                file_path = file_metadata['file_path']
-
                 addml_element = create_addml.create_addml(
-                    tmpfile, delimiter, isheader,
-                    charset, record_separator, quoting_char,
-                    flatfile_name=file_path
+                    tmpfile,
+                    file_characteristics['csv_delimiter'],
+                    file_characteristics['csv_has_header'],
+                    file_characteristics['encoding'],
+                    file_characteristics['csv_record_separator'],
+                    file_characteristics['csv_quoting_char'],
+                    flatfile_name=file_metadata['file_path']
                 )
                 metax_client.set_xml(file_id, addml_element)
 
@@ -94,14 +94,19 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         shutil.rmtree(tmpdir)
 
 
-def _generate_techmd(tmpfile, original_metadata):
-    """Reads file and generates technical metadata. Saves metada to
-    "file_characteristics" object in Metax. If a field already has a value
-    (set by user) it will not be updated.
+def _generate_techmd(filepath, original_metadata):
+    """Reads file and generates technical metadata. `file_characteristics`
+    object is read from original meta.  Generated metadata is appended
+    `file_characteristics` object. If a field already has a value (set by
+    user) it will not be updated.
+
+    :param filepath: path to file for which the metadata is generated
+    :param original_metadata: full original metadata dictionary
+    :returns: New `file_characteristics` dictionary
     """
 
     # Generate technical metadata from file
-    metadata = import_object.metadata_info(tmpfile)
+    metadata = import_object.metadata_info(filepath)
 
     # Create file_characteristics object
     file_characteristics = {}
