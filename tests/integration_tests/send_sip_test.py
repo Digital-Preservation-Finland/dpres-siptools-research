@@ -12,6 +12,7 @@ from siptools_research.config import Configuration
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
 
+
 @pytest.mark.usefixtures('testmongoclient')
 def test_send_sip(testpath):
     """Test the SendSipToDP workflow task. Run task and check that .tar is
@@ -31,14 +32,8 @@ def test_send_sip(testpath):
     shutil.copy('tests/data/testsips/simple_sip.tar',
                 os.path.join(workspace, tar_file_name))
 
-    # Init and run task
-    task = SendSIPToDP(workspace=workspace,
-                       dataset_id='1',
-                       config=tests.conftest.TEST_CONFIG_FILE)
-    task.run()
-    assert task.complete()
-
-    # Init sftp connection to digital preservation server
+    # Init sftp connection to digital preservation server for instant
+    # verification later on
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -47,12 +42,19 @@ def test_send_sip(testpath):
                 key_filename=conf.get('dp_ssh_key'))
     sftp = ssh.open_sftp()
 
+    # Init and run task
+    task = SendSIPToDP(workspace=workspace,
+                       dataset_id='1',
+                       config=tests.conftest.TEST_CONFIG_FILE)
+    task.run()
+    assert task.complete()
+
     # Check that tar-file is created on remote host.
     # NOTE: Tar is copied to ~/transfer/. From there it is automatically moved
     # to /var/spool/preservation/ and after validation it is moved to
     # ~/rejected/<datedir>/<workspace>.tar/. There is a risk that file is moved
     # from ~/transfer before this test is finished.
-    target_file_path = "/home/tpas/transfer/" + tar_file_name
+    target_file_path = "transfer/" + tar_file_name
     logging.debug('Looking for file: %s on server: %s',
                   target_file_path, conf.get('dp_host'))
     sftp.stat(target_file_path)

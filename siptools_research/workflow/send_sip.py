@@ -55,5 +55,5 @@ class SendSIPToDP(WorkflowTask):
                         # Copy tar to remote host
                         tar_file = os.path.basename(self.workspace) + '.tar'
                         sftp.put(os.path.join(self.workspace, tar_file),
-                                 '/home/tpas/transfer/' + tar_file,
+                                 'transfer/' + tar_file,
                                  confirm=False)
