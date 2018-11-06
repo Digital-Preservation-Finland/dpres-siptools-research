@@ -1,4 +1,4 @@
-"""Mail interface class."""
+"""Email send module"""
 
 from smtplib import SMTP
 from os.path import basename
@@ -8,22 +8,37 @@ from email.mime.text import MIMEText
 
 
 def send(sender, receiver, subject, message, attachments=None):
+    """Send email.
+
+    :param sender: email sender
+    :param receiver: email receiver
+    :param subject: email subject
+    :param message: email message
+    :param attachments: email attachment file paths
+    :returns: ``None``
+    """
+    if attachments is None:
+        attachments = []
+
     msg = MIMEMultipart()
     msg['From'] = sender
     msg['To'] = receiver
     msg['Subject'] = subject
     msg.attach(MIMEText(message))
-    for f in attachments or []:
-        with open(f, "rb") as fil:
+
+    for attachment in attachments:
+        with open(attachment, "rb") as fil:
             part = MIMEApplication(
                 fil.read(),
-                Name=basename(f)
+                Name=basename(attachment)
             )
         # After the file is closed
-        part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
+        part['Content-Disposition'] \
+            = 'attachment; filename="%s"' % basename(attachment)
         msg.attach(part)
-    smtpObj = SMTP('localhost')
+
+    smtp = SMTP('localhost')
     try:
-        smtpObj.sendmail(sender, receiver, msg.as_string())
+        smtp.sendmail(sender, receiver, msg.as_string())
     finally:
-        smtpObj.quit()
+        smtp.quit()

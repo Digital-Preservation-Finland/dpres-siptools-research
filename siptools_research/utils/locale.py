@@ -1,12 +1,11 @@
+"""Localization"""
 import iso639
 
 
 def get_dataset_languages(dataset):
-    """
-    Get an ordered list of languages for a dataset in ISO 639-1 format
+    """Get an ordered list of languages for a dataset in ISO 639-1 format
 
-    :dataset: Dict containing dataset metadata
-
+    :param dataset: Dict containing dataset metadata
     :returns: A list of ISO 639-1 formatted language codes
               eg. ["fi", "en"]
     """
@@ -37,13 +36,11 @@ def get_dataset_languages(dataset):
     return lang_codes
 
 
-def get_localized_value(d, languages=None):
-    """
-    Get localized value from a dict
+def get_localized_value(dictionary, languages=None):
+    """Get localized value from a dict
 
-    :d: Dict containing a value in multiple languages
-    :languages: A list of ISO 639-1 language codes in order of preference
-
+    :param dictionary: Dict containing a value in multiple languages
+    :paramlanguages: A list of ISO 639-1 language codes in order of preference
     :returns: Localized value from dict
     """
     if not languages:
@@ -54,7 +51,7 @@ def get_localized_value(d, languages=None):
     languages += ["und", "zxx"]
 
     for lang in languages:
-        if lang in d.keys():
-            return d[lang]
+        if lang in dictionary.keys():
+            return dictionary[lang]
 
-    raise KeyError("Localized value not found in {}".format(d))
+    raise KeyError("Localized value not found in {}".format(dictionary))

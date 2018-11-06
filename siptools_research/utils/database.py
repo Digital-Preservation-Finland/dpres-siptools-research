@@ -1,11 +1,11 @@
-"""Workflow status database interface"""
+"""Workflow database interface"""
 
 import datetime
 import pymongo
 from siptools_research.config import Configuration
 
 
-def timestamp():
+def _timestamp():
     """Return time now.
 
     :returns: Time stamp string
@@ -20,6 +20,11 @@ class Database(object):
     client = None
 
     def __init__(self, config_file):
+        """Initialize new pymongo client if it does not exist already
+        (singleton design pattern)
+
+        :param config_file: path to configurtion file
+        """
 
         if self._collection is None:
             conf = Configuration(config_file)
@@ -38,7 +43,7 @@ class Database(object):
         :param taskname: Name of the task
         :param result: Result string ('failure' or 'success')
         :param messages: Information of the event
-        :returns: None
+        :returns: ``None``
         """
 
         self._collection.update_one(
@@ -48,7 +53,7 @@ class Database(object):
             {
                 '$set': {
                     'workflow_tasks.' + taskname: {
-                        'timestamp': timestamp(),
+                        'timestamp': _timestamp(),
                         'messages': messages,
                         'result': result
                     }
@@ -62,7 +67,7 @@ class Database(object):
 
         :param workflow_id: Workflow identifier
         :param status: Status string
-        :returns: None
+        :returns: ``None``
         """
 
         self._collection.update_one(
@@ -81,7 +86,7 @@ class Database(object):
         """Mark workflow completed.
 
         :param workflow_id: Workflow identifier
-        :returns: None
+        :returns: ``None``
         """
 
         self._collection.update_one(
@@ -100,7 +105,7 @@ class Database(object):
         """Mark workflow disabled.
 
         :param workflow_id: Workflow identifier
-        :returns: None
+        :returns: ``None``
         """
 
         self._collection.update_one(
@@ -122,7 +127,7 @@ class Database(object):
         :param workflow_id: Workflow identifier, i.e. the name of workspace
             directory
         :param dataset_id: Dataset identifier
-        :returns: None
+        :returns: ``None``
         """
 
         self._collection.update_one(
@@ -145,7 +150,7 @@ class Database(object):
 
         :param workflow_id: Mongo workflow id
         :param taskname: Name of task
-        :returns: None
+        :returns: ``None``
         """
         document = self._collection.find_one({'_id': workflow_id})
         return document['workflow_tasks'][taskname]['result']
