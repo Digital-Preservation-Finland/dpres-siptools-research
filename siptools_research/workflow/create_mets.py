@@ -43,7 +43,7 @@ class CreateMets(WorkflowTask):
                              config_object.get('metax_user'),
                              config_object.get('metax_password'))
         metadata = metax_client.get_dataset(self.dataset_id)
-        contract_id = metadata["contract"]["id"]
+        contract_id = metadata["contract"]["identifier"]
 
         contract_metadata = metax_client.get_contract(contract_id)
         contract_identifier = contract_metadata["contract_json"]["identifier"]

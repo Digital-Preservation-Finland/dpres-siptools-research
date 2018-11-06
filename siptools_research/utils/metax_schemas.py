@@ -9,7 +9,7 @@ DATASET_METADATA_SCHEMA = \
         "properties": {
             "contract": {
                 "type": "object",
-                "required": ["id"]
+                "required": ["identifier"]
             },
             "research_dataset": {
                 "type": "object",

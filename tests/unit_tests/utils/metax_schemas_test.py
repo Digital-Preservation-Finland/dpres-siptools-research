@@ -15,7 +15,7 @@ def test_validate_valid_dataset_metadata_with_provenance():
     valid_dataset_metadata = \
         {
             "contract": {
-                "id": 1
+                "identifier": 1
             },
             "research_dataset": {
                 "provenance": [
@@ -72,7 +72,7 @@ def test_validate_valid_dataset_metadata_without_provenance():
     valid_dataset_metadata = \
         {
             "contract": {
-                "id": 1
+                "identifier": 1
             },
             "research_dataset": {
                 "files": [
@@ -114,7 +114,7 @@ def test_validate_invalid_dataset_metadata_missing_attribute_in_provenance():
     invalid_dataset_metadata = \
         {
             "contract": {
-                "id": 1
+                "identifier": 1
             },
             "research_dataset": {
                 "provenance": [
