@@ -2,13 +2,13 @@
 
 import os
 from luigi import LocalTarget
-from siptools_research.workflowtask import WorkflowTask
-from siptools_research.utils.contextmanager import redirect_stdout
 from metax_access import Metax
-from siptools_research.workflow.create_workspace import CreateWorkspace
-from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools.scripts import import_description
 from siptools_research.config import Configuration
+from siptools_research.workflowtask import WorkflowTask
+from siptools_research.utils.contextmanager import redirect_stdout
+from siptools_research.workflow.create_workspace import CreateWorkspace
+from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
 class CreateDescriptiveMetadata(WorkflowTask):

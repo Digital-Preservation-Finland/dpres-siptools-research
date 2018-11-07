@@ -32,7 +32,6 @@ class SendSIPToDP(WorkflowTask):
         return luigi.LocalTarget(os.path.join(self.logs_path,
                                               'task-send-sip-to-dp.log'))
 
-
     def run(self):
         """Sends SIP file to DP service using sftp.
 

@@ -3,15 +3,15 @@
 
 import os
 from luigi import LocalTarget
-from siptools_research.utils.contextmanager import redirect_stdout
 from metax_access import Metax
+import siptools.scripts.import_object
+import siptools.utils
+from siptools_research.config import Configuration
+from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.get_files import GetFiles
-from siptools_research.config import Configuration
-import siptools.scripts.import_object
-import siptools.utils
 
 
 TECH_ATTR_TYPES = [
@@ -137,7 +137,7 @@ def create_technical_attributes(config, workspace, file_id, filepath):
     xmls = Metax(config_object.get('metax_url'),
                  config_object.get('metax_user'),
                  config_object.get('metax_password')).get_xml('files', file_id)
-    
+
     creator = siptools.utils.TechmdCreator(
         os.path.join(workspace, 'sip-in-progress')
     )
@@ -146,7 +146,7 @@ def create_technical_attributes(config, workspace, file_id, filepath):
         if type_["namespace"] in xmls:
 
             # Create METS TechMD file
-            techmd_id, techmd_fname = creator.write_md(
+            techmd_id, _ = creator.write_md(
                 xmls[type_['namespace']].getroot(),
                 type_['mdtype'],
                 type_['mdtypeversion'],

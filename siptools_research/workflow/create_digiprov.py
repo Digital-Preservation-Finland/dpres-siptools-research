@@ -62,9 +62,11 @@ class CreateProvenanceInformation(WorkflowTask):
 def create_premis_event(dataset_id, workspace, config):
     """Gets metada from Metax and calls siptools premis_event script."""
     config_object = Configuration(config)
-    metadata = Metax(config_object.get('metax_url'),
-                     config_object.get('metax_user'),
-                     config_object.get('metax_password')).get_dataset(dataset_id)
+    metadata = Metax(
+        config_object.get('metax_url'),
+        config_object.get('metax_user'),
+        config_object.get('metax_password')
+    ).get_dataset(dataset_id)
 
     dataset_languages = get_dataset_languages(metadata)
 

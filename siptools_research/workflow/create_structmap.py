@@ -6,20 +6,20 @@ import os
 import luigi
 import lxml.etree as ET
 import mets
+from metax_access import Metax
 import xml_helpers.utils as h
 from siptools.scripts import compile_structmap
 from siptools.utils import encode_path
 from siptools.xml.mets import NAMESPACES
+from siptools_research.config import Configuration
 from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
-from metax_access import Metax
+from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_digiprov import \
     CreateProvenanceInformation
 from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
-from siptools_research.workflowtask import WorkflowTask
-from siptools_research.config import Configuration
 
 
 class CreateStructMap(WorkflowTask):
@@ -121,14 +121,15 @@ class CreateStructMap(WorkflowTask):
         metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(metadata)
 
-        if not 'provenance' in metadata['research_dataset']:
+        if 'provenance' not in metadata['research_dataset']:
             return []
 
         provenance_ids = []
         for provenance in metadata["research_dataset"]["provenance"]:
             event_type = get_localized_value(
                 provenance["preservation_event"]["pref_label"],
-                languages=languages)
+                languages=languages
+            )
             prov_file = '%s-event.xml' % event_type
             prov_file = encode_path(os.path.join(self.sip_creation_path,
                                                  prov_file))
@@ -235,7 +236,8 @@ def find_dir_use_category(identifier, dataset_metadata):
         if directory['identifier'] == identifier:
             return get_localized_value(
                 directory['use_category']['pref_label'],
-                languages=languages)
+                languages=languages
+            )
 
     # Nothing found
     return None

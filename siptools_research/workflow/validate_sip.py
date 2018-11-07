@@ -7,6 +7,7 @@ from siptools_research.workflowtask import WorkflowExternalTask
 from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.workflow.send_sip import SendSIPToDP
 
+
 class ValidateSIP(WorkflowExternalTask):
     """External task that finishes when SIP is found in ~/rejected/ or
     ~/accepted/ directories at digital preservation server.

@@ -3,8 +3,8 @@
 import os
 import logging
 import luigi
-from siptools_research.utils import ida
 from metax_access import Metax
+from siptools_research.utils import ida
 from siptools_research.utils import contextmanager
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
@@ -81,9 +81,9 @@ def download_files(self, dataset_files):
             ida.download_file(dataset_file['identifier'],
                               target_path,
                               self.config)
-        except HTTPError as e:
+        except HTTPError as error:
             file_path = dataset_file['file_path']
-            status_code = e.response.status_code
+            status_code = error.response.status_code
             if status_code == 404:
                 raise Exception("File %s not found in Ida." % file_path)
             elif status_code == 403:

@@ -102,60 +102,58 @@ def test_create_premis_event(testpath):
     create_digiprov.create_premis_event(
         'create_digiprov_test_dataset_detailed_check',
         workspace,
-        tests.conftest.UNIT_TEST_CONFIG_FILE)
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
 
     # Check that the created xml-file contains correct elements.
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].attrib["MDTYPE"] == "PREMIS:EVENT"
     assert elements[0].attrib["MDTYPEVERSION"] == "2.3"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
-                          '/mets:xmlData/premis:event/premis:eventIdentifier'\
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
+                          '/mets:xmlData/premis:event/premis:eventIdentifier'
                           '/premis:eventIdentifierType',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "UUID"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventType',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "creation"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventDateTime',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "2014-01-01T08:19:58Z"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventDetail',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "Description of provenance"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
-                          '/mets:xmlData/premis:event/premis:eventOutcomeInformation/premis:eventOutcome',
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
+                          '/mets:xmlData/premis:event'
+                          '/premis:eventOutcomeInformation'
+                          '/premis:eventOutcome',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "success"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
-                          '/mets:xmlData/premis:event/premis:eventOutcomeInformation'\
-                          '/premis:eventOutcomeDetail/premis:eventOutcomeDetailNote',
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
+                          '/mets:xmlData/premis:event'
+                          '/premis:eventOutcomeInformation'
+                          '/premis:eventOutcomeDetail'
+                          '/premis:eventOutcomeDetailNote',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "This is a detail of an successful event"
 
 
@@ -183,43 +181,39 @@ def test_create_premis_event_unav(testpath):
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].attrib["MDTYPE"] == "PREMIS:EVENT"
     assert elements[0].attrib["MDTYPEVERSION"] == "2.3"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
-                          '/mets:xmlData/premis:event/premis:eventIdentifier'\
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
+                          '/mets:xmlData/premis:event/premis:eventIdentifier'
                           '/premis:eventIdentifierType',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "UUID"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventType',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "creation"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventDateTime',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "OPEN"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventDetail',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "Created by packaging service"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'\
-                          '/mets:xmlData/premis:event/premis:eventOutcomeInformation/premis:eventOutcome',
+    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
+                          '/mets:xmlData/premis:event'
+                          '/premis:eventOutcomeInformation'
+                          '/premis:eventOutcome',
                           namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"}
-                          )
+                                      'premis': "info:lc/xmlns/premis-v2"})
     assert elements[0].text == "(:unav)"
