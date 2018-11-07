@@ -12,6 +12,7 @@ import pymongo
 import luigi.configuration
 import httpretty
 import pytest
+import siptools_research.utils.mimetypes
 
 
 # Print debug messages to stdout
@@ -215,3 +216,11 @@ def mock_luigi_config_path(monkeypatch):
                         ['tests/data/configuration_files/luigi.cfg'])
 
 
+@pytest.fixture(scope="function")
+def mock_filetype_conf(monkeypatch):
+    """Mock supported filetypes config file path"""
+    # Patching DEFAULT_CONFIG variable would not affect is_supported -function
+    # default arguments. Therefore, the argument defaults are patched instead.
+    monkeypatch.setattr(siptools_research.utils.mimetypes.is_supported,
+                        "__defaults__",
+                        ('include/etc/dpres_mimetypes.json',))

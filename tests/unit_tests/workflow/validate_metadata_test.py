@@ -7,7 +7,7 @@ from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_filetype_conf')
 def test_validatemetadata(testpath):
     """Test ValidateMetadata class. Run task for dataset that has valid
     metadata.

@@ -49,7 +49,7 @@ def run_luigi_task(module, task, workspace):
     ]
 )
 @pytest.mark.usefixtures('testmetax', 'testida', 'testmongoclient',
-                         'mock_luigi_config_path')
+                         'mock_luigi_config_path', 'mock_filetype_conf')
 @pytest.mark.timeout(600)
 def test_workflow(testpath, module, task):
     """Run a task (and all tasks it requires) and check that check that report

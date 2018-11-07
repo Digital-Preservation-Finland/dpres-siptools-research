@@ -153,25 +153,28 @@ def _validate_dataset_files(dataset_metadata, metax_client):
 
 
 def _check_mimetype(file_metadata):
-    ''' Remove try-except as soon as Metax supports file_format and
-    format_version attributes
-    '''
+    """Check that file format is supported.
+
+    :param file_metadata: file metadata dictionary
+    :returns: ``None``
+    """
+    file_format = file_metadata["file_characteristics"]["file_format"]
     try:
-        file_format = file_metadata["file_characteristics"]["file_format"]
         format_version \
             = file_metadata["file_characteristics"]["format_version"]
-        if not mimetypes.is_supported(file_format, format_version):
-            message = (
-                "Validation error in file {file_path}: Incorrect file "
-                "format: {file_format}, version {version}"
-            ).format(
-                file_path=file_metadata["file_path"],
-                file_format=file_format,
-                version=format_version
-            )
-            raise InvalidMetadataError(message)
     except KeyError:
-        pass
+        format_version = ""
+
+    if not mimetypes.is_supported(file_format, format_version):
+        message = (
+            "Validation error in file {file_path}: Incorrect file "
+            "format: {file_format}, version {version}"
+        ).format(
+            file_path=file_metadata["file_path"],
+            file_format=file_format,
+            version=format_version
+        )
+        raise InvalidMetadataError(message)
 
 
 def _validate_file_metadata(dataset_id, metax_client):
@@ -180,7 +183,6 @@ def _validate_file_metadata(dataset_id, metax_client):
     :returns: None
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
-        _check_mimetype(file_metadata)
         try:
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)
@@ -196,6 +198,7 @@ def _validate_file_metadata(dataset_id, metax_client):
                 message = _modify_msg(message, exc.path)
 
             raise InvalidMetadataError(message)
+        _check_mimetype(file_metadata)
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):

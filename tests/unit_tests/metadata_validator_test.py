@@ -3,14 +3,14 @@
 
 import pytest
 import tests.conftest
+import siptools_research
 from siptools_research import validate_metadata
 from siptools_research.workflowtask import InvalidMetadataError
-import siptools_research.metadata_validator
 from siptools_research.config import Configuration
 from metax_access import Metax
 
 
-@pytest.mark.usefixtures('testmetax')
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
 def test_validate_metadata():
     """Test that validate_metadata function returns ``True`` for a valid
     dataset.
@@ -51,7 +51,7 @@ def test_validate_metadata_invalid_contract_metadata():
         "'name' is a required property at field /contract_json/organization/"
 
 
-@pytest.mark.usefixtures('testmetax')
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
 def test_validate_metadata_missing_xml():
     """Test that validate_metadata function raises exception if dataset
     contains image file but not XML metadata.
@@ -64,7 +64,7 @@ def test_validate_metadata_missing_xml():
         "Missing XML metadata for file: pid:urn:validate_metadata_test_image"
 
 
-@pytest.mark.usefixtures('testmetax')
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
 def test_validate_metadata_audiovideo():
     """Test that validate_metadata function validates AudioMD and VideoMD
     metadata.
@@ -74,7 +74,7 @@ def test_validate_metadata_audiovideo():
         tests.conftest.UNIT_TEST_CONFIG_FILE) is True
 
 
-@pytest.mark.usefixtures('testmetax')
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
 def test_validate_metadata_invalid_datacite():
     """Test that validate_metadata function raises exception with correct error
     message for invalid datacite where required attribute identifier is
