@@ -35,15 +35,17 @@ TECH_ATTR_TYPES = [
 
 
 class CreateTechnicalMetadata(WorkflowTask):
-    """Create technical metadata files.
+    """Create technical metadata files. The task requires workspace to be
+    created, dataset metadata to be validated and dataset file to downloaded.
     """
     success_message = 'Technical metadata for objects created'
     failure_message = 'Technical metadata for objects could not be created'
 
     def requires(self):
-        """Return required tasks.
+        """The Tasks that this Task depends on.
 
-        :returns: CreateWorkspace task
+        :returns: list of tasks: CreateWorkspace, ValidateMetadata, and
+           GetFiles
         """
 
         return [CreateWorkspace(workspace=self.workspace,
@@ -57,16 +59,19 @@ class CreateTechnicalMetadata(WorkflowTask):
                          config=self.config)]
 
     def output(self):
-        """Outputs log to ``logs/task-create-technical-metadata.log``"
+        """The output that this Task produces.
 
-        :returns: LocalTarget"""
+        :returns: local target: `logs/task-create-technical-metadata.log`
+        :rtype: LocalTarget
+        """
         return LocalTarget(os.path.join(self.logs_path,
                                         'task-create-technical-metadata.log'))
 
     def run(self):
-        """Creates PREMIS technical metadata files for files in transfer.
+        """Creates PREMIS technical metadata files and technical attribute
+        files.
 
-        :returns: None
+        :returns: ``None``
         """
 
         with self.output().open('w') as log:
@@ -74,9 +79,16 @@ class CreateTechnicalMetadata(WorkflowTask):
                 import_objects(self.dataset_id, self.workspace, self.config)
 
 
-def create_objects(file_id=None, metax_filepath=None, workspace=None,
-                   config=None):
-    """Gets file metadata from Metax and calls create_premis_object function"""
+def create_objects(file_id, metax_filepath, workspace, config):
+    """Reads file metadata from Metax and creates technical metada XML file and
+    technical attrubute XML files.
+
+    :param file_id: file identifier
+    :param metax_filepath: path to file
+    :param workspace: workflow workspace directory
+    :param config: path to configuration file
+    :returns: ``None``
+    """
 
     config_object = Configuration(config)
     metadata = Metax(config_object.get('metax_url'),
@@ -132,6 +144,12 @@ def create_objects(file_id=None, metax_filepath=None, workspace=None,
 def create_technical_attributes(config, workspace, file_id, filepath):
     """Read technical attribute XML from Metax. Create METS TechMD files for
     each metadata type, if it is available in Metax.
+
+    :param config: path to configuration file
+    :param workspace: workspace directory
+    :param file_id: file identifier
+    :param filepath: path to file described by techMD element
+    :returns: ``None``
     """
     config_object = Configuration(config)
     xmls = Metax(config_object.get('metax_url'),
@@ -160,14 +178,21 @@ def create_technical_attributes(config, workspace, file_id, filepath):
 
 
 def import_objects(dataset_id, workspace, config):
-    """Main function of import_objects script """
+    """Create technical metadata for file using import_objects script from
+    siptools.
+
+    :param dataset_id: dataset identifier
+    :param workspace: SIP creation path
+    :param config: path to configuration file
+    :returns: ``None``
+    """
     config_object = Configuration(config)
     metax_client = Metax(config_object.get('metax_url'),
                          config_object.get('metax_user'),
                          config_object.get('metax_password'))
     file_metadata = metax_client.get_dataset_files(dataset_id)
-    for file_ in file_metadata:
 
+    for file_ in file_metadata:
         # Read file identifier
         file_id = file_["identifier"]
 
@@ -182,6 +207,8 @@ def algorithm_name(algorithm, value):
     either 'md5' or 'sha2'. If it is 'sha2' the exact algorithm has to be
     deduced from the lenght of checksum value.
 
+    :param algorithm: algorithm string, 'md5' or 'sha2'
+    :param value: the checksum value
     :returns: 'MD5', 'SHA-224', 'SHA-256', 'SHA-384', or 'SHA-512'
     """
     sha2_bit_lengths \

@@ -10,13 +10,14 @@ from siptools_research.utils.contextmanager import redirect_stdout
 
 
 class SendSIPToDP(WorkflowTask):
-    """Copy compressed SIP to ~/transfer directory in digital preservation
-    server using SFTP."""
+    """Copy SIP to ~/transfer directory in digital preservation server using
+    SFTP. Task requires that tar archive format SIP is created.
+    """
     success_message = "SIP was sent to digital preservation"
     failure_message = "Sending SIP to digital preservation failed"
 
     def requires(self):
-        """Requires tar-archived SIP file.
+        """The Tasks that this Task depends on.
 
         :returns: CompressSIP task
         """
@@ -25,9 +26,10 @@ class SendSIPToDP(WorkflowTask):
                            config=self.config)
 
     def output(self):
-        """Outputs log file: ``logs/task-send-sip-to-dp``.
+        """The output that this Task produces.
 
-        :returns: LocalTarget
+        :returns: local target: `logs/task-send-sip-to-dp`
+        :rtype: LocalTarget
         """
         return luigi.LocalTarget(os.path.join(self.logs_path,
                                               'task-send-sip-to-dp.log'))
@@ -35,7 +37,7 @@ class SendSIPToDP(WorkflowTask):
     def run(self):
         """Sends SIP file to DP service using sftp.
 
-        :returns: None
+        :returns: ``None``
         """
 
         with self.output().open('w') as log:

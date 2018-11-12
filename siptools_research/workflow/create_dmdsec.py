@@ -12,13 +12,14 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
 class CreateDescriptiveMetadata(WorkflowTask):
-    """Workflow task that creates mets dmdSec from DataCite file.
+    """Workflow task that creates mets dmdSec from DataCite file. Task requires
+    that workspace is created and dataset metadata is validated.
     """
     success_message = "Descriptive metadata created"
     failure_message = "Creating descriptive metadata failed"
 
     def requires(self):
-        """Workspace must created and Metax metadata must be validated.
+        """The Tasks that this Task depends on.
 
         :returns: list of tasks: [CreateWorkspace, ValidateMetadata]
         """
@@ -30,9 +31,10 @@ class CreateDescriptiveMetadata(WorkflowTask):
                                  config=self.config)]
 
     def output(self):
-        """Task is ready when ``sip-in-progress/dmdsec.xml`` has been created.
+        """The output that this Task produces.
 
-        :returns: LocalTarget
+        :returns: local target: ``sip-in-progress/dmdsec.xml``
+        :rtype: LocalTarget
         """
         return LocalTarget(os.path.join(self.sip_creation_path, 'dmdsec.xml'))
 

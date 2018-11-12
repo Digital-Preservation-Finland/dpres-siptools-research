@@ -10,11 +10,12 @@ from siptools_research.workflow.send_sip import SendSIPToDP
 
 class ValidateSIP(WorkflowExternalTask):
     """External task that finishes when SIP is found in ~/rejected/ or
-    ~/accepted/ directories at digital preservation server.
+    ~/accepted/ directories at digital preservation server. Task requires that
+    SIP is sent to digital preservation service.
     """
 
     def requires(self):
-        """Requires SIP to be sent to DP service.
+        """The Tasks that this Task depends on.
 
         :returns: SendSIPToDP task
         """
@@ -23,11 +24,13 @@ class ValidateSIP(WorkflowExternalTask):
                            config=self.config)
 
     def output(self):
-        """Outpus directory that contains ingest reports:
-        dp_service:~/accepted/<datepath>/<document_id>.tar/ or
-        dp_service:~/rejected/<datepath>/<document_id>.tar/
+        """The output that this Task produces.
 
-        :returns: RemoteAnyTarget
+        :returns: remote target that may exist in two possible locations on
+            digital preservation server:
+            ~/accepted/<datepath>/<document_id>.tar/ or
+            ~/rejected/<datepath>/<document_id>.tar/
+        :rtype: RemoteAnyTarget
         """
         # TODO: if day changes between ingest report creation and init of this
         # target, the target does not exist.

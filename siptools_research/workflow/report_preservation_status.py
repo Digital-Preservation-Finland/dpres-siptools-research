@@ -15,15 +15,15 @@ from metax_access import Metax, DS_STATE_IN_DIGITAL_PRESERVATION
 class ReportPreservationStatus(WorkflowTask):
     """A workflowtask that updates the preservation status of dataset in Metax
     based on the directory where ingest report was found in digital
-    preservation system.
+    preservation system. Task requires SIP to be sent to digital preservation
+    service and the validation to be finished.
     """
 
     success_message = "Dataset was accepted to preservation"
     failure_message = "Dataset was not accepted to preservation"
 
     def requires(self):
-        """Requires SIP to be sent to digital preservation service and the
-        validation to be finished
+        """The Tasks that this Task depends on.
 
         :returns: list of required tasks"""
         return [ValidateSIP(workspace=self.workspace,
@@ -34,9 +34,10 @@ class ReportPreservationStatus(WorkflowTask):
                             config=self.config)]
 
     def output(self):
-        """Outputs log to ``logs/report-preservation-status.log``
+        """The output that this Task produces.
 
-        :returns: None
+        :returns: local target: `logs/report-preservation-status.log`
+        :rtype: LocalTarget
         """
         return LocalTarget(os.path.join(self.logs_path,
                                         'report-preservation-status.log'))
@@ -49,7 +50,7 @@ class ReportPreservationStatus(WorkflowTask):
         somewhere else, an exception is risen. The event handlers will deal
         with the exceptions.
 
-        :returns: None
+        :returns: ``None``
         """
 
         with self.output().open('w') as log:

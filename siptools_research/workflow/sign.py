@@ -10,12 +10,13 @@ from siptools.scripts import sign_mets
 
 
 class SignSIP(WorkflowTask):
-    """Task that signs METS file."""
+    """Task that signs METS file. Task requires METS file to be created."""
+
     success_message = "Signing SIP completed succesfully"
     failure_message = "Could not sign SIP"
 
     def requires(self):
-        """Returns required tasks.
+        """The Tasks that this Task depends on.
 
         :returns: CreateMets task
         """
@@ -24,9 +25,10 @@ class SignSIP(WorkflowTask):
                           config=self.config)
 
     def output(self):
-        """Outputs signature file: ``sip-in-progress/signature.sig``.
+        """The output that this Task produces.
 
-        :returns: LocalTarget
+        :returns: local target: `sip-in-progress/signature.sig`
+        :rtype: LocalTarget
         """
         return luigi.LocalTarget(os.path.join(self.sip_creation_path,
                                               "signature.sig"))
@@ -34,7 +36,7 @@ class SignSIP(WorkflowTask):
     def run(self):
         """Signs METS file using sign_mets from siptools.
 
-        :returns: None
+        :returns: ``None``
         """
         log_path = os.path.join(self.workspace, 'logs', 'task-sign-sip.log')
         with open(log_path, 'w+') as log:

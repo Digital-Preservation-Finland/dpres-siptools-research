@@ -10,15 +10,17 @@ from siptools_research.workflow.report_preservation_status\
 
 
 class CleanupWorkspace(WorkflowTask):
-    """Remove the workspace when it is ready for cleanup.
-    Tries to run task for a limited number of times until task
-    sets the status of the document to pending.
+    """Removes the workspace when it is ready for cleanup. Task requires that
+    preservation status has been reported.
     """
     success_message = 'Workspace was cleaned'
     failure_message = 'Cleaning workspace failed'
 
     def requires(self):
-        """Requires that preservation status has been reported"""
+        """The Tasks that this Task depends on.
+
+        :returns: ReportPreservationStatus task
+        """
         return ReportPreservationStatus(workspace=self.workspace,
                                         dataset_id=self.dataset_id,
                                         config=self.config)
@@ -34,7 +36,7 @@ class CleanupWorkspace(WorkflowTask):
         """Task is complete when workspace does not exist, but
         ReportPreservationStatus has finished according to workflow database.
 
-        :returns: True or False
+        :returns: ``True`` or ``False``
         """
 
         # Check if ReportPreservationStatus has finished

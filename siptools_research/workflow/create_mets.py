@@ -11,12 +11,13 @@ from siptools.scripts import compile_mets
 
 
 class CreateMets(WorkflowTask):
-    """WorkflowTask that Compiles METS document."""
+    """Compiles METS document. Task requires METS structure map to be created.
+    """
     success_message = "METS document compiled"
     failure_message = "Compiling METS document failed"
 
     def requires(self):
-        """Requires METS structure map to be created.
+        """The Tasks that this Task depends on.
 
         :returns: CreateStructMap task
         """
@@ -25,9 +26,10 @@ class CreateMets(WorkflowTask):
                                config=self.config)
 
     def output(self):
-        """Creates ``sip-in-progress/mets.xml`` file
+        """The output that this Task produces.
 
-        :returns: LocalTarget
+        :returns: local target: `sip-in-progress/mets.xml`
+        :rtype: LocalTarget
         """
         return LocalTarget(os.path.join(self.sip_creation_path, 'mets.xml'))
 

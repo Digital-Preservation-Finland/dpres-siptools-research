@@ -23,45 +23,45 @@ from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 
 
 class CreateStructMap(WorkflowTask):
-    """Create METS fileSec and structMap files.
-
-    :returns: dict
+    """Create METS fileSec and structMap files. Task requires descriptive
+    metadata, provenance information, and techical metadata to be created.
     """
     success_message = "Structure map created"
     failure_message = "Structure map could not be created"
 
     def requires(self):
-        """Requires dmdSec file, PREMIS object files, PREMIS
-        event files and PREMIS agent files
+        """The Tasks that this Task depends on.
+
+        :returns: list of tasks
         """
-        return {"Create descriptive metadata completed":
-                CreateDescriptiveMetadata(workspace=self.workspace,
-                                          dataset_id=self.dataset_id,
-                                          config=self.config),
-                "Create provenance information completed":
-                CreateProvenanceInformation(workspace=self.workspace,
-                                            dataset_id=self.dataset_id,
-                                            config=self.config),
-                "Create technical metadata completed":
-                CreateTechnicalMetadata(workspace=self.workspace,
+        return [
+            CreateDescriptiveMetadata(workspace=self.workspace,
+                                      dataset_id=self.dataset_id,
+                                      config=self.config),
+            CreateProvenanceInformation(workspace=self.workspace,
                                         dataset_id=self.dataset_id,
-                                        config=self.config)}
+                                        config=self.config),
+            CreateTechnicalMetadata(workspace=self.workspace,
+                                    dataset_id=self.dataset_id,
+                                    config=self.config)
+        ]
 
     def output(self):
-        """Writes log to ``logs/create-struct-map`` file
+        """The output that this Task produces.
 
-        :returns: LocalTarget
+        :returns: local target: `logs/create-struct-map`
+        :rtype: LocalTarget
         """
         return luigi.LocalTarget(os.path.join(self.logs_path,
                                               'create-struct-map'))
 
     def run(self):
         """Creates a METS structural map file with two distinct structural
-        maps. Physical structural map is created based on a folder structure.
-        Logical structural map is based on dataset metada retrieved from Metax.
+        maps. Physical structural map is created based on a directory
+        structure.  Logical structural map is based on dataset metada retrieved
+        from Metax.
 
-        :returns: None
-
+        :returns: ``None``
         """
         # Redirect stdout to logfile
         with self.output().open('w') as log:
@@ -83,8 +83,8 @@ class CreateStructMap(WorkflowTask):
                 provenance_ids = self.get_provenance_ids()
 
                 # Init logical structmap
-                logical_structmap = \
-                    mets.structmap(type_attr='Fairdata-logical')
+                logical_structmap \
+                    = mets.structmap(type_attr='Fairdata-logical')
 
                 mets_structmap = mets.mets(child_elements=[logical_structmap])
 
@@ -143,7 +143,7 @@ class CreateStructMap(WorkflowTask):
         """Creates logical structure map of dataset files. Returns dictionary
         with filecategories as keys and filepaths as values.
 
-        :returns: dict
+        :returns: logical structure map dictionary
         """
         config_object = Configuration(self.config)
         metax_client = Metax(config_object.get('metax_url'),
@@ -182,8 +182,8 @@ class CreateStructMap(WorkflowTask):
     def get_fileid(self, filename):
         """Get file id from filesec.xml by filename.
 
-        :filename: filename
-        :returns: file ID
+        :param filename: filename
+        :returns: file identifier
         """
 
         # pylint: disable=no-member
@@ -205,12 +205,12 @@ class CreateStructMap(WorkflowTask):
 
 def find_file_use_category(identifier, dataset_metadata):
     """Looks for file with identifier from dataset metadata. Returns the
-    "use_category" of file if it is found. If file is not found from list,
+    `use_category` of file if it is found. If file is not found from list,
     return None.
 
-    :identifier (string): File ID
-    :dataset_metadata (dict): Dataset metadata from Metax
-    :returns (string): Use category attribute
+    :param identifier: file identifier
+    :param dataset_metadata: dataset metadata dictionary
+    :returns: `use_category` attribute of file
     """
     languages = get_dataset_languages(dataset_metadata)
 
@@ -226,9 +226,13 @@ def find_file_use_category(identifier, dataset_metadata):
 
 
 def find_dir_use_category(identifier, dataset_metadata):
-    """Looks for file with identifier from dataset metadata. Returns the
-    "use_category" of file if it is found. If file is not found from list,
-    return None.
+    """Looks for directory with identifier from dataset metadata. Returns the
+    `use_category` of directory if it is found. If directory is not found from
+    list, return ``None``.
+
+    :param identifier: directory identifier
+    :param dataset_metadata: dataset metadata dictionary
+    :returns: `use_category` attribute of directory
     """
     languages = get_dataset_languages(dataset_metadata)
 

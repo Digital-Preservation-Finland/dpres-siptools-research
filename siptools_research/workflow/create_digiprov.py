@@ -16,14 +16,17 @@ from siptools_research.config import Configuration
 
 class CreateProvenanceInformation(WorkflowTask):
     """Create provenance information as PREMIS event and PREMIS agent
-    files in METS digiprov wrappers.
+    files in METS digiprov wrappers. The Task requires that workspace directory
+    is created and dataset metadata is validated.
     """
     success_message = "Provenance metadata created."
     failure_message = "Could not create provenance metadata"
 
     def requires(self):
-        """Requires workspace directory to be created and Metax metadata to be
-        validated."""
+        """The Tasks that this Task depends on.
+
+        :returns: CreateWorkspace task and ValidateMetadata task
+        """
         return [
             CreateWorkspace(
                 workspace=self.workspace,
@@ -38,15 +41,20 @@ class CreateProvenanceInformation(WorkflowTask):
         ]
 
     def output(self):
-        """Outputs ``logs/task-create-provenance-information.log`` file."""
+        """The output that this Task produces.
+
+        :returns: local target:
+           `<workspace>/<log_directory>/task-create-provenance-information.log`
+        :rtype: LocalTarget
+        """
         return luigi.LocalTarget(
             os.path.join(self.logs_path,
                          'task-create-provenance-information.log')
         )
 
     def run(self):
-        """Gets file metadata from Metax. Writes digital provenance information
-        to ``sip-in-progress/creation-event.xml`` file.
+        """Reads file metadata from Metax and writes digital provenance
+        information to `sip-in-progress/creation-event.xml` file.
 
         :returns: None
         """
@@ -54,13 +62,19 @@ class CreateProvenanceInformation(WorkflowTask):
         # Redirect stdout to logfile
         with self.output().open('w') as log:
             with redirect_stdout(log):
-                create_premis_event(self.dataset_id,
-                                    self.sip_creation_path,
-                                    self.config)
+                _create_premis_event(self.dataset_id,
+                                     self.sip_creation_path,
+                                     self.config)
 
 
-def create_premis_event(dataset_id, workspace, config):
-    """Gets metada from Metax and calls siptools premis_event script."""
+def _create_premis_event(dataset_id, workspace, config):
+    """Reads dataset metadta from Metax and calls siptools premis_event script.
+
+    :param dataset_id: dataset identifier
+    :param workspace: SIP creation directory
+    :param config: path to configuration file
+    :returns: ``None``
+    """
     config_object = Configuration(config)
     metadata = Metax(
         config_object.get('metax_url'),
@@ -92,27 +106,32 @@ def create_premis_event(dataset_id, workspace, config):
         for provenance in metadata["research_dataset"]["provenance"]:
             event_type = get_localized_value(
                 provenance["preservation_event"]["pref_label"],
-                languages=dataset_languages)
+                languages=dataset_languages
+            )
             event_datetime = provenance["temporal"]["start_date"]
             event_detail = get_localized_value(
                 provenance["description"],
-                languages=dataset_languages)
+                languages=dataset_languages
+            )
             # Read event_outcome if it defined for this dataset
             try:
                 event_outcome = get_localized_value(
                     provenance["event_outcome"]["pref_label"],
-                    languages=dataset_languages)
+                    languages=dataset_languages
+                )
             except KeyError:
                 event_outcome = "(:unav)"
             # Read event_outcome_detail if it defined for this dataset
             try:
                 event_outcome_detail = get_localized_value(
                     provenance["outcome_description"],
-                    languages=dataset_languages)
+                    languages=dataset_languages
+                )
             except KeyError:
                 event_outcome_detail = "Value unavailable, possibly unknown"
             premis_event.main([
-                event_type, event_datetime,
+                event_type,
+                event_datetime,
                 "--event_detail", event_detail,
                 "--event_outcome", event_outcome,
                 "--event_outcome_detail", event_outcome_detail,

@@ -18,15 +18,16 @@ logging.basicConfig(level=logging.DEBUG)
 
 class GetFiles(WorkflowTask):
     """A task that reads file metadata from Metax and downloads requred files
-    from Ida.
+    from Ida. Task requires that workspace directory exists and metadata is
+    validated.
     """
     success_message = 'Files were downloaded from IDA'
     failure_message = 'Could not get files from IDA'
 
     def requires(self):
-        """Requires workspace directory to be created.
+        """The Tasks that this Task depends on.
 
-        :returns: CreateWorkspace task
+        :returns: list of required tasks
         """
         return [CreateWorkspace(workspace=self.workspace,
                                 dataset_id=self.dataset_id,
@@ -36,9 +37,10 @@ class GetFiles(WorkflowTask):
                                  config=self.config)]
 
     def output(self):
-        """Outputs log to ``logs/task-getfiles.log``
+        """The output that this Task produces.
 
-        :returns: LocalTarget
+        :returns: local target: `logs/task-getfiles.log`
+        :rtype: LocalTarget
         """
         return luigi.LocalTarget(os.path.join(self.logs_path,
                                               "task-getfiles.log"))
@@ -46,7 +48,7 @@ class GetFiles(WorkflowTask):
     def run(self):
         """Reads list of required files from Metax and downloads them from Ida.
 
-        :returns: None
+        :returns: ``None``
         """
 
         with self.output().open('w') as log:
@@ -63,8 +65,11 @@ class GetFiles(WorkflowTask):
 
 
 def download_files(self, dataset_files):
-    """Reads files from IDA and writes them on a path based on use_category in
+    """Reads files from IDA and writes them on a path based on `use_category` in
     Metax
+
+    :param dataset_files: dataset files metadata dictionary
+    :returns: ``None``
     """
     for dataset_file in dataset_files:
 

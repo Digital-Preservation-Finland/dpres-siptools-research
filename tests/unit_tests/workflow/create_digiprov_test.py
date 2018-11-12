@@ -99,7 +99,8 @@ def test_create_premis_event(testpath):
 
     # Create provenance info xml-file to tempdir
     workspace = testpath
-    create_digiprov.create_premis_event(
+    # pylint: disable=protected-access
+    create_digiprov._create_premis_event(
         'create_digiprov_test_dataset_detailed_check',
         workspace,
         tests.conftest.UNIT_TEST_CONFIG_FILE
@@ -171,7 +172,8 @@ def test_create_premis_event_unav(testpath):
 
     # Create provenance info xml-file to tempdir
     workspace = testpath
-    create_digiprov.create_premis_event(
+    # pylint: disable=protected-access
+    create_digiprov._create_premis_event(
         'create_digiprov_test_dataset_provenance_data_missing',
         workspace,
         tests.conftest.UNIT_TEST_CONFIG_FILE)

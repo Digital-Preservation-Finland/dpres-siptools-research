@@ -9,22 +9,26 @@ from siptools_research.workflow.sign import SignSIP
 
 
 class CompressSIP(WorkflowTask):
-    """Creates tar-archive from SIP directory."""
+    """Creates tar-archive from SIP directory. Task requires that SIP has been
+    signed.
+    """
     success_message = "TAR archive was created"
     failure_message = "Creating TAR archive failed"
 
     def requires(self):
-        """The signature file ``signature.sig`` is required.
+        """The Tasks that this Task depends on.
 
-        :returns: SignSIP task"""
+        :returns: SignSIP task
+        """
         return SignSIP(workspace=self.workspace,
                        dataset_id=self.dataset_id,
                        config=self.config)
 
     def output(self):
-        """Creates ``<document_id>.tar`` file.
+        """The output that this Task produces.
 
-        :returns: LocalTarget
+        :returns: local target: `<workspace>/<document_id>.tar`
+        :rtype: LocalTarget
         """
         return luigi.LocalTarget(
             os.path.join(self.workspace, self.document_id) + '.tar'
