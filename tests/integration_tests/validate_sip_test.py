@@ -7,7 +7,6 @@ import time
 import tests.conftest
 import paramiko
 from siptools_research.workflow.validate_sip import ValidateSIP
-from os.path import expanduser
 
 
 def test_validatesip_accepted(testpath):
@@ -68,9 +67,11 @@ def _create_remote_dir(path):
     with paramiko.SSHClient() as ssh:
         # Initialize SSH connection to digital preservation server
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect('86.50.168.218',
-                    username='cloud-user',
-                    key_filename=expanduser("~") + '/.ssh/pouta-key.pem')
+        ssh.connect(
+            '86.50.168.218',
+            username='cloud-user',
+            key_filename=os.path.expanduser("~") + '/.ssh/pouta-key.pem'
+        )
         parent_path = os.path.dirname(path.strip('/'))
         _remote_cmd(ssh, 'sudo mkdir /home/tpas/' + parent_path)
         _remote_cmd(ssh, 'sudo chown tpas:access-rest-api /home/'

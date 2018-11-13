@@ -75,8 +75,8 @@ def test_workflow(testpath):
         # Init pymongo client
         conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
         mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-        collection = mongoclient[conf.get('mongodb_database')]\
-            [conf.get('mongodb_collection')]
+        collection = (mongoclient[conf.get('mongodb_database')]
+                      [conf.get('mongodb_collection')])
         document = collection.find_one()
 
         # Check 'result' field
