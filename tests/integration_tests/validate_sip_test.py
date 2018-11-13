@@ -15,7 +15,7 @@ def test_validatesip_accepted(testpath):
     server and tests that task is complete.
 
     :param testpath: Temporary directory fixture
-    :returns: None
+    :returns: ``None``
     """
     workspace = testpath
 
@@ -39,7 +39,7 @@ def test_validatesip_rejected(testpath):
     server and tests that task is complete.
 
     :param testpath: Temporary directory fixture
-    :returns: None
+    :returns: ``None``
     """
     workspace = testpath
 
@@ -62,7 +62,7 @@ def _create_remote_dir(path):
     permissions of the new directory and its parent directory.
 
     :param path: Path of new directory
-    :returns: None
+    :returns: ``None``
     """
     with paramiko.SSHClient() as ssh:
         # Initialize SSH connection to digital preservation server
@@ -87,7 +87,7 @@ def _remote_cmd(ssh, command, raise_error=False):
     :param ssh: SSHClient used for running the command
     :param command: Command to be run on remote host
     :param raise_error: When true raises an Exception if command fails
-    :returns: None
+    :returns: ``None``
     """
     _, stdout, _ = ssh.exec_command(command)
     if raise_error and stdout.channel.recv_exit_status() != 0:

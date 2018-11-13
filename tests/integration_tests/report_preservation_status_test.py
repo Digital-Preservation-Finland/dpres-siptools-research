@@ -18,8 +18,8 @@ def test_reportpreservationstatus(testpath):
     after it has been run. Fake Metax server is used, so it can not be tested
     if preservation status really is updated in Metax.
 
-    :testpath: Temporary directory fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
 
     workspace = testpath
@@ -62,8 +62,8 @@ def test_reportpreservationstatus_rejected(testpath):
     Metax server is used, so it can not be tested if preservation status really
     is updated in Metax.
 
-    :testpath: Temporary directory fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
 
     workspace = testpath
@@ -118,8 +118,8 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
     and tests that the report file is NOT sent. Metax server is used, so it can
     not be tested if preservation status really is updated in Metax.
 
-    :testpath: Temporary directory fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
 
     workspace = testpath

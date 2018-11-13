@@ -18,8 +18,8 @@ def test_send_sip(testpath):
     """Test the SendSipToDP workflow task. Run task and check that .tar is
     copied to digital preservation server.
 
-    :testpath: Temporary directory fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
     # Set permissions of ssh key
     os.chmod('tests/data/pas_ssh_key', 0600)

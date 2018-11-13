@@ -11,6 +11,8 @@ from siptools_research.utils.ida import download_file
 def test_ida_download(testpath):
     """Add test dataset metadata and associated file metadata to Metax. Run
     partial workflow by calling CreateMets task with luigi.
+
+    :param testpath: temporary directory fixture
     """
     # Read configuration file
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)

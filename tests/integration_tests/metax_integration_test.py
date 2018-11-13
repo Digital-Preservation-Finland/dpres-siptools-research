@@ -15,7 +15,14 @@ from siptools_research.config import Configuration
 
 
 def run_luigi_task(module, task, workspace, dataset_id):
-    """Run luigi as it would be run from commandline"""
+    """Run any WorkflowTask with luigi as it would be run from commandline.
+
+    :param module: full path module that contains task
+    :param task: name of task class
+    :param workspace: --workspace parameter for WorkflowTask
+    :param dataset_id: --dataset-id parameter for WorkflowTask
+    :returns: ``None``
+    """
     with pytest.raises(SystemExit):
         luigi.cmdline.luigi_run(
             ('--module', module, task,
@@ -30,6 +37,9 @@ def run_luigi_task(module, task, workspace, dataset_id):
 def test_workflow(testpath):
     """Add test dataset metadata and associated file metadata to Metax. Run
     partial workflow by calling CreateMets task with luigi.
+
+    :param testpath: temporary directory
+    :returns: ``None``
     """
     dataset_id = -1
     file1_id = "pid:urn:wf_test_1a"
@@ -91,7 +101,8 @@ def post_metax_file(metadatafile, conf):
     """Post file metadata to Metax using HTTP POST method.
 
     :metadatafile: JSON file from which the metadata is read
-    :returns: None
+    :param conf: Configuration
+    :returns: ``None``
     """
     # Read metadata file
     with open(metadatafile) as open_file:
@@ -109,8 +120,9 @@ def post_metax_file(metadatafile, conf):
 def post_metax_dataset(metadatafile, file_ids, conf):
     """Post dataset metadata to Metax using HTTP POST method.
 
-    :identifier: unique identifier for file
-    :metadatafile: JSON file from which the metadata is read
+    :param identifier: unique identifier for file
+    :param metadatafile: JSON file from which the metadata is read
+    :param conf: Configuration
     :returns: Id of added dataset
     """
     # Edit metadata
@@ -137,8 +149,8 @@ def post_metax_dataset(metadatafile, file_ids, conf):
 def delete_metax_file(identifier, conf):
     """Delete file metadata from Metax using HTTP DELETE method.
 
-    :identifier: Identifier of file to be deleted
-    :conf: Configuration
+    :param identifier: Identifier of file to be deleted
+    :param conf: Configuration
     :returns: None
     """
     url = "%s/rest/v1/files/%s" % (conf.get("metax_url"), identifier)
@@ -152,9 +164,9 @@ def delete_metax_file(identifier, conf):
 def delete_metax_dataset(identifier, conf):
     """Delete dataset metadata from Metax using HTTP DELETE method.
 
-    :identifier: Identifier of dataset to be deleted
-    :conf: Configuration
-    :returns: None
+    :param identifier: Identifier of dataset to be deleted
+    :param conf: Configuration
+    :returns: ``None``
     """
 
     url = "%s/rest/v1/datasets/%s" % (conf.get("metax_url"), identifier)

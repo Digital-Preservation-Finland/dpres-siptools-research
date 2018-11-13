@@ -15,7 +15,13 @@ from siptools_research.config import Configuration
 
 
 def run_luigi_task(module, task, workspace):
-    """Run luigi as it would be run from commandline"""
+
+    """Run any WorkflowTask using luigi as it would be run from commandline
+    :param module: full path module that contains the Task
+    :param task: Task class name
+    :param workspace: --workspace parameter for WorkflowTask
+    :returns: ``None``
+    """
     with pytest.raises(SystemExit):
         luigi.cmdline.luigi_run(
             ('--module', module, task,
@@ -54,6 +60,12 @@ def run_luigi_task(module, task, workspace):
 def test_workflow(testpath, module, task):
     """Run a task (and all tasks it requires) and check that check that report
     of successfull task is added to mongodb.
+
+    :param testpath: temporary directory
+    :param module: submodule of siptools_research.workflow that contains Task
+                   to be tested
+    :param task: Task class name
+    :returns: ``None``
     """
     # Set permissions of ssh key (required by SendSIPToDP task)
     os.chmod('tests/data/pas_ssh_key', 0600)
