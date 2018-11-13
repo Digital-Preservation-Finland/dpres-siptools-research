@@ -7,6 +7,7 @@ import time
 import tests.conftest
 import paramiko
 from siptools_research.workflow.validate_sip import ValidateSIP
+from os.path import expanduser
 
 
 def test_validatesip_accepted(testpath):
@@ -14,7 +15,7 @@ def test_validatesip_accepted(testpath):
     creates new directory to "accepted" directory in digital preservation
     server and tests that task is complete.
 
-    :testpath: Temporary directory fixture
+    :param testpath: Temporary directory fixture
     :returns: None
     """
     workspace = testpath
@@ -38,7 +39,7 @@ def test_validatesip_rejected(testpath):
     creates new directory to "rejected" directory in digital preservation
     server and tests that task is complete.
 
-    :testpath: Temporary directory fixture
+    :param testpath: Temporary directory fixture
     :returns: None
     """
     workspace = testpath
@@ -61,34 +62,32 @@ def _create_remote_dir(path):
     """Creates new directory to digital preservation server and sets
     permissions of the new directory and its parent directory.
 
-    :path: Path of new directory
+    :param path: Path of new directory
     :returns: None
     """
     with paramiko.SSHClient() as ssh:
         # Initialize SSH connection to digital preservation server
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect('86.50.168.218',
-                    username='tpas',
-                    key_filename='tests/data/pas_ssh_key')
-
-        sftp = ssh.open_sftp()
-
-        # Create directory with name of the workspace to digital preservation
-        # server over SSH, so that the ReportPreservationStatus thinks that
-        # validation has completed.
-
-        # Create parent directory
+                    username='cloud-user',
+                    key_filename=expanduser("~") + '/.ssh/pouta-key.pem')
         parent_path = os.path.dirname(path.strip('/'))
-        try:
-            sftp.mkdir(parent_path)
-        except IOError as exc:
-            if exc.message == 'Failure':
-                # The directory probably exists already
-                pass
-            else:
-                raise
-        sftp.chown(parent_path, 9906, 333)  # tpas:preservation
-        sftp.chmod(parent_path, 0775)
+        _remote_cmd(ssh, 'sudo mkdir /home/tpas/' + parent_path)
+        _remote_cmd(ssh, 'sudo chown tpas:access-rest-api /home/'
+                    'tpas/' + parent_path, raise_error=True)
+        _remote_cmd(ssh, 'sudo chmod 0775 /home/tpas/' + parent_path,
+                    raise_error=True)
+        _remote_cmd(ssh, 'sudo mkdir /home/tpas/' + path, raise_error=True)
 
-        # Create new directory
-        sftp.mkdir(path)
+
+def _remote_cmd(ssh, command, raise_error=False):
+    """Runs a command on remote host.
+
+    :param ssh: SSHClient used for running the command
+    :param command: Command to be run on remote host
+    :param raise_error: When true raises an Exception if command fails
+    :returns: None
+    """
+    _, stdout, _ = ssh.exec_command(command)
+    if raise_error and stdout.channel.recv_exit_status() != 0:
+        raise Exception('Remote command: ' + command + ' failed')
