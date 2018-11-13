@@ -5,6 +5,7 @@ import tarfile
 import tests.conftest
 from siptools_research.workflow.compress import CompressSIP
 
+
 def test_compresssip(testpath):
     """Test that run-function of CompresSIP task creates tar-file
     complete-function returns True when tar-file exists.
@@ -27,8 +28,10 @@ def test_compresssip(testpath):
 
     # Extract tar file created by task and that it contains same files/dirs as
     # the original sip-in-progress directory
-    with tarfile.open(os.path.join(testpath, os.path.basename(testpath)) \
-                      + '.tar') as tar:
+    with tarfile.open(
+        os.path.join(testpath, os.path.basename(testpath)) + '.tar'
+    ) as tar:
         tar.extractall(os.path.join(testpath, 'extracted_tar'))
+
     assert set(os.listdir(os.path.join(testpath, 'extracted_tar'))) \
         == set(['signature.sig', 'mets.xml', 'tests'])

@@ -44,9 +44,11 @@ def test_invalid_metadata(testpath):
     os.mkdir(os.path.join(testpath, 'logs'))
 
     # Init task
-    task = ValidateMetadata(workspace=testpath,
-                            dataset_id='validate_metadata_test_dataset_invalid_metadata',
-                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = ValidateMetadata(
+        workspace=testpath,
+        dataset_id='validate_metadata_test_dataset_invalid_metadata',
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
     assert not task.complete()
 
     # Run task

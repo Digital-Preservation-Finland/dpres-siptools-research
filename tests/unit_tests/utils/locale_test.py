@@ -1,3 +1,4 @@
+"""Tests for `siptools_research.utils.locale` module"""
 import pytest
 
 from siptools_research.utils.locale import (

@@ -8,6 +8,7 @@ from lxml import etree
 from siptools_research.workflow.create_dmdsec\
     import CreateDescriptiveMetadata
 
+
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
 def test_createdescriptivemetadata(testpath):
     """Test `CreateDescriptiveMetadata` task.
@@ -56,7 +57,6 @@ def test_createdescriptivemetadata(testpath):
                           namespaces=xpath_namespaces)
     assert elements[0].attrib["OTHERMDTYPE"] == "DATACITE"
     assert elements[0].attrib["MDTYPEVERSION"] == "4.1"
-
 
     elements = tree.xpath(common_xpath + 'ns1:identifier',
                           namespaces=xpath_namespaces)

@@ -12,6 +12,7 @@ from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       import_objects,
                                                       algorithm_name)
 
+
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
 def test_create_techmd_ok(testpath):
     """Test the workflow task CreateTechnicalMetadata module.

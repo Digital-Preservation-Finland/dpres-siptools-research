@@ -1,4 +1,3 @@
-# pylint: disable=invalid-name
 """Tests for ``siptools_research.validate_metadata`` module"""
 
 import pytest
@@ -35,6 +34,7 @@ def test_validate_metadata_invalid():
 
 
 @pytest.mark.usefixtures('testmetax')
+# pylint: disable=invalid-name
 def test_validate_metadata_invalid_contract_metadata():
     """Test that validate_metadata function raises exception with correct error
     message for invalid dataset.
@@ -52,6 +52,7 @@ def test_validate_metadata_invalid_contract_metadata():
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
 def test_validate_metadata_missing_xml():
     """Test that validate_metadata function raises exception if dataset
     contains image file but not XML metadata.
@@ -65,6 +66,7 @@ def test_validate_metadata_missing_xml():
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
 def test_validate_metadata_audiovideo():
     """Test that validate_metadata function validates AudioMD and VideoMD
     metadata.
@@ -75,6 +77,7 @@ def test_validate_metadata_audiovideo():
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
 def test_validate_metadata_invalid_datacite():
     """Test that validate_metadata function raises exception with correct error
     message for invalid datacite where required attribute identifier is

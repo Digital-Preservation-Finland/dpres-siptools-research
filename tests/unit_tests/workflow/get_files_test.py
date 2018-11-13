@@ -18,7 +18,8 @@ def test_getfiles(testpath):
     """
 
     # Create required directories to  workspace
-    os.makedirs(os.path.join(testpath, 'sip-in-progress'))
+    sipdirectory = os.path.join(testpath, 'sip-in-progress')
+    os.makedirs(sipdirectory)
     os.makedirs(os.path.join(testpath, 'logs'))
 
     # Init task
@@ -32,14 +33,10 @@ def test_getfiles(testpath):
     assert task.complete()
 
     # Check that correct files are created into correct path
-    with open(os.path.join(testpath, 'sip-in-progress/project_x_FROZEN/'\
-                           'Experiment_X/file_name_3'))\
-            as open_file:
+    with open(os.path.join(sipdirectory, 'path/to/file1')) as open_file:
         assert open_file.read() == 'foo\n'
 
-    with open(os.path.join(testpath, 'sip-in-progress/project_x_FROZEN/'\
-                           'Experiment_X/file_name_4'))\
-            as open_file:
+    with open(os.path.join(sipdirectory, 'path/to/file2')) as open_file:
         assert open_file.read() == 'bar\n'
 
 
@@ -53,9 +50,11 @@ def test_missing_files(testpath):
     """
 
     # Init task
-    task = get_files.GetFiles(workspace=testpath,
-                              dataset_id="get_files_test_dataset_ida_missing_file",
-                              config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = get_files.GetFiles(
+        workspace=testpath,
+        dataset_id="get_files_test_dataset_ida_missing_file",
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
     assert not task.complete()
 
     # Run task.
@@ -63,14 +62,12 @@ def test_missing_files(testpath):
         task.run()
 
     # Check exception message
-    assert str(excinfo.value) == \
-        "File /project_x_FROZEN/Experiment_X/file_name_4 not found in Ida."
+    assert str(excinfo.value) == "File /path/to/file4 not found in Ida."
 
     # Task should not be completed
     assert not task.complete()
 
     # The first file should be created into correct path
-    with open(os.path.join(testpath, 'sip-in-progress/project_x_FROZEN/'\
-                           'Experiment_X/file_name_3'))\
+    with open(os.path.join(testpath, 'sip-in-progress/path/to/file3'))\
             as open_file:
         assert open_file.read() == 'foo\n'

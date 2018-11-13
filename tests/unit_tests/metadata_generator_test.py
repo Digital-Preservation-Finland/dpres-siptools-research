@@ -40,6 +40,7 @@ def test_generate_metadata():
 
 
 @pytest.mark.usefixtures('testmetax', 'testida')
+# pylint: disable=invalid-name
 def test_generate_metadata_file_characteristics_block_not_present():
     """Tests metadata generation. Generates metadata for a dataset and checks
     that JSON message sent to Metax has correct keys/values when
@@ -88,6 +89,7 @@ def test_generate_metadata_mix():
 
 
 @pytest.mark.usefixtures('testmetax', 'testida')
+# pylint: disable=invalid-name
 def test_generate_metadata_mix_larger_file():
     """Tests mix metadata generation for a image file. Generates metadata for a
     dataset that contains an image file larger than 512 bytes and checks that
@@ -162,13 +164,15 @@ def test_generate_metadata_audiomd():
     assert freq == '48'
 
     # Check HTTP request query string
-    assert httpretty.last_request().querystring['namespace'][0] == \
-            'http://www.loc.gov/audioMD/'
+    assert httpretty.last_request().querystring['namespace'][0] \
+        == 'http://www.loc.gov/audioMD/'
 
     # Check HTTP request method
     assert httpretty.last_request().method == "POST"
 
+
 @pytest.mark.usefixtures('testmetax', 'testida')
+# pylint: disable=invalid-name
 def test_generate_metadata_tempfile_removal():
     """Tests that temporary files downloaded from Ida are removed.
     """

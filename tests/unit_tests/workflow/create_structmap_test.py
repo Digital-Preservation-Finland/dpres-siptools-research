@@ -87,9 +87,11 @@ def test_create_structmap_without_directories(testpath):
                                  testpath)
 
     # Init task
-    task = CreateStructMap(workspace=testpath,
-                           dataset_id='create_structmap_test_dataset_no_directories',
-                           config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = CreateStructMap(
+        workspace=testpath,
+        dataset_id='create_structmap_test_dataset_no_directories',
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
 
     # Run task
     task.run()
@@ -109,9 +111,11 @@ def test_filesec_othermd(testpath):
                                  testpath)
 
     # Init task
-    task = CreateStructMap(workspace=testpath,
-                           dataset_id='create_structmap_test_dataset_othermd_present',
-                           config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = CreateStructMap(
+        workspace=testpath,
+        dataset_id='create_structmap_test_dataset_othermd_present',
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
 
     # Run task
     task.run()

@@ -55,6 +55,7 @@ def test_set_status():
     database.set_status('test_workflow', 'Original status')
 
     # Check status
+    # pylint: disable=protected-access
     assert database._collection.find_one({'_id': 'test_workflow'})['status'] \
         == 'Original status'
 
@@ -80,6 +81,7 @@ def test_add_workflow():
     database.add_workflow('test_workflow', 'test_dataset')
 
     # Check result
+    # pylint: disable=protected-access
     workflow = database._collection.find_one({'_id': 'test_workflow'})
     workflow['status'] = 'Request received'
     workflow['dataset'] = 'test_dataset'
@@ -110,4 +112,3 @@ def test_get_incomplete_datasets():
     workflows = database.get_incomplete_workflows()
     assert set(workflow['_id'] for workflow in workflows) \
         == set(['test1', 'test4'])
-

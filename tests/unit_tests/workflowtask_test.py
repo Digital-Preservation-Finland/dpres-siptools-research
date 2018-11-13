@@ -103,8 +103,8 @@ def test_run_workflowtask(testpath, testmongoclient):
     # Check that new event is added to workflow database
     conf = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-    collection = mongoclient[conf.get('mongodb_database')]\
-        [conf.get('mongodb_collection')]
+    collection = (mongoclient[conf.get('mongodb_database')]
+                  [conf.get('mongodb_collection')])
     document = collection.find_one()
     # Check 'messages' field
     assert document['workflow_tasks']['TestTask']['messages'] ==\
@@ -129,8 +129,8 @@ def test_run_failing_task(testpath, testmongoclient):
     # Check that new event is added to workflow database
     conf = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-    collection = mongoclient[conf.get('mongodb_database')]\
-        [conf.get('mongodb_collection')]
+    collection = (mongoclient[conf.get('mongodb_database')]
+                  [conf.get('mongodb_collection')])
     document = collection.find_one()
     # Check 'messages' field
     assert document['workflow_tasks']['FailingTestTask']['messages'] ==\

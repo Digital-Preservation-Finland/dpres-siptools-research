@@ -5,6 +5,7 @@ import pytest
 import tests.conftest
 from siptools_research.workflow import create_workspace
 
+
 @pytest.mark.usefixtures('testmongoclient')
 def test_createworkspace(testpath):
     """Tests for `CreateWorkspace` task.

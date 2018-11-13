@@ -35,19 +35,25 @@ def test_create_mets_ok(testpath):
     tree = lxml.etree.parse(os.path.join(create_sip, 'mets.xml'))
 
     elements = tree.xpath('/mets:mets',
-                            namespaces={'mets': "http://www.loc.gov/METS/"}
-                          )
+                          namespaces={'mets': "http://www.loc.gov/METS/"})
 
     assert elements[0].attrib["OBJID"] == "create_mets_dataset"
 
-    assert len(tree.xpath(
-        '/mets:mets[@fi:CONTRACTID="urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001"]', 
-        namespaces={'mets': "http://www.loc.gov/METS/", 
-                    'fi': "http://digitalpreservation.fi/schemas/mets/fi-extensions"})) == 1
+    # Check that xml-file contains one contract id
+    namespaces = {
+        'mets': "http://www.loc.gov/METS/",
+        'fi': "http://digitalpreservation.fi/schemas/mets/fi-extensions"
+    }
+    assert len(
+        tree.xpath(
+            '/mets:mets[@fi:CONTRACTID='
+            '"urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001"]',
+            namespaces=namespaces
+        )
+    ) == 1
 
     elements = tree.xpath('/mets:mets/mets:metsHdr/mets:agent/mets:name',
-                            namespaces={'mets': "http://www.loc.gov/METS/"}
-                          )
+                          namespaces={'mets': "http://www.loc.gov/METS/"})
     assert elements[0].text == "Helsingin Yliopisto"
 
 
@@ -64,7 +70,7 @@ def create_test_data(workspace):
     # Create dmdsec
     import_description.main([dmdpath, '--workspace', workspace])
 
-     # Create provenance
+    # Create provenance
     premis_event.main(['creation', '2016-10-13T12:30:55',
                        '--workspace', workspace,
                        '--event_outcome', 'success',
