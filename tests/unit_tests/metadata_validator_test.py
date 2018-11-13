@@ -54,7 +54,16 @@ def test_validate_metadata_invalid_contract_metadata():
 
     # Check exception message
     assert exc_info.value.message == \
-        "'name' is a required property at field /contract_json/organization/"
+        """'name' is a required property
+
+Failed validating 'required' in schema['properties']['contract_json']\
+['properties']['organization']:
+    {'properties': {'name': {'type': 'string'}},
+     'required': ['name'],
+     'type': 'object'}
+
+On instance['contract_json']['organization']:
+    {u'foo': u'bar'}"""
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
@@ -125,6 +134,17 @@ def test_validate_file_metadata():
             'validate_metadata_test_dataset_missing_file_format', client
         )
 
-    assert exc_info.value.message \
-        == ("Validation error in file path/to/file1: 'file_format' is a "
-            "required property at field /file_characteristics/")
+    assert exc_info.value.message == """Validation error in\
+ file path/to/file1: 'file_format' is a required property
+
+Failed validating 'required' in schema['properties']['file_characteristics']:
+    {'properties': {'file_encoding': {'enum': ['ISO-8859-15',
+                                               'UTF-8',
+                                               'UTF-16',
+                                               'UTF-32'],
+                                      'type': 'string'}},
+     'required': ['file_format'],
+     'type': 'object'}
+
+On instance['file_characteristics']:
+    {u'file_created': u'2014-01-17T08:19:31Z'}"""

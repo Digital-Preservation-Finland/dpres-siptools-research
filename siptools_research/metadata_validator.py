@@ -70,22 +70,6 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     return True
 
 
-def _modify_msg(message, path):
-    """Modifies error message by appending the path to the failed field.
-
-    :param message: the original error message
-    :param path: collections.deque object with the path to the failed field
-
-    :returns: modified message
-    """
-
-    path_str = " at field /"
-    for field in path:
-        path_str += "%s/" % field
-
-    return message + path_str
-
-
 def _validate_dataset_metadata(dataset_metadata):
     """Validates dataset metadata from /rest/v1/datasets/<dataset_id>
 
@@ -99,7 +83,7 @@ def _validate_dataset_metadata(dataset_metadata):
 
         # Modify message only if a required param is missing
         message = (
-            _modify_msg(exc.message, exc.path)
+            str(exc)
             if exc.validator == "required"
             else exc.message
         )
@@ -121,7 +105,7 @@ def _validate_contract_metadata(contract_id, metax_client):
 
         # Modify message only if a required param is missing
         message = (
-            _modify_msg(exc.message, exc.path)
+            str(exc)
             if exc.validator == "required"
             else exc.message
         )
@@ -154,7 +138,7 @@ def _validate_dataset_files(dataset_metadata, metax_client):
 
             # Add path to the message only if a required param is missing
             if exc.validator == "required":
-                message = _modify_msg(message, exc.path)
+                message = message + str(exc)
 
             raise InvalidMetadataError(message)
 
@@ -197,14 +181,12 @@ def _validate_file_metadata(dataset_id, metax_client):
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
             message = (
-                "Validation error in file {file_path}: {message}"
-            ).format(
-                file_path=file_metadata["file_path"], message=exc.message
-            )
+                "Validation error in file {file_path}: "
+            ).format(file_path=file_metadata["file_path"])
 
             # Add path to message only if a required param is missing
             if exc.validator == "required":
-                message = _modify_msg(message, exc.path)
+                message = message + str(exc)
 
             raise InvalidMetadataError(message)
         _check_mimetype(file_metadata)
