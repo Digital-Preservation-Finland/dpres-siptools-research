@@ -63,10 +63,21 @@ def testmetax(request):
     is requested using HTTP GET method, the file from path
     ``METAX_PATH/<subdir>/<filename>%2Fxml%3Fnamespace%3Dhttp%3A%2F%2Ftest.com%2Fns%2F``
     is retrieved.
+
+    :param request: pytest `request` fixture
+    :returns: ``None``
     """
 
+    # pylint: disable=unused-argument
     def dynamic_response(request, url, headers):
-        """Return HTTP response according to url and query string"""
+        """Return HTTP response according to url and query string.
+
+        :param request: ghost parameter required by httpretty
+        :param url: HTTP request url
+        :param header: HTTP request headers
+        :returns: HTTP status code, response headers, response body
+        :rtype: tuple
+        """
         logging.debug("Dynamic response for HTTP GET url: %s", url)
         # url without basepath:
         path = url.split(METAX_URL)[1]
@@ -144,6 +155,9 @@ def testida(request):
     method, a HTTP response with contents of file: ``IDA_PATH/<file_id>`` as
     message body is retrieved. The status of message is always *HTTP/1.1 200
     OK*. To add new test responses just add new  file to ``IDA_PATH``.
+
+    :param request: pytest `request` fixture
+    :returns: ``None``
     """
 
     httpretty.enable()
@@ -180,9 +194,13 @@ def testmongoclient(monkeypatch):
     mongomock.MongoClient is created in beginning of test. Whenever
     pymongo.MongoClient() is called during the test, the already initialized
     mongomoc.MongoClient is used instead.
+
+    :param monkeypatch: pytest `monkeypatch` fixture
+    :returns: ``None``
     """
     mongoclient = mongomock.MongoClient()
     # pylint: disable=unused-argument
+
     def mock_mongoclient(*args, **kwargs):
         """Returns already initialized mongomock.MongoClient"""
         return mongoclient
@@ -191,9 +209,11 @@ def testmongoclient(monkeypatch):
 
 @pytest.fixture(scope="function")
 def testpath(request):
-    """Create and cleanup a temporary directory
+    """Create a temporary directory that will be removed after execution of
+    function.
 
-    :request: Pytest request fixture
+    :param request: Pytest `request` fixture
+    :returns: path to temporary directory
     """
 
     temp_path = tempfile.mkdtemp()
@@ -207,10 +227,14 @@ def testpath(request):
     return temp_path
 
 
-# Prevent using system luigi configuration file (/etc/luigi/luigi.cfg) in tests
 @pytest.fixture(scope="function")
 def mock_luigi_config_path(monkeypatch):
-    """Mock luigi config file path"""
+    """Monkeypatch luigi config file path to prevent using system luigi
+    configuration file (/etc/luigi/luigi.cfg) in tests.
+
+    :param monkeypatch: pytest `monkeypatch` fixture
+    :returns: ``None``
+    """
     monkeypatch.setattr(luigi.configuration.LuigiConfigParser,
                         '_config_paths',
                         ['tests/data/configuration_files/luigi.cfg'])
@@ -218,7 +242,11 @@ def mock_luigi_config_path(monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_filetype_conf(monkeypatch):
-    """Mock supported filetypes config file path"""
+    """Monkeypatch supported filetypes config file path.
+
+    :param monkeypatch: pytest `monkeypatch` fixture
+    :returns: ``None``
+    """
     # Patching DEFAULT_CONFIG variable would not affect is_supported -function
     # default arguments. Therefore, the argument defaults are patched instead.
     monkeypatch.setattr(siptools_research.utils.mimetypes.is_supported,
