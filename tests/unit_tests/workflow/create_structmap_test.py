@@ -17,8 +17,8 @@ import lxml.etree
 def test_create_structmap_ok(testpath):
     """Test the workflow task CreateStructMap.
 
-    :testpath: Temporary directory fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
     workspace = testpath
     sip_creation_path = os.path.join(workspace, "sip-in-progress")
@@ -79,8 +79,8 @@ def test_create_structmap_ok(testpath):
 def test_create_structmap_without_directories(testpath):
     """Test creating structmap for dataset that does not have directories.
 
-    :testpath: Temporary directory fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
     # Copy workspace directory
     distutils.dir_util.copy_tree('tests/data/workspaces/create_structmap_2',
@@ -103,8 +103,8 @@ def test_filesec_othermd(testpath):
     """Test CreateStructMap task with dataset that has some othermd metadata
     for files.
 
-    :testpath: Temporary directory fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
     # Copy workspace directory
     distutils.dir_util.copy_tree('tests/data/workspaces/create_structmap_3',
@@ -126,8 +126,8 @@ def validate_logical_structmap_file(logical_structmap_file):
     """Validates logical structuremap XML-file. Checks that XML-file has the
     correct elements. Raises exception if XML is not valid.
 
-    :logical_structmap_file: XML file to be validated
-    :returns: None
+    :param logical_structmap_file: XML file to be validated
+    :returns: ``None``
     """
     tree = lxml.etree.parse(logical_structmap_file)
     root = tree.getroot()
@@ -160,8 +160,8 @@ def validate_filesec_file(filesec_file):
     """Validates logical filesec XML-file. Checks that XML-file has the
     correct elements. Raises exception if XML is not valid.
 
-    :filesec_file: XML file to be validated
-    :returns: None
+    :param filesec_file: XML file to be validated
+    :returns: ``None``
     """
     tree = lxml.etree.parse(filesec_file)
     root = tree.getroot()
@@ -191,8 +191,8 @@ def validate_structmap_file(structmap_file):
     """Validates logical structuremap XML-file. Checks that XML-file has the
     correct elements. Raises exception if XML is not valid.
 
-    :filesec_file: XML file to be validated
-    :returns: None
+    :param structmap_file: XML file to be validated
+    :returns: ``None``
     """
     tree = lxml.etree.parse(structmap_file)
     root = tree.getroot()

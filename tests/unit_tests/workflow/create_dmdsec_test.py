@@ -13,8 +13,8 @@ from siptools_research.workflow.create_dmdsec\
 def test_createdescriptivemetadata(testpath):
     """Test `CreateDescriptiveMetadata` task.
 
-    :testpath: Testpath fixture
-    :returns: None
+    :param testpath: Testpath fixture
+    :returns: ``None``
     """
 
     # Create workspace with "logs" and "sip-in-progress' directories in

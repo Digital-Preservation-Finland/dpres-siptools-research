@@ -15,8 +15,8 @@ def test_signsip(testpath):
     - Signature file created
     - Log file is created
 
-    :testpath: Testpath fixture
-    :returns: None
+    :param testpath: Testpath fixture
+    :returns: ``None``
     """
 
     # Create workspace with "logs" and "transfers" directories in temporary

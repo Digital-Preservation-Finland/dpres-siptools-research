@@ -8,6 +8,8 @@ import tests.conftest
 def test_initworkflow():
     """Test that ``InitWorkflow.requires`` function returns task with correct
     parameters.
+
+    :returns: ``None``
     """
     task = siptools_research.workflow_init.InitWorkflow(
         workspace='test_workspace',
@@ -27,6 +29,8 @@ def test_initworkflows():
     """Add few sample workflows to database and test that
     ``InitWorkflows.requires`` function produces CleanupWorkflow tasks for each
     incomplete workflow in database.
+
+    :returns: ``None``
     """
     # Add sample workflows to database
     database = siptools_research.utils.database.Database(

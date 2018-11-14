@@ -16,8 +16,8 @@ def test_createprovenanceinformation(testpath):
     - XML file created
     - Log file is created
 
-    :testpath: Testpath fixture
-    :returns: None
+    :param testpath: Testpath fixture
+    :returns: ``None``
     """
 
     # Create workspace with "logs" and "transfers" directories in temporary
@@ -63,8 +63,8 @@ def test_failed_createprovenanceinformation(testpath):
     The dataset requested does not have all the required fields (date) in
     provenance information, which should cause exception.
 
-    :testpath: Testpath fixture
-    :returns: None
+    :param testpath: Testpath fixture
+    :returns: ``None``
     """
 
     # Create empty workspace
@@ -93,8 +93,8 @@ def test_create_premis_event(testpath):
     """Test `create_premis_event` function. Output XML file should be produced
     and it should contain some specified elements.
 
-    :testpath: Testpath fixture
-    :returns: None
+    :param testpath: Testpath fixture
+    :returns: ``None``
     """
 
     # Create provenance info xml-file to tempdir
@@ -166,8 +166,8 @@ def test_create_premis_event_unav(testpath):
     Output XML file should be produced
     and it should contain some specified elements.
 
-    :testpath: Testpath fixture
-    :returns: None
+    :param testpath: Testpath fixture
+    :returns: ``None``
     """
 
     # Create provenance info xml-file to tempdir

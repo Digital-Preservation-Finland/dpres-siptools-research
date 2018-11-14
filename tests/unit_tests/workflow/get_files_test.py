@@ -1,4 +1,4 @@
-"""Test the ``siptools_research.workflow.get_files`` module"""
+"""Test the `siptools_research.workflow.get_files` module"""
 
 import os
 import pytest
@@ -13,8 +13,8 @@ def test_getfiles(testpath):
     - ``Task.complete()`` is true after ``Task.run()``
     - Files are copied to correct path
 
-    :testpath: Testpath fixture
-    :returns: None
+    :param testpath: Testpath fixture
+    :returns: ``None``
     """
 
     # Create required directories to  workspace
@@ -46,7 +46,8 @@ def test_missing_files(testpath):
     successfully downloaded, but the second file is not found in Ida. Task
     should fail with Exception.
 
-    :testpath: Temporary directory fixture
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
 
     # Init task

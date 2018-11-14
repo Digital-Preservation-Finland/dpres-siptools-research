@@ -11,7 +11,7 @@ def test_add_event():
     """Test add_event function. Adds sample event to empty database and checks
     that new document is created.
 
-    :returns: None
+    :returns: ``None``
     """
 
     # Init database client
@@ -44,6 +44,8 @@ def test_add_event():
 def test_set_status():
     """Change workflow status twice using ``set_status`` function and check that
     status is updated.
+
+    :returns: ``None``
     """
 
     # Init database client
@@ -71,6 +73,8 @@ def test_set_status():
 def test_add_workflow():
     """Add new workflow to database using ``add_workflow`` function and check
     that new document contains correct information.
+
+    :returns: ``None``
     """
     # Init database client
     database = siptools_research.utils.database.Database(
@@ -93,6 +97,8 @@ def test_get_incomplete_datasets():
     """Populates database with few completed, incomplete and disabled datasets
     and checks that ``get_incomplete_workflows`` function returns list of
     incomplete workflows.
+
+    :returns: ``None``
     """
     # Init database client
     database = siptools_research.utils.database.Database(

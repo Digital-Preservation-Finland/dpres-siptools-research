@@ -10,7 +10,7 @@ def test_validate_valid_dataset_metadata_with_provenance():
     sample metadata dictionary that is known to be valid. The dictionary is
     then validated against ``DATASET_METADA_SCHEMA``.
 
-    :returns: None
+    :returns: ``None``
     """
     valid_dataset_metadata = \
         {
@@ -67,7 +67,7 @@ def test_validate_valid_dataset_metadata_without_provenance():
     sample metadata dictionary that is known to be valid. The dictionary is
     then validated against ``DATASET_METADA_SCHEMA``.
 
-    :returns: None
+    :returns: ``None``
     """
     valid_dataset_metadata = \
         {
@@ -109,7 +109,7 @@ def test_validate_invalid_dataset_metadata_missing_attribute_in_provenance():
     known to be valid. The dictionary is then validated against
     ``DATASET_METADA_SCHEMA``.
 
-    :returns: None
+    :returns: ``None``
     """
     invalid_dataset_metadata = \
         {
@@ -162,7 +162,7 @@ def test_validate_invalid_dataset_metadata():
     """Test validation of invalid dataset metadata. The validation should raise
     ``ValidationError``.
 
-    :returns: None
+    :returns: ``None``
     """
     invalid_dataset_metadata = \
         {
@@ -196,7 +196,7 @@ def test_validate_valid_file_metadata():
     dictionary that is known to be valid. The dictionary is then validated
     against ``FILE_METADA_SCHEMA``.
 
-    :returns: None
+    :returns: ``None``
     """
     valid_file_metadata = \
         {
@@ -224,7 +224,7 @@ def test_validate_valid_file_metadata_optional_attribute_missing():
     dictionary that is known to be valid. The dictionary is then validated
     against ``FILE_METADA_SCHEMA``.
 
-    :returns: None
+    :returns: ``None``
     """
     valid_file_metadata = \
         {
@@ -250,7 +250,8 @@ def test_validate_invalid_file_metadata():
     """Test validation of invalid file metadata. The validation should raise
     ``ValidationError``.
 
-    :returns: None
+
+    :returns: ``None``
     """
     invalid_file_metadata = \
         {
@@ -275,7 +276,8 @@ def test_validate_invalid_file_charset():
     """Test validation of file metadata that contains invalid file encoding.
     The validation should raise ``ValidationError``.
 
-    :returns: None
+
+    :returns: ``None``
     """
     invalid_file_metadata = \
         {
@@ -306,7 +308,8 @@ def test_validate_invalid_file_charset():
 def test_validate_valid_contract():
     """Test validation of valid contract metadata
 
-    :returns: None
+
+    :returns: ``None``
     """
     valid_contract_metadata = \
         {
@@ -325,7 +328,8 @@ def test_validate_valid_contract():
 def test_validate_invalid_contract():
     """Test validation of invalid contract metadata (name is not string)
 
-    :returns: None
+
+    :returns: ``None``
     """
     invalid_contract_metadata = \
         {

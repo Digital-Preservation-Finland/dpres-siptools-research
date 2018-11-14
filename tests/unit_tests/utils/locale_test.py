@@ -36,9 +36,10 @@ DATASET = {
 
 
 def test_get_localized_value():
-    """
-    Test that correct localized value is selected depending on priority,
+    """Test that correct localized value is selected depending on priority,
     or 'und' or 'zxx' is used as a fallback if nothing else matches
+
+    :returns: ``None``
     """
     assert get_localized_value(
         DATASET["testa"], languages=["en", "fi"]) == "Test in English"
@@ -54,9 +55,10 @@ def test_get_localized_value():
 
 
 def test_get_dataset_languages():
-    """
-    Test that a list of languages are retrieved correctly from dataset
+    """Test that a list of languages are retrieved correctly from dataset
     metadata
+
+    :returns: ``None``
     """
     assert get_dataset_languages(DATASET) == ["en", "fi"]
 

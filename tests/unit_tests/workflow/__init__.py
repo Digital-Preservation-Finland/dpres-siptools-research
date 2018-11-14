@@ -1,1 +1,1 @@
-"""Tests for `siptools_research.workflow` module"""
+"""Tests for `siptools_research.workflow` package"""

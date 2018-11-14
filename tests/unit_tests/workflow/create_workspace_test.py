@@ -14,8 +14,8 @@ def test_createworkspace(testpath):
     - Directory structure is created in workspace
     - Log entry is created to mongodb
 
-    :testpath: Testpath fixture
-    :returns: None
+    :param testpath: Testpath fixture
+    :returns: ``None``
     """
 
     workspace = os.path.join(testpath, 'test_workspace')

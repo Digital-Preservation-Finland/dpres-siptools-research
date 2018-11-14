@@ -1,4 +1,4 @@
-"""Test module ``siptools_research.workflow.create_mets``"""
+"""Test module `siptools_research.workflow.create_mets`"""
 import shutil
 import os
 import pytest
@@ -14,8 +14,8 @@ from siptools.scripts import import_description, premis_event, \
 def test_create_mets_ok(testpath):
     """Test the workflow task CreateMets.
 
-    :testpath: Temporary directory fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
     # Create workspace with contents required by the tested task
     workspace = testpath

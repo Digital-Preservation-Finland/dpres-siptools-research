@@ -16,6 +16,8 @@ import tests.conftest
 def test_generate_metadata():
     """Tests metadata generation. Generates metadata for a dataset and checks
     that JSON message sent to Metax has correct keys/values.
+
+    :returns: ``None``
     """
     generate_metadata('generate_metadata_test_dataset_1',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -45,6 +47,8 @@ def test_generate_metadata_file_characteristics_block_not_present():
     """Tests metadata generation. Generates metadata for a dataset and checks
     that JSON message sent to Metax has correct keys/values when
     file_characteristics block was not present in file metadata
+
+    :returns: ``None``
     """
     generate_metadata('generate_metadata_test_dataset_' +
                       'file_characteristics_block_not_present',
@@ -69,6 +73,8 @@ def test_generate_metadata_mix():
     dataset that contains an image file and checks that message sent to Metax
     is valid XML. The method of last HTTP request should be POST, and the
     querystring should contain the namespace of XML.
+
+    :returns: ``None``
     """
     generate_metadata('generate_metadata_test_dataset_2',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -95,6 +101,8 @@ def test_generate_metadata_mix_larger_file():
     dataset that contains an image file larger than 512 bytes and checks that
     message sent to Metax is valid XML. The method of last HTTP request should
     be POST, and the querystring should contain the namespace of XML.
+
+    :returns: ``None``
     """
     generate_metadata('generate_metadata_test_dataset_5',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -120,6 +128,8 @@ def test_generate_metadata_addml():
     dataset that contains a CSV file and checks that message sent to Metax
     is valid XML. The method of last HTTP request should be POST, and the
     querystring should contain the namespace of XML.
+
+    :returns: ``None``
     """
     generate_metadata('generate_metadata_test_dataset_3',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -149,6 +159,8 @@ def test_generate_metadata_audiomd():
     dataset that contains a WAV file and checks that message sent to Metax
     is valid XML. The method of last HTTP request should be POST, and the
     querystring should contain the namespace of XML.
+
+    :returns: ``None``
     """
     generate_metadata('generate_metadata_test_dataset_4',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -175,6 +187,8 @@ def test_generate_metadata_audiomd():
 # pylint: disable=invalid-name
 def test_generate_metadata_tempfile_removal():
     """Tests that temporary files downloaded from Ida are removed.
+
+    :returns: ``None``
     """
     # Check contents of /tmp before calling generate_metadata()
     tmp_dir_before_test = os.listdir(tempfile.gettempdir())

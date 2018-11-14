@@ -13,6 +13,8 @@ from metax_access import Metax
 def test_validate_metadata():
     """Test that validate_metadata function returns ``True`` for a valid
     dataset.
+
+    :returns: ``None``
     """
     assert validate_metadata('validate_metadata_test_dataset',
                              tests.conftest.UNIT_TEST_CONFIG_FILE) is True
@@ -22,6 +24,8 @@ def test_validate_metadata():
 def test_validate_metadata_invalid():
     """Test that validate_metadata function raises exception with correct error
     message for invalid dataset.
+
+    :returns: ``None``
     """
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -38,6 +42,8 @@ def test_validate_metadata_invalid():
 def test_validate_metadata_invalid_contract_metadata():
     """Test that validate_metadata function raises exception with correct error
     message for invalid dataset.
+
+    :returns: ``None``
     """
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -56,6 +62,8 @@ def test_validate_metadata_invalid_contract_metadata():
 def test_validate_metadata_missing_xml():
     """Test that validate_metadata function raises exception if dataset
     contains image file but not XML metadata.
+
+    :returns: ``None``
     """
     with pytest.raises(InvalidMetadataError) as exc:
         validate_metadata('validate_metadata_test_dataset_metadata_missing',
@@ -70,6 +78,8 @@ def test_validate_metadata_missing_xml():
 def test_validate_metadata_audiovideo():
     """Test that validate_metadata function validates AudioMD and VideoMD
     metadata.
+
+    :returns: ``None``
     """
     assert validate_metadata(
         'validate_metadata_test_dataset_audio_video_metadata',
@@ -82,6 +92,8 @@ def test_validate_metadata_invalid_datacite():
     """Test that validate_metadata function raises exception with correct error
     message for invalid datacite where required attribute identifier is
     missing.
+
+    :returns: ``None``
     """
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -98,6 +110,8 @@ def test_validate_metadata_invalid_datacite():
 def test_validate_file_metadata():
     """Check that ``_validate_file_metadata`` raises exceptions with
     descriptive error messages.
+
+    :returns: ``None``
     """
     # Init metax client
     configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)

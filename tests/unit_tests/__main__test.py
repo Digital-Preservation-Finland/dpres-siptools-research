@@ -11,6 +11,11 @@ import mock
 def test_main_generate(mock_generate, mock_validate, mock_preserve):
     """Test that correct function is called from main function when "generate"
     command is used.
+
+    :param mock_generate: Mock object for `generate_metadata` function
+    :param mock_validate: Mock object for `validate_metadata` function
+    :param mock_preserve: Mock object for `preserve_dataset` function
+    :returns: ``None``
     """
     # Run main function with "generate" as command
     with mock.patch.object(sys, 'argv',
@@ -29,6 +34,11 @@ def test_main_generate(mock_generate, mock_validate, mock_preserve):
 def test_main_validate(mock_generate, mock_validate, mock_preserve):
     """Test that correct function is called from main function when "validate"
     command is used.
+
+    :param mock_generate: Mock object for `generate_metadata` function
+    :param mock_validate: Mock object for `validate_metadata` function
+    :param mock_preserve: Mock object for `preserve_dataset` function
+    :returns: ``None``
     """
     # Run main function with "validate" as command
     with mock.patch.object(sys, 'argv',
@@ -47,6 +57,11 @@ def test_main_validate(mock_generate, mock_validate, mock_preserve):
 def test_main_preserve(mock_generate, mock_validate, mock_preserve):
     """Test that correct function is called from main function when "preserve"
     command is used.
+
+    :param mock_generate: Mock object for `generate_metadata` function
+    :param mock_validate: Mock object for `validate_metadata` function
+    :param mock_preserve: Mock object for `preserve_dataset` function
+    :returns: ``None``
     """
     # Run main function with "preserve" as command
     with mock.patch.object(sys, 'argv',

@@ -1,4 +1,4 @@
-"""Units tests for ``siptools_research.workflow.validate_sip`` module."""
+"""Unit tests for `siptools_research.workflow.validate_sip` module."""
 
 
 import tests.conftest
@@ -9,7 +9,7 @@ from siptools_research.workflow.validate_sip import ValidateSIP
 def _always_true(*args, **kwargs):
     """Mock function that always returns True.
 
-    :returns: True
+    :returns: ``True``
     """
     return True
 
@@ -17,7 +17,7 @@ def _always_true(*args, **kwargs):
 def _always_false(*args, **kwargs):
     """Mock function that always returns False.
 
-    :returns: False
+    :returns: ``False``
     """
     return False
 
@@ -27,9 +27,9 @@ def test_validatesip_accepted(testpath, monkeypatch):
     code is then monkeypatched to always think that remote target exists. The
     task should then be completed.
 
-    :testpath: Temporary directory fixture
-    :monkeypatch: Monkeypatch fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :param monkeypatch: Monkeypatch fixture
+    :returns: ``None``
     """
     workspace = testpath
 

@@ -1,4 +1,4 @@
-"""Tests for ``siptools_research.workflow.cleanup`` module"""
+"""Tests for `siptools_research.workflow.cleanup` module"""
 import os
 import pytest
 import tests.conftest
@@ -10,7 +10,8 @@ from siptools_research.workflow.cleanup import CleanupWorkspace
 def test_cleanupworkspace(testpath):
     """Test that task.run() removes workspace.
 
-    :testpath: Temporary directory fixture"""
+    :param testpath: Temporary directory fixture
+    """
 
     # Create a workspace directory
     workspace = os.path.join(testpath, 'test_workspace')

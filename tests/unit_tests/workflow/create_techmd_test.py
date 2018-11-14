@@ -17,8 +17,8 @@ from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
 def test_create_techmd_ok(testpath):
     """Test the workflow task CreateTechnicalMetadata module.
 
-    :testpath: Temporary directory fixture
-    :returns: None
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
     # Create workspace with empty "logs" and "sip-in-progress' directories in
     # temporary directory
@@ -96,7 +96,11 @@ def test_create_techmd_ok(testpath):
 
 @pytest.mark.usefixtures('testmetax')
 def test_import_object_ok(testpath):
-    """Test import object function"""
+    """Test import object function
+
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
+    """
 
     # Create workspace with empty "logs" and "sip-in-progress' directories in
     # temporary directory
@@ -134,7 +138,11 @@ def test_import_object_ok(testpath):
 # pylint: disable=invalid-name
 def test_import_object_without_charset(testpath):
     """Test import object function with dataset that has files without defined
-    charset"""
+    charset
+
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
+    """
 
     # Create workspace with empty "logs" and "sip-in-progress' directories in
     # temporary directory
@@ -169,7 +177,10 @@ def test_import_object_without_charset(testpath):
 def test_xml_metadata_file_missing(testpath):
     """Test the workflow task CreateTechnicalMetadata module when XML
     metadata for a file is missing. Behavior not specified yet. Currently
-    throws an error
+    throws an error.
+
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
     """
     # Create workspace with empty "logs" and "sip-in-progress' directories in
     # temporary directory
@@ -201,7 +212,10 @@ def test_xml_metadata_file_missing(testpath):
 
 
 def test_algorithm_name():
-    """Test ``algorithm_name`` function with valid and invalid inputs."""
+    """Test ``algorithm_name`` function with valid and invalid inputs.
+
+    :returns: ``None``
+    """
 
     # Valid input
     assert algorithm_name('md5', hashlib.md5('foo').hexdigest()) == 'MD5'
