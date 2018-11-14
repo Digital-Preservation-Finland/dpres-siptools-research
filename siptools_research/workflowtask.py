@@ -49,7 +49,6 @@ class WorkflowTask(luigi.Task):
     :document_id: Identifier of the workflow. Generated from the name of
        workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is created
-    :logs_path: A path in the workspace in which the task logs are written
     """
 
     workspace = luigi.Parameter()
@@ -64,7 +63,6 @@ class WorkflowTask(luigi.Task):
         self.task_name = self.__class__.__name__
         self.sip_creation_path = os.path.join(self.workspace,
                                               'sip-in-progress')
-        self.logs_path = os.path.join(self.workspace, 'logs')
 
 
 class WorkflowExternalTask(luigi.ExternalTask):
@@ -88,7 +86,6 @@ class WorkflowExternalTask(luigi.ExternalTask):
     :document_id: Identifier of the workflow. Generated from the name of
        workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is created
-    :logs_path: A path in the workspace in which the task logs are written
     """
 
     workspace = luigi.Parameter()
@@ -103,7 +100,6 @@ class WorkflowExternalTask(luigi.ExternalTask):
         self.task_name = self.__class__.__name__
         self.sip_creation_path = os.path.join(self.workspace,
                                               'sip-in-progress')
-        self.logs_path = os.path.join(self.workspace, 'logs')
 
 
 class WorkflowWrapperTask(luigi.WrapperTask):

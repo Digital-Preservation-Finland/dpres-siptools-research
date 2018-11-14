@@ -7,7 +7,6 @@ from metax_access import Metax
 import siptools.scripts.import_object
 import siptools.utils
 from siptools_research.config import Configuration
-from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
@@ -61,11 +60,16 @@ class CreateTechnicalMetadata(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        :returns: local target: `logs/task-create-technical-metadata.log`
+        A false target ``ask-create-technical-metadata.finished`` is created
+        into workspace directory to notify luigi (and dependent tasks) that
+        this task has finished.
+
+        :returns: local target: ``task-create-technical-metadata.finished``
         :rtype: LocalTarget
         """
-        return LocalTarget(os.path.join(self.logs_path,
-                                        'task-create-technical-metadata.log'))
+
+        return LocalTarget(os.path.join(self.workspace, 'task-create-'
+                                        'technical-metadata.finished'))
 
     def run(self):
         """Creates PREMIS technical metadata files and technical attribute
@@ -74,9 +78,9 @@ class CreateTechnicalMetadata(WorkflowTask):
         :returns: ``None``
         """
 
-        with self.output().open('w') as log:
-            with redirect_stdout(log):
-                import_objects(self.dataset_id, self.workspace, self.config)
+        import_objects(self.dataset_id, self.workspace, self.config)
+        with self.output().open('w') as output:
+            output.write("Dataset id=" + self.dataset_id)
 
 
 def create_objects(file_id, metax_filepath, workspace, config):

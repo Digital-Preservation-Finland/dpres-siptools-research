@@ -2,7 +2,6 @@
 
 import os
 from luigi import LocalTarget
-from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.metadata_validator import validate_metadata
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflowtask import WorkflowTask
@@ -27,11 +26,15 @@ class ValidateMetadata(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        :returns: local target `logs/validate-metadata.log`
+        A false target file ``validate-metadata.finished`` is created into
+        workspace directory to notify luigi (and dependent tasks) that this
+        task has finished.
+
+        :returns: local target: `validate-metadata.finished`
         :rtype: LocalTarget
         """
-        return LocalTarget(os.path.join(self.logs_path,
-                                        'validate-metadata.log'))
+        return LocalTarget(os.path.join(self.workspace,
+                                        'validate-metadata.finished'))
 
     def run(self):
         """Reads dataset metadata, file metadata, and additional XML metadata
@@ -40,7 +43,7 @@ class ValidateMetadata(WorkflowTask):
 
         :returns: ``None``
         """
+        # Validate dataset metadata
+        validate_metadata(self.dataset_id, self.config)
         with self.output().open('w') as log:
-            with redirect_stdout(log):
-                # Validate dataset metadata
-                validate_metadata(self.dataset_id, self.config)
+            log.write('Dataset id=' + self.dataset_id)

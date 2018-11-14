@@ -1,12 +1,13 @@
 """Luigi task that signs METS file"""
 
 import os
-import luigi
+from luigi import LocalTarget
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_mets import CreateMets
-from siptools_research.utils import contextmanager
 from siptools.scripts import sign_mets
+from tempfile import mkdtemp
+from shutil import copyfile, move
 
 
 class SignSIP(WorkflowTask):
@@ -30,19 +31,17 @@ class SignSIP(WorkflowTask):
         :returns: local target: `sip-in-progress/signature.sig`
         :rtype: LocalTarget
         """
-        return luigi.LocalTarget(os.path.join(self.sip_creation_path,
-                                              "signature.sig"))
+        return LocalTarget(os.path.join(self.sip_creation_path,
+                                        "signature.sig"))
 
     def run(self):
         """Signs METS file using sign_mets from siptools.
 
         :returns: ``None``
         """
-        log_path = os.path.join(self.workspace, 'logs', 'task-sign-sip.log')
-        with open(log_path, 'w+') as log:
-            with contextmanager.redirect_stdout(log):
-                sign_mets.main([
-                    "--workspace",
-                    self.sip_creation_path,
-                    Configuration(self.config).get("sip_sign_key")
-                ])
+        dirpath = mkdtemp(dir=self.workspace)
+        copyfile(os.path.join(self.sip_creation_path, "mets.xml"),
+                 os.path.join(dirpath, "mets.xml"))
+        sign_mets.main(["--workspace", dirpath,
+                        Configuration(self.config).get("sip_sign_key")])
+        move(os.path.join(dirpath, "signature.sig"), self.output().path)

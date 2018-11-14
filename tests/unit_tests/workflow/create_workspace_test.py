@@ -35,5 +35,4 @@ def test_createworkspace(testpath):
 
     # Check that directories were created
     assert os.path.isdir(workspace)
-    assert os.path.isdir(os.path.join(workspace, 'logs'))
     assert os.path.isdir(os.path.join(workspace, 'sip-in-progress'))

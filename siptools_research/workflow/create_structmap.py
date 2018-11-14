@@ -3,7 +3,7 @@
 
 import os
 
-import luigi
+from luigi import LocalTarget
 import lxml.etree as ET
 import mets
 from metax_access import Metax
@@ -12,7 +12,6 @@ from siptools.scripts import compile_structmap
 from siptools.utils import encode_path
 from siptools.xml.mets import NAMESPACES
 from siptools_research.config import Configuration
-from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
 from siptools_research.workflowtask import WorkflowTask
@@ -49,11 +48,19 @@ class CreateStructMap(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        :returns: local target: `logs/create-struct-map`
+        :returns: list of local targets: ``sip-in-progress/structmap.xml`` ,
+            ``sip-in-progress/filesec.xml`` and
+            ``sip-in-progress/logical_structmap.xml``
         :rtype: LocalTarget
         """
-        return luigi.LocalTarget(os.path.join(self.logs_path,
-                                              'create-struct-map'))
+        targets = []
+        targets.append(LocalTarget(os.path.join(self.sip_creation_path,
+                                                'structmap.xml')))
+        targets.append(LocalTarget(os.path.join(self.sip_creation_path,
+                                                'filesec.xml')))
+        targets.append(LocalTarget(os.path.join(self.sip_creation_path,
+                                                'logical_structmap.xml')))
+        return targets
 
     def run(self):
         """Creates a METS structural map file with two distinct structural
@@ -63,49 +70,44 @@ class CreateStructMap(WorkflowTask):
 
         :returns: ``None``
         """
-        # Redirect stdout to logfile
-        with self.output().open('w') as log:
-            with redirect_stdout(log):
 
-                # Create physical structmap using siptools script
-                compile_structmap.main(['--workspace',
-                                        self.sip_creation_path,
-                                        '--type_attr', 'Fairdata-physical'])
-                # Read the generated physical structmap from file
-                # pylint: disable=no-member
-                structmap = ET.parse(os.path.join(self.sip_creation_path,
-                                                  'structmap.xml'))
+        # Create physical structmap using siptools script
+        compile_structmap.main(['--workspace',
+                                self.sip_creation_path,
+                                '--type_attr', 'Fairdata-physical'])
+        # Read the generated physical structmap from file
+        # pylint: disable=no-member
+        structmap = ET.parse(os.path.join(self.sip_creation_path,
+                                          'structmap.xml'))
 
-                # Get dmdsec id from physical_structmap
-                dmdsec_id = structmap.getroot()[0][0].attrib['DMDID']
+        # Get dmdsec id from physical_structmap
+        dmdsec_id = structmap.getroot()[0][0].attrib['DMDID']
 
-                # Get provenance id's
-                provenance_ids = self.get_provenance_ids()
+        # Get provenance id's
+        provenance_ids = self.get_provenance_ids()
 
-                # Init logical structmap
-                logical_structmap \
-                    = mets.structmap(type_attr='Fairdata-logical')
+        # Init logical structmap
+        logical_structmap \
+            = mets.structmap(type_attr='Fairdata-logical')
 
-                mets_structmap = mets.mets(child_elements=[logical_structmap])
+        mets_structmap = mets.mets(child_elements=[logical_structmap])
 
-                # Create logical structmap
-                categories = self.find_file_categories()
-                wrapper_div = mets.div(type_attr='logical',
-                                       dmdid=[dmdsec_id],
-                                       admid=provenance_ids)
-                for category in categories:
-                    div = mets.div(type_attr=category)
-                    for filename in categories.get(category):
-                        fileid = self.get_fileid(encode_path(filename,
-                                                             safe='/'))
-                        div.append(mets.fptr(fileid))
-                    wrapper_div.append(div)
-                logical_structmap.append(wrapper_div)
+        # Create logical structmap
+        categories = self.find_file_categories()
+        wrapper_div = mets.div(type_attr='logical',
+                               dmdid=[dmdsec_id],
+                               admid=provenance_ids)
+        for category in categories:
+            div = mets.div(type_attr=category)
+            for filename in categories.get(category):
+                fileid = self.get_fileid(encode_path(filename,
+                                                     safe='/'))
+                div.append(mets.fptr(fileid))
+            wrapper_div.append(div)
+        logical_structmap.append(wrapper_div)
 
-                with open(os.path.join(self.sip_creation_path,
-                                       'logical_structmap.xml'), 'w+') \
-                        as outfile:
-                    outfile.write(h.serialize(mets_structmap))
+        with self.output()[-1].open('w') as output:
+            output.write(h.serialize(mets_structmap))
 
     def get_provenance_ids(self):
         """Gets list of dataset provenance events from Metax, and reads

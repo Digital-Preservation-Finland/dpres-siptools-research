@@ -47,10 +47,3 @@ def test_signsip(testpath):
                            'signature.sig'))\
             as open_file:
         assert "This is an S/MIME signed message" in open_file.read()
-
-    # Check that log is created in workspace/logs/
-    with open(os.path.join(workspace,
-                           'logs',
-                           'task-sign-sip.log'))\
-            as open_file:
-        assert open_file.read().startswith("sign_mets created file")

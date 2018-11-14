@@ -11,13 +11,12 @@ from siptools.scripts import compile_mets
 
 
 class CreateMets(WorkflowTask):
-    """Compiles METS document. Task requires METS structure map to be created.
-    """
+    """WorkflowTask that Compiles METS document."""
     success_message = "METS document compiled"
     failure_message = "Compiling METS document failed"
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """Requires METS structure map to be created.
 
         :returns: CreateStructMap task
         """
@@ -28,10 +27,20 @@ class CreateMets(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        :returns: local target: `sip-in-progress/mets.xml`
+        A false target ``create-mets.finished`` is created into
+        workspace directory to notify luigi (and dependent tasks) that this
+        task has finished.
+
+        :returns: list of local targets: ``sip-in-progress/mets.xml`` and
+            create-mets.finished
         :rtype: LocalTarget
         """
-        return LocalTarget(os.path.join(self.sip_creation_path, 'mets.xml'))
+        targets = []
+        targets.append(LocalTarget(os.path.join(self.sip_creation_path,
+                                                'mets.xml')))
+        targets.append(LocalTarget(os.path.join(self.workspace,
+                                                'create-mets.finished')))
+        return targets
 
     def run(self):
         """Compiles all metadata files into METS document.
@@ -60,3 +69,5 @@ class CreateMets(WorkflowTask):
                            '--clean',
                            '--objid', self.dataset_id,
                            '--packagingservice', 'Packaging Service'])
+        with self.output()[-1].open('w') as output:
+            output.write('Dataset id=' + self.dataset_id)

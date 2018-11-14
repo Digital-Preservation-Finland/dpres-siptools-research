@@ -33,7 +33,7 @@ def test_create_techmd_ok(testpath):
 
     # Init task
     task = CreateTechnicalMetadata(workspace=workspace,
-                                   dataset_id="create_techmd_test_dataset",
+                                   dataset_id='create_techmd_test_dataset',
                                    config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
@@ -87,11 +87,10 @@ def test_create_techmd_ok(testpath):
     assert len(root.xpath("//mix:mix/mix:ImageAssessmentMetadata",
                           namespaces=NAMESPACES)) == 1
 
-    # Check that log is created in workspace/logs/
-    with open(os.path.join(workspace,
-                           'logs',
-                           'task-create-technical-metadata.log')) as open_file:
-        assert "Wrote METS technical metadata to file" in open_file.read()
+    # Check that target file is created
+    with open(os.path.join(workspace, 'task-create-technical-'
+                           'metadata.finished')) as open_file:
+        assert 'Dataset id=create_techmd_test_dataset' in open_file.read()
 
 
 @pytest.mark.usefixtures('testmetax')

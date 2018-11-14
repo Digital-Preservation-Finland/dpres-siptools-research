@@ -4,22 +4,18 @@ import os
 import tarfile
 import luigi
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.workflow.sign import SignSIP
 
 
 class CompressSIP(WorkflowTask):
-    """Creates tar-archive from SIP directory. Task requires that SIP has been
-    signed.
-    """
+    """Creates tar-archive from SIP directory."""
     success_message = "TAR archive was created"
     failure_message = "Creating TAR archive failed"
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """The signature file ``signature.sig`` is required.
 
-        :returns: SignSIP task
-        """
+        :returns: SignSIP task"""
         return SignSIP(workspace=self.workspace,
                        dataset_id=self.dataset_id,
                        config=self.config)
@@ -27,7 +23,7 @@ class CompressSIP(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        :returns: local target: `<workspace>/<document_id>.tar`
+        :returns: local target: ``<workspace>/<document_id>.tar``
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
@@ -40,9 +36,8 @@ class CompressSIP(WorkflowTask):
 
         :returns: None
         """
-        compress_log = os.path.join(self.logs_path, 'task-compress-sip.log')
-        # Redirect stdout to logfile
-        with open(compress_log, 'w') as log:
-            with redirect_stdout(log):
-                with tarfile.open(self.output().path, 'w') as tar:
-                    tar.add(self.sip_creation_path, arcname='.')
+        # To be atomic tar file is written into temp file.
+        # On exit luigi moves the temp file to targeted file
+        with self.output().temporary_path() as self.temp_output_path:
+            with tarfile.open(self.temp_output_path, 'w') as tar:
+                tar.add(self.sip_creation_path, arcname='.')

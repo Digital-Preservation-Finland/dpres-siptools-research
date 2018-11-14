@@ -47,13 +47,11 @@ def test_createprovenanceinformation(testpath):
                                        'sip-in-progress',
                                        'Another+provenance+event-event.xml'))
 
-    # Check that log is created in workspace/logs/
-    with open(os.path.join(workspace,
-                           'logs',
-                           'task-create-provenance-information.log'))\
-            as open_file:
-        # Check last line of log file
-        assert open_file.readlines()[-1].startswith("premis_event created")
+    # Check that target file is created
+    with open(os.path.join(workspace, 'create-provenance-information.'
+                           'finished')) as open_file:
+        assert 'Dataset id=create_digiprov_test_dataset_file_and_logging' in\
+         open_file.read()
 
 
 @pytest.mark.usefixtures("testmongoclient", "testmetax")
@@ -169,7 +167,7 @@ def test_create_premis_event_unav(testpath):
     :param testpath: Testpath fixture
     :returns: ``None``
     """
-
+ 
     # Create provenance info xml-file to tempdir
     workspace = testpath
     # pylint: disable=protected-access

@@ -1,17 +1,17 @@
 """Luigi task that creates digital provenance information."""
 
 import os
-import luigi
+from luigi import local_target
 from siptools.scripts import premis_event
 from metax_access import Metax
 from siptools_research.utils.locale import (
     get_dataset_languages, get_localized_value
 )
-from siptools_research.utils.contextmanager import redirect_stdout
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
+from siptools.utils import encode_path
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -19,6 +19,17 @@ class CreateProvenanceInformation(WorkflowTask):
     files in METS digiprov wrappers. The Task requires that workspace directory
     is created and dataset metadata is validated.
     """
+
+    def __init__(self, *args, **kwargs):
+        """Calls WorkflowTask's __init__ and sets additional instance variables.
+        """
+        super(CreateProvenanceInformation, self).__init__(*args, **kwargs)
+        config_object = Configuration(self.config)
+        metax = Metax(config_object.get('metax_url'),
+                      config_object.get('metax_user'),
+                      config_object.get('metax_password'))
+        self.dataset = metax.get_dataset(self.dataset_id)
+
     success_message = "Provenance metadata created."
     failure_message = "Could not create provenance metadata"
 
@@ -43,14 +54,16 @@ class CreateProvenanceInformation(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        :returns: local target:
-           `<workspace>/<log_directory>/task-create-provenance-information.log`
+        A false target ``create-provenance-information.finished`` is created
+        into workspace directory to notify luigi (and dependent tasks) that
+        this task has finished.
+
+        :returns: local target: ``create-provenance-information.finished``
         :rtype: LocalTarget
         """
-        return luigi.LocalTarget(
-            os.path.join(self.logs_path,
-                         'task-create-provenance-information.log')
-        )
+        return local_target.LocalTarget(os.path.join(self.workspace, 'create-'
+                                                     'provenance-information.'
+                                                     'finished'))
 
     def run(self):
         """Reads file metadata from Metax and writes digital provenance
@@ -58,13 +71,11 @@ class CreateProvenanceInformation(WorkflowTask):
 
         :returns: None
         """
-
-        # Redirect stdout to logfile
-        with self.output().open('w') as log:
-            with redirect_stdout(log):
-                _create_premis_event(self.dataset_id,
-                                     self.sip_creation_path,
-                                     self.config)
+        _create_premis_event(self.dataset_id,
+                             self.sip_creation_path,
+                             self.config)
+        with self.output().open('w') as output:
+            output.write('Dataset id=' + self.dataset_id)
 
 
 def _create_premis_event(dataset_id, workspace, config):
@@ -76,11 +87,10 @@ def _create_premis_event(dataset_id, workspace, config):
     :returns: ``None``
     """
     config_object = Configuration(config)
-    metadata = Metax(
-        config_object.get('metax_url'),
-        config_object.get('metax_user'),
-        config_object.get('metax_password')
-    ).get_dataset(dataset_id)
+    metadata = Metax(config_object.get('metax_url'),
+                     config_object.get('metax_user'),
+                     config_object.get('metax_password')).\
+        get_dataset(dataset_id)
 
     dataset_languages = get_dataset_languages(metadata)
 

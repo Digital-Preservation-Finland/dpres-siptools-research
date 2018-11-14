@@ -12,12 +12,13 @@ class CreateWorkspace(WorkflowTask):
     failure_message = 'Creating workspace directory failed'
 
     def output(self):
-        """Outputs ``logs`` directory.
+        """Creates directories for running the workflow.
 
-        :returns: LocalTarget"""
-
-        # TODO: Could multiple targets be returned?
-        return luigi.LocalTarget(self.logs_path)
+        :returns: list of local targets
+        :rtype: LocalTarget
+        """
+        return [luigi.LocalTarget(self.workspace),
+                luigi.LocalTarget(self.sip_creation_path)]
 
     def run(self):
         """Creates workspace directory and adds event information to mongodb.
@@ -26,4 +27,3 @@ class CreateWorkspace(WorkflowTask):
         """
         utils.makedirs_exist_ok(self.workspace)
         utils.makedirs_exist_ok(self.sip_creation_path)
-        utils.makedirs_exist_ok(self.logs_path)
