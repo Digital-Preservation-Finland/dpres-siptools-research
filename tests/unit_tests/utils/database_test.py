@@ -1,4 +1,4 @@
-"""Tests for ``siptools_research.utils.database`` module"""
+"""Tests for :mod:`siptools_research.utils.database` module"""
 import uuid
 import pytest
 import tests.conftest

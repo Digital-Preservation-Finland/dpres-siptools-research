@@ -1,4 +1,4 @@
-"""Unit tests for `siptools_research.workflow.validate_sip` module."""
+"""Unit tests for :mod:`siptools_research.workflow.validate_sip` module."""
 
 
 import tests.conftest

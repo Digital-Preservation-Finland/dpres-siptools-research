@@ -1,4 +1,4 @@
-"""Integration test for ``siptools_research.workflow.send_sip`` module and
+"""Integration test for :mod:`siptools_research.workflow.send_sip` module and
 digital preservation service."""
 import os
 import shutil

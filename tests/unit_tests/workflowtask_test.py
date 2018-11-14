@@ -1,4 +1,4 @@
-"""Tests for siptools_research.workflowtask module"""
+"""Tests for :mod:`siptools_research.workflowtask` module"""
 
 import os
 import json

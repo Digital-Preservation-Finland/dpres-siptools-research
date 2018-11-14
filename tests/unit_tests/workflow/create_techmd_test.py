@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.create_sip.create_techmd` module"""
+"""Test the :mod:`siptools_research.workflow.create_techmd` module"""
 
 import os
 import shutil

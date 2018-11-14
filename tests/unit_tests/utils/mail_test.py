@@ -1,4 +1,4 @@
-"""Tests for ``siptools_research.utils.mail`` module"""
+"""Tests for :mod:`siptools_research.utils.mail` module"""
 try:
     import mock
 except ImportError:

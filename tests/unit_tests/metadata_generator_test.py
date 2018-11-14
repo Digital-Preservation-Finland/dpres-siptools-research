@@ -1,4 +1,4 @@
-"""Tests for ``siptools_research.generate_metadata`` module"""
+"""Tests for :mod:`siptools_research.metadata_generator` module"""
 
 import os
 import tempfile

@@ -1,4 +1,4 @@
-"""Tests for `siptools_research.workflow.cleanup` module"""
+"""Tests for :mod:`siptools_research.workflow.cleanup` module"""
 import os
 import pytest
 import tests.conftest

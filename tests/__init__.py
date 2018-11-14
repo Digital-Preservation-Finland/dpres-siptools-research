@@ -1,1 +1,1 @@
-"""Tests for the `siptools_research` package"""
+"""Tests for the :mod:`siptools_research` package"""

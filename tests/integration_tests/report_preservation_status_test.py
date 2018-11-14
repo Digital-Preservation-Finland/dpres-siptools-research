@@ -1,5 +1,5 @@
 """Integration tests for digital preservation server and
-`siptools_research.workflow.report_preservation_status` module"""
+:mod:`siptools_research.workflow.report_preservation_status` module"""
 
 import os
 import time

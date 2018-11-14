@@ -1,4 +1,4 @@
-"""Test the `siptools_research.workflow.create_workspace` module"""
+"""Test the :mod:`siptools_research.workflow.create_workspace` module"""
 
 import os
 import pytest

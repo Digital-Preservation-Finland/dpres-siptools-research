@@ -1,4 +1,4 @@
-"""Test the `siptools_research.workflow.create_digiprov` module"""
+"""Test the :mod:`siptools_research.workflow.create_digiprov` module"""
 
 import os
 import pytest

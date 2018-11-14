@@ -1,4 +1,4 @@
-"""Test the `siptools_research.workflow.sign` module"""
+"""Test the :mod:`siptools_research.workflow.sign` module"""
 
 import os
 import shutil

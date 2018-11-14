@@ -1,4 +1,4 @@
-"""Tests for ``siptools_research.workflow_init`` module"""
+"""Tests for :mod:`siptools_research.workflow_init` module"""
 
 import pytest
 import siptools_research

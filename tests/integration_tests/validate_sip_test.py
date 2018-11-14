@@ -1,5 +1,5 @@
 """Integration tests for digital preservation service and
-``siptools_research.workflow.validate_sip`` module.
+:mod:`siptools_research.workflow.validate_sip` module.
 """
 
 import os

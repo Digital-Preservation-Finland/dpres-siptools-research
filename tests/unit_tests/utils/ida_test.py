@@ -1,4 +1,4 @@
-"""Tests for `siptools_research.utils.ida` module"""
+"""Tests for :mod:`siptools_research.utils.ida` module"""
 import os
 import pytest
 import tests.conftest

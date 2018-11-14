@@ -1,4 +1,4 @@
-"""Tests for `siptools_research.workflow.compress` module"""
+"""Tests for :mod:`siptools_research.workflow.compress` module"""
 import os
 import shutil
 import tarfile

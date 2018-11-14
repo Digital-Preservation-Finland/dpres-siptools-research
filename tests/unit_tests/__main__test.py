@@ -1,4 +1,4 @@
-"""Tests for ``siptools_research.__main__`` module"""
+"""Tests for :mod:`siptools_research.__main__` module"""
 
 import sys
 import siptools_research.__main__

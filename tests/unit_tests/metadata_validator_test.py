@@ -1,4 +1,4 @@
-"""Tests for ``siptools_research.validate_metadata`` module"""
+"""Tests for :mod:`siptools_research.metadata_validator` module"""
 
 import pytest
 import tests.conftest

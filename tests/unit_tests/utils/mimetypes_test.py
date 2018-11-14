@@ -1,4 +1,4 @@
-"""Tests for ``siptools_research.utils.mimetypes`` module"""
+"""Tests for :mod:`siptools_research.utils.mimetypes` module"""
 import siptools_research.utils.mimetypes
 import pytest
 

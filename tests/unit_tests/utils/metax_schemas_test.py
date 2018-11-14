@@ -1,4 +1,4 @@
-"""Tests for ``siptools_research.utils.metax_schemas`` module"""
+"""Tests for :mod:`siptools_research.utils.metax_schemas` module"""
 import pytest
 import jsonschema
 import siptools_research.utils.metax_schemas as metax_schemas

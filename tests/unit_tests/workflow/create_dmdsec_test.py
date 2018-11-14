@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Tests for `siptools_research.workflow.create_dmdsec` module"""
+"""Tests for :mod:`siptools_research.workflow.create_dmdsec` module"""
 
 import os
 import pytest

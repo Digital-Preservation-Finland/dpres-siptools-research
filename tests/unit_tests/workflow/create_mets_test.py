@@ -1,4 +1,4 @@
-"""Test module `siptools_research.workflow.create_mets`"""
+"""Test module :mod:`siptools_research.workflow.create_mets`"""
 import shutil
 import os
 import pytest
