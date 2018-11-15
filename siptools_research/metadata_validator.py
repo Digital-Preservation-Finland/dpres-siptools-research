@@ -80,14 +80,7 @@ def _validate_dataset_metadata(dataset_metadata):
         jsonschema.validate(dataset_metadata,
                             metax_schemas.DATASET_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
-
-        # Modify message only if a required param is missing
-        message = (
-            str(exc)
-            if exc.validator == "required"
-            else exc.message
-        )
-        raise InvalidMetadataError(message)
+        raise InvalidMetadataError(str(exc))
 
 
 def _validate_contract_metadata(contract_id, metax_client):
@@ -102,14 +95,7 @@ def _validate_contract_metadata(contract_id, metax_client):
         jsonschema.validate(contract_metadata,
                             metax_schemas.CONTRACT_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
-
-        # Modify message only if a required param is missing
-        message = (
-            str(exc)
-            if exc.validator == "required"
-            else exc.message
-        )
-        raise InvalidMetadataError(message)
+        raise InvalidMetadataError(str(exc))
 
 
 def _validate_dataset_files(dataset_metadata, metax_client):
@@ -131,15 +117,9 @@ def _validate_dataset_files(dataset_metadata, metax_client):
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
             message = (
-                "Validation error in file metadata of {file_path}: "
-                "{message}".format(
-                    file_path=file_metadata["file_path"], message=exc.message)
-            )
-
-            # Add path to the message only if a required param is missing
-            if exc.validator == "required":
-                message = message + str(exc)
-
+                "Validation error in metadata of {file_path}: {error}"
+            ).format(file_path=file_metadata["file_path"],
+                     error=str(exc))
             raise InvalidMetadataError(message)
 
 
@@ -181,13 +161,9 @@ def _validate_file_metadata(dataset_id, metax_client):
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
             message = (
-                "Validation error in file {file_path}: "
-            ).format(file_path=file_metadata["file_path"])
-
-            # Add path to message only if a required param is missing
-            if exc.validator == "required":
-                message = message + str(exc)
-
+                "Validation error in metadata of {file_path}: {error}"
+            ).format(file_path=file_metadata["file_path"],
+                     error=str(exc))
             raise InvalidMetadataError(message)
         _check_mimetype(file_metadata)
 

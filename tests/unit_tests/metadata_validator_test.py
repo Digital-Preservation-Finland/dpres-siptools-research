@@ -134,8 +134,8 @@ def test_validate_file_metadata():
             'validate_metadata_test_dataset_missing_file_format', client
         )
 
-    assert exc_info.value.message == """Validation error in\
- file path/to/file1: 'file_format' is a required property
+    assert exc_info.value.message == """Validation error in metadata of \
+path/to/file1: 'file_format' is a required property
 
 Failed validating 'required' in schema['properties']['file_characteristics']:
     {'properties': {'file_encoding': {'enum': ['ISO-8859-15',
