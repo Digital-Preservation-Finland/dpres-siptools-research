@@ -1,6 +1,8 @@
 Digital Preservation Packaging Service for Research
 ===================================================
-Service for creating SIP from research datasets.
+Service for creating submission information packages (SIP) from research datasets.
+The service reads dataset metadata from Metax metadata database and collects files from file servers, such as Ida.
+SIP creation workflow is implemented using `Luigi <https://luigi.readthedocs.io>`_ and workflow status is logged in `MongoDB <https://www.mongodb.com/>`_ database.
 
 Installation
 ------------
@@ -8,23 +10,28 @@ On Centos 7 siptools_research can be installed from `DPres RPM repository <https
 
    yum install dpres-siptools-research
 
+Packaging service requires MongoDB daemon running on default port (27017) and Luigi scheduler runnig on default port (8082).
+Enable systemd timer that starts/restarts all incomplete and enabled workflows found in database::
+
+   systemctl enable siptools_research.timer
+   systemctl start siptools_research.timer
+
+
 Usage
 -----
 Commandline interface
 ^^^^^^^^^^^^^^^^^^^^^
 To package and preserve for example dataset 1234, run::
 
-   siptools-research --config ~/siptools_config_file.conf 1234
-
-where ``~/siptools_config_file.conf`` is  configuration file. If no config is provided, default config file: ``/etc/siptools_research.conf`` is used.
+   siptools-research preserve 1234
 
 The dataset metadata can be validated without starting the packaging workflow::
 
-   siptools_research --validate 1234
+   siptools-research validate 1234
 
 The technical metadata can generated and posted to Metax::
 
-   siptools_research --generate 1234
+   siptools-research generate 1234
 
 Python inteface
 ^^^^^^^^^^^^^^^
@@ -40,12 +47,16 @@ Also dataset metadata validation can be used from python::
 
 The ``validate_dataset`` function returns ``True`` if dataset metadata is valid.
 
-Systemd service
-^^^^^^^^^^^^^^^
-Enable timer that starts/restarts all incomplete and enabled tasks found from database::
+Starting workflows with luigi
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+A single workflow can be started/restarted using luigi command::
 
-   systemctl enable siptools_research.timer
-   systemctl start siptools_research.timer
+   luigi --module siptools_research.workflow.init_workflow InitWorkflow --workspace /var/spool/siptools-research/testworkspace_1234 --dataset-id 1234 --config /etc/siptools_research.conf
+
+Incomplete workflows can be restarted with::
+
+   luigi --module siptools_research.workflow_init InitWorkflows --config /etc/siptools_research.conf
+
 
 Testing
 -------
@@ -66,7 +77,7 @@ Install required python packages for testing::
 
    pip install -r requirements_dev.txt --process-dependency-links
 
-Run tests that do not require running luigi/mongo::
+Run unit tests::
 
    make test
 
@@ -74,26 +85,11 @@ or run one of the integration tests::
 
    py.test -v tests/integration_tests/workflow_test.py
 
-Note: validate_sip_test.py uses cloud-user account to log into preservation
-server. Thus the SSH private key of the cloud-user should be found in
-current user's ~/.ssh/pouta-key.pem file. The test sets the dataset state
-as rejected/accepted to simulate the behavior of the preservation server. 
-
-Testing workflow
-^^^^^^^^^^^^^^^^
-Start luigid::
-
-   luigid
-
-Start mongodb::
-
-   mkdir -p ~/.mongodata
-   mongod --dbpath ~/.mongodata
-
-Start workflow using luigi::
-
-   luigi --module siptools_research.workflow.init_workflow InitWorkflow --scheduler-host=localhost  --workspace /var/spool/siptools-research/testworkspace_abdc1234 --dataset-id 1234 --config tests/data/configuration_files/siptools_research.conf
-
+.. Note ::
+    validate_sip_test.py uses cloud-user account to log into preservation
+    server. Thus the SSH private key of the cloud-user should be found in
+    current user's `~/.ssh/pouta-key.pem` file. The test sets the dataset state
+    as rejected/accepted to simulate the behavior of the preservation server.
 
 
 Building
@@ -102,9 +98,7 @@ Build RPM::
 
    make rpm
 
-Generating documentation
-------------------------
-Documentation for modules is automatically generated from docstrings using Sphinx (`https://wiki.csc.fi/KDK/PythonKoodinDokumentointi <https://wiki.csc.fi/KDK/PythonKoodinDokumentointi>`_)::
+Documentation for modules is automatically generated from docstrings using Sphinx (`https://wiki.csc.fi/KDK/PythonKoodinDokumentointi <https://wiki.csc.fi/KDK/PythonKoodinDokumentointi>`_). Generate documentation::
 
    cd doc/
    make html
