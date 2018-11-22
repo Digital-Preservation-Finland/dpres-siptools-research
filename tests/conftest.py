@@ -220,7 +220,7 @@ def testpath(request):
 
     def fin():
         """remove temporary path"""
-#        shutil.rmtree(temp_path)
+        shutil.rmtree(temp_path)
 
     request.addfinalizer(fin)
 
