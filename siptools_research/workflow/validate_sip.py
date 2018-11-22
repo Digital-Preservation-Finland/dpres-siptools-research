@@ -15,7 +15,7 @@ class ValidateSIP(WorkflowExternalTask):
     """
 
     def requires(self):
-        """Requires SIP to be sent to DP service.
+        """The Tasks that this Task depends on.
 
         :returns: SendSIPToDP task
         """

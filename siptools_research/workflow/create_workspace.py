@@ -6,7 +6,11 @@ from siptools_research.workflowtask import WorkflowTask
 
 
 class CreateWorkspace(WorkflowTask):
-    """Creates empty workspace directory."""
+    """Creates directories for running the workflow.
+
+    :returns: list of local targets
+    :rtype: LocalTarget
+    """
 
     success_message = 'Workspace directory create.'
     failure_message = 'Creating workspace directory failed'
