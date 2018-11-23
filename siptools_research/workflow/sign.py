@@ -1,13 +1,15 @@
 """Luigi task that signs METS file"""
 
 import os
+from shutil import copyfile, move
+from tempfile import mkdtemp
+
 from luigi import LocalTarget
+
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_mets import CreateMets
 from siptools.scripts import sign_mets
-from tempfile import mkdtemp
-from shutil import copyfile, move
 
 
 class SignSIP(WorkflowTask):

@@ -56,10 +56,11 @@ class CreateDescriptiveMetadata(WorkflowTask):
         """
         # Get datacite.xml from Metax
         config_object = Configuration(self.config)
-        datacite = Metax(config_object.get('metax_url'),
-                         config_object.get('metax_user'),
-                         config_object.get('metax_password')
-                         ).get_datacite(self.dataset_id)
+        datacite = Metax(
+            config_object.get('metax_url'),
+            config_object.get('metax_user'),
+            config_object.get('metax_password')
+        ).get_datacite(self.dataset_id)
 
         # Write datacite.xml to file
         datacite_path = os.path.join(self.workspace,

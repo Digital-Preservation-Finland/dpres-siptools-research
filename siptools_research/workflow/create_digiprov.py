@@ -1,6 +1,7 @@
 """Luigi task that creates digital provenance information."""
 
 import os
+
 from luigi import local_target
 from siptools.scripts import premis_event
 from metax_access import Metax
@@ -11,7 +12,6 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
-from siptools.utils import encode_path
 
 
 class CreateProvenanceInformation(WorkflowTask):
