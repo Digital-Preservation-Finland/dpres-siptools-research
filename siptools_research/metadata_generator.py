@@ -58,7 +58,13 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             if file_characteristics['file_format'].startswith('image'):
                 ida.download_file(file_id, tmpfile, config)
                 mix_element = create_mix.create_mix(tmpfile)
-                metax_client.set_xml(file_id, mix_element)
+                namespace = mix_element.attrib['{http://www.w3.org/2001/'
+                                               'XMLSchema-instance}'
+                                               'schemaLocation'].split()[0]
+
+                xmls = metax_client.get_xml('files', file_id)
+                if namespace not in xmls:
+                    metax_client.set_xml(file_id, mix_element)
 
             # Generate and post ADDML metadata
             elif file_characteristics['file_format'] == 'text/csv':
