@@ -45,7 +45,7 @@ def test_createprovenanceinformation(testpath):
 
     assert os.path.isfile(os.path.join(workspace,
                                        'sip-in-progress',
-                                       'Another+provenance+event-event.xml'))
+                                       'metadata+modification-event.xml'))
 
     # Check that target file is created
     with open(os.path.join(workspace, 'create-provenance-information.'
