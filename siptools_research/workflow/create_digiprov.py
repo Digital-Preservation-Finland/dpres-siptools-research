@@ -5,6 +5,7 @@ import os
 from luigi import local_target
 from siptools.scripts import premis_event
 from metax_access import Metax
+
 from siptools_research.utils.locale import (
     get_dataset_languages, get_localized_value
 )
@@ -15,9 +16,17 @@ from siptools_research.config import Configuration
 
 
 class CreateProvenanceInformation(WorkflowTask):
-    """Create provenance information as PREMIS event and PREMIS agent
-    files in METS digiprov wrappers. The Task requires that workspace directory
-    is created and dataset metadata is validated.
+    """Creates METS documents that contain PREMIS event element for each
+    provenance event. Each document contains a digiprovMD element identified by
+    hash generated from the document filename. The METS documents are written
+    to `<sip_creation_path>/<event_type>-event.xml`. Because siptools requires
+    these undeterministic filenames, a false target
+    `create-provenance-information.finished` is created into workspace
+    directory to notify luigi (and dependent tasks) that this task has
+    finished.
+
+    The Task requires that workspace directory is created and dataset metadata
+    is validated.
     """
 
     def __init__(self, *args, **kwargs):
@@ -54,16 +63,17 @@ class CreateProvenanceInformation(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        A false target ``create-provenance-information.finished`` is created
+        A false target `create-provenance-information.finished` is created
         into workspace directory to notify luigi (and dependent tasks) that
         this task has finished.
 
-        :returns: local target: ``create-provenance-information.finished``
+        :returns: local target: `create-provenance-information.finished`
         :rtype: LocalTarget
         """
-        return local_target.LocalTarget(os.path.join(self.workspace, 'create-'
-                                                     'provenance-information.'
-                                                     'finished'))
+        return local_target.LocalTarget(
+            os.path.join(self.workspace,
+                         'create-provenance-information.finished')
+        )
 
     def run(self):
         """Reads file metadata from Metax and writes digital provenance
@@ -71,15 +81,17 @@ class CreateProvenanceInformation(WorkflowTask):
 
         :returns: None
         """
-        _create_premis_event(self.dataset_id,
-                             self.sip_creation_path,
-                             self.config)
+        _create_premis_events(self.dataset_id,
+                              self.sip_creation_path,
+                              self.config)
+
         with self.output().open('w') as output:
             output.write('Dataset id=' + self.dataset_id)
 
 
-def _create_premis_event(dataset_id, workspace, config):
-    """Reads dataset metadta from Metax and calls siptools premis_event script.
+def _create_premis_events(dataset_id, workspace, config):
+    """Reads dataset provenance metadata from Metax. For each provenance
+    object a METS document that contains a PREMIS event element is created.
 
     :param dataset_id: dataset identifier
     :param workspace: SIP creation directory
@@ -87,63 +99,61 @@ def _create_premis_event(dataset_id, workspace, config):
     :returns: ``None``
     """
     config_object = Configuration(config)
-    metadata = Metax(config_object.get('metax_url'),
-                     config_object.get('metax_user'),
-                     config_object.get('metax_password')).\
-        get_dataset(dataset_id)
+    metadata = Metax(
+        config_object.get('metax_url'),
+        config_object.get('metax_user'),
+        config_object.get('metax_password')
+    ).get_dataset(dataset_id)
 
     dataset_languages = get_dataset_languages(metadata)
 
     try:
-        provenance = metadata["research_dataset"]["provenance"]
+        provenances = metadata["research_dataset"]["provenance"]
     except KeyError:
-        provenance = None
+        # Provenances not found in Metax, create default provenance data
+        provenances = [
+            {
+                "preservation_event": {"pref_label": {"en": "creation"}},
+                "temporal": {"start_date": "OPEN"},
+                "description": {"en": "Created by packaging service"}
+            }
+        ]
 
-    if provenance is None:
-        event_type = "creation"
-        event_datetime = "OPEN"
-        event_detail = "Created by packaging service"
-        event_outcome = "(:unav)"
-        event_outcome_detail = "Value unavailable, possibly unknown"
-        premis_event.main([
-            event_type, event_datetime,
-            "--event_detail", event_detail,
-            "--event_outcome", event_outcome,
-            "--event_outcome_detail", event_outcome_detail,
-            "--workspace", workspace
-        ])
-    else:
-        for provenance in metadata["research_dataset"]["provenance"]:
-            event_type = get_localized_value(
-                provenance["preservation_event"]["pref_label"],
+    for provenance in provenances:
+
+        event_type = get_localized_value(
+            provenance["preservation_event"]["pref_label"],
+            languages=dataset_languages
+        )
+
+        event_datetime = provenance["temporal"]["start_date"]
+
+        event_detail = get_localized_value(
+            provenance["description"],
+            languages=dataset_languages
+        )
+
+        # Read event_outcome if it is defined for this dataset
+        try:
+            event_outcome = get_localized_value(
+                provenance["event_outcome"]["pref_label"],
                 languages=dataset_languages
             )
-            event_datetime = provenance["temporal"]["start_date"]
-            event_detail = get_localized_value(
-                provenance["description"],
+        except KeyError:
+            event_outcome = "(:unav)"
+
+        # Read event_outcome_detail if it is defined for this dataset
+        try:
+            event_outcome_detail = get_localized_value(
+                provenance["outcome_description"],
                 languages=dataset_languages
             )
-            # Read event_outcome if it defined for this dataset
-            try:
-                event_outcome = get_localized_value(
-                    provenance["event_outcome"]["pref_label"],
-                    languages=dataset_languages
-                )
-            except KeyError:
-                event_outcome = "(:unav)"
-            # Read event_outcome_detail if it defined for this dataset
-            try:
-                event_outcome_detail = get_localized_value(
-                    provenance["outcome_description"],
-                    languages=dataset_languages
-                )
-            except KeyError:
-                event_outcome_detail = "Value unavailable, possibly unknown"
-            premis_event.main([
-                event_type,
-                event_datetime,
-                "--event_detail", event_detail,
-                "--event_outcome", event_outcome,
-                "--event_outcome_detail", event_outcome_detail,
-                "--workspace", workspace
-            ])
+        except KeyError:
+            event_outcome_detail = "Value unavailable, possibly unknown"
+
+        premis_event.create_premis_event_file(workspace,
+                                              event_type,
+                                              event_datetime,
+                                              event_detail,
+                                              event_outcome,
+                                              event_outcome_detail)

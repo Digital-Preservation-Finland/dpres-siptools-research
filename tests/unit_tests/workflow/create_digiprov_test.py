@@ -87,7 +87,7 @@ def test_failed_createprovenanceinformation(testpath):
 
 
 @pytest.mark.usefixtures("testmetax")
-def test_create_premis_event(testpath):
+def test_create_premis_events(testpath):
     """Test `create_premis_event` function. Output XML file should be produced
     and it should contain some specified elements.
 
@@ -98,7 +98,7 @@ def test_create_premis_event(testpath):
     # Create provenance info xml-file to tempdir
     workspace = testpath
     # pylint: disable=protected-access
-    create_digiprov._create_premis_event(
+    create_digiprov._create_premis_events(
         'create_digiprov_test_dataset_detailed_check',
         workspace,
         tests.conftest.UNIT_TEST_CONFIG_FILE
@@ -157,21 +157,19 @@ def test_create_premis_event(testpath):
 
 
 @pytest.mark.usefixtures("testmetax")
-def test_create_premis_event_unav(testpath):
-    """Test `create_premis_event` function for creating unav-event.
-    The dataset requested does not have provenance information, and
-    therefore unav-event will be created by packaging service.
-    Output XML file should be produced
-    and it should contain some specified elements.
+def test_create_premis_events_unav(testpath):
+    """Test `create_premis_event` function for creating unav-event. The
+    dataset requested does not have provenance information, and therefore
+    unav-event will be created by packaging service. Output XML file should be
+    produced and it should contain some specified elements.
 
     :param testpath: Testpath fixture
     :returns: ``None``
     """
- 
     # Create provenance info xml-file to tempdir
     workspace = testpath
     # pylint: disable=protected-access
-    create_digiprov._create_premis_event(
+    create_digiprov._create_premis_events(
         'create_digiprov_test_dataset_provenance_data_missing',
         workspace,
         tests.conftest.UNIT_TEST_CONFIG_FILE)
