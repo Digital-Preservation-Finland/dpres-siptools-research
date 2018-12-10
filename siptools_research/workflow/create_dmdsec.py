@@ -11,8 +11,10 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
 class CreateDescriptiveMetadata(WorkflowTask):
-    """Workflow task that creates mets dmdSec from DataCite file. Task requires
-    that workspace is created and dataset metadata is validated.
+    """Creates METS dmdSec document. Descriptive metadata is read from Metax in
+    DataCite format. Output file is written to <sip_creation_path>/dmdsec.xml
+
+    Task requires that workspace is created and dataset metadata is validated.
     """
     success_message = "Descriptive metadata created"
     failure_message = "Creating descriptive metadata failed"
@@ -20,7 +22,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
     def requires(self):
         """The Tasks that this Task depends on.
 
-        :returns: list of tasks: [CreateWorkspace, ValidateMetadata]
+        :returns: list of tasks: CreateWorkspace and ValidateMetadata
         """
         return [CreateWorkspace(workspace=self.workspace,
                                 dataset_id=self.dataset_id,
@@ -32,27 +34,16 @@ class CreateDescriptiveMetadata(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        A false target ``create-descriptive-metadata.finished`` is created into
-        workspace directory to notify luigi (and dependent tasks) that this
-        task has finished.
-
-        :returns: list of local targets: ``sip-in-progress/dmdsec.xml`` and
-            ``create-descriptive-metadata.finished``
+        :returns: local target: `sip-in-progress/dmdsec.xml`
         :rtype: LocalTarget
         """
-        targets = []
-        targets.append(LocalTarget(os.path.join(self.sip_creation_path,
-                                                'dmdsec.xml')))
-        targets.append(LocalTarget(os.path.join(self.workspace,
-                                                'create-descriptive-metadata.'
-                                                'finished')))
-        return targets
+        return LocalTarget(os.path.join(self.sip_creation_path, 'dmdsec.xml'))
 
     def run(self):
-        """Copies datacite.xml metadatafile from Metax. Creates dmdSec XML from
-        datacite.xml using siptools import_description script.
+        """Copies datacite.xml metadatafile from Metax. Creates a METS document
+        that contains dmdSec element with datacite metadata.
 
-        :returns: None
+        :returns: ``None``
         """
         # Get datacite.xml from Metax
         config_object = Configuration(self.config)
@@ -67,9 +58,11 @@ class CreateDescriptiveMetadata(WorkflowTask):
                                      'datacite.xml')
         datacite.write(datacite_path)
 
-        # Create dmdsec.xml file
-        import_description.main([datacite_path,
-                                 '--workspace',
-                                 self.sip_creation_path])
-        with self.output()[-1].open('w') as output:
-            output.write('Dataset id=' + self.dataset_id)
+        # Create METS dmdSec element tree that contains datacite, and write it
+        # to output
+        mets_ = import_description.create_mets(datacite_path, 'dmdsec.xml')
+        with self.output().open('w') as outputfile:
+            mets_.write(outputfile,
+                        pretty_print=True,
+                        xml_declaration=True,
+                        encoding='UTF-8')
