@@ -15,7 +15,7 @@
                 "title": "asdf",
                 "identifier": "pid:urn:wf_test_1a",
                 "use_category": {
-                    "identifier": "http://purl.org/att/es/reference_data/use_category/use_category_source",
+                    "identifier": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source",
                     "pref_label": {
                         "en": "label1"
                     }
@@ -25,7 +25,7 @@
                 "title": "asdf",
                 "identifier": "pid:urn:wf_test_1b",
                 "use_category": {
-                    "identifier": "http://purl.org/att/es/reference_data/use_category/use_category_source",
+                    "identifier": "http://uri.suomi.fi/codelist/fairdata/use_category/code/source",
                     "pref_label": {
                         "en": "label2"
                     }
@@ -53,11 +53,13 @@
         },
         "access_rights": {
             "access_type": {
-                "identifier": "http://purl.org/att/es/reference_data/access_type/access_type_open_access"
+                "identifier": "http://uri.suomi.fi/codelist/fairdata/access_type/code/open"
             },
-            "restriction_grounds": {
-                "identifier": "http://purl.org/att/es/reference_data/restriction_grounds/restriction_grounds_1"
-            }
+            "restriction_grounds": [
+                {
+                    "identifier": "http://uri.suomi.fi/codelist/fairdata/restriction_grounds/code/other"
+                }
+            ]
         }
     }
 }

@@ -26,21 +26,25 @@ def test_reportpreservationstatus(testpath):
 
     # Set permissions of ssh-key (required by paramiko)
     os.chmod('tests/data/pas_ssh_key', 0600)
-
     # Create new directory to digital preservation server
     with paramiko.SSHClient() as ssh:
         # Initialize SSH connection to digital preservation server
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect('86.50.168.218',
-                    username='tpas',
-                    key_filename='tests/data/pas_ssh_key')
-
+        ssh.connect(
+            '86.50.168.218',
+            username='cloud-user',
+            key_filename=os.path.expanduser("~") + '/.ssh/pouta-key.pem'
+        )
         # Create directory with name of the workspace to digital preservation
         # server over SSH, so that the ReportPreservationStatus thinks that
         # validation has completed.
         datedir = time.strftime("%Y-%m-%d")
         tar_name = os.path.basename(workspace) + '.tar'
-        ssh.exec_command("mkdir -p accepted/%s/%s" % (datedir, tar_name))
+        _remote_cmd(ssh, "sudo mkdir -p /home/tpas/accepted/%s/%s" %
+                    (datedir, tar_name))
+        _remote_cmd(ssh, "sudo chown tpas:access-rest-api "
+                    "/home/tpas/accepted/%s/%s" % (datedir, tar_name),
+                    raise_error=True)
 
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
@@ -75,9 +79,11 @@ def test_reportpreservationstatus_rejected(testpath):
     with paramiko.SSHClient() as ssh:
         # Initialize SSH connection to digital preservation server
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect('86.50.168.218',
-                    username='tpas',
-                    key_filename='tests/data/pas_ssh_key')
+        ssh.connect(
+            '86.50.168.218',
+            username='cloud-user',
+            key_filename=os.path.expanduser("~") + '/.ssh/pouta-key.pem'
+        )
 
         # Create directory with name of the workspace to digital preservation
         # server over SSH, so that the ReportPreservationStatus thinks that
@@ -85,11 +91,14 @@ def test_reportpreservationstatus_rejected(testpath):
         datedir = time.strftime("%Y-%m-%d")
         tar_name = os.path.basename(workspace) + '.tar'
         dir_path = "rejected/%s/%s" % (datedir, tar_name)
-        ssh.exec_command("mkdir -p " + dir_path)
-        ssh.exec_command("touch " + dir_path + "/" +
-                         os.path.basename(workspace) +
-                         ".html")
-
+        _remote_cmd(ssh, "sudo mkdir -p /home/tpas/" + dir_path)
+        _remote_cmd(ssh, "sudo chown tpas:access-rest-api /home/tpas/" +
+                    dir_path)
+        _remote_cmd(ssh, "sudo touch /home/tpas/" + dir_path + "/" +
+                    os.path.basename(workspace) + ".html")
+        _remote_cmd(ssh, "sudo chown tpas:access-rest-api /home/tpas/" +
+                    dir_path + "/" + os.path.basename(workspace) + ".html",
+                    raise_error=True)
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
         workspace=workspace,
@@ -131,9 +140,11 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
     with paramiko.SSHClient() as ssh:
         # Initialize SSH connection to digital preservation server
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect('86.50.168.218',
-                    username='tpas',
-                    key_filename='tests/data/pas_ssh_key')
+        ssh.connect(
+            '86.50.168.218',
+            username='cloud-user',
+            key_filename=os.path.expanduser("~") + '/.ssh/pouta-key.pem'
+        )
 
         # Create directory with name of the workspace to digital preservation
         # server over SSH, so that the ReportPreservationStatus thinks that
@@ -141,13 +152,19 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
         datedir = time.strftime("%Y-%m-%d")
         tar_name = os.path.basename(workspace) + '.tar'
         dir_path = "rejected/%s/%s" % (datedir, tar_name)
-        ssh.exec_command("mkdir -p " + dir_path)
-        ssh.exec_command("touch " + dir_path + "/" +
-                         os.path.basename(workspace) +
-                         ".html")
-        ssh.exec_command("touch " + dir_path + "/" +
-                         os.path.basename(workspace) +
-                         "_extra.html")
+        _remote_cmd(ssh, 'sudo mkdir -p /home/tpas/' + dir_path)
+        _remote_cmd(ssh, 'sudo chown tpas:access-rest-api /home/'
+                    'tpas/' + dir_path, raise_error=True)
+        _remote_cmd(ssh, "sudo touch /home/tpas/" + dir_path + "/" +
+                    os.path.basename(workspace) + ".html")
+        _remote_cmd(ssh, "sudo chown tpas:access-rest-api /home/tpas/" +
+                    dir_path + "/" + os.path.basename(workspace) + ".html",
+                    raise_error=True)
+        _remote_cmd(ssh, "sudo touch /home/tpas/" + dir_path + "/" +
+                    os.path.basename(workspace) + "_extra.html")
+        _remote_cmd(ssh, "sudo chown tpas:access-rest-api /home/tpas/" +
+                    dir_path + "/" + os.path.basename(workspace) +
+                    "_extra.html", raise_error=True)
 
     # Init and run task
     with mock.patch('siptools_research.workflow'
@@ -168,5 +185,17 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
         assert exceptionThrown is True
         assert task.complete() is False
 
+
+def _remote_cmd(ssh, command, raise_error=False):
+    """Runs a command on remote host.
+
+    :param ssh: SSHClient used for running the command
+    :param command: Command to be run on remote host
+    :param raise_error: When true raises an Exception if command fails
+    :returns: ``None``
+    """
+    _, stdout, _ = ssh.exec_command(command)
+    if raise_error and stdout.channel.recv_exit_status() != 0:
+        raise Exception('Remote command: ' + command + ' failed')
 
 # TODO: Check which requests were sent to httpretty

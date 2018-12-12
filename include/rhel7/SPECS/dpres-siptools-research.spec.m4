@@ -23,12 +23,26 @@ URL:            http://www.csc.fi
 Source0:        %{file_prefix}-v%{file_version}%{?file_release_tag}-%{file_build_number}-g%{file_commit_ref}.%{file_ext}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
-Requires:       python python-luigi python-pymongo dpres-siptools addml mets
-Requires:       python-lxml python-paramiko python2-jsonschema python-requests
-Requires:       python-scandir python-iso-639 ImageMagick
+Requires:       python
+Requires:       python-luigi
+Requires:       python-pymongo
+Requires:       dpres-siptools
+Requires:       addml
+Requires:       mets
+Requires:       python-lxml
+Requires:       python-paramiko
+Requires:       python2-jsonschema
+Requires:       python-requests
+Requires:       python-scandir
+Requires:       python-iso-639 ImageMagick
 Requires:       python-mongomock
-Requires:       dpres-ipt dpres-xml-schemas metax-access
-BuildRequires:  python-setuptools pytest python-httpretty
+Requires:       dpres-ipt
+Requires:       dpres-xml-schemas
+Requires:       metax-access
+Requires:       python-mock
+BuildRequires:  python-setuptools
+BuildRequires:  pytest
+BuildRequires:  python-httpretty
 
 %description
 Digital Preservation Packaging Service for Research datasets
