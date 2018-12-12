@@ -1,13 +1,34 @@
-"""Test module :mod:`siptools_research.workflow.create_mets`"""
-import shutil
+"""Tests for module :mod:`siptools_research.workflow.create_mets`"""
 import os
 import pytest
 import tests.conftest
 import lxml
 from siptools_research.workflow.create_mets import CreateMets
-from siptools.scripts import import_object
-from siptools.scripts import import_description, premis_event, \
-    compile_structmap
+from siptools.scripts import (import_description,
+                              premis_event,
+                              compile_structmap,
+                              import_object)
+
+NAMESPACES = {
+    'xsi': "http://www.w3.org/2001/XMLSchema-instance",
+    'mets': "http://www.loc.gov/METS/",
+    'fi': "http://digitalpreservation.fi/schemas/mets/fi-extensions",
+    'premis': "info:lc/xmlns/premis-v2",
+    'xlink': "http://www.w3.org/1999/xlink"
+}
+
+
+METS_ATTRIBUTES = {
+    'PROFILE': 'http://digitalpreservation.fi/mets-profiles/research-data',
+    '{%s}CONTRACTID' % NAMESPACES['fi']:
+    "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
+    '{%s}schemaLocation' % NAMESPACES['xsi']: 'http://www.loc.gov/METS/ '
+                                              'http://digitalpreservation.fi/'
+                                              'schemas/mets/mets.xsd',
+    '{%s}SPECIFICATION' % NAMESPACES['fi']: '1.7.0',
+    'OBJID': 'create_mets_dataset',
+    '{%s}CATALOG' % NAMESPACES['fi']: '1.7.0',
+}
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
@@ -18,43 +39,43 @@ def test_create_mets_ok(testpath):
     :returns: ``None``
     """
     # Create workspace with contents required by the tested task
-    workspace = testpath
-    os.makedirs(os.path.join(workspace, 'logs'))
-    create_sip = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(create_sip)
-    create_test_data(workspace=create_sip)
+    create_test_data(workspace=testpath)
 
     # Init and run task
-    task = CreateMets(workspace=workspace, dataset_id='create_mets_dataset',
+    task = CreateMets(workspace=testpath, dataset_id='create_mets_dataset',
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
-    assert os.path.isfile(os.path.join(create_sip, 'mets.xml'))
 
-    # Check that the created xml-file contains correct elements.
-    tree = lxml.etree.parse(os.path.join(create_sip, 'mets.xml'))
+    # Read created mets.xml
+    tree = lxml.etree.parse(
+        os.path.join(testpath, 'sip-in-progress', 'mets.xml')
+    )
 
-    elements = tree.xpath('/mets:mets',
-                          namespaces={'mets': "http://www.loc.gov/METS/"})
+    # Check that the root element contains expected attributes.
+    assert tree.getroot().attrib == METS_ATTRIBUTES
 
-    assert elements[0].attrib["OBJID"] == "create_mets_dataset"
+    # Check that XML documents contains expected namespaces
+    assert tree.getroot().nsmap == NAMESPACES
 
-    # Check that xml-file contains one contract id
-    namespaces = {
-        'mets': "http://www.loc.gov/METS/",
-        'fi': "http://digitalpreservation.fi/schemas/mets/fi-extensions"
-    }
-    assert len(
-        tree.xpath(
-            '/mets:mets[@fi:CONTRACTID='
-            '"urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001"]',
-            namespaces=namespaces
-        )
-    ) == 1
+    # Check metsHdr element attributes
+    metshdr = tree.xpath('/mets:mets/mets:metsHdr', namespaces=NAMESPACES)[0]
+    assert metshdr.attrib['RECORDSTATUS'] == 'submission'
+    assert metshdr.attrib['CREATEDATE']
 
-    elements = tree.xpath('/mets:mets/mets:metsHdr/mets:agent/mets:name',
-                          namespaces={'mets': "http://www.loc.gov/METS/"})
-    assert elements[0].text == "Helsingin Yliopisto"
+    # Check agent element attributes
+    archivist = metshdr.xpath("mets:agent[@ROLE='ARCHIVIST']",
+                              namespaces=NAMESPACES)[0]
+    assert archivist.attrib['TYPE'] == 'ORGANIZATION'
+    assert archivist.xpath("mets:name", namespaces=NAMESPACES)[0].text \
+        == "Helsingin Yliopisto"
+    creator = metshdr.xpath("mets:agent[@ROLE='CREATOR']",
+                            namespaces=NAMESPACES)[0]
+    assert creator.attrib['ROLE'] == 'CREATOR'
+    assert creator.attrib['TYPE'] == 'OTHER'
+    assert creator.attrib['OTHERTYPE'] == 'SOFTWARE'
+    assert creator.xpath("mets:name", namespaces=NAMESPACES)[0].text \
+        == "Packaging Service"
 
 
 def create_test_data(workspace):
@@ -63,24 +84,26 @@ def create_test_data(workspace):
     :workspace: Workspace directory in which the data is created.
     """
 
-    # Copy sample datacite.xml to workspace directory
-    dmdpath = os.path.join(workspace, 'datacite.xml')
-    shutil.copy('tests/data/datacite_sample.xml', dmdpath)
+    # Create directory structure
+    os.makedirs(os.path.join(workspace, 'logs'))
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sipdirectory)
 
     # Create dmdsec
-    import_description.main([dmdpath, '--workspace', workspace])
+    import_description.main(['tests/data/datacite_sample.xml',
+                             '--workspace', sipdirectory])
 
     # Create provenance
     premis_event.main(['creation', '2016-10-13T12:30:55',
-                       '--workspace', workspace,
+                       '--workspace', sipdirectory,
                        '--event_outcome', 'success',
                        '--event_detail', 'Poika, 2.985 kg'])
 
     # Create tech metadata
     test_data_folder = './tests/data/structured'
-    import_object.main(['--workspace', workspace,
+    import_object.main(['--workspace', sipdirectory,
                         '--skip_inspection',
                         test_data_folder])
 
     # Create structmap
-    compile_structmap.main(['--workspace', workspace])
+    compile_structmap.main(['--workspace', sipdirectory])

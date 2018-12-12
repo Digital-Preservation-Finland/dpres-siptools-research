@@ -1,6 +1,4 @@
 """Luigi task that creates METS document."""
-# encoding=utf8
-
 import os
 from luigi import LocalTarget
 from metax_access import Metax
@@ -11,7 +9,11 @@ from siptools.scripts import compile_mets
 
 
 class CreateMets(WorkflowTask):
-    """Compiles METS document. Task requires METS structure map to be created.
+    """Merges all partial METS documents found from <sip_creation_path> to one
+    METS document. The METS document is written to <sip_creation_path>/mets.xml
+    and partial METS documents are removed.
+
+    Task requires METS structure map to be created.
     """
     success_message = "METS document compiled"
     failure_message = "Compiling METS document failed"
@@ -28,47 +30,51 @@ class CreateMets(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        A false target ``create-mets.finished`` is created into
-        workspace directory to notify luigi (and dependent tasks) that this
-        task has finished.
-
-        :returns: list of local targets: ``sip-in-progress/mets.xml`` and
-            create-mets.finished
+        :returns: local targets: `sip-in-progress/mets.xml`
         :rtype: LocalTarget
         """
-        targets = []
-        targets.append(LocalTarget(os.path.join(self.sip_creation_path,
-                                                'mets.xml')))
-        targets.append(LocalTarget(os.path.join(self.workspace,
-                                                'create-mets.finished')))
-        return targets
+        return LocalTarget(os.path.join(self.sip_creation_path, 'mets.xml'))
 
     def run(self):
         """Compiles all metadata files into METS document.
 
-        :returns: None
+        :returns: ``None``
         """
 
-        # Get contract id from Metax
         config_object = Configuration(self.config)
         metax_client = Metax(config_object.get('metax_url'),
                              config_object.get('metax_user'),
                              config_object.get('metax_password'))
         metadata = metax_client.get_dataset(self.dataset_id)
-        contract_id = metadata["contract"]["identifier"]
 
+        # Get contract data from Metax
+        contract_id = metadata["contract"]["identifier"]
         contract_metadata = metax_client.get_contract(contract_id)
         contract_identifier = contract_metadata["contract_json"]["identifier"]
         contract_org_name \
             = contract_metadata["contract_json"]["organization"]["name"]
 
         # Compile METS
-        compile_mets.main(['tpas',
-                           contract_org_name.encode('utf-8'),
-                           contract_identifier,
-                           '--workspace', self.sip_creation_path,
-                           '--clean',
-                           '--objid', self.dataset_id,
-                           '--packagingservice', 'Packaging Service'])
-        with self.output()[-1].open('w') as output:
-            output.write('Dataset id=' + self.dataset_id)
+        mets = compile_mets.create_mets(
+            workspace=self.sip_creation_path,
+            mets_attributes={
+                'PROFILE': 'tpas',
+                'CONTRACTID': contract_identifier,
+                'OBJID': self.dataset_id,
+                'LABEL': None,
+                'CONTENTID': None
+            },
+            metshdr_attributes={
+                'CREATEDATE': None,
+                'LASTMODDATE': None,
+                'RECORDSTATUS': 'submission'
+            },
+            organization=contract_org_name,
+            packagingservice='Packaging Service'
+        )
+
+        with self.output().open('w') as outputfile:
+            mets.write(outputfile,
+                       pretty_print=True,
+                       xml_declaration=True,
+                       encoding='UTF-8')
