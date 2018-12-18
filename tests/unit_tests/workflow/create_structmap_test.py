@@ -51,27 +51,17 @@ def test_create_structmap_ok(testpath):
                         '--skip_inspection',
                         test_data_folder])
 
-    # Create structmap
+    # Init and run CreateStructMap task
     task = CreateStructMap(workspace=workspace,
                            dataset_id='create_structmap_test_dataset',
                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-
     task.run()
     assert task.complete()
-    assert os.path.isfile(os.path.join(sip_creation_path, 'filesec.xml'))
+
     validate_filesec_file(os.path.join(sip_creation_path, 'filesec.xml'))
-    assert os.path.isfile(os.path.join(sip_creation_path, 'structmap.xml'))
     validate_structmap_file(os.path.join(sip_creation_path, 'structmap.xml'))
-    assert os.path.isfile(os.path.join(sip_creation_path,
-                                       'logical_structmap.xml'))
     validate_logical_structmap_file(os.path.join(sip_creation_path,
                                                  'logical_structmap.xml'))
-
-    with open(os.path.join(sip_creation_path,
-                           'logical_structmap.xml'))\
-            as open_file:
-        file_content = open_file.read()
-        assert 'Fairdata-logical' in file_content
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
@@ -130,29 +120,38 @@ def validate_logical_structmap_file(logical_structmap_file):
     :returns: ``None``
     """
     tree = lxml.etree.parse(logical_structmap_file)
-    root = tree.getroot()
-    directories = root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
-    /@TYPE', namespaces=NAMESPACES)
+
+    directories = tree.xpath(
+        '/mets:mets/mets:structMap/mets:div/mets:div/@TYPE',
+        namespaces=NAMESPACES
+    )
     assert len(directories) == 5
     assert 'Documentation files' in directories
     assert 'Machine-readable metadata' in directories
     assert 'Access and use rights files' in directories
     assert 'Software files' in directories
     assert 'Publication files' in directories
-    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
-    [@TYPE="Documentation files"]/mets:fptr/@FILEID',
+
+    assert tree.xpath('/mets:mets/mets:structMap',
+                      namespaces=NAMESPACES)[0].attrib['TYPE'] \
+        == "Fairdata-logical"
+
+    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
+                          '[@TYPE="Documentation files"]/mets:fptr/@FILEID',
                           namespaces=NAMESPACES)) == 5
-    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
-    [@TYPE="Machine-readable metadata"]/mets:fptr[@FILEID]',
+    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
+                          '[@TYPE="Machine-readable metadata"]/mets:fptr'
+                          '[@FILEID]',
                           namespaces=NAMESPACES)) == 1
-    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
-    [@TYPE="Access and use rights files"]/mets:fptr/@FILEID',
+    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
+                          '[@TYPE="Access and use rights files"]/mets:fptr'
+                          '/@FILEID',
                           namespaces=NAMESPACES)) == 1
-    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
-    [@TYPE="Software files"]/mets:fptr/@FILEID',
+    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
+                          '[@TYPE="Software files"]/mets:fptr/@FILEID',
                           namespaces=NAMESPACES)) == 1
-    assert len(root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
-    [@TYPE="Publication files"]/mets:fptr/@FILEID',
+    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
+                          '[@TYPE="Publication files"]/mets:fptr/@FILEID',
                           namespaces=NAMESPACES)) == 1
 
 
@@ -164,10 +163,14 @@ def validate_filesec_file(filesec_file):
     :returns: ``None``
     """
     tree = lxml.etree.parse(filesec_file)
-    root = tree.getroot()
-    files = root.xpath('//mets:mets/mets:fileSec/mets:fileGrp/mets:file/\
-    mets:FLocat/@xlink:href', namespaces=NAMESPACES)
+
+    files = tree.xpath(
+        '/mets:mets/mets:fileSec/mets:fileGrp/mets:file/mets:FLocat/'
+        '@xlink:href',
+        namespaces=NAMESPACES
+    )
     assert len(files) == 9
+
     assert 'file://tests/data/structured/Documentation+files/' \
            'Configuration+files/properties.txt' in files
     assert 'file://tests/data/structured/Documentation+files/' \
@@ -195,24 +198,29 @@ def validate_structmap_file(structmap_file):
     :returns: ``None``
     """
     tree = lxml.etree.parse(structmap_file)
-    root = tree.getroot()
-    assert root.xpath("//mets:mets/mets:structMap/mets:div/@TYPE",
+    assert tree.xpath("/mets:mets/mets:structMap/mets:div/@TYPE",
                       namespaces=NAMESPACES)[0] == 'directory'
-    assert root.xpath("//mets:mets/mets:structMap/mets:div/mets:div/@TYPE",
+    assert tree.xpath("/mets:mets/mets:structMap/mets:div/mets:div/@TYPE",
                       namespaces=NAMESPACES)[0] == 'tests'
-    assert root.xpath("//mets:mets/mets:structMap/mets:div/mets:div/mets:div\
-    /@TYPE", namespaces=NAMESPACES)[0] == 'data'
-    assert root.xpath("//mets:mets/mets:structMap/mets:div/mets:div/mets:div\
-    /mets:div/@TYPE", namespaces=NAMESPACES)[0] == 'structured'
-    directories = root.xpath("//mets:mets/mets:structMap/mets:div/mets:div\
-    /mets:div/mets:div/mets:div/@TYPE", namespaces=NAMESPACES)
+    assert tree.xpath("/mets:mets/mets:structMap/mets:div/mets:div/mets:div"
+                      "/@TYPE",
+                      namespaces=NAMESPACES)[0] == 'data'
+    assert tree.xpath("/mets:mets/mets:structMap/mets:div/mets:div/mets:div"
+                      "/mets:div/@TYPE",
+                      namespaces=NAMESPACES)[0] == 'structured'
+
+    directories = tree.xpath("/mets:mets/mets:structMap/mets:div/mets:div"
+                             "/mets:div/mets:div/mets:div/@TYPE",
+                             namespaces=NAMESPACES)
     assert 'Documentation files' in directories
     assert 'Machine-readable metadata' in directories
     assert 'Access and use rights files' in directories
     assert 'Software files' in directories
     assert 'Publication files' in directories
-    sub_dirs = root.xpath('//mets:mets/mets:structMap/mets:div/mets:div\
-    /mets:div/mets:div/mets:div[@TYPE="Documentation files"]/mets:div/@TYPE',
+
+    sub_dirs = tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
+                          '/mets:div/mets:div/mets:div'
+                          '[@TYPE="Documentation files"]/mets:div/@TYPE',
                           namespaces=NAMESPACES)
     assert 'Configuration files' in sub_dirs
     assert 'Other files' in sub_dirs
