@@ -46,6 +46,7 @@ def run_luigi_task(module, task, workspace):
         ('get_files', 'GetFiles'),
         ('create_techmd', 'CreateTechnicalMetadata'),
         ('create_structmap', 'CreateStructMap'),
+        ('create_logical_structmap', 'CreateLogicalStructMap'),
         ('create_mets', 'CreateMets'),
         ('sign', 'SignSIP'),
         ('compress', 'CompressSIP'),

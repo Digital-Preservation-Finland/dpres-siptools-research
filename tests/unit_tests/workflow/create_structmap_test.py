@@ -60,8 +60,6 @@ def test_create_structmap_ok(testpath):
 
     validate_filesec_file(os.path.join(sip_creation_path, 'filesec.xml'))
     validate_structmap_file(os.path.join(sip_creation_path, 'structmap.xml'))
-    validate_logical_structmap_file(os.path.join(sip_creation_path,
-                                                 'logical_structmap.xml'))
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
@@ -110,49 +108,6 @@ def test_filesec_othermd(testpath):
     # Run task
     task.run()
     assert task.complete()
-
-
-def validate_logical_structmap_file(logical_structmap_file):
-    """Validates logical structuremap XML-file. Checks that XML-file has the
-    correct elements. Raises exception if XML is not valid.
-
-    :param logical_structmap_file: XML file to be validated
-    :returns: ``None``
-    """
-    tree = lxml.etree.parse(logical_structmap_file)
-
-    directories = tree.xpath(
-        '/mets:mets/mets:structMap/mets:div/mets:div/@TYPE',
-        namespaces=NAMESPACES
-    )
-    assert len(directories) == 5
-    assert 'Documentation files' in directories
-    assert 'Machine-readable metadata' in directories
-    assert 'Access and use rights files' in directories
-    assert 'Software files' in directories
-    assert 'Publication files' in directories
-
-    assert tree.xpath('/mets:mets/mets:structMap',
-                      namespaces=NAMESPACES)[0].attrib['TYPE'] \
-        == "Fairdata-logical"
-
-    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Documentation files"]/mets:fptr/@FILEID',
-                          namespaces=NAMESPACES)) == 5
-    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Machine-readable metadata"]/mets:fptr'
-                          '[@FILEID]',
-                          namespaces=NAMESPACES)) == 1
-    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Access and use rights files"]/mets:fptr'
-                          '/@FILEID',
-                          namespaces=NAMESPACES)) == 1
-    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Software files"]/mets:fptr/@FILEID',
-                          namespaces=NAMESPACES)) == 1
-    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Publication files"]/mets:fptr/@FILEID',
-                          namespaces=NAMESPACES)) == 1
 
 
 def validate_filesec_file(filesec_file):
