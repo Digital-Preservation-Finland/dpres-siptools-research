@@ -20,15 +20,14 @@ def test_create_structmap_ok(testpath):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    workspace = testpath
-    sip_creation_path = os.path.join(workspace, "sip-in-progress")
+    sip_creation_path = os.path.join(testpath, "sip-in-progress")
 
     # Clean workspace and create "logs" directory in temporary directory
-    os.makedirs(os.path.join(workspace, 'logs'))
-    os.makedirs(os.path.join(workspace, 'sip-in-progress'))
+    os.makedirs(os.path.join(testpath, 'logs'))
+    os.makedirs(os.path.join(testpath, 'sip-in-progress'))
 
     # Copy sample datacite.xml to workspace directory
-    dmdpath = os.path.join(workspace, 'datacite.xml')
+    dmdpath = os.path.join(testpath, 'datacite.xml')
     shutil.copy('tests/data/datacite_sample.xml', dmdpath)
 
     # Create dmdsec
@@ -52,7 +51,7 @@ def test_create_structmap_ok(testpath):
                         test_data_folder])
 
     # Init and run CreateStructMap task
-    task = CreateStructMap(workspace=workspace,
+    task = CreateStructMap(workspace=testpath,
                            dataset_id='create_structmap_test_dataset',
                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
