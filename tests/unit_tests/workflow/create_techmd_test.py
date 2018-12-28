@@ -9,7 +9,6 @@ import pytest
 from siptools.xml.mets import NAMESPACES
 import tests.conftest
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
-                                                      import_objects,
                                                       algorithm_name)
 
 
@@ -41,7 +40,7 @@ def test_create_techmd_ok(testpath):
     task.run()
     assert task.complete()
 
-    # Check that XML files are created in workspace
+    # Check that all expected XML files are created in workspace
     assert os.path.isfile(os.path.join(
         sipdirectory,
         'project_x%2Fsome%2Fpath%2Ffile_name_5-premis-techmd.xml'
@@ -62,6 +61,24 @@ def test_create_techmd_ok(testpath):
         sipdirectory,
         'techmd-references.xml'
     ))
+
+    # Check that one of the PREMIS techMD files has desired properties
+    output_file = os.path.join(
+        sipdirectory,
+        'project_x%2Fsome%2Fpath%2Ffile_name_5-premis-techmd.xml'
+    )
+    tree = lxml.etree.parse(output_file)
+    root = tree.getroot()
+    assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1
+    assert len(root.xpath("//premis:object", namespaces=NAMESPACES)) == 1
+    assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] \
+        == 'premis:file'
+    assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
+        == 'text/html; charset=UTF-8'
+    assert root.xpath("//premis:formatVersion",
+                      namespaces=NAMESPACES)[0].text == '4.01'
+
+    # Check that the NISOIMG techMD file has desired properties
     output_file = os.path.join(
         sipdirectory,
         '1b2eecde68d99171f70613f14cf21f49-NISOIMG-techmd.xml'
@@ -94,50 +111,9 @@ def test_create_techmd_ok(testpath):
 
 
 @pytest.mark.usefixtures('testmetax')
-def test_import_object_ok(testpath):
-    """Test import object function
-
-    :param testpath: Temporary directory fixture
-    :returns: ``None``
-    """
-
-    # Create workspace with empty "logs" and "sip-in-progress' directories in
-    # temporary directory
-    os.makedirs(os.path.join(testpath, 'logs'))
-    sipdirectory = os.path.join(testpath, 'sip-in-progress')
-    os.makedirs(sipdirectory)
-
-    # Copy sample directory with some files to SIP
-    shutil.copytree('tests/data/sample_dataset_directories/project_x',
-                    os.path.join(sipdirectory, 'project_x'))
-
-    # Run import_objects function for a sample dataset
-    import_objects('create_techmd_test_dataset',
-                   testpath,
-                   tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # Check that output file is created, and it has desired properties
-    output_file = os.path.join(
-        sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_5-premis-techmd.xml'
-    )
-    tree = lxml.etree.parse(output_file)
-    root = tree.getroot()
-    assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1
-    assert len(root.xpath("//premis:object", namespaces=NAMESPACES)) == 1
-    assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] \
-        == 'premis:file'
-    assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-        == 'text/html; charset=UTF-8'
-    assert root.xpath("//premis:formatVersion",
-                      namespaces=NAMESPACES)[0].text == '4.01'
-
-
-@pytest.mark.usefixtures('testmetax')
 # pylint: disable=invalid-name
-def test_import_object_without_charset(testpath):
-    """Test import object function with dataset that has files without defined
-    charset
+def test_create_techmd_without_charset(testpath):
+    """Test the task with dataset that has files without defined charset
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
@@ -154,10 +130,13 @@ def test_import_object_without_charset(testpath):
     shutil.copytree('tests/data/sample_dataset_directories/project_x',
                     os.path.join(sipdirectory, 'project_x'))
 
-    # Run import_objects function for a sample dataset
-    import_objects('create_techmd_test_dataset_charset_not_defined',
-                   testpath,
-                   tests.conftest.UNIT_TEST_CONFIG_FILE)
+    # Init and run task
+    task = CreateTechnicalMetadata(
+        workspace=workspace,
+        dataset_id='create_techmd_test_dataset_charset_not_defined',
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+    task.run()
 
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(

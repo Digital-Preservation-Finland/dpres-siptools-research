@@ -34,11 +34,31 @@ TECH_ATTR_TYPES = [
 
 
 class CreateTechnicalMetadata(WorkflowTask):
-    """Create technical metadata files. The task requires workspace to be
-    created, dataset metadata to be validated and dataset file to downloaded.
+    """Creates METS documents that contain technical metadata. The PREMIS
+    metadata is created to all dataset files and it is written to
+    `<sip_creation_path>/<url_encoded_filepath>-premis-techmd.xml`.
+
+    The file format specific metadata is copied from metax if it is available.
+    It is written to
+    `<sip_creation_path>/<url_encoded_filepath>-<metadata_type>-techmd.xml`,
+    where <metadata_type> is NISOIMG, ADDML, AudioMD, or VideoMD.
+
+    Since the output files are not known beforehand, a false target
+    `task-create-technical-metadata.finished` is created into workspace
+    directory to notify luigi that this task has finished.
+
+    The task requires workspace to be created, dataset metadata to be validated
+    and dataset files to be downloaded.
     """
     success_message = 'Technical metadata for objects created'
     failure_message = 'Technical metadata for objects could not be created'
+
+    def __init__(self, *args, **kwargs):
+        super(CreateTechnicalMetadata, self).__init__(*args, **kwargs)
+        config_object = Configuration(self.config)
+        self.metax_client = Metax(config_object.get('metax_url'),
+                                  config_object.get('metax_user'),
+                                  config_object.get('metax_password'))
 
     def requires(self):
         """The Tasks that this Task depends on.
@@ -60,11 +80,7 @@ class CreateTechnicalMetadata(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        A false target ``ask-create-technical-metadata.finished`` is created
-        into workspace directory to notify luigi (and dependent tasks) that
-        this task has finished.
-
-        :returns: local target: ``task-create-technical-metadata.finished``
+        :returns: local target: `task-create-technical-metadata.finished`
         :rtype: LocalTarget
         """
 
@@ -77,139 +93,101 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         :returns: ``None``
         """
+        file_metadata = self.metax_client.get_dataset_files(self.dataset_id)
 
-        import_objects(self.dataset_id, self.workspace, self.config)
+        for file_ in file_metadata:
+            # Create METS document that contains PREMIS metadata
+            self.create_objects(file_)
+
+            # Create METS documents that contain technical attributes
+            self.create_technical_attributes(file_)
+
         with self.output().open('w') as output:
             output.write("Dataset id=" + self.dataset_id)
 
+    def create_objects(self, metadata):
+        """Reads file metadata from Metax and creates technical metada XML file
+        and technical attrubute XML files.
 
-def create_objects(file_id, metax_filepath, workspace, config):
-    """Reads file metadata from Metax and creates technical metada XML file and
-    technical attrubute XML files.
+        :param metadata: file metadata dictionary
+        :returns: ``None``
+        """
+        # Read character set if it defined for this file
+        try:
+            charset = metadata["file_characteristics"]["encoding"]
+        except KeyError:
+            charset = None
 
-    :param file_id: file identifier
-    :param metax_filepath: path to file
-    :param workspace: workflow workspace directory
-    :param config: path to configuration file
-    :returns: ``None``
-    """
+        # Read format version if it defined for this file
+        try:
+            formatversion = metadata["file_characteristics"]["format_version"]
+        except KeyError:
+            formatversion = ""
 
-    config_object = Configuration(config)
-    metadata = Metax(config_object.get('metax_url'),
-                     config_object.get('metax_user'),
-                     config_object.get('metax_password')).get_file(file_id)
+        # figure out the checksum algorithm
+        digest_algorithm = algorithm_name(metadata["checksum"]["algorithm"],
+                                          metadata["checksum"]["value"])
 
-    # Read character set if it defined for this file
-    try:
-        charset = metadata["file_characteristics"]["encoding"]
-    except KeyError:
-        charset = None
+        # Read file created if it defined for this file
+        try:
+            file_created = metadata["file_characteristics"]["file_created"]
+        except KeyError:
+            file_created = None
 
-    # Read format version if it defined for this file
-    try:
-        formatversion = metadata["file_characteristics"]["format_version"]
-    except KeyError:
-        formatversion = ""
+        # Build parameter list for import_objects script
+        import_object_parameters = [
+            metadata['file_path'].strip('/'),
+            '--base_path', self.sip_creation_path,
+            '--workspace', self.sip_creation_path,
+            '--skip_inspection',
+            '--format_name', metadata["file_characteristics"]["file_format"],
+            '--digest_algorithm', digest_algorithm,
+            '--message_digest', metadata["checksum"]["value"],
+            '--format_version', formatversion
+        ]
+        if charset is not None:
+            import_object_parameters += ['--charset', charset]
 
-    # figure out the checksum algorithm
-    digest_algorithm = algorithm_name(metadata["checksum"]["algorithm"],
-                                      metadata["checksum"]["value"])
+        if file_created is not None:
+            import_object_parameters += ['--date_created', file_created]
 
-    # Read file created if it defined for this file
-    try:
-        file_created = metadata["file_characteristics"]["file_created"]
-    except KeyError:
-        file_created = None
+        # Create PREMIS file metadata XML
+        siptools.scripts.import_object.main(import_object_parameters)
 
-    # Build parameter list for import_objects script
-    import_object_parameters = [
-        metax_filepath.strip('/'),
-        '--base_path', os.path.join(workspace, 'sip-in-progress'),
-        '--workspace', os.path.join(workspace, 'sip-in-progress'),
-        '--skip_inspection',
-        '--format_name', metadata["file_characteristics"]["file_format"],
-        '--digest_algorithm', digest_algorithm,
-        '--message_digest', metadata["checksum"]["value"],
-        '--format_version', formatversion
-    ]
-    if charset is not None:
-        import_object_parameters += ['--charset', charset]
+    def create_technical_attributes(self, metadata):
+        """Read technical attribute XML from Metax. Create METS TechMD files for
+        each metadata type, if it is available in Metax.
 
-    if file_created is not None:
-        import_object_parameters += ['--date_created', file_created]
+        :param metadata: file metadata dictionary
+        :returns: ``None``
+        """
+        file_id = metadata["identifier"]
+        filepath = metadata['file_path'].strip('/')
+        xmls = self.metax_client.get_xml('files', file_id)
 
-    # Create PREMIS file metadata XML
-    siptools.scripts.import_object.main(import_object_parameters)
+        creator = siptools.utils.TechmdCreator(self.sip_creation_path)
 
-    # Create technical attributes XML files
-    create_technical_attributes(config, workspace, file_id, metax_filepath)
+        for type_ in TECH_ATTR_TYPES:
+            if type_["namespace"] in xmls:
 
+                # Create METS TechMD file
+                techmd_id, _ = creator.write_md(
+                    xmls[type_['namespace']].getroot(),
+                    type_['mdtype'],
+                    type_['mdtypeversion'],
+                    type_['othermdtype']
+                )
 
-def create_technical_attributes(config, workspace, file_id, filepath):
-    """Read technical attribute XML from Metax. Create METS TechMD files for
-    each metadata type, if it is available in Metax.
+                # Add reference from fileSec to TechMD
+                creator.add_reference(techmd_id, filepath)
 
-    :param config: path to configuration file
-    :param workspace: workspace directory
-    :param file_id: file identifier
-    :param filepath: path to file described by techMD element
-    :returns: ``None``
-    """
-    config_object = Configuration(config)
-    xmls = Metax(config_object.get('metax_url'),
-                 config_object.get('metax_user'),
-                 config_object.get('metax_password')).get_xml('files', file_id)
-
-    creator = siptools.utils.TechmdCreator(
-        os.path.join(workspace, 'sip-in-progress')
-    )
-
-    for type_ in TECH_ATTR_TYPES:
-        if type_["namespace"] in xmls:
-
-            # Create METS TechMD file
-            techmd_id, _ = creator.write_md(
-                xmls[type_['namespace']].getroot(),
-                type_['mdtype'],
-                type_['mdtypeversion'],
-                type_['othermdtype']
-            )
-
-            # Add reference from fileSec to TechMD
-            creator.add_reference(techmd_id, filepath)
-
-    creator.write()
-
-
-def import_objects(dataset_id, workspace, config):
-    """Create technical metadata for file using import_objects script from
-    siptools.
-
-    :param dataset_id: dataset identifier
-    :param workspace: SIP creation path
-    :param config: path to configuration file
-    :returns: ``None``
-    """
-    config_object = Configuration(config)
-    metax_client = Metax(config_object.get('metax_url'),
-                         config_object.get('metax_user'),
-                         config_object.get('metax_password'))
-    file_metadata = metax_client.get_dataset_files(dataset_id)
-
-    for file_ in file_metadata:
-        # Read file identifier
-        file_id = file_["identifier"]
-
-        # Read file path from dataset file metadata
-        file_metadata = metax_client.get_dataset_files
-        metax_filepath = file_['file_path'].strip('/')
-        create_objects(file_id, metax_filepath, workspace, config)
+        creator.write()
 
 
 def algorithm_name(algorithm, value):
     """Guess the checksum algorithm. The name of checksum algorithm in Metax is
     either 'md5' or 'sha2'. If it is 'sha2' the exact algorithm has to be
-    deduced from the lenght of checksum value.
+    deduced from the length of checksum value.
 
     :param algorithm: algorithm string, 'md5' or 'sha2'
     :param value: the checksum value
