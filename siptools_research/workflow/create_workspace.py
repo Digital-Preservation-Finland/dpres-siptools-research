@@ -1,12 +1,12 @@
 """Luigi task that creates workspace directory."""
 
+import os
 import luigi
-from siptools_research.utils import utils
 from siptools_research.workflowtask import WorkflowTask
 
 
 class CreateWorkspace(WorkflowTask):
-    """Creates directories for running the workflow.
+    """Creates directories required by the workflow.
 
     :returns: list of local targets
     :rtype: LocalTarget
@@ -16,18 +16,19 @@ class CreateWorkspace(WorkflowTask):
     failure_message = 'Creating workspace directory failed'
 
     def output(self):
-        """Creates directories for running the workflow.
+        """The output that this Task produces.
 
         :returns: list of local targets
-        :rtype: LocalTarget
         """
         return [luigi.LocalTarget(self.workspace),
                 luigi.LocalTarget(self.sip_creation_path)]
 
     def run(self):
-        """Creates workspace directory and adds event information to mongodb.
+        """Creates workspace directory.
 
-        :returns: None
+        :returns: ``None``
         """
-        utils.makedirs_exist_ok(self.workspace)
-        utils.makedirs_exist_ok(self.sip_creation_path)
+        if not os.path.exists(self.workspace):
+            os.makedirs(self.workspace)
+
+        os.makedirs(self.sip_creation_path)
