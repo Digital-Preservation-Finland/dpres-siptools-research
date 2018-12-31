@@ -1,4 +1,4 @@
-"""Luigi task that sends compressed SIP to DP service."""
+"""Luigi task that sends SIP to DP service."""
 
 import os
 import paramiko
@@ -10,7 +10,15 @@ from siptools_research.workflow.compress import CompressSIP
 
 class SendSIPToDP(WorkflowTask):
     """Copy SIP to ~/transfer directory in digital preservation server using
-    SFTP. Task requires that tar archive format SIP is created.
+    SFTP.
+
+    As the SIP file is moved from the transfer directory by preservation system
+    the existence of the SIP file cannot be verified reliably there. A false
+    target file in workspace: `task-send-sip-to-dp.finished` is used as an
+    output to notify luigi(and dependent tasks) that this task has finished and
+    SIP file has been transferred to preservation system.
+
+    Task requires that tar archive format SIP is created.
     """
     success_message = "SIP was sent to digital preservation"
     failure_message = "Sending SIP to digital preservation failed"
@@ -26,13 +34,6 @@ class SendSIPToDP(WorkflowTask):
 
     def output(self):
         """The output that this Task produces.
-
-        A false target file in workspace: ``task-send-sip-to-dp.finished``
-        is used as an output to notify luigi(and dependent tasks) that this
-        task has finished and SIP file has been transferred to preservation
-        system. As the SIP file is moved from the transfer directory by
-        preservation system the existence of the SIP file cannot be
-        verified reliably there.
 
         :returns: local target: `task-send-sip-to-dp.finished`
         :rtype: LocalTarget
