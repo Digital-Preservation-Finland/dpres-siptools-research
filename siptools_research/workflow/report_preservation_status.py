@@ -1,5 +1,6 @@
 """A luigi task that reads the ingest report locations from preservation
-service and updates preservation status to Metax."""
+service and updates preservation status to Metax.
+"""
 
 import os
 from luigi import LocalTarget
@@ -14,8 +15,14 @@ from metax_access import Metax, DS_STATE_IN_DIGITAL_PRESERVATION
 class ReportPreservationStatus(WorkflowTask):
     """A workflowtask that updates the preservation status of dataset in Metax
     based on the directory where ingest report was found in digital
-    preservation system. Task requires SIP to be sent to digital preservation
-    service and the validation to be finished.
+    preservation system.
+
+    A false target `report-preservation-status.finished` is created into
+    workspace directory to notify luigi (and dependent tasks) that this task
+    has finished.
+
+    Task requires SIP to be sent to digital preservation service and the
+    validation to be finished.
     """
 
     success_message = "Dataset was accepted to preservation"
@@ -34,10 +41,6 @@ class ReportPreservationStatus(WorkflowTask):
 
     def output(self):
         """The output that this Task produces.
-
-        A false target ``report-preservation-status.finished`` is created into
-        workspace directory to notify luigi (and dependent tasks) that this
-        task has finished.
 
         :returns: local target: `report-preservation-status.finished`
         :rtype: LocalTarget
@@ -83,5 +86,5 @@ class ReportPreservationStatus(WorkflowTask):
             # did not pass validation
             raise InvalidDatasetError("SIP was rejected")
         else:
-            raise ValueError('Report was found in incorrect.'
-                             ' Path: %s' % ingest_report_paths[0])
+            raise ValueError('Report was found in incorrect '
+                             'path: %s' % ingest_report_paths[0])
