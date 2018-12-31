@@ -19,6 +19,13 @@ class GetFiles(WorkflowTask):
     """A task that reads file metadata from Metax and downloads requred files
     from Ida. Task requires that workspace directory exists and metadata is
     validated.
+
+    Because output files are not known beforehand, a false target
+    `get-files.finished` is created into workspace directory to notify luigi
+    that this task has finished.
+
+    Task requires that workspace directory is created and dataset metadata is
+    validated.
     """
     success_message = 'Files were downloaded from IDA'
     failure_message = 'Could not get files from IDA'
@@ -37,10 +44,6 @@ class GetFiles(WorkflowTask):
 
     def output(self):
         """The output that this Task produces.
-
-        A false target ``get-files.finished`` is created into workspace
-        directory to notify luigi (and dependent tasks) that this
-        task has finished.
 
         :returns: local target: ``task-getfiles.finished``
         :rtype: LocalTarget
