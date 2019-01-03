@@ -8,8 +8,11 @@ from siptools_research.workflowtask import WorkflowTask
 
 
 class ValidateMetadata(WorkflowTask):
-    """Gets metadata from Metax and validates it. Task requires workspace
-    directory to be created. Writes log to `logs/validate-metadata.log`.
+    """Reads metadata from Metax and validates it.  A false target file
+    `validate-metadata.finished` is created into workspace directory to notify
+    luigi that this task has finished.
+
+    Task requires workspace directory to be created.
     """
     success_message = "Metax metadata is valid"
     failure_message = "Metax metadata could not be validated"
@@ -26,10 +29,6 @@ class ValidateMetadata(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        A false target file ``validate-metadata.finished`` is created into
-        workspace directory to notify luigi (and dependent tasks) that this
-        task has finished.
-
         :returns: local target: `validate-metadata.finished`
         :rtype: LocalTarget
         """
@@ -38,12 +37,12 @@ class ValidateMetadata(WorkflowTask):
 
     def run(self):
         """Reads dataset metadata, file metadata, and additional XML metadata
-        from Metax and validates them against schemas. Stdout is redirected to
-        log file.
+        from Metax and validates them against schemas.
 
         :returns: ``None``
         """
         # Validate dataset metadata
         validate_metadata(self.dataset_id, self.config)
+
         with self.output().open('w') as log:
             log.write('Dataset id=' + self.dataset_id)
