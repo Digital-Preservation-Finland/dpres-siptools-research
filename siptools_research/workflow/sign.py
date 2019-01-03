@@ -1,19 +1,20 @@
-"""Luigi task that signs METS file"""
+"""Luigi task that signs METS document"""
 
 import os
-from shutil import copyfile, move
-from tempfile import mkdtemp
 
 from luigi import LocalTarget
+import dpres_signature.signature
 
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_mets import CreateMets
-from siptools.scripts import sign_mets
 
 
 class SignSIP(WorkflowTask):
-    """Task that signs METS file. Task requires METS file to be created."""
+    """Task that signs METS file. Signature is written to
+    `<sip_creation_path>/signature.sig`.
+
+    Task requires METS file to be created."""
 
     success_message = "Signing SIP completed succesfully"
     failure_message = "Could not sign SIP"
@@ -37,13 +38,16 @@ class SignSIP(WorkflowTask):
                                         "signature.sig"))
 
     def run(self):
-        """Signs METS file using sign_mets from siptools.
+        """Sign METS document.
 
         :returns: ``None``
         """
-        dirpath = mkdtemp(dir=self.workspace)
-        copyfile(os.path.join(self.sip_creation_path, "mets.xml"),
-                 os.path.join(dirpath, "mets.xml"))
-        sign_mets.main(["--workspace", dirpath,
-                        Configuration(self.config).get("sip_sign_key")])
-        move(os.path.join(dirpath, "signature.sig"), self.output().path)
+
+        signature = dpres_signature.signature.create_signature(
+            os.path.join(self.sip_creation_path, 'signature.sig'),
+            Configuration(self.config).get("sip_sign_key"),
+            ['mets.xml']
+        )
+
+        with self.output().open('w') as signature_file:
+            signature_file.write(signature)
