@@ -1,5 +1,6 @@
 """Luigi external task that waits for SIP validation in digital preservation
-service."""
+service.
+"""
 
 import time
 from siptools_research.config import Configuration
@@ -10,8 +11,9 @@ from siptools_research.workflow.send_sip import SendSIPToDP
 
 class ValidateSIP(WorkflowExternalTask):
     """External task that finishes when SIP is found in ~/rejected/ or
-    ~/accepted/ directories at digital preservation server. Task requires that
-    SIP is sent to digital preservation service.
+    ~/accepted/ directories at digital preservation server.
+
+    Task requires that SIP is sent to digital preservation service.
     """
 
     def requires(self):
@@ -27,9 +29,9 @@ class ValidateSIP(WorkflowExternalTask):
         """The output that this Task produces.
 
         :returns: remote target that may exist in two possible locations on
-            digital preservation server:
-            ~/accepted/<datepath>/<document_id>.tar/ or
-            ~/rejected/<datepath>/<document_id>.tar/
+                  digital preservation server:
+                  ~/accepted/<datepath>/<document_id>.tar/ or
+                  ~/rejected/<datepath>/<document_id>.tar/
         :rtype: RemoteAnyTarget
         """
         # TODO: if day changes between ingest report creation and init of this
