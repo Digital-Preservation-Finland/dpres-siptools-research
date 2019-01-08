@@ -31,6 +31,12 @@ METS_ATTRIBUTES = {
 }
 
 
+def assert_only_mets_dot_xml_in_workspace(testpath):
+    files = os.listdir(os.path.join(testpath, 'sip-in-progress'))
+    assert len(files) == 1
+    assert files[0] == 'mets.xml'
+
+
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
 def test_create_mets_ok(testpath):
     """Test the workflow task CreateMets.
@@ -46,6 +52,7 @@ def test_create_mets_ok(testpath):
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
+    assert_only_mets_dot_xml_in_workspace(testpath)
 
     # Read created mets.xml
     tree = lxml.etree.parse(

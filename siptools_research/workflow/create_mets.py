@@ -79,6 +79,7 @@ class CreateMets(WorkflowTask):
             organization=contract_org_name,
             packagingservice='Packaging Service'
         )
+        compile_mets.clean_metsparts(self.sip_creation_path)
 
         with self.output().open('w') as outputfile:
             mets.write(outputfile,
