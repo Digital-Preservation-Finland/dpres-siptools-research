@@ -11,3 +11,10 @@ unit-test:
   stage: local-test
   script:
     - 'unit-test.sh'
+
+e2e-localhost-siptools-research:
+  stage: local-test
+  script:
+    - 'e2e-fairdata.sh dpres-research-rest-api'
+  except:
+    - master
