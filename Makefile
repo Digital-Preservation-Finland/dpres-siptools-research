@@ -8,8 +8,6 @@ LIB=${DESTDIR}${PREFIX}/lib
 LOGDIR=${VAR}/log/siptools_research
 PROCESSINGDIR=${VAR}/spool/siptools_research
 
-TESTER=blahblah
-
 install:
 	# Cleanup temporary files
 	rm -f INSTALLED_FILES
@@ -31,9 +29,6 @@ install:
 	# Use Python setuptools
 	python ./setup.py install -O1 --prefix="${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
 	cat INSTALLED_FILES | sed 's/^/\//g' >> INSTALLED_FILES
-
-testa:
-	echo $(TESTER)
 
 test:
 	py.test -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml tests/unit_tests
