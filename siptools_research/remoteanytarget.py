@@ -1,6 +1,6 @@
 import paramiko
 import luigi
-import sys
+
 
 class RemoteAnyTarget(luigi.Target):
     """ A list of possible file paths is given instead of one path.

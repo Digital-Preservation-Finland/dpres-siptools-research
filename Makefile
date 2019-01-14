@@ -31,7 +31,12 @@ install:
 	cat INSTALLED_FILES | sed 's/^/\//g' >> INSTALLED_FILES
 
 test:
-	py.test -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml tests/unit_tests
+	py.test  tests -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml \
+		--ignore tests/integration_tests/ida_integration_test.py \
+		--ignore tests/integration_tests/metax_integration_test.py \
+		--ignore tests/integration_tests/report_preservation_status_test.py \
+		--ignore tests/integration_tests/validate_sip_test.py \
+		--ignore tests/integration_tests/send_sip_test.py
 
 coverage:
 	py.test tests --cov=siptools_research --cov-report=html --ignore tests/integration_tests/ --ignore tests/workflow/report_preservation_status_test.py
