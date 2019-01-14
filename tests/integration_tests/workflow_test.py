@@ -60,9 +60,6 @@ def test_workflow(_mock_ssh, testpath, module_name, task):
     :returns: ``None``
     """
     with mock.patch.object(RemoteAnyTarget, '_exists', mock_exists):
-        # Set permissions of ssh key (required by SendSIPToDP task)
-        os.chmod('tests/data/pas_ssh_key', 0600)
-
         workspace = os.path.join(testpath, 'workspace_' +
                                  os.path.basename(testpath))
         module = importlib.import_module('siptools_research.workflow.' +
