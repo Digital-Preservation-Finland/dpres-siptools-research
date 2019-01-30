@@ -100,5 +100,4 @@ Build RPM::
 
 Documentation for modules is automatically generated from docstrings using Sphinx (`https://wiki.csc.fi/KDK/PythonKoodinDokumentointi <https://wiki.csc.fi/KDK/PythonKoodinDokumentointi>`_). Generate documentation::
 
-   cd doc/
-   make html
+   make doc

@@ -1,6 +1,8 @@
+---
 stages:
   - rpm-package
   - local-test
+  - documentation
 
 rpm-package:
   stage: rpm-package
@@ -18,3 +20,10 @@ e2e-localhost-siptools-research:
     - 'e2e-fairdata-localhost.sh dpres-research-rest-api'
   except:
     - master
+
+docmentation:
+  stage: documentation
+  script:
+    - 'documentation.sh'
+  only:
+    - develop

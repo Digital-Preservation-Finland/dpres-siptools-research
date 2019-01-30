@@ -61,3 +61,7 @@ rpm: clean
 	create-archive.sh
 	preprocess-spec-m4-macros.sh include/rhel7
 	build-rpm.sh
+
+.PHONY: doc
+doc:
+	make -C doc html
