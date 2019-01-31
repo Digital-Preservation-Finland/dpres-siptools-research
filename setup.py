@@ -18,11 +18,8 @@ def main():
             "paramiko",
             "jsonschema",
             "iso-639",
-            "siptools",
-        ],
-        dependency_links=[
-            'git+https://gitlab.csc.fi/dpres/dpres-siptools.git'
-            '@develop#egg=siptools-0.0'
+            "siptools@git+https://gitlab.csc.fi/dpres/dpres-siptools.git'
+            '@develop"
         ],
         entry_points={
             'console_scripts': [
