@@ -27,7 +27,6 @@ Requires:       python
 Requires:       python-luigi
 Requires:       python-pymongo
 Requires:       dpres-siptools
-Requires:       addml
 Requires:       mets
 Requires:       python-lxml
 Requires:       python-paramiko

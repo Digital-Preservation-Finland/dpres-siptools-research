@@ -10,7 +10,6 @@ mongomock
 
 # Install requirements
 git+https://gitlab.csc.fi/dpres/dpres-siptools.git@develop#egg=siptools
-git+https://gitlab.csc.fi/dpres/addml.git@develop
 git+https://gitlab.csc.fi/dpres/dpres-ipt.git@develop#egg=ipt
 git+https://gitlab.csc.fi/dpres/metax-access.git@develop#egg=metax_access
 

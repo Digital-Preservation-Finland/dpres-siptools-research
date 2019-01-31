@@ -18,8 +18,11 @@ def main():
             "paramiko",
             "jsonschema",
             "iso-639",
-            "siptools@git+https://gitlab.csc.fi/dpres/dpres-siptools.git'
-            '@develop"
+            "siptools@git+https://gitlab.csc.fi/dpres/dpres-siptools.git"
+            "@develop",
+            "metax_access@git+https://gitlab.csc.fi/dpres/metax-access.git"
+            "@develop",
+            "ipt@git+https://gitlab.csc.fi/dpres/dpres-ipt.git@develop"
         ],
         entry_points={
             'console_scripts': [
