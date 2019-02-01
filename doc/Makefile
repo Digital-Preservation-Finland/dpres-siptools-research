@@ -43,7 +43,9 @@ clean:
 	-rm -rf modules
 
 modules:
-	sphinx-apidoc --no-toc --module-first --maxdepth=10 --force --output-dir=modules ../ ../setup.py ../version.py
+	# TODO: --module-first parameter was dropped because it is not
+	# supported by sphinx-apidoc version (1.1.3) shipped with centos 7
+	sphinx-apidoc --no-toc --maxdepth=10 --force --output-dir=modules ../ ../setup.py ../version.py
 
 html: modules
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
