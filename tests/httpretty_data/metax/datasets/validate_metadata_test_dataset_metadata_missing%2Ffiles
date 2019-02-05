@@ -4,6 +4,9 @@
         "identifier": "pid:urn:validate_metadata_test_image",
         "file_name": "valid_tiff.tiff",
         "file_path": "/path/to/valid_tiff.tiff",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "parent_directory": {
             "identifier": "pid:urn:dir:wf1"
         },

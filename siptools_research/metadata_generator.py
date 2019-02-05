@@ -9,6 +9,7 @@ from requests.exceptions import HTTPError
 from metax_access import Metax
 from siptools.scripts import import_object
 from siptools_research.utils import ida
+from siptools_research.utils.database import Database
 from siptools_research.config import Configuration
 from siptools_research.xml_metadata import (XMLMetadataGenerator,
                                             FileIncompleteError)
@@ -22,6 +23,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     :returns: ``None``
     """
     config_object = Configuration(config)
+    storage_id = config_object.get("pas_storage_id")
     metax_client = Metax(config_object.get('metax_url'),
                          config_object.get('metax_user'),
                          config_object.get('metax_password'))
@@ -36,19 +38,31 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
             # Download file to tmp directory
             tmpfile = os.path.join(tmpdir, file_id)
-            try:
-                ida.download_file_header(file_id, tmpfile, config)
-            except HTTPError as error:
-                handle_exception(file_, error)
+
+            local = file_metadata["file_storage"]["identifier"] == storage_id
+            if local:
+                # Local file storage
+                files_col = Database(config).client.upload.files
+                file_path = files_col.find_one({"_id": file_id})["file_path"]
+                os.link(file_path, tmpfile)
+            else:
+                # IDA
+                try:
+                    ida.download_file_header(file_id, tmpfile, config)
+                except HTTPError as error:
+                    handle_exception(file_, error)
 
             # Generate and update file_characteristics
             file_characteristics = _generate_techmd(tmpfile, file_metadata)
-            metax_client.set_file_characteristics(file_id,
-                                                  file_characteristics)
+            metax_client.set_file_characteristics(
+                file_id, file_characteristics
+            )
             file_metadata['file_characteristics'] = file_characteristics
 
-            if file_characteristics['file_format'].startswith('image'):
+            image = file_characteristics['file_format'].startswith('image')
+            if image and not local:
                 ida.download_file(file_id, tmpfile, config)
+
             generator = XMLMetadataGenerator(tmpfile, file_metadata)
             try:
                 xml = generator.create()
@@ -58,13 +72,15 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                 generator = XMLMetadataGenerator(tmpfile,
                                                  file_metadata)
                 xml = generator.create()
-            if(xml is not None):
+            if xml is not None:
                 metax_client.set_xml(file_id, xml)
     finally:
         shutil.rmtree(tmpdir)
 
 
 def handle_exception(file_, http_error):
+    """Raise Exception with message depending on http status code"""
+
     file_path = file_['file_path']
     status_code = http_error.response.status_code
     if status_code == 404:
@@ -103,6 +119,6 @@ def _generate_techmd(filepath, original_metadata):
     if 'file_characteristics' in original_metadata:
         file_characteristics.update(
             original_metadata['file_characteristics']
-            )
+        )
 
     return file_characteristics

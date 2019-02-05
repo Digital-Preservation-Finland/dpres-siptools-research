@@ -24,7 +24,8 @@ DEFAULTS = {
     'sip_rejected_mail_subject': 'SIP was rejected',
     'sip_rejected_mail_msg': 'SIP was not approved for Digital Preservation \
 due to errors. Error report attached. \n\nPlease \
-contact DPRES support: {0}'
+contact DPRES support: {0}',
+    'pas_storage_id': 'urn:nbn:fi:att:file-storage-pas'
 }
 
 

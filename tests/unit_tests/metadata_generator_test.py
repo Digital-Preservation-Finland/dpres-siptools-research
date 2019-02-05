@@ -4,22 +4,51 @@ import os
 import tempfile
 import json
 import pytest
+import pymongo
 import httpretty
 import lxml.etree
 
 from siptools.utils import decode_path
+from siptools_research.config import Configuration
 from siptools_research.metadata_generator import generate_metadata
 import tests.conftest
 
 
+@pytest.fixture(autouse=True)
+def _init_mongo_client(testmongoclient):
+    """Initializes mocked mongo collection upload.files"""
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
+    mongoclient = pymongo.MongoClient(host=conf.get("mongodb_host"))
+    files_col = mongoclient.upload.files
+
+    files = [
+        "pid:urn:generate_metadata_1",
+        "pid:urn:generate_metadata_2",
+        "pid:urn:generate_metadata_3",
+        "pid:urn:generate_metadata_4",
+        "pid:urn:generate_metadata_5",
+        "pid:urn:generate_metadata_file_characteristics_"
+        "block_not_present"
+    ]
+
+    for _file in files:
+        files_col.insert_one({
+            "_id": _file + "_local",
+            "file_path": os.path.abspath(
+                "tests/httpretty_data/ida/%s_ida" % _file
+            )
+        })
+
+
+@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida')
-def test_generate_metadata():
+def test_generate_metadata(file_storage):
     """Tests metadata generation. Generates metadata for a dataset and checks
     that JSON message sent to Metax has correct keys/values.
 
     :returns: ``None``
     """
-    generate_metadata('generate_metadata_test_dataset_1',
+    generate_metadata('generate_metadata_test_dataset_1_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     json_message = json.loads(httpretty.last_request().body)
@@ -41,17 +70,18 @@ def test_generate_metadata():
         'dummy_value'
 
 
+@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida')
 # pylint: disable=invalid-name
-def test_generate_metadata_file_characteristics_block_not_present():
+def test_generate_metadata_file_characteristics_not_present(file_storage):
     """Tests metadata generation. Generates metadata for a dataset and checks
     that JSON message sent to Metax has correct keys/values when
     file_characteristics block was not present in file metadata
 
     :returns: ``None``
     """
-    generate_metadata('generate_metadata_test_dataset_' +
-                      'file_characteristics_block_not_present',
+    generate_metadata('generate_metadata_test_dataset_file_' +
+                      'characteristics_block_not_present_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     json_message = json.loads(httpretty.last_request().body)
@@ -67,8 +97,9 @@ def test_generate_metadata_file_characteristics_block_not_present():
         'ISO-8859-15'
 
 
+@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida')
-def test_generate_metadata_mix():
+def test_generate_metadata_mix(file_storage):
     """Tests mix metadata generation for a image file. Generates metadata for a
     dataset that contains an image file and checks that message sent to Metax
     is valid XML. The method of last HTTP request should be POST, and the
@@ -76,7 +107,7 @@ def test_generate_metadata_mix():
 
     :returns: ``None``
     """
-    generate_metadata('generate_metadata_test_dataset_2',
+    generate_metadata('generate_metadata_test_dataset_2_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
@@ -94,9 +125,10 @@ def test_generate_metadata_mix():
     assert httpretty.last_request().method == "POST"
 
 
+@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida')
 # pylint: disable=invalid-name
-def test_generate_metadata_mix_larger_file():
+def test_generate_metadata_mix_larger_file(file_storage):
     """Tests mix metadata generation for a image file. Generates metadata for a
     dataset that contains an image file larger than 512 bytes and checks that
     message sent to Metax is valid XML. The method of last HTTP request should
@@ -104,7 +136,7 @@ def test_generate_metadata_mix_larger_file():
 
     :returns: ``None``
     """
-    generate_metadata('generate_metadata_test_dataset_5',
+    generate_metadata('generate_metadata_test_dataset_5_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
@@ -122,8 +154,9 @@ def test_generate_metadata_mix_larger_file():
     assert httpretty.last_request().method == "POST"
 
 
+@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida')
-def test_generate_metadata_addml():
+def test_generate_metadata_addml(file_storage):
     """Tests addml metadata generation for a CSV file. Generates metadata for a
     dataset that contains a CSV file and checks that message sent to Metax
     is valid XML. The method of last HTTP request should be POST, and the
@@ -131,7 +164,7 @@ def test_generate_metadata_addml():
 
     :returns: ``None``
     """
-    generate_metadata('generate_metadata_test_dataset_3',
+    generate_metadata('generate_metadata_test_dataset_3_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
@@ -153,8 +186,9 @@ def test_generate_metadata_addml():
     assert httpretty.last_request().method == "POST"
 
 
+@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida')
-def test_generate_metadata_audiomd():
+def test_generate_metadata_audiomd(file_storage):
     """Tests addml metadata generation for a WAV file. Generates metadata for a
     dataset that contains a WAV file and checks that message sent to Metax
     is valid XML. The method of last HTTP request should be POST, and the
@@ -162,7 +196,7 @@ def test_generate_metadata_audiomd():
 
     :returns: ``None``
     """
-    generate_metadata('generate_metadata_test_dataset_4',
+    generate_metadata('generate_metadata_test_dataset_4_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
@@ -183,9 +217,10 @@ def test_generate_metadata_audiomd():
     assert httpretty.last_request().method == "POST"
 
 
+@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida')
 # pylint: disable=invalid-name
-def test_generate_metadata_tempfile_removal():
+def test_generate_metadata_tempfile_removal(file_storage):
     """Tests that temporary files downloaded from Ida are removed.
 
     :returns: ``None``
@@ -193,7 +228,7 @@ def test_generate_metadata_tempfile_removal():
     # Check contents of /tmp before calling generate_metadata()
     tmp_dir_before_test = os.listdir(tempfile.gettempdir())
 
-    generate_metadata('generate_metadata_test_dataset_1',
+    generate_metadata('generate_metadata_test_dataset_1_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # There should not be new files or directories in /tmp

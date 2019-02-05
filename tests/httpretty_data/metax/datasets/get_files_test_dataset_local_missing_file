@@ -1,0 +1,22 @@
+{
+    "research_dataset": {
+        "files": [
+            {
+                "identifier": "pid:urn:1",
+                "use_category": {
+                    "pref_label": {
+                        "en": "Source material"
+                    }
+                }
+            },
+            {
+                "identifier": "pid:urn:does_not_exist",
+                "use_category": {
+                    "pref_label": {
+                        "en": "Source material"
+                    }
+                }
+            }
+        ]
+    }
+}

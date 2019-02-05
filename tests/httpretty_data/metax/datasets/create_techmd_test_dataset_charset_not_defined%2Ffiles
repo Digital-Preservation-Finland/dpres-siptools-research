@@ -4,6 +4,9 @@
         "file_name": "file_name_5",
         "file_format": "html/text",
         "file_path": "/project_x/some/path/file_name_5",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "checksum": {
             "algorithm": "sha2",
             "value": "0000000000000000000000000000000000000000000000000000000000000000"

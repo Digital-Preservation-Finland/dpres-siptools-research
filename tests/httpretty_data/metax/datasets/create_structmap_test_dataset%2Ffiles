@@ -5,6 +5,9 @@
             "identifier": "pid:urn:dir:1"
         },
         "file_name": "file_name_1",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "file_path": "tests/data/structured/Access and use rights files/access_file.txt"
     },
     {
@@ -13,6 +16,9 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_2",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "file_path": "tests/data/structured/Documentation files/readme.txt"
     },
     {
@@ -21,6 +27,9 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_3",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "file_path": "tests/data/structured/Documentation files/Configuration files/properties.txt"
     },
     {
@@ -29,6 +38,9 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_4",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "file_path": "tests/data/structured/Documentation files/Method files/method_putkisto.txt"
     },
     {
@@ -37,6 +49,9 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_5",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "file_path": "tests/data/structured/Documentation files/Notebook/notes.txt"
     },
     {
@@ -45,6 +60,9 @@
             "identifier": "pid:urn:dir:2"
         },
         "file_name": "file_name_6",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "file_path": "tests/data/structured/Documentation files/Other files/this.txt"
     },
     {
@@ -53,6 +71,9 @@
             "identifier": "pid:urn:dir:3"
         },
         "file_name": "file_name_7",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "file_path": "tests/data/structured/Machine-readable metadata/metadata.txt"
     },
     {
@@ -61,6 +82,9 @@
             "identifier": "pid:urn:dir:4"
         },
         "file_name": "file_name_8",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "file_path": "tests/data/structured/Publication files/publication.txt"
     },
     {
@@ -69,6 +93,9 @@
             "identifier": "pid:urn:dir:5"
         },
         "file_name": "file_name_9",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "file_path": "tests/data/structured/Software files/koodi.java"
     }
 ]

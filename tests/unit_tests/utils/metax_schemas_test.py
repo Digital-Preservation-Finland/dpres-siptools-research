@@ -38,6 +38,9 @@ def test_validate_valid_dataset_metadata_with_provenance():
                     {
                         "title": "File 1",
                         "identifier": "pid1",
+                        "file_storage": {
+                            "identifier": "urn:nbn:fi:att:file-storage-ida"
+                        },
                         "use_category": {
                             "pref_label": {
                                 "en": "label1"
@@ -47,6 +50,9 @@ def test_validate_valid_dataset_metadata_with_provenance():
                     {
                         "title": "File 2",
                         "identifier": "pid2",
+                        "file_storage": {
+                            "identifier": "urn:nbn:fi:att:file-storage-ida"
+                        },
                         "use_category": {
                             "pref_label": {
                                 "en": "label1"
@@ -79,6 +85,9 @@ def test_validate_valid_dataset_metadata_without_provenance():
                     {
                         "title": "File 1",
                         "identifier": "pid1",
+                        "file_storage": {
+                            "identifier": "urn:nbn:fi:att:file-storage-ida"
+                        },
                         "use_category": {
                             "pref_label": {
                                 "en": "label1"
@@ -88,6 +97,9 @@ def test_validate_valid_dataset_metadata_without_provenance():
                     {
                         "title": "File 2",
                         "identifier": "pid2",
+                        "file_storage": {
+                            "identifier": "urn:nbn:fi:att:file-storage-ida"
+                        },
                         "use_category": {
                             "pref_label": {
                                 "en": "label1"
@@ -134,6 +146,9 @@ def test_validate_invalid_dataset_metadata_missing_attribute_in_provenance():
                     {
                         "title": "File 1",
                         "identifier": "pid1",
+                        "file_storage": {
+                            "identifier": "urn:nbn:fi:att:file-storage-ida"
+                        },
                         "use_category": {
                             "pref_label": {
                                 "en": "label1"
@@ -143,6 +158,9 @@ def test_validate_invalid_dataset_metadata_missing_attribute_in_provenance():
                     {
                         "title": "File 2",
                         "identifier": "pid2",
+                        "file_storage": {
+                            "identifier": "urn:nbn:fi:att:file-storage-ida"
+                        },
                         "use_category": {
                             "pref_label": {
                                 "en": "label1"
@@ -171,6 +189,9 @@ def test_validate_invalid_dataset_metadata():
                     {
                         "title": "File 1",
                         "identifier": "pid1",
+                        "file_storage": {
+                            "identifier": "urn:nbn:fi:att:file-storage-ida"
+                        },
                         "type": {
                             "pref_label": {
                                 "en": "label1"
@@ -180,6 +201,9 @@ def test_validate_invalid_dataset_metadata():
                     {
                         "title": "File 2",
                         "identifier": "pid2",
+                        "file_storage": {
+                            "identifier": "urn:nbn:fi:att:file-storage-ida"
+                        }
                     }
                 ]
             }
@@ -205,6 +229,9 @@ def test_validate_valid_file_metadata():
                 "value": "habeebit"
             },
             "file_path": "path/to/file",
+            "file_storage": {
+                "identifier": "urn:nbn:fi:att:file-storage-ida"
+            },
             "parent_directory": {
                 "identifier": "pid:urn:dir:1",
             },
@@ -233,6 +260,9 @@ def test_validate_valid_file_metadata_optional_attribute_missing():
                 "value": "habeebit"
             },
             "file_path": "path/to/file",
+            "file_storage": {
+                "identifier": "urn:nbn:fi:att:file-storage-ida"
+            },
             "parent_directory": {
                 "identifier": "pid:urn:dir:1",
             },
@@ -259,6 +289,9 @@ def test_validate_invalid_file_metadata():
                 "algorithm": "sha2",
             },
             "file_format": "html/text",
+            "file_storage": {
+                "identifier": "urn:nbn:fi:att:file-storage-ida"
+            },
             "file_characteristics": {
                 "file_created": "2014-01-17T08:19:31Z",
             }
@@ -286,6 +319,9 @@ def test_validate_invalid_file_charset():
                 "value": "habeebit"
             },
             "file_path": "path/to/file",
+            "file_storage": {
+                "identifier": "urn:nbn:fi:att:file-storage-ida"
+            },
             "parent_directory": {
                 "identifier": "pid:urn:dir:1",
             },

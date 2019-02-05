@@ -1,0 +1,8 @@
+{
+    "file_storage": {
+        "identifier": "pid:urn:fi:att:file-storage-ida"
+    },
+    "file_characteristics": {
+        "dummy_key": "dummy_value"
+    }
+}

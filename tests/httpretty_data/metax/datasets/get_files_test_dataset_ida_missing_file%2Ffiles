@@ -2,11 +2,17 @@
     {
         "file_name": "file_name_3",
         "file_path": "/path/to/file3",
-        "identifier": "pid:urn:1"
+        "identifier": "pid:urn:1",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        }
     },
     {
         "file_name": "file_name_4",
         "file_path": "/path/to/file4",
-        "identifier": "pid:urn:does_not_exist"
+        "identifier": "pid:urn:does_not_exist",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        }
     }
 ]

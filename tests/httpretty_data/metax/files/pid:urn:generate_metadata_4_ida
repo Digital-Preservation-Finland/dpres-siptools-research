@@ -1,0 +1,9 @@
+{
+    "identifier": "pid:urn:generate_metadata_4",
+    "file_storage": {
+        "identifier": "pid:urn:fi:att:file-storage-ida"
+    },
+    "file_name": "valid-wav.wav",
+    "file_format": "audio/x-wav",
+    "file_path": "/testpath/valid-wav.wav"
+}

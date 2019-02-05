@@ -3,21 +3,21 @@
 import os
 import logging
 import luigi
+from requests.exceptions import HTTPError
 from metax_access import Metax
-from siptools_research.utils import ida
+from siptools_research.utils import ida, database as db
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
-from requests.exceptions import HTTPError
 
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
 
 
 class GetFiles(WorkflowTask):
-    """A task that reads file metadata from Metax and downloads requred files
-    from Ida. Task requires that workspace directory exists and metadata is
+    """A task that reads file metadata from Metax and downloads the required
+    files. Task requires that workspace directory exists and metadata is
     validated.
 
     Because output files are not known beforehand, a false target
@@ -27,8 +27,8 @@ class GetFiles(WorkflowTask):
     Task requires that workspace directory is created and dataset metadata is
     validated.
     """
-    success_message = 'Files were downloaded from IDA'
-    failure_message = 'Could not get files from IDA'
+    success_message = 'Files were downloaded'
+    failure_message = 'Could not get files'
 
     def requires(self):
         """The Tasks that this Task depends on.
@@ -52,7 +52,7 @@ class GetFiles(WorkflowTask):
                                               "task-getfiles.finsihed"))
 
     def run(self):
-        """Reads list of required files from Metax and downloads them from Ida.
+        """Reads list of required files from Metax and downloads them.
 
         :returns: ``None``
         """
@@ -65,40 +65,73 @@ class GetFiles(WorkflowTask):
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
 
         # get files from ida
-        self._download_files(dataset_files)
+        self._download_files(dataset_files, config_object)
         with self.output().open('w') as output:
             output.write("Dataset id=" + self.dataset_id)
 
-    def _download_files(self, dataset_files):
-        """Reads files from IDA and writes them on a path based on
-        ``use_category`` in Metax
+    def _get_storage_path(self, identifier, fpath):
+        """Returns the path to file with _id == identifier on passipservice"""
 
-        :param dataset_files: dataset files metadata dictionary
+        files_col = db.Database(self.config).client.upload.files
+        storage_path = files_col.find_one({"_id": identifier})
+        if storage_path is None:
+            raise Exception("File %s not found in the database" % fpath)
+
+        return files_col.find_one({"_id": identifier})["file_path"]
+
+    def _download_files(self, dataset_files, config):
+        """Reads and writes files on a path based on
+        ``file_path`` in Metax
+
+        :param dataset_files: list of files metadata dicts
+        :param config: siptools_research config object
         :returns: ``None``
         """
+        pas_storage_id = config.get("pas_storage_id")
+
         for dataset_file in dataset_files:
+            identifier = dataset_file["identifier"]
+            file_storage = dataset_file["file_storage"]["identifier"]
 
             # Full path to file
             target_path = os.path.join(self.sip_creation_path,
-                                       dataset_file['file_path'].strip('/'))
+                                       dataset_file["file_path"].strip('/'))
 
             # Create the download directory for file if it does not exist
             # already
             if not os.path.isdir(os.path.dirname(target_path)):
                 os.makedirs(os.path.dirname(target_path))
 
-            # Download file
-            try:
-                ida.download_file(dataset_file['identifier'],
-                                  target_path,
-                                  self.config)
-            except HTTPError as error:
-                file_path = dataset_file['file_path']
-                status_code = error.response.status_code
-                if status_code == 404:
-                    raise Exception("File %s not found in Ida." % file_path)
-                elif status_code == 403:
-                    raise Exception("Access to file %s forbidden." % file_path)
-                else:
-                    raise Exception("File %s could not be retrieved." %
-                                    file_path)
+            if file_storage == pas_storage_id:
+                file_path = self._get_storage_path(
+                    identifier, dataset_file["file_path"]
+                )
+                if not os.path.isfile(file_path):
+                    raise Exception(
+                        "File %s not found on disk" % dataset_file["file_path"]
+                    )
+                # Create hard links to the files on workspace
+                os.link(file_path, target_path)
+            else:
+                # Download file from IDA
+                try:
+                    ida.download_file(
+                        dataset_file['identifier'], target_path, self.config
+                    )
+
+                except HTTPError as error:
+                    file_path = dataset_file['file_path']
+                    status_code = error.response.status_code
+
+                    if status_code == 404:
+                        raise Exception(
+                            "File %s not found in Ida." % file_path
+                        )
+                    elif status_code == 403:
+                        raise Exception(
+                            "Access to file %s forbidden." % file_path
+                        )
+                    else:
+                        raise Exception(
+                            "File %s could not be retrieved." % file_path
+                        )

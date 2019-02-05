@@ -1,0 +1,16 @@
+[
+    {
+        "file_path": "/path/to/file1",
+        "identifier": "pid:urn:1",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-pas"
+        }
+    },
+    {
+        "file_path": "/path/to/file2",
+        "identifier": "pid:urn:2",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-pas"
+        }
+    }
+]

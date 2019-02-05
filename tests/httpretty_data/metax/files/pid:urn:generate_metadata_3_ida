@@ -1,5 +1,8 @@
 {
     "identifier": "pid:urn:generate_metadata_3",
+    "file_storage": {
+        "identifier": "pid:urn:fi:att:file-storage-ida"
+    },
     "file_name": "csvfile.csv",
     "file_format": "text/csv",
     "file_path": "/testpath/csvfile.csv",

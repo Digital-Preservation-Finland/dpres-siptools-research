@@ -1,0 +1,19 @@
+{
+    "identifier": "pid:urn:generate_metadata_3",
+    "file_storage": {
+        "identifier": "urn:nbn:fi:att:file-storage-pas"
+    },
+    "file_name": "csvfile.csv",
+    "file_format": "text/csv",
+    "file_path": "/testpath/csvfile.csv",
+    "file_characteristics": {
+        "file_created": "2014-01-17T08:19:31Z",
+        "file_format": "text/csv",
+        "format_version": "8.3",
+        "encoding": "UTF-8",
+        "csv_delimiter": ";",
+        "csv_record_separator": "CR+LF",
+        "csv_quoting_char": "'",
+        "csv_has_header": false 
+    }
+}

@@ -2,6 +2,9 @@
     {
         "identifier": "pid:urn:5",
         "file_path": "/project_x/some/path/file_name_5",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "checksum": {
             "algorithm": "sha2",
             "value": "0000000000000000000000000000000000000000000000000000000000000000"
@@ -14,6 +17,9 @@
     },
     {
         "file_path": "/project_x/some/path/file_name_6",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "identifier": "pid:urn:6",
         "checksum": {
             "algorithm": "sha2",
@@ -27,6 +33,9 @@
     },
     {
         "file_path": "/project_x/some/path/file_name_7.txt",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "identifier": "pid:urn:7",
         "checksum": {
             "algorithm": "sha2",
@@ -39,6 +48,9 @@
     },
     {
         "file_path": "/project_x/some/path/valid_tiff.tiff",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "identifier": "pid:urn:888",
         "checksum": {
             "algorithm": "sha2",
@@ -52,6 +64,9 @@
     {
         "identifier": "pid:urn:999",
         "file_path": "/project_x/some/path/file.csv",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
         "checksum": {
             "algorithm": "sha2",
             "value": "0000000000000000000000000000000000000000000000000000000000000000"

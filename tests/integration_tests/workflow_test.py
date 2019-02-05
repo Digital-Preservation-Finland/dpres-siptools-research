@@ -8,21 +8,37 @@ output of task is NOT examined.
 """
 
 import os
+import importlib
+import uuid
+
 import pytest
-import tests.conftest
 import luigi
 import pymongo
-from siptools_research.config import Configuration
 import mock
-from siptools_research.remoteanytarget import RemoteAnyTarget
-import importlib
+import lxml.etree as ET
+
 from ipt.scripts import (check_xml_schema_features,
                          check_xml_schematron_features,
                          check_sip_file_checksums,
                          check_sip_digital_objects)
+
+import tests.conftest
+from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.workflow.compress import CompressSIP
-import uuid
-import lxml.etree as ET
+from siptools_research.config import Configuration
+
+
+def _init_files_col(mongoclient):
+    """Init mocked upload.files collection"""
+    mongo_files = [
+        ("pid:urn:wf_test_1a", "tests/httpretty_data/ida/pid:urn:wf_test_1a"),
+        ("pid:urn:wf_test_1b", "tests/httpretty_data/ida/pid:urn:wf_test_1b")
+    ]
+    for identifier, fpath in mongo_files:
+        mongoclient.upload.files.insert_one(
+            {"_id": identifier, "file_path": os.path.abspath(fpath)}
+        )
+
 
 
 # Run every task as it would be run from commandline
@@ -45,45 +61,56 @@ import lxml.etree as ET
         ('cleanup', 'CleanupWorkspace'),
     ]
 )
+@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida', 'testmongoclient',
                          'mock_luigi_config_path', 'mock_filetype_conf')
 @pytest.mark.timeout(600)
-def test_workflow(_mock_ssh, testpath, module_name, task):
+def test_workflow(_mock_ssh, testpath, file_storage, module_name, task):
     """Run a task (and all tasks it requires) and check that check that report
     of successfull task is added to mongodb.
 
     :param _mock_ssh: mocked paramiko.SSHClient
     :param testpath: temporary directory
     :param module_name: submodule of siptools_research.workflow that contains
-                    Task to be tested
+                        Task to be tested
     :param task: Task class name
     :returns: ``None``
     """
-    with mock.patch.object(RemoteAnyTarget, '_exists', mock_exists):
+    # Init pymongo client
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
+    mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
+    database = mongoclient[conf.get('mongodb_database')]
+    collection = database[conf.get('mongodb_collection')]
+
+    dataset_id = 'workflow_test_dataset_1_%s' % file_storage
+    # Add test identifiers to upload.files collection
+    if file_storage == 'local':
+        _init_files_col(mongoclient)
+
+    with mock.patch.object(RemoteAnyTarget, '_exists', _mock_exists):
         workspace = os.path.join(testpath, 'workspace_' +
                                  os.path.basename(testpath))
         module = importlib.import_module('siptools_research.workflow.' +
                                          module_name)
         task_class = getattr(module, task)
-        luigi.build([task_class(workspace=workspace,
-                                dataset_id='workflow_test_dataset_1',
-                                config=tests.conftest.UNIT_TEST_CONFIG_FILE)],
-                    local_scheduler=True)
+        luigi.build(
+            [task_class(
+                workspace=workspace, dataset_id=dataset_id,
+                config=tests.conftest.UNIT_TEST_CONFIG_FILE
+            )],
+            local_scheduler=True
+        )
 
-        # Init pymongo client
-        conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-        mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-        collection = (mongoclient[conf.get('mongodb_database')]
-                      [conf.get('mongodb_collection')])
         document = collection.find_one()
 
         # Check 'result' field
         assert document['workflow_tasks'][task]['result'] == 'success'
 
 
+@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida', 'testmongoclient',
                          'mock_luigi_config_path', 'mock_filetype_conf')
-def test_mets_creation(testpath):
+def test_mets_creation(testpath, file_storage):
     """Run CompressSIP task (and all tasks it requires) and check that:
 
         #. report of successful task is added to mongodb.
@@ -96,18 +123,28 @@ def test_mets_creation(testpath):
     :param testpath: temporary directory
     :returns: ``None``
     """
-
-    workspace = os.path.join(testpath,
-                             'workspace_' + os.path.basename(testpath))
-    luigi.build([CompressSIP(workspace=workspace,
-                             dataset_id='workflow_test_dataset_1',
-                             config=tests.conftest.UNIT_TEST_CONFIG_FILE)],
-                local_scheduler=True)
     # Init pymongo client
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-    collection = (mongoclient[conf.get('mongodb_database')]
-                  [conf.get('mongodb_collection')])
+    database = mongoclient[conf.get('mongodb_database')]
+    collection = database[conf.get('mongodb_collection')]
+
+    dataset_id = 'workflow_test_dataset_1_%s' % file_storage
+    # Add test identifiers to upload.files collection
+    if file_storage == 'local':
+        _init_files_col(mongoclient)
+
+    workspace = os.path.join(
+        testpath, 'workspace_' + os.path.basename(testpath)
+    )
+
+    luigi.build(
+        [CompressSIP(
+            workspace=workspace, dataset_id=dataset_id,
+            config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        )],
+        local_scheduler=True
+    )
     document = collection.find_one()
 
     # Check 'result' field
@@ -122,6 +159,8 @@ def test_mets_creation(testpath):
 
 
 def assert_schematron(mets_path):
+    """Validate mets.xml against Schematrons"""
+
     schematron_path = '/usr/share/dpres-xml-schemas/schematron'
     schematron_rules = [
         'mets_addml.sch',
@@ -152,6 +191,8 @@ def assert_schematron(mets_path):
 
 
 def assert_mets_root_element(mets_path):
+    """Check mets root element"""
+
     mets_xml_root = ET.parse(mets_path).getroot()
     contractid = mets_xml_root.xpath('@*[local-name() = "CONTRACTID"]')[0]
     assert contractid == 'urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd'
@@ -160,7 +201,7 @@ def assert_mets_root_element(mets_path):
     assert version == '1.7'
 
 
-def mock_exists(self, path):
+def _mock_exists(self, path):
     if path.startswith('accepted'):
         return True
     return False

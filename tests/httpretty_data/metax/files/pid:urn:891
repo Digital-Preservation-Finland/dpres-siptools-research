@@ -3,6 +3,9 @@
     "download_url": "http://path.to.csc.fi/891",
     "file_name": "audio.mp4",
     "file_path": "/path/to/audio.mp4",
+    "file_storage": {
+        "identifier": "urn:nbn:fi:att:file-storage-ida"
+    },
     "parent_directory": {
         "identifier": "pid:urn:dir:wf1"
     },

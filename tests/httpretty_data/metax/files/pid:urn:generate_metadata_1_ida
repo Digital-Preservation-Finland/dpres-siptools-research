@@ -1,0 +1,9 @@
+{
+    "file_storage": {
+        "identifier": "urn:nbn:fi:att:file-storage-ida"
+    },
+    "file_characteristics": {
+        "encoding": "user_defined_charset",
+        "dummy_key": "dummy_value"
+    }
+}

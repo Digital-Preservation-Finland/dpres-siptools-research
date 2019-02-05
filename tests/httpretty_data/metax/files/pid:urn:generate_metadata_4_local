@@ -1,5 +1,8 @@
 {
     "identifier": "pid:urn:generate_metadata_4",
+    "file_storage": {
+        "identifier": "urn:nbn:fi:att:file-storage-pas"
+    },
     "file_name": "valid-wav.wav",
     "file_format": "audio/x-wav",
     "file_path": "/testpath/valid-wav.wav"
