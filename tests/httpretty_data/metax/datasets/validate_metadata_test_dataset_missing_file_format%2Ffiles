@@ -1,7 +1,7 @@
 [
     {
         "file_format": "text/plain",
-        "identifier": "pid:urn:wf_test_1a",
+        "identifier": "pid:urn:wf_test_1a_ida",
         "file_path": "path/to/file1",
         "file_storage": {
             "identifier": "urn:nbn:fi:att:file-storage-ida"

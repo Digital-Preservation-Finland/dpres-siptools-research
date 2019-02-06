@@ -22,7 +22,7 @@
         ],
         "files": [
             {
-                "identifier": "pid:urn:wf_test_1a",
+                "identifier": "pid:urn:wf_test_1a_local",
                 "use_category": {
                     "pref_label": {
                         "en": "label1"
@@ -30,7 +30,7 @@
                 }
             },
             {
-                "identifier": "pid:urn:wf_test_1b",
+                "identifier": "pid:urn:wf_test_1b_local",
                 "use_category": {
                     "pref_label": {
                         "en": "label2"

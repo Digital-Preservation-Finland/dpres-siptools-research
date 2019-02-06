@@ -1,6 +1,6 @@
 [
     {
-        "identifier": "pid:urn:wf_test_1a",
+        "identifier": "pid:urn:wf_test_1a_local",
         "file_storage": {
             "identifier": "urn:nbn:fi:att:file-storage-pas"
         },
@@ -22,7 +22,7 @@
         }
     },
     {
-        "identifier": "pid:urn:wf_test_1b",
+        "identifier": "pid:urn:wf_test_1b_local",
         "file_storage": {
             "identifier": "urn:nbn:fi:att:file-storage-pas"
         },

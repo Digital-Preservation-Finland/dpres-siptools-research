@@ -5,7 +5,7 @@
     "research_dataset": {
         "files": [
             {
-                "identifier": "pid:urn:wf_test_1a",
+                "identifier": "pid:urn:wf_test_1a_ida",
                 "use_category": {
                     "pref_label": {
                         "en": "label1"

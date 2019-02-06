@@ -31,8 +31,14 @@ from siptools_research.config import Configuration
 def _init_files_col(mongoclient):
     """Init mocked upload.files collection"""
     mongo_files = [
-        ("pid:urn:wf_test_1a", "tests/httpretty_data/ida/pid:urn:wf_test_1a"),
-        ("pid:urn:wf_test_1b", "tests/httpretty_data/ida/pid:urn:wf_test_1b")
+        (
+            "pid:urn:wf_test_1a_local",
+            "tests/httpretty_data/ida/pid:urn:wf_test_1a_local"
+        ),
+        (
+            "pid:urn:wf_test_1b_local",
+            "tests/httpretty_data/ida/pid:urn:wf_test_1b_local"
+        )
     ]
     for identifier, fpath in mongo_files:
         mongoclient.upload.files.insert_one(
