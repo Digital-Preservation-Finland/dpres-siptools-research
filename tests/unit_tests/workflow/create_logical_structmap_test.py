@@ -28,12 +28,13 @@ def test_create_structmap_ok(testpath):
     event_type = 'creation'
     event_datetime = '2014-12-31T08:19:58Z'
     event_detail = 'Description of provenance'
-    premis_event.main([
-        event_type, event_datetime,
-        "--event_detail", event_detail,
-        "--event_outcome", 'success',
-        "--workspace", sip_creation_path
-    ])
+
+    premis_event.create_premis_event_file(sip_creation_path,
+                                          event_type,
+                                          event_datetime,
+                                          event_detail,
+                                          'success',
+                                          event_detail)
 
     # Create dmdsec (required to create valid physical structmap)
     import_description.main(['tests/data/datacite_sample.xml',

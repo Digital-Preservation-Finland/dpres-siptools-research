@@ -94,7 +94,7 @@ class _AudioXWavFileXMLMetadata(_XMLMetadata):
             xml = create_audiomd.create_audiomd(self.file_path)
         except ValueError:
             raise FileIncompleteError
-        return xml
+        return xml['0']
 
     @classmethod
     def is_generator_for(cls, file_format):

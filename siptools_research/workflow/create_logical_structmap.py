@@ -114,7 +114,7 @@ class CreateLogicalStructMap(WorkflowTask):
                 provenance["preservation_event"]["pref_label"],
                 languages=languages
             )
-            prov_file = '%s-event.xml' % event_type
+            prov_file = '%s-event-amd.xml' % event_type
             prov_file = encode_path(os.path.join(self.sip_creation_path,
                                                  prov_file))
             prov_xml = ET.parse(prov_file)

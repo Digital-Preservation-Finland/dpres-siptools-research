@@ -5,7 +5,9 @@ import shutil
 import distutils.dir_util
 import pytest
 import tests.conftest
-from siptools_research.workflow.create_structmap import CreateStructMap
+from siptools_research.workflow.create_structmap import (
+    CreateTechnicalMetadata,
+    CreateStructMap)
 from siptools.scripts import import_object
 from siptools.scripts import import_description
 from siptools.scripts import premis_event

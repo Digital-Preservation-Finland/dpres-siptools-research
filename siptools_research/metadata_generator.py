@@ -13,7 +13,6 @@ from siptools_research.config import Configuration
 from siptools_research.xml_metadata import (XMLMetadataGenerator,
                                             FileIncompleteError)
 
-
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Generates technical metadata and mix metadata for all files of a given
     dataset and updates relevant fields in file metadata.

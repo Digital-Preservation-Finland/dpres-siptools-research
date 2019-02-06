@@ -39,33 +39,24 @@ def test_create_techmd_ok(testpath):
     # Run task.
     task.run()
     assert task.complete()
-
-    # Check that all expected XML files are created in workspace
+    reference_file = os.path.join(sipdirectory, 'amd-references.xml')
+    xml = lxml.etree.parse(reference_file)
+    amd_refs = xml.xpath('/amdReferences/amdReference')
+    assert len(amd_refs) == 6
+    for amd_ref in amd_refs:
+        if amd_ref.text[1:] != '1b2eecde68d99171f70613f14cf21f49':
+            assert os.path.isfile(os.path.join(
+                sipdirectory,
+                amd_ref.text[1:] + '-PREMIS%3AOBJECT-amd.xml'
+                ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_5-premis-techmd.xml'
+        '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml'
     ))
-    assert os.path.isfile(os.path.join(
-        sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_6-premis-techmd.xml'
-    ))
-    assert os.path.isfile(os.path.join(
-        sipdirectory,
-        'project_x%2Fsome%2Fpath%2Fvalid_tiff.tiff-premis-techmd.xml'
-    ))
-    assert os.path.isfile(os.path.join(
-        sipdirectory,
-        '1b2eecde68d99171f70613f14cf21f49-NISOIMG-techmd.xml'
-    ))
-    assert os.path.isfile(os.path.join(
-        sipdirectory,
-        'techmd-references.xml'
-    ))
-
     # Check that one of the PREMIS techMD files has desired properties
     output_file = os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_5-premis-techmd.xml'
+        amd_refs[0].text[1:] + '-PREMIS%3AOBJECT-amd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
@@ -81,7 +72,7 @@ def test_create_techmd_ok(testpath):
     # Check that the NISOIMG techMD file has desired properties
     output_file = os.path.join(
         sipdirectory,
-        '1b2eecde68d99171f70613f14cf21f49-NISOIMG-techmd.xml'
+        '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
@@ -137,11 +128,14 @@ def test_create_techmd_without_charset(testpath):
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     task.run()
-
+    reference_file = os.path.join(sipdirectory, 'amd-references.xml')
+    xml = lxml.etree.parse(reference_file)
+    amd_refs = xml.xpath('/amdReferences/amdReference')
+    assert len(amd_refs) == 1
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
         sipdirectory,
-        'project_x%2Fsome%2Fpath%2Ffile_name_5-premis-techmd.xml'
+        amd_refs[0].text[1:] + '-PREMIS%3AOBJECT-amd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()

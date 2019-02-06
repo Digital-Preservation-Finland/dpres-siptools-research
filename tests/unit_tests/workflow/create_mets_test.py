@@ -25,9 +25,9 @@ METS_ATTRIBUTES = {
     '{%s}schemaLocation' % NAMESPACES['xsi']: 'http://www.loc.gov/METS/ '
                                               'http://digitalpreservation.fi/'
                                               'schemas/mets/mets.xsd',
-    '{%s}SPECIFICATION' % NAMESPACES['fi']: '1.7.0',
+    '{%s}SPECIFICATION' % NAMESPACES['fi']: '1.7.1',
     'OBJID': 'create_mets_dataset',
-    '{%s}CATALOG' % NAMESPACES['fi']: '1.7.0',
+    '{%s}CATALOG' % NAMESPACES['fi']: '1.7.1',
 }
 
 

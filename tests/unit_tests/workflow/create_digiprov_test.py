@@ -41,11 +41,11 @@ def test_createprovenanceinformation(testpath):
     # Check that XML is created in workspace/sip-inprogrss/
     assert os.path.isfile(os.path.join(workspace,
                                        'sip-in-progress',
-                                       'creation-event.xml'))
+                                       'creation-event-amd.xml'))
 
     assert os.path.isfile(os.path.join(workspace,
                                        'sip-in-progress',
-                                       'metadata+modification-event.xml'))
+                                       'metadata+modification-event-amd.xml'))
 
     # Check that target file is created
     with open(os.path.join(workspace, 'create-provenance-information.'
@@ -105,7 +105,7 @@ def test_create_premis_events(testpath):
     )
 
     # Check that the created xml-file contains correct elements.
-    tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))
+    tree = lxml.etree.parse(os.path.join(testpath, 'creation-event-amd.xml'))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
                           namespaces={'mets': "http://www.loc.gov/METS/",
@@ -175,7 +175,7 @@ def test_create_premis_events_unav(testpath):
         tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Check that the created xml-file contains correct elements.
-    tree = lxml.etree.parse(os.path.join(testpath, 'creation-event.xml'))
+    tree = lxml.etree.parse(os.path.join(testpath, 'creation-event-amd.xml'))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
                           namespaces={'mets': "http://www.loc.gov/METS/",

@@ -5,6 +5,7 @@ import os
 
 from luigi import LocalTarget
 from siptools.scripts import compile_structmap
+from siptools.utils import get_objectlist
 
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_digiprov import \
@@ -63,7 +64,9 @@ class CreateStructMap(WorkflowTask):
         """
 
         # Create fileSec
-        filesec = compile_structmap.create_filesec(self.sip_creation_path)
+        file_list = get_objectlist(self.sip_creation_path)
+        filesec = compile_structmap.create_filesec(self.sip_creation_path,
+                                                   file_list)
         with self.output()[0].open('w') as filesecxml:
             filesec.write(filesecxml,
                           pretty_print=True,
@@ -74,6 +77,7 @@ class CreateStructMap(WorkflowTask):
         filesec_element = filesec.getroot()[0]
         structmap = compile_structmap.create_structmap(self.sip_creation_path,
                                                        filesec_element,
+                                                       file_list,
                                                        'Fairdata-physical')
         with self.output()[1].open('w') as structmapxml:
             structmap.write(structmapxml,
