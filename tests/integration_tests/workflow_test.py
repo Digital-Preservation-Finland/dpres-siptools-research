@@ -46,7 +46,6 @@ def _init_files_col(mongoclient):
         )
 
 
-
 # Run every task as it would be run from commandline
 @mock.patch('siptools_research.workflow.send_sip.paramiko.SSHClient')
 @pytest.mark.parametrize(
