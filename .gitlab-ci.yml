@@ -21,7 +21,7 @@ e2e-localhost-siptools-research:
   except:
     - master
 
-docmentation:
+documentation:
   stage: documentation
   script:
     - 'documentation.sh'
