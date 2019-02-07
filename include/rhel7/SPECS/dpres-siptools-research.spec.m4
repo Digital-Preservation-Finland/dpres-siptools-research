@@ -42,6 +42,7 @@ Requires:       python-mock
 BuildRequires:  python-setuptools
 BuildRequires:  pytest
 BuildRequires:  python-httpretty
+BuildRequires:  python-sphinx
 
 %description
 Digital Preservation Packaging Service for Research datasets
