@@ -5,7 +5,7 @@ junit.xml
 .coverage
 .pytest_cache/
 doc/build/
-doc/source/modules/
+doc/modules/
 htmlcov/
 venv/
 .venv/

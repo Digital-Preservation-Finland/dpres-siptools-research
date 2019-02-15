@@ -2,12 +2,12 @@
 Gets the current version number.
 If in a git repository, it is the current git tag.
 Otherwise it is the one contained in the PKG-INFO file.
- 
+
 To use this script, simply import it in your setup.py file
 and use the results of get_version() as your package version:
- 
+
     from version import *
- 
+
     setup(
         ...
         version=get_version(),
@@ -28,7 +28,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 PKG_INFO_FILENAME = os.path.join(PROJECT_ROOT, 'PKG-INFO')
 
 def call_git_describe():
-    """docstirng"""
+    """docstring"""
     cmd = 'git describe --abbrev --tags --match v[0-9]*'.split()
     print >> sys.stderr, ' '.join(cmd)
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
