@@ -166,9 +166,7 @@ def report_task_failure(task, exception):
         metax_client.set_preservation_state(
             task.dataset_id,
             DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
-            system_description="%s: %s: %s" % (task.failure_message,
-                                               type(exception).__name__,
-                                               str(exception))
+            system_description=_get_description(task, exception)
         )
     elif isinstance(exception, InvalidMetadataError):
         # Set preservation status for dataset in Metax
@@ -178,8 +176,7 @@ def report_task_failure(task, exception):
                              config_object.get('metax_password'))
         metax_client.set_preservation_state(
             task.dataset_id, DS_STATE_METADATA_VALIDATION_FAILED,
-            system_description="%s: %s" % (task.failure_message,
-                                           str(exception))
+            system_description=_get_description(task, exception)
         )
     elif isinstance(exception, MetaxConnectionError):
         # send email to admin
@@ -187,3 +184,15 @@ def report_task_failure(task, exception):
         mail.send(conf.get('tpas_mail_sender'),
                   conf.get('tpas_admin_email'),
                   str(exception), str(exception))
+
+
+def _get_description(task, exception):
+    """Max length of the preservation_description attribute in Metax
+     is 200 chars
+     """
+    system_description = "%s: %s: %s" % (task.failure_message,
+                                         type(exception).__name__,
+                                         str(exception))
+    if len(system_description) > 200:
+        system_description = system_description[:199]
+    return system_description

@@ -219,8 +219,9 @@ def test_invalidmetadataerror(testpath):
     request_body = json.loads(httpretty.last_request().body)
     assert request_body['preservation_state'] ==\
         DS_STATE_METADATA_VALIDATION_FAILED
-    assert request_body['preservation_description'] == 'An error '\
-        'occurred while running a test task: Missing some important metadata'
+    assert request_body['preservation_description'] == 'An error occurred ' + \
+        'while running a test task: InvalidMetadataError: Missing some ' + \
+        'important metadata'
 
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'
