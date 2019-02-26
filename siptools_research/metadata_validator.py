@@ -27,7 +27,7 @@ SCHEMATRONS = {
 SCHEMATRON_ERROR = "Schematron metadata validation failed for file: %s"
 MISSING_XML_METADATA_ERROR = "Missing XML metadata for file: %s"
 INVALID_NS_ERROR = "Invalid XML namespace: %s"
-DATACITE_VALIDATION_ERROR = 'Datacite (id=%s) validation failed'
+DATACITE_VALIDATION_ERROR = 'Datacite (id=%s) validation failed: %s'
 
 
 def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
@@ -224,11 +224,18 @@ def _validate_datacite(dataset_metadata, metax_client):
     :returns: ``None``
     """
     with tempfile.NamedTemporaryFile() as temp:
-        datacite = metax_client.get_datacite(dataset_metadata)
+        try:
+            datacite = metax_client.get_datacite(dataset_metadata)
+        except lxml.etree.XMLSyntaxError as exception:
+            raise InvalidMetadataError(
+                DATACITE_VALIDATION_ERROR % (dataset_metadata, exception)
+            )
+
         datacite.write(temp.name)
         temp.seek(0)
         schem = '/etc/xml/dpres-xml-schemas/schema_catalogs/' + \
                 'schemas_external/datacite/4.1/metadata.xsd'
         if check_xml_schema_features.main(['-s', schem, temp.name]) != 0:
-            raise InvalidMetadataError(DATACITE_VALIDATION_ERROR %
-                                       (dataset_metadata))
+            raise InvalidMetadataError(
+                DATACITE_VALIDATION_ERROR % (dataset_metadata, '118')
+            )

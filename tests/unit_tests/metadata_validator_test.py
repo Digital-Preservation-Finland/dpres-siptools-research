@@ -115,6 +115,27 @@ def test_validate_metadata_invalid_datacite():
                                   'set_invalid_datacite) validation failed')
 
 
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
+def test_validate_metadata_corrupted_datacite():
+    """Test that validate_metadata function raises exception with correct error
+    message for corrupted datacite.
+
+    :returns: ``None``
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        validate_metadata('validate_metadata_test_dataset_corrupted_datacite',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check exception message
+    exc = exc_info.value
+    assert exc.message.startswith('Datacite (id=validate_metadata_test_data'
+                                  'set_corrupted_datacite) validation failed: '
+                                  'Couldn\'t find end of Start Tag resource '
+                                  'line 1, line 2, column 1')
+
+
 @pytest.mark.usefixtures('testmetax')
 def test_validate_file_metadata():
     """Check that ``_validate_file_metadata`` raises exceptions with
