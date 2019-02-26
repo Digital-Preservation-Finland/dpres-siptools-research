@@ -3,8 +3,7 @@
 import tempfile
 import jsonschema
 import lxml
-from ipt.scripts import (check_xml_schema_features,
-                         check_xml_schematron_features)
+from ipt.scripts import check_xml_schematron_features
 from metax_access import Metax
 import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils import mimetypes
@@ -23,6 +22,9 @@ SCHEMATRONS = {
     'video': {'ns': 'http://www.loc.gov/videoMD/', 'schema':
               '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'}
 }
+
+DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
+                   '/schemas_external/datacite/4.1/metadata.xsd')
 
 SCHEMATRON_ERROR = "Schematron metadata validation failed for file: %s"
 MISSING_XML_METADATA_ERROR = "Missing XML metadata for file: %s"
@@ -223,19 +225,16 @@ def _validate_datacite(dataset_metadata, metax_client):
     :param metax_client: metax_access.Metax instance
     :returns: ``None``
     """
-    with tempfile.NamedTemporaryFile() as temp:
-        try:
-            datacite = metax_client.get_datacite(dataset_metadata)
-        except lxml.etree.XMLSyntaxError as exception:
-            raise InvalidMetadataError(
-                DATACITE_VALIDATION_ERROR % (dataset_metadata, exception)
-            )
+    try:
+        datacite = metax_client.get_datacite(dataset_metadata)
+    except lxml.etree.XMLSyntaxError as exception:
+        raise InvalidMetadataError(
+            DATACITE_VALIDATION_ERROR % (dataset_metadata, exception)
+        )
 
-        datacite.write(temp.name)
-        temp.seek(0)
-        schem = '/etc/xml/dpres-xml-schemas/schema_catalogs/' + \
-                'schemas_external/datacite/4.1/metadata.xsd'
-        if check_xml_schema_features.main(['-s', schem, temp.name]) != 0:
-            raise InvalidMetadataError(
-                DATACITE_VALIDATION_ERROR % (dataset_metadata, '118')
-            )
+    schema = lxml.etree.XMLSchema(lxml.etree.parse(DATACITE_SCHEMA))
+    if schema.validate(datacite) is False:
+        raise InvalidMetadataError(
+            DATACITE_VALIDATION_ERROR % (dataset_metadata,
+                                         schema.error_log.last_error.message)
+        )

@@ -111,15 +111,19 @@ def test_validate_metadata_invalid_datacite():
 
     # Check exception message
     exc = exc_info.value
-    assert exc.message.startswith('Datacite (id=validate_metadata_test_data' +
-                                  'set_invalid_datacite) validation failed')
+    assert exc.message.startswith(
+        'Datacite (id=validate_metadata_test_dataset_invalid_datacite) '
+        'validation failed: Element '
+        '\'{http://datacite.org/schema/kernel-4}resource\': Missing child '
+        'element(s).'
+    )
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
 # pylint: disable=invalid-name
 def test_validate_metadata_corrupted_datacite():
     """Test that validate_metadata function raises exception with correct error
-    message for corrupted datacite.
+    message for corrupted datacite XML.
 
     :returns: ``None``
     """
