@@ -23,6 +23,7 @@ SCHEMATRONS = {
               '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'}
 }
 
+XML_METADATA_VALIDATION_ERROR = "XML metadata is invalid: %s"
 DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
 
@@ -184,7 +185,12 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
 
         if file_format_prefix in SCHEMATRONS:
             file_id = file_metadata['identifier']
-            xmls = metax_client.get_xml('files', file_id)
+            try:
+                xmls = metax_client.get_xml('files', file_id)
+            except lxml.etree.XMLSyntaxError as exception:
+                raise InvalidMetadataError(
+                    XML_METADATA_VALIDATION_ERROR % exception
+                )
 
             for namespace in xmls:
                 if namespace not in NAMESPACES.values():

@@ -1,0 +1,25 @@
+{
+    "contract": {
+        "identifier": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83002"
+    },
+    "research_dataset": {
+        "provenance": [
+            {
+                "preservation_event": {
+                    "identifier": "1234",
+                    "pref_label": {
+                        "en": "creation"
+                    }
+                },
+                "temporal": {
+                    "start_date": "2014-01-01T08:19:58Z"
+                },
+                "description": {
+                    "en": "Description of provenance"
+                }
+            }
+        ],
+        "files": [
+        ]
+    }
+}

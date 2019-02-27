@@ -97,6 +97,27 @@ def test_validate_metadata_audiovideo():
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
 # pylint: disable=invalid-name
+def test_validate_metadata_corrupted_mix():
+    """Test that validate_metadata function raises exception if MIX metadata in
+    Metax is corrupted (invalid XML).
+
+    :returns: ``None``
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        validate_metadata('validate_metadata_test_dataset_corrupted_mix',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check exception message
+    exc = exc_info.value
+    assert exc.message.startswith(
+        'XML metadata is invalid: Namespace prefix mix on mix is not defined, '
+        'line 2, column 1'
+    )
+
+
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
 def test_validate_metadata_invalid_datacite():
     """Test that validate_metadata function raises exception with correct error
     message for invalid datacite where required attribute identifier is
