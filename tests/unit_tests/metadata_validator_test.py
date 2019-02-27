@@ -53,17 +53,17 @@ def test_validate_metadata_invalid_contract_metadata():
         )
 
     # Check exception message
-    assert exc_info.value.message == \
-        """'name' is a required property
-
-Failed validating 'required' in schema['properties']['contract_json']\
-['properties']['organization']:
-    {'properties': {'name': {'type': 'string'}},
-     'required': ['name'],
-     'type': 'object'}
-
-On instance['contract_json']['organization']:
-    {u'foo': u'bar'}"""
+    assert exc_info.value.message \
+        == ("'name' is a required property\n"
+            "\n"
+            "Failed validating 'required' in schema['properties']"
+            "['contract_json']['properties']['organization']:\n"
+            "    {'properties': {'name': {'type': 'string'}},\n"
+            "     'required': ['name'],\n"
+            "     'type': 'object'}\n"
+            "\n"
+            "On instance['contract_json']['organization']:\n"
+            "    {u'foo': u'bar'}")
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
@@ -134,17 +134,19 @@ def test_validate_file_metadata():
             'validate_metadata_test_dataset_missing_file_format', client
         )
 
-    assert exc_info.value.message == """Validation error in metadata of \
-path/to/file1: 'file_format' is a required property
-
-Failed validating 'required' in schema['properties']['file_characteristics']:
-    {'properties': {'file_encoding': {'enum': ['ISO-8859-15',
-                                               'UTF-8',
-                                               'UTF-16',
-                                               'UTF-32'],
-                                      'type': 'string'}},
-     'required': ['file_format'],
-     'type': 'object'}
-
-On instance['file_characteristics']:
-    {u'file_created': u'2014-01-17T08:19:31Z'}"""
+    assert exc_info.value.message \
+        == ("Validation error in metadata of path/to/file1: 'file_format' is"
+            " a required property\n"
+            "\n"
+            "Failed validating 'required' in schema['properties']"
+            "['file_characteristics']:\n"
+            "    {'properties': {'file_encoding': {'enum': ['ISO-8859-15',\n"
+            "                                               'UTF-8',\n"
+            "                                               'UTF-16',\n"
+            "                                               'UTF-32'],\n"
+            "                                      'type': 'string'}},\n"
+            "     'required': ['file_format'],\n"
+            "     'type': 'object'}\n"
+            "\n"
+            "On instance['file_characteristics']:\n"
+            "    {u'file_created': u'2014-01-17T08:19:31Z'}")
