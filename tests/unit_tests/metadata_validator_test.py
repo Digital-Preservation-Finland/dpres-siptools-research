@@ -97,6 +97,27 @@ def test_validate_metadata_audiovideo():
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
 # pylint: disable=invalid-name
+def test_validate_metadata_invalid_audiomd():
+    """Test that validate_metadata function raises exception if AudioMD is
+    invalid (missing required audiomd:duration element).
+
+    :returns: ``None``
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        validate_metadata('validate_metadata_test_dataset_invalid_audiomd',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check exception message
+    exc = exc_info.value
+    assert exc.message.startswith(
+        "Schematron metadata validation failed for file: pid:urn:testaudio: "
+        "Element 'audiomd:duration' is required in element 'amd:audioInfo'."
+    )
+
+
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
 def test_validate_metadata_corrupted_mix():
     """Test that validate_metadata function raises exception if MIX metadata in
     Metax is corrupted (invalid XML).

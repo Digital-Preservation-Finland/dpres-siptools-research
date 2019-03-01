@@ -1,9 +1,8 @@
 """Dataset metadata validation tools."""
 
-import tempfile
 import jsonschema
 import lxml
-from ipt.scripts import check_xml_schematron_features
+import lxml.isoschematron
 from metax_access import Metax
 import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils import mimetypes
@@ -27,7 +26,7 @@ XML_METADATA_VALIDATION_ERROR = "XML metadata is invalid: %s"
 DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
 
-SCHEMATRON_ERROR = "Schematron metadata validation failed for file: %s"
+SCHEMATRON_ERROR = "Schematron metadata validation failed for file: %s: %s"
 MISSING_XML_METADATA_ERROR = "Missing XML metadata for file: %s"
 INVALID_NS_ERROR = "Invalid XML namespace: %s"
 DATACITE_VALIDATION_ERROR = 'Datacite (id=%s) validation failed: %s'
@@ -216,12 +215,19 @@ def _validate_with_schematron(filetype, xml, file_id):
     :param file_id: identifier of file described by XML
     :returns: ``None``
     """
-    with tempfile.NamedTemporaryFile() as temp:
-        temp.write(lxml.etree.tostring(xml).strip())
-        temp.seek(0)
-        schem = SCHEMATRONS[filetype]['schema']
-        if check_xml_schematron_features.main(['-s', schem, temp.name]) != 0:
-            raise InvalidMetadataError(SCHEMATRON_ERROR % (file_id))
+    schema_file = SCHEMATRONS[filetype]['schema']
+    schema = lxml.isoschematron.Schematron(lxml.etree.parse(schema_file))
+    if schema.validate(xml) is False:
+
+        error = schema.error_log.last_error
+        error_xml = lxml.etree.fromstring(error.message)
+        error_string = error_xml.xpath(
+            '//svrl:text',
+            namespaces={'svrl': 'http://purl.oclc.org/dsdl/svrl'}
+        )[0].text.strip()
+        raise InvalidMetadataError(
+            SCHEMATRON_ERROR % (file_id, error_string)
+        )
 
 
 def _validate_datacite(dataset_metadata, metax_client):
