@@ -21,21 +21,20 @@ SCHEMATRONS = {
     'video': {'ns': 'http://www.loc.gov/videoMD/', 'schema':
               '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'}
 }
-
-XML_METADATA_VALIDATION_ERROR = "XML metadata is invalid: %s"
 DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
 
-SCHEMATRON_ERROR = "Schematron metadata validation failed for file: %s: %s"
-MISSING_XML_METADATA_ERROR = "Missing XML metadata for file: %s"
+TECHMD_XML_VALIDATION_ERROR \
+    = "Technical metadata XML of file %s is invalid: %s"
+DATACITE_VALIDATION_ERROR = 'Datacite metadata is invalid: %s'
 INVALID_NS_ERROR = "Invalid XML namespace: %s"
-DATACITE_VALIDATION_ERROR = 'Datacite (id=%s) validation failed: %s'
+MISSING_XML_METADATA_ERROR = "Missing technical metadata XML for file: %s"
 
 
 def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
-    """Reads dataset metadata, file metadata, and additional XML metadata
-    from Metax and validates them against schemas. Raises error if dataset is
-    not valid.
+    """Reads dataset metadata, file metadata, and additional techMD XML from
+    Metax and validates them against schemas. Raises error if dataset is not
+    valid.
 
     :param dataset_id: dataset identifier
     :param config: configuration file path
@@ -63,7 +62,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     # Validate file metadata for each file in dataset files
     _validate_file_metadata(dataset_id, metax_client)
 
-    # Validate XML metadata for each file in dataset files
+    # Validate techMD XML for each file in dataset files
     _validate_xml_file_metadata(dataset_id, metax_client)
 
     # Validate datacite provided by Metax
@@ -171,7 +170,7 @@ def _validate_file_metadata(dataset_id, metax_client):
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
-    """Validates additional XML file metadata found from
+    """Validates additional techMD XML file metadata found from
     /rest/v1/files/<file_id>/xml.
 
     :param dataset_id: identifier of file described by XML
@@ -188,7 +187,7 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
                 xmls = metax_client.get_xml('files', file_id)
             except lxml.etree.XMLSyntaxError as exception:
                 raise InvalidMetadataError(
-                    XML_METADATA_VALIDATION_ERROR % exception
+                    TECHMD_XML_VALIDATION_ERROR % (file_id, exception)
                 )
 
             for namespace in xmls:
@@ -208,7 +207,8 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
 
 
 def _validate_with_schematron(filetype, xml, file_id):
-    """Validates XML file with schematron.
+    """Validates XML with schematron. Parses validation error from schematron
+    output and raises InvalidMetadataError with clear error message.
 
     :param filetype: Type of file described by XML (image, video, or audio)
     :param xml: XML element
@@ -226,11 +226,11 @@ def _validate_with_schematron(filetype, xml, file_id):
             namespaces={'svrl': 'http://purl.oclc.org/dsdl/svrl'}
         )[0].text.strip()
         raise InvalidMetadataError(
-            SCHEMATRON_ERROR % (file_id, error_string)
+            TECHMD_XML_VALIDATION_ERROR % (file_id, error_string)
         )
 
 
-def _validate_datacite(dataset_metadata, metax_client):
+def _validate_datacite(dataset_id, metax_client):
     """Validates datacite.
 
     :param dataset_metadata: dataset metadata dictionary
@@ -238,15 +238,14 @@ def _validate_datacite(dataset_metadata, metax_client):
     :returns: ``None``
     """
     try:
-        datacite = metax_client.get_datacite(dataset_metadata)
+        datacite = metax_client.get_datacite(dataset_id)
     except lxml.etree.XMLSyntaxError as exception:
         raise InvalidMetadataError(
-            DATACITE_VALIDATION_ERROR % (dataset_metadata, exception)
+            DATACITE_VALIDATION_ERROR % (exception)
         )
 
     schema = lxml.etree.XMLSchema(lxml.etree.parse(DATACITE_SCHEMA))
     if schema.validate(datacite) is False:
         raise InvalidMetadataError(
-            DATACITE_VALIDATION_ERROR % (dataset_metadata,
-                                         schema.error_log.last_error.message)
+            DATACITE_VALIDATION_ERROR % (schema.error_log.last_error.message)
         )

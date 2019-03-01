@@ -78,8 +78,8 @@ def test_validate_metadata_missing_xml():
         validate_metadata('validate_metadata_test_dataset_metadata_missing',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    assert exc.value[0] == \
-        "Missing XML metadata for file: pid:urn:validate_metadata_test_image"
+    assert exc.value[0] == ("Missing technical metadata XML for file: "
+                            "pid:urn:validate_metadata_test_image")
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
@@ -111,8 +111,8 @@ def test_validate_metadata_invalid_audiomd():
     # Check exception message
     exc = exc_info.value
     assert exc.message.startswith(
-        "Schematron metadata validation failed for file: pid:urn:testaudio: "
-        "Element 'audiomd:duration' is required in element 'amd:audioInfo'."
+        "Technical metadata XML of file pid:urn:testaudio is invalid: Element "
+        "'audiomd:duration' is required in element 'amd:audioInfo'."
     )
 
 
@@ -132,8 +132,8 @@ def test_validate_metadata_corrupted_mix():
     # Check exception message
     exc = exc_info.value
     assert exc.message.startswith(
-        'XML metadata is invalid: Namespace prefix mix on mix is not defined, '
-        'line 2, column 1'
+        'Technical metadata XML of file pid:urn:testimage is invalid: '
+        'Namespace prefix mix on mix is not defined, line 2, column 1'
     )
 
 
@@ -154,8 +154,7 @@ def test_validate_metadata_invalid_datacite():
     # Check exception message
     exc = exc_info.value
     assert exc.message.startswith(
-        'Datacite (id=validate_metadata_test_dataset_invalid_datacite) '
-        'validation failed: Element '
+        'Datacite metadata is invalid: Element '
         '\'{http://datacite.org/schema/kernel-4}resource\': Missing child '
         'element(s).'
     )
@@ -176,10 +175,10 @@ def test_validate_metadata_corrupted_datacite():
 
     # Check exception message
     exc = exc_info.value
-    assert exc.message.startswith('Datacite (id=validate_metadata_test_data'
-                                  'set_corrupted_datacite) validation failed: '
-                                  'Couldn\'t find end of Start Tag resource '
-                                  'line 1, line 2, column 1')
+    assert exc.message.startswith(
+        "Datacite metadata is invalid: Couldn't find end of Start Tag "
+        "resource line 1, line 2, column 1"
+    )
 
 
 @pytest.mark.usefixtures('testmetax')
