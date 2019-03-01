@@ -2,8 +2,10 @@
 
 import pytest
 import tests.conftest
+import lxml.etree
 import siptools_research
 from siptools_research import validate_metadata
+import siptools_research.metadata_validator
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
 from metax_access import Metax
@@ -216,3 +218,63 @@ def test_validate_file_metadata():
             "\n"
             "On instance['file_characteristics']:\n"
             "    {u'file_created': u'2014-01-17T08:19:31Z'}")
+
+
+def test_validate_xml_file_metadata():
+    """Test that _validate_xml_file_metadata function raises exception with
+    readable error message when validated XML contains multiple errors.
+
+    :returns: ``None``
+    """
+    xml = lxml.etree.parse('tests/data/invalid_audiomd.xml')
+    # pylint: disable=protected-access
+    with pytest.raises(InvalidMetadataError) as exception_info:
+        siptools_research.metadata_validator._validate_with_schematron(
+            'audio', xml, 'foo'
+        )
+
+    assert exception_info.value.message == (
+        "Technical metadata XML of file foo is invalid: The following errors "
+        "were detected:\n\n"
+        "1. Element 'audiomd:samplingFrequency' is required in element "
+        "'amd:fileData'.\n"
+        "2. Element 'audiomd:duration' is required in element 'amd:audioInfo'."
+    )
+
+
+@pytest.mark.usefixtures('testmetax')
+def test_validate_datacite():
+    """Test that _validate_datacite function raises exception with readable
+    error message when datacite XML contains multiple errors.
+
+    :returns: ``None``
+    """
+
+    # Init metax client
+    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    metax_client = Metax(configuration.get('metax_url'),
+                         configuration.get('metax_user'),
+                         configuration.get('metax_password'))
+
+    # Validate datacite
+    # pylint: disable=protected-access
+    with pytest.raises(InvalidMetadataError) as exception_info:
+        siptools_research.metadata_validator._validate_datacite(
+            'validate_metadata_test_dataset_very_invalid_datacite',
+            metax_client
+        )
+
+    # Check error message
+    assert exception_info.value.message == (
+        "Datacite metadata is invalid: The following errors were detected:\n\n"
+        "1. Element '{http://datacite.org/schema/kernel-4}resourceType', "
+        "attribute 'resourceTypeGeneral': [facet 'enumeration'] The value "
+        "'INVALID_RESOURCE_TYPE' is not an element of the set {'Audiovisual', "
+        "'Collection', 'DataPaper', 'Dataset', 'Event', 'Image', "
+        "'InteractiveResource', 'Model', 'PhysicalObject', 'Service', "
+        "'Software', 'Sound', 'Text', 'Workflow', 'Other'}.\n"
+        "2. Element '{http://datacite.org/schema/kernel-4}resourceType', "
+        "attribute 'resourceTypeGeneral': 'INVALID_RESOURCE_TYPE' is not a "
+        "valid value of the atomic type "
+        "'{http://datacite.org/schema/kernel-4}resourceType'."
+    )

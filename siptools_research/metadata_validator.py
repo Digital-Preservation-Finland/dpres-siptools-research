@@ -219,14 +219,18 @@ def _validate_with_schematron(filetype, xml, file_id):
     schema = lxml.isoschematron.Schematron(lxml.etree.parse(schema_file))
     if schema.validate(xml) is False:
 
-        error = schema.error_log.last_error
-        error_xml = lxml.etree.fromstring(error.message)
-        error_string = error_xml.xpath(
-            '//svrl:text',
-            namespaces={'svrl': 'http://purl.oclc.org/dsdl/svrl'}
-        )[0].text.strip()
+        # Parse error messages from schematron output
+        errors = []
+        for error in schema.error_log:
+            error_xml = lxml.etree.fromstring(error.message)
+            error_string = error_xml.xpath(
+                '//svrl:text',
+                namespaces={'svrl': 'http://purl.oclc.org/dsdl/svrl'}
+            )[0].text.strip()
+            errors.append(error_string)
+
         raise InvalidMetadataError(
-            TECHMD_XML_VALIDATION_ERROR % (file_id, error_string)
+            TECHMD_XML_VALIDATION_ERROR % (file_id, _format_error_list(errors))
         )
 
 
@@ -246,6 +250,26 @@ def _validate_datacite(dataset_id, metax_client):
 
     schema = lxml.etree.XMLSchema(lxml.etree.parse(DATACITE_SCHEMA))
     if schema.validate(datacite) is False:
+        errors = [error.message for error in schema.error_log]
         raise InvalidMetadataError(
-            DATACITE_VALIDATION_ERROR % (schema.error_log.last_error.message)
+            DATACITE_VALIDATION_ERROR % (_format_error_list(errors))
         )
+
+
+def _format_error_list(errors):
+    """Format list of errors as one error message.
+
+    :param errors: list of strings
+    :returns: error message string
+    """
+
+    if len(errors) == 1:
+        message = errors[0]
+    elif len(errors) > 1:
+        message = 'The following errors were detected:\n'
+        for error in enumerate(errors, 1):
+            message += '\n%s. %s' % (error)
+    else:
+        raise TypeError("Can not format empty list")
+
+    return message
