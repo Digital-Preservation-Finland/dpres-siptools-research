@@ -35,10 +35,10 @@ Requires:       python-requests
 Requires:       python-scandir
 Requires:       python-iso-639 ImageMagick
 Requires:       python-mongomock
-Requires:       dpres-ipt
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python-mock
+BuildRequires:  dpres-ipt
 BuildRequires:  python-setuptools
 BuildRequires:  pytest
 BuildRequires:  python-httpretty
