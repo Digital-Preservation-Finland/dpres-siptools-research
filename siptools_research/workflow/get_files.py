@@ -6,7 +6,7 @@ import luigi
 from requests.exceptions import HTTPError
 from metax_access import Metax
 from siptools_research.utils import ida, database as db
-from siptools_research.workflowtask import WorkflowTask
+from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
@@ -94,12 +94,23 @@ class GetFiles(WorkflowTask):
             file_storage = dataset_file["file_storage"]["identifier"]
 
             # Full path to file
-            target_path = os.path.join(self.sip_creation_path,
-                                       dataset_file["file_path"].strip('/'))
+            target_path = os.path.normpath(
+                os.path.join(
+                    self.sip_creation_path,
+                    dataset_file["file_path"].strip('/')
+                )
+            )
+            if not target_path.startswith(self.sip_creation_path):
+                raise InvalidMetadataError(
+                    'The file path of file %s is invalid: %s' % (
+                        identifier, dataset_file["file_path"]
+                    )
+                )
 
             # Create the download directory for file if it does not exist
             # already
             if not os.path.isdir(os.path.dirname(target_path)):
+                # TODO: Use exist_ok -parameter when moving to python3
                 os.makedirs(os.path.dirname(target_path))
 
             if file_storage == pas_storage_id:

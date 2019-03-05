@@ -4,7 +4,9 @@ import os
 import pytest
 import pymongo
 import tests.conftest
+import siptools_research.config
 from siptools_research.workflow import get_files
+from siptools_research.workflowtask import InvalidMetadataError
 
 
 def _init_files_col(mongoclient):
@@ -100,3 +102,90 @@ def test_missing_files(testpath, file_storage):
     with open(os.path.join(testpath, 'sip-in-progress/path/to/file3'))\
             as open_file:
         assert open_file.read() == 'foo\n'
+
+
+@pytest.mark.usefixtures('testida')
+def test_forbidden_relative_path(testpath):
+    """Test that files can not be saved outside the workspace by using relative
+    file paths in Metax. The tested path is `../../file1` so the target
+    download path is
+    `<workspace_root>/<workspace>/<sip_creation_path>/../../file1` which equals
+    to `<workspace_root>/file1`.
+
+    :returns: ``None``
+    """
+    # Create the workspace and required directories
+    workspace = os.path.join(testpath, 'workspace')
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sipdirectory)
+
+    # Init task
+    task = get_files.GetFiles(
+        workspace=workspace,
+        dataset_id="foo",
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+
+    files = [
+        {
+            "file_path": "../../file1",
+            "identifier": "pid:urn:1",
+            "file_storage": {
+                "identifier": "urn:nbn:fi:att:file-storage-ida"
+            }
+        }
+    ]
+
+    # File download should fail
+    with pytest.raises(InvalidMetadataError) as exception_info:
+        # pylint: disable=protected-access
+        task._download_files(
+            files, siptools_research.config.Configuration(task.config)
+        )
+    assert exception_info.value.message \
+        == 'The file path of file pid:urn:1 is invalid: ../../file1'
+
+    # Check that file is not saved in workspace root i.e. workspace root
+    # contains only the workspace directory
+    assert os.listdir(testpath) == ['workspace']
+
+
+@pytest.mark.usefixtures('testida')
+@pytest.mark.parametrize('path', ["foo/../file1",
+                                  "/foo/../file1",
+                                  "./file1",
+                                  "././file1",
+                                  "/./file1"])
+def test_allowed_relative_paths(testpath, path):
+    """Test that file is downloaded to correct location in some special cases.
+
+    :returns: ``None``
+    """
+    # Create the workspace and required directories
+    workspace = os.path.join(testpath, 'workspace')
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sipdirectory)
+
+    # Init task
+    task = get_files.GetFiles(
+        workspace=workspace,
+        dataset_id="foo",
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+
+    files = [
+        {
+            "file_path": path,
+            "identifier": "pid:urn:1",
+            "file_storage": {
+                "identifier": "urn:nbn:fi:att:file-storage-ida"
+            }
+        }
+    ]
+
+    # Download file and check that is found in expected location
+    # pylint: disable=protected-access
+    task._download_files(
+        files, siptools_research.config.Configuration(task.config)
+    )
+    assert os.listdir(sipdirectory) == ['file1']
