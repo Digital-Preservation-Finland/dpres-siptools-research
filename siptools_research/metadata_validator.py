@@ -38,7 +38,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
     :param dataset_id: dataset identifier
     :param config: configuration file path
-    :returns: ``True``, if dataset metada is valid.
+    :returns: ``True``, if dataset metadata is valid.
     """
     conf = Configuration(config)
     metax_client = Metax(conf.get('metax_url'),
@@ -101,11 +101,11 @@ def _validate_contract_metadata(contract_id, metax_client):
 
 def _validate_dataset_files(dataset_metadata, metax_client):
     """Reads file identifiers of each file listed in dataset metadata, and
-    validates file metadata found by file identidier from
+    validates file metadata found by file identifier from
     /rest/v1/files/<file_id>.
 
     :param dataset_metadata: dataset metadata dictionary
-    :param metax_clien: metax_access.Metax instance
+    :param metax_client: metax_access.Metax instance
     :returns: ``None``
     """
     for dataset_file in dataset_metadata['research_dataset']['files']:
@@ -117,11 +117,10 @@ def _validate_dataset_files(dataset_metadata, metax_client):
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
-            message = (
+            raise InvalidMetadataError(
                 "Validation error in metadata of {file_path}: {error}"
-            ).format(file_path=file_metadata["file_path"],
-                     error=str(exc))
-            raise InvalidMetadataError(message)
+                .format(file_path=file_metadata["file_path"], error=str(exc))
+            )
 
 
 def _check_mimetype(file_metadata):
