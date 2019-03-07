@@ -70,6 +70,25 @@ def test_validate_metadata_invalid_contract_metadata():
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
 # pylint: disable=invalid-name
+def test_validate_metadata_invalid_file_path():
+    """Test that validate_metadata function raises exception if some of the
+    file paths point outside SIP.
+
+    :returns: ``None``
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exception_info:
+        validate_metadata('validate_metadata_test_dataset_invalid_file_path',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check exception message
+    assert exception_info.value.message \
+        == ("The file path of file pid:urn:invalidpath is invalid: "
+            "../../file_in_invalid_path")
+
+
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
 def test_validate_metadata_missing_xml():
     """Test that validate_metadata function raises exception if dataset
     contains image file but not XML metadata.

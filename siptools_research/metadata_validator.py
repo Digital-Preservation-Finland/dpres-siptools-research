@@ -1,5 +1,6 @@
 """Dataset metadata validation tools."""
 
+import os
 import jsonschema
 import lxml
 import lxml.isoschematron
@@ -156,16 +157,30 @@ def _validate_file_metadata(dataset_id, metax_client):
     :returns: ``None``
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
+
+        file_id = file_metadata["identifier"]
+        file_path = file_metadata["file_path"]
+
+        # Validate metadata against JSON schema
         try:
             jsonschema.validate(file_metadata,
                                 metax_schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
-            message = (
+            raise InvalidMetadataError(
                 "Validation error in metadata of {file_path}: {error}"
-            ).format(file_path=file_metadata["file_path"],
-                     error=str(exc))
-            raise InvalidMetadataError(message)
+                .format(file_path=file_path, error=str(exc))
+            )
+
+        # Check that mimetype is supported
         _check_mimetype(file_metadata)
+
+        # Check that file path does not point outside SIP
+        normalised_path = os.path.normpath(file_path.strip('/'))
+        if normalised_path.startswith('..'):
+            raise InvalidMetadataError(
+                'The file path of file %s is invalid: %s' % (file_id,
+                                                             file_path)
+            )
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
