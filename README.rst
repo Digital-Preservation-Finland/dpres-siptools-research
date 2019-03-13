@@ -60,9 +60,10 @@ Incomplete workflows can be restarted with::
 
 Testing
 -------
-Install required RPM packages::
+Install required RPM packages. Gcc and openssl-devel are required to install M2Crypto, ImageMagick, file-5.30, and ffmpeg are required by dpres-ipt, and dpres-xml-schemas is required for testing XML validation::
 
-   yum install libxslt-devel libxml2-devel openssl-devel mongodb-server gcc ImageMagick dpres-xml-schemas
+   rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+   yum gcc openssl-devel ImageMagick file-5.30 ffmpeg dpres-xml-schemas
 
 Create and activate virtualenv::
 
