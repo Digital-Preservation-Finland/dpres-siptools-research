@@ -105,13 +105,17 @@ def test_missing_files(testpath, file_storage):
 
 
 @pytest.mark.usefixtures('testida')
-def test_forbidden_relative_path(testpath):
+@pytest.mark.parametrize('path', ["../../file1",
+                                  "/../../file1",
+                                  "//../../file1"])
+def test_forbidden_relative_path(testpath, path):
     """Test that files can not be saved outside the workspace by using relative
-    file paths in Metax. The tested path is `../../file1` so the target
-    download path is
+    file paths in Metax. The tested path would be downloaded to
     `<workspace_root>/<workspace>/<sip_creation_path>/../../file1` which equals
-    to `<workspace_root>/file1`.
+    to `<workspace_root>/file1`, if the path was not validated.
 
+    :param testpath: Temporary workspace path fixture
+    :param path: sample file path
     :returns: ``None``
     """
     # Create the workspace and required directories
@@ -128,7 +132,7 @@ def test_forbidden_relative_path(testpath):
 
     files = [
         {
-            "file_path": "../../file1",
+            "file_path": path,
             "identifier": "pid:urn:1",
             "file_storage": {
                 "identifier": "urn:nbn:fi:att:file-storage-ida"
@@ -143,7 +147,7 @@ def test_forbidden_relative_path(testpath):
             files, siptools_research.config.Configuration(task.config)
         )
     assert exception_info.value.message \
-        == 'The file path of file pid:urn:1 is invalid: ../../file1'
+        == 'The file path of file pid:urn:1 is invalid: %s' % path
 
     # Check that file is not saved in workspace root i.e. workspace root
     # contains only the workspace directory
@@ -159,6 +163,8 @@ def test_forbidden_relative_path(testpath):
 def test_allowed_relative_paths(testpath, path):
     """Test that file is downloaded to correct location in some special cases.
 
+    :param testpath: Temporary workspace path fixture
+    :param path: sample file path
     :returns: ``None``
     """
     # Create the workspace and required directories
