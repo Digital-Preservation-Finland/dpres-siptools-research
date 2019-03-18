@@ -14,6 +14,9 @@ from siptools_research.config import Configuration
 from siptools_research.xml_metadata import (XMLMetadataGenerator,
                                             FileIncompleteError)
 
+TEMPDIR = "/var/spool/siptools_research/tmp"
+
+
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Generates technical metadata and mix metadata for all files of a given
     dataset and updates relevant fields in file metadata.
@@ -27,7 +30,10 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     metax_client = Metax(config_object.get('metax_url'),
                          config_object.get('metax_user'),
                          config_object.get('metax_password'))
-    tmpdir = tempfile.mkdtemp(prefix='generate_metadata-')
+    tmpdir = tempfile.mkdtemp(
+        prefix='generate_metadata-',
+        dir=TEMPDIR
+    )
 
     try:
         for file_ in metax_client.get_dataset_files(dataset_id):

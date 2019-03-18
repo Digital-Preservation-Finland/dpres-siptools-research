@@ -10,6 +10,7 @@ import lxml.etree
 
 from siptools.utils import decode_path
 from siptools_research.config import Configuration
+import siptools_research.metadata_generator as metadata_generator
 from siptools_research.metadata_generator import generate_metadata
 import tests.conftest
 
@@ -41,7 +42,7 @@ def _init_mongo_client(testmongoclient):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida')
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
 def test_generate_metadata(file_storage):
     """Tests metadata generation. Generates metadata for a dataset and checks
     that JSON message sent to Metax has correct keys/values.
@@ -71,7 +72,7 @@ def test_generate_metadata(file_storage):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida')
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
 # pylint: disable=invalid-name
 def test_generate_metadata_file_characteristics_not_present(file_storage):
     """Tests metadata generation. Generates metadata for a dataset and checks
@@ -98,7 +99,7 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida')
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
 def test_generate_metadata_mix(file_storage):
     """Tests mix metadata generation for a image file. Generates metadata for a
     dataset that contains an image file and checks that message sent to Metax
@@ -126,7 +127,7 @@ def test_generate_metadata_mix(file_storage):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida')
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
 # pylint: disable=invalid-name
 def test_generate_metadata_mix_larger_file(file_storage):
     """Tests mix metadata generation for a image file. Generates metadata for a
@@ -155,7 +156,7 @@ def test_generate_metadata_mix_larger_file(file_storage):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida')
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
 def test_generate_metadata_addml(file_storage):
     """Tests addml metadata generation for a CSV file. Generates metadata for a
     dataset that contains a CSV file and checks that message sent to Metax
@@ -187,7 +188,7 @@ def test_generate_metadata_addml(file_storage):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida')
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
 def test_generate_metadata_audiomd(file_storage):
     """Tests addml metadata generation for a WAV file. Generates metadata for a
     dataset that contains a WAV file and checks that message sent to Metax
@@ -218,7 +219,7 @@ def test_generate_metadata_audiomd(file_storage):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida')
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
 # pylint: disable=invalid-name
 def test_generate_metadata_tempfile_removal(file_storage):
     """Tests that temporary files downloaded from Ida are removed.
@@ -226,10 +227,10 @@ def test_generate_metadata_tempfile_removal(file_storage):
     :returns: ``None``
     """
     # Check contents of /tmp before calling generate_metadata()
-    tmp_dir_before_test = os.listdir(tempfile.gettempdir())
+    tmp_dir_before_test = os.listdir(metadata_generator.TEMPDIR)
 
     generate_metadata('generate_metadata_test_dataset_1_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # There should not be new files or directories in /tmp
-    assert os.listdir(tempfile.gettempdir()) == tmp_dir_before_test
+    assert os.listdir(metadata_generator.TEMPDIR) == tmp_dir_before_test

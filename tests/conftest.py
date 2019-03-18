@@ -12,6 +12,7 @@ import pymongo
 import luigi.configuration
 import httpretty
 import pytest
+import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
 
 
@@ -208,7 +209,7 @@ def testmongoclient(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def testpath(request):
+def testpath(request, monkeypatch):
     """Create a temporary directory that will be removed after execution of
     function.
 
@@ -217,6 +218,12 @@ def testpath(request):
     """
 
     temp_path = tempfile.mkdtemp()
+    tmpdir = os.path.join(temp_path, "tmp")
+    os.mkdir(tmpdir)
+
+    monkeypatch.setattr(
+        siptools_research.metadata_generator, "TEMPDIR", tmpdir
+    )
 
     def fin():
         """remove temporary path"""
