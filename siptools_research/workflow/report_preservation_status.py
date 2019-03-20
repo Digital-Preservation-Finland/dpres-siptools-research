@@ -76,7 +76,7 @@ class ReportPreservationStatus(WorkflowTask):
             # longterm preservation")
             metax_client.set_preservation_state(
                 self.dataset_id,
-                DS_STATE_IN_DIGITAL_PRESERVATION,
+                state=DS_STATE_IN_DIGITAL_PRESERVATION,
                 system_description='Accepted to preservation'
             )
             with self.output().open('w') as output:

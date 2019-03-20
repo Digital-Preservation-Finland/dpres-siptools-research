@@ -165,7 +165,7 @@ def report_task_failure(task, exception):
                              config_object.get('metax_password'))
         metax_client.set_preservation_state(
             task.dataset_id,
-            DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+            state=DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
             system_description=_get_description(task, exception)
         )
     elif isinstance(exception, InvalidMetadataError):
@@ -175,7 +175,7 @@ def report_task_failure(task, exception):
                              config_object.get('metax_user'),
                              config_object.get('metax_password'))
         metax_client.set_preservation_state(
-            task.dataset_id, DS_STATE_METADATA_VALIDATION_FAILED,
+            task.dataset_id, state=DS_STATE_METADATA_VALIDATION_FAILED,
             system_description=_get_description(task, exception)
         )
     elif isinstance(exception, MetaxConnectionError):
