@@ -59,9 +59,12 @@ class GetFiles(WorkflowTask):
 
         # Find file identifiers from Metax dataset metadata.
         config_object = Configuration(self.config)
-        metax_client = Metax(config_object.get('metax_url'),
-                             config_object.get('metax_user'),
-                             config_object.get('metax_password'))
+        metax_client = Metax(
+            config_object.get('metax_url'),
+            config_object.get('metax_user'),
+            config_object.get('metax_password'),
+            verify=config_object.getboolean('metax_ssl_verification')
+        )
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
 
         # get files from ida

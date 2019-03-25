@@ -1,6 +1,7 @@
 {
-    "identifier": "workflow_test_dataset_1_local",
+    "identifier": "validate_metadata_test_dataset_publisher_missing_400",
     "contract": {
+        "id": 1,
         "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
     },
     "research_dataset": {
@@ -23,7 +24,7 @@
         ],
         "files": [
             {
-                "identifier": "pid:urn:wf_test_1a_local",
+                "identifier": "pid:urn:wf_test_1a_ida",
                 "use_category": {
                     "pref_label": {
                         "en": "label1"
@@ -31,7 +32,7 @@
                 }
             },
             {
-                "identifier": "pid:urn:wf_test_1b_local",
+                "identifier": "pid:urn:wf_test_1b_ida",
                 "use_category": {
                     "pref_label": {
                         "en": "label2"
@@ -41,4 +42,3 @@
         ]
     }
 }
-

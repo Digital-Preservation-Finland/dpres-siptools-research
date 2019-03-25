@@ -39,9 +39,12 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """
     config_object = Configuration(config)
     storage_id = config_object.get("pas_storage_id")
-    metax_client = Metax(config_object.get('metax_url'),
-                         config_object.get('metax_user'),
-                         config_object.get('metax_password'))
+    metax_client = Metax(
+        config_object.get('metax_url'),
+        config_object.get('metax_user'),
+        config_object.get('metax_password'),
+        verify=config_object.getboolean('metax_ssl_verification')
+    )
     tmpdir = tempfile.mkdtemp(
         prefix='generate_metadata-',
         dir=TEMPDIR

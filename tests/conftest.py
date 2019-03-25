@@ -20,7 +20,8 @@ import siptools_research.utils.mimetypes
 logging.basicConfig(level=logging.DEBUG)
 
 METAX_PATH = "tests/httpretty_data/metax"
-METAX_URL = "https://metax-test.csc.fi/rest/v1"
+METAX_URL = "https://metaksi/rest/v1"
+METAX_RPC_URL = "https://metaksi/rpc"
 IDA_PATH = "tests/httpretty_data/ida/"
 IDA_URL = 'https://86.50.169.61:4433'
 TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
@@ -93,6 +94,7 @@ def testmetax(request):
             body_file += urllib.quote(tail, safe='%')
 
         full_path = "%s/%s/%s" % (METAX_PATH, subdir, body_file)
+        status = 400 if body_file.split('?')[0].endswith('400') else 200
         logging.debug("Looking for file: %s", full_path)
         if not os.path.isfile(full_path):
             return (403, headers, "File not found")
@@ -100,7 +102,7 @@ def testmetax(request):
         with open(full_path) as open_file:
             body = open_file.read()
 
-        return (200, headers, body)
+        return (status, headers, body)
 
     # Enable http-server in beginning of test function
     httpretty.enable()
@@ -124,6 +126,13 @@ def testmetax(request):
         httpretty.POST,
         re.compile(METAX_URL + '/(.*)'),
         status=201
+    )
+
+    # Register response for POST method for any url starting with METAX_RPC_URL
+    httpretty.register_uri(
+        httpretty.POST,
+        re.compile(METAX_RPC_URL + '/(.*)'),
+        status=200
     )
 
     # register response for get_elasticsearchdata-function

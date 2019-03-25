@@ -4,7 +4,7 @@ import os
 import jsonschema
 import lxml
 import lxml.isoschematron
-from metax_access import Metax
+from metax_access import Metax, DataciteGenerationError
 import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils import mimetypes
 from siptools_research.workflowtask import InvalidMetadataError
@@ -42,9 +42,12 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     :returns: ``True``, if dataset metadata is valid.
     """
     conf = Configuration(config)
-    metax_client = Metax(conf.get('metax_url'),
-                         conf.get('metax_user'),
-                         conf.get('metax_password'))
+    metax_client = Metax(
+        conf.get('metax_url'),
+        conf.get('metax_user'),
+        conf.get('metax_password'),
+        verify=conf.getboolean('metax_ssl_verification')
+    )
 
     # Get dataset metadata from Metax
     dataset_metadata = metax_client.get_dataset(dataset_id)
@@ -67,7 +70,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     _validate_xml_file_metadata(dataset_id, metax_client)
 
     # Validate datacite provided by Metax
-    _validate_datacite(dataset_id, metax_client)
+    _validate_datacite(dataset_metadata['identifier'], metax_client)
 
     return True
 
@@ -248,7 +251,7 @@ def _validate_with_schematron(filetype, xml, file_id):
         )
 
 
-def _validate_datacite(dataset_id, metax_client):
+def _validate_datacite(dataset_identifier, metax_client):
     """Validates datacite.
 
     :param dataset_metadata: dataset metadata dictionary
@@ -256,8 +259,8 @@ def _validate_datacite(dataset_id, metax_client):
     :returns: ``None``
     """
     try:
-        datacite = metax_client.get_datacite(dataset_id)
-    except lxml.etree.XMLSyntaxError as exception:
+        datacite = metax_client.get_datacite(dataset_identifier)
+    except (lxml.etree.XMLSyntaxError, DataciteGenerationError) as exception:
         raise InvalidMetadataError(
             DATACITE_VALIDATION_ERROR % (exception)
         )

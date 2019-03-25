@@ -36,7 +36,9 @@ class CreateProvenanceInformation(WorkflowTask):
         config_object = Configuration(self.config)
         metax = Metax(config_object.get('metax_url'),
                       config_object.get('metax_user'),
-                      config_object.get('metax_password'))
+                      config_object.get('metax_password'),
+                      verify=config_object.getboolean('metax_ssl_verification')
+        )
         self.dataset = metax.get_dataset(self.dataset_id)
 
     success_message = "Provenance metadata created."
@@ -102,7 +104,8 @@ def _create_premis_events(dataset_id, workspace, config):
     metadata = Metax(
         config_object.get('metax_url'),
         config_object.get('metax_user'),
-        config_object.get('metax_password')
+        config_object.get('metax_password'),
+        verify=config_object.getboolean('metax_ssl_verification')
     ).get_dataset(dataset_id)
 
     dataset_languages = get_dataset_languages(metadata)

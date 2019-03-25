@@ -3,10 +3,7 @@
         "id": 1,
         "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
     },
-    "data_catalog": {
-        "id": 1,
-        "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
-    },
+    "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
     "metadata_provider_org": "csc.fi",
     "metadata_provider_user": "teppo.testaaja@csc.fi",
     "research_dataset": {
@@ -35,6 +32,7 @@
         "title": {
             "en": "Testi datasetti"
         },
+        "issued": "1997-02-21",
         "creator": [
             {
                 "name": "Teppo Testaaja",
@@ -47,6 +45,50 @@
                 }
             }
         ],
+        "publisher": {
+            "name": {
+                "fi": "School services, ARTS",
+                "und": "School services, ARTS"
+            },
+            "@type": "Organization",
+            "homepage": {
+                "title": {
+                    "en": "Publisher website",
+                    "fi": "Julkaisijan kotisivu"
+                },
+                "identifier": "http://www.publisher.fi/"
+            },
+            "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/10076-A800",
+            "is_part_of": {
+                "name": {
+                    "en": "Aalto University",
+                    "fi": "Aalto yliopisto",
+                    "sv": "Aalto universitetet",
+                    "und": "Aalto yliopisto"
+                },
+                "@type": "Organization",
+                "homepage": {
+                    "title": {
+                        "en": "Publisher parent website",
+                        "fi": "Julkaisijan yläorganisaation kotisivu"
+                    },
+                    "identifier": "http://www.publisher_parent.fi/"
+                },
+                "identifier": "http://uri.suomi.fi/codelist/fairdata/organization/code/10076"
+            },
+            "contributor_type": [
+                {
+                    "in_scheme": "http://uri.suomi.fi/codelist/fairdata/contributor_type",
+                    "identifier": "http://uri.suomi.fi/codelist/fairdata/contributor_type/code/Distributor",
+                    "pref_label": {
+                        "en": "Distributor",
+                        "fi": "Jakelija",
+                        "sv": "Distributör",
+                        "und": "Jakelija"
+                    }
+                }
+            ]
+        },
         "modified": "2014-01-17T08:19:58Z",
         "description": {
             "en": "Dataset for integration testing."

@@ -56,9 +56,12 @@ class CreateTechnicalMetadata(WorkflowTask):
     def __init__(self, *args, **kwargs):
         super(CreateTechnicalMetadata, self).__init__(*args, **kwargs)
         config_object = Configuration(self.config)
-        self.metax_client = Metax(config_object.get('metax_url'),
-                                  config_object.get('metax_user'),
-                                  config_object.get('metax_password'))
+        self.metax_client = Metax(
+            config_object.get('metax_url'),
+            config_object.get('metax_user'),
+            config_object.get('metax_password'),
+            verify=config_object.getboolean('metax_ssl_verification')
+        )
 
     def requires(self):
         """The Tasks that this Task depends on.

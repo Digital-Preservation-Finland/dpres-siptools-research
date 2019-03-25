@@ -99,9 +99,12 @@ class CreateLogicalStructMap(WorkflowTask):
         :returns: list of provenance IDs
         """
         config_object = Configuration(self.config)
-        metax_client = Metax(config_object.get('metax_url'),
-                             config_object.get('metax_user'),
-                             config_object.get('metax_password'))
+        metax_client = Metax(
+            config_object.get('metax_url'),
+            config_object.get('metax_user'),
+            config_object.get('metax_password'),
+            verify=config_object.getboolean('metax_ssl_verification')
+        )
         metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(metadata)
 
@@ -130,9 +133,12 @@ class CreateLogicalStructMap(WorkflowTask):
         :returns: logical structure map dictionary
         """
         config_object = Configuration(self.config)
-        metax_client = Metax(config_object.get('metax_url'),
-                             config_object.get('metax_user'),
-                             config_object.get('metax_password'))
+        metax_client = Metax(
+            config_object.get('metax_url'),
+            config_object.get('metax_user'),
+            config_object.get('metax_password'),
+            verify=config_object.getboolean('metax_ssl_verification')
+        )
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
         dataset_metadata = metax_client.get_dataset(self.dataset_id)
         logical_struct = dict()

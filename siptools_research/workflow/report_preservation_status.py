@@ -69,9 +69,12 @@ class ReportPreservationStatus(WorkflowTask):
         if directory == 'accepted':
             # Init metax
             config_object = Configuration(self.config)
-            metax_client = Metax(config_object.get('metax_url'),
-                                 config_object.get('metax_user'),
-                                 config_object.get('metax_password'))
+            metax_client = Metax(
+                config_object.get('metax_url'),
+                config_object.get('metax_user'),
+                config_object.get('metax_password'),
+                verify=config_object.getboolean('metax_ssl_verification')
+            )
             # Set Metax preservation state of this dataset to 6 ("in
             # longterm preservation")
             metax_client.set_preservation_state(

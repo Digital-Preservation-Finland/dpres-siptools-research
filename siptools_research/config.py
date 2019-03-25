@@ -12,6 +12,7 @@ DEFAULTS = {
     'metax_url': 'https://metax-test.csc.fi',
     'metax_user': 'tpas',
     'metax_password': '',
+    'metax_ssl_verification': 'True',
     'ida_url': 'https://86.50.169.61:4433',
     'ida_user': 'testuser_1',
     'ida_password': '',
@@ -99,3 +100,11 @@ class Configuration(object):
         :returns: value for parameter
         """
         return self._parser.get(self.config_section, parameter)
+
+    def getboolean(self, parameter):
+        """Get boolean value for configuration parameter.
+
+        :param parameter: parameter
+        :returns: value for parameter
+        """
+        return self._parser.getboolean(self.config_section, parameter)

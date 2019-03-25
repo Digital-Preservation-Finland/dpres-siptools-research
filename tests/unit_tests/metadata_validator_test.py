@@ -202,6 +202,27 @@ def test_validate_metadata_corrupted_datacite():
     )
 
 
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
+def test_validate_metadata_datacite_generation_fails_in_metax():
+    """Test that validate_metadata function raises exception with correct error
+    message for dataset missing publisher attribute.
+
+    :returns: ``None``
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        validate_metadata('validate_metadata_test_dataset_publisher_missing',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check exception message
+    exc = exc_info.value
+    assert exc.message == ("Datacite metadata is invalid: Dataset does not "
+                           "have a publisher (field: research_dataset."
+                           "publisher), which is a required value for "
+                           "datacite format")
+
+
 @pytest.mark.usefixtures('testmetax')
 def test_validate_file_metadata():
     """Check that ``_validate_file_metadata`` raises exceptions with
@@ -211,9 +232,12 @@ def test_validate_file_metadata():
     """
     # Init metax client
     configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(configuration.get('metax_url'),
-                   configuration.get('metax_user'),
-                   configuration.get('metax_password'))
+    client = Metax(
+        configuration.get('metax_url'),
+        configuration.get('metax_user'),
+        configuration.get('metax_password'),
+        verify=configuration.getboolean('metax_ssl_verification')
+    )
 
     with pytest.raises(InvalidMetadataError) as exc_info:
         # pylint: disable=protected-access
@@ -271,9 +295,12 @@ def test_validate_datacite():
 
     # Init metax client
     configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    metax_client = Metax(configuration.get('metax_url'),
-                         configuration.get('metax_user'),
-                         configuration.get('metax_password'))
+    metax_client = Metax(
+        configuration.get('metax_url'),
+        configuration.get('metax_user'),
+        configuration.get('metax_password'),
+        verify=configuration.getboolean('metax_ssl_verification')
+    )
 
     # Validate datacite
     # pylint: disable=protected-access
