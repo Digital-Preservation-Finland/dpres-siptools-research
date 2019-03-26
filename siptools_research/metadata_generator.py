@@ -17,6 +17,18 @@ from siptools_research.xml_metadata import (XMLMetadataGenerator,
 TEMPDIR = "/var/spool/siptools_research/tmp"
 
 
+class MetadataGenerationError(Exception):
+    """Exception raised when metadata generation fails"""
+    def __init__(self, dataset_id, message):
+        super(MetadataGenerationError, self).__init__(message)
+        self.dataset_id = dataset_id
+
+    def __str__(self):
+        return "Error generating metadata for dataset %s: %s" % (
+            self.dataset_id, self.message
+        )
+
+
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Generates technical metadata and mix metadata for all files of a given
     dataset and updates relevant fields in file metadata.
@@ -56,7 +68,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                 try:
                     ida.download_file_header(file_id, tmpfile, config)
                 except HTTPError as error:
-                    handle_exception(file_, error)
+                    handle_exception(file_, error, dataset_id)
 
             # Generate and update file_characteristics
             file_characteristics = _generate_techmd(tmpfile, file_metadata)
@@ -84,18 +96,21 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         shutil.rmtree(tmpdir)
 
 
-def handle_exception(file_, http_error):
-    """Raise Exception with message depending on http status code"""
-
+def handle_exception(file_, http_error, dataset_id):
+    """Raise MetadataGenerationError with message depending on the
+    http status code
+    """
     file_path = file_['file_path']
     status_code = http_error.response.status_code
+
     if status_code == 404:
-        raise Exception("File %s not found in Ida." % file_path)
+        message = "File %s not found in Ida." % file_path
     elif status_code == 403:
-        raise Exception("Access to file %s forbidden." % file_path)
+        message = "Access to file %s forbidden." % file_path
     else:
-        raise Exception("File %s could not be retrieved." %
-                        file_path)
+        message = "File %s could not be retrieved." % file_path
+
+    raise MetadataGenerationError(dataset_id, message)
 
 
 def _generate_techmd(filepath, original_metadata):
