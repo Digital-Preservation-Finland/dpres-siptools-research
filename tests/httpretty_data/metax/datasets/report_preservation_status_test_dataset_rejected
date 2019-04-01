@@ -1,4 +1,5 @@
 {
+    "preservation_identifier": "doi:test",
     "research_dataset": {
         "rights_holder": {
             "name": {

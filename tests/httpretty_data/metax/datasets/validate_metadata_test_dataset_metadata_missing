@@ -1,4 +1,5 @@
 {
+    "preservation_identifier": "doi:test",
     "contract": {
         "id": 2,
         "identifier": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83002"

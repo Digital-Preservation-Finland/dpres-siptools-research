@@ -1,5 +1,6 @@
 {
     "identifier": "workflow_test_dataset_1_local",
+    "preservation_identifier": "doi:test",
     "contract": {
         "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
     },

@@ -12,56 +12,56 @@ def test_validate_valid_dataset_metadata_with_provenance():
 
     :returns: ``None``
     """
-    valid_dataset_metadata = \
-        {
-            "contract": {
-                "identifier": 1
-            },
-            "research_dataset": {
-                "provenance": [
-                    {
-                        "preservation_event": {
-                            "identifier": "identifierURL",
-                            "pref_label": {
-                                "en": "ProvenanceText",
-                            }
-                        },
-                        "description": {
-                            "en": "en_description"
-                        },
-                        "temporal": {
-                            "start_date": "17.9.1991"
-                        }
-                    }
-                ],
-                "files": [
-                    {
-                        "title": "File 1",
-                        "identifier": "pid1",
-                        "file_storage": {
-                            "identifier": "urn:nbn:fi:att:file-storage-ida"
-                        },
-                        "use_category": {
-                            "pref_label": {
-                                "en": "label1"
-                            }
+    valid_dataset_metadata = {
+        "preservation_identifier": "doi:test",
+        "contract": {
+            "identifier": 1
+        },
+        "research_dataset": {
+            "provenance": [
+                {
+                    "preservation_event": {
+                        "identifier": "identifierURL",
+                        "pref_label": {
+                            "en": "ProvenanceText",
                         }
                     },
-                    {
-                        "title": "File 2",
-                        "identifier": "pid2",
-                        "file_storage": {
-                            "identifier": "urn:nbn:fi:att:file-storage-ida"
-                        },
-                        "use_category": {
-                            "pref_label": {
-                                "en": "label1"
-                            }
+                    "description": {
+                        "en": "en_description"
+                    },
+                    "temporal": {
+                        "start_date": "17.9.1991"
+                    }
+                }
+            ],
+            "files": [
+                {
+                    "title": "File 1",
+                    "identifier": "pid1",
+                    "file_storage": {
+                        "identifier": "urn:nbn:fi:att:file-storage-ida"
+                    },
+                    "use_category": {
+                        "pref_label": {
+                            "en": "label1"
                         }
                     }
-                ]
-            }
+                },
+                {
+                    "title": "File 2",
+                    "identifier": "pid2",
+                    "file_storage": {
+                        "identifier": "urn:nbn:fi:att:file-storage-ida"
+                    },
+                    "use_category": {
+                        "pref_label": {
+                            "en": "label1"
+                        }
+                    }
+                }
+            ]
         }
+    }
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(valid_dataset_metadata,
@@ -75,40 +75,40 @@ def test_validate_valid_dataset_metadata_without_provenance():
 
     :returns: ``None``
     """
-    valid_dataset_metadata = \
-        {
-            "contract": {
-                "identifier": 1
-            },
-            "research_dataset": {
-                "files": [
-                    {
-                        "title": "File 1",
-                        "identifier": "pid1",
-                        "file_storage": {
-                            "identifier": "urn:nbn:fi:att:file-storage-ida"
-                        },
-                        "use_category": {
-                            "pref_label": {
-                                "en": "label1"
-                            }
-                        }
+    valid_dataset_metadata = {
+        "preservation_identifier": "doi:test",
+        "contract": {
+            "identifier": 1
+        },
+        "research_dataset": {
+            "files": [
+                {
+                    "title": "File 1",
+                    "identifier": "pid1",
+                    "file_storage": {
+                        "identifier": "urn:nbn:fi:att:file-storage-ida"
                     },
-                    {
-                        "title": "File 2",
-                        "identifier": "pid2",
-                        "file_storage": {
-                            "identifier": "urn:nbn:fi:att:file-storage-ida"
-                        },
-                        "use_category": {
-                            "pref_label": {
-                                "en": "label1"
-                            }
+                    "use_category": {
+                        "pref_label": {
+                            "en": "label1"
                         }
                     }
-                ]
-            }
+                },
+                {
+                    "title": "File 2",
+                    "identifier": "pid2",
+                    "file_storage": {
+                        "identifier": "urn:nbn:fi:att:file-storage-ida"
+                    },
+                    "use_category": {
+                        "pref_label": {
+                            "en": "label1"
+                        }
+                    }
+                }
+            ]
         }
+    }
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(valid_dataset_metadata,
