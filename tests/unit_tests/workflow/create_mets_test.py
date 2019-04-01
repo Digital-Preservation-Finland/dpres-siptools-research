@@ -1,13 +1,14 @@
 """Tests for module :mod:`siptools_research.workflow.create_mets`"""
 import os
+
 import pytest
-import tests.conftest
 import lxml
+
+from siptools.scripts import (
+    import_description, premis_event, compile_structmap, import_object
+)
 from siptools_research.workflow.create_mets import CreateMets
-from siptools.scripts import (import_description,
-                              premis_event,
-                              compile_structmap,
-                              import_object)
+import tests.conftest
 
 NAMESPACES = {
     'xsi': "http://www.w3.org/2001/XMLSchema-instance",
@@ -26,12 +27,13 @@ METS_ATTRIBUTES = {
                                               'http://digitalpreservation.fi/'
                                               'schemas/mets/mets.xsd',
     '{%s}SPECIFICATION' % NAMESPACES['fi']: '1.7.1',
-    'OBJID': 'create_mets_dataset',
+    'OBJID': 'doi:test',
     '{%s}CATALOG' % NAMESPACES['fi']: '1.7.1',
 }
 
 
-def assert_only_mets_dot_xml_in_workspace(testpath):
+def _check_workspace(testpath):
+    """Check that workspace does not contain anything else than mets.xml"""
     files = os.listdir(os.path.join(testpath, 'sip-in-progress'))
     assert len(files) == 1
     assert files[0] == 'mets.xml'
@@ -52,7 +54,7 @@ def test_create_mets_ok(testpath):
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
-    assert_only_mets_dot_xml_in_workspace(testpath)
+    _check_workspace(testpath)
 
     # Read created mets.xml
     tree = lxml.etree.parse(

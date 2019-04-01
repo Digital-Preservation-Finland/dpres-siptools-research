@@ -1,13 +1,16 @@
 """Luigi task that creates METS document."""
 import os
+
 from luigi import LocalTarget
+
 from metax_access import Metax
+from siptools.scripts import compile_mets
+
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools_research.workflow.create_logical_structmap \
     import CreateLogicalStructMap
-from siptools.scripts import compile_mets
 
 
 class CreateMets(WorkflowTask):
@@ -57,6 +60,9 @@ class CreateMets(WorkflowTask):
         )
         metadata = metax_client.get_dataset(self.dataset_id)
 
+        # Get preservation_identifier from Metax
+        preservation_id = metadata["preservation_identifier"]
+
         # Get contract data from Metax
         contract_id = metadata["contract"]["identifier"]
         contract_metadata = metax_client.get_contract(contract_id)
@@ -70,7 +76,7 @@ class CreateMets(WorkflowTask):
             mets_attributes={
                 'PROFILE': 'tpas',
                 'CONTRACTID': contract_identifier,
-                'OBJID': self.dataset_id,
+                'OBJID': preservation_id,
                 'LABEL': None,
                 'CONTENTID': None
             },
