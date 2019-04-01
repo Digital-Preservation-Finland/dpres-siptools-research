@@ -49,6 +49,9 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         verify=conf.getboolean('metax_ssl_verification')
     )
 
+    # Generate preservation_identifier
+    metax_client.set_datacite(dataset_id)
+
     # Get dataset metadata from Metax
     dataset_metadata = metax_client.get_dataset(dataset_id)
 
