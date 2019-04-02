@@ -51,7 +51,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     )
 
     # Generate preservation_identifier
-    metax_client.set_datacite(dataset_id)
+    metax_client.set_preservation_id(dataset_id)
 
     try:
         for file_ in metax_client.get_dataset_files(dataset_id):
