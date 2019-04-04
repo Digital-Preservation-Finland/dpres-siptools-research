@@ -5,11 +5,11 @@ import jsonschema
 import lxml
 import lxml.isoschematron
 from metax_access import Metax, DataciteGenerationError
+from siptools.xml.mets import NAMESPACES
 import siptools_research.utils.metax_schemas as metax_schemas
 from siptools_research.utils import mimetypes
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
-from siptools.xml.mets import NAMESPACES
 
 
 # SCHEMATRONS is a dictionary that contains mapping:
@@ -64,7 +64,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     _validate_dataset_files(dataset_metadata, metax_client)
 
     # Validate file metadata for each file in dataset files
-    _validate_file_metadata(dataset_id, metax_client)
+    _validate_file_metadata(dataset_id, metax_client, conf)
 
     # Validate techMD XML for each file in dataset files
     _validate_xml_file_metadata(dataset_id, metax_client)
@@ -127,10 +127,11 @@ def _validate_dataset_files(dataset_metadata, metax_client):
             )
 
 
-def _check_mimetype(file_metadata):
+def _check_mimetype(file_metadata, conf):
     """Check that file format is supported.
 
     :param file_metadata: file metadata dictionary
+    :param conf: siptools_research Configuration object
     :returns: ``None``
     """
     file_format = file_metadata["file_characteristics"]["file_format"]
@@ -140,7 +141,8 @@ def _check_mimetype(file_metadata):
     except KeyError:
         format_version = ""
 
-    if not mimetypes.is_supported(file_format, format_version):
+    mimetypes_conf = conf.get("mimetypes_conf")
+    if not mimetypes.is_supported(file_format, format_version, mimetypes_conf):
         message = (
             "Validation error in file {file_path}: Incorrect file "
             "format: {file_format}, version {version}"
@@ -152,11 +154,12 @@ def _check_mimetype(file_metadata):
         raise InvalidMetadataError(message)
 
 
-def _validate_file_metadata(dataset_id, metax_client):
+def _validate_file_metadata(dataset_id, metax_client, conf):
     """Validates file metadata found from /rest/v1/datasets/<dataset_id>/files.
 
     :param dataset_id: identifier of file
     :param metax_client: metax_access.Metax instance
+    :param conf: siptools_research Configuration object
     :returns: ``None``
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
@@ -175,7 +178,7 @@ def _validate_file_metadata(dataset_id, metax_client):
             )
 
         # Check that mimetype is supported
-        _check_mimetype(file_metadata)
+        _check_mimetype(file_metadata, conf)
 
         # Check that file path does not point outside SIP
         normalised_path = os.path.normpath(file_path.strip('/'))

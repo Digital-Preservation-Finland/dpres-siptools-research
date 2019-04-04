@@ -1,10 +1,8 @@
 """Check file format support"""
 import json
 
-DEFAULT_CONFIG = '/etc/dpres_mimetypes.json'
 
-
-def is_supported(mimetype, version, config=DEFAULT_CONFIG):
+def is_supported(mimetype, version, config):
     """Check if file format is supported. Supported file formats are listed in
     JSON configuration file.
 

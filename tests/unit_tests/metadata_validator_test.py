@@ -1,14 +1,16 @@
 """Tests for :mod:`siptools_research.metadata_validator` module"""
 
 import pytest
-import tests.conftest
 import lxml.etree
+
+from metax_access import Metax
+
 import siptools_research
 from siptools_research import validate_metadata
 import siptools_research.metadata_validator
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
-from metax_access import Metax
+import tests.conftest
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
@@ -242,7 +244,8 @@ def test_validate_file_metadata():
     with pytest.raises(InvalidMetadataError) as exc_info:
         # pylint: disable=protected-access
         siptools_research.metadata_validator._validate_file_metadata(
-            'validate_metadata_test_dataset_missing_file_format', client
+            'validate_metadata_test_dataset_missing_file_format',
+            client, configuration
         )
 
     assert exc_info.value.message \

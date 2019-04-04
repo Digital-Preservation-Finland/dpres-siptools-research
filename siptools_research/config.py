@@ -26,7 +26,8 @@ DEFAULTS = {
     'sip_rejected_mail_msg': 'SIP was not approved for Digital Preservation \
 due to errors. Error report attached. \n\nPlease \
 contact DPRES support: {0}',
-    'pas_storage_id': 'urn:nbn:fi:att:file-storage-pas'
+    'pas_storage_id': 'urn:nbn:fi:att:file-storage-pas',
+    'mimetypes_conf': '/etc/dpres_mimetypes.json'
 }
 
 
