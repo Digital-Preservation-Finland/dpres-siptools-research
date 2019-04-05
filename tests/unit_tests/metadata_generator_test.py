@@ -1,18 +1,20 @@
 """Tests for :mod:`siptools_research.metadata_generator` module"""
 
 import os
-import tempfile
 import json
+
 import pytest
 import pymongo
 import httpretty
 import lxml.etree
 
 from siptools.utils import decode_path
+
 from siptools_research.config import Configuration
 import siptools_research.metadata_generator as metadata_generator
 from siptools_research.metadata_generator import generate_metadata
 import tests.conftest
+from tests.metax_data import datasets, files
 
 
 @pytest.fixture(autouse=True)
@@ -28,8 +30,7 @@ def _init_mongo_client(testmongoclient):
         "pid:urn:generate_metadata_3",
         "pid:urn:generate_metadata_4",
         "pid:urn:generate_metadata_5",
-        "pid:urn:generate_metadata_file_characteristics_"
-        "block_not_present"
+        "pid:urn:generate_metadata_file_characteristics"
     ]
 
     for _file in files:
@@ -39,6 +40,18 @@ def _init_mongo_client(testmongoclient):
                 "tests/httpretty_data/ida/%s_ida" % _file
             )
         })
+
+
+@pytest.fixture(autouse=True)
+def _mock_metax(monkeypatch):
+    """Generate Metax datasets and files at runtime."""
+    monkeypatch.setattr(
+        metadata_generator.Metax,
+        "get_dataset_files", datasets.get_dataset_files
+    )
+    monkeypatch.setattr(
+        metadata_generator.Metax, "get_file", files.get_file
+    )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
@@ -81,9 +94,10 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
 
     :returns: ``None``
     """
-    generate_metadata('generate_metadata_test_dataset_file_' +
-                      'characteristics_block_not_present_%s' % file_storage,
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+    generate_metadata(
+        'generate_metadata_test_dataset_file_characteristics_%s' % file_storage,
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
 
     json_message = json.loads(httpretty.last_request().body)
     # The file should recognised as plain text file
@@ -113,7 +127,8 @@ def test_generate_metadata_mix(file_storage):
 
     # Read one element from XML to ensure it is valid and contains correct data
     # The file is 10x10px image, so the metadata should contain image width.
-    xml = lxml.etree.fromstring(httpretty.last_request().body)
+    last_request = httpretty.last_request().body
+    xml = lxml.etree.fromstring(last_request)
     assert xml.xpath('//ns0:imageWidth',
                      namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
         == '10'
@@ -177,7 +192,7 @@ def test_generate_metadata_addml(file_storage):
         namespaces={"addml": "http://www.arkivverket.no/standarder/addml"}
     )
     name = decode_path(flatfile[0].get("name"))
-    assert name == "/testpath/csvfile.csv"
+    assert name == "path/to/file"
 
     # Check HTTP request query string
     assert httpretty.last_request().querystring['namespace'][0] == \

@@ -7,6 +7,7 @@ import logging
 import tempfile
 import shutil
 import urllib
+import urllib3
 import mongomock
 import pymongo
 import luigi.configuration
@@ -15,6 +16,7 @@ import pytest
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
