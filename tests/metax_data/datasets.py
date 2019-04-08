@@ -68,6 +68,30 @@ DATASETS = {
     "generate_metadata_test_dataset_file_characteristics_local": {
         "files": ["pid:urn:generate_metadata_file_characteristics_local"]
     },
+    "validate_metadata_test_dataset": {
+        "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
+    },
+    "validate_metadata_test_dataset_invalid_metadata": {
+        "remove": ["contract"]
+    },
+    "validate_metadata_test_dataset_invalid_contract_metadata": {
+        "contract": "contract_with_invalid_metadata"
+    },
+    "validate_metadata_test_dataset_invalid_file_path": {
+        "files": ["pid:urn:invalidpath"]
+    },
+    "validate_metadata_test_dataset_metadata_missing": {
+        "files": ["pid:urn:validate_metadata_test_image"]
+    },
+    "validate_metadata_test_dataset_audio_video_metadata": {
+        "files": ["pid:urn:891", "pid:urn:892"]
+    },
+    "validate_metadata_test_dataset_invalid_audiomd": {
+        "files": ["pid:urn:testaudio"]
+    },
+    "validate_metadata_test_dataset_corrupted_mix": {
+        "files": ["pid:urn:testimage"]
+    }
 }
 
 
@@ -77,10 +101,33 @@ def get_dataset(self, dataset_id):
     new_dataset["identifier"] = dataset_id
     dataset = DATASETS[dataset_id]
 
+    # Add files to dataset
     if "files" in dataset:
         for _file in dataset["files"]:
             files = new_dataset["research_dataset"]["files"]
-            files.append({"identifier": _file})
+            files.append({
+                "identifier": _file,
+                "use_category": {
+                    "pref_label": {
+                        "en": "label2"
+                    }
+                }
+            })
+
+    # Set contract identifier
+    if "contract" in dataset:
+        new_dataset["contract"]["identifier"] = dataset["contract"]
+
+    # Set arbitrary field
+    if "set" in dataset:
+        for key, value in dataset["set"]:
+            new_dataset[key] = value
+
+    # Delete keys that exist in the BASE_DATASET
+    if "remove" in dataset:
+        for key in dataset["remove"]:
+            if key in new_dataset:
+                new_dataset.pop(key)
 
     return new_dataset
 
