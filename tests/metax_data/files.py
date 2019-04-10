@@ -110,6 +110,11 @@ FILES = {
     },
     "pid:urn:testimage": {
         "file_characteristics": TIFF_FILE_CHARS
+    },
+    "pid:urn:wf_test_1a_ida_missing_file_format": {
+        "file_characteristics": {
+            "file_created": "2014-01-17T08:19:31Z"
+        }
     }
 }
 

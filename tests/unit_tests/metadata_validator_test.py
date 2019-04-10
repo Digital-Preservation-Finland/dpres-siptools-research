@@ -167,8 +167,10 @@ def test_validate_metadata_corrupted_mix():
     """
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
-        validate_metadata('validate_metadata_test_dataset_corrupted_mix',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        validate_metadata(
+            'validate_metadata_test_dataset_corrupted_mix',
+            tests.conftest.UNIT_TEST_CONFIG_FILE
+        )
 
     # Check exception message
     exc = exc_info.value
@@ -178,170 +180,177 @@ def test_validate_metadata_corrupted_mix():
     )
 
 
-# @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
-# # pylint: disable=invalid-name
-# def test_validate_metadata_invalid_datacite():
-#     """Test that validate_metadata function raises exception with correct error
-#     message for invalid datacite where required attribute identifier is
-#     missing.
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
+def test_validate_metadata_invalid_datacite():
+    """Test that validate_metadata function raises exception with correct error
+    message for invalid datacite where required attribute identifier is
+    missing.
 
-#     :returns: ``None``
-#     """
-#     # Try to validate invalid dataset
-#     with pytest.raises(InvalidMetadataError) as exc_info:
-#         validate_metadata('validate_metadata_test_dataset_invalid_datacite',
-#                           tests.conftest.UNIT_TEST_CONFIG_FILE)
+    :returns: ``None``
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        validate_metadata(
+            'validate_metadata_test_dataset_invalid_datacite',
+            tests.conftest.UNIT_TEST_CONFIG_FILE
+        )
 
-#     # Check exception message
-#     exc = exc_info.value
-#     assert exc.message.startswith(
-#         'Datacite metadata is invalid: Element '
-#         '\'{http://datacite.org/schema/kernel-4}resource\': Missing child '
-#         'element(s).'
-#     )
-
-
-# @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
-# # pylint: disable=invalid-name
-# def test_validate_metadata_corrupted_datacite():
-#     """Test that validate_metadata function raises exception with correct error
-#     message for corrupted datacite XML.
-
-#     :returns: ``None``
-#     """
-#     # Try to validate invalid dataset
-#     with pytest.raises(InvalidMetadataError) as exc_info:
-#         validate_metadata('validate_metadata_test_dataset_corrupted_datacite',
-#                           tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-#     # Check exception message
-#     exc = exc_info.value
-#     assert exc.message.startswith(
-#         "Datacite metadata is invalid: Couldn't find end of Start Tag "
-#         "resource line 1, line 2, column 1"
-#     )
+    # Check exception message
+    exc = exc_info.value
+    assert exc.message.startswith(
+        "Datacite metadata is invalid: Element "
+        "'{http://datacite.org/schema/kernel-4}resource': Missing child "
+        "element(s)."
+    )
 
 
-# @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
-# # pylint: disable=invalid-name
-# def test_validate_metadata_datacite_generation_fails_in_metax():
-#     """Test that validate_metadata function raises exception with correct error
-#     message for dataset missing publisher attribute.
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
+def test_validate_metadata_corrupted_datacite():
+    """Test that validate_metadata function raises exception with correct error
+    message for corrupted datacite XML.
 
-#     :returns: ``None``
-#     """
-#     # Try to validate invalid dataset
-#     with pytest.raises(InvalidMetadataError) as exc_info:
-#         validate_metadata('validate_metadata_test_dataset_publisher_missing',
-#                           tests.conftest.UNIT_TEST_CONFIG_FILE)
+    :returns: ``None``
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        validate_metadata(
+            'validate_metadata_test_dataset_corrupted_datacite',
+            tests.conftest.UNIT_TEST_CONFIG_FILE
+        )
 
-#     # Check exception message
-#     exc = exc_info.value
-#     assert exc.message == ("Datacite metadata is invalid: Dataset does not "
-#                            "have a publisher (field: research_dataset."
-#                            "publisher), which is a required value for "
-#                            "datacite format")
-
-
-# @pytest.mark.usefixtures('testmetax')
-# def test_validate_file_metadata():
-#     """Check that ``_validate_file_metadata`` raises exceptions with
-#     descriptive error messages.
-
-#     :returns: ``None``
-#     """
-#     # Init metax client
-#     configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-#     client = Metax(
-#         configuration.get('metax_url'),
-#         configuration.get('metax_user'),
-#         configuration.get('metax_password'),
-#         verify=configuration.getboolean('metax_ssl_verification')
-#     )
-
-#     with pytest.raises(InvalidMetadataError) as exc_info:
-#         # pylint: disable=protected-access
-#         siptools_research.metadata_validator._validate_file_metadata(
-#             'validate_metadata_test_dataset_missing_file_format',
-#             client, configuration
-#         )
-
-#     assert exc_info.value.message \
-#         == ("Validation error in metadata of path/to/file1: 'file_format' is"
-#             " a required property\n"
-#             "\n"
-#             "Failed validating 'required' in schema['properties']"
-#             "['file_characteristics']:\n"
-#             "    {'properties': {'file_encoding': {'enum': ['ISO-8859-15',\n"
-#             "                                               'UTF-8',\n"
-#             "                                               'UTF-16',\n"
-#             "                                               'UTF-32'],\n"
-#             "                                      'type': 'string'}},\n"
-#             "     'required': ['file_format'],\n"
-#             "     'type': 'object'}\n"
-#             "\n"
-#             "On instance['file_characteristics']:\n"
-#             "    {u'file_created': u'2014-01-17T08:19:31Z'}")
+    # Check exception message
+    exc = exc_info.value
+    assert exc.message.startswith(
+        "Datacite metadata is invalid: Couldn't find end of Start Tag "
+        "resource line 1, line 2, column 1"
+    )
 
 
-# def test_validate_xml_file_metadata():
-#     """Test that _validate_xml_file_metadata function raises exception with
-#     readable error message when validated XML contains multiple errors.
+@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+# pylint: disable=invalid-name
+def test_validate_metadata_datacite_generation_fails_in_metax():
+    """Test that validate_metadata function raises exception with correct error
+    message for dataset missing publisher attribute.
 
-#     :returns: ``None``
-#     """
-#     xml = lxml.etree.parse('tests/data/invalid_audiomd.xml')
-#     # pylint: disable=protected-access
-#     with pytest.raises(InvalidMetadataError) as exception_info:
-#         metadata_validator._validate_with_schematron(
-#             'audio', xml, 'foo'
-#         )
+    :returns: ``None``
+    """
+    # Try to validate invalid dataset
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        validate_metadata(
+            'validate_metadata_test_dataset_publisher_missing',
+            tests.conftest.UNIT_TEST_CONFIG_FILE
+        )
 
-#     assert exception_info.value.message == (
-#         "Technical metadata XML of file foo is invalid: The following errors "
-#         "were detected:\n\n"
-#         "1. Element 'audiomd:samplingFrequency' is required in element "
-#         "'amd:fileData'.\n"
-#         "2. Element 'audiomd:duration' is required in element 'amd:audioInfo'."
-#     )
+    # Check exception message
+    exc = exc_info.value
+    assert exc.message == (
+        "Datacite metadata is invalid: Dataset does not have a publisher "
+        "(field: research_dataset.publisher), which is a required value for "
+        "datacite format"
+    )
 
 
-# @pytest.mark.usefixtures('testmetax')
-# def test_validate_datacite():
-#     """Test that _validate_datacite function raises exception with readable
-#     error message when datacite XML contains multiple errors.
+@pytest.mark.usefixtures('testmetax')
+def test_validate_file_metadata():
+    """Check that ``_validate_file_metadata`` raises exceptions with
+    descriptive error messages.
 
-#     :returns: ``None``
-#     """
+    :returns: ``None``
+    """
+    # Init metax client
+    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    client = Metax(
+        configuration.get('metax_url'),
+        configuration.get('metax_user'),
+        configuration.get('metax_password'),
+        verify=configuration.getboolean('metax_ssl_verification')
+    )
 
-#     # Init metax client
-#     configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-#     metax_client = Metax(
-#         configuration.get('metax_url'),
-#         configuration.get('metax_user'),
-#         configuration.get('metax_password'),
-#         verify=configuration.getboolean('metax_ssl_verification')
-#     )
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        # pylint: disable=protected-access
+        siptools_research.metadata_validator._validate_file_metadata(
+            'validate_metadata_test_dataset_missing_file_format',
+            client, configuration
+        )
 
-#     # Validate datacite
-#     # pylint: disable=protected-access
-#     with pytest.raises(InvalidMetadataError) as exception_info:
-#         metadata_validator._validate_datacite(
-#             'validate_metadata_test_dataset_very_invalid_datacite',
-#             metax_client
-#         )
+    assert exc_info.value.message == (
+        "Validation error in metadata of path/to/file: 'file_format' is"
+        " a required property\n\n"
+        "Failed validating 'required' in schema['properties']"
+        "['file_characteristics']:\n"
+        "    {'properties': {'file_encoding': {'enum': ['ISO-8859-15',\n"
+        "                                               'UTF-8',\n"
+        "                                               'UTF-16',\n"
+        "                                               'UTF-32'],\n"
+        "                                      'type': 'string'}},\n"
+        "     'required': ['file_format'],\n"
+        "     'type': 'object'}\n"
+        "\n"
+        "On instance['file_characteristics']:\n"
+        "    {'file_created': '2014-01-17T08:19:31Z'}"
+    )
 
-#     # Check error message
-#     assert exception_info.value.message == (
-#         "Datacite metadata is invalid: The following errors were detected:\n\n"
-#         "1. Element '{http://datacite.org/schema/kernel-4}resourceType', "
-#         "attribute 'resourceTypeGeneral': [facet 'enumeration'] The value "
-#         "'INVALID_RESOURCE_TYPE' is not an element of the set {'Audiovisual', "
-#         "'Collection', 'DataPaper', 'Dataset', 'Event', 'Image', "
-#         "'InteractiveResource', 'Model', 'PhysicalObject', 'Service', "
-#         "'Software', 'Sound', 'Text', 'Workflow', 'Other'}.\n"
-#         "2. Element '{http://datacite.org/schema/kernel-4}resourceType', "
-#         "attribute 'resourceTypeGeneral': 'INVALID_RESOURCE_TYPE' is not a "
-#         "valid value of the atomic type "
-#         "'{http://datacite.org/schema/kernel-4}resourceType'."
-#     )
+
+def test_validate_xml_file_metadata():
+    """Test that _validate_xml_file_metadata function raises exception with
+    readable error message when validated XML contains multiple errors.
+
+    :returns: ``None``
+    """
+    xml = lxml.etree.parse('tests/data/invalid_audiomd.xml')
+    # pylint: disable=protected-access
+    with pytest.raises(InvalidMetadataError) as exception_info:
+        metadata_validator._validate_with_schematron(
+            'audio', xml, 'foo'
+        )
+
+    assert exception_info.value.message == (
+        "Technical metadata XML of file foo is invalid: The following errors "
+        "were detected:\n\n"
+        "1. Element 'audiomd:samplingFrequency' is required in element "
+        "'amd:fileData'.\n"
+        "2. Element 'audiomd:duration' is required in element 'amd:audioInfo'."
+    )
+
+
+@pytest.mark.usefixtures('testmetax')
+def test_validate_datacite():
+    """Test that _validate_datacite function raises exception with readable
+    error message when datacite XML contains multiple errors.
+
+    :returns: ``None``
+    """
+
+    # Init metax client
+    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    metax_client = Metax(
+        configuration.get('metax_url'),
+        configuration.get('metax_user'),
+        configuration.get('metax_password'),
+        verify=configuration.getboolean('metax_ssl_verification')
+    )
+
+    # Validate datacite
+    # pylint: disable=protected-access
+    with pytest.raises(InvalidMetadataError) as exception_info:
+        metadata_validator._validate_datacite(
+            'validate_metadata_test_dataset_very_invalid_datacite',
+            metax_client
+        )
+
+    # Check error message
+    assert exception_info.value.message == (
+        "Datacite metadata is invalid: The following errors were detected:\n\n"
+        "1. Element '{http://datacite.org/schema/kernel-4}resourceType', "
+        "attribute 'resourceTypeGeneral': [facet 'enumeration'] The value "
+        "'INVALID_RESOURCE_TYPE' is not an element of the set {'Audiovisual', "
+        "'Collection', 'DataPaper', 'Dataset', 'Event', 'Image', "
+        "'InteractiveResource', 'Model', 'PhysicalObject', 'Service', "
+        "'Software', 'Sound', 'Text', 'Workflow', 'Other'}.\n"
+        "2. Element '{http://datacite.org/schema/kernel-4}resourceType', "
+        "attribute 'resourceTypeGeneral': 'INVALID_RESOURCE_TYPE' is not a "
+        "valid value of the atomic type "
+        "'{http://datacite.org/schema/kernel-4}resourceType'."
+    )
