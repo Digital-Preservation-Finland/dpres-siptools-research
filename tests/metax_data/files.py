@@ -132,7 +132,9 @@ def get_file(self, file_id):
 
     # Set arbitrary field
     if "set" in _file:
-        for key, value in _file["set"]:
+        for params in _file["set"]:
+            key = params[0]
+            value = params[1]
             new_file[key] = value
 
     # Remove field that exist in the BASE_FILE

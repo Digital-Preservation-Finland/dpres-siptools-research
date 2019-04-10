@@ -106,7 +106,26 @@ DATASETS = {
     "validate_metadata_test_dataset_missing_file_format": {
         "files": ["pid:urn:wf_test_1a_ida_missing_file_format"]
     },
-    "validate_metadata_test_dataset_very_invalid_datacite": {}
+    "validate_metadata_test_dataset_very_invalid_datacite": {},
+    "create_digiprov_test_dataset_file_and_logging": {
+        "provenance": ["creation", "metadata modification"]
+    },
+    "create_digiprov_test_dataset_date_data_missing": {
+        "set": [(
+            "research_dataset", {
+                "provenance": [{
+                    "preservation_event": {
+                        "pref_label": {
+                            "en": "creation"
+                        }
+                    },
+                    "description": {
+                        "en": "Description of provenance"
+                    }
+                }]
+            }
+        )]
+    }
 }
 
 
@@ -133,9 +152,20 @@ def get_dataset(self, dataset_id):
     if "contract" in dataset:
         new_dataset["contract"]["identifier"] = dataset["contract"]
 
+    if "provenance" in dataset:
+        base_provenance = new_dataset["research_dataset"].pop("provenance")[0]
+        new_dataset["research_dataset"]["provenance"] = []
+
+        for event in dataset["provenance"]:
+            provenance = deepcopy(base_provenance)
+            provenance["preservation_event"]["pref_label"]["en"] = event
+            new_dataset["research_dataset"]["provenance"].append(provenance)
+
     # Set arbitrary field
     if "set" in dataset:
-        for key, value in dataset["set"]:
+        for params in dataset["set"]:
+            key = params[0]
+            value = params[1]
             new_dataset[key] = value
 
     # Delete keys that exist in the BASE_DATASET
