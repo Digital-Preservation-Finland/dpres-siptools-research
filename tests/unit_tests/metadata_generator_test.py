@@ -14,7 +14,6 @@ from siptools_research.config import Configuration
 import siptools_research.metadata_generator as metadata_generator
 from siptools_research.metadata_generator import generate_metadata
 import tests.conftest
-from tests.metax_data import datasets, files
 
 
 @pytest.fixture(autouse=True)
@@ -40,18 +39,6 @@ def _init_mongo_client(testmongoclient):
                 "tests/httpretty_data/ida/%s_ida" % _file
             )
         })
-
-
-@pytest.fixture(autouse=True)
-def _mock_metax(monkeypatch):
-    """Generate Metax datasets and files at runtime."""
-    monkeypatch.setattr(
-        metadata_generator.Metax,
-        "get_dataset_files", datasets.get_dataset_files
-    )
-    monkeypatch.setattr(
-        metadata_generator.Metax, "get_file", files.get_file
-    )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])

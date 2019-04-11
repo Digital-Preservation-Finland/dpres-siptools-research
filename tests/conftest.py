@@ -7,14 +7,20 @@ import logging
 import tempfile
 import shutil
 import urllib
+
 import urllib3
 import mongomock
 import pymongo
 import luigi.configuration
 import httpretty
 import pytest
+
+from metax_access import Metax
+
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
+import tests.metax_data.datasets as datasets
+import tests.metax_data.files as files
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -36,6 +42,16 @@ PROJECT_ROOT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')
 )
 sys.path.insert(0, PROJECT_ROOT_PATH)
+
+
+@pytest.fixture(autouse=True)
+def mock_metax_access(monkeypatch):
+    """Mock metax_access GET requests to files or datasets to return
+    mock functions from metax_data.datasets and metax_data.files modules.
+    """
+    monkeypatch.setattr(Metax, "get_dataset", datasets.get_dataset)
+    monkeypatch.setattr(Metax, "get_dataset_files", datasets.get_dataset_files)
+    monkeypatch.setattr(Metax, "get_file", files.get_file)
 
 
 @pytest.fixture(scope="function")

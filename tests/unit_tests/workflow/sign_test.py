@@ -2,12 +2,10 @@
 
 import os
 import shutil
-import pytest
 import tests.conftest
 from siptools_research.workflow import sign
 
 
-@pytest.mark.usefixtures('testmetax')
 def test_signsip(testpath):
     """Tests for `SignSIP` task.
 

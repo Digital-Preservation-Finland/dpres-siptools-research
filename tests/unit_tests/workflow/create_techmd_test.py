@@ -176,10 +176,11 @@ def test_xml_metadata_file_missing(testpath):
     assert not task.complete()
 
     # Run task.
+    msg = "Could not retrieve additional metadata XML for dataset pid:urn:8"
     with pytest.raises(Exception) as exc:
         task.run()
-    assert 'Could not retrieve additional metadata XML for dataset pid:urn:8' \
-        in str(exc)
+        assert msg in str(exc)
+
     assert not task.complete()
 
 

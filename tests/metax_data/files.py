@@ -26,6 +26,18 @@ TIFF_FILE_CHARS = {
     "format_version": "6.0"
 }
 
+HTML_FILE_CHARS = {
+    "file_format": "text/html",
+    "format_version": "4.01",
+    "encoding": "UTF-8"
+}
+
+XML_FILE_CHARS = {
+    "file_format": "application/xml",
+    "format_version": "1.0",
+    "encoding": "utf-8"
+}
+
 BASE_FILE = {
     "identifier": "pid:urn:identifier",
     "file_path": "path/to/file",
@@ -115,6 +127,152 @@ FILES = {
         "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z"
         }
+    },
+    "pid:urn:1": {
+        "set": [
+            (
+                "file_path", "tests/data/structured/"
+                "Access and use rights files/access_file.txt"
+            ),
+            (
+                "parent_directory", {"identifier": "pid:urn:dir:1"}
+            ),
+            (
+                "file_name", "file_name_1"
+            )
+        ]
+    },
+    "pid:urn:2": {
+        "set": [
+            (
+                "file_path", "tests/data/structured/"
+                "Documentation files/readme.txt"
+            ),
+            (
+                "parent_directory", {"identifier": "pid:urn:dir:2"}
+            ),
+            (
+                "file_name", "file_name_2"
+            )
+        ]
+    },
+    "pid:urn:3": {
+        "set": [(
+            "file_path",
+            "tests/data/structured/Documentation files/"
+            "Configuration files/properties.txt"
+        )]
+    },
+    "pid:urn:4": {
+        "set": [(
+            "file_path",
+            "tests/data/structured/Documentation files/"
+            "Method files/method_putkisto.txt"
+        )]
+    },
+    "pid:urn:5": {
+        "set": [(
+            "file_path",
+            "tests/data/structured/Documentation files/Notebook/notes.txt"
+        )]
+    },
+    "pid:urn:6": {
+        "set": [(
+            "file_path",
+            "tests/data/structured/Documentation files/Other files/this.txt"
+        )]
+    },
+    "pid:urn:7": {
+        "set": [(
+            "file_path",
+            "tests/data/structured/Machine-readable metadata/metadata.txt"
+        )]
+    },
+    "pid:urn:8": {
+        "set": [(
+            "file_path",
+            "tests/data/structured/Publication files/publication.txt"
+        )]
+    },
+    "pid:urn:9": {
+        "set": [(
+            "file_path",
+            "tests/data/structured/Software files/koodi.java"
+        )]
+    },
+    "pid:urn:get_files_1": {
+        "set": [
+            ("file_path", "/path/to/file1"),
+            ("identifier", "pid:urn:1")
+        ]
+    },
+    "pid:urn:get_files_1_local": {
+        "set": [("file_path", "/path/to/file1")]
+    },
+    "pid:urn:get_files_2": {
+        "set": [
+            ("file_path", "/path/to/file2"),
+            ("identifier", "pid:urn:2")
+        ]
+    },
+    "pid:urn:get_files_2_local": {
+        "set": [("file_path", "/path/to/file2")]
+    },
+    "pid:urn:does_not_exist": {
+        "set": [("file_path", "/path/to/file4")]
+    },
+    "pid:urn:does_not_exist_local": {
+        "set": [("file_path", "/path/to/file4")]
+    },
+    "pid:urn:techmd_5": {
+        "file_characteristics": HTML_FILE_CHARS,
+        "set": [
+            ("identifier", "pid:urn:5"),
+            ("file_path", "project_x/some/path/file_name_5")
+        ]
+    },
+    "pid:urn:techmd_6": {
+        "file_characteristics": XML_FILE_CHARS,
+        "set": [
+            ("identifier", "pid:urn:6"),
+            ("file_path", "project_x/some/path/file_name_6")
+        ]
+    },
+    "pid:urn:techmd_7": {
+        "file_characteristics": TXT_FILE_CHARS,
+        "set": [
+            ("identifier", "pid:urn:7"),
+            ("file_path", "project_x/some/path/file_name_7.txt")
+        ]
+    },
+    "pid:urn:techmd_888": {
+        "file_characteristics": TIFF_FILE_CHARS,
+        "set": [
+            ("identifier", "pid:urn:888"),
+            ("file_path", "project_x/some/path/valid_tiff.tiff")
+        ]
+    },
+    "pid:urn:techmd_999": {
+        "file_characteristics": CSV_FILE_CHARS,
+        "set": [
+            ("identifier", "pid:urn:999"),
+            ("file_path", "project_x/some/path/file.csv")
+        ]
+    },
+    "pid:urn:create_techmd_3": {
+        "file_characteristics": {
+            "file_created": "2014-01-17T08:19:31Z",
+            "file_format": "text/html",
+            "format_version": "4.01"
+        },
+        "set": [("file_path", "/project_x/some/path/file_name_5")]
+    },
+    "pid:urn:create_techmd_8": {
+        "file_characteristics": TIFF_FILE_CHARS,
+        "set": [
+            ("file_path", "/project_x/some/path/valid_tiff.tif"),
+            ("identifier", "pid:urn:8")
+        ]
     }
 }
 

@@ -11,7 +11,6 @@ import siptools_research.metadata_validator as metadata_validator
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
 import tests.conftest
-from tests.metax_data import datasets, files
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
@@ -23,22 +22,6 @@ def test_validate_metadata():
     """
     assert validate_metadata('validate_metadata_test_dataset',
                              tests.conftest.UNIT_TEST_CONFIG_FILE) is True
-
-
-@pytest.fixture(autouse=True)
-def _mock_metax(monkeypatch):
-    """Generate Metax datasets and files at runtime."""
-    monkeypatch.setattr(
-        metadata_validator.Metax,
-        "get_dataset", datasets.get_dataset
-    )
-    monkeypatch.setattr(
-        metadata_validator.Metax,
-        "get_dataset_files", datasets.get_dataset_files
-    )
-    monkeypatch.setattr(
-        metadata_validator.Metax, "get_file", files.get_file
-    )
 
 
 @pytest.mark.usefixtures('testmetax')

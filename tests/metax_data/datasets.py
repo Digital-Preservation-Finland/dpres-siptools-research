@@ -27,7 +27,8 @@ BASE_DATASET = {
                 }
             }
         ],
-        "files": []
+        "files": [],
+        "directories": []
     }
 }
 
@@ -125,6 +126,102 @@ DATASETS = {
                 }]
             }
         )]
+    },
+    "create_digiprov_test_dataset_detailed_check": {
+        "set": [(
+            "research_dataset", {
+                "provenance": [
+                    {
+                        "preservation_event": {
+                            "pref_label": {
+                                "en": "creation"
+                            }
+                        },
+                        "temporal": {
+                            "end_date": "2014-12-31T08:19:58Z",
+                            "start_date": "2014-01-01T08:19:58Z"
+                        },
+                        "description": {
+                            "en": "Description of provenance"
+                        },
+                        "event_outcome": {
+                            "pref_label": {
+                                "en": "success"
+                            }
+                        },
+                        "outcome_description": {
+                            "en": "This is a detail of an successful event"
+                        }
+                    }
+                ]
+            }
+        )]
+    },
+    "create_digiprov_test_dataset_provenance_data_missing": {
+        "set": [(
+            "research_dataset", {
+                "files": [{
+                    "identifier": "pid:urn:892",
+                    "use_category": {
+                        "pref_label": {
+                            "en": "label5"
+                        }
+                    }
+                }]
+            }
+        )]
+    },
+    "datacite_test_1": {},
+    "create_structmap_test_dataset": {
+        "files_with_labels": [
+            ("pid:urn:1", "Access and use rights files"),
+            ("pid:urn:2", "Documentation files"),
+            ("pid:urn:3", "Documentation files"),
+            ("pid:urn:4", "Documentation files"),
+            ("pid:urn:5", "Documentation files"),
+            ("pid:urn:6", "Documentation files"),
+            ("pid:urn:7", "Machine-readable metadata"),
+            ("pid:urn:8", "Publication files"),
+            ("pid:urn:9", "Software files")
+        ],
+        "directories": [
+            ("pid:urn:dir:1", "Access and use rights files"),
+            ("pid:urn:dir:2", "Documentation files"),
+            ("pid:urn:dir:3", "Machine-readable metadata"),
+            ("pid:urn:dir:4", "Publication files"),
+            ("pid:urn:dir:5", "Software files")
+        ]
+    },
+    "get_files_test_dataset_ida": {
+        "files": ["pid:urn:get_files_1", "pid:urn:get_files_2"]
+    },
+    "get_files_test_dataset_local": {
+        "files": ["pid:urn:get_files_1_local", "pid:urn:get_files_2_local"]
+    },
+    "get_files_test_dataset_ida_missing_file": {
+        "files": ["pid:urn:get_files_1", "pid:urn:does_not_exist"]
+    },
+    "get_files_test_dataset_local_missing_file": {
+        "files": ["pid:urn:get_files_1_local", "pid:urn:does_not_exist_local"]
+    },
+    "create_techmd_test_dataset": {
+        "files": [
+            "pid:urn:techmd_5",
+            "pid:urn:techmd_6",
+            "pid:urn:techmd_7",
+            "pid:urn:techmd_999",
+            "pid:urn:techmd_888"
+        ]
+    },
+    "create_techmd_test_dataset_charset_not_defined": {
+        "files": ["pid:urn:create_techmd_3"]
+    },
+    "create_techmd_test_dataset_xml_metadata_missing": {
+        "files": ["pid:urn:create_techmd_8"]
+    },
+    "create_mets_dataset": {
+        "contract": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
+        "remove": ["research_dataset"]
     }
 }
 
@@ -144,6 +241,32 @@ def get_dataset(self, dataset_id):
                 "use_category": {
                     "pref_label": {
                         "en": "label2"
+                    }
+                }
+            })
+
+    # Add files with specified labels to dataset
+    if "files_with_labels" in dataset:
+        for _file, label in dataset["files_with_labels"]:
+            files = new_dataset["research_dataset"]["files"]
+            files.append({
+                "identifier": _file,
+                "use_category": {
+                    "pref_label": {
+                        "en": label
+                    }
+                }
+            })
+
+    # Set directories to dataset
+    if "directories" in dataset:
+        for directory, label in dataset["directories"]:
+            directories = new_dataset["research_dataset"]["directories"]
+            directories.append({
+                "identifier": directory,
+                "use_category": {
+                    "pref_label": {
+                        "en": label
                     }
                 }
             })

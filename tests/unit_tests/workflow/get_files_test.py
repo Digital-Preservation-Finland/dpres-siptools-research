@@ -12,10 +12,9 @@ from siptools_research.workflowtask import InvalidMetadataError
 def _init_files_col(mongoclient):
     """Init mocked upload.files collection"""
     mongo_files = [
-        ("pid:urn:1", "tests/httpretty_data/ida/pid:urn:1"),
-        ("pid:urn:2", "tests/httpretty_data/ida/pid:urn:2"),
-        ("pid:urn:999", "tests/httpretty_data/ida/pid:urn:999"),
-        ("pid:urn:does_not_exist", "file/not/found/on/disk")
+        ("pid:urn:get_files_1_local", "tests/httpretty_data/ida/pid:urn:1"),
+        ("pid:urn:get_files_2_local", "tests/httpretty_data/ida/pid:urn:2"),
+        ("pid:urn:does_not_exist_local", "file/not/found/on/disk")
     ]
     for identifier, fpath in mongo_files:
         mongoclient.upload.files.insert_one(
@@ -99,7 +98,7 @@ def test_missing_files(testpath, file_storage):
     assert not task.complete()
 
     # The first file should be created into correct path
-    with open(os.path.join(testpath, 'sip-in-progress/path/to/file3'))\
+    with open(os.path.join(testpath, 'sip-in-progress/path/to/file1'))\
             as open_file:
         assert open_file.read() == 'foo\n'
 
