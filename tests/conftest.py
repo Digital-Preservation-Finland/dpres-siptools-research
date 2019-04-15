@@ -54,6 +54,13 @@ def mock_metax_access(monkeypatch):
     monkeypatch.setattr(Metax, "get_file", files.get_file)
 
 
+def _identifier_exists(identifier):
+    """Check if identifier is defined in metax_data.datasets or
+    metax_data.files
+    """
+    return identifier in files.FILES or identifier in datasets.DATASETS
+
+
 @pytest.fixture(scope="function")
 def testmetax(request):
     """Use fake http-server and local sample JSON/XML files instead of real
@@ -114,11 +121,15 @@ def testmetax(request):
         full_path = "%s/%s/%s" % (METAX_PATH, subdir, body_file)
         status = 400 if body_file.split('?')[0].endswith('400') else 200
         logging.debug("Looking for file: %s", full_path)
-        if not os.path.isfile(full_path):
+        if not os.path.isfile(full_path) and not _identifier_exists(body_file):
             return (403, headers, "File not found")
 
-        with open(full_path) as open_file:
-            body = open_file.read()
+        # Retrieve PATCHed files from metax_data.files
+        if request.method == "PATCH" and subdir == "files":
+            body = files.get_file("", body_file)
+        else:
+            with open(full_path) as open_file:
+                body = open_file.read()
 
         return (status, headers, body)
 
