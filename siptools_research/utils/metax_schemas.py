@@ -15,7 +15,10 @@ DATASET_METADATA_SCHEMA = {
         },
         "research_dataset": {
             "type": "object",
-            "required": ["files"],
+            "anyOf": [
+                {"required": ["files"]},
+                {"required": ["directories"]}
+            ],
             "properties": {
                 "provenance": {
                     "type": "array",

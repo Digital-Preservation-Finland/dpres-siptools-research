@@ -112,8 +112,11 @@ def _validate_dataset_files(dataset_metadata, metax_client):
     :param metax_client: metax_access.Metax instance
     :returns: ``None``
     """
-    for dataset_file in dataset_metadata['research_dataset']['files']:
+    dataset_files = metax_client.get_dataset_files(
+        dataset_metadata['identifier']
+    )
 
+    for dataset_file in dataset_files:
         file_id = dataset_file['identifier']
         file_metadata = metax_client.get_file(file_id)
 

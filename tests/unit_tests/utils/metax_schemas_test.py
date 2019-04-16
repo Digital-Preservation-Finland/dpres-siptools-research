@@ -382,3 +382,51 @@ def test_validate_invalid_contract():
                             metax_schemas.CONTRACT_METADATA_SCHEMA)
 
     assert excinfo.value.message == "1234 is not of type 'string'"
+
+
+def test_validate_dataset_with_directories():
+    """Test validation of valid dataset metadata with directories attribute
+    present in dataset. Defines a sample metadata dictionary that is known to
+    be valid. The dictionary is then validated against
+    ``DATASET_METADA_SCHEMA``.
+
+    :returns: ``None``
+    """
+    valid_dataset_metadata = {
+        "preservation_identifier": "doi:test",
+        "contract": {
+            "identifier": 1
+        },
+        "research_dataset": {
+            "directories": [
+            ]
+        }
+    }
+
+    # Validation of valid dataset should return 'None'
+    assert jsonschema.validate(valid_dataset_metadata,
+                               metax_schemas.DATASET_METADATA_SCHEMA) is None
+
+
+def test_validate_dataset_no_files_and_directories():
+    """Test validation of dataset metadata without directories nor files
+    attribute present in dataset. Defines a sample metadata dictionary that is
+    known to be valid. The dictionary is then validated against
+    ``DATASET_METADA_SCHEMA``.
+
+    :returns: ``None``
+    """
+    invalid_dataset_metadata = {
+        "preservation_identifier": "doi:test",
+        "contract": {
+            "identifier": 1
+        },
+        "research_dataset": {
+        }
+    }
+
+    with pytest.raises(jsonschema.ValidationError) as excinfo:
+        jsonschema.validate(invalid_dataset_metadata,
+                            metax_schemas.DATASET_METADATA_SCHEMA)
+
+    assert excinfo.value.message == "'files' is a required property"
