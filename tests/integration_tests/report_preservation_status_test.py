@@ -167,8 +167,7 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
                     "_extra.html", raise_error=True)
 
     # Init and run task
-    with mock.patch('siptools_research.workflow'
-                    '.report_preservation_status.mail.send') as mock_sendmail:
+    with mock.patch('siptools_research.workflowtask.mail.send') as mock_mail:
         # Run task like it would be run from command line
         exceptionThrown = False
         task = report_preservation_status.ReportPreservationStatus(
@@ -181,7 +180,7 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
             task.run()
         except ValueError:
             exceptionThrown = True
-        mock_sendmail.assert_not_called()
+        mock_mail.assert_not_called()
         assert exceptionThrown is True
         assert task.complete() is False
 
