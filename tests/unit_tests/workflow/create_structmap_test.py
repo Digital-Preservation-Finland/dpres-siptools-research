@@ -33,24 +33,28 @@ def test_create_structmap_ok(testpath):
     shutil.copy('tests/data/datacite_sample.xml', dmdpath)
 
     # Create dmdsec
-    import_description.main([dmdpath, '--workspace', sip_creation_path])
+    import_description.run(dmdpath, workspace=sip_creation_path)
 
     # Create digiprov
     event_type = 'creation'
     event_datetime = '2014-12-31T08:19:58Z'
     event_detail = 'Description of provenance'
-    premis_event.main([
-        event_type, event_datetime,
-        "--event_detail", event_detail,
-        "--event_outcome", 'success',
-        "--workspace", sip_creation_path
-    ])
+    event_outcome = 'success'
+    premis_event.run(
+        event_type,
+        event_datetime,
+        event_detail,
+        event_outcome,
+        workspace=sip_creation_path
+    )
 
     # Create tech metadata
     test_data_folder = './tests/data/structured'
-    import_object.main(['--workspace', sip_creation_path,
-                        '--skip_inspection',
-                        test_data_folder])
+    import_object.run(
+        workspace=sip_creation_path,
+        skip_wellformed_check=True,
+        filepaths=[test_data_folder]
+    )
 
     # Init and run CreateStructMap task
     task = CreateStructMap(workspace=testpath,

@@ -99,20 +99,24 @@ def create_test_data(workspace):
     os.makedirs(sipdirectory)
 
     # Create dmdsec
-    import_description.main(['tests/data/datacite_sample.xml',
-                             '--workspace', sipdirectory])
+    import_description.run(
+        'tests/data/datacite_sample.xml',
+        workspace=sipdirectory
+    )
 
     # Create provenance
-    premis_event.main(['creation', '2016-10-13T12:30:55',
-                       '--workspace', sipdirectory,
-                       '--event_outcome', 'success',
-                       '--event_detail', 'Poika, 2.985 kg'])
+    premis_event.run(
+        'creation', '2016-10-13T12:30:55', 'Poika, 2.985 kg', 'success',
+        workspace=sipdirectory
+    )
 
     # Create tech metadata
     test_data_folder = './tests/data/structured'
-    import_object.main(['--workspace', sipdirectory,
-                        '--skip_inspection',
-                        test_data_folder])
+    import_object.run(
+        workspace=sipdirectory,
+        skip_wellformed_check=True,
+        filepaths=[test_data_folder]
+    )
 
     # Create structmap
-    compile_structmap.main(['--workspace', sipdirectory])
+    compile_structmap.run(workspace=sipdirectory)

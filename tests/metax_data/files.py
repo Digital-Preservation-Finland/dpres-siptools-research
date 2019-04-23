@@ -15,7 +15,7 @@ CSV_FILE_CHARS = {
 }
 
 TXT_FILE_CHARS = {
-    "encoding": "utf-8",
+    "encoding": "UTF-8",
     "file_created": "2014-01-17T08:19:31Z",
     "file_format": "text/plain"
 }
@@ -35,7 +35,7 @@ HTML_FILE_CHARS = {
 XML_FILE_CHARS = {
     "file_format": "application/xml",
     "format_version": "1.0",
-    "encoding": "utf-8"
+    "encoding": "UTF-8"
 }
 
 BASE_FILE = {

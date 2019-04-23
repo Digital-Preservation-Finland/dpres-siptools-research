@@ -37,17 +37,23 @@ def test_create_structmap_ok(testpath):
                                           event_detail)
 
     # Create dmdsec (required to create valid physical structmap)
-    import_description.main(['tests/data/datacite_sample.xml',
-                             '--workspace', sip_creation_path])
+    import_description.run(
+        'tests/data/datacite_sample.xml',
+        workspace=sip_creation_path
+    )
     # Create tech metadata
     test_data_folder = './tests/data/structured'
-    import_object.main(['--workspace', sip_creation_path,
-                        '--skip_inspection',
-                        test_data_folder])
+    import_object.run(
+        workspace=sip_creation_path,
+        skip_wellformed_check=True,
+        filepaths=[test_data_folder]
+    )
 
     # Create physical structmap
-    compile_structmap.main(['--workspace', sip_creation_path,
-                            '--type_attr', 'Fairdata-physical'])
+    compile_structmap.run(
+        workspace=sip_creation_path,
+        structmap_type='Fairdata-physical'
+    )
 
     # Init and run CreateStructMap task
     task = CreateLogicalStructMap(workspace=testpath,

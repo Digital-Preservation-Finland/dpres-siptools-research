@@ -137,25 +137,20 @@ class CreateTechnicalMetadata(WorkflowTask):
         except KeyError:
             file_created = None
 
-        # Build parameter list for import_objects script
-        import_object_parameters = [
-            metadata['file_path'].strip('/'),
-            '--base_path', self.sip_creation_path,
-            '--workspace', self.sip_creation_path,
-            '--skip_inspection',
-            '--format_name', metadata["file_characteristics"]["file_format"],
-            '--digest_algorithm', digest_algorithm,
-            '--message_digest', metadata["checksum"]["value"],
-            '--format_version', formatversion
-        ]
-        if charset is not None:
-            import_object_parameters += ['--charset', charset]
-
-        if file_created is not None:
-            import_object_parameters += ['--date_created', file_created]
-
         # Create PREMIS file metadata XML
-        siptools.scripts.import_object.main(import_object_parameters)
+        siptools.scripts.import_object.run(
+            filepaths=[metadata['file_path'].strip('/')],
+            base_path=self.sip_creation_path,
+            workspace=self.sip_creation_path,
+            skip_wellformed_check=True,
+            file_format=(
+                metadata["file_characteristics"]["file_format"],
+                formatversion
+            ),
+            checksum=(digest_algorithm, metadata["checksum"]["value"]),
+            charset=charset,
+            date_created=file_created
+        )
 
     def create_technical_attributes(self, metadata):
         """Read technical attribute XML from Metax. Create METS TechMD files for
