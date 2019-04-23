@@ -8,7 +8,7 @@ import siptools_research.utils.metax_schemas as metax_schemas
 VALID_DATASET_METADATA = {
     "preservation_identifier": "doi:test",
     "contract": {
-        "identifier": 1
+        "identifier": "1"
     },
     "research_dataset": {
         "provenance": [

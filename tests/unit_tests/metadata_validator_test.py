@@ -299,21 +299,11 @@ def test_validate_file_metadata():
             client, configuration
         )
 
-    assert exc_info.value.message == (
+    assert exc_info.value.message.startswith(
         "Validation error in metadata of path/to/file: 'file_format' is"
         " a required property\n\n"
         "Failed validating 'required' in schema['properties']"
         "['file_characteristics']:\n"
-        "    {'properties': {'file_encoding': {'enum': ['ISO-8859-15',\n"
-        "                                               'UTF-8',\n"
-        "                                               'UTF-16',\n"
-        "                                               'UTF-32'],\n"
-        "                                      'type': 'string'}},\n"
-        "     'required': ['file_format'],\n"
-        "     'type': 'object'}\n"
-        "\n"
-        "On instance['file_characteristics']:\n"
-        "    {'file_created': '2014-01-17T08:19:31Z'}"
     )
 
 

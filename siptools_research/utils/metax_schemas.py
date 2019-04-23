@@ -11,7 +11,12 @@ DATASET_METADATA_SCHEMA = {
         },
         "contract": {
             "type": "object",
-            "required": ["identifier"]
+            "required": ["identifier"],
+            "properties": {
+                "identifier": {
+                    "type": "string"
+                }
+            }
         },
         "research_dataset": {
             "type": "object",
@@ -35,11 +40,21 @@ DATASET_METADATA_SCHEMA = {
                         "properties": {
                             "temporal": {
                                 "type": "object",
-                                "required": ["start_date"]
+                                "required": ["start_date"],
+                                "properties": {
+                                    "start_date": {
+                                        "type": "string"
+                                    }
+                                }
                             },
                             "description": {
                                 "type": "object",
-                                "required": ["en"]
+                                "required": ["en"],
+                                "properties": {
+                                    "en": {
+                                        "type": "string"
+                                    }
+                                }
                             },
                             "preservation_event": {
                                 "type": "object",
@@ -50,7 +65,12 @@ DATASET_METADATA_SCHEMA = {
                                     },
                                     "pref_label": {
                                         "type": "object",
-                                        "required": ["en"]
+                                        "required": ["en"],
+                                        "properties": {
+                                            "en": {
+                                                "type": "string"
+                                            }
+                                        }
                                     }
                                 }
                             },
@@ -60,13 +80,25 @@ DATASET_METADATA_SCHEMA = {
                                 "properties": {
                                     "pref_label": {
                                         "type": "object",
-                                        "required": ["en"]
+                                        "required": ["en"],
+                                        "properties": {
+                                            "en": {
+                                                "type": "string"
+                                            }
+                                        }
                                     }
                                 }
                             },
                             "outcome_description": {
                                 "type": "object",
-                                "required": ["en"]
+                                "required": ["en"],
+                                "properties": {
+                                    "properties": {
+                                        "en": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -78,6 +110,33 @@ DATASET_METADATA_SCHEMA = {
                         "required": ["identifier", "use_category"],
                         "properties": {
                             "identifier": {
+                                "type": "string"
+                            },
+                            "use_category": {
+                                "type": "object",
+                                "required": ["pref_label"],
+                                "properties": {
+                                    "pref_label": {
+                                        "type": "object",
+                                        "required": ["en"],
+                                        "properties": {
+                                            "en": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "directories": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["identifier", "use_category"],
+                        "properties": {
+                            "identfier": {
                                 "type": "string"
                             },
                             "use_category": {
@@ -117,8 +176,14 @@ FILE_METADATA_SCHEMA = {
                 "algorithm": {
                     "type": "string",
                     "enum": ['md5', 'sha2']
+                },
+                "value": {
+                    "type": "string"
                 }
             }
+        },
+        "file_path": {
+            "type": "string"
         },
         "file_characteristics": {
             "type": "object",
@@ -127,16 +192,35 @@ FILE_METADATA_SCHEMA = {
                 "file_encoding": {
                     "type": "string",
                     "enum": ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']
+                },
+                "format_version": {
+                    "type": "string"
+                },
+                "file_created": {
+                    "type": "string"
+                },
+                "file_format": {
+                    "type": "string"
                 }
             }
         },
         "file_storage": {
             "type": "object",
-            "required": ["identifier"]
+            "required": ["identifier"],
+            "properties": {
+                "identifier": {
+                    "type": "string"
+                }
+            }
         },
         "parent_directory": {
             "type": "object",
-            "required": ["identifier"]
+            "required": ["identifier"],
+            "properties": {
+                "identifier": {
+                    "type": "string"
+                }
+            }
         }
     }
 }
