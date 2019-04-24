@@ -104,6 +104,13 @@ DATASETS = {
         )],
         "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
     },
+    "validate_metadata_test_dataset_publisher_missing_400": {
+        "set": [(
+            "identifier",
+            "validate_metadata_test_dataset_publisher_missing_400"
+        )],
+        "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
+    },
     "validate_metadata_test_dataset_missing_file_format": {
         "files": ["pid:urn:wf_test_1a_ida_missing_file_format"]
     },

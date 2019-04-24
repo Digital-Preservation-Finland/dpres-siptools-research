@@ -224,14 +224,15 @@ def find_dir_use_category(identifier, dataset_metadata):
     :param dataset_metadata: dataset metadata dictionary
     :returns: `use_category` attribute of directory
     """
-    languages = get_dataset_languages(dataset_metadata)
+    if 'files' in dataset_metadata['research_dataset']:
+        languages = get_dataset_languages(dataset_metadata)
 
-    for directory in dataset_metadata['research_dataset']['directories']:
-        if directory['identifier'] == identifier:
-            return get_localized_value(
-                directory['use_category']['pref_label'],
-                languages=languages
-            )
+        for directory in dataset_metadata['research_dataset']['directories']:
+            if directory['identifier'] == identifier:
+                return get_localized_value(
+                    directory['use_category']['pref_label'],
+                    languages=languages
+                )
 
     # Nothing found
     return None
