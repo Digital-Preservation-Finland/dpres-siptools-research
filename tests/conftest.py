@@ -124,9 +124,11 @@ def testmetax(request):
         if not os.path.isfile(full_path) and not _identifier_exists(body_file):
             return (403, headers, "File not found")
 
-        # Retrieve PATCHed files from metax_data.files
+        # Retrieve PATCHed files or datasets from metax_data.files
         if request.method == "PATCH" and subdir == "files":
             body = files.get_file("", body_file)
+        elif request.method == "PATCH" and subdir == "datasets":
+            body = datasets.get_dataset("", body_file)
         else:
             with open(full_path) as open_file:
                 body = open_file.read()
