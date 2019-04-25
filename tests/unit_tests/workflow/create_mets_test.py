@@ -4,9 +4,11 @@ import os
 import pytest
 import lxml
 
-from siptools.scripts import (
-    import_description, premis_event, compile_structmap, import_object
-)
+from siptools.scripts.import_description import import_description
+from siptools.scripts.premis_event import premis_event
+from siptools.scripts.compile_structmap import compile_structmap
+from siptools.scripts.import_object import import_object
+
 from siptools_research.workflow.create_mets import CreateMets
 import tests.conftest
 
@@ -99,24 +101,24 @@ def create_test_data(workspace):
     os.makedirs(sipdirectory)
 
     # Create dmdsec
-    import_description.run(
+    import_description(
         'tests/data/datacite_sample.xml',
         workspace=sipdirectory
     )
 
     # Create provenance
-    premis_event.run(
+    premis_event(
         'creation', '2016-10-13T12:30:55', 'Poika, 2.985 kg', 'success',
         workspace=sipdirectory
     )
 
     # Create tech metadata
     test_data_folder = './tests/data/structured'
-    import_object.run(
+    import_object(
         workspace=sipdirectory,
         skip_wellformed_check=True,
         filepaths=[test_data_folder]
     )
 
     # Create structmap
-    compile_structmap.run(workspace=sipdirectory)
+    compile_structmap(workspace=sipdirectory)

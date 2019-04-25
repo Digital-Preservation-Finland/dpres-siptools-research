@@ -8,9 +8,9 @@ import tests.conftest
 from siptools_research.workflow.create_structmap import (
     CreateTechnicalMetadata,
     CreateStructMap)
-from siptools.scripts import import_object
-from siptools.scripts import import_description
-from siptools.scripts import premis_event
+from siptools.scripts.import_object import import_object
+from siptools.scripts.import_description import import_description
+from siptools.scripts.premis_event import premis_event
 from siptools.xml.mets import NAMESPACES
 import lxml.etree
 
@@ -33,14 +33,14 @@ def test_create_structmap_ok(testpath):
     shutil.copy('tests/data/datacite_sample.xml', dmdpath)
 
     # Create dmdsec
-    import_description.run(dmdpath, workspace=sip_creation_path)
+    import_description(dmdpath, workspace=sip_creation_path)
 
     # Create digiprov
     event_type = 'creation'
     event_datetime = '2014-12-31T08:19:58Z'
     event_detail = 'Description of provenance'
     event_outcome = 'success'
-    premis_event.run(
+    premis_event(
         event_type,
         event_datetime,
         event_detail,
@@ -50,7 +50,7 @@ def test_create_structmap_ok(testpath):
 
     # Create tech metadata
     test_data_folder = './tests/data/structured'
-    import_object.run(
+    import_object(
         workspace=sip_creation_path,
         skip_wellformed_check=True,
         filepaths=[test_data_folder]

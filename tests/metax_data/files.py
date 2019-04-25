@@ -85,16 +85,44 @@ FILES = {
     "pid:urn:generate_metadata_file_characteristics_ida": {},
     "pid:urn:generate_metadata_file_characteristics_local": {},
     "pid:urn:wf_test_1a_ida": {
-        "file_characteristics": TXT_FILE_CHARS
+        "file_characteristics": TXT_FILE_CHARS,
+        "set": [
+            ("file_path", "/path/to/file1"),
+            ("checksum", {
+                "algorithm": "md5",
+                "value": "58284d6cdd8deaffe082d063580a9df3"
+            })
+        ]
     },
     "pid:urn:wf_test_1a_local": {
-        "file_characteristics": TXT_FILE_CHARS
+        "file_characteristics": TXT_FILE_CHARS,
+        "set": [
+            ("file_path", "/path/to/file1"),
+            ("checksum", {
+                "algorithm": "md5",
+                "value": "58284d6cdd8deaffe082d063580a9df3"
+            })
+        ]
     },
     "pid:urn:wf_test_1b_ida": {
-        "file_characteristics": TXT_FILE_CHARS
+        "file_characteristics": TXT_FILE_CHARS,
+        "set": [
+            ("file_path", "/path/to/file2"),
+            ("checksum", {
+                "algorithm": "md5",
+                "value": "90dd1fc82b5d523f6f85716c1c67c0f3"
+            })
+        ]
     },
     "pid:urn:wf_test_1b_local": {
-        "file_characteristics": TXT_FILE_CHARS
+        "file_characteristics": TXT_FILE_CHARS,
+        "set": [
+            ("file_path", "/path/to/file2"),
+            ("checksum", {
+                "algorithm": "md5",
+                "value": "90dd1fc82b5d523f6f85716c1c67c0f3"
+            })
+        ]
     },
     "pid:urn:invalidpath": {
         "file_characteristics": TXT_FILE_CHARS,

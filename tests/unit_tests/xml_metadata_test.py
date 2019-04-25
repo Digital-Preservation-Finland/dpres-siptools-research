@@ -10,8 +10,9 @@ def test_generate_xml_metadata_for_image_file():
     """Tests metadata XML generation for image file.
     :returns: ``None``
     """
-    with mock.patch('siptools.scripts.create_mix'
-                    '.create_mix') as mock_create_mix:
+    with mock.patch(
+        'siptools.scripts.create_mix.create_mix_metadata'
+    ) as mock_create_mix:
         file_path = '/foo/bar'
         file_metadata = {}
         file_metadata['file_characteristics'] = {'file_format': 'image/tiff'}
@@ -25,8 +26,9 @@ def test_generate_xml_metadata_for_csv_file():
     """Tests metadata XML generation for CSV file.
     :returns: ``None``
     """
-    with mock.patch('siptools.scripts.create_addml'
-                    '.create_addml') as mock_create_addml:
+    with mock.patch(
+        'siptools.scripts.create_addml.create_addml_metadata'
+    ) as mock_create_addml:
         file_path = '/foo/bar'
         file_md = {}
         file_md['file_characteristics'] = {'file_format': 'text/csv',
@@ -48,8 +50,9 @@ def test_generate_xml_metadata_for_audio_file():
     """Tests metadata XML generation for audio file.
     :returns: ``None``
     """
-    with mock.patch('siptools.scripts.create_audiomd'
-                    '.create_audiomd') as mock_create_audiomd:
+    with mock.patch(
+        'siptools.scripts.create_audiomd.create_audiomd_metadata'
+    ) as mock_create_audiomd:
         file_path = '/foo/bar'
         file_metadata = {}
         file_metadata['file_characteristics'] = {'file_format': 'audio/x-wav'}

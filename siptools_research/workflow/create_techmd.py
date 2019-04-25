@@ -138,7 +138,7 @@ class CreateTechnicalMetadata(WorkflowTask):
             file_created = None
 
         # Create PREMIS file metadata XML
-        siptools.scripts.import_object.run(
+        siptools.scripts.import_object.import_object(
             filepaths=[metadata['file_path'].strip('/')],
             base_path=self.sip_creation_path,
             workspace=self.sip_creation_path,

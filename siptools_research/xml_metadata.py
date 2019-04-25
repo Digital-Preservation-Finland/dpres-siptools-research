@@ -49,7 +49,7 @@ class _ImageFileXMLMetadata(_XMLMetadata):
         """Creates a MIX metadata XML element for an image file.
         :returns: MIX XML element
         """
-        return create_mix.create_mix(self.file_path)
+        return create_mix.create_mix_metadata(self.file_path)
 
     @classmethod
     def is_generator_for(cls, file_format):
@@ -66,7 +66,7 @@ class _CSVFileXMLMetadata(_XMLMetadata):
         """Creates ADDML metadata XML elementfor a CSV file.
         :returns: ADDML metadata XML element
         """
-        return create_addml.create_addml(
+        return create_addml.create_addml_metadata(
             self.file_path,
             self.file_metadata['file_characteristics']['csv_delimiter'],
             self.file_metadata['file_characteristics']['csv_has_header'],
@@ -91,7 +91,7 @@ class _AudioXWavFileXMLMetadata(_XMLMetadata):
         :returns: audioMD XML element
         """
         try:
-            xml = create_audiomd.create_audiomd(self.file_path)
+            xml = create_audiomd.create_audiomd_metadata(self.file_path)
         except ValueError:
             raise FileIncompleteError
         return xml['0']

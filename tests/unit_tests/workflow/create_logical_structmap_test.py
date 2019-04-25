@@ -1,16 +1,22 @@
 """Test the :mod:`siptools_research.workflow.create_structmap` module"""
 
 import os
+
 import pytest
-import tests.conftest
-from siptools_research.workflow.create_logical_structmap \
-    import CreateLogicalStructMap
-from siptools.scripts import import_description
-from siptools.scripts import import_object
-from siptools.scripts import premis_event
-from siptools.scripts import compile_structmap
-from siptools.xml.mets import NAMESPACES
 import lxml.etree
+
+from siptools.scripts.import_description import import_description
+from siptools.scripts.import_object import import_object
+from siptools.scripts.compile_structmap import compile_structmap
+from siptools.scripts.premis_event import (
+    premis_event, create_premis_event_file
+)
+from siptools.xml.mets import NAMESPACES
+
+import tests.conftest
+from siptools_research.workflow.create_logical_structmap import (
+    CreateLogicalStructMap
+)
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
@@ -29,28 +35,26 @@ def test_create_structmap_ok(testpath):
     event_datetime = '2014-12-31T08:19:58Z'
     event_detail = 'Description of provenance'
 
-    premis_event.create_premis_event_file(sip_creation_path,
-                                          event_type,
-                                          event_datetime,
-                                          event_detail,
-                                          'success',
-                                          event_detail)
+    create_premis_event_file(
+        sip_creation_path, event_type, event_datetime,
+        event_detail, 'success', event_detail
+    )
 
     # Create dmdsec (required to create valid physical structmap)
-    import_description.run(
+    import_description(
         'tests/data/datacite_sample.xml',
         workspace=sip_creation_path
     )
     # Create tech metadata
     test_data_folder = './tests/data/structured'
-    import_object.run(
+    import_object(
         workspace=sip_creation_path,
         skip_wellformed_check=True,
         filepaths=[test_data_folder]
     )
 
     # Create physical structmap
-    compile_structmap.run(
+    compile_structmap(
         workspace=sip_creation_path,
         structmap_type='Fairdata-physical'
     )

@@ -247,6 +247,12 @@ DATASETS = {
                 }
             }
         )]
+    },
+    "workflow_test_dataset_1_ida": {
+        "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
+    },
+    "workflow_test_dataset_1_local": {
+        "files": ["pid:urn:wf_test_1a_local", "pid:urn:wf_test_1b_local"]
     }
 }
 
