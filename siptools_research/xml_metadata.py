@@ -92,8 +92,8 @@ class _AudioXWavFileXMLMetadata(_XMLMetadata):
         """
         try:
             xml = create_audiomd.create_audiomd_metadata(self.file_path)
-        except ValueError:
-            raise FileIncompleteError
+        except ValueError as exception:
+            raise FileIncompleteError(exception)
         return xml['0']
 
     @classmethod
