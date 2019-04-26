@@ -429,4 +429,5 @@ def test_validate_dataset_no_files_and_directories():
         jsonschema.validate(invalid_dataset_metadata,
                             metax_schemas.DATASET_METADATA_SCHEMA)
 
-    assert excinfo.value.message == "'files' is a required property"
+    assert excinfo.value.message == (
+        "{} is not valid under any of the given schemas")
