@@ -12,7 +12,8 @@ from siptools_research.utils import ida
 from siptools_research.utils.database import Database
 from siptools_research.config import Configuration
 from siptools_research.xml_metadata import (XMLMetadataGenerator,
-                                            FileIncompleteError)
+                                            FileIncompleteError,
+                                            MissingMetadataError)
 
 TEMPDIR = "/var/spool/siptools_research/tmp"
 
@@ -96,6 +97,8 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                 generator = XMLMetadataGenerator(tmpfile,
                                                  file_metadata)
                 xml = generator.create()
+            except MissingMetadataError as exception:
+                raise MetadataGenerationError(dataset_id, exception)
             if xml is not None:
                 metax_client.set_xml(file_id, xml)
     finally:

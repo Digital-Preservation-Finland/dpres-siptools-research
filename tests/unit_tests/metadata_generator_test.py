@@ -12,7 +12,8 @@ from siptools.utils import decode_path
 
 from siptools_research.config import Configuration
 import siptools_research.metadata_generator as metadata_generator
-from siptools_research.metadata_generator import generate_metadata
+from siptools_research.metadata_generator import (generate_metadata,
+                                                  MetadataGenerationError)
 import tests.conftest
 
 
@@ -236,3 +237,20 @@ def test_generate_metadata_tempfile_removal(file_storage):
 
     # There should not be new files or directories in /tmp
     assert os.listdir(metadata_generator.TEMPDIR) == tmp_dir_before_test
+
+
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
+def test_generate_metadata_missing_csv_info():
+    """Tests addml metadata generation for a dataset that does not contain all
+    metadata required for addml generation.
+
+    :returns: ``None``
+    """
+    with pytest.raises(MetadataGenerationError) as exception_info:
+        generate_metadata('missing_csv_info',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+    assert str(exception_info.value) == (
+        'Error generating metadata for dataset missing_csv_info: Required '
+        'attribute "csv_delimiter" is missing from file characteristics of a '
+        'CSV file.'
+    )

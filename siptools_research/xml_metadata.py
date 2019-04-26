@@ -13,6 +13,12 @@ class FileIncompleteError(Exception):
     message = 'File incomplete'
 
 
+class MissingMetadataError(Exception):
+    """Exception raised when a XML generation fails because of insufficient
+    metadata.
+    """
+
+
 class _XMLMetadata:
     """ Abstract base class for XML metadata generators"""
     __metaclass__ = ABCMeta
@@ -66,6 +72,16 @@ class _CSVFileXMLMetadata(_XMLMetadata):
         """Creates ADDML metadata XML elementfor a CSV file.
         :returns: ADDML metadata XML element
         """
+        for attribute in ('csv_delimiter',
+                          'csv_has_header',
+                          'encoding',
+                          'csv_record_separator',
+                          'csv_quoting_char'):
+            if attribute not in self.file_metadata['file_characteristics']:
+                raise MissingMetadataError('Required attribute "%s" is missing'
+                                           ' from file characteristics of a '
+                                           'CSV file.' % attribute)
+
         return create_addml.create_addml_metadata(
             self.file_path,
             self.file_metadata['file_characteristics']['csv_delimiter'],
@@ -73,7 +89,8 @@ class _CSVFileXMLMetadata(_XMLMetadata):
             self.file_metadata['file_characteristics']['encoding'],
             self.file_metadata['file_characteristics']['csv_record_separator'],
             self.file_metadata['file_characteristics']['csv_quoting_char'],
-            flatfile_name=self.file_metadata['file_path'])
+            flatfile_name=self.file_metadata['file_path']
+        )
 
     @classmethod
     def is_generator_for(cls, file_format):

@@ -260,6 +260,9 @@ DATASETS = {
     },
     "workflow_test_dataset_1_local": {
         "files": ["pid:urn:wf_test_1a_local", "pid:urn:wf_test_1b_local"]
+    },
+    "missing_csv_info": {
+        "files": ["missing_csv_info"]
     }
 }
 

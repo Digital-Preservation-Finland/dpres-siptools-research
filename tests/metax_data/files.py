@@ -301,6 +301,11 @@ FILES = {
             ("file_path", "/project_x/some/path/valid_tiff.tif"),
             ("identifier", "pid:urn:8")
         ]
+    },
+    "missing_csv_info": {
+        "file_characteristics": {
+            "file_format": "text/csv"
+        }
     }
 }
 
