@@ -11,9 +11,7 @@ from siptools.scripts import import_object
 from siptools_research.utils import ida
 from siptools_research.utils.database import Database
 from siptools_research.config import Configuration
-from siptools_research.xml_metadata import (XMLMetadataGenerator,
-                                            FileIncompleteError,
-                                            MissingMetadataError)
+from siptools_research.xml_metadata import XMLMetadataGenerator
 
 TEMPDIR = "/var/spool/siptools_research/tmp"
 
@@ -73,7 +71,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             else:
                 # IDA
                 try:
-                    ida.download_file_header(file_id, tmpfile, config)
+                    ida.download_file(file_id, tmpfile, config)
                 except HTTPError as error:
                     handle_exception(file_, error, dataset_id)
 
@@ -84,21 +82,11 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             )
             file_metadata['file_characteristics'] = file_characteristics
 
-            image = file_characteristics['file_format'].startswith('image')
-            if image and not local:
-                ida.download_file(file_id, tmpfile, config)
-
             generator = XMLMetadataGenerator(tmpfile, file_metadata)
             try:
                 xml = generator.create()
-            except FileIncompleteError:
-                # Complete file required for XML metadata generation
-                ida.download_file(file_id, tmpfile, config)
-                generator = XMLMetadataGenerator(tmpfile,
-                                                 file_metadata)
-                xml = generator.create()
-            except MissingMetadataError as exception:
-                raise MetadataGenerationError(dataset_id, exception)
+            except Exception as ex:
+                raise MetadataGenerationError(dataset_id, ex)
             if xml is not None:
                 metax_client.set_xml(file_id, xml)
     finally:

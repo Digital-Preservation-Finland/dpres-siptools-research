@@ -18,7 +18,7 @@ luigi
 pymongo
 requests
 paramiko
-jsonschema
+jsonschema==2.5.1
 iso-639
 
 

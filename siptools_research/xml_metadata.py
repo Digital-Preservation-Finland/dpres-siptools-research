@@ -7,18 +7,6 @@ from siptools.scripts import create_addml
 from siptools.scripts import create_audiomd
 
 
-class FileIncompleteError(Exception):
-    """Exception raised when a complete file is required for XML generation.
-    """
-    message = 'File incomplete'
-
-
-class MissingMetadataError(Exception):
-    """Exception raised when a XML generation fails because of insufficient
-    metadata.
-    """
-
-
 class _XMLMetadata:
     """ Abstract base class for XML metadata generators"""
     __metaclass__ = ABCMeta
@@ -78,9 +66,9 @@ class _CSVFileXMLMetadata(_XMLMetadata):
                           'csv_record_separator',
                           'csv_quoting_char'):
             if attribute not in self.file_metadata['file_characteristics']:
-                raise MissingMetadataError('Required attribute "%s" is missing'
-                                           ' from file characteristics of a '
-                                           'CSV file.' % attribute)
+                raise Exception('Required attribute "%s" is missing'
+                                ' from file characteristics of a '
+                                'CSV file.' % attribute)
 
         return create_addml.create_addml_metadata(
             self.file_path,
@@ -107,11 +95,7 @@ class _AudioXWavFileXMLMetadata(_XMLMetadata):
         """Creates and returns the root audioMD XML element.
         :returns: audioMD XML element
         """
-        try:
-            xml = create_audiomd.create_audiomd_metadata(self.file_path)
-        except ValueError as exception:
-            raise FileIncompleteError(exception)
-        return xml['0']
+        return create_audiomd.create_audiomd_metadata(self.file_path)['0']
 
     @classmethod
     def is_generator_for(cls, file_format):
