@@ -7,6 +7,12 @@ from siptools.scripts import create_addml
 from siptools.scripts import create_audiomd
 
 
+class MissingMetadataError(Exception):
+    """Exception raised when a XML generation fails because of insufficient
+    metadata.
+    """
+
+
 class _XMLMetadata:
     """ Abstract base class for XML metadata generators"""
     __metaclass__ = ABCMeta
@@ -66,9 +72,9 @@ class _CSVFileXMLMetadata(_XMLMetadata):
                           'csv_record_separator',
                           'csv_quoting_char'):
             if attribute not in self.file_metadata['file_characteristics']:
-                raise Exception('Required attribute "%s" is missing'
-                                ' from file characteristics of a '
-                                'CSV file.' % attribute)
+                raise MissingMetadataError('Required attribute "%s" is missing'
+                                           ' from file characteristics of a '
+                                           'CSV file.' % attribute)
 
         return create_addml.create_addml_metadata(
             self.file_path,
