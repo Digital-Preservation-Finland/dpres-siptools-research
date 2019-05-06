@@ -66,7 +66,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     _validate_xml_file_metadata(dataset_id, metax_client)
 
     # Validate datacite provided by Metax
-    _validate_datacite(dataset_metadata['identifier'], metax_client)
+    _validate_datacite(dataset_id, metax_client)
 
     return True
 
@@ -226,15 +226,15 @@ def _validate_with_schematron(filetype, xml, file_id):
         )
 
 
-def _validate_datacite(dataset_identifier, metax_client):
+def _validate_datacite(dataset_id, metax_client):
     """Validates datacite.
 
-    :param dataset_metadata: dataset metadata dictionary
+    :param dataset_id: dataset identifier
     :param metax_client: metax_access.Metax instance
     :returns: ``None``
     """
     try:
-        datacite = metax_client.get_datacite(dataset_identifier)
+        datacite = metax_client.get_datacite(dataset_id)
     except (lxml.etree.XMLSyntaxError, DataciteGenerationError) as exception:
         raise InvalidMetadataError(
             DATACITE_VALIDATION_ERROR % (exception)

@@ -4,6 +4,7 @@ import pytest
 import lxml.etree
 
 from metax_access import Metax
+import requests_mock
 
 import siptools_research
 from siptools_research import validate_metadata
@@ -211,14 +212,54 @@ def test_validate_metadata_corrupted_datacite():
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
+@pytest.mark.usefixtures('mock_filetype_conf')
+@requests_mock.Mocker()
 # pylint: disable=invalid-name
-def test_validate_metadata_datacite_generation_fails_in_metax():
+def test_validate_metadata_publisher_missing(mocker):
     """Test that validate_metadata function raises exception with correct error
-    message for dataset missing publisher attribute.
+    message if Metax fails to generate datacite for dataset that is missing
+    `publisher` attribute.
 
     :returns: ``None``
     """
+    # Mock contract metadata request
+    mocker.get(
+        tests.conftest.METAX_URL
+        + '/contracts/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd',
+        json={
+            'contract_json': {
+                'identifier': '1',
+                'organization': {
+                    'name': 'test organization'
+                }
+            }
+        },
+        status_code=200
+    )
+
+    # Mock set_preservation_identifier API request
+    mocker.post(
+        tests.conftest.METAX_RPC_URL + '/datasets/set_preservation_identifier'
+        '?identifier=validate_metadata_test_dataset_publisher_missing',
+        text='foobar'
+    )
+
+    # Mock datacite request response. Mocked response has status code 400, and
+    # response body contains error information.
+    response = \
+        {
+            "detail": "Dataset does not have a publisher (field: "
+                      "research_dataset.publisher), which is a required value "
+                      "for datacite format",
+            "error_identifier": "2019-03-28T12:39:01-f0a7e3ae"
+        }
+    mocker.get(
+        tests.conftest.METAX_URL + '/datasets/validate_metadata_test_dataset_'
+                                   'publisher_missing?dataset_format=datacite',
+        json=response,
+        status_code=400
+    )
+
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(

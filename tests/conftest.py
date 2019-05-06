@@ -119,7 +119,6 @@ def testmetax(request):
             body_file += urllib.quote(tail, safe='%')
 
         full_path = "%s/%s/%s" % (METAX_PATH, subdir, body_file)
-        status = 400 if body_file.split('?')[0].endswith('400') else 200
         logging.debug("Looking for file: %s", full_path)
         if not os.path.isfile(full_path) and not _identifier_exists(body_file):
             return (403, headers, "File not found")
@@ -133,7 +132,7 @@ def testmetax(request):
             with open(full_path) as open_file:
                 body = open_file.read()
 
-        return (status, headers, body)
+        return (200, headers, body)
 
     # Enable http-server in beginning of test function
     httpretty.enable()
