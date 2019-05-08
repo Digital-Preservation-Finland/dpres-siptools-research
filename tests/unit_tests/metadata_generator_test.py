@@ -250,7 +250,7 @@ def test_generate_metadata_missing_csv_info():
         generate_metadata('missing_csv_info',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert str(exception_info.value) == (
-        'Error generating metadata for dataset missing_csv_info: Required '
-        'attribute "csv_delimiter" is missing from file characteristics of a '
-        'CSV file.'
+        'Required attribute "csv_delimiter" is missing from file '
+        'characteristics of a CSV file. '
+        '[ dataset=missing_csv_info, file=missing_csv_info ]'
     )

@@ -1,16 +1,35 @@
 """Module that generates file metadata XML element to be stored into Metax
 """
-
 from abc import ABCMeta, abstractmethod
+
 from siptools.scripts import create_mix
 from siptools.scripts import create_addml
 from siptools.scripts import create_audiomd
 
 
-class MissingMetadataError(Exception):
-    """Exception raised when a XML generation fails because of insufficient
-    metadata.
-    """
+def _kwargs2str(kwargs):
+    """Format dict kwargs into a human readable list."""
+    keys = sorted(kwargs.keys())
+    kwarg_list = " ["
+
+    for i in range(len(keys)-1):
+        kwarg_list += " %s=%s," % (keys[i], kwargs[keys[i]])
+
+    return kwarg_list + " %s=%s ]" % (keys[-1], kwargs[keys[-1]])
+
+
+class MetadataGenerationError(Exception):
+    """Exception raised when metadata generation fails"""
+    def __init__(self, message, **kwargs):
+        super(MetadataGenerationError, self).__init__(message)
+        self.kwargs = kwargs
+
+    def __str__(self):
+        message = self.message
+        if self.kwargs:
+            message += _kwargs2str(self.kwargs)
+
+        return message
 
 
 class _XMLMetadata:
@@ -49,7 +68,12 @@ class _ImageFileXMLMetadata(_XMLMetadata):
         """Creates a MIX metadata XML element for an image file.
         :returns: MIX XML element
         """
-        return create_mix.create_mix_metadata(self.file_path)
+        try:
+            return create_mix.create_mix_metadata(self.file_path)
+        except IOError:
+            raise MetadataGenerationError(
+                "Cannot identify image file."
+            )
 
     @classmethod
     def is_generator_for(cls, file_format):
@@ -72,9 +96,10 @@ class _CSVFileXMLMetadata(_XMLMetadata):
                           'csv_record_separator',
                           'csv_quoting_char'):
             if attribute not in self.file_metadata['file_characteristics']:
-                raise MissingMetadataError('Required attribute "%s" is missing'
-                                           ' from file characteristics of a '
-                                           'CSV file.' % attribute)
+                raise MetadataGenerationError(
+                    'Required attribute "%s" is missing from file '
+                    'characteristics of a CSV file.' % attribute
+                )
 
         return create_addml.create_addml_metadata(
             self.file_path,
@@ -135,5 +160,5 @@ class XMLMetadataGenerator(object):
         """
         if self.generator is not None:
             return self.generator.create()
-        else:
-            return None
+
+        return None

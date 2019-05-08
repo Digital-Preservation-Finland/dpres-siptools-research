@@ -11,22 +11,11 @@ from siptools.scripts import import_object
 from siptools_research.utils import ida
 from siptools_research.utils.database import Database
 from siptools_research.config import Configuration
-from siptools_research.xml_metadata import (XMLMetadataGenerator,
-                                            MissingMetadataError)
+from siptools_research.xml_metadata import (
+    XMLMetadataGenerator, MetadataGenerationError
+)
 
 TEMPDIR = "/var/spool/siptools_research/tmp"
-
-
-class MetadataGenerationError(Exception):
-    """Exception raised when metadata generation fails"""
-    def __init__(self, dataset_id, message):
-        super(MetadataGenerationError, self).__init__(message)
-        self.dataset_id = dataset_id
-
-    def __str__(self):
-        return "Error generating metadata for dataset %s: %s" % (
-            self.dataset_id, self.message
-        )
 
 
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
@@ -86,8 +75,12 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             generator = XMLMetadataGenerator(tmpfile, file_metadata)
             try:
                 xml = generator.create()
-            except MissingMetadataError as ex:
-                raise MetadataGenerationError(dataset_id, ex)
+            except MetadataGenerationError as error:
+                raise MetadataGenerationError(
+                    str(error),
+                    dataset=dataset_id,
+                    file=os.path.split(tmpfile)[1]
+                )
             if xml is not None:
                 metax_client.set_xml(file_id, xml)
     finally:
@@ -108,7 +101,7 @@ def handle_exception(file_, http_error, dataset_id):
     else:
         message = "File %s could not be retrieved." % file_path
 
-    raise MetadataGenerationError(dataset_id, message)
+    raise MetadataGenerationError(message, dataset=dataset_id)
 
 
 def _generate_techmd(filepath, original_metadata):
