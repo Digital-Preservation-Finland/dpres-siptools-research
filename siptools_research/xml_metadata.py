@@ -1,8 +1,10 @@
 """Module that generates file metadata XML element to be stored into Metax
 """
+import os
 from abc import ABCMeta, abstractmethod
 
 from siptools.scripts import create_mix
+from siptools.scripts.create_mix import MixGenerationError
 from siptools.scripts import create_addml
 from siptools.scripts import create_audiomd
 
@@ -70,9 +72,10 @@ class _ImageFileXMLMetadata(_XMLMetadata):
         """
         try:
             return create_mix.create_mix_metadata(self.file_path)
-        except IOError:
+        except MixGenerationError as error:
+            error.filename = os.path.split(error.filename)[1]
             raise MetadataGenerationError(
-                "Cannot identify image file."
+                str(error)
             )
 
     @classmethod
