@@ -74,9 +74,7 @@ class _ImageFileXMLMetadata(_XMLMetadata):
             return create_mix.create_mix_metadata(self.file_path)
         except MixGenerationError as error:
             error.filename = os.path.split(error.filename)[1]
-            raise MetadataGenerationError(
-                str(error)
-            )
+            raise MetadataGenerationError(str(error))
 
     @classmethod
     def is_generator_for(cls, file_format):
@@ -129,7 +127,10 @@ class _AudioXWavFileXMLMetadata(_XMLMetadata):
         """Creates and returns the root audioMD XML element.
         :returns: audioMD XML element
         """
-        return create_audiomd.create_audiomd_metadata(self.file_path)['0']
+        try:
+            return create_audiomd.create_audiomd_metadata(self.file_path)['0']
+        except ValueError as error:
+            raise MetadataGenerationError(str(error))
 
     @classmethod
     def is_generator_for(cls, file_format):
