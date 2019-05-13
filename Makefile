@@ -36,12 +36,8 @@ install:
 	sed -i '/\.egg-info\/requires.txt$$/d' INSTALLED_FILES
 
 test:
-	py.test  tests -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml \
-		--ignore tests/integration_tests/ida_integration_test.py \
-		--ignore tests/integration_tests/metax_integration_test.py \
-		--ignore tests/integration_tests/report_preservation_status_test.py \
-		--ignore tests/integration_tests/validate_sip_test.py \
-		--ignore tests/integration_tests/send_sip_test.py
+	py.test  tests/unit_tests tests/integration_tests/workflow_test.py \
+	    -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml
 
 coverage:
 	py.test tests --cov=siptools_research --cov-report=html --ignore tests/integration_tests/ --ignore tests/workflow/report_preservation_status_test.py
