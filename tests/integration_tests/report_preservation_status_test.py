@@ -3,12 +3,28 @@
 
 import os
 import time
+
 import pytest
-import tests.conftest
 import paramiko
+import mock
+
+from metax_access import Metax
+
+import tests.conftest
+from tests.metax_data import datasets
 from siptools_research.workflow import report_preservation_status
 from siptools_research.workflowtask import InvalidDatasetError
-import mock
+
+
+@pytest.fixture(autouse=True)
+def mock_metax_access(monkeypatch):
+    """Mock metax_access GET requests to files or datasets to return
+    mock functions from metax_data.datasets and metax_data.files modules.
+    """
+    monkeypatch.setattr(
+        Metax, "set_preservation_state",
+        lambda self, dataset_id, **kwargs: datasets.get_dataset("", dataset_id)
+    )
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
@@ -111,10 +127,6 @@ def test_reportpreservationstatus_rejected(testpath):
         task.run()
     assert exc_info.value[0] == "SIP was rejected"
 
-    # Ingest report HTML should be copied to workspace
-    assert os.path.isfile(workspace + '/' +
-                          os.path.basename(workspace) + '.html')
-
     # The task should not be completed
     assert not task.complete()
 
@@ -178,8 +190,9 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
         assert not task.complete()
         try:
             task.run()
-        except ValueError:
+        except (ValueError, InvalidDatasetError):
             exceptionThrown = True
+
         mock_mail.assert_not_called()
         assert exceptionThrown is True
         assert task.complete() is False
