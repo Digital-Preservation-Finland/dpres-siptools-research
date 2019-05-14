@@ -191,10 +191,10 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
         try:
             task.run()
         except (ValueError, InvalidDatasetError):
-            exceptionThrown = True
+            exception_thrown = True
 
         mock_mail.assert_not_called()
-        assert exceptionThrown is True
+        assert exception_thrown
         assert task.complete() is False
 
 
