@@ -24,6 +24,14 @@ BASE_DATASET = {
                 },
                 "description": {
                     "en": "Description of provenance"
+                },
+                'event_outcome': {
+                    "pref_label": {
+                        "en": "outcome"
+                    }
+                },
+                'outcome_description': {
+                    "en": "outcome_description"
                 }
             }
         ],

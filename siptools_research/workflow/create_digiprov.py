@@ -112,17 +112,7 @@ def _create_premis_events(dataset_id, workspace, config):
 
     dataset_languages = get_dataset_languages(metadata)
 
-    try:
-        provenances = metadata["research_dataset"]["provenance"]
-    except KeyError:
-        # Provenances not found in Metax, create default provenance data
-        provenances = [
-            {
-                "preservation_event": {"pref_label": {"en": "creation"}},
-                "temporal": {"start_date": "OPEN"},
-                "description": {"en": "Created by packaging service"}
-            }
-        ]
+    provenances = metadata["research_dataset"]["provenance"]
 
     for provenance in provenances:
 
@@ -138,23 +128,15 @@ def _create_premis_events(dataset_id, workspace, config):
             languages=dataset_languages
         )
 
-        # Read event_outcome if it is defined for this dataset
-        try:
-            event_outcome = get_localized_value(
-                provenance["event_outcome"]["pref_label"],
-                languages=dataset_languages
-            )
-        except KeyError:
-            event_outcome = "(:unav)"
+        event_outcome = get_localized_value(
+            provenance["event_outcome"]["pref_label"],
+            languages=dataset_languages
+        )
 
-        # Read event_outcome_detail if it is defined for this dataset
-        try:
-            event_outcome_detail = get_localized_value(
-                provenance["outcome_description"],
-                languages=dataset_languages
-            )
-        except KeyError:
-            event_outcome_detail = "Value unavailable, possibly unknown"
+        event_outcome_detail = get_localized_value(
+            provenance["outcome_description"],
+            languages=dataset_languages
+        )
 
         premis_event.create_premis_event_file(workspace,
                                               event_type,

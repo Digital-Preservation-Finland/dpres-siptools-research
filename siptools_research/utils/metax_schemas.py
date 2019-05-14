@@ -15,6 +15,7 @@ DATASET_METADATA_SCHEMA = {
         },
         "research_dataset": {
             "type": "object",
+            "required": ["provenance"],
             "anyOf": [
                 {"required": ["files"]},
                 {"required": ["directories"]}
@@ -22,12 +23,15 @@ DATASET_METADATA_SCHEMA = {
             "properties": {
                 "provenance": {
                     "type": "array",
+                    "minItems": 1,
                     "items": {
                         "type": "object",
                         "required": [
                             "preservation_event",
                             "temporal",
-                            "description"
+                            "description",
+                            "event_outcome",
+                            "outcome_description"
                         ],
                         "properties": {
                             "temporal": {
@@ -50,6 +54,20 @@ DATASET_METADATA_SCHEMA = {
                                         "required": ["en"]
                                     }
                                 }
+                            },
+                            "event_outcome": {
+                                "type": "object",
+                                "required": ["pref_label"],
+                                "properties": {
+                                    "pref_label": {
+                                        "type": "object",
+                                        "required": ["en"]
+                                    }
+                                }
+                            },
+                            "outcome_description": {
+                                "type": "object",
+                                "required": ["en"]
                             }
                         }
                     }

@@ -1,179 +1,102 @@
 """Tests for :mod:`siptools_research.utils.metax_schemas` module"""
+import copy
+
 import pytest
 import jsonschema
 import siptools_research.utils.metax_schemas as metax_schemas
 
+VALID_DATASET_METADATA = {
+    "preservation_identifier": "doi:test",
+    "contract": {
+        "identifier": 1
+    },
+    "research_dataset": {
+        "provenance": [
+            {
+                "preservation_event": {
+                    "identifier": "identifierURL",
+                    "pref_label": {
+                        "en": "ProvenanceText",
+                    }
+                },
+                "description": {
+                    "en": "en_description"
+                },
+                "temporal": {
+                    "start_date": "17.9.1991"
+                },
+                'event_outcome': {
+                    "pref_label": {
+                        "en": "outcome"
+                    }
+                },
+                'outcome_description': {
+                    "en": "outcome_description"
+                }
+            }
+        ],
+        "files": [
+            {
+                "title": "File 1",
+                "identifier": "pid1",
+                "file_storage": {
+                    "identifier": "urn:nbn:fi:att:file-storage-ida"
+                },
+                "use_category": {
+                    "pref_label": {
+                        "en": "label1"
+                    }
+                }
+            },
+            {
+                "title": "File 2",
+                "identifier": "pid2",
+                "file_storage": {
+                    "identifier": "urn:nbn:fi:att:file-storage-ida"
+                },
+                "use_category": {
+                    "pref_label": {
+                        "en": "label1"
+                    }
+                }
+            }
+        ],
+        "directories": [
+        ]
+    }
+}
+
 
 # pylint: disable=invalid-name
-def test_validate_valid_dataset_metadata_with_provenance():
+def test_validate_valid_dataset_metadata():
     """Test validation of valid dataset metadata with provenance. Defines a
     sample metadata dictionary that is known to be valid. The dictionary is
     then validated against ``DATASET_METADA_SCHEMA``.
 
     :returns: ``None``
     """
-    valid_dataset_metadata = {
-        "preservation_identifier": "doi:test",
-        "contract": {
-            "identifier": 1
-        },
-        "research_dataset": {
-            "provenance": [
-                {
-                    "preservation_event": {
-                        "identifier": "identifierURL",
-                        "pref_label": {
-                            "en": "ProvenanceText",
-                        }
-                    },
-                    "description": {
-                        "en": "en_description"
-                    },
-                    "temporal": {
-                        "start_date": "17.9.1991"
-                    }
-                }
-            ],
-            "files": [
-                {
-                    "title": "File 1",
-                    "identifier": "pid1",
-                    "file_storage": {
-                        "identifier": "urn:nbn:fi:att:file-storage-ida"
-                    },
-                    "use_category": {
-                        "pref_label": {
-                            "en": "label1"
-                        }
-                    }
-                },
-                {
-                    "title": "File 2",
-                    "identifier": "pid2",
-                    "file_storage": {
-                        "identifier": "urn:nbn:fi:att:file-storage-ida"
-                    },
-                    "use_category": {
-                        "pref_label": {
-                            "en": "label1"
-                        }
-                    }
-                }
-            ]
-        }
-    }
 
     # Validation of valid dataset should return 'None'
-    assert jsonschema.validate(valid_dataset_metadata,
+    assert jsonschema.validate(VALID_DATASET_METADATA,
                                metax_schemas.DATASET_METADATA_SCHEMA) is None
 
 
-def test_validate_valid_dataset_metadata_without_provenance():
+def test_validate_dataset_metadata_without_provenance():
     """Test validation of valid dataset metadata without provenance. Defines a
-    sample metadata dictionary that is known to be valid. The dictionary is
-    then validated against ``DATASET_METADA_SCHEMA``.
+    sample metadata dictionary that has empty list of provenaces. The
+    dictionary is then validated against ``DATASET_METADA_SCHEMA``.
 
     :returns: ``None``
     """
-    valid_dataset_metadata = {
-        "preservation_identifier": "doi:test",
-        "contract": {
-            "identifier": 1
-        },
-        "research_dataset": {
-            "files": [
-                {
-                    "title": "File 1",
-                    "identifier": "pid1",
-                    "file_storage": {
-                        "identifier": "urn:nbn:fi:att:file-storage-ida"
-                    },
-                    "use_category": {
-                        "pref_label": {
-                            "en": "label1"
-                        }
-                    }
-                },
-                {
-                    "title": "File 2",
-                    "identifier": "pid2",
-                    "file_storage": {
-                        "identifier": "urn:nbn:fi:att:file-storage-ida"
-                    },
-                    "use_category": {
-                        "pref_label": {
-                            "en": "label1"
-                        }
-                    }
-                }
-            ]
-        }
-    }
+    invalid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    invalid_dataset_metadata['research_dataset']['provenance'] = []
 
     # Validation of valid dataset should return 'None'
-    assert jsonschema.validate(valid_dataset_metadata,
-                               metax_schemas.DATASET_METADATA_SCHEMA) is None
-
-
-def test_validate_invalid_dataset_metadata_missing_attribute_in_provenance():
-    """Test validation of valid dataset metadata with provenance missing a
-    required prefLabel attribute. Defines a sample metadata dictionary that is
-    known to be valid. The dictionary is then validated against
-    ``DATASET_METADA_SCHEMA``.
-
-    :returns: ``None``
-    """
-    invalid_dataset_metadata = \
-        {
-            "contract": {
-                "identifier": 1
-            },
-            "research_dataset": {
-                "provenance": [
-                    {
-                        "preservation_event": {
-                            "identifier": "identifierURL",
-                        },
-                        "description": {
-                            "en": "en_description"
-                        },
-                        "temporal": {
-                            "start_date": "17.9.1991"
-                        }
-                    }
-                ],
-                "files": [
-                    {
-                        "title": "File 1",
-                        "identifier": "pid1",
-                        "file_storage": {
-                            "identifier": "urn:nbn:fi:att:file-storage-ida"
-                        },
-                        "use_category": {
-                            "pref_label": {
-                                "en": "label1"
-                            }
-                        }
-                    },
-                    {
-                        "title": "File 2",
-                        "identifier": "pid2",
-                        "file_storage": {
-                            "identifier": "urn:nbn:fi:att:file-storage-ida"
-                        },
-                        "use_category": {
-                            "pref_label": {
-                                "en": "label1"
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    # Validation of invalid dataset raise error
-    with pytest.raises(jsonschema.ValidationError):
+    with pytest.raises(jsonschema.ValidationError) as error:
         assert not jsonschema.validate(invalid_dataset_metadata,
                                        metax_schemas.DATASET_METADATA_SCHEMA)
+
+    assert error.value.message == '[] is too short'
 
 
 def test_validate_invalid_dataset_metadata():
@@ -182,37 +105,17 @@ def test_validate_invalid_dataset_metadata():
 
     :returns: ``None``
     """
-    invalid_dataset_metadata = \
-        {
-            "research_dataset": {
-                "files": [
-                    {
-                        "title": "File 1",
-                        "identifier": "pid1",
-                        "file_storage": {
-                            "identifier": "urn:nbn:fi:att:file-storage-ida"
-                        },
-                        "type": {
-                            "pref_label": {
-                                "en": "label1"
-                            }
-                        }
-                    },
-                    {
-                        "title": "File 2",
-                        "identifier": "pid2",
-                        "file_storage": {
-                            "identifier": "urn:nbn:fi:att:file-storage-ida"
-                        }
-                    }
-                ]
-            }
-        }
+    # Create invalid metadata by deleting required key from valid dataset
+    invalid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    del invalid_dataset_metadata["preservation_identifier"]
 
-    # Validation of invalid dataset raise error
-    with pytest.raises(jsonschema.ValidationError):
+    # Validation of invalid dataset should raise error
+    with pytest.raises(jsonschema.ValidationError) as error:
         assert not jsonschema.validate(invalid_dataset_metadata,
                                        metax_schemas.DATASET_METADATA_SCHEMA)
+
+    assert error.value.message == ("'preservation_identifier' is a "
+                                   "required property")
 
 
 def test_validate_valid_file_metadata():
@@ -385,23 +288,14 @@ def test_validate_invalid_contract():
 
 
 def test_validate_dataset_with_directories():
-    """Test validation of valid dataset metadata with directories attribute
-    present in dataset. Defines a sample metadata dictionary that is known to
-    be valid. The dictionary is then validated against
-    ``DATASET_METADA_SCHEMA``.
+    """Test validation of valid dataset metadata that contains only directories
+    and no files. Defines a sample metadata dictionary that is known to be
+    valid. The dictionary is then validated against ``DATASET_METADA_SCHEMA``.
 
     :returns: ``None``
     """
-    valid_dataset_metadata = {
-        "preservation_identifier": "doi:test",
-        "contract": {
-            "identifier": 1
-        },
-        "research_dataset": {
-            "directories": [
-            ]
-        }
-    }
+    valid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    del valid_dataset_metadata['research_dataset']['files']
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(valid_dataset_metadata,
@@ -416,18 +310,14 @@ def test_validate_dataset_no_files_and_directories():
 
     :returns: ``None``
     """
-    invalid_dataset_metadata = {
-        "preservation_identifier": "doi:test",
-        "contract": {
-            "identifier": 1
-        },
-        "research_dataset": {
-        }
-    }
+    invalid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    del invalid_dataset_metadata['research_dataset']['files']
+    del invalid_dataset_metadata['research_dataset']['directories']
 
     with pytest.raises(jsonschema.ValidationError) as excinfo:
         jsonschema.validate(invalid_dataset_metadata,
                             metax_schemas.DATASET_METADATA_SCHEMA)
 
-    assert excinfo.value.message == (
-        "{} is not valid under any of the given schemas")
+    assert excinfo.value.message.endswith(
+        "is not valid under any of the given schemas"
+    )
