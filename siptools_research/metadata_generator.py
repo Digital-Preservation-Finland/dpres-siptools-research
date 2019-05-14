@@ -66,12 +66,16 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                     handle_exception(file_, error, dataset_id)
 
             # Generate and update file_characteristics
-            file_characteristics = _generate_techmd(tmpfile, file_metadata)
-            metax_client.set_file_characteristics(
-                file_id, file_characteristics
+            file_characteristics = _generate_file_characteristics(
+                tmpfile, file_metadata.get('file_characteristics', {})
+            )
+            metax_client.patch_file(
+                file_id,
+                {'file_characteristics': file_characteristics}
             )
             file_metadata['file_characteristics'] = file_characteristics
 
+            # Generate XML metadata
             generator = XMLMetadataGenerator(tmpfile, file_metadata)
             try:
                 xml = generator.create()
@@ -104,14 +108,14 @@ def handle_exception(file_, http_error, dataset_id):
     raise MetadataGenerationError(message, dataset=dataset_id)
 
 
-def _generate_techmd(filepath, original_metadata):
+def _generate_file_characteristics(filepath, original_file_characteristics):
     """Reads file and generates technical metadata. `file_characteristics`
-    object is read from original meta.  Generated metadata is appended
+    object is read from original meta. Generated metadata is appended
     `file_characteristics` object. If a field already has a value (set by
     user) it will not be updated.
 
     :param filepath: path to file for which the metadata is generated
-    :param original_metadata: full original metadata dictionary
+    :param original_file_characteristics: full original metadata dictionary
     :returns: New `file_characteristics` dictionary
     """
 
@@ -128,9 +132,8 @@ def _generate_techmd(filepath, original_metadata):
     # Merge generated file_characteristics with original data from Metax.
     # If a field was already defined in original data, it will override the
     # generated value.
-    if 'file_characteristics' in original_metadata:
         file_characteristics.update(
-            original_metadata['file_characteristics']
+            original_file_characteristics
         )
 
     return file_characteristics
