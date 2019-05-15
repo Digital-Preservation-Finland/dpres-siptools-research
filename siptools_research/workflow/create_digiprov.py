@@ -30,14 +30,16 @@ class CreateProvenanceInformation(WorkflowTask):
     """
 
     def __init__(self, *args, **kwargs):
-        """Calls WorkflowTask's __init__ and sets additional instance variables.
+        """Calls WorkflowTask's __init__ and sets additional instance
+        variables.
         """
         super(CreateProvenanceInformation, self).__init__(*args, **kwargs)
         config_object = Configuration(self.config)
-        metax = Metax(config_object.get('metax_url'),
-                      config_object.get('metax_user'),
-                      config_object.get('metax_password'),
-                      verify=config_object.getboolean('metax_ssl_verification')
+        metax = Metax(
+            config_object.get('metax_url'),
+            config_object.get('metax_user'),
+            config_object.get('metax_password'),
+            verify=config_object.getboolean('metax_ssl_verification')
         )
         self.dataset = metax.get_dataset(self.dataset_id)
 

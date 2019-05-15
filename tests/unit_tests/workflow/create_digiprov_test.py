@@ -53,7 +53,7 @@ def test_createprovenanceinformation(testpath):
     with open(os.path.join(workspace, 'create-provenance-information.'
                            'finished')) as open_file:
         assert 'Dataset id=create_digiprov_test_dataset_file_and_logging' in\
-         open_file.read()
+            open_file.read()
 
 
 @pytest.mark.usefixtures("testmongoclient", "testmetax")
@@ -107,6 +107,7 @@ def test_create_premis_events(testpath):
     )
 
     # Check that the created xml-file contains correct elements.
+    # pylint: disable=no-member
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event-amd.xml'))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
@@ -177,6 +178,7 @@ def test_create_premis_events_unav(testpath):
         tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Check that the created xml-file contains correct elements.
+    # pylint: disable=no-member
     tree = lxml.etree.parse(os.path.join(testpath, 'creation-event-amd.xml'))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
