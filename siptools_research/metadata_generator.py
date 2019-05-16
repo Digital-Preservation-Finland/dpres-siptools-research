@@ -1,4 +1,4 @@
-"""Module that generates technical metadata for dataset files and writes it to
+"""Module that generates metadata required to create SIP, and posts it to
 Metax.
 """
 import os
@@ -17,10 +17,37 @@ from siptools_research.xml_metadata import (
 
 TEMPDIR = "/var/spool/siptools_research/tmp"
 
+DEFAULT_PROVENANCE = {
+    "preservation_event": {
+        "identifier": "",
+        "pref_label": {
+            "en": "creation"
+        }
+    },
+    "temporal": {
+        "start_date": "OPEN"
+    },
+    "description": {
+        "en": "Created by packaging service"
+    },
+    "event_outcome": {
+        "pref_label": {
+            "en": "(:unav)"
+        }
+    },
+    "outcome_description": {
+        "en": "Value unavailable, possibly unknown"
+    }
+}
+
 
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
-    """Generates technical metadata and mix metadata for all files of a given
-    dataset and updates relevant fields in file metadata.
+    """Generates
+
+    - preservation identifier for dataset
+    - provenance metadata if it does not exist already
+    - techincal metadata for all dataset files
+    - file format specific metadata for files
 
     :param dataset_id: identifier of dataset
     :param config: path to configuration file
@@ -41,6 +68,15 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
     # Generate preservation_identifier
     metax_client.set_preservation_id(dataset_id)
+
+    # Generate default provenance metada if provenance list is empty or does
+    # not exist at all
+    research_dataset = metax_client.get_dataset(dataset_id)['research_dataset']
+    if not research_dataset.get('provenance', []):
+        metax_client.patch_dataset(
+            dataset_id,
+            {'research_dataset': {'provenance': [DEFAULT_PROVENANCE]}}
+        )
 
     try:
         for file_ in metax_client.get_dataset_files(dataset_id):
@@ -75,7 +111,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             )
             file_metadata['file_characteristics'] = file_characteristics
 
-            # Generate XML metadata
+            # Generate file format specific XML metadata
             generator = XMLMetadataGenerator(tmpfile, file_metadata)
             try:
                 xml = generator.create()

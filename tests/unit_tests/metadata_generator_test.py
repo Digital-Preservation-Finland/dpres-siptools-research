@@ -17,7 +17,32 @@ from siptools_research.metadata_generator import (generate_metadata,
 import tests.conftest
 
 
+DEFAULT_PROVENANCE = {
+    "preservation_event": {
+        "identifier": "",
+        "pref_label": {
+            "en": "creation"
+        }
+    },
+    "temporal": {
+        "start_date": "OPEN"
+    },
+    "description": {
+        "en": "Created by packaging service"
+    },
+    "event_outcome": {
+        "pref_label": {
+            "en": "(:unav)"
+        }
+    },
+    "outcome_description": {
+        "en": "Value unavailable, possibly unknown"
+    }
+}
+
+
 @pytest.fixture(autouse=True)
+# pylint: disable=unused-argument
 def _init_mongo_client(testmongoclient):
     """Initializes mocked mongo collection upload.files"""
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
@@ -83,7 +108,8 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
     :returns: ``None``
     """
     generate_metadata(
-        'generate_metadata_test_dataset_file_characteristics_%s' % file_storage,
+        'generate_metadata_test_dataset_file_characteristics_%s'
+        % file_storage,
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
@@ -116,6 +142,7 @@ def test_generate_metadata_mix(file_storage):
     # Read one element from XML to ensure it is valid and contains correct data
     # The file is 10x10px image, so the metadata should contain image width.
     last_request = httpretty.last_request().body
+    # pylint: disable=no-member
     xml = lxml.etree.fromstring(last_request)
     assert xml.xpath('//ns0:imageWidth',
                      namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
@@ -145,6 +172,7 @@ def test_generate_metadata_mix_larger_file(file_storage):
 
     # Read one element from XML to ensure it is valid and contains correct data
     # The file is 10x10px image, so the metadata should contain image width.
+    # pylint: disable=no-member
     xml = lxml.etree.fromstring(httpretty.last_request().body)
     assert xml.xpath('//ns0:imageWidth',
                      namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
@@ -173,6 +201,7 @@ def test_generate_metadata_addml(file_storage):
 
     # Read one element from XML to ensure it is valid and contains correct data
     # The decoded filename should be /testpath/csvfile.csv
+    # pylint: disable=no-member
     xml = lxml.etree.fromstring(httpretty.last_request().body)
 
     flatfile = xml.xpath(
@@ -204,6 +233,7 @@ def test_generate_metadata_audiomd(file_storage):
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
+    # pylint: disable=no-member
     xml = lxml.etree.fromstring(httpretty.last_request().body)
 
     freq = xml.xpath(
@@ -240,6 +270,7 @@ def test_generate_metadata_tempfile_removal(file_storage):
 
 
 @pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
+# pylint: disable=invalid-name
 def test_generate_metadata_missing_csv_info():
     """Tests addml metadata generation for a dataset that does not contain all
     metadata required for addml generation.
@@ -254,3 +285,20 @@ def test_generate_metadata_missing_csv_info():
         'characteristics of a CSV file. '
         '[ dataset=missing_csv_info, file=missing_csv_info ]'
     )
+
+
+# pylint: disable=invalid-name
+@pytest.mark.parametrize('dataset', ['missing_provenance', 'empty_provenance'])
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
+def test_generate_metadata_provenance(dataset):
+    """Tests that provenance data is generated and added to Metax if it is
+    missing from dataset metadata.
+
+    :returns: ``None``
+    """
+    generate_metadata(dataset,
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    json_message = json.loads(httpretty.last_request().body)
+    assert json_message['research_dataset']['provenance'] \
+        == [DEFAULT_PROVENANCE]

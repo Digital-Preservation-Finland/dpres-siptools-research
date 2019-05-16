@@ -258,6 +258,12 @@ DATASETS = {
     },
     "missing_csv_info": {
         "files": ["missing_csv_info"]
+    },
+    "missing_provenance": {
+        "set": [("research_dataset", {"files": []})]
+    },
+    "empty_provenance": {
+        "set": [("research_dataset", {"files": [], "provenance":[]})]
     }
 }
 
