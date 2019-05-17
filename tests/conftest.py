@@ -7,6 +7,7 @@ import logging
 import tempfile
 import shutil
 import urllib
+from datetime import datetime
 
 import urllib3
 import mongomock
@@ -19,6 +20,7 @@ from metax_access import Metax
 
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
+from siptools_research.utils.database import Database
 import tests.metax_data.datasets as datasets
 import tests.metax_data.files as files
 
@@ -52,6 +54,16 @@ def mock_metax_access(monkeypatch):
     monkeypatch.setattr(Metax, "get_dataset", datasets.get_dataset)
     monkeypatch.setattr(Metax, "get_dataset_files", datasets.get_dataset_files)
     monkeypatch.setattr(Metax, "get_file", files.get_file)
+
+
+@pytest.fixture(autouse=True)
+def mock_event_timestamp(monkeypatch):
+    """Monkeypatch Database.get_event_timestamp() to return current timestamp
+    """
+    monkeypatch.setattr(
+        Database, 'get_event_timestamp',
+        lambda self, workflow, task: datetime.utcnow().isoformat()
+    )
 
 
 def _identifier_exists(identifier):

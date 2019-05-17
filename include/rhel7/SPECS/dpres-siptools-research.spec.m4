@@ -34,6 +34,7 @@ Requires:       python2-jsonschema
 Requires:       python-requests
 Requires:       python-scandir
 Requires:       python-iso-639 ImageMagick
+Requires:       python-dateutil
 Requires:       python-mongomock
 Requires:       dpres-xml-schemas
 Requires:       metax-access

@@ -20,6 +20,7 @@ requests
 paramiko
 jsonschema==2.5.1
 iso-639
+python-dateutil
 
 
 # TODO: docutils is required by python-daemon. Can be removed when this issue:

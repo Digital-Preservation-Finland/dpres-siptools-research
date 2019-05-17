@@ -39,7 +39,7 @@ class WorkflowTask(luigi.Task):
     :config: Path to configuration file
 
     WorkflowTask also has some extra instance variables that can be used to
-    identify the task and current workflow, forexample when storing workflow
+    identify the task and current workflow, for example when storing workflow
     status information to database:
 
     :document_id: A unique string that is used for identifying workflows (one

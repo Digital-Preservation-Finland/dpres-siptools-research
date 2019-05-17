@@ -150,10 +150,20 @@ class Database(object):
 
         :param workflow_id: Mongo workflow id
         :param taskname: Name of task
-        :returns: ``None``
+        :returns: Event result
         """
         document = self._collection.find_one({'_id': workflow_id})
         return document['workflow_tasks'][taskname]['result']
+
+    def get_event_timestamp(self, workflow_id, taskname):
+        """Read event timestamp for a workflow.
+
+        :param workflow_id: Mongo workflow id
+        :param taskname: Name of task
+        :returns: Event timestamp
+        """
+        document = self._collection.find_one({'_id': workflow_id})
+        return document['workflow_tasks'][taskname]['timestamp']
 
     def get_incomplete_workflows(self):
         """Find all incomplete workflows that are not disabled

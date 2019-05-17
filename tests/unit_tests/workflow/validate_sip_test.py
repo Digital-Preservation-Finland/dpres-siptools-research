@@ -1,25 +1,6 @@
 """Unit tests for :mod:`siptools_research.workflow.validate_sip` module."""
-
-
 import tests.conftest
 from siptools_research.workflow.validate_sip import ValidateSIP
-
-
-# pylint: disable=unused-argument
-def _always_true(*args, **kwargs):
-    """Mock function that always returns True.
-
-    :returns: ``True``
-    """
-    return True
-
-
-def _always_false(*args, **kwargs):
-    """Mock function that always returns False.
-
-    :returns: ``False``
-    """
-    return False
 
 
 def test_validatesip_accepted(testpath, monkeypatch):
@@ -39,14 +20,16 @@ def test_validatesip_accepted(testpath, monkeypatch):
 
     # Monkeypatch RemoteFileSystem.exists to return False. The task should not
     # be completed.
-    monkeypatch.setattr('siptools_research.remoteanytarget.'
-                        'RemoteAnyTarget._exists',
-                        _always_false)
+    monkeypatch.setattr(
+        'siptools_research.remoteanytarget.RemoteAnyTarget._exists',
+        lambda *args, **kwargs: False
+    )
     assert not task.complete()
 
     # Monkeypatch RemoteFileSystem.exists to return True. The task should now
     # be completed.
-    monkeypatch.setattr('siptools_research.remoteanytarget.'
-                        'RemoteAnyTarget._exists',
-                        _always_true)
+    monkeypatch.setattr(
+        'siptools_research.remoteanytarget.RemoteAnyTarget._exists',
+        lambda *args, **kwargs: True
+    )
     assert task.complete()

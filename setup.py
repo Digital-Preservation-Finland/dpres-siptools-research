@@ -18,6 +18,7 @@ def main():
             "paramiko",
             "jsonschema",
             "iso-639",
+            "python-dateutil",
             "siptools@git+https://gitlab.csc.fi/dpres/dpres-siptools.git"
             "@develop",
             "metax_access@git+https://gitlab.csc.fi/dpres/metax-access.git"
