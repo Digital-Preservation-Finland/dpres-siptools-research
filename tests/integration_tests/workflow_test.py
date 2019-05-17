@@ -10,6 +10,7 @@ output of task is NOT examined.
 import os
 import importlib
 import uuid
+from datetime import date
 
 import pytest
 import luigi
@@ -207,6 +208,7 @@ def assert_mets_root_element(mets_path):
 
 
 def _mock_exists(self, path):
-    if path.startswith('accepted'):
+    if path.startswith('accepted/%s/' % date.today().strftime("%Y-%m-%d")):
         return True
+
     return False

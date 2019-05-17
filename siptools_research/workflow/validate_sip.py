@@ -2,7 +2,7 @@
 service.
 """
 
-import time
+from datetime import date, timedelta
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowExternalTask
 from siptools_research.remoteanytarget import RemoteAnyTarget
@@ -28,18 +28,25 @@ class ValidateSIP(WorkflowExternalTask):
     def output(self):
         """The output that this Task produces.
 
-        :returns: remote target that may exist in two possible locations on
+        :returns: remote target that may exist in four possible locations on
                   digital preservation server:
-                  ~/accepted/<datepath>/<document_id>.tar/ or
-                  ~/rejected/<datepath>/<document_id>.tar/
+                  ~/accepted/<datepath-today>/<document_id>.tar/
+                  ~/rejected/<datepath-today>/<document_id>.tar/
+                  ~/accepted/<datepath-yesterday>/<document_id>.tar/
+                  ~/rejected/<datepath-yesterday>/<document_id>.tar/
         :rtype: RemoteAnyTarget
         """
-        # TODO: if day changes between ingest report creation and init of this
-        # target, the target does not exist.
         conf = Configuration(self.config)
-        date = time.strftime("%Y-%m-%d")
-        path = ['accepted/%s/%s.tar' % (date, self.document_id),
-                'rejected/%s/%s.tar' % (date, self.document_id)]
+
+        today = date.today().strftime("%Y-%m-%d")
+        yesterday = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+        path = [
+            'accepted/%s/%s.tar' % (today, self.document_id),
+            'rejected/%s/%s.tar' % (today, self.document_id),
+            'accepted/%s/%s.tar' % (yesterday, self.document_id),
+            'rejected/%s/%s.tar' % (yesterday, self.document_id)
+        ]
+
         return RemoteAnyTarget(path, conf.get('dp_host'),
                                conf.get('dp_user'),
                                conf.get('dp_ssh_key'))
