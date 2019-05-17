@@ -154,6 +154,7 @@ class CreateLogicalStructMap(WorkflowTask):
             # the "use_category" of the parent directory.
             if filecategory is None:
                 filecategory = find_dir_use_category(
+                    metax_client,
                     dataset_file['parent_directory']['identifier'],
                     dataset_metadata
                 )
@@ -212,24 +213,28 @@ def find_file_use_category(identifier, dataset_metadata):
     return None
 
 
-def find_dir_use_category(identifier, dataset_metadata):
+def find_dir_use_category(metax_client, identifier, dataset_metadata):
     """Looks for directory with identifier from dataset metadata. Returns the
     `use_category` of directory if it is found. If directory is not found from
     list, return ``None``.
 
+    :param metax_client: metax access
     :param identifier: directory identifier
     :param dataset_metadata: dataset metadata dictionary
     :returns: `use_category` attribute of directory
     """
-    if 'files' in dataset_metadata['research_dataset']:
-        languages = get_dataset_languages(dataset_metadata)
+    languages = get_dataset_languages(dataset_metadata)
 
-        for directory in dataset_metadata['research_dataset']['directories']:
-            if directory['identifier'] == identifier:
-                return get_localized_value(
-                    directory['use_category']['pref_label'],
-                    languages=languages
-                )
-
+    for directory in dataset_metadata['research_dataset']['directories']:
+        if directory['identifier'] == identifier:
+            return get_localized_value(
+                directory['use_category']['pref_label'],
+                languages=languages
+            )
+    dire = metax_client.get_directory(identifier)
+    if 'parent_directory' in dire:
+        find_dir_use_category(
+            metax_client, dire['parent_directory']['identifier'],
+            dataset_metadata)
     # Nothing found
     return None
