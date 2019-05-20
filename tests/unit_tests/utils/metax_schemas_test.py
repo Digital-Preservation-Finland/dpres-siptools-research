@@ -22,9 +22,6 @@ VALID_DATASET_METADATA = {
                 "description": {
                     "en": "en_description"
                 },
-                "temporal": {
-                    "start_date": "17.9.1991"
-                },
                 'event_outcome': {
                     "pref_label": {
                         "en": "outcome"

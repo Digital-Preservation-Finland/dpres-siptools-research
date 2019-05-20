@@ -121,7 +121,10 @@ def _create_premis_events(dataset_id, workspace, config):
             languages=dataset_languages
         )
 
-        event_datetime = provenance["temporal"]["start_date"]
+        try:
+            event_datetime = provenance["temporal"]["start_date"]
+        except KeyError:
+            event_datetime = 'OPEN'
 
         event_detail = get_localized_value(
             provenance["description"],

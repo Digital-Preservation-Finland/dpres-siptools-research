@@ -19,18 +19,18 @@ import tests.conftest
 
 DEFAULT_PROVENANCE = {
     "preservation_event": {
-        "identifier": "",
+        "identifier":
+        "http://uri.suomi.fi/codelist/fairdata/preservation_event/code/cre",
         "pref_label": {
             "en": "creation"
         }
-    },
-    "temporal": {
-        "start_date": "OPEN"
     },
     "description": {
         "en": "Created by packaging service"
     },
     "event_outcome": {
+        "identifier":
+        "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/unknown",
         "pref_label": {
             "en": "(:unav)"
         }

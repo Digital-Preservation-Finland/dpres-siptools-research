@@ -28,7 +28,6 @@ DATASET_METADATA_SCHEMA = {
                         "type": "object",
                         "required": [
                             "preservation_event",
-                            "temporal",
                             "description",
                             "event_outcome",
                             "outcome_description"
