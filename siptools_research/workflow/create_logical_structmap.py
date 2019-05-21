@@ -233,8 +233,9 @@ def find_dir_use_category(metax_client, identifier, dataset_metadata):
             )
     dire = metax_client.get_directory(identifier)
     if 'parent_directory' in dire:
-        find_dir_use_category(
-            metax_client, dire['parent_directory']['identifier'],
-            dataset_metadata)
+        return find_dir_use_category(
+                    metax_client, dire['parent_directory']['identifier'],
+                    dataset_metadata
+                )
     # Nothing found
     return None
