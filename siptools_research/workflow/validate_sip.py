@@ -1,7 +1,7 @@
 """Luigi external task that waits for SIP validation in digital preservation
 service.
 """
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import dateutil.parser
 
@@ -47,13 +47,15 @@ class ValidateSIP(WorkflowExternalTask):
         send_timestamp = database.get_event_timestamp(
             self.document_id, "SendSIPToDP"
         )
-        send_datetime = dateutil.parser.parse(send_timestamp)
+        date = dateutil.parser.parse(send_timestamp)
+        lim_datetime = datetime.today()
 
         path = []
-        for i in range(3):
-            date = (send_datetime + timedelta(days=i)).strftime("%Y-%m-%d")
-            path.append('accepted/%s/%s.tar' % (date, self.document_id))
-            path.append('rejected/%s/%s.tar' % (date, self.document_id))
+        while date < lim_datetime:
+            date_str = date.strftime("%Y-%m-%d")
+            path.append('accepted/%s/%s.tar' % (date_str, self.document_id))
+            path.append('rejected/%s/%s.tar' % (date_str, self.document_id))
+            date += timedelta(days=1)
 
         return RemoteAnyTarget(
             path,
