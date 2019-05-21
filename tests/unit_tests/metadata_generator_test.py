@@ -26,7 +26,7 @@ DEFAULT_PROVENANCE = {
         }
     },
     "description": {
-        "en": "Created by packaging service"
+        "en": "Value unavailable, possibly unknown"
     },
     "event_outcome": {
         "identifier":
