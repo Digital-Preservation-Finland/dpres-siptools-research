@@ -5,6 +5,7 @@ pytest-cov
 requests_mock
 mock
 Sphinx
+jsonschema2rst
 httpretty
 mongomock
 git+https://gitlab.csc.fi/dpres/dpres-ipt.git@develop#egg=ipt

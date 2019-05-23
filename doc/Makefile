@@ -41,13 +41,17 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)
 	-rm -rf modules
+	-rm -rf schemas
 
 modules:
 	# TODO: --module-first parameter was dropped because it is not
 	# supported by sphinx-apidoc version (1.1.3) shipped with centos 7
 	sphinx-apidoc --no-toc --maxdepth=10 --force --output-dir=modules ../ ../setup.py ../version.py
 
-html: modules
+schemas:
+	jsonschema2rst ../siptools_research/schemas/ schemas/
+
+html: modules schemas
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

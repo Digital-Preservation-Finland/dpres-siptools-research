@@ -6,6 +6,7 @@ junit.xml
 .pytest_cache/
 doc/build/
 doc/modules/
+doc/schemas/
 htmlcov/
 venv/
 .venv/

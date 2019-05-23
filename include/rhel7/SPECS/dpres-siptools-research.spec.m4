@@ -43,6 +43,8 @@ BuildRequires:  dpres-ipt
 BuildRequires:  python-setuptools
 BuildRequires:  pytest
 BuildRequires:  python-httpretty
+BuildRequires:  python-sphinx
+BuildRequires:  python-jsonschema2rst
 
 %description
 Digital Preservation Packaging Service for Research datasets

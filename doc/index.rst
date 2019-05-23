@@ -3,16 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. include:: ../README.rst
-.. include:: ./configuration.rst
-
-
-Modules
-=======
-
+Table of contents
+=================
 .. toctree::
-   modules/siptools_research
-   modules/tests
+   :maxdepth: 2
+
+   usage.rst
+   schemas.rst
+   modules.rst
 
 
 Indices and tables
