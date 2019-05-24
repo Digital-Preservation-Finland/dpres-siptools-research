@@ -95,6 +95,13 @@ or run one of the integration tests::
 
 Building
 --------
+Building RPM package requires rpmtools from `DPres RPM repository <https://dpres-rpms.csc.fi/>`_ and packages listed as build requirements in SPEC file (include/rhel7/SPECS/dpres-siptools-research.spec.m4). dpres-ipt requires ffmpeg from li.nux.ro repositories.::
+
+   yum install rpmtools
+   rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+   grep BuildRequires include/rhel7/SPECS/dpres-siptools-research.spec.m4 | cut -d ':' -f 2 | xargs yum install -y
+
+
 Build RPM::
 
    make rpm
