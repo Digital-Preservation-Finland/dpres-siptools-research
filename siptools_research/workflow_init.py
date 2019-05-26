@@ -72,38 +72,20 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     database = siptools_research.utils.database.Database(config)
     database.add_workflow(workspace_name, dataset_id)
 
+    # Report preservation state to Metax
+    metax = Metax(
+        conf.get('metax_url'),
+        conf.get('metax_user'),
+        conf.get('metax_password'),
+        verify=conf.getboolean('metax_ssl_verification')
+    )
+    metax.set_preservation_state(dataset_id,
+                                 state=DS_STATE_IN_PACKAGING_SERVICE,
+                                 system_description='In packaging service')
+
     # Start luigi workflow. Run in background.
     subprocess.Popen(["luigi",
                       "--module", "siptools_research.__main__", "InitWorkflow",
                       "--dataset-id", dataset_id,
                       "--workspace", workspace,
                       "--config", config])
-
-    set_preservation_state(dataset_id, conf)
-
-
-def set_preservation_state(dataset_id, config):
-    """Sets dataset's preservation state as In Packaging Service
-    if not already set.
-
-    :returns: ``None``
-    """
-    metax = Metax(
-        config.get('metax_url'),
-        config.get('metax_user'),
-        config.get('metax_password'),
-        verify=config.getboolean('metax_ssl_verification'))
-    dataset = metax.get_dataset(dataset_id)
-    # Do not change preservation_state_modified timestamp unnecessarily
-    if dataset['preservation_state'] != DS_STATE_IN_PACKAGING_SERVICE:
-        metax.set_preservation_state(
-            dataset_id,
-            state=DS_STATE_IN_PACKAGING_SERVICE,
-            system_description='In packaging service'
-        )
-    elif (dataset['preservation_state'] == DS_STATE_IN_PACKAGING_SERVICE and
-            dataset['preservation_description'] != 'In packaging service'):
-        metax.set_preservation_state(
-            dataset_id,
-            system_description='In packaging service'
-        )

@@ -42,6 +42,7 @@ BASE_DATASET = {
 }
 
 DATASETS = {
+    "1": {},
     "generate_metadata_test_dataset_1_ida": {
         "files": ["pid:urn:generate_metadata_1_ida"]
     },
