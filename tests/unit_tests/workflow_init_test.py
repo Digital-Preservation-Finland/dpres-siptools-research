@@ -1,13 +1,14 @@
 """Tests for :mod:`siptools_research.workflow_init` module"""
+import json
 
 import pytest
 import mock
-import json
 import httpretty
 
 import siptools_research
-import tests.conftest
 from siptools_research.workflow_init import preserve_dataset
+import tests.conftest
+
 
 def test_initworkflow():
     """Test that ``InitWorkflow.requires`` function returns task with correct
@@ -59,6 +60,7 @@ def test_initworkflows():
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
 @mock.patch('subprocess.Popen')
+# pylint: disable=invalid-name
 def test_preserve_dataset_sets_preservation_state(mock_subproc_popen):
     """Tests that dataset's preservation_state and preservation_description
     attributes are set correctly..
@@ -74,9 +76,8 @@ def test_preserve_dataset_sets_preservation_state(mock_subproc_popen):
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
 @mock.patch('subprocess.Popen')
-def test_preserve_dataset_sets_only_preservation_description(
-            mock_subproc_popen
-        ):
+# pylint: disable=invalid-name
+def test_preserve_dataset_only_description(mock_subproc_popen):
     """Verifies that only preservation_description attribute is set if not
     already correct.
 
@@ -95,9 +96,8 @@ def test_preserve_dataset_sets_only_preservation_description(
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
 @mock.patch('subprocess.Popen')
-def test_preserve_dataset_set_preservation_state_not_called(
-            mock_subproc_popen
-        ):
+# pylint: disable=invalid-name
+def test_preserve_dataset_no_changes(mock_subproc_popen):
     """Verifies that metax is not called to set preservation_state or
     preservation_description attributes when they already have correct values
 
