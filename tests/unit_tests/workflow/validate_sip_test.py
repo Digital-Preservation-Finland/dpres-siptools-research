@@ -1,6 +1,9 @@
 """Unit tests for :mod:`siptools_research.workflow.validate_sip` module."""
+from datetime import datetime
+
 import tests.conftest
 from siptools_research.workflow.validate_sip import ValidateSIP
+from siptools_research.utils.database import Database
 
 
 def test_validatesip_accepted(testpath, monkeypatch):
@@ -12,6 +15,10 @@ def test_validatesip_accepted(testpath, monkeypatch):
     :param monkeypatch: Monkeypatch fixture
     :returns: ``None``
     """
+    monkeypatch.setattr(
+        Database, 'get_event_timestamp',
+        lambda self, workflow, task: datetime.utcnow().isoformat()
+    )
     workspace = testpath
 
     # Init task

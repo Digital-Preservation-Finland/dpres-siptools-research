@@ -39,7 +39,7 @@ class Database(object):
         """Add information of workflow task to mongodb.
 
         :param workflow_id: Workflow identifier i.e. the name of workspace
-            directory
+                            directory
         :param taskname: Name of the task
         :param result: Result string ('failure' or 'success')
         :param messages: Information of the event

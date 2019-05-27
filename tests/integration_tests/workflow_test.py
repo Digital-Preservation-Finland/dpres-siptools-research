@@ -10,7 +10,7 @@ output of task is NOT examined.
 import os
 import importlib
 import uuid
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 import luigi
@@ -45,6 +45,23 @@ def _init_files_col(mongoclient):
         mongoclient.upload.files.insert_one(
             {"_id": identifier, "file_path": os.path.abspath(fpath)}
         )
+
+
+def _insert_sendsip_success(mongoclient, workflow_id):
+    """Insert completed SendSIPToDP workflow_task to siptools-research.workflow
+    collection.
+    """
+    mongoclient['siptools-research']['workflow'].insert_one(
+        {
+            "_id": workflow_id,
+            "workflow_tasks": {
+                "SendSIPToDP": {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "results": "success"
+                }
+            }
+        }
+    )
 
 
 # Run every task as it would be run from commandline
@@ -96,6 +113,9 @@ def test_workflow(_mock_ssh, testpath, file_storage, module_name, task):
     with mock.patch.object(RemoteAnyTarget, '_exists', _mock_exists):
         workspace = os.path.join(testpath, 'workspace_' +
                                  os.path.basename(testpath))
+
+        _insert_sendsip_success(mongoclient, os.path.split(workspace)[1])
+
         module = importlib.import_module('siptools_research.workflow.' +
                                          module_name)
         task_class = getattr(module, task)
