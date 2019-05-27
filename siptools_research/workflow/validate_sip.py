@@ -31,14 +31,15 @@ class ValidateSIP(WorkflowExternalTask):
     def output(self):
         """The output that this Task produces.
 
-        :returns: remote target that may exist in six possible locations on
-                  digital preservation server:
-                  ~/accepted/<send_datepath>/<document_id>.tar/
-                  ~/rejected/<send_datepath>/<document_id>.tar/
-                  ~/accepted/<send_datepath+1>/<document_id>.tar/
-                  ~/rejected/<send_datepath+1>/<document_id>.tar/
-                  ~/accepted/<send_datepath+2>/<document_id>.tar/
-                  ~/rejected/<send_datepath+2>/<document_id>.tar/
+        :returns: remote target that may exist on digital preservation server
+                  in any path formatted::
+
+                      ~/accepted/<datepath>/<document_id>.tar/
+                      ~/rejected/<datepath>/<document_id>.tar/
+
+                  where datepath is any date between the date the SIP was sent
+                  to the server and the current date.
+
         :rtype: RemoteAnyTarget
         """
         conf = Configuration(self.config)
