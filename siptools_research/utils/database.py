@@ -163,6 +163,9 @@ class Database(object):
         :returns: Event timestamp
         """
         document = self._collection.find_one({'_id': workflow_id})
+        if not document:
+            raise ValueError
+
         return document['workflow_tasks'][taskname]['timestamp']
 
     def get_incomplete_workflows(self):

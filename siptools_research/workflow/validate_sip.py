@@ -45,10 +45,15 @@ class ValidateSIP(WorkflowExternalTask):
         conf = Configuration(self.config)
         database = Database(self.config)
 
-        send_timestamp = database.get_event_timestamp(
-            self.document_id, "SendSIPToDP"
-        )
-        date = dateutil.parser.parse(send_timestamp)
+        # Get SendSIPToDP completion datetime or use the current UTC time
+        try:
+            send_timestamp = database.get_event_timestamp(
+                self.document_id, "SendSIPToDP"
+            )
+            date = dateutil.parser.parse(send_timestamp)
+        except ValueError:
+            date = datetime.utcnow()
+
         lim_datetime = datetime.today()
 
         path = []
