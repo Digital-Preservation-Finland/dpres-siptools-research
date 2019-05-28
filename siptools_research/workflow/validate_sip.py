@@ -45,7 +45,10 @@ class ValidateSIP(WorkflowExternalTask):
         conf = Configuration(self.config)
         database = Database(self.config)
 
-        # Get SendSIPToDP completion datetime or use the current UTC time
+        # Get SendSIPToDP completion datetime or use the current UTC time.
+        # This is necessary since ValidateSip output is checked first time
+        # before any of the dependencies are ran. Dependencies are ran only if
+        # ValidateSip task is not completed.
         try:
             send_timestamp = database.get_event_timestamp(
                 self.document_id, "SendSIPToDP"
