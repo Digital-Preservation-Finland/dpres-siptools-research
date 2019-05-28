@@ -37,7 +37,8 @@ BASE_DATASET = {
         ],
         "files": [],
         "directories": []
-    }
+    },
+    "preservation_state": 0
 }
 
 DATASETS = {
@@ -264,6 +265,11 @@ DATASETS = {
     },
     "empty_provenance": {
         "set": [("research_dataset", {"files": [], "provenance":[]})]
+    },
+    "dataset_1": {
+    },
+    "dataset_1_in_packaging_service": {
+        "set": [("preservation_state", 90)]
     }
 }
 
