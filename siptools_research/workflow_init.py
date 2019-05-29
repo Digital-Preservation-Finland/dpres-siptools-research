@@ -4,6 +4,8 @@ import os
 import uuid
 import subprocess
 import luigi
+from metax_access import Metax, DS_STATE_IN_PACKAGING_SERVICE
+
 from siptools_research.workflowtask import WorkflowWrapperTask
 from siptools_research.config import Configuration
 import siptools_research.utils.database
@@ -76,3 +78,32 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
                       "--dataset-id", dataset_id,
                       "--workspace", workspace,
                       "--config", config])
+
+    set_preservation_state(dataset_id, conf)
+
+
+def set_preservation_state(dataset_id, config):
+    """Sets dataset's preservation state as In Packaging Service
+    if not already set.
+
+    :returns: ``None``
+    """
+    metax = Metax(
+        config.get('metax_url'),
+        config.get('metax_user'),
+        config.get('metax_password'),
+        verify=config.getboolean('metax_ssl_verification'))
+    dataset = metax.get_dataset(dataset_id)
+    # Do not change preservation_state_modified timestamp unnecessarily
+    if dataset['preservation_state'] != DS_STATE_IN_PACKAGING_SERVICE:
+        metax.set_preservation_state(
+            dataset_id,
+            state=DS_STATE_IN_PACKAGING_SERVICE,
+            system_description='In packaging service'
+        )
+    elif (dataset['preservation_state'] == DS_STATE_IN_PACKAGING_SERVICE and
+            dataset['preservation_description'] != 'In packaging service'):
+        metax.set_preservation_state(
+            dataset_id,
+            system_description='In packaging service'
+        )

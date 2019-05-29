@@ -1,9 +1,13 @@
 """Tests for :mod:`siptools_research.workflow_init` module"""
 
 import pytest
+import mock
+import json
+import httpretty
+
 import siptools_research
 import tests.conftest
-
+from siptools_research.workflow_init import preserve_dataset
 
 def test_initworkflow():
     """Test that ``InitWorkflow.requires`` function returns task with correct
@@ -51,3 +55,57 @@ def test_initworkflows():
     assert set([required_task.workspace for required_task in required_tasks])\
         == set(['./test_workspace_root/workflow1',
                 './test_workspace_root/workflow3'])
+
+
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@mock.patch('subprocess.Popen')
+def test_preserve_dataset_sets_preservation_state(mock_subproc_popen):
+    """Tests that dataset's preservation_state and preservation_description
+    attributes are set correctly..
+
+    :returns: ``None``
+    """
+    preserve_dataset('dataset_1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    assert mock_subproc_popen.called
+    json_message = json.loads(httpretty.last_request().body)
+    assert json_message['preservation_state'] == 90
+    assert json_message['preservation_description'] == 'In packaging service'
+
+
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@mock.patch('subprocess.Popen')
+def test_preserve_dataset_sets_only_preservation_description(
+            mock_subproc_popen
+        ):
+    """Verifies that only preservation_description attribute is set if not
+    already correct.
+
+    :returns: ``None``
+    """
+    preserve_dataset(
+        'dataset_1_in_packaging_service_with_conflicting_description',
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+    assert mock_subproc_popen.called
+    json_message = json.loads(httpretty.last_request().body)
+    assert 'preservation_state' not in json_message
+    assert json_message['preservation_description'] == 'In packaging service'
+    httpretty.reset()
+
+
+@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@mock.patch('subprocess.Popen')
+def test_preserve_dataset_set_preservation_state_not_called(
+            mock_subproc_popen
+        ):
+    """Verifies that metax is not called to set preservation_state or
+    preservation_description attributes when they already have correct values
+
+    :returns: ``None``
+    """
+    preserve_dataset('dataset_1_in_packaging_service',
+                     config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    assert mock_subproc_popen.called
+    # Check that metax set_preservation_state is not called
+    assert isinstance(httpretty.last_request(),
+                      httpretty.core.HTTPrettyRequestEmpty)

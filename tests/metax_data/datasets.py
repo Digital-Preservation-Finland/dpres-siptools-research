@@ -268,8 +268,13 @@ DATASETS = {
     },
     "dataset_1": {
     },
+    "dataset_1_in_packaging_service_with_conflicting_description": {
+        "set": [("preservation_state", 90),
+                ("preservation_description", "foobar")]
+    },
     "dataset_1_in_packaging_service": {
-        "set": [("preservation_state", 90)]
+        "set": [("preservation_state", 90),
+                ("preservation_description", "In packaging service")]
     }
 }
 
