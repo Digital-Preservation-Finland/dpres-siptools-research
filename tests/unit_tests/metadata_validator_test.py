@@ -58,17 +58,10 @@ def test_validate_metadata_invalid_contract_metadata():
         )
 
     # Check exception message
-    assert exc_info.value.message \
-        == ("'name' is a required property\n"
-            "\n"
-            "Failed validating 'required' in schema['properties']"
-            "['contract_json']['properties']['organization']:\n"
-            "    {'properties': {'name': {'type': 'string'}},\n"
-            "     'required': ['name'],\n"
-            "     'type': 'object'}\n"
-            "\n"
-            "On instance['contract_json']['organization']:\n"
-            "    {u'foo': u'bar'}")
+    assert exc_info.value.message.startswith(
+        "'name' is a required property\n\nFailed validating 'required' in "
+        "schema"
+    )
 
 
 @pytest.mark.usefixtures('testmetax', 'mock_filetype_conf')
