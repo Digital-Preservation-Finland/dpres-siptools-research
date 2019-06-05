@@ -1,4 +1,5 @@
 """IDA interface module"""
+import shutil
 import requests
 from siptools_research.config import Configuration
 
@@ -38,7 +39,7 @@ def download_file(identifier, tmpfilepath, config_file):
     :param config_file: Configuration file
     :returns: ``None``
     """
-    response = _get_response(identifier, config_file)
+    response = _get_response(identifier, config_file, stream=True)
 
     with open(tmpfilepath, 'w') as new_file:
-        new_file.write(response.content)
+        shutil.copyfileobj(response.raw, new_file)
