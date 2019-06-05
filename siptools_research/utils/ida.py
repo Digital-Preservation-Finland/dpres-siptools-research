@@ -1,6 +1,9 @@
 """IDA interface module"""
+import os
 import shutil
+
 import requests
+
 from siptools_research.config import Configuration
 
 
@@ -30,16 +33,25 @@ def _get_response(identifier, config_file, stream=False):
     return response
 
 
-def download_file(identifier, tmpfilepath, config_file):
-    """Download file from IDA. Ida url, username, and password are read from
+def download_file(identifier, linkpath, config_file):
+    """Download file from IDA to workspace_root/ida_files and create a hard
+    link to linkpath. Ida url, username, and password are read from
     configuration file.
 
     :param identifier: File identifier (for example "pid:urn:1")
-    :param tmpfilepath: Path to save the file
+    :param linkpath: Path where the hard link is created
     :param config_file: Configuration file
     :returns: ``None``
     """
-    response = _get_response(identifier, config_file, stream=True)
+    conf = Configuration(config_file)
+    filepath = os.path.join(
+        conf.get("workspace_root"), "ida_files", identifier
+    )
 
-    with open(tmpfilepath, 'w') as new_file:
-        shutil.copyfileobj(response.raw, new_file)
+    if not os.path.exists(filepath):
+        response = _get_response(identifier, config_file, stream=True)
+
+        with open(filepath, 'w') as new_file:
+            shutil.copyfileobj(response.raw, new_file)
+
+    os.link(filepath, linkpath)
