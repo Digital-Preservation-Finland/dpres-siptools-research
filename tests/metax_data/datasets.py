@@ -13,7 +13,6 @@ BASE_DATASET = {
         "provenance": [
             {
                 "preservation_event": {
-                    "identifier": "1234",
                     "pref_label": {
                         "en": "creation"
                     }

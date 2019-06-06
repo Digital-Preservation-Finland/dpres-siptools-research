@@ -58,11 +58,8 @@ DATASET_METADATA_SCHEMA = {
                             },
                             "preservation_event": {
                                 "type": "object",
-                                "required": ["identifier", "pref_label"],
+                                "required": ["pref_label"],
                                 "properties": {
-                                    "identifier": {
-                                        "type": "string"
-                                    },
                                     "pref_label": {
                                         "type": "object",
                                         "required": ["en"],

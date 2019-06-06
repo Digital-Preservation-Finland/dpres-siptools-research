@@ -14,7 +14,6 @@ VALID_DATASET_METADATA = {
         "provenance": [
             {
                 "preservation_event": {
-                    "identifier": "identifierURL",
                     "pref_label": {
                         "en": "ProvenanceText",
                     }
