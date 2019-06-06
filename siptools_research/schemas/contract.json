@@ -1,0 +1,32 @@
+{
+    "type": "object",
+    "required": ["contract_json"],
+    "properties": {
+        "contract_json": {
+            "title": "Contract JSON",
+            "description": "DP Service contract metadata",
+            "type": "object",
+            "required": ["identifier", "organization"],
+            "properties": {
+                "identifier": {
+                    "title": "Identifier",
+                    "description": "Contract identifier is used as value of fi:CONTRACTID attribute in METS document.",
+                    "type": "string"
+                },
+                "organization": {
+                    "title": "Organization",
+                    "description": "Organization used as archivist organization agent in METS document.",
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                        "name": {
+                            "title": "Name",
+                            "description": "Name used as value of mets:name element in METS agent.",
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

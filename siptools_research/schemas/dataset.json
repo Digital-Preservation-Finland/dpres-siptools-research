@@ -1,0 +1,210 @@
+{
+    "type": "object",
+    "required": ["research_dataset", "contract", "preservation_identifier"],
+    "properties": {
+        "preservation_identifier": {
+            "title": "Preservation identifier",
+            "description": "Package identifier i.e. the OBJID attribute in METS document",
+            "type": "string"
+        },
+        "contract": {
+            "title": "Contract",
+            "description": "Metadata for identifying contract",
+            "type": "object",
+            "required": ["identifier"],
+            "properties": {
+                "identifier": {
+                    "title": "Identifier",
+                    "description": "Identifier of contract in Metax",
+                    "type": "string"
+                }
+            }
+        },
+        "research_dataset": {
+            "title": "Research dataset",
+            "description": "Administrative metadata and files included in dataset",
+            "type": "object",
+            "required": ["provenance"],
+            "anyOf": [
+                {"required": ["files"]},
+                {"required": ["directories"]}
+            ],
+            "properties": {
+                "provenance": {
+                    "title": "Provenance",
+                    "description": "Digital provenance metadata. Packaging service can create dummy provenance metadata if it is not provided.",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "preservation_event",
+                            "description",
+                            "event_outcome",
+                            "outcome_description"
+                        ],
+                        "properties": {
+                            "temporal": {
+                                "title": "Temporal",
+                                "description": "Creation date of dataset",
+                                "type": "object",
+                                "required": ["start_date"],
+                                "properties": {
+                                    "start_date": {
+                                        "title": "Start date",
+                                        "description": "The value of premis:eventDateTime element",
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "description": {
+                                "title": "Description",
+                                "description": "The description of digital provenance event in multiple languages. The description in the default language of the dataset is used as value of premis:eventDetail element.",
+                                "type": "object",
+                                "required": ["en"],
+                                "properties": {
+                                    "en": {
+                                        "title": "en",
+                                        "description": "English",
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "preservation_event": {
+                                "title": "Preservation event",
+                                "description": "The digital provenance event",
+                                "type": "object",
+                                "required": ["pref_label"],
+                                "properties": {
+                                    "pref_label": {
+                                        "title": "Preferred label",
+                                        "description": "The type of digital provenance event in multiple languages. The type in the default language of the dataset is used as value of premis:eventType element.",
+                                        "type": "object",
+                                        "required": ["en"],
+                                        "properties": {
+                                            "en": {
+                                                "title": "en",
+                                                "description": "English",
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "event_outcome": {
+                                "title": "Event outcome",
+                                "description": "Digital provenance event outcome information",
+                                "type": "object",
+                                "required": ["pref_label"],
+                                "properties": {
+                                    "pref_label": {
+                                        "title": "Preferred label",
+                                        "description": "The outcome of digital provenance event in multiple languages. The outcome in the default language of the dataset is used as value of premis:eventOutcomeInformation element",
+                                        "type": "object",
+                                        "required": ["en"],
+                                        "properties": {
+                                            "en": {
+                                                "title": "en",
+                                                "description": "English",
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "outcome_description": {
+                                "title": "Outcome description",
+                                "description": "The outcome detail note of digital provenance event in multiple languages. The outcome detail note in the default language of the dataset is used as value of premis:eventOutcomeDetailNote element",
+                                "type": "object",
+                                "required": ["en"],
+                                "properties": {
+                                    "properties": {
+                                        "en": {
+                                            "title": "en",
+                                            "description": "English",
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "files": {
+                    "title": "Files",
+                    "description": "List of files included in the dataset",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["identifier", "use_category"],
+                        "properties": {
+                            "identifier": {
+                                "title": "Identifier",
+                                "description": "The identifier used for finding file metadata from Metax and the file itself from Ida download service.",
+                                "type": "string"
+                            },
+                            "use_category": {
+                                "title": "Use category",
+                                "description": "The category of file",
+                                "type": "object",
+                                "required": ["pref_label"],
+                                "properties": {
+                                    "pref_label": {
+                                        "title": "Preferred label",
+                                        "description": "The category of file in logical structure map in multiple languages. The category in the default language of the dataset is used as TYPE attribute for div element in logical structmap.",
+                                        "type": "object",
+                                        "required": ["en"],
+                                        "properties": {
+                                            "en": {
+                                                "title": "en",
+                                                "description": "English",
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "directories": {
+                    "title": "Directories",
+                    "description": "List of directories included in dataset",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["identifier", "use_category"],
+                        "properties": {
+                            "identfier": {
+                                "title": "Identifier",
+                                "description": "Identifier of category used for searching parent directories of files",
+                                "type": "string"
+                            },
+                            "use_category": {
+                                "title": "Use category",
+                                "description": "The category of directory",
+                                "type": "object",
+                                "required": ["pref_label"],
+                                "properties": {
+                                    "pref_label": {
+                                        "title": "Preferred label",
+                                        "description": "The category of directory files in logical structure map. If use category is not defined for a file, the use category of parent directory is used as TYPE attribute for div element in logical structmap.",
+                                        "type": "object",
+                                        "required": ["en"],
+                                        "properties": {
+                                            "en": {
+                                                "title": "en",
+                                                "description": "English",
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

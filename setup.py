@@ -9,6 +9,7 @@ def main():
     setup(
         name='siptools-research',
         packages=find_packages(exclude=['tests', 'tests.*']),
+        package_data={'siptools_research': ['schemas/*.json']},
         version=get_version(),
         install_requires=[
             "lxml",

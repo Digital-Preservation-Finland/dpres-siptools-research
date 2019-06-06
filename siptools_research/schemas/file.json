@@ -1,0 +1,86 @@
+{
+    "type": "object",
+    "required": ["checksum", "file_characteristics", "file_storage",
+                 "file_path", "parent_directory"],
+    "properties": {
+        "checksum": {
+            "title": "Checksum",
+            "description": "File checksum algorithm and value",
+            "type": "object",
+            "required": ["algorithm", "value"],
+            "properties": {
+                "algorithm": {
+                    "title": "Algorithm",
+                    "description": "Checksum algorithm is md5 or sha2. If sha2 is used, packaging service will guess which function (SHA-224, SHA-256, SHA-384, or SHA-512) was used. Checksum algorithm is used as value of premis:messageDigestAlgorithm element in technical metadata.",
+                    "type": "string",
+                    "enum": ["md5", "sha2"]
+                },
+                "value": {
+                    "title": "Value",
+                    "description": "Output of checksum algorithm",
+                    "type": "string"
+                }
+            }
+        },
+        "file_path": {
+            "title": "File path",
+            "description": "Path of file in SIP",
+            "type": "string"
+        },
+        "file_characteristics": {
+            "title": "File characteristics",
+            "description": "Technical characteristics of file",
+            "type": "object",
+            "required": ["file_format"],
+            "properties": {
+                "file_encoding": {
+                    "title": "File encoding",
+                    "description": "Character encoding of file is included in premis:formatName element in technical metadata.",
+                    "type": "string",
+                    "enum": ["ISO-8859-15", "UTF-8", "UTF-16", "UTF-32"]
+                },
+                "format_version": {
+                    "title": "Format version",
+                    "description": "Format version is used as value for premis:formatVersion element in technical metadata.",
+                    "type": "string"
+                },
+                "file_created": {
+                    "title": "File created",
+                    "description": "File creation date is used as value of premis:dateCreatedByApplication element in technical metadata. If value is not provided, the file creation date in packaging service is used.",
+                    "type": "string"
+                },
+                "file_format": {
+                    "title": "File format",
+                    "description": "File format is used as value of premis:formatName element in technical metadata.",
+                    "type": "string"
+                }
+            }
+        },
+        "file_storage": {
+            "title": "File storage",
+            "description": "File storage service",
+            "type": "object",
+            "required": ["identifier"],
+            "properties": {
+                "identifier": {
+                    "title": "Identifier",
+                    "description": "Identifier that defines from which storage service the file is copied.",
+                    "type": "string"
+                }
+            }
+        },
+        "parent_directory": {
+            "title": "Parent directory",
+            "description": "Parent directory of file defines the category of file in logical structure map if use category is not defined for the file.",
+            "type": "object",
+            "required": ["identifier"],
+            "properties": {
+                "identifier": {
+                    "title": "Identifier",
+                    "description": "Identifier used for finding parent directory metadata",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

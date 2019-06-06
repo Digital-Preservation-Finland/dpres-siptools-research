@@ -6,7 +6,7 @@ import lxml
 import lxml.isoschematron
 from metax_access import Metax, DataciteGenerationError
 from siptools.xml.mets import NAMESPACES
-import siptools_research.utils.metax_schemas as metax_schemas
+import siptools_research.schemas
 from siptools_research.utils import mimetypes
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
@@ -24,6 +24,7 @@ SCHEMATRONS = {
 }
 DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
+
 
 TECHMD_XML_VALIDATION_ERROR \
     = "Technical metadata XML of file %s is invalid: %s"
@@ -79,7 +80,7 @@ def _validate_dataset_metadata(dataset_metadata):
     """
     try:
         jsonschema.validate(dataset_metadata,
-                            metax_schemas.DATASET_METADATA_SCHEMA)
+                            siptools_research.schemas.DATASET_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
         raise InvalidMetadataError(str(exc))
 
@@ -94,7 +95,7 @@ def _validate_contract_metadata(contract_id, metax_client):
     contract_metadata = metax_client.get_contract(contract_id)
     try:
         jsonschema.validate(contract_metadata,
-                            metax_schemas.CONTRACT_METADATA_SCHEMA)
+                            siptools_research.schemas.CONTRACT_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
         raise InvalidMetadataError(str(exc))
 
@@ -142,7 +143,7 @@ def _validate_file_metadata(dataset_id, metax_client, conf):
         # Validate metadata against JSON schema
         try:
             jsonschema.validate(file_metadata,
-                                metax_schemas.FILE_METADATA_SCHEMA)
+                                siptools_research.schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
             raise InvalidMetadataError(
                 "Validation error in metadata of {file_path}: {error}"

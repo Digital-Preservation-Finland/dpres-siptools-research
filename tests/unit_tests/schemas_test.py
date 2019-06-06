@@ -1,9 +1,9 @@
-"""Tests for :mod:`siptools_research.utils.metax_schemas` module"""
+"""Tests for :mod:`siptools_research.schemas` module"""
 import copy
 
 import pytest
 import jsonschema
-import siptools_research.utils.metax_schemas as metax_schemas
+import siptools_research.schemas
 
 VALID_DATASET_METADATA = {
     "preservation_identifier": "doi:test",
@@ -73,8 +73,10 @@ def test_validate_valid_dataset_metadata():
     """
 
     # Validation of valid dataset should return 'None'
-    assert jsonschema.validate(VALID_DATASET_METADATA,
-                               metax_schemas.DATASET_METADATA_SCHEMA) is None
+    assert jsonschema.validate(
+        VALID_DATASET_METADATA,
+        siptools_research.schemas.DATASET_METADATA_SCHEMA
+    ) is None
 
 
 def test_validate_dataset_metadata_without_provenance():
@@ -89,8 +91,10 @@ def test_validate_dataset_metadata_without_provenance():
 
     # Validation of valid dataset should return 'None'
     with pytest.raises(jsonschema.ValidationError) as error:
-        assert not jsonschema.validate(invalid_dataset_metadata,
-                                       metax_schemas.DATASET_METADATA_SCHEMA)
+        assert not jsonschema.validate(
+            invalid_dataset_metadata,
+            siptools_research.schemas.DATASET_METADATA_SCHEMA
+        )
 
     assert error.value.message == '[] is too short'
 
@@ -107,8 +111,10 @@ def test_validate_invalid_dataset_metadata():
 
     # Validation of invalid dataset should raise error
     with pytest.raises(jsonschema.ValidationError) as error:
-        assert not jsonschema.validate(invalid_dataset_metadata,
-                                       metax_schemas.DATASET_METADATA_SCHEMA)
+        assert not jsonschema.validate(
+            invalid_dataset_metadata,
+            siptools_research.schemas.DATASET_METADATA_SCHEMA
+        )
 
     assert error.value.message == ("'preservation_identifier' is a "
                                    "required property")
@@ -141,8 +147,10 @@ def test_validate_valid_file_metadata():
         }
 
     # Validation of valid dataset should return 'None'
-    assert jsonschema.validate(valid_file_metadata,
-                               metax_schemas.FILE_METADATA_SCHEMA) is None
+    assert jsonschema.validate(
+        valid_file_metadata,
+        siptools_research.schemas.FILE_METADATA_SCHEMA
+    ) is None
 
 
 def test_validate_valid_file_metadata_optional_attribute_missing():
@@ -171,8 +179,10 @@ def test_validate_valid_file_metadata_optional_attribute_missing():
         }
 
     # Validation of valid dataset should return 'None'
-    assert jsonschema.validate(valid_file_metadata,
-                               metax_schemas.FILE_METADATA_SCHEMA) is None
+    assert jsonschema.validate(
+        valid_file_metadata,
+        siptools_research.schemas.FILE_METADATA_SCHEMA
+    ) is None
 
 
 def test_validate_invalid_file_metadata():
@@ -198,8 +208,10 @@ def test_validate_invalid_file_metadata():
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError) as excinfo:
-        assert not jsonschema.validate(invalid_file_metadata,
-                                       metax_schemas.FILE_METADATA_SCHEMA)
+        assert not jsonschema.validate(
+            invalid_file_metadata,
+            siptools_research.schemas.FILE_METADATA_SCHEMA
+        )
 
     assert excinfo.value.message == "'file_path' is a required property"
 
@@ -233,8 +245,10 @@ def test_validate_invalid_file_charset():
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError) as excinfo:
-        assert not jsonschema.validate(invalid_file_metadata,
-                                       metax_schemas.FILE_METADATA_SCHEMA)
+        assert not jsonschema.validate(
+            invalid_file_metadata,
+            siptools_research.schemas.FILE_METADATA_SCHEMA
+        )
 
     assert excinfo.value.message \
         == "'foo' is not one of ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']"
@@ -257,7 +271,7 @@ def test_validate_valid_contract():
         }
 
     jsonschema.validate(valid_contract_metadata,
-                        metax_schemas.CONTRACT_METADATA_SCHEMA)
+                        siptools_research.schemas.CONTRACT_METADATA_SCHEMA)
 
 
 def test_validate_invalid_contract():
@@ -278,7 +292,7 @@ def test_validate_invalid_contract():
 
     with pytest.raises(jsonschema.ValidationError) as excinfo:
         jsonschema.validate(invalid_contract_metadata,
-                            metax_schemas.CONTRACT_METADATA_SCHEMA)
+                            siptools_research.schemas.CONTRACT_METADATA_SCHEMA)
 
     assert excinfo.value.message == "1234 is not of type 'string'"
 
@@ -294,8 +308,10 @@ def test_validate_dataset_with_directories():
     del valid_dataset_metadata['research_dataset']['files']
 
     # Validation of valid dataset should return 'None'
-    assert jsonschema.validate(valid_dataset_metadata,
-                               metax_schemas.DATASET_METADATA_SCHEMA) is None
+    assert jsonschema.validate(
+        valid_dataset_metadata,
+        siptools_research.schemas.DATASET_METADATA_SCHEMA
+    ) is None
 
 
 def test_validate_dataset_no_files_and_directories():
@@ -312,7 +328,7 @@ def test_validate_dataset_no_files_and_directories():
 
     with pytest.raises(jsonschema.ValidationError) as excinfo:
         jsonschema.validate(invalid_dataset_metadata,
-                            metax_schemas.DATASET_METADATA_SCHEMA)
+                            siptools_research.schemas.DATASET_METADATA_SCHEMA)
 
     assert excinfo.value.message.endswith(
         "is not valid under any of the given schemas"
