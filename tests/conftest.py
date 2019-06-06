@@ -258,10 +258,22 @@ def testpath(request, monkeypatch):
 
     temp_path = tempfile.mkdtemp()
     tmpdir = os.path.join(temp_path, "tmp")
+    ida_dir = os.path.join(temp_path, "ida_files")
     os.mkdir(tmpdir)
+    os.mkdir(ida_dir)
+
+    def mock_get(self, parameter):
+        """Mock Configuration().get()"""
+        if parameter == "workspace_root":
+            return temp_path
+
+        return self._parser.get(self.config_section, parameter)
 
     monkeypatch.setattr(
         siptools_research.metadata_generator, "TEMPDIR", tmpdir
+    )
+    monkeypatch.setattr(
+        siptools_research.config.Configuration, "get", mock_get
     )
 
     def fin():
