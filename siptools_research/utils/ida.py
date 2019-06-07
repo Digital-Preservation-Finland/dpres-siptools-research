@@ -1,6 +1,5 @@
 """IDA interface module"""
 import os
-import shutil
 
 import requests
 
@@ -52,6 +51,7 @@ def download_file(identifier, linkpath, config_file):
         response = _get_response(identifier, config_file, stream=True)
 
         with open(filepath, 'wb') as new_file:
-            shutil.copyfileobj(response.raw, new_file)
+            for chunk in response.iter_content(chunk_size=1024):
+                new_file.write(chunk)
 
     os.link(filepath, linkpath)
