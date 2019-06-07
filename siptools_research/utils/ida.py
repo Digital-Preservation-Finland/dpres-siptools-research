@@ -51,7 +51,7 @@ def download_file(identifier, linkpath, config_file):
     if not os.path.exists(filepath):
         response = _get_response(identifier, config_file, stream=True)
 
-        with open(filepath, 'w') as new_file:
+        with open(filepath, 'wb') as new_file:
             shutil.copyfileobj(response.raw, new_file)
 
     os.link(filepath, linkpath)
