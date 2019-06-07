@@ -1,9 +1,11 @@
 """Tests for :mod:`siptools_research.utils.ida` module"""
 import os
+
 import pytest
+from requests.exceptions import HTTPError
+
 import tests.conftest
 from siptools_research.utils import ida
-from requests.exceptions import HTTPError
 
 
 @pytest.mark.usefixtures('testida')
@@ -17,6 +19,9 @@ def test_download_file(testpath):
     new_file_path = os.path.join(testpath, 'new_file')
     ida.download_file('pid:urn:1', new_file_path,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Remove file from ida_files and test that the workspace copy stays intact
+    os.remove(os.path.join(testpath, "ida_files", "pid:urn:1"))
 
     # The file should be a text file that says: "foo\n"
     with open(new_file_path, 'r') as new_file:
