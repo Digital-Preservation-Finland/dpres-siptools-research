@@ -1,18 +1,28 @@
 """Luigi task that gets files from Ida."""
-
 import os
 import logging
+
 import luigi
 from requests.exceptions import HTTPError
+
 from metax_access import Metax
+
 from siptools_research.utils import ida, database as db
 from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
+from siptools_research.utils.ida import IdaError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
 
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
+
+
+class UploadApiError(Exception):
+    """Exception raised when files or mongo entries are missing from upload
+    rest API.
+    """
+    pass
 
 
 class GetFiles(WorkflowTask):
@@ -78,7 +88,7 @@ class GetFiles(WorkflowTask):
         files_col = db.Database(self.config).client.upload.files
         storage_path = files_col.find_one({"_id": identifier})
         if storage_path is None:
-            raise Exception("File %s not found in the database" % fpath)
+            raise UploadApiError("File %s not found in the database" % fpath)
 
         return files_col.find_one({"_id": identifier})["file_path"]
 
@@ -121,7 +131,7 @@ class GetFiles(WorkflowTask):
                     identifier, dataset_file["file_path"]
                 )
                 if not os.path.isfile(file_path):
-                    raise Exception(
+                    raise UploadApiError(
                         "File %s not found on disk" % dataset_file["file_path"]
                     )
                 # Create hard links to the files on workspace
@@ -138,14 +148,14 @@ class GetFiles(WorkflowTask):
                     status_code = error.response.status_code
 
                     if status_code == 404:
-                        raise Exception(
+                        raise IdaError(
                             "File %s not found in Ida." % file_path
                         )
                     elif status_code == 403:
-                        raise Exception(
+                        raise IdaError(
                             "Access to file %s forbidden." % file_path
                         )
                     else:
-                        raise Exception(
+                        raise IdaError(
                             "File %s could not be retrieved." % file_path
                         )

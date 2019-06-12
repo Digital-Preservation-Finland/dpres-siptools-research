@@ -6,6 +6,11 @@ import requests
 from siptools_research.config import Configuration
 
 
+class IdaError(Exception):
+    """Exception raised when files in IDA can't be accessed"""
+    pass
+
+
 def _get_response(identifier, config_file, stream=False):
     """Send authenticated HTTP request to IDA.
 
@@ -26,7 +31,7 @@ def _get_response(identifier, config_file, stream=False):
                                 verify=False,
                                 stream=stream)
     except requests.exceptions.ConnectionError as exc:
-        raise Exception("Could not connect to Ida: %s" % exc.message)
+        raise IdaError("Could not connect to Ida: %s" % exc.message)
 
     response.raise_for_status()
     return response

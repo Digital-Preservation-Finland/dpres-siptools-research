@@ -1,10 +1,13 @@
 """Test the :mod:`siptools_research.workflow.get_files` module"""
-
 import os
+
 import pytest
 import pymongo
+
 import tests.conftest
 import siptools_research.config
+from siptools_research.utils.ida import IdaError
+from siptools_research.workflow.get_files import UploadApiError
 from siptools_research.workflow import get_files
 from siptools_research.workflowtask import InvalidMetadataError
 
@@ -84,8 +87,10 @@ def test_missing_files(testpath, file_storage):
     )
     assert not task.complete()
 
+    error = IdaError if file_storage == "ida" else UploadApiError
+
     # Run task.
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(error) as excinfo:
         task.run()
 
     # Check exception message

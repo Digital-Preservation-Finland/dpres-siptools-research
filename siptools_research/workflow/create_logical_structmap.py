@@ -4,11 +4,14 @@ import os
 
 from luigi import LocalTarget
 import lxml.etree as ET
+
 import mets
 from metax_access import Metax
 import xml_helpers.utils as h
 from siptools.utils import encode_path
 from siptools.xml.mets import NAMESPACES
+
+from siptools_research.xml_metadata import MetadataGenerationError
 from siptools_research.config import Configuration
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
@@ -187,8 +190,11 @@ class CreateLogicalStructMap(WorkflowTask):
                         == filename.strip('/'):
                     return file_.get('ID')
 
-        raise Exception("File ID for file %s not found from fileSec: %s" %
-                        (filename, filesec_xml))
+        raise MetadataGenerationError(
+            "File ID for file %s not found from fileSec: %s" % (
+                filename, filesec_xml
+            )
+        )
 
 
 def find_file_use_category(identifier, dataset_metadata):
@@ -234,8 +240,8 @@ def find_dir_use_category(metax_client, identifier, dataset_metadata):
     dire = metax_client.get_directory(identifier)
     if 'parent_directory' in dire:
         return find_dir_use_category(
-                    metax_client, dire['parent_directory']['identifier'],
-                    dataset_metadata
-                )
+            metax_client, dire['parent_directory']['identifier'],
+            dataset_metadata
+        )
     # Nothing found
     return None
