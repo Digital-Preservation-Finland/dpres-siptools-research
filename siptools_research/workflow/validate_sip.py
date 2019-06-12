@@ -54,7 +54,7 @@ class ValidateSIP(WorkflowExternalTask):
                 self.document_id, "SendSIPToDP"
             )
             date = dateutil.parser.parse(send_timestamp)
-        except ValueError:
+        except (ValueError, KeyError):
             date = datetime.utcnow()
 
         lim_datetime = datetime.today()
