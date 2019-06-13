@@ -6,6 +6,8 @@ import hashlib
 import lxml.etree
 import pytest
 
+from metax_access import MetaxError
+
 from siptools.xml.mets import NAMESPACES
 import tests.conftest
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
@@ -177,10 +179,10 @@ def test_xml_metadata_file_missing(testpath):
 
     # Run task.
     msg = "Could not retrieve additional metadata XML for dataset pid:urn:8"
-    with pytest.raises(Exception) as exc:
+    with pytest.raises(MetaxError) as exc:
         task.run()
-        assert msg in str(exc)
 
+    assert msg in str(exc)
     assert not task.complete()
 
 

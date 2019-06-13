@@ -298,7 +298,10 @@ FILES = {
     "pid:urn:create_techmd_8": {
         "file_characteristics": TIFF_FILE_CHARS,
         "set": [
-            ("file_path", "/project_x/some/path/valid_tiff.tif"),
+            (
+                "file_path",
+                "/project_xml_metadata_missing/some/path/valid_tiff.tiff"
+            ),
             ("identifier", "pid:urn:8")
         ]
     },
