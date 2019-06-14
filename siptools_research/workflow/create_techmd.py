@@ -163,7 +163,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         filepath = metadata['file_path'].strip('/')
         xmls = self.metax_client.get_xml('files', file_id)
 
-        creator = siptools.utils.AmdCreator(self.sip_creation_path)
+        creator = siptools.utils.MdCreator(self.sip_creation_path)
 
         for type_ in TECH_ATTR_TYPES:
             if type_["namespace"] in xmls:

@@ -39,9 +39,9 @@ def test_create_techmd_ok(testpath):
     # Run task.
     task.run()
     assert task.complete()
-    reference_file = os.path.join(sipdirectory, 'amd-references.xml')
+    reference_file = os.path.join(sipdirectory, 'md-references.xml')
     xml = lxml.etree.parse(reference_file)
-    amd_refs = xml.xpath('/amdReferences/amdReference')
+    amd_refs = xml.xpath('/mdReferences/mdReference')
     assert len(amd_refs) == 6
     for amd_ref in amd_refs:
         if amd_ref.text[1:] != '1b2eecde68d99171f70613f14cf21f49':
@@ -128,9 +128,9 @@ def test_create_techmd_without_charset(testpath):
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     task.run()
-    reference_file = os.path.join(sipdirectory, 'amd-references.xml')
+    reference_file = os.path.join(sipdirectory, 'md-references.xml')
     xml = lxml.etree.parse(reference_file)
-    amd_refs = xml.xpath('/amdReferences/amdReference')
+    amd_refs = xml.xpath('/mdReferences/mdReference')
     assert len(amd_refs) == 1
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
