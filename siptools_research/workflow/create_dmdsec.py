@@ -65,7 +65,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
 
         # Create METS dmdSec file that contains datacite as XML tree
         import_description.import_description(
-            datacite_path, workspace=self.sip_creation_path)
+            datacite_path, workspace=self.sip_creation_path, without_uuid=True)
 
         with self.output().open('w') as output:
             output.write("Dataset id=" + self.dataset_id)
