@@ -40,14 +40,13 @@ def test_createdescriptivemetadata(testpath):
     assert os.path.isfile(os.path.join(workspace, 'datacite.xml'))
 
     # Check that XML is created in sip creation directory
-    assert os.path.isfile(os.path.join(workspace,
-                                       'sip-in-progress',
-                                       'dmdsec.xml'))
+    for filename in os.listdir(os.path.join(workspace, 'sip-in-progress')):
+        if filename.endswith('dmdsec.xml'):
+            dmdsecfile = os.path.join(workspace, 'sip-in-progress', filename)
+    assert os.path.isfile(dmdsecfile)
 
     # Check that the created xml-file contains correct elements.
-    tree = etree.parse(os.path.join(workspace,
-                                    'sip-in-progress',
-                                    'dmdsec.xml'))
+    tree = etree.parse(dmdsecfile)
     common_xpath = '/mets:mets//mets:dmdSec/mets:mdWrap/mets:xmlData/'\
         'ns1:resource/'
     xpath_namespaces = {'mets': "http://www.loc.gov/METS/",

@@ -37,7 +37,9 @@ class CreateDescriptiveMetadata(WorkflowTask):
         :returns: local target: `sip-in-progress/dmdsec.xml`
         :rtype: LocalTarget
         """
-        return LocalTarget(os.path.join(self.sip_creation_path, 'dmdsec.xml'))
+        return LocalTarget(
+            os.path.join(
+                self.workspace, 'task-create-descriptive-metadata.finished'))
 
     def run(self):
         """Copies datacite.xml metadatafile from Metax. Creates a METS document
@@ -61,11 +63,9 @@ class CreateDescriptiveMetadata(WorkflowTask):
                                      'datacite.xml')
         datacite.write(datacite_path)
 
-        # Create METS dmdSec element tree that contains datacite, and write it
-        # to output
-        mets_ = import_description.create_mets(datacite_path, 'dmdsec.xml')
-        with self.output().open('w') as outputfile:
-            mets_.write(outputfile,
-                        pretty_print=True,
-                        xml_declaration=True,
-                        encoding='UTF-8')
+        # Create METS dmdSec file that contains datacite as XML tree
+        import_description.import_description(
+            datacite_path, workspace=self.sip_creation_path)
+
+        with self.output().open('w') as output:
+            output.write("Dataset id=" + self.dataset_id)
