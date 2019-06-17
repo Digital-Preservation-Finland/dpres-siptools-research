@@ -1,9 +1,11 @@
 """Luigi task that creates descriptive metadata."""
-
 import os
+
 from luigi import LocalTarget
+
 from metax_access import Metax
 from siptools.scripts import import_description
+
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
@@ -38,8 +40,8 @@ class CreateDescriptiveMetadata(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(
-                self.workspace, 'task-create-descriptive-metadata.finished'))
+            os.path.join(self.workspace, 'sip-in-progress/dmdsec.xml')
+        )
 
     def run(self):
         """Copies datacite.xml metadatafile from Metax. Creates a METS document
@@ -65,7 +67,5 @@ class CreateDescriptiveMetadata(WorkflowTask):
 
         # Create METS dmdSec file that contains datacite as XML tree
         import_description.import_description(
-            datacite_path, workspace=self.sip_creation_path, without_uuid=True)
-
-        with self.output().open('w') as output:
-            output.write("Dataset id=" + self.dataset_id)
+            datacite_path, workspace=self.sip_creation_path, without_uuid=True
+        )
