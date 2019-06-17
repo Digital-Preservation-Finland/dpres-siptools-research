@@ -5,6 +5,7 @@ from luigi import LocalTarget
 
 from metax_access import Metax
 from siptools.scripts import import_description
+from siptools.utils import remove_dmdsec_references
 
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
@@ -64,6 +65,9 @@ class CreateDescriptiveMetadata(WorkflowTask):
         datacite_path = os.path.join(self.workspace,
                                      'datacite.xml')
         datacite.write(datacite_path)
+
+        # Clean up possible dmdSec references created by earlier runs
+        remove_dmdsec_references(self.sip_creation_path)
 
         # Create METS dmdSec file that contains datacite as XML tree
         import_description.import_description(
