@@ -1,12 +1,12 @@
 # coding=utf-8
 """Tests for :mod:`siptools_research.workflow.create_dmdsec` module"""
-
 import os
+
 import pytest
-import tests.conftest
 from lxml import etree
-from siptools_research.workflow.create_dmdsec\
-    import CreateDescriptiveMetadata
+
+import tests.conftest
+from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
