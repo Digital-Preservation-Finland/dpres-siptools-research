@@ -2,6 +2,7 @@
 import json
 import os
 import pkg_resources
+import sys
 
 
 SCHEMAS_PATH = pkg_resources.resource_filename('siptools_research', 'schemas')
@@ -16,6 +17,10 @@ def _byteify(data):
     :param data: unicode data as list, string, or dictionary
     :returns: data converted to str
     """
+    # Python3 compatibility
+    if sys.version_info >= (3, 0):
+        return data
+
     if isinstance(data, unicode):
         return data.encode('utf-8')
 
