@@ -2,10 +2,10 @@
 import os
 
 import pytest
-from requests.exceptions import HTTPError
 
 import tests.conftest
 from siptools_research.utils import ida
+from siptools_research.utils.ida import IdaError
 
 
 @pytest.mark.usefixtures('testida')
@@ -17,7 +17,7 @@ def test_download_file(testpath):
     :returns: ``None``
     """
     new_file_path = os.path.join(testpath, 'new_file')
-    ida.download_file('pid:urn:1', new_file_path,
+    ida.download_file('pid:urn:1', new_file_path, "file_path",
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Remove file from ida_files and test that the workspace copy stays intact
@@ -30,12 +30,12 @@ def test_download_file(testpath):
 
 @pytest.mark.usefixtures('testida')
 def test_download_file_404(testpath):
-    """Tries to download non-exiting file from IDA.
+    """Tries to download non-existing file from IDA.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
     new_file_path = os.path.join(testpath, 'new_file')
-    with pytest.raises(HTTPError):
-        ida.download_file('pid:urn:does_not_exist', new_file_path,
+    with pytest.raises(IdaError):
+        ida.download_file('pid:urn:does_not_exist', new_file_path, "file_path",
                           tests.conftest.UNIT_TEST_CONFIG_FILE)

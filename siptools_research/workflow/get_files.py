@@ -3,13 +3,11 @@ import os
 import logging
 
 import luigi
-from requests.exceptions import HTTPError
 
 from metax_access import Metax
 
 from siptools_research.utils import ida, database as db
 from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
-from siptools_research.utils.ida import IdaError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
@@ -138,24 +136,7 @@ class GetFiles(WorkflowTask):
                 os.link(file_path, target_path)
             else:
                 # Download file from IDA
-                try:
-                    ida.download_file(
-                        dataset_file['identifier'], target_path, self.config
-                    )
-
-                except HTTPError as error:
-                    file_path = dataset_file['file_path']
-                    status_code = error.response.status_code
-
-                    if status_code == 404:
-                        raise IdaError(
-                            "File %s not found in Ida." % file_path
-                        )
-                    elif status_code == 403:
-                        raise IdaError(
-                            "Access to file %s forbidden." % file_path
-                        )
-                    else:
-                        raise IdaError(
-                            "File %s could not be retrieved." % file_path
-                        )
+                ida.download_file(
+                    dataset_file['identifier'], target_path,
+                    dataset_file["file_path"], self.config
+                )

@@ -97,7 +97,9 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             else:
                 # IDA
                 try:
-                    ida.download_file(file_id, tmpfile, config)
+                    ida.download_file(
+                        file_id, tmpfile, file_["file_path"], config
+                    )
                 except HTTPError as error:
                     handle_exception(file_, error, dataset_id)
 
