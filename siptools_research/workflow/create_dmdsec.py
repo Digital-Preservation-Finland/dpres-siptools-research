@@ -1,5 +1,6 @@
 """Luigi task that creates descriptive metadata."""
 import os
+from uuid import uuid4
 
 from luigi import LocalTarget
 
@@ -41,7 +42,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.workspace, 'sip-in-progress/dmdsec.xml')
+            os.path.join(self.sip_creation_path, 'dmdsec.xml')
         )
 
     def run(self):
@@ -69,7 +70,14 @@ class CreateDescriptiveMetadata(WorkflowTask):
         # Clean up possible dmdSec references created by earlier runs
         remove_dmdsec_references(self.sip_creation_path)
 
-        # Create METS dmdSec file that contains datacite as XML tree
-        import_description.import_description(
-            datacite_path, workspace=self.sip_creation_path, without_uuid=True
-        )
+        # Create METS dmdSec element tree that contains datacite, and write it
+        dmd_id = '_' + str(uuid4())
+        _mets = import_description.create_mets(datacite_path, dmd_id)
+        creator = import_description.DmdCreator(self.sip_creation_path)
+        creator.write_dmd_ref(_mets, dmd_id, '.')
+
+        with self.output().open('w') as outputfile:
+            _mets.write(outputfile,
+                        pretty_print=True,
+                        xml_declaration=True,
+                        encoding='UTF-8')
