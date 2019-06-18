@@ -1,8 +1,8 @@
 """Validation schemas for JSON metadata retrieved from Metax."""
-import json
 import os
-import pkg_resources
 import sys
+import json
+import pkg_resources
 
 
 SCHEMAS_PATH = pkg_resources.resource_filename('siptools_research', 'schemas')
