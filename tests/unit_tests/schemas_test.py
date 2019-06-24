@@ -58,6 +58,14 @@ VALID_DATASET_METADATA = {
             }
         ],
         "directories": [
+            {
+                "identifier": "foo",
+                "use_category": {
+                    "pref_label": {
+                        "en": "foo"
+                    }
+                }
+            }
         ]
     }
 }
@@ -89,7 +97,7 @@ def test_validate_dataset_metadata_without_provenance():
     invalid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
     invalid_dataset_metadata['research_dataset']['provenance'] = []
 
-    # Validation of valid dataset should return 'None'
+    # Validation of valid dataset should raise error
     with pytest.raises(jsonschema.ValidationError) as error:
         assert not jsonschema.validate(
             invalid_dataset_metadata,
@@ -118,6 +126,24 @@ def test_validate_invalid_dataset_metadata():
 
     assert error.value.message == ("'preservation_identifier' is a "
                                    "required property")
+
+
+def test_invalid_directory():
+    """Test validation of dataset metadata with invalid directory.
+
+    :returns: ``None``
+    """
+    metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    metadata['research_dataset']['directories'][0]["identifier"] = 1
+
+    # Validation of valid dataset should raise error
+    with pytest.raises(jsonschema.ValidationError) as error:
+        assert not jsonschema.validate(
+            metadata,
+            siptools_research.schemas.DATASET_METADATA_SCHEMA
+        )
+
+    assert error.value.message == "1 is not of type 'string'"
 
 
 def test_validate_valid_file_metadata():
