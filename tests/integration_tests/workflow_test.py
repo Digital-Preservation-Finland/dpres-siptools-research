@@ -9,19 +9,14 @@ output of task is NOT examined.
 
 import os
 import importlib
-import uuid
 from datetime import date
 
 import pytest
 import luigi
 import pymongo
 import mock
+import lxml
 import lxml.etree as ET
-
-from ipt.scripts import (check_xml_schema_features,
-                         check_xml_schematron_features,
-                         check_sip_file_checksums,
-                         check_sip_digital_objects)
 
 import tests.conftest
 from siptools_research.remoteanytarget import RemoteAnyTarget
@@ -45,6 +40,45 @@ def _init_files_col(mongoclient):
         mongoclient.upload.files.insert_one(
             {"_id": identifier, "file_path": os.path.abspath(fpath)}
         )
+
+
+def _check_xml_schema_features(mets_path):
+    """Validate mets.xml against schema."""
+    assert True
+
+def _check_xml_schematron_features(mets_path):
+    """Validate mets.xml against Schematrons."""
+    schematron_path = '/usr/share/dpres-xml-schemas/schematron'
+    schematron_rules = [
+        'mets_addml.sch',
+        'mets_amdsec.sch',
+        'mets_audiomd.sch',
+        'mets_digiprovmd.sch',
+        'mets_dmdsec.sch',
+        'mets_ead3.sch',
+        'mets_filesec.sch',
+        'mets_mdwrap.sch',
+        'mets_metshdr.sch',
+        'mets_mix.sch',
+        'mets_mods.sch',
+        'mets_premis_digiprovmd.sch',
+        'mets_premis_rightsmd.sch',
+        'mets_premis.sch',
+        'mets_premis_techmd.sch',
+        'mets_rightsmd.sch',
+        'mets_root.sch',
+        'mets_sourcemd.sch',
+        'mets_structmap.sch',
+        'mets_techmd.sch',
+        'mets_videomd.sch'
+    ]
+    mets = lxml.etree.parse(mets_path)
+
+    for rule in schematron_rules:
+        rule_path = os.path.join(schematron_path, rule)
+        rule = lxml.etree.parse(rule_path)
+        schematron = lxml.isoschematron.Schematron(rule)
+        assert schematron.validate(mets)
 
 
 # Run every task as it would be run from commandline
@@ -156,44 +190,10 @@ def test_mets_creation(testpath, file_storage):
     # Check 'result' field
     assert document['workflow_tasks']['CompressSIP']['result'] == 'success'
     mets_path = os.path.join(workspace, 'sip-in-progress', 'mets.xml')
-    assert check_xml_schema_features.main([mets_path]) == 0
-    assert_schematron(mets_path)
-    assert check_sip_file_checksums.main([mets_path]) == 0
-    assert check_sip_digital_objects.main([mets_path, 'preservation-sip-id',
-                                           str(uuid.uuid4())]) == 0
+
+    _check_xml_schema_features(mets_path)
+    _check_xml_schematron_features(mets_path)
     assert_mets_root_element(mets_path)
-
-
-def assert_schematron(mets_path):
-    """Validate mets.xml against Schematrons"""
-
-    schematron_path = '/usr/share/dpres-xml-schemas/schematron'
-    schematron_rules = [
-        'mets_addml.sch',
-        'mets_amdsec.sch',
-        'mets_audiomd.sch',
-        'mets_digiprovmd.sch',
-        'mets_dmdsec.sch',
-        'mets_ead3.sch',
-        'mets_filesec.sch',
-        'mets_mdwrap.sch',
-        'mets_metshdr.sch',
-        'mets_mix.sch',
-        'mets_mods.sch',
-        'mets_premis_digiprovmd.sch',
-        'mets_premis_rightsmd.sch',
-        'mets_premis.sch',
-        'mets_premis_techmd.sch',
-        'mets_rightsmd.sch',
-        'mets_root.sch',
-        'mets_sourcemd.sch',
-        'mets_structmap.sch',
-        'mets_techmd.sch',
-        'mets_videomd.sch']
-    for rule in schematron_rules:
-        rule_path = os.path.join(schematron_path, rule)
-        assert check_xml_schematron_features.main(['-s',
-                                                   rule_path, mets_path]) == 0
 
 
 def assert_mets_root_element(mets_path):

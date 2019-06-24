@@ -39,12 +39,12 @@ Requires:       python-mongomock
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python-mock
-BuildRequires:  dpres-ipt
 BuildRequires:  python-setuptools
 BuildRequires:  pytest
 BuildRequires:  python-httpretty
 BuildRequires:  python-sphinx
 BuildRequires:  python-jsonschema2rst
+BuildRequires:  dpres-xml-schemas
 
 %description
 Digital Preservation Packaging Service for Research datasets
