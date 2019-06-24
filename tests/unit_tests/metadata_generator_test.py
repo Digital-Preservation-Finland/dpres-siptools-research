@@ -45,7 +45,7 @@ DEFAULT_PROVENANCE = {
 # pylint: disable=unused-argument
 def _init_mongo_client(testmongoclient):
     """Initializes mocked mongo collection upload.files"""
-    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
+    conf = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get("mongodb_host"))
     files_col = mongoclient.upload.files
 
