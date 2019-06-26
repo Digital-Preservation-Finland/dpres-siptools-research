@@ -15,13 +15,17 @@ import pytest
 import luigi
 import pymongo
 import mock
-import lxml
 import lxml.etree as ET
+from lxml.isoschematron import Schematron
 
 import tests.conftest
 from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.workflow.compress import CompressSIP
 from siptools_research.config import Configuration
+
+
+METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
+SCHEMATRON_PATH = "/usr/share/dpres-xml-schemas/schematron"
 
 
 def _init_files_col(mongoclient):
@@ -44,11 +48,12 @@ def _init_files_col(mongoclient):
 
 def _check_xml_schema_features(mets_path):
     """Validate mets.xml against schema."""
-    assert True
+    schema = ET.XMLSchema(ET.parse(METS_XSD))
+    assert schema.validate(ET.parse(mets_path))
+
 
 def _check_xml_schematron_features(mets_path):
     """Validate mets.xml against Schematrons."""
-    schematron_path = '/usr/share/dpres-xml-schemas/schematron'
     schematron_rules = [
         'mets_addml.sch',
         'mets_amdsec.sch',
@@ -72,12 +77,11 @@ def _check_xml_schematron_features(mets_path):
         'mets_techmd.sch',
         'mets_videomd.sch'
     ]
-    mets = lxml.etree.parse(mets_path)
+    mets = ET.parse(mets_path)
 
     for rule in schematron_rules:
-        rule_path = os.path.join(schematron_path, rule)
-        rule = lxml.etree.parse(rule_path)
-        schematron = lxml.isoschematron.Schematron(rule)
+        rule_path = os.path.join(SCHEMATRON_PATH, rule)
+        schematron = Schematron(ET.parse(rule_path))
         assert schematron.validate(mets)
 
 
