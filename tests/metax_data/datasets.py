@@ -1,3 +1,4 @@
+# coding=utf-8
 """Module for generating test datasets at runtime."""
 from copy import deepcopy
 
@@ -80,6 +81,103 @@ DATASETS = {
     },
     "validate_metadata_test_dataset": {
         "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
+    },
+    "validate_metadata_en": {
+        "set": [(
+            "research_dataset", {
+                "provenance": [
+                    {
+                        "preservation_event": {
+                            "pref_label": {
+                                "en": "creation"
+                            }
+                        },
+                        "temporal": {
+                            "end_date": "2014-12-31T08:19:58Z",
+                            "start_date": "2014-01-01T08:19:58Z"
+                        },
+                        "description": {
+                            "en": "Description of provenance"
+                        },
+                        "event_outcome": {
+                            "pref_label": {
+                                "en": "success"
+                            }
+                        },
+                        "outcome_description": {
+                            "en": "This is a detail of an successful event"
+                        }
+                    }
+                ],
+                "files": []
+            }
+        )]
+    },
+    "validate_metadata_fi": {
+        "set": [(
+            "research_dataset", {
+                "provenance": [
+                    {
+                        "preservation_event": {
+                            "pref_label": {
+                                "fi": "luonti"
+                            }
+                        },
+                        "temporal": {
+                            "end_date": "2014-12-31T08:19:58Z",
+                            "start_date": "2014-01-01T08:19:58Z"
+                        },
+                        "description": {
+                            "fi": u"Alkuperän kuvaus"
+                        },
+                        "event_outcome": {
+                            "pref_label": {
+                                "fi": u"läpi"
+                            }
+                        },
+                        "outcome_description": {
+                            "fi": "Kuvaus tapahtumasta"
+                        }
+                    }
+                ],
+                "files": []
+            }
+        )]
+    },
+    "validate_metadata_enfi": {
+        "set": [(
+            "research_dataset", {
+                "provenance": [
+                    {
+                        "preservation_event": {
+                            "pref_label": {
+                                "en": "creation",
+                                "fi": "luonti"
+                            }
+                        },
+                        "temporal": {
+                            "end_date": "2014-12-31T08:19:58Z",
+                            "start_date": "2014-01-01T08:19:58Z"
+                        },
+                        "description": {
+                            "en": "Description of provenance",
+                            "fi": u"Alkuperän kuvaus"
+                        },
+                        "event_outcome": {
+                            "pref_label": {
+                                "en": "success",
+                                "fi": u"läpi"
+                            }
+                        },
+                        "outcome_description": {
+                            "en": "This is a detail of an successful event",
+                            "fi": "Kuvaus tapahtumasta"
+                        }
+                    }
+                ],
+                "files": []
+            }
+        )]
     },
     "validate_metadata_test_dataset_invalid_metadata": {
         "remove": ["contract"]

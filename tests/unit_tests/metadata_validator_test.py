@@ -21,8 +21,28 @@ def test_validate_metadata():
 
     :returns: ``None``
     """
-    assert validate_metadata('validate_metadata_test_dataset',
-                             tests.conftest.UNIT_TEST_CONFIG_FILE) is True
+    assert validate_metadata(
+        'validate_metadata_test_dataset', tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+
+
+@pytest.mark.usefixtures('testmetax')
+@pytest.mark.parametrize("language", ["en", "fi", "enfi"])
+def test_validate_metadata_languages(language, monkeypatch):
+    """Test that validate_metadata function returns ``True`` when English,
+    Finnish, or both translations are provided.
+
+    :returns: ``None``
+    """
+    # Datacite validation is patched to only test dataset schema validation.
+    # Datacite validation is tested in test_validate_metadata.
+    monkeypatch.setattr(
+        metadata_validator, "_validate_datacite",
+        lambda dataset_id, client: None
+    )
+    assert validate_metadata(
+        'validate_metadata_%s' % language, tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
 
 
 @pytest.mark.usefixtures('testmetax')
