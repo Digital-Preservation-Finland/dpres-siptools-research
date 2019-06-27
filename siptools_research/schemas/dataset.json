@@ -61,11 +61,19 @@
                                 "title": "Description",
                                 "description": "The description of digital provenance event in multiple languages. The description in the default language of the dataset is used as value of premis:eventDetail element.",
                                 "type": "object",
-                                "required": ["en"],
+                                "anyOf": [
+                                    {"required": ["en"]},
+                                    {"required": ["fi"]}
+                                ],
                                 "properties": {
                                     "en": {
                                         "title": "en",
                                         "description": "English",
+                                        "type": "string"
+                                    },
+                                    "fi": {
+                                        "title": "fi",
+                                        "description": "Finnish",
                                         "type": "string"
                                     }
                                 }
@@ -80,11 +88,19 @@
                                         "title": "Preferred label",
                                         "description": "The type of digital provenance event in multiple languages. The type in the default language of the dataset is used as value of premis:eventType element.",
                                         "type": "object",
-                                        "required": ["en"],
+                                        "anyOf": [
+                                            {"required": ["en"]},
+                                            {"required": ["fi"]}
+                                        ],
                                         "properties": {
                                             "en": {
                                                 "title": "en",
                                                 "description": "English",
+                                                "type": "string"
+                                            },
+                                            "fi": {
+                                                "title": "fi",
+                                                "description": "Finnish",
                                                 "type": "string"
                                             }
                                         }
@@ -101,11 +117,19 @@
                                         "title": "Preferred label",
                                         "description": "The outcome of digital provenance event in multiple languages. The outcome in the default language of the dataset is used as value of premis:eventOutcomeInformation element",
                                         "type": "object",
-                                        "required": ["en"],
+                                        "anyOf": [
+                                            {"required": ["en"]},
+                                            {"required": ["fi"]}
+                                        ],
                                         "properties": {
                                             "en": {
                                                 "title": "en",
                                                 "description": "English",
+                                                "type": "string"
+                                            },
+                                            "fi": {
+                                                "title": "fi",
+                                                "description": "Finnish",
                                                 "type": "string"
                                             }
                                         }
@@ -116,11 +140,19 @@
                                 "title": "Outcome description",
                                 "description": "The outcome detail note of digital provenance event in multiple languages. The outcome detail note in the default language of the dataset is used as value of premis:eventOutcomeDetailNote element",
                                 "type": "object",
-                                "required": ["en"],
+                                "anyOf": [
+                                    {"required": ["en"]},
+                                    {"required": ["fi"]}
+                                ],
                                 "properties": {
                                     "en": {
                                         "title": "en",
                                         "description": "English",
+                                        "type": "string"
+                                    },
+                                    "fi": {
+                                        "title": "fi",
+                                        "description": "Finnish",
                                         "type": "string"
                                     }
                                 }
@@ -151,11 +183,19 @@
                                         "title": "Preferred label",
                                         "description": "The category of file in logical structure map in multiple languages. The category in the default language of the dataset is used as TYPE attribute for div element in logical structmap.",
                                         "type": "object",
-                                        "required": ["en"],
+                                        "anyOf": [
+                                            {"required": ["en"]},
+                                            {"required": ["fi"]}
+                                        ],
                                         "properties": {
                                             "en": {
                                                 "title": "en",
                                                 "description": "English",
+                                                "type": "string"
+                                            },
+                                            "fi": {
+                                                "title": "fi",
+                                                "description": "Finnish",
                                                 "type": "string"
                                             }
                                         }
@@ -188,11 +228,19 @@
                                         "title": "Preferred label",
                                         "description": "The category of directory files in logical structure map. If use category is not defined for a file, the use category of parent directory is used as TYPE attribute for div element in logical structmap.",
                                         "type": "object",
-                                        "required": ["en"],
+                                        "anyOf": [
+                                            {"required": ["en"]},
+                                            {"required": ["fi"]}
+                                        ],
                                         "properties": {
                                             "en": {
                                                 "title": "en",
                                                 "description": "English",
+                                                "type": "string"
+                                            },
+                                            "fi": {
+                                                "title": "fi",
+                                                "description": "Finnish",
                                                 "type": "string"
                                             }
                                         }
