@@ -140,6 +140,11 @@ def _validate_localization(localization_dict, field):
         )
 
     for language in localization_dict:
+        # Per MetaX schema, 'und' and 'zxx' are fallbacks for content that
+        # can't be localized
+        if language == "und" or language == "zxx":
+            continue
+
         try:
             languages.get(part1=language)
         except KeyError:
