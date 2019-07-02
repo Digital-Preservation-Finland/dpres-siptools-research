@@ -39,7 +39,6 @@ Requires:       python-mongomock
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python-mock
-Requires:       dpres-xml-schemas
 BuildRequires:  python-setuptools
 BuildRequires:  pytest
 BuildRequires:  python-httpretty
