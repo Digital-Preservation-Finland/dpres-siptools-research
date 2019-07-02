@@ -179,6 +179,29 @@ DATASETS = {
             }
         )]
     },
+    "validate_metadata_localization_missing": {
+        "set": [(
+            "research_dataset", {
+                "provenance": [
+                    {
+                        "preservation_event": {
+                            "pref_label": {}
+                        },
+                        "temporal": {
+                            "end_date": "2014-12-31T08:19:58Z",
+                            "start_date": "2014-01-01T08:19:58Z"
+                        },
+                        "description": {},
+                        "event_outcome": {
+                            "pref_label": {}
+                        },
+                        "outcome_description": {}
+                    }
+                ],
+                "files": []
+            }
+        )]
+    },
     "validate_metadata_test_dataset_invalid_metadata": {
         "remove": ["contract"]
     },

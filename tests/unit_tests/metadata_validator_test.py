@@ -46,6 +46,25 @@ def test_validate_metadata_languages(language, monkeypatch):
 
 
 @pytest.mark.usefixtures('testmetax')
+def test_validate_metadata_language_missing(monkeypatch):
+    """Test that metadata validation fails if localization is missing on a
+    required field.
+    """
+    monkeypatch.setattr(
+        metadata_validator, "_validate_datacite",
+        lambda dataset_id, client: None
+    )
+    with pytest.raises(InvalidMetadataError) as error:
+        validate_metadata(
+            'validate_metadata_localization_missing',
+            tests.conftest.UNIT_TEST_CONFIG_FILE
+        )
+
+    field = "'research_dataset/provenance/description'"
+    assert str(error.value) == "No localization provided in field: %s" % field
+
+
+@pytest.mark.usefixtures('testmetax')
 def test_validate_metadata_invalid():
     """Test that validate_metadata function raises exception with correct error
     message for invalid dataset.
