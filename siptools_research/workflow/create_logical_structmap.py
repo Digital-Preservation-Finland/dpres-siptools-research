@@ -16,6 +16,7 @@ from siptools_research.config import Configuration
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
 from siptools_research.workflowtask import WorkflowTask
+from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools_research.workflow.create_digiprov \
     import CreateProvenanceInformation
@@ -85,8 +86,7 @@ class CreateLogicalStructMap(WorkflowTask):
         for category in categories:
             div = mets.div(type_attr=category)
             for filename in categories.get(category):
-                fileid = self.get_fileid(encode_path(filename,
-                                                     safe='/'))
+                fileid = self.get_fileid(encode_path(filename, safe='/'))
                 div.append(mets.fptr(fileid))
             wrapper_div.append(div)
         logical_structmap.append(wrapper_div)
@@ -162,6 +162,12 @@ class CreateLogicalStructMap(WorkflowTask):
                     dataset_metadata
                 )
 
+            # If file category was not found even for the parent directory,
+            # raise error
+            if filecategory is None:
+                raise InvalidMetadataError("File category for file {} was not "
+                                           "found".format(file_id))
+
             # Append path to logical_struct[filecategory] list. Create list if
             # it does not exist already
             if filecategory not in logical_struct.keys():
@@ -231,17 +237,22 @@ def find_dir_use_category(metax_client, identifier, dataset_metadata):
     """
     languages = get_dataset_languages(dataset_metadata)
 
-    for directory in dataset_metadata['research_dataset']['directories']:
-        if directory['identifier'] == identifier:
-            return get_localized_value(
-                directory['use_category']['pref_label'],
-                languages=languages
+    if 'directories' in dataset_metadata['research_dataset']:
+        for directory in dataset_metadata['research_dataset']['directories']:
+            if directory['identifier'] == identifier:
+                return get_localized_value(
+                    directory['use_category']['pref_label'],
+                    languages=languages
+                )
+
+        dire = metax_client.get_directory(identifier)
+
+        if 'parent_directory' in dire:
+            return find_dir_use_category(
+                metax_client,
+                dire['parent_directory']['identifier'],
+                dataset_metadata
             )
-    dire = metax_client.get_directory(identifier)
-    if 'parent_directory' in dire:
-        return find_dir_use_category(
-            metax_client, dire['parent_directory']['identifier'],
-            dataset_metadata
-        )
-    # Nothing found
+
+    # Nothing found:
     return None
