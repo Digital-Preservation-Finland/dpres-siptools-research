@@ -54,6 +54,14 @@ BASE_FILE = {
 }
 
 FILES = {
+    "pid:urn:generate_metadata_1_pas": {
+        "file_characteristics": {
+            "encoding": "user_defined_charset",
+            "file_created": "2014-01-17T08:19:31Z",
+            "file_format": "text/plain",
+            "dummy_key": "dummy_value"
+        }
+    },
     "pid:urn:generate_metadata_1_ida": {
         "file_characteristics": {
             "encoding": "user_defined_charset",
@@ -234,6 +242,11 @@ FILES = {
             ("identifier", "pid:urn:1")
         ]
     },
+    "pid:urn:get_files_1_pas": {
+        "set": [
+            ("file_path", "/path/to/file1")
+        ]
+    },
     "pid:urn:get_files_1_local": {
         "set": [("file_path", "/path/to/file1")]
     },
@@ -241,6 +254,11 @@ FILES = {
         "set": [
             ("file_path", "/path/to/file2"),
             ("identifier", "pid:urn:2")
+        ]
+    },
+    "pid:urn:get_files_2_pas": {
+        "set": [
+            ("file_path", "/path/to/file2")
         ]
     },
     "pid:urn:get_files_2_local": {

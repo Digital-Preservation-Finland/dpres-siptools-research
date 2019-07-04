@@ -43,6 +43,13 @@ BASE_DATASET = {
 
 DATASETS = {
     "1": {},
+    "generate_metadata_test_dataset_1_pas": {
+        "files": ["pid:urn:generate_metadata_1_pas"],
+        "set": [(
+            "preservation_dataset_origin_version",
+            {"identifier": "generate_metadata_test_dataset_1_ida"}
+        )]
+    },
     "generate_metadata_test_dataset_1_ida": {
         "files": ["pid:urn:generate_metadata_1_ida"]
     },
@@ -315,6 +322,13 @@ DATASETS = {
             ("pid:urn:dir:4", "Publication files"),
             ("pid:urn:dir:5", "Software files")
         ]
+    },
+    "get_files_test_dataset_pas": {
+        "files": ["pid:urn:get_files_1_pas", "pid:urn:get_files_2_pas"],
+        "set": [(
+            "preservation_dataset_origin_version",
+            {"identifier": "get_files_test_dataset_ida"}
+        )]
     },
     "get_files_test_dataset_ida": {
         "files": ["pid:urn:get_files_1", "pid:urn:get_files_2"]
