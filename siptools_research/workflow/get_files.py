@@ -64,7 +64,6 @@ class GetFiles(WorkflowTask):
 
         :returns: ``None``
         """
-
         # Find file identifiers from Metax dataset metadata.
         config_object = Configuration(self.config)
         metax_client = Metax(
@@ -74,9 +73,10 @@ class GetFiles(WorkflowTask):
             verify=config_object.getboolean('metax_ssl_verification')
         )
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
+        pas2ida = metax_client.get_dataset_file_mapping(self.dataset_id)
 
-        # get files from ida
-        self._download_files(dataset_files, config_object)
+        # get files from ida or pas storage
+        self._download_files(dataset_files, pas2ida, config_object)
         with self.output().open('w') as output:
             output.write("Dataset id=" + self.dataset_id)
 
@@ -90,11 +90,12 @@ class GetFiles(WorkflowTask):
 
         return files_col.find_one({"_id": identifier})["file_path"]
 
-    def _download_files(self, dataset_files, config):
+    def _download_files(self, dataset_files, pas2ida, config):
         """Reads and writes files on a path based on
         ``file_path`` in Metax
 
         :param dataset_files: list of files metadata dicts
+        :param pas2ida: Dict used for mapping PAS file ids to IDA file ids
         :param config: siptools_research config object
         :returns: ``None``
         """
@@ -137,6 +138,6 @@ class GetFiles(WorkflowTask):
             else:
                 # Download file from IDA
                 ida.download_file(
-                    dataset_file['identifier'], target_path,
+                    pas2ida[dataset_file['identifier']], target_path,
                     dataset_file["file_path"], self.config
                 )

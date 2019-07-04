@@ -143,12 +143,13 @@ def test_forbidden_relative_path(testpath, path):
             }
         }
     ]
+    pas2ida = {"pid:urn:1": "pid:urn:1"}
 
     # File download should fail
     with pytest.raises(InvalidMetadataError) as exception_info:
         # pylint: disable=protected-access
         task._download_files(
-            files, siptools_research.config.Configuration(task.config)
+            files, pas2ida, siptools_research.config.Configuration(task.config)
         )
     assert exception_info.value.message \
         == 'The file path of file pid:urn:1 is invalid: %s' % path
@@ -192,10 +193,11 @@ def test_allowed_relative_paths(testpath, path):
             }
         }
     ]
+    pas2ida = {"pid:urn:1": "pid:urn:1"}
 
     # Download file and check that is found in expected location
     # pylint: disable=protected-access
     task._download_files(
-        files, siptools_research.config.Configuration(task.config)
+        files, pas2ida, siptools_research.config.Configuration(task.config)
     )
     assert os.listdir(sipdirectory) == ['file1']
