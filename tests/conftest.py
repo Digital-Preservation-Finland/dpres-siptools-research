@@ -7,6 +7,7 @@ import logging
 import tempfile
 import shutil
 import urllib
+import json
 
 import urllib3
 import mongomock
@@ -125,9 +126,9 @@ def testmetax(request):
 
         # Retrieve PATCHed files or datasets from metax_data.files
         if request.method == "PATCH" and subdir == "files":
-            body = files.get_file("", body_file)
+            body = json.dumps(files.get_file("", body_file))
         elif request.method == "PATCH" and subdir == "datasets":
-            body = datasets.get_dataset("", body_file)
+            body = json.dumps(datasets.get_dataset("", body_file))
         else:
             with open(full_path) as open_file:
                 body = open_file.read()
