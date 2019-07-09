@@ -212,6 +212,12 @@ DATASETS = {
     "validate_metadata_test_dataset_invalid_metadata": {
         "remove": ["contract"]
     },
+    "validate_invalid_file_type_": {
+        "files": ["pid:urn:wf_test_1a_ida", "pid:urn:invalid_file_type_"]
+    },
+    "validate_invalid_file_type_1.0": {
+        "files": ["pid:urn:wf_test_1a_ida", "pid:urn:invalid_file_type_1.0"]
+    },
     "validate_metadata_test_dataset_invalid_contract_metadata": {
         "contract": "contract_with_invalid_metadata"
     },

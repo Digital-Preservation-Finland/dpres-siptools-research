@@ -188,12 +188,15 @@ def _check_mimetype(file_metadata, conf):
     if not mimetypes.is_supported(file_format, format_version, mimetypes_conf):
         message = (
             "Validation error in file {file_path}: Incorrect file "
-            "format: {file_format}, version {version}"
+            "format: {file_format}"
         ).format(
             file_path=file_metadata["file_path"],
             file_format=file_format,
-            version=format_version
         )
+
+        if format_version:
+            message += ", version %s" % format_version
+
         raise InvalidMetadataError(message)
 
 

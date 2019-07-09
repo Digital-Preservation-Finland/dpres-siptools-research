@@ -136,6 +136,19 @@ FILES = {
         "file_characteristics": TXT_FILE_CHARS,
         "set": [("file_path", "../../file_in_invalid_path")]
     },
+    "pid:urn:invalid_file_type_" : {
+        "file_characteristics": {
+            "file_created": "2018-01-17T08:19:31Z",
+            "file_format": "application/unsupported"
+        }
+    },
+    "pid:urn:invalid_file_type_1.0" : {
+        "file_characteristics": {
+            "file_created": "2018-01-17T08:19:31Z",
+            "file_format": "application/unsupported",
+            "format_version": "1.0"
+        }
+    },
     "pid:urn:validate_metadata_test_image": {
         "file_characteristics": TIFF_FILE_CHARS
     },

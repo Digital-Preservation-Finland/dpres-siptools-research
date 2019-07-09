@@ -82,6 +82,30 @@ def test_validate_metadata_invalid():
 
 
 @pytest.mark.usefixtures('testmetax')
+@pytest.mark.parametrize('format_version', ["1.0", ""])
+def test_validate_invalid_file_type(format_version):
+    """Test that validate_metadata function raises exception with correct error
+    message for unsupported file type.
+
+    :returns: ``None``
+    """
+    # Try to validate dataset with a file that has an unsupported file_format
+    with pytest.raises(InvalidMetadataError) as error:
+        validate_metadata('validate_invalid_file_type_%s' % format_version,
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check exception message
+    message = (
+        "Validation error in file path/to/file:"
+        " Incorrect file format: application/unsupported"
+    )
+    if format_version:
+        message += ", version 1.0"
+
+    assert error.value.message == message
+
+
+@pytest.mark.usefixtures('testmetax')
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_contract_metadata():
     """Test that validate_metadata function raises exception with correct error
