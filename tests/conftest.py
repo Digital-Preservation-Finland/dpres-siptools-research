@@ -46,10 +46,12 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
 @pytest.fixture(autouse=True)
-def mock_metax_access(monkeypatch):
+def mock_metax_access(request, monkeypatch):
     """Mock metax_access GET requests to files or datasets to return
     mock functions from metax_data.datasets and metax_data.files modules.
     """
+    if 'noautofixt' in request.keywords:
+        return
     monkeypatch.setattr(Metax, "get_dataset", datasets.get_dataset)
     monkeypatch.setattr(Metax, "get_dataset_files", datasets.get_dataset_files)
     monkeypatch.setattr(Metax, "get_file", files.get_file)

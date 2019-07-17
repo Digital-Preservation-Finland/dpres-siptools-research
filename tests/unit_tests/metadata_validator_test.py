@@ -1,4 +1,5 @@
 """Tests for :mod:`siptools_research.metadata_validator` module"""
+import copy
 
 import pytest
 import lxml.etree
@@ -332,8 +333,89 @@ def test_validate_metadata_publisher_missing(mocker):
     )
 
 
+@pytest.mark.usefixtures('mock_filetype_conf')
+@requests_mock.Mocker()
+@pytest.mark.noautofixt
+def test_validate_file_metadata(mocker):
+    """Check that dataset directory caching is working correctly in
+    DatasetConsistency when the files have common root directory
+    in dataset.directories property.
+
+    :returns: ``None``
+    """
+    dataset = {
+        'identifier': 'dataset_identifier',
+        'research_dataset': {
+            'files': [],
+            'directories': [{'identifier': 'root_dir'}]
+        }
+    }
+
+    FILE_METADATA = {
+        'file_path': "/path/to/file1",
+        'parent_directory': {
+            'identifier': 'first_par_dir'
+        },
+        "checksum": {
+            "algorithm": "md5",
+            "value": "foobar"
+        },
+        "file_characteristics": {
+            "file_format": "text/csv"
+        },
+        "file_storage": {
+            "identifier": "foobar",
+            "id": 1
+        }
+    }
+    file_1 = copy.deepcopy(FILE_METADATA)
+    file_1['identifier'] = 'file_identifier1'
+    file_2 = copy.deepcopy(FILE_METADATA)
+    file_2['identifier'] = 'file_identifier2'
+    first_par_dir_adapter = mocker.get(
+        tests.conftest.METAX_URL + '/directories/first_par_dir',
+        json={'identifier': 'first_par_dir',
+              'parent_directory': {
+                  'identifier': 'second_par_dir'
+                  }
+              },
+        status_code=200
+    )
+    second_par_dir_adapter = mocker.get(
+        tests.conftest.METAX_URL + '/directories/second_par_dir',
+        json={'identifier': 'second_par_dir',
+              'parent_directory': {
+                  'identifier': 'root_dir'
+                  }
+              },
+        status_code=200
+    )
+    files_adapter = mocker.get(
+        tests.conftest.METAX_URL + '/datasets/dataset_identifier/files',
+        json=[file_1, file_2],
+        status_code=200
+    )
+    # Init metax client
+    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    client = Metax(
+        configuration.get('metax_url'),
+        configuration.get('metax_user'),
+        configuration.get('metax_password'),
+        verify=configuration.getboolean('metax_ssl_verification')
+    )
+    # pylint: disable=protected-access
+    siptools_research.metadata_validator._validate_file_metadata(
+        dataset,
+        client, configuration
+    )
+    assert files_adapter.call_count == 1
+    # verify that dataset directory caching works
+    assert first_par_dir_adapter.call_count == 1
+    assert second_par_dir_adapter.call_count == 1
+
+
 @pytest.mark.usefixtures('testmetax')
-def test_validate_file_metadata():
+def test_validate_file_metadata_invalid_metadata():
     """Check that ``_validate_file_metadata`` raises exceptions with
     descriptive error messages.
 
@@ -351,7 +433,10 @@ def test_validate_file_metadata():
     with pytest.raises(InvalidMetadataError) as exc_info:
         # pylint: disable=protected-access
         siptools_research.metadata_validator._validate_file_metadata(
-            'validate_metadata_test_dataset_missing_file_format',
+            {
+                'identifier': 'validate_metadata_test_dataset_missing_'
+                'file_format'
+            },
             client, configuration
         )
 

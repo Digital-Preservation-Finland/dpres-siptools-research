@@ -9,6 +9,7 @@ from metax_access import Metax, DataciteGenerationError
 from siptools.xml.mets import NAMESPACES
 import siptools_research.schemas
 from siptools_research.utils import mimetypes
+from siptools_research.utils.dataset_consistency import DatasetConsistency
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
 
@@ -65,7 +66,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                                 metax_client)
 
     # Validate file metadata for each file in dataset files
-    _validate_file_metadata(dataset_id, metax_client, conf)
+    _validate_file_metadata(dataset_metadata, metax_client, conf)
 
     # Validate techMD XML for each file in dataset files
     _validate_xml_file_metadata(dataset_id, metax_client)
@@ -200,19 +201,21 @@ def _check_mimetype(file_metadata, conf):
         raise InvalidMetadataError(message)
 
 
-def _validate_file_metadata(dataset_id, metax_client, conf):
+def _validate_file_metadata(dataset, metax_client, conf):
     """Validates file metadata found from /rest/v1/datasets/<dataset_id>/files.
 
-    :param dataset_id: identifier of file
+    :param dataset: dataset
     :param metax_client: metax_access.Metax instance
     :param conf: siptools_research Configuration object
     :returns: ``None``
     """
-    for file_metadata in metax_client.get_dataset_files(dataset_id):
-
-        file_id = file_metadata["identifier"]
+    # DatasetConsistency is used to verify file consistency within the dataset
+    # i.e. every file returned by Metax API /datasets/datasetid/files
+    # can be found from dataset.file or dataset.directories properties
+    consistency = DatasetConsistency(metax_client, dataset)
+    for file_metadata in metax_client.get_dataset_files(dataset['identifier']):
+        file_identifier = file_metadata["identifier"]
         file_path = file_metadata["file_path"]
-
         # Validate metadata against JSON schema
         try:
             jsonschema.validate(file_metadata,
@@ -230,9 +233,10 @@ def _validate_file_metadata(dataset_id, metax_client, conf):
         normalised_path = os.path.normpath(file_path.strip('/'))
         if normalised_path.startswith('..'):
             raise InvalidMetadataError(
-                'The file path of file %s is invalid: %s' % (file_id,
+                'The file path of file %s is invalid: %s' % (file_identifier,
                                                              file_path)
             )
+        consistency.is_consistent_for_file(file_metadata)
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
