@@ -16,7 +16,8 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 class CreateDescriptiveMetadata(WorkflowTask):
     """Creates METS dmdSec document. Descriptive metadata is read from Metax in
-    DataCite format. Output file is written to <sip_creation_path>/dmdsec.xml
+    DataCite format. Output file is written to <sip_creation_path>/dmdsec.xml.
+    Metadata references are written <sip_creation_path>/md-references.xml.
 
     Task requires that workspace is created and dataset metadata is validated.
     """
@@ -38,12 +39,14 @@ class CreateDescriptiveMetadata(WorkflowTask):
     def output(self):
         """The output that this Task produces.
 
-        :returns: local target: `sip-in-progress/dmdsec.xml`
+        :returns: list of local targets
         :rtype: LocalTarget
         """
-        return LocalTarget(
-            os.path.join(self.sip_creation_path, 'dmdsec.xml')
-        )
+        return [
+            LocalTarget(os.path.join(self.sip_creation_path, 'dmdsec.xml')),
+            LocalTarget(os.path.join(self.sip_creation_path,
+                                     'md-references.xml'))
+        ]
 
     def run(self):
         """Copies datacite.xml metadatafile from Metax. Creates a METS document
@@ -76,7 +79,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
         creator = import_description.DmdCreator(self.sip_creation_path)
         creator.write_dmd_ref(_mets, dmd_id, '.')
 
-        with self.output().open('w') as outputfile:
+        with self.output()[0].open('w') as outputfile:
             _mets.write(outputfile,
                         pretty_print=True,
                         xml_declaration=True,
