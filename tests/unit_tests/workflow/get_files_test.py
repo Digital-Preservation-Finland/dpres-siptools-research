@@ -130,9 +130,11 @@ def test_missing_files(testpath, file_storage):
 
     # Check exception message
     if file_storage == "ida":
-        assert str(excinfo.value) == "File /path/to/file4 not found in Ida."
+        assert str(excinfo.value) \
+            == "File pid:urn:does_not_exist not found in Ida."
     else:
-        assert str(excinfo.value) == "File /path/to/file4 not found on disk"
+        assert str(excinfo.value) \
+            == "File pid:urn:does_not_exist_local not found on disk"
 
     # Task should not be completed
     assert not task.complete()

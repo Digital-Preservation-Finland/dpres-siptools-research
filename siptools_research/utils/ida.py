@@ -38,14 +38,13 @@ def _get_response(identifier, config_file, stream=False):
     return response
 
 
-def download_file(identifier, linkpath, metax_filepath, config_file):
+def download_file(identifier, linkpath, config_file):
     """Download file from IDA to workspace_root/ida_files and create a hard
     link to linkpath. Ida url, username, and password are read from
     configuration file.
 
     :param identifier: File identifier (for example "pid:urn:1")
     :param linkpath: Path where the hard link is created
-    :param metax_filepath: file_path field in Metax. Used in error messages.
     :param config_file: Configuration file
     :returns: ``None``
     """
@@ -62,17 +61,8 @@ def download_file(identifier, linkpath, metax_filepath, config_file):
 
             if status_code == 404:
                 raise IdaError(
-                    "File %s not found in Ida." % metax_filepath
+                    "File %s not found in Ida." % identifier
                 )
-            elif status_code == 403:
-                raise IdaError(
-                    "Access to file %s forbidden." % metax_filepath
-                )
-            else:
-                raise IdaError(
-                    "File %s could not be retrieved." % metax_filepath
-                )
-
 
         with open(filepath, 'wb') as new_file:
             for chunk in response.iter_content(chunk_size=1024):

@@ -17,7 +17,7 @@ def test_download_file(testpath):
     :returns: ``None``
     """
     new_file_path = os.path.join(testpath, 'new_file')
-    ida.download_file('pid:urn:1', new_file_path, "file_path",
+    ida.download_file('pid:urn:1', new_file_path,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Remove file from ida_files and test that the workspace copy stays intact
@@ -37,5 +37,5 @@ def test_download_file_404(testpath):
     """
     new_file_path = os.path.join(testpath, 'new_file')
     with pytest.raises(IdaError):
-        ida.download_file('pid:urn:does_not_exist', new_file_path, "file_path",
+        ida.download_file('pid:urn:does_not_exist', new_file_path,
                           tests.conftest.UNIT_TEST_CONFIG_FILE)

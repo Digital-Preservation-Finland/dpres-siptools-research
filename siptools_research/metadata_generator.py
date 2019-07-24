@@ -100,11 +100,11 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             else:
                 # IDA
                 try:
-                    ida.download_file(
-                        pas2ida[file_id], tmpfile, file_["file_path"], config
-                    )
-                except HTTPError as error:
-                    handle_exception(file_, error, dataset_id)
+                    ida.download_file(pas2ida[file_id], tmpfile, config)
+                except ida.IdaError as error:
+                    message = ("File {} was not found in Ida."
+                               .format(file_["file_path"]))
+                    raise MetadataGenerationError(message, dataset=dataset_id)
 
             # Generate and update file_characteristics
             file_characteristics = _generate_file_characteristics(
@@ -130,23 +130,6 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                 metax_client.set_xml(file_id, xml)
     finally:
         shutil.rmtree(tmpdir)
-
-
-def handle_exception(file_, http_error, dataset_id):
-    """Raise MetadataGenerationError with message depending on the
-    http status code
-    """
-    file_path = file_['file_path']
-    status_code = http_error.response.status_code
-
-    if status_code == 404:
-        message = "File %s not found in Ida." % file_path
-    elif status_code == 403:
-        message = "Access to file %s forbidden." % file_path
-    else:
-        message = "File %s could not be retrieved." % file_path
-
-    raise MetadataGenerationError(message, dataset=dataset_id)
 
 
 def _generate_file_characteristics(filepath, original_file_characteristics):

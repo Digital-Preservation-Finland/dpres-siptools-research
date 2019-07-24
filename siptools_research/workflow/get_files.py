@@ -130,14 +130,14 @@ class GetFiles(WorkflowTask):
                     identifier, dataset_file["file_path"]
                 )
                 if not os.path.isfile(file_path):
-                    raise UploadApiError(
-                        "File %s not found on disk" % dataset_file["file_path"]
-                    )
+                    raise UploadApiError("File %s not found on disk"
+                                         % dataset_file["identifier"])
                 # Create hard links to the files on workspace
                 os.link(file_path, target_path)
             else:
                 # Download file from IDA
                 ida.download_file(
-                    pas2ida[dataset_file['identifier']], target_path,
-                    dataset_file["file_path"], self.config
+                    pas2ida[dataset_file['identifier']],
+                    target_path,
+                    self.config
                 )
