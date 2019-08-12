@@ -78,10 +78,6 @@ def testmetax(request):
     PATCH method has exactly same effect as HTTP GET methdod. Using HTTP POST
     method returns empty message with status *HTTP/1.1 201 OK*.
 
-    When url https://metax-test.csc.fi/es/reference_data/use_category/_search?pretty&size=100
-    is requested using HTTP GET method, the response is content of file:
-    'tests/httpretty_data/metax_elastic_search.json'
-
     If file from subsubdirectory is requested, the filename must be url encoded
     (the files are searched only from subdirectories, not from
     subsubdirectories). For example, when
@@ -166,19 +162,6 @@ def testmetax(request):
         httpretty.POST,
         re.compile(METAX_RPC_URL + '/(.*)'),
         status=200
-    )
-
-    # register response for get_elasticsearchdata-function
-    elasticsearchdata_url = 'https://metax-test.csc.fi/es/reference_data/'\
-                            'use_category/_search?pretty&size=100'
-    with open('tests/httpretty_data/metax_elastic_search.json') as open_file:
-        body = open_file.read()
-    httpretty.register_uri(
-        httpretty.GET,
-        elasticsearchdata_url,
-        body=body,
-        status=200,
-        content_type='application/json'
     )
 
     # Didable http-server after executing the test function
