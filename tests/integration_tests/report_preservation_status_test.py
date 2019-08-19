@@ -178,24 +178,21 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
                     dir_path + "/" + os.path.basename(workspace) +
                     "_extra.html", raise_error=True)
 
-    # Init and run task
-    with mock.patch('siptools_research.workflowtask.mail.send') as mock_mail:
-        # Run task like it would be run from command line
-        exceptionThrown = False
-        task = report_preservation_status.ReportPreservationStatus(
-            workspace=workspace,
-            dataset_id="report_preservation_status_test_dataset_rejected",
-            config=tests.conftest.TEST_CONFIG_FILE
-        )
-        assert not task.complete()
-        try:
-            task.run()
-        except (ValueError, InvalidDatasetError):
-            exception_thrown = True
+    # Run task like it would be run from command line
+    exceptionThrown = False
+    task = report_preservation_status.ReportPreservationStatus(
+        workspace=workspace,
+        dataset_id="report_preservation_status_test_dataset_rejected",
+        config=tests.conftest.TEST_CONFIG_FILE
+    )
+    assert not task.complete()
+    try:
+        task.run()
+    except (ValueError, InvalidDatasetError):
+        exception_thrown = True
 
-        mock_mail.assert_not_called()
-        assert exception_thrown
-        assert task.complete() is False
+    assert exception_thrown
+    assert task.complete() is False
 
 
 def _remote_cmd(ssh, command, raise_error=False):

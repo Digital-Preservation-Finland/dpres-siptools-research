@@ -4,7 +4,6 @@ import os
 import luigi
 from siptools_research.config import Configuration
 from siptools_research.utils.database import Database
-from siptools_research.utils import mail
 from metax_access import Metax, MetaxConnectionError,\
     DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,\
     DS_STATE_METADATA_VALIDATION_FAILED
@@ -184,12 +183,6 @@ def report_task_failure(task, exception):
             task.dataset_id, state=DS_STATE_METADATA_VALIDATION_FAILED,
             system_description=_get_description(task, exception)
         )
-    elif isinstance(exception, MetaxConnectionError):
-        # send email to admin
-        conf = Configuration(task.config)
-        mail.send(conf.get('tpas_mail_sender'),
-                  conf.get('tpas_admin_email'),
-                  str(exception), str(exception))
 
 
 def _get_description(task, exception):

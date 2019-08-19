@@ -100,17 +100,6 @@ class InvalidMetadataTask(FailingTestTask):
         raise InvalidMetadataError('Missing some important metadata')
 
 
-class MetaxConnectionErrorTask(FailingTestTask):
-    """Test class that raises MetaxConnectionError"""
-
-    def run(self):
-        """Raises MetaxConnectionError
-
-        :returns:  ``None``
-        """
-        raise MetaxConnectionError
-
-
 # pylint: disable=unused-argument
 @pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
 def test_run_workflowtask(testpath):
@@ -225,28 +214,6 @@ def test_invalidmetadataerror(testpath):
 
     # Check the method of last HTTP request
     assert httpretty.last_request().method == 'PATCH'
-
-
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
-def test_metaxconnectionerror(testpath):
-    """Test that event handler of WorkflowTask correctly deals with
-    MetaxConnectionError risen in a task. Event handler should send
-    an email to configured address.
-
-    :param testpath: temporary directory
-    :returns: ``None``
-    """
-
-    with mock.patch('siptools_research.workflowtask.mail.send') \
-            as mock_sendmail:
-        # Run task like it would be run from command line
-        run_luigi_task('MetaxConnectionErrorTask', testpath)
-        mock_sendmail.assert_called_once_with('test.sender@tpas.fi',
-                                              'tpas.admin@csc.fi',
-                                              str(MetaxConnectionError()),
-                                              str(MetaxConnectionError()))
-        # Check the body of last HTTP request
-        assert httpretty.last_request().method == 'PATCH'
 
 
 # TODO: Test for WorkflowWrapperTask
