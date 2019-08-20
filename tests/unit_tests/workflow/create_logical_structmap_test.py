@@ -5,17 +5,17 @@ import os
 import pytest
 import lxml.etree
 
+from metax_access import Metax
+
 from siptools.scripts.import_description import import_description
 from siptools.scripts.import_object import import_object
 from siptools.scripts.compile_structmap import compile_structmap
-from siptools.scripts.premis_event import (
-    premis_event, create_premis_event_file
-)
+from siptools.scripts.premis_event import create_premis_event_file
 from siptools.xml.mets import NAMESPACES
 
 import tests.conftest
 from siptools_research.workflow.create_logical_structmap import (
-    CreateLogicalStructMap
+    CreateLogicalStructMap, find_dir_use_category
 )
 
 
@@ -68,6 +68,78 @@ def test_create_structmap_ok(testpath):
 
     validate_logical_structmap_file(os.path.join(sip_creation_path,
                                                  'logical_structmap.xml'))
+
+
+def test_find_dir_use_category(requests_mock):
+    """Test that find_dir_use_category returns the label from
+    the closest parent directory.
+    """
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/1",
+        json={
+            "identifier": "1",
+            "parent_directory": {"identifier": "2"}
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/2",
+        json={
+            "identifier": "2",
+            "parent_directory": {"identifier": "3"}
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/3",
+        json={
+            "identifier": "3",
+            "parent_directory": {"identifier": "4"},
+            "use_category": {"pref_label": {"en": "correct_label"}}
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/4",
+        json={
+            "identifier": "4",
+            "use_category": {"pref_label": {"en": "wrong_label"}}
+        }
+    )
+    metax_client = Metax("https://metaksi", "test", "test")
+    assert find_dir_use_category(metax_client, "1", ["en"]) == "correct_label"
+
+
+def test_use_category_missing(requests_mock):
+    """Test that function find_dir_use_category traverses all the way to the
+    root directory and returns None if no directories have defined the
+    use_category.
+    """
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/1",
+        json={
+            "identifier": "1",
+            "parent_directory": {"identifier": "2"}
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/2",
+        json={
+            "identifier": "2",
+            "parent_directory": {"identifier": "3"}
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/3",
+        json={
+            "identifier": "3",
+            "parent_directory": {"identifier": "4"}
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/4",
+        json={"identifier": "4"}
+    )
+    metax_client = Metax("https://metaksi", "test", "test")
+    assert not find_dir_use_category(metax_client, "1", ["en"])
+    assert requests_mock.call_count == 4
 
 
 def validate_logical_structmap_file(logical_structmap_file):
