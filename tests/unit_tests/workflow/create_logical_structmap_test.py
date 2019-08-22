@@ -15,17 +15,54 @@ from siptools.xml.mets import NAMESPACES
 
 import tests.conftest
 from siptools_research.workflow.create_logical_structmap import (
-    CreateLogicalStructMap, find_dir_use_category
+    CreateLogicalStructMap, find_dir_use_category, get_dirpath_dict
 )
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax')
-def test_create_structmap_ok(testpath):
+def test_create_structmap_ok(testpath, requests_mock):
     """Test the workflow task CreateLogicalStructMap.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
+    # Mock research_dataset directories
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/pid:urn:dir:1",
+        json={
+            "identifier": "pid:urn:dir:1",
+            "directory_path": "/access"
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/pid:urn:dir:2",
+        json={
+            "identifier": "pid:urn:dir:2",
+            "directory_path": "/docs"
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/pid:urn:dir:3",
+        json={
+            "identifier": "pid:urn:dir:3",
+            "directory_path": "/metadata"
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/pid:urn:dir:4",
+        json={
+            "identifier": "pid:urn:dir:4",
+            "directory_path": "/pubs"
+        }
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/pid:urn:dir:5",
+        json={
+            "identifier": "pid:urn:dir:5",
+            "directory_path": "/software"
+        }
+    )
+
     # Create sip directory in workspace
     sip_creation_path = os.path.join(testpath, "sip-in-progress")
     os.makedirs(os.path.join(testpath, 'sip-in-progress'))
@@ -70,76 +107,77 @@ def test_create_structmap_ok(testpath):
                                                  'logical_structmap.xml'))
 
 
-def test_find_dir_use_category(requests_mock):
-    """Test that find_dir_use_category returns the label from
-    the closest parent directory.
+def test_get_dirpath_dict(requests_mock):
+    """Test that get_dirpath_dict returns the correct dictionary, which maps
+    dirpath -> use_category.
     """
     requests_mock.get(
         "https://metaksi/rest/v1/directories/1",
         json={
             "identifier": "1",
-            "parent_directory": {"identifier": "2"}
+            "directory_path": "/"
         }
     )
     requests_mock.get(
         "https://metaksi/rest/v1/directories/2",
         json={
             "identifier": "2",
-            "parent_directory": {"identifier": "3"}
+            "directory_path": "/test"
         }
     )
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/3",
-        json={
-            "identifier": "3",
-            "parent_directory": {"identifier": "4"},
-            "use_category": {"pref_label": {"en": "correct_label"}}
-        }
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/4",
-        json={
-            "identifier": "4",
-            "use_category": {"pref_label": {"en": "wrong_label"}}
-        }
-    )
+
     metax_client = Metax("https://metaksi", "test", "test")
-    assert find_dir_use_category(metax_client, "1", ["en"]) == "correct_label"
+    dataset_metadata = {
+        "research_dataset": {
+            "directories": [
+                {
+                    "identifier": "1",
+                    "use_category": {"pref_label": {"en": "rootdir"}}
+                },
+                {
+                    "identifier": "2",
+                    "use_category": {"pref_label": {"en": "testdir"}}
+                }
+            ]
+        }
+    }
+
+    assert get_dirpath_dict(metax_client, dataset_metadata) == {
+        "/": {"pref_label": {"en": "rootdir"}},
+        "/test": {"pref_label": {"en": "testdir"}}
+    }
 
 
-def test_use_category_missing(requests_mock):
-    """Test that function find_dir_use_category traverses all the way to the
-    root directory and returns None if no directories have defined the
-    use_category.
+def test_get_dirpath_dict_no_directories():
+    """Test that get_dirpath_dict returns an empty dict when no directories
+    are defined in the research_dataset.
     """
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/1",
-        json={
-            "identifier": "1",
-            "parent_directory": {"identifier": "2"}
-        }
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/2",
-        json={
-            "identifier": "2",
-            "parent_directory": {"identifier": "3"}
-        }
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/3",
-        json={
-            "identifier": "3",
-            "parent_directory": {"identifier": "4"}
-        }
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/4",
-        json={"identifier": "4"}
-    )
     metax_client = Metax("https://metaksi", "test", "test")
-    assert not find_dir_use_category(metax_client, "1", ["en"])
-    assert requests_mock.call_count == 4
+    assert not get_dirpath_dict(metax_client, {"research_dataset": {}})
+
+
+def test_find_dir_use_category():
+    """Test that find_dir_use_category returns the correct label"""
+    dirpath_dict = {
+        "/test1": {"pref_label": {"en": "testdir1"}},
+        "/test2": {"pref_label": {"en": "testdir2"}}
+    }
+    languages = ["en"]
+
+    # Straightforward cases
+    assert find_dir_use_category("/test1", dirpath_dict, languages) == "testdir1"
+    assert find_dir_use_category("/test2", dirpath_dict, languages) == "testdir2"
+
+    # Closest parent that matches
+    assert find_dir_use_category(
+        "/test1/test", dirpath_dict, languages
+    ) == "testdir1"
+
+    # No matches
+    assert not find_dir_use_category("/", dirpath_dict, languages)
+
+    # No directories were found in the research_dataset
+    assert not find_dir_use_category("/test", {}, languages)
 
 
 def validate_logical_structmap_file(logical_structmap_file):

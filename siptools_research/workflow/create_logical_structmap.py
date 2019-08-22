@@ -141,6 +141,8 @@ class CreateLogicalStructMap(WorkflowTask):
         )
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
         dataset_metadata = metax_client.get_dataset(self.dataset_id)
+        languages = get_dataset_languages(dataset_metadata)
+        dirpath_dict = get_dirpath_dict(metax_client, dataset_metadata)
         logical_struct = dict()
 
         for dataset_file in dataset_files:
@@ -156,11 +158,11 @@ class CreateLogicalStructMap(WorkflowTask):
             # file from  'directories' section. The "use_category" of file is
             # the "use_category" of the parent directory.
             if filecategory is None:
-                languages = get_dataset_languages(dataset_metadata)
+                name_len = len(dataset_file["file_name"])
+
                 filecategory = find_dir_use_category(
-                    metax_client,
-                    dataset_file['parent_directory']['identifier'],
-                    languages
+                    dataset_file["file_path"][:-name_len],
+                    dirpath_dict, languages
                 )
 
             # If file category was not found even for the parent directory,
@@ -226,30 +228,72 @@ def find_file_use_category(identifier, dataset_metadata):
     return None
 
 
-def find_dir_use_category(metax_client, identifier, languages):
-    """Traverses recursively up the directory tree. Stops when it
-    finds the first directory where use_category is defined or reaches the root
-    directory. Returns the `use_category` of directory if it is found,
-    otherwise returns ``None``
+def _match_strings(parent_path, dir_path):
+    """Retuns the number of matching leading characters. Returns 0 if dir_path
+    is longer than parent_path since we don't want to consider directories,
+    which are lower in the directory tree than the parent directory.
+    """
+    if len(dir_path) > len(parent_path):
+        return 0
+
+    matches = 0
+    for i, char in enumerate(dir_path):
+        if parent_path[i] == char:
+            matches += 1
+        else:
+            break
+
+    return matches
+
+
+def get_dirpath_dict(metax_client, dataset_metadata):
+    """Returns a dict, which maps all research_dataset directory paths to the
+    correcponding use_category values.
 
     :param metax_client: metax access
-    :param identifier: directory identifier
-    :param languages: list of ISO 639-1 languages for the dataset
+    :dataset_metadata: dataset metadata dictionary
+    :returns: Dict {dirpath: use_category}
+    """
+    dirpath_dict = {}
+    research_dataset = dataset_metadata["research_dataset"]
+
+    if "directories" in research_dataset:
+        for _dir in research_dataset["directories"]:
+            use_category = _dir["use_category"]
+            directory = metax_client.get_directory(_dir["identifier"])
+            dirpath = directory["directory_path"]
+
+            dirpath_dict[dirpath] = use_category
+
+    return dirpath_dict
+
+
+def find_dir_use_category(parent_path, dirpath_dict, languages):
+    """Find use_category of the closest parent directory listed in the
+    research_dataset. This is done by checking how well the directory paths in
+    the research_dataset match with the parent directory path.
+
+    :param parent_path: path to the parent directory of the file
+    :param dirpath_dict: Dictionary, which maps research_dataset directory
+                         paths to the corresponding use_categories.
+    :param languages: A list of ISO 639-1 formatted language codes of the
+                      dataset
     :returns: `use_category` attribute of directory
     """
-    directory = metax_client.get_directory(identifier)
+    max_matches = 0
+    use_category = None
 
-    if 'use_category' in directory:
+    for dirpath in dirpath_dict:
+        matches = _match_strings(parent_path, dirpath)
+
+        if matches > max_matches:
+            max_matches = matches
+            use_category = dirpath_dict[dirpath]
+
+    if use_category:
         return get_localized_value(
-            directory['use_category']['pref_label'],
+            use_category["pref_label"],
             languages=languages
         )
-    elif 'parent_directory' in directory:
-        return find_dir_use_category(
-            metax_client,
-            directory['parent_directory']['identifier'],
-            languages
-        )
 
-    # At the root dir, nothing found:
     return None
