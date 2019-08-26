@@ -142,7 +142,7 @@ class CreateLogicalStructMap(WorkflowTask):
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
         dataset_metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(dataset_metadata)
-        dirpath_dict = get_dirpath_dict(metax_client, dataset_metadata)
+        dirpath2usecategory = get_dirpath_dict(metax_client, dataset_metadata)
         logical_struct = dict()
 
         for dataset_file in dataset_files:
@@ -162,7 +162,7 @@ class CreateLogicalStructMap(WorkflowTask):
 
                 filecategory = find_dir_use_category(
                     dataset_file["file_path"][:-name_len],
-                    dirpath_dict, languages
+                    dirpath2usecategory, languages
                 )
 
             # If file category was not found even for the parent directory,
@@ -268,14 +268,15 @@ def get_dirpath_dict(metax_client, dataset_metadata):
     return dirpath_dict
 
 
-def find_dir_use_category(parent_path, dirpath_dict, languages):
+def find_dir_use_category(parent_path, dirpath2usecategory, languages):
     """Find use_category of the closest parent directory listed in the
     research_dataset. This is done by checking how well the directory paths in
     the research_dataset match with the parent directory path.
 
     :param parent_path: path to the parent directory of the file
-    :param dirpath_dict: Dictionary, which maps research_dataset directory
-                         paths to the corresponding use_categories.
+    :param dirpath2usecategory: Dictionary, which maps research_dataset
+                                directory paths to the corresponding
+                                use_categories.
     :param languages: A list of ISO 639-1 formatted language codes of the
                       dataset
     :returns: `use_category` attribute of directory
@@ -283,12 +284,12 @@ def find_dir_use_category(parent_path, dirpath_dict, languages):
     max_matches = 0
     use_category = None
 
-    for dirpath in dirpath_dict:
+    for dirpath in dirpath2usecategory:
         matches = _match_strings(parent_path, dirpath)
 
         if matches > max_matches:
             max_matches = matches
-            use_category = dirpath_dict[dirpath]
+            use_category = dirpath2usecategory[dirpath]
 
     if use_category:
         return get_localized_value(
