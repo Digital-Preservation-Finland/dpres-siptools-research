@@ -33,8 +33,7 @@ def run_luigi_task(module, task, workspace, dataset_id):
         )
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_luigi_config_path',
-                         'mock_filetype_conf')
+@pytest.mark.usefixtures('testmongoclient', 'mock_filetype_conf')
 def test_workflow(testpath):
     """Add test dataset metadata and associated file metadata to Metax. Run
     partial workflow by calling CreateMets task with luigi.

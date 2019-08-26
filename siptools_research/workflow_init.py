@@ -88,4 +88,5 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
                       "--module", "siptools_research.__main__", "InitWorkflow",
                       "--dataset-id", dataset_id,
                       "--workspace", workspace,
-                      "--config", config])
+                      "--config", config,
+                      "--logging-conf-file", "/etc/luigi/logging.cfg"])

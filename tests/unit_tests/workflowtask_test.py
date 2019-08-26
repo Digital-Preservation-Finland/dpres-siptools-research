@@ -101,7 +101,7 @@ class InvalidMetadataTask(FailingTestTask):
 
 
 # pylint: disable=unused-argument
-@pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
+@pytest.mark.usefixtures('testmongoclient')
 def test_run_workflowtask(testpath):
     """Executes TestTask, checks that output file is created, checks that new
     event field is created to mongo document.

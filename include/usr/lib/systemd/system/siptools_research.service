@@ -6,7 +6,7 @@ After=luigid.service mongod.service
 [Service]
 User=siptools_research
 Type=oneshot
-ExecStart=/usr/bin/luigi --module siptools_research.workflow_init InitWorkflows --config /etc/siptools_research.conf
+ExecStart=/usr/bin/luigi --module siptools_research.workflow_init InitWorkflows --config /etc/siptools_research.conf --logging-conf-file /etc/luigi/logging.cfg
 
 [Install]
 WantedBy=multi-user.target
