@@ -35,7 +35,6 @@ class CleanupWorkspace(WorkflowTask):
 
         return True
 
-
     def clean_ida_files(self):
         """Remove identifiers from /var/spool/siptools_research/ida_files"""
         identifiers, ida_files_path = self.get_identifiers()
@@ -81,7 +80,6 @@ class CleanupWorkspace(WorkflowTask):
         """
         shutil.rmtree(self.workspace)
         self.clean_ida_files()
-
 
     def complete(self):
         """Task is complete when workspace does not exist, but
