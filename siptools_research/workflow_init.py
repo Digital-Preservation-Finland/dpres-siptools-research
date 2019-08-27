@@ -84,9 +84,11 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
                                  system_description='In packaging service')
 
     # Start luigi workflow. Run in background.
-    subprocess.Popen(["luigi",
-                      "--module", "siptools_research.__main__", "InitWorkflow",
-                      "--dataset-id", dataset_id,
-                      "--workspace", workspace,
-                      "--config", config,
-                      "--logging-conf-file", "/etc/luigi/logging.cfg"])
+    subprocess.Popen([
+        "luigi",
+        "--module", "siptools_research.__main__", "InitWorkflow",
+        "--dataset-id", dataset_id,
+        "--workspace", workspace,
+        "--config", config,
+        "--logging-conf-file", "/etc/luigi/research_logging.cfg"
+    ])
