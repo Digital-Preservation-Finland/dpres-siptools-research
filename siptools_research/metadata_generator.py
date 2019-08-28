@@ -66,9 +66,6 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         dir=TEMPDIR
     )
 
-    # Get dataset file mapping
-    pas2ida = metax_client.get_dataset_file_mapping(dataset_id)
-
     # Generate preservation_identifier
     metax_client.set_preservation_id(dataset_id)
 
@@ -100,7 +97,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             else:
                 # IDA
                 try:
-                    ida.download_file(pas2ida[file_id], tmpfile, config)
+                    ida.download_file(file_id, tmpfile, config)
                 except ida.IdaError as error:
                     message = ("File {} was not found in Ida."
                                .format(file_["file_path"]))

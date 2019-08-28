@@ -97,36 +97,6 @@ def test_generate_metadata(file_storage):
         'dummy_value'
 
 
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
-def test_generate_metadata_pas_catalog():
-    """Tests the metadata generation for a PAS dataset.
-
-    :returns: ``None``
-    """
-    # The dataset has a file, which is not found in IDA. generate_metadata
-    # should get the IDA files provided in the original IDA dataset.
-    generate_metadata('generate_metadata_test_dataset_1_pas',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    json_message = json.loads(httpretty.last_request().body)
-
-    # The file should recognised as plain text file
-    assert json_message['file_characteristics']['file_format'] == 'text/plain'
-
-    # The format version should be set empty string since there is no
-    # different versions of plain text files
-    assert json_message['file_characteristics']['format_version'] == ''
-
-    # Encoding should not be changed since it was already defined by user
-    assert json_message['file_characteristics']['encoding'] == \
-        'user_defined_charset'
-
-    # All other fields should be same as in the original file_charasteristics
-    # object in Metax
-    assert json_message['file_characteristics']['dummy_key'] == \
-        'dummy_value'
-
-
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
 # pylint: disable=invalid-name
