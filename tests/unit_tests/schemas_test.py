@@ -75,7 +75,7 @@ VALID_DATASET_METADATA = {
 def test_validate_valid_dataset_metadata():
     """Test validation of valid dataset metadata with provenance. Defines a
     sample metadata dictionary that is known to be valid. The dictionary is
-    then validated against ``DATASET_METADA_SCHEMA``.
+    then validated against ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
@@ -90,7 +90,7 @@ def test_validate_valid_dataset_metadata():
 def test_validate_dataset_metadata_without_provenance():
     """Test validation of valid dataset metadata without provenance. Defines a
     sample metadata dictionary that has empty list of provenaces. The
-    dictionary is then validated against ``DATASET_METADA_SCHEMA``.
+    dictionary is then validated against ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
@@ -149,7 +149,7 @@ def test_invalid_directory():
 def test_validate_valid_file_metadata():
     """Test validation of valid file metadata. Defines a sample metadata
     dictionary that is known to be valid. The dictionary is then validated
-    against ``FILE_METADA_SCHEMA``.
+    against ``FILE_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
@@ -182,7 +182,7 @@ def test_validate_valid_file_metadata():
 def test_validate_valid_file_metadata_optional_attribute_missing():
     """Test validation of valid file metadata. Defines a sample metadata
     dictionary that is known to be valid. The dictionary is then validated
-    against ``FILE_METADA_SCHEMA``.
+    against ``FILE_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
@@ -326,7 +326,7 @@ def test_validate_invalid_contract():
 def test_validate_dataset_with_directories():
     """Test validation of valid dataset metadata that contains only directories
     and no files. Defines a sample metadata dictionary that is known to be
-    valid. The dictionary is then validated against ``DATASET_METADA_SCHEMA``.
+    valid. The dictionary is then validated against ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
@@ -344,7 +344,7 @@ def test_validate_dataset_no_files_and_directories():
     """Test validation of dataset metadata without directories nor files
     attribute present in dataset. Defines a sample metadata dictionary that is
     known to be valid. The dictionary is then validated against
-    ``DATASET_METADA_SCHEMA``.
+    ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
@@ -358,4 +358,71 @@ def test_validate_dataset_no_files_and_directories():
 
     assert excinfo.value.message.endswith(
         "is not valid under any of the given schemas"
+    )
+
+
+def test_validate_directory_valid_metadata():
+    """Test validation of valid directory metadata. Defines a sample metadata
+    dictionary that is known to be valid. The dictionary is then validated
+    against ``DIRECTORY_METADATA_SCHEMA``.
+
+    :returns: ``None``
+    """
+    valid_directory_metadata = {
+        "directory_path": "path",
+        "parent_directory": {
+            "identifier": "identifier"
+        }
+    }
+
+    # Validation of valid dataset should return 'None'
+    assert jsonschema.validate(
+        valid_directory_metadata,
+        siptools_research.schemas.DIRECTORY_METADATA_SCHEMA
+    ) is None
+
+
+def test_validate_directory_directory_path_missing():
+    """Test validation of invalid directory metadata. Defines a sample metadata
+    dictionary where ``directory_path`` is missing. The dictionary is then
+    validated against ``DIRECTORY_METADATA_SCHEMA``.
+
+    :returns: ``None``
+    """
+    valid_directory_metadata = {
+        "parent_directory": {
+            "identifier": "identifier"
+        }
+    }
+
+    with pytest.raises(jsonschema.ValidationError) as excinfo:
+        jsonschema.validate(
+            valid_directory_metadata,
+            siptools_research.schemas.DIRECTORY_METADATA_SCHEMA)
+
+    assert str(excinfo.value).startswith(
+        "'directory_path' is a required property"
+    )
+
+
+def test_validate_directory_parent_identifier_missing():
+    """Test validation of invalid directory metadata. Defines a sample metadata
+    dictionary where parent's ``indentifier`` is missing. The dictionary is
+    then validated against ``DIRECTORY_METADATA_SCHEMA``.
+
+    :returns: ``None``
+    """
+    valid_directory_metadata = {
+        "directory_path": "path",
+        "parent_directory": {
+        }
+    }
+
+    with pytest.raises(jsonschema.ValidationError) as excinfo:
+        jsonschema.validate(
+            valid_directory_metadata,
+            siptools_research.schemas.DIRECTORY_METADATA_SCHEMA)
+
+    assert str(excinfo.value).startswith(
+        "'identifier' is a required property"
     )

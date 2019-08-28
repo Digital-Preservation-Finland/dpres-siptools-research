@@ -1,0 +1,18 @@
+Validation error in metadata of root: 'directory_path' is a required property
+
+Failed validating 'required' in schema:
+    {'properties': {'file_path': {'description': 'Path to the directory',
+                                  'title': 'Directory path',
+                                  'type': 'string'},
+                    'parent_directory': {'description': 'Optional parent directory of directory.',
+                                         'properties': {'identifier': {'description': 'Identifier used for finding parent directory metadata',
+                                                                       'title': 'Identifier',
+                                                                       'type': 'string'}},
+                                         'required': ['identifier'],
+                                         'title': 'Parent directory',
+                                         'type': 'object'}},
+     'required': ['directory_path'],
+     'type': 'object'}
+
+On instance:
+    {u'identifier': u'root'}

@@ -283,3 +283,8 @@ def mock_filetype_conf(monkeypatch):
     monkeypatch.setattr(siptools_research.utils.mimetypes.is_supported,
                         "__defaults__",
                         ('include/etc/dpres_mimetypes.json',))
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers",
+                            "noautofixt: disabling autouse fixture.")

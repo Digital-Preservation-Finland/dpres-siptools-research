@@ -48,3 +48,7 @@ with open(os.path.join(SCHEMAS_PATH, 'file.json')) as json_file:
 # JSON schema for contract metadata
 with open(os.path.join(SCHEMAS_PATH, 'contract.json')) as json_file:
     CONTRACT_METADATA_SCHEMA = json.load(json_file, object_hook=_byteify)
+
+# JSON schema for directory metadata
+with open(os.path.join(SCHEMAS_PATH, 'directory.json')) as json_file:
+    DIRECTORY_METADATA_SCHEMA = json.load(json_file, object_hook=_byteify)

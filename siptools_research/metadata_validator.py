@@ -10,6 +10,7 @@ from siptools.xml.mets import NAMESPACES
 import siptools_research.schemas
 from siptools_research.utils import mimetypes
 from siptools_research.utils.dataset_consistency import DatasetConsistency
+from siptools_research.utils.directory_validation import DirectoryValidation
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
 
@@ -213,6 +214,7 @@ def _validate_file_metadata(dataset, metax_client, conf):
     # i.e. every file returned by Metax API /datasets/datasetid/files
     # can be found from dataset.file or dataset.directories properties
     consistency = DatasetConsistency(metax_client, dataset)
+    directory_validation = DirectoryValidation(metax_client)
     for file_metadata in metax_client.get_dataset_files(dataset['identifier']):
         file_identifier = file_metadata["identifier"]
         file_path = file_metadata["file_path"]
@@ -225,7 +227,7 @@ def _validate_file_metadata(dataset, metax_client, conf):
                 "Validation error in metadata of {file_path}: {error}"
                 .format(file_path=file_path, error=str(exc))
             )
-
+        directory_validation.is_valid_for_file(file_metadata)
         # Check that mimetype is supported
         _check_mimetype(file_metadata, conf)
 
