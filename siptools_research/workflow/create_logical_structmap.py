@@ -228,17 +228,22 @@ def find_file_use_category(identifier, dataset_metadata):
     return None
 
 
-def _match_strings(parent_path, dir_path):
-    """Retuns the number of matching leading characters. Returns 0 if dir_path
-    is longer than parent_path since we don't want to consider directories,
+def _match_paths(parent_path, dir_path):
+    """Retuns the depth to which the two paths match. Returns 0 if dir_path
+    is deeper than parent_path since we don't want to consider directories,
     which are lower in the directory tree than the parent directory.
     """
-    if len(dir_path) > len(parent_path):
+    parent_path = parent_path[1:] if parent_path[0] == "/" else parent_path
+    dir_path = dir_path[1:] if dir_path[0] == "/" else dir_path
+    parent_list = parent_path.split("/")
+    dir_list = dir_path.split("/")
+
+    if len(dir_list) > len(parent_list):
         return 0
 
     matches = 0
-    for i, char in enumerate(dir_path):
-        if parent_path[i] == char:
+    for i, _dir in enumerate(dir_list):
+        if parent_list[i] == _dir:
             matches += 1
         else:
             break
@@ -285,7 +290,7 @@ def find_dir_use_category(parent_path, dirpath2usecategory, languages):
     use_category = None
 
     for dirpath in dirpath2usecategory:
-        matches = _match_strings(parent_path, dirpath)
+        matches = _match_paths(parent_path, dirpath)
 
         if matches > max_matches:
             max_matches = matches

@@ -175,9 +175,17 @@ def test_find_dir_use_category():
 
     # No matches
     assert not find_dir_use_category("/", dirpath_dict, languages)
+    assert not find_dir_use_category("/test3", dirpath_dict, languages)
 
     # No directories were found in the research_dataset
     assert not find_dir_use_category("/test", {}, languages)
+
+    # Match to root
+    assert find_dir_use_category(
+        "/",
+        {"/": {"pref_label": {"en": "root"}}},
+        languages
+    ) == "root"
 
 
 def validate_logical_structmap_file(logical_structmap_file):
