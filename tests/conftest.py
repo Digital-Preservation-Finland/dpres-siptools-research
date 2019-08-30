@@ -272,6 +272,19 @@ def testpath(request, monkeypatch):
 
 
 @pytest.fixture(scope="function")
+def mock_luigi_config_path(monkeypatch):
+    """Monkeypatch luigi config file path to prevent using system luigi
+    configuration file (/etc/luigi/luigi.cfg) in tests.
+
+    :param monkeypatch: pytest `monkeypatch` fixture
+    :returns: ``None``
+    """
+    monkeypatch.setattr(luigi.configuration.LuigiConfigParser,
+                        '_config_paths',
+                        ['tests/data/configuration_files/luigi.cfg'])
+
+
+@pytest.fixture(scope="function")
 def mock_filetype_conf(monkeypatch):
     """Monkeypatch supported filetypes config file path.
 

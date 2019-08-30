@@ -4,19 +4,20 @@ import os
 import json
 import datetime
 import pytest
-import tests.conftest
 import luigi.cmdline
 import pymongo
 import httpretty
-import mock
 
+from metax_access import (
+    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+    DS_STATE_METADATA_VALIDATION_FAILED
+)
+
+import tests.conftest
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflowtask import InvalidDatasetError
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
-from metax_access import MetaxConnectionError,\
-    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,\
-    DS_STATE_METADATA_VALIDATION_FAILED
 
 
 def run_luigi_task(task_name, workspace):
@@ -101,7 +102,7 @@ class InvalidMetadataTask(FailingTestTask):
 
 
 # pylint: disable=unused-argument
-@pytest.mark.usefixtures('testmongoclient')
+@pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
 def test_run_workflowtask(testpath):
     """Executes TestTask, checks that output file is created, checks that new
     event field is created to mongo document.
