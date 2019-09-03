@@ -11,6 +11,7 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.report_preservation_status import (
     ReportPreservationStatus
 )
+from metax_access.metax import MetaxError
 
 
 class CleanupWorkspace(WorkflowTask):
@@ -60,9 +61,13 @@ class CleanupWorkspace(WorkflowTask):
             config_object.get('metax_password'),
             verify=config_object.getboolean('metax_ssl_verification')
         )
-        dataset_files = metax_client.get_dataset_files(self.dataset_id)
-
-        return [_file["identifier"] for _file in dataset_files], ida_files_path
+        try:
+            dataset_files = metax_client.get_dataset_files(self.dataset_id)
+            return ([_file["identifier"] for _file in dataset_files],
+                    ida_files_path)
+        except MetaxError:
+            # dataset not in Metax
+            return [], ida_files_path
 
     def requires(self):
         """The Tasks that this Task depends on.
