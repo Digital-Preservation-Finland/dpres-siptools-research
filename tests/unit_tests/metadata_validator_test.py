@@ -309,7 +309,6 @@ def mock_metax_get_dir(mocker):
     )
 
 
-@pytest.mark.noautofixt
 def test_validate_metadata(requests_mock):
     """Test that validate_metadata function returns ``True`` for a valid
     dataset.
@@ -345,7 +344,6 @@ def test_validate_metadata(requests_mock):
                   (["fi"], ["Jotain suomeksi"]),
                   (["en", "fi"], ["Something in english", "Jotain suomeksi"])]
 )
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_languages(lang, text, monkeypatch, requests_mock):
     """Test that validate_metadata function returns ``True`` when English,
@@ -373,7 +371,6 @@ def test_validate_metadata_languages(lang, text, monkeypatch, requests_mock):
         'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE)
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_language_missing(monkeypatch, requests_mock):
     """Test that metadata validation fails if localization is missing on a
@@ -400,7 +397,6 @@ def test_validate_metadata_language_missing(monkeypatch, requests_mock):
     assert str(error.value) == "No localization provided in field: %s" % field
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid(requests_mock):
     """Test that validate_metadata function raises exception with correct error
@@ -423,7 +419,6 @@ def test_validate_metadata_invalid(requests_mock):
     assert str(exc).startswith("'contract' is a required property")
 
 
-@pytest.mark.noautofixt
 @pytest.mark.parametrize('format_version', ["1.0", ""])
 # pylint: disable=invalid-name
 def test_validate_invalid_file_type(format_version, requests_mock):
@@ -474,7 +469,6 @@ def test_validate_invalid_file_type(format_version, requests_mock):
     assert str(error.value) == message
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_contract_metadata(requests_mock):
     """Test that validate_metadata function raises exception with correct error
@@ -503,7 +497,6 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
     )
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_file_path(requests_mock):
     """Test that validate_metadata function raises exception if some of the
@@ -540,7 +533,6 @@ def test_validate_metadata_invalid_file_path(requests_mock):
             "../../file_in_invalid_path")
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_missing_xml(requests_mock):
     """Test that validate_metadata function raises exception if dataset
@@ -580,7 +572,6 @@ def test_validate_metadata_missing_xml(requests_mock):
                                  "pid:urn:validate_metadata_test_image")
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_audiovideo(requests_mock):
     """Test that validate_metadata function validates AudioMD and VideoMD
@@ -634,7 +625,6 @@ def test_validate_metadata_audiovideo(requests_mock):
     )
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_audiomd(requests_mock):
     """Test that validate_metadata function raises exception if AudioMD is
@@ -684,7 +674,6 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
     )
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_corrupted_mix(requests_mock):
     """Test that validate_metadata function raises exception if MIX metadata in
@@ -737,7 +726,6 @@ def test_validate_metadata_corrupted_mix(requests_mock):
     )
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_datacite(requests_mock):
     """Test that validate_metadata function raises exception with correct error
@@ -783,7 +771,6 @@ def test_validate_metadata_invalid_datacite(requests_mock):
     )
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_corrupted_datacite(requests_mock):
     """Test that validate_metadata function raises exception with correct error
@@ -819,7 +806,6 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     )
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_publisher_missing(requests_mock):
     """Test that validate_metadata function raises exception with correct error
@@ -883,7 +869,6 @@ def test_validate_metadata_publisher_missing(requests_mock):
     )
 
 
-@pytest.mark.noautofixt
 def test_validate_file_metadata(requests_mock):
     """Check that dataset directory caching is working correctly in
     DatasetConsistency when the files have common root directory
@@ -945,7 +930,6 @@ def test_validate_file_metadata(requests_mock):
     assert files_adapter.call_count == 1
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_file_metadata_invalid_metadata(requests_mock):
     """Check that ``_validate_file_metadata`` raises exceptions with
@@ -1005,7 +989,6 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
     )
 
 
-@pytest.mark.noautofixt
 def test_validate_xml_file_metadata():
     """Test that _validate_xml_file_metadata function raises exception with
     readable error message when validated XML contains multiple errors.
@@ -1028,7 +1011,6 @@ def test_validate_xml_file_metadata():
     )
 
 
-@pytest.mark.noautofixt
 def test_validate_datacite(requests_mock):
     """Test that _validate_datacite function raises exception with readable
     error message when datacite XML contains multiple errors.
@@ -1082,7 +1064,6 @@ def test_validate_datacite(requests_mock):
     )
 
 
-@pytest.mark.noautofixt
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_directory_metadata(requests_mock):
     """Test that validate_metadata function raises exception if directory

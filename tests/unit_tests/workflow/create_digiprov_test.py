@@ -9,7 +9,7 @@ from siptools_research.workflow import create_digiprov
 import tests.conftest
 
 
-@pytest.mark.usefixtures("testmongoclient", "testmetax")
+@pytest.mark.usefixtures("testmongoclient", "testmetax", 'mock_metax_access')
 # pylint: disable=invalid-name
 def test_createprovenanceinformation(testpath):
     """Tests for `CreateProvenanceInformation` task.
@@ -56,7 +56,7 @@ def test_createprovenanceinformation(testpath):
             open_file.read()
 
 
-@pytest.mark.usefixtures("testmongoclient", "testmetax")
+@pytest.mark.usefixtures("testmongoclient", "testmetax", 'mock_metax_access')
 # pylint: disable=invalid-name
 def test_failed_createprovenanceinformation(testpath):
     """Test case where `CreateProvenanceInformation` task should fail.
@@ -88,7 +88,7 @@ def test_failed_createprovenanceinformation(testpath):
     assert set(os.listdir(workspace)) == {'sip-in-progress', 'logs'}
 
 
-@pytest.mark.usefixtures("testmetax")
+@pytest.mark.usefixtures("testmetax", 'mock_metax_access')
 def test_create_premis_events(testpath):
     """Test `create_premis_event` function. Output XML file should be produced
     and it should contain some specified elements.

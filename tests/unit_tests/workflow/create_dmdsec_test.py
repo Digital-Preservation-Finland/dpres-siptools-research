@@ -9,7 +9,7 @@ import tests.conftest
 from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
 def test_createdescriptivemetadata(testpath):
     """Test `CreateDescriptiveMetadata` task.
 

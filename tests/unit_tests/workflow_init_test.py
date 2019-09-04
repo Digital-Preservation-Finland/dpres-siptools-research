@@ -58,7 +58,7 @@ def test_initworkflows():
                 './test_workspace_root/workflow3'])
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
 @mock.patch('subprocess.Popen')
 # pylint: disable=invalid-name
 def test_preserve_dataset_sets_preservation_state(mock_subproc_popen):
@@ -74,7 +74,7 @@ def test_preserve_dataset_sets_preservation_state(mock_subproc_popen):
     assert json_message['preservation_description'] == 'In packaging service'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
 @mock.patch('subprocess.Popen')
 # pylint: disable=invalid-name
 def test_preserve_dataset_only_description(mock_subproc_popen):
@@ -94,7 +94,7 @@ def test_preserve_dataset_only_description(mock_subproc_popen):
     httpretty.reset()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
 @mock.patch('subprocess.Popen')
 # pylint: disable=invalid-name
 def test_preserve_dataset_no_changes(mock_subproc_popen):

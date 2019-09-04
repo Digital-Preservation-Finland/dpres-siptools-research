@@ -14,7 +14,7 @@ from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       algorithm_name)
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
 def test_create_techmd_ok(testpath):
     """Test the workflow task CreateTechnicalMetadata module.
 
@@ -103,7 +103,7 @@ def test_create_techmd_ok(testpath):
         assert 'Dataset id=create_techmd_test_dataset' in open_file.read()
 
 
-@pytest.mark.usefixtures('testmetax')
+@pytest.mark.usefixtures('testmetax', 'mock_metax_access')
 # pylint: disable=invalid-name
 def test_create_techmd_without_charset(testpath):
     """Test the task with dataset that has files without defined charset
@@ -147,7 +147,7 @@ def test_create_techmd_without_charset(testpath):
         == 'text/html; charset=UTF-8'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
 def test_xml_metadata_file_missing(testpath):
     """Test the workflow task CreateTechnicalMetadata module when XML
     metadata for a file is missing. Behavior not specified yet. Currently

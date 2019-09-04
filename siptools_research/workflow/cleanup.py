@@ -11,7 +11,7 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.report_preservation_status import (
     ReportPreservationStatus
 )
-from metax_access.metax import MetaxError
+from metax_access.metax import MetaxError, DatasetNotFoundError
 
 
 class CleanupWorkspace(WorkflowTask):
@@ -65,8 +65,7 @@ class CleanupWorkspace(WorkflowTask):
             dataset_files = metax_client.get_dataset_files(self.dataset_id)
             return ([_file["identifier"] for _file in dataset_files],
                     ida_files_path)
-        except MetaxError:
-            # dataset not in Metax
+        except DatasetNotFoundError:
             return [], ida_files_path
 
     def requires(self):

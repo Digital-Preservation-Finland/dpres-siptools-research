@@ -41,7 +41,7 @@ def _check_workspace(testpath):
     assert files[0] == 'mets.xml'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
 def test_create_mets_ok(testpath):
     """Test the workflow task CreateMets.
 

@@ -108,7 +108,7 @@ def _check_xml_schematron_features(mets_path):
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures(
     'testmetax', 'testida', 'testmongoclient',
-    'mock_luigi_config_path', 'mock_filetype_conf'
+    'mock_luigi_config_path', 'mock_filetype_conf', 'mock_metax_access'
 )
 @pytest.mark.timeout(600)
 def test_workflow(_mock_ssh, testpath, file_storage, module_name, task):
@@ -156,7 +156,8 @@ def test_workflow(_mock_ssh, testpath, file_storage, module_name, task):
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures(
     'testmetax', 'testida', 'testmongoclient',
-    'mock_luigi_config_path', 'mock_filetype_conf'
+    'mock_luigi_config_path', 'mock_filetype_conf',
+    'mock_metax_access'
 )
 def test_mets_creation(testpath, file_storage):
     """Run CompressSIP task (and all tasks it requires) and check that:

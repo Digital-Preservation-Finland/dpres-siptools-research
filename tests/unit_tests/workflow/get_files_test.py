@@ -26,7 +26,8 @@ def _init_files_col(mongoclient):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'testida')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'testida',
+                         'mock_metax_access')
 def test_getfiles(testpath, file_storage):
     """Tests for ``GetFiles`` task for IDA and local files.
 
@@ -66,7 +67,8 @@ def test_getfiles(testpath, file_storage):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'testida')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'testida',
+                         'mock_metax_access')
 def test_missing_files(testpath, file_storage):
     """Test case where a file can not be found from Ida. The first file should
     successfully downloaded, but the second file is not found in Ida. Task

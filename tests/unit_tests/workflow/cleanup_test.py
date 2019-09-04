@@ -5,16 +5,15 @@ import pytest
 import tests.conftest
 from siptools_research.utils.database import Database
 from siptools_research.workflow.cleanup import CleanupWorkspace
-from metax_access.metax import MetaxError
+from metax_access.metax import DatasetNotFoundError
 
 
 @pytest.mark.usefixtures("testmongoclient")
-@pytest.mark.noautofixt
 def test_cleanupworkspace(testpath, requests_mock):
     """Test that task.run() removes workspace.
 
     :param testpath: Temporary directory fixture
-    :param requests_mock
+    :param requests_mock 
     """
 
     requests_mock.get(
@@ -31,7 +30,6 @@ def test_cleanupworkspace(testpath, requests_mock):
 
 
 @pytest.mark.usefixtures("testmongoclient")
-@pytest.mark.noautofixt
 def test_cleanupworkspace_missing_dataset(testpath, requests_mock):
     """Test that task.run() removes workspace although dataset not found in
     metax.
@@ -42,7 +40,7 @@ def test_cleanupworkspace_missing_dataset(testpath, requests_mock):
     # mock metax to raise MetaxError meaning dataset was not found
     requests_mock.get(
         "https://metaksi/rest/v1/datasets/identifier/files",
-        exc=MetaxError)
+        exc=DatasetNotFoundError)
 
     workspace, task, database = _do_setup(testpath)
 
@@ -71,11 +69,12 @@ def _do_setup(testpath):
 
 
 def _assert_workspace_cleaned(workspace, database, task):
-    """Asserts that workspace was cleaned.
+    """Asserts that workspace was cleaned and the task remains as incomplete
+    until the required task ReportPreservationStatus succeeds
 
     :param workspace: Temporary directory fixture
-    :param database
-    :param task
+    :param database: Database object providing access to workflow task database
+    :param task CleanupWorkspace object under test
     """
     assert not os.path.exists(workspace)
     assert not task.complete()

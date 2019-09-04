@@ -4,7 +4,6 @@ Metax.
 import os
 import shutil
 import tempfile
-from requests.exceptions import HTTPError
 
 from metax_access import Metax
 from siptools.scripts import import_object

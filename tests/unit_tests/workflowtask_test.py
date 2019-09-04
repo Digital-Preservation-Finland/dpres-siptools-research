@@ -169,7 +169,7 @@ def test_run_failing_task(testpath, ):
     assert collection.count() == 1
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
 def test_invaliddataseterror(testpath):
     """Test that event handler of WorkflowTask correctly deals with
     InvalidDatasetError risen in a task. Event handler should report
@@ -193,7 +193,8 @@ def test_invaliddataseterror(testpath):
     assert httpretty.last_request().method == 'PATCH'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax',
+                         'mock_metax_access')
 def test_invalidmetadataerror(testpath):
     """Test that event handler of WorkflowTask correctly deals with
     InvalidMetadatatError risen in a task. Event handler should report
