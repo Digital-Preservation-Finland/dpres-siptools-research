@@ -19,12 +19,11 @@ from siptools_research.workflow_init import preserve_dataset
 from siptools_research.metadata_validator import validate_metadata
 
 
-def main():
-    """Parse command line arguments and start the workflow.
+def _parse_args():
+    """Parse command line arguments.
 
-    :returns: None
+    :returns: Parsed arguments
     """
-
     # Parse commandline arguments
     parser = argparse.ArgumentParser(
         description='Generate techincal metadata for a dataset in Metax, '
@@ -48,15 +47,44 @@ def main():
     )
     preserve_parser.set_defaults(func=preserve_dataset)
 
-    # Define arguments common to all commands
-    parser.add_argument('dataset_id', help="metax dataset identifier")
-    parser.add_argument('--config',
-                        default='/etc/siptools_research.conf',
-                        metavar='config_file',
-                        help="path to configuration file")
+    subparsers.add_parser(
+        'get',
+        help='Get a workflow document'
+    )
+    subparsers.add_parser(
+        'status',
+        help='Get workflow task results'
+    )
+    subparsers.add_parser(
+        'disable',
+        help='Disable workflow'
+    )
+    subparsers.add_parser(
+        'enable',
+        help='Enable workflow'
+    )
 
+    # Define arguments common to all commands
+    parser.add_argument('dataset_id', help="Metax dataset identifier")
+    parser.add_argument('--workflow_id', help="Luigi workflow identifier")
+    parser.add_argument(
+        '--config',
+        default='/etc/siptools_research.conf',
+        metavar='config_file',
+        help="path to configuration file"
+    )
+
+    # Parse arguments and return the arguments
+    return parser.parse_args()
+
+
+def main():
+    """Parse command line arguments and execute the commands.
+
+    :returns: None
+    """
     # Parse arguments and call function defined by chosen subparser.
-    args = parser.parse_args()
+    args = _parse_args()
     args.func(args.dataset_id, args.config)
 
 

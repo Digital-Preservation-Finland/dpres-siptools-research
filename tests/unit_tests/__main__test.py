@@ -1,8 +1,8 @@
 """Tests for :mod:`siptools_research.__main__` module"""
 
 import sys
-import siptools_research.__main__
 import mock
+import siptools_research.__main__
 
 
 @mock.patch('siptools_research.__main__.preserve_dataset')

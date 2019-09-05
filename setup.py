@@ -27,7 +27,7 @@ def main():
         ],
         entry_points={
             'console_scripts': [
-                'siptools-research = siptools_research.__main__:main'
+                'research_workflows = siptools_research.__main__:main'
             ]
         }
     )

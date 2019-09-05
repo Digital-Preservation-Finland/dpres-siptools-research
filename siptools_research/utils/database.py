@@ -120,6 +120,26 @@ class Database(object):
             upsert=True
         )
 
+    def set_enabled(self, workflow_id):
+        """Mark workflow enabled.
+
+        :param workflow_id: Workflow identifier
+        :returns: ``None``
+        """
+
+        self._collection.update_one(
+            {
+                '_id': workflow_id
+            },
+            {
+                '$set': {
+                    'disabled': False
+                }
+            },
+            upsert=True
+        )
+
+
     def add_workflow(self, workflow_id, dataset_id):
         """Add new workflow. The workflow identity will be the primary key
         ('_id') of the document.
