@@ -31,38 +31,47 @@ def _parse_args():
                     'preservation workflow a Metax dataset.'
     )
 
-    # Add three alternative commands. The command defines which function will
-    # called.
+    # Add the alternative commands
     subparsers = parser.add_subparsers(title='Available commands')
+
     generate_parser = subparsers.add_parser(
         'generate', help='generate technical metadata for the dataset'
     )
-    generate_parser.set_defaults(func=generate_metadata)
+    generate_parser.set_defaults(func=_generate)
+
     validate_parser = subparsers.add_parser(
         'validate', help='validate dataset metadata'
     )
-    validate_parser.set_defaults(func=validate_metadata)
+    validate_parser.set_defaults(func=_validate)
+
     preserve_parser = subparsers.add_parser(
         'preserve', help='start preservation workflow'
     )
-    preserve_parser.set_defaults(func=preserve_dataset)
+    preserve_parser.set_defaults(func=_preserve)
 
-    subparsers.add_parser(
+    get_parser = subparsers.add_parser(
         'get',
         help='Get a workflow document'
     )
-    subparsers.add_parser(
+    get_parser.set_defaults(func=_get)
+
+    status_parser = subparsers.add_parser(
         'status',
         help='Get workflow task results'
     )
-    subparsers.add_parser(
+    status_parser.set_defaults(func=_status)
+
+    disable_parser = subparsers.add_parser(
         'disable',
         help='Disable workflow'
     )
-    subparsers.add_parser(
+    disable_parser.set_defaults(func=_disable)
+
+    enable_parser = subparsers.add_parser(
         'enable',
         help='Enable workflow'
     )
+    enable_parser.set_defaults(func=_enable)
 
     # Define arguments common to all commands
     parser.add_argument('dataset_id', help="Metax dataset identifier")
@@ -78,6 +87,41 @@ def _parse_args():
     return parser.parse_args()
 
 
+def _generate(args):
+    """Generate technical metadata for the dataset"""
+    generate_metadata(args.dataset_id, args.config)
+
+
+def _validate(args):
+    """Validate dataset metadata"""
+    validate_metadata(args.dataset_id, args.config)
+
+
+def _preserve(args):
+    """Start preservation workflow"""
+    preserve_dataset(args.dataset_id, args.config)
+
+
+def _get(args):
+    """Get a workflow document"""
+    pass
+
+
+def _status(args):
+    """Get workflow task results"""
+    pass
+
+
+def _disable(args):
+    """Disable workflow"""
+    pass
+
+
+def _enable(args):
+    """Enable workflow"""
+    pass
+
+
 def main():
     """Parse command line arguments and execute the commands.
 
@@ -85,7 +129,7 @@ def main():
     """
     # Parse arguments and call function defined by chosen subparser.
     args = _parse_args()
-    args.func(args.dataset_id, args.config)
+    args.func(args)
 
 
 if __name__ == '__main__':
