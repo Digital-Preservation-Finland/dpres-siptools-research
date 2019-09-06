@@ -139,7 +139,6 @@ class Database(object):
             upsert=True
         )
 
-
     def add_workflow(self, workflow_id, dataset_id):
         """Add new workflow. The workflow identity will be the primary key
         ('_id') of the document.
@@ -164,6 +163,22 @@ class Database(object):
             },
             upsert=True
         )
+
+    def get_workflows(self, dataset_id):
+        """Get workflow documents by dataset_id
+
+        :param dataset_id: Dataset identifier
+        :returns: Workflow document
+        """
+        return self._collection.find({"dataset": dataset_id})
+
+    def get_one_workflow(self, workflow_id):
+        """Get a workflow document by _id
+
+        :param workflow_id: Workflow identifier _id
+        :return: Workflow document
+        """
+        return self._collection.find_one({"_id": workflow_id})
 
     def get_event_result(self, workflow_id, taskname):
         """Read event result for a workflow.

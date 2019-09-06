@@ -12,11 +12,15 @@ To validate metadata::
 
    siptools_research validate --config /etc/siptools_research.conf 1234
 """
+from __future__ import print_function
 
 import argparse
+import json
+
 from siptools_research.metadata_generator import generate_metadata
 from siptools_research.workflow_init import preserve_dataset
 from siptools_research.metadata_validator import validate_metadata
+from siptools_research.utils.database import Database
 
 
 def _parse_args():
@@ -102,10 +106,49 @@ def _preserve(args):
     preserve_dataset(args.dataset_id, args.config)
 
 
+def _get_workflow_document(args):
+    """Get a workflow document dict using workflow identifier if provided.
+    Otherwise, use the dataset identifier.
+    """
+    dataset_id = args.dataset_id
+    workflow_id = args.workflow_id
+    database = Database(args.config)
+    document = None
+
+    # If workflow_id is provided, search using it
+    if workflow_id is not None:
+        document = database.get_one_workflow(workflow_id)
+        if not document:
+            print(
+                "Could not find document "
+                "with workflow identifier: %s" % workflow_id
+            )
+
+    # If no workflow_id is provided, search using the dataset_id
+    else:
+        documents = Database(args.config).get_workflows(dataset_id)
+        count = documents.count()
+
+        if count == 0:
+            print(
+                "Could not find documents "
+                "with dataset identifier: %s" % dataset_id
+            )
+        elif count > 1:
+            print("Found multiple matches:")
+            for doc in documents:
+                print(doc["_id"])
+        else:
+            documents = documents[0]
+
+    return document
+
+
 def _get(args):
     """Get a workflow document"""
-    pass
-
+    document = _get_workflow_document(args)
+    if document:
+        print(json.dumps(document))
 
 def _status(args):
     """Get workflow task results"""
