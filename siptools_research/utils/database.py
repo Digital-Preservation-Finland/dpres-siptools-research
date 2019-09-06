@@ -155,7 +155,7 @@ class Database(object):
             },
             {
                 '$set': {
-                    'status': 'Request reveived',
+                    'status': 'Request received',
                     'dataset': dataset_id,
                     'completed': False,
                     'disabled': False
