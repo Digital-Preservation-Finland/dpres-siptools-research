@@ -195,12 +195,22 @@ def _status(args):
 
 def _disable(args):
     """Disable workflow"""
-    pass
+    document = _get_workflow_document(args)
+    if document:
+        database = Database(args.config)
+        _id = document["_id"]
+        database.set_disabled(_id)
+        print("Workflow %s disabled" % _id)
 
 
 def _enable(args):
     """Enable workflow"""
-    pass
+    document = _get_workflow_document(args)
+    if document:
+        database = Database(args.config)
+        _id = document["_id"]
+        database.set_enabled(_id)
+        print("Workflow %s enabled" % _id)
 
 
 def main():
