@@ -23,6 +23,13 @@ from siptools_research.metadata_validator import validate_metadata
 from siptools_research.utils.database import Database
 
 
+# ANSI escape sequences for different colors
+SUCCESSC = '\033[92m'
+WARNINGC = '\033[93m'
+FAILC = '\033[91m'
+ENDC = '\033[0m'
+
+
 def _parse_args():
     """Parse command line arguments.
 
@@ -120,8 +127,10 @@ def _get_workflow_document(args):
         document = database.get_one_workflow(workflow_id)
         if not document:
             print(
+                FAILC +
                 "Could not find document "
-                "with workflow identifier: %s" % workflow_id
+                "with workflow identifier: %s" % workflow_id +
+                ENDC
             )
 
     # If no workflow_id is provided, search using the dataset_id
@@ -131,13 +140,16 @@ def _get_workflow_document(args):
 
         if count == 0:
             print(
+                FAILC +
                 "Could not find documents "
-                "with dataset identifier: %s" % dataset_id
+                "with dataset identifier: %s" % dataset_id +
+                ENDC
             )
         elif count > 1:
-            print("Found multiple matches:")
+            print(WARNINGC + "Found multiple matches:")
             for doc in documents:
                 print(doc["_id"])
+            print(ENDC, end="")
         else:
             documents = documents[0]
 
@@ -150,9 +162,35 @@ def _get(args):
     if document:
         print(json.dumps(document, indent=4))
 
+
 def _status(args):
     """Get workflow task results"""
-    pass
+    document = _get_workflow_document(args)
+    if document:
+        success = []
+        fail = []
+
+        for task in document["workflow_tasks"]:
+            if document["workflow_tasks"][task]["result"] == "success":
+                success.append(task)
+            else:
+                fail.append([task, document["workflow_tasks"][task]])
+
+        # Print tasks that were completed successfully
+        if success:
+            print("Ran successfully:")
+            print(SUCCESSC)
+            for task in success:
+                print(task)
+            print(ENDC, end="")
+
+        # Print tasks that failed
+        if fail:
+            print("\nFailed:")
+            print(FAILC)
+            for task in fail:
+                print(json.dumps(task, indent=4))
+            print(ENDC, end="")
 
 
 def _disable(args):
