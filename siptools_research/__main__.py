@@ -65,28 +65,43 @@ def _parse_args():
         help='Get a workflow document'
     )
     get_parser.set_defaults(func=_get)
+    get_parser.add_argument(
+        '--workflow_id',
+        help="Luigi workflow identifier"
+    )
 
     status_parser = subparsers.add_parser(
         'status',
         help='Get workflow task results'
     )
     status_parser.set_defaults(func=_status)
+    status_parser.add_argument(
+        '--workflow_id',
+        help="Luigi workflow identifier"
+    )
 
     disable_parser = subparsers.add_parser(
         'disable',
         help='Disable workflow'
     )
     disable_parser.set_defaults(func=_disable)
+    disable_parser.add_argument(
+        '--workflow_id',
+        help="Luigi workflow identifier"
+    )
 
     enable_parser = subparsers.add_parser(
         'enable',
         help='Enable workflow'
     )
     enable_parser.set_defaults(func=_enable)
+    enable_parser.add_argument(
+        '--workflow_id',
+        help="Luigi workflow identifier"
+    )
 
     # Define arguments common to all commands
     parser.add_argument('dataset_id', help="Metax dataset identifier")
-    parser.add_argument('--workflow_id', help="Luigi workflow identifier")
     parser.add_argument(
         '--config',
         default='/etc/siptools_research.conf',
