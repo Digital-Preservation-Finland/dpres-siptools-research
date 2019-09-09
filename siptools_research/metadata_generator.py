@@ -5,9 +5,12 @@ import os
 import shutil
 import tempfile
 
+from file_scraper.scraper import Scraper
 from metax_access import Metax
+from siptools.scripts.import_object import (DEFAULT_VERSIONS,
+                                            UNKNOWN_VERSION,
+                                            NO_VERSION)
 
-from siptools.scripts import import_object
 from siptools_research.utils import ida
 from siptools_research.utils.database import Database
 from siptools_research.config import Configuration
@@ -145,7 +148,7 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     """
 
     # Generate technical metadata from file
-    metadata = import_object.metadata_info(filepath)
+    metadata = _get_metadata_info(filepath)
 
     # Create file_characteristics object
     file_characteristics = {}
@@ -160,5 +163,82 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
         file_characteristics.update(
             original_file_characteristics
         )
-
     return file_characteristics
+
+
+def _get_metadata_info(fname):
+    """Creates and  returns a dictionary containing mimetype, version and
+    charset values of the file passed in as an argument. Scraper is used to
+    dig out the values to be returned in the dictionary
+
+    :param filepath: path to file for which the metadata is generated
+    :returns: Dictionary containing mimetype, format version and charset
+        of the file
+    """
+    scraper = Scraper(fname)
+    scraper.scrape(check_wellformed=False)
+    metadata = scraper.streams[0]
+    mimetype = metadata['mimetype']
+    format_version = DEFAULT_VERSIONS.get(mimetype, None)
+    if metadata['version'] and metadata['version'] != UNKNOWN_VERSION:
+        format_version = metadata['version']
+    if format_version == NO_VERSION or format_version is None:
+        format_version = ''
+    charset = ''
+    if 'charset' in metadata:
+        charset = metadata['charset']
+    metadata_info_ = {
+        'filename': fname,
+        'type': 'file',
+        'format': {
+            'mimetype': mimetype,
+            'version': format_version,
+            'charset': charset
+        }
+    }
+    if charset == '':
+        del metadata_info_['format']['charset']
+
+    # If Broadcast WAVE file return version
+    if mimetype == 'audio/x-wav':
+        if is_broadcast_wav(fname):
+            metadata_info_['format']['version'] = '2'
+
+    return metadata_info_
+
+
+def _read_uint(f_in):
+    """Read 4 bytes from f_in and return the corresponding
+    unsigned integer.
+    """
+    uint = 0
+    binary_num = f_in.read(4)
+
+    for i in range(4):
+        uint += ord(binary_num[i]) << (8 * i)  # Left shift of 8*i
+
+    return uint
+
+
+def is_broadcast_wav(fname):
+    """Check if file fname is WAV or broadcast WAV file.
+    The function reads all the RIFF chunk IDs and returns
+    True if "bext" chunk is found.
+    """
+    with open(fname, "rb") as f_in:
+        f_in.read(4)  # Skip RIFF ID
+        size = _read_uint(f_in) - 4
+        f_in.read(4)  # Skip WAVE ID
+
+        # Iterate all WAVE chunks
+        while size > 0:
+            chunk_id = f_in.read(4)
+            chunk_size = _read_uint(f_in)
+
+            if chunk_id == b"bext":
+                return True
+            else:
+                size -= (chunk_size + 8)
+                f_in.seek(chunk_size, 1)
+
+    return False

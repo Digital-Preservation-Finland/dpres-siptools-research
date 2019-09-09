@@ -123,9 +123,9 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
     # different versions of plain text files
     assert json_message['file_characteristics']['format_version'] == ''
 
-    # Encoding should not be changed since it was already defined by user
+    # Encoding should be correctly since it was not defined by user
     assert json_message['file_characteristics']['encoding'] == \
-        'ISO-8859-15'
+        'UTF-8'
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
