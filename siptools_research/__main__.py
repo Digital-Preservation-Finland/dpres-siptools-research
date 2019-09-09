@@ -148,7 +148,7 @@ def _get(args):
     """Get a workflow document"""
     document = _get_workflow_document(args)
     if document:
-        print(json.dumps(document))
+        print(json.dumps(document, indent=4))
 
 def _status(args):
     """Get workflow task results"""
