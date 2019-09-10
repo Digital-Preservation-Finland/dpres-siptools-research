@@ -166,7 +166,7 @@ def _get_workflow_document(args):
                 print(doc["_id"])
             print(ENDC, end="")
         else:
-            documents = documents[0]
+            document = documents[0]
 
     return document
 
@@ -185,11 +185,14 @@ def _status(args):
         success = []
         fail = []
 
-        for task in document["workflow_tasks"]:
-            if document["workflow_tasks"][task]["result"] == "success":
-                success.append(task)
-            else:
-                fail.append([task, document["workflow_tasks"][task]])
+        if "workflow_tasks" in document:
+            for task in document["workflow_tasks"]:
+                if document["workflow_tasks"][task]["result"] == "success":
+                    success.append(task)
+                else:
+                    fail.append([task, document["workflow_tasks"][task]])
+        else:
+            print("Workflow %s has no workflow_tasks" % document["_id"])
 
         # Print tasks that were completed successfully
         if success:
