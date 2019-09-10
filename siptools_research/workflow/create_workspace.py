@@ -12,7 +12,7 @@ class CreateWorkspace(WorkflowTask):
     :rtype: LocalTarget
     """
 
-    success_message = 'Workspace directory create.'
+    success_message = 'Workspace directory created.'
     failure_message = 'Creating workspace directory failed'
 
     def output(self):
