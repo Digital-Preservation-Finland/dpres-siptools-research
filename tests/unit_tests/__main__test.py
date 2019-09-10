@@ -4,9 +4,9 @@ import sys
 import mock
 import pytest
 
-import tests.conftest
 import siptools_research.__main__
 from siptools_research.utils.database import Database
+from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
 @mock.patch('siptools_research.__main__.preserve_dataset')
@@ -85,11 +85,14 @@ def test_main_get_single_match(capsys, monkeypatch):
     :returns: ``None``
     """
     # Add a single workflow documents to the db
-    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    database = Database(UNIT_TEST_CONFIG_FILE)
     database.add_workflow("aineisto_1", "1")
 
     # Run siptools-research get 1
-    monkeypatch.setattr(sys, "argv", ["siptools-research", "get", "1"])
+    monkeypatch.setattr(
+        sys, "argv",
+        ["siptools-research", "--config", UNIT_TEST_CONFIG_FILE, "get", "1"]
+    )
     siptools_research.__main__.main()
 
     out, _ = capsys.readouterr()
@@ -104,12 +107,15 @@ def test_main_get_multiple_matches(capsys, monkeypatch):
     :returns: ``None``
     """
     # Add two workflow documents to the db
-    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    database = Database(UNIT_TEST_CONFIG_FILE)
     database.add_workflow("aineisto_1", "1")
     database.add_workflow("aineisto_2", "1")
 
     # Run siptools-research get 1
-    monkeypatch.setattr(sys, "argv", ["siptools-research", "get", "1"])
+    monkeypatch.setattr(
+        sys, "argv",
+        ["siptools-research", "--config", UNIT_TEST_CONFIG_FILE, "get", "1"]
+    )
     siptools_research.__main__.main()
 
     out, _ = capsys.readouterr()
@@ -118,7 +124,13 @@ def test_main_get_multiple_matches(capsys, monkeypatch):
     # Run siptools-research get --workflow_id aineisto_1 1
     monkeypatch.setattr(
         sys, "argv",
-        ["siptools-research", "get", "--workflow_id", "aineisto_1", "1"]
+        [
+            "siptools-research",
+            "--config", UNIT_TEST_CONFIG_FILE,
+            "get",
+            "--workflow_id", "aineisto_1",
+            "1"
+        ]
     )
     siptools_research.__main__.main()
 
@@ -133,11 +145,14 @@ def test_main_no_matches(capsys, monkeypatch):
     :returns: ``None``
     """
     # Add a single workflow documents to the db
-    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    database = Database(UNIT_TEST_CONFIG_FILE)
     database.add_workflow("aineisto_1", "1")
 
     # Run siptools-research get 2
-    monkeypatch.setattr(sys, "argv", ["siptools-research", "get", "2"])
+    monkeypatch.setattr(
+        sys, "argv",
+        ["siptools-research", "--config", UNIT_TEST_CONFIG_FILE, "get", "2"]
+    )
     siptools_research.__main__.main()
 
     out, _ = capsys.readouterr()
@@ -151,7 +166,7 @@ def test_main_status(capsys, monkeypatch):
     :returns: ``None``
     """
     # Add a single workflow documents and couple workflow_tasks to the db
-    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    database = Database(UNIT_TEST_CONFIG_FILE)
     database.add_workflow("aineisto_1", "1")
     database.add_event(
         "aineisto_1",
@@ -173,7 +188,10 @@ def test_main_status(capsys, monkeypatch):
     )
 
     # Run siptools-research status 1
-    monkeypatch.setattr(sys, "argv", ["siptools-research", "status", "1"])
+    monkeypatch.setattr(
+        sys, "argv",
+        ["siptools-research", "--config", UNIT_TEST_CONFIG_FILE, "status", "1"]
+    )
     siptools_research.__main__.main()
     out, _ = capsys.readouterr()
     assert "ValidateMetadata\nCreateWorkspace" in out
@@ -189,18 +207,28 @@ def test_main_disabled(capsys, monkeypatch):
     :returns: ``None``
     """
     # Add a single workflow documents to the db
-    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    database = Database(UNIT_TEST_CONFIG_FILE)
     database.add_workflow("aineisto_1", "1")
 
     # Run siptools-research enable 1
-    monkeypatch.setattr(sys, "argv", ["siptools-research", "enable", "1"])
+    monkeypatch.setattr(
+        sys, "argv",
+        ["siptools-research", "--config", UNIT_TEST_CONFIG_FILE, "enable", "1"]
+    )
     siptools_research.__main__.main()
     assert not database._collection.find_one({"_id": "aineisto_1"})["disabled"]
     out, _ = capsys.readouterr()
     assert "Workflow aineisto_1 enabled" in out
 
     # Run siptools-research enable 1
-    monkeypatch.setattr(sys, "argv", ["siptools-research", "disable", "1"])
+    monkeypatch.setattr(
+        sys, "argv",
+        [
+            "siptools-research",
+            "--config", UNIT_TEST_CONFIG_FILE,
+            "disable", "1"
+        ]
+    )
     siptools_research.__main__.main()
     assert database._collection.find_one({"_id": "aineisto_1"})["disabled"]
     out, _ = capsys.readouterr()
