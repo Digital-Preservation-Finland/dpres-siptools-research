@@ -188,22 +188,30 @@ def _status(args):
         if "workflow_tasks" in document:
             for task in document["workflow_tasks"]:
                 if document["workflow_tasks"][task]["result"] == "success":
-                    success.append(task)
+                    success.append([task, document["workflow_tasks"][task]])
                 else:
                     fail.append([task, document["workflow_tasks"][task]])
         else:
             print("Workflow %s has no workflow_tasks" % document["_id"])
 
-        # Print tasks that were completed successfully
+        # Sort and print tasks that were completed successfully
         if success:
+            # Sort by timestamp
+            success = sorted(success, key=lambda k: k[1]["timestamp"])
+
+            # Print
             print("Ran successfully:")
             print(SUCCESSC)
             for task in success:
-                print(task)
+                print(task[0])
             print(ENDC, end="")
 
-        # Print tasks that failed
+        # Sort and print tasks that failed
         if fail:
+            # Sort by timestamp
+            success = sorted(success, key=lambda k: k[1]["timestamp"])
+
+            # Print
             print("\nFailed:")
             print(FAILC)
             for task in fail:

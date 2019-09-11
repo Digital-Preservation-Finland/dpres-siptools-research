@@ -194,7 +194,7 @@ def test_main_status(capsys, monkeypatch):
     )
     siptools_research.__main__.main()
     out, _ = capsys.readouterr()
-    assert "ValidateMetadata\nCreateWorkspace" in out
+    assert "CreateWorkspace\nValidateMetadata\n" in out
     assert "CreateProvenanceInformation" in out
     assert '"messages": "Fail message"' in out
 
