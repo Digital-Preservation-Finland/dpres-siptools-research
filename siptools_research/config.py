@@ -1,7 +1,7 @@
 """Global configuration defaults and config file reader."""
 import os
 import logging
-import ConfigParser
+import configparser
 
 
 DEFAULTS = {
@@ -39,7 +39,7 @@ class Configuration(object):
 
         # Read config file if it has not been read yet
         if self.config_file != config_file:
-            self._parser = ConfigParser.RawConfigParser()
+            self._parser = configparser.RawConfigParser()
             self.read_config_file(config_file)
 
     def read_config_file(self, config_file):
@@ -69,8 +69,6 @@ class Configuration(object):
         # Get list of options for validation
         # pylint: disable=protected-access
         options = self._parser._sections[self.config_section]
-        # Remove extra items from option list
-        del options['__name__']
 
         # Check that each option in config file exists in default options
         # dictionary
