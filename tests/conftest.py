@@ -129,7 +129,7 @@ def testmetax(request):
         elif request.method == "PATCH" and subdir == "datasets":
             body = json.dumps(datasets.get_dataset("", body_file))
         else:
-            with open(full_path) as open_file:
+            with open(full_path, 'rb') as open_file:
                 body = open_file.read()
 
         return (200, headers, body)
@@ -191,7 +191,7 @@ def testida(request):
 
     # Register all files in subdirectories of ``IDA_PATH`` to httpretty.
     for idafile in os.listdir(IDA_PATH):
-        with open(os.path.join(IDA_PATH, idafile)) as open_file:
+        with open(os.path.join(IDA_PATH, idafile), 'rb') as open_file:
             body = open_file.read()
             httpretty.register_uri(
                 httpretty.GET,
