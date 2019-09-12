@@ -6,7 +6,10 @@ import re
 import logging
 import tempfile
 import shutil
-import urllib
+try:
+    from urllib import quote
+except ImportError:  # Python 3
+    from urllib.parse import quote
 import json
 
 import urllib3
@@ -113,7 +116,7 @@ def testmetax(request):
         # everything is added to the filename url encoded
         tail = path.split('/%s/%s' % (subdir, body_file))[1]
         if tail:
-            body_file += urllib.quote(tail, safe='%')
+            body_file += quote(tail, safe='%')
 
         full_path = "%s/%s/%s" % (METAX_PATH, subdir, body_file)
         logging.debug("Looking for file: %s", full_path)
