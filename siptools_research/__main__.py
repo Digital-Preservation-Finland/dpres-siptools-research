@@ -2,15 +2,25 @@
 
 To start the workflow for dataset 1234 (for example)::
 
-   siptools_research preserve --config /etc/siptools_research.conf 1234
+   siptools-research preserve 1234
 
 To generate metadata::
 
-   siptools_research generate --config /etc/siptools_research.conf 1234
+   siptools-research generate 1234
 
 To validate metadata::
 
-   siptools_research validate --config /etc/siptools_research.conf 1234
+   siptools-research validate 1234
+
+MongoDB can be queried and updated with commands: get, status, tasks,
+workflows, disable and enable. For further information run::
+
+   siptools-research --help
+
+and::
+
+   siptools-research command --help
+
 """
 from __future__ import print_function
 
@@ -36,9 +46,10 @@ def _parse_args():
     """
     # Parse commandline arguments
     parser = argparse.ArgumentParser(
-        description='Generate techincal metadata for a dataset in Metax, '
-                    'validate Metax dataset metadata, or start digital '
-                    'preservation workflow a Metax dataset.'
+        description='Generate technical metadata for a dataset in Metax, '
+                    'validate Metax dataset metadata, start digital '
+                    'preservation workflow a Metax dataset, or query/edit '
+                    'workflow documents in MongoDB.'
     )
 
     # Add the alternative commands
@@ -68,7 +79,7 @@ def _parse_args():
 def _setup_generate_args(subparsers):
     """Define generate subparser and its arguments."""
     generate_parser = subparsers.add_parser(
-        'generate', help='generate technical metadata for the dataset'
+        'generate', help='Generate technical metadata for the dataset'
     )
     generate_parser.set_defaults(func=_generate)
     generate_parser.add_argument('dataset_id', help="Metax dataset identifier")
@@ -77,7 +88,7 @@ def _setup_generate_args(subparsers):
 def _setup_validate_args(subparsers):
     """Define validate subparser and its arguments."""
     validate_parser = subparsers.add_parser(
-        'validate', help='validate dataset metadata'
+        'validate', help='Validate dataset metadata'
     )
     validate_parser.set_defaults(func=_validate)
     validate_parser.add_argument('dataset_id', help="Metax dataset identifier")
@@ -86,7 +97,7 @@ def _setup_validate_args(subparsers):
 def _setup_preserve_args(subparsers):
     """Define preserve subparser and its arguments."""
     preserve_parser = subparsers.add_parser(
-        'preserve', help='start preservation workflow'
+        'preserve', help='Start preservation workflow'
     )
     preserve_parser.set_defaults(func=_preserve)
     preserve_parser.add_argument('dataset_id', help="Metax dataset identifier")
@@ -135,7 +146,7 @@ def _setup_workflows_args(subparsers):
     """Define tasks subparser and its arguments."""
     status_parser = subparsers.add_parser(
         'workflows',
-        help='Get all workflows of a single dataset'
+        help='Get all tasks of a single workflow'
     )
     status_parser.set_defaults(func=_workflows)
     status_parser.add_argument(
