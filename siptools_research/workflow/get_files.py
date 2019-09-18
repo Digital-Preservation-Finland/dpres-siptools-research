@@ -56,8 +56,9 @@ class GetFiles(WorkflowTask):
         :returns: local target: ``task-getfiles.finished``
         :rtype: LocalTarget
         """
-        return luigi.LocalTarget(os.path.join(self.workspace,
-                                              "task-getfiles.finsihed"))
+        return luigi.LocalTarget(
+            os.path.join(self.workspace, "task-getfiles.finsihed")
+        )
 
     def run(self):
         """Reads list of required files from Metax and downloads them.

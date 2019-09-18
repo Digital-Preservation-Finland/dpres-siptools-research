@@ -1,6 +1,7 @@
 """Luigi task that creates METS document."""
 import os
 
+import luigi.format
 from luigi import LocalTarget
 
 from metax_access import Metax
@@ -43,7 +44,10 @@ class CreateMets(WorkflowTask):
         :returns: local targets: `sip-in-progress/mets.xml`
         :rtype: LocalTarget
         """
-        return LocalTarget(os.path.join(self.sip_creation_path, 'mets.xml'))
+        return LocalTarget(
+            os.path.join(self.sip_creation_path, 'mets.xml'),
+            format=luigi.format.Nop
+        )
 
     def run(self):
         """Compiles all metadata files into METS document.
@@ -90,7 +94,7 @@ class CreateMets(WorkflowTask):
         )
         compile_mets.clean_metsparts(self.sip_creation_path)
 
-        with self.output().open('w') as outputfile:
+        with self.output().open('wb') as outputfile:
             mets.write(outputfile,
                        pretty_print=True,
                        xml_declaration=True,

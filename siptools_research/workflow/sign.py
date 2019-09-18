@@ -2,6 +2,7 @@
 
 import os
 
+import luigi.format
 from luigi import LocalTarget
 import dpres_signature.signature
 
@@ -34,8 +35,10 @@ class SignSIP(WorkflowTask):
         :returns: local target: `sip-in-progress/signature.sig`
         :rtype: LocalTarget
         """
-        return LocalTarget(os.path.join(self.sip_creation_path,
-                                        "signature.sig"))
+        return LocalTarget(
+            os.path.join(self.sip_creation_path, "signature.sig"),
+            format=luigi.format.Nop
+        )
 
     def run(self):
         """Sign METS document.
@@ -49,5 +52,5 @@ class SignSIP(WorkflowTask):
             ['mets.xml']
         )
 
-        with self.output().open('w') as signature_file:
+        with self.output().open('wb') as signature_file:
             signature_file.write(signature)

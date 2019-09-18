@@ -2,6 +2,7 @@
 
 import os
 
+import luigi.format
 from luigi import LocalTarget
 import lxml.etree as ET
 
@@ -52,8 +53,10 @@ class CreateLogicalStructMap(WorkflowTask):
         :returns: local target: ``sip-in-progress/logical_structmap.xml`` ,
         :rtype: LocalTarget
         """
-        return LocalTarget(os.path.join(self.sip_creation_path,
-                                        'logical_structmap.xml'))
+        return LocalTarget(
+            os.path.join(self.sip_creation_path, 'logical_structmap.xml'),
+            format=luigi.format.Nop
+        )
 
     def run(self):
         """Creates a METS document that contains logical structural map.
@@ -91,7 +94,7 @@ class CreateLogicalStructMap(WorkflowTask):
             wrapper_div.append(div)
         logical_structmap.append(wrapper_div)
 
-        with self.output().open('w') as output:
+        with self.output().open('wb') as output:
             output.write(h.serialize(mets_structmap))
 
     def get_provenance_ids(self):

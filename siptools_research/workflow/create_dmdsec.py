@@ -2,7 +2,7 @@
 import os
 from uuid import uuid4
 
-from luigi import LocalTarget
+import luigi
 
 from metax_access import Metax
 from siptools.scripts import import_description
@@ -43,9 +43,14 @@ class CreateDescriptiveMetadata(WorkflowTask):
         :rtype: LocalTarget
         """
         return [
-            LocalTarget(os.path.join(self.sip_creation_path, 'dmdsec.xml')),
-            LocalTarget(os.path.join(self.sip_creation_path,
-                                     'md-references.xml'))
+            luigi.LocalTarget(
+                os.path.join(self.sip_creation_path, 'dmdsec.xml'),
+                format=luigi.format.Nop
+            ),
+            luigi.LocalTarget(
+                os.path.join(self.sip_creation_path, 'md-references.xml'),
+                format=luigi.format.Nop
+            )
         ]
 
     def run(self):
@@ -79,7 +84,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
         creator = import_description.DmdCreator(self.sip_creation_path)
         creator.write_dmd_ref(_mets, dmd_id, '.')
 
-        with self.output()[0].open('w') as outputfile:
+        with self.output()[0].open('wb') as outputfile:
             _mets.write(outputfile,
                         pretty_print=True,
                         xml_declaration=True,

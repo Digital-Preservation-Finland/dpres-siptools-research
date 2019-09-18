@@ -87,8 +87,12 @@ class CreateTechnicalMetadata(WorkflowTask):
         :rtype: LocalTarget
         """
 
-        return LocalTarget(os.path.join(self.workspace, 'task-create-'
-                                        'technical-metadata.finished'))
+        return LocalTarget(
+            os.path.join(
+                self.workspace,
+                'task-create-technical-metadata.finished'
+            )
+        )
 
     def run(self):
         """Creates PREMIS technical metadata files and technical attribute

@@ -39,8 +39,9 @@ class SendSIPToDP(WorkflowTask):
         :rtype: LocalTarget
         """
 
-        return luigi.LocalTarget(os.path.join(self.workspace,
-                                              'task-send-sip-to-dp.finished'))
+        return luigi.LocalTarget(
+            os.path.join(self.workspace, 'task-send-sip-to-dp.finished'),
+        )
 
     def run(self):
         """Sends SIP file to DP service using sftp.

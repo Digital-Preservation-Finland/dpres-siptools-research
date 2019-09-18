@@ -3,6 +3,7 @@
 
 import os
 
+import luigi.format
 from luigi import LocalTarget
 from siptools.scripts import compile_structmap
 from siptools.utils import get_objectlist
@@ -50,8 +51,14 @@ class CreateStructMap(WorkflowTask):
         :rtype: LocalTarget
         """
         return [
-            LocalTarget(os.path.join(self.sip_creation_path, 'filesec.xml')),
-            LocalTarget(os.path.join(self.sip_creation_path, 'structmap.xml'))
+            LocalTarget(
+                os.path.join(self.sip_creation_path, 'filesec.xml'),
+                format=luigi.format.Nop
+            ),
+            LocalTarget(
+                os.path.join(self.sip_creation_path, 'structmap.xml'),
+                format=luigi.format.Nop
+            )
         ]
 
     def run(self):
@@ -67,7 +74,7 @@ class CreateStructMap(WorkflowTask):
         file_list = get_objectlist(self.sip_creation_path)
         filesec = compile_structmap.create_filesec(self.sip_creation_path,
                                                    file_list)
-        with self.output()[0].open('w') as filesecxml:
+        with self.output()[0].open('wb') as filesecxml:
             filesec.write(filesecxml,
                           pretty_print=True,
                           xml_declaration=True,
@@ -79,7 +86,7 @@ class CreateStructMap(WorkflowTask):
                                                        filesec_element,
                                                        file_list,
                                                        'Fairdata-physical')
-        with self.output()[1].open('w') as structmapxml:
+        with self.output()[1].open('wb') as structmapxml:
             structmap.write(structmapxml,
                             pretty_print=True,
                             xml_declaration=True,

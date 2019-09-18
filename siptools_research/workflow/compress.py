@@ -33,7 +33,8 @@ class CompressSIP(WorkflowTask):
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
-            os.path.join(self.workspace, self.document_id) + '.tar'
+            os.path.join(self.workspace, self.document_id) + '.tar',
+            format=luigi.format.Nop
         )
 
     def run(self):

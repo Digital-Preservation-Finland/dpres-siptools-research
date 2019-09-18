@@ -4,12 +4,12 @@ service and updates preservation status to Metax.
 
 import os
 from luigi import LocalTarget
+from metax_access import Metax, DS_STATE_IN_DIGITAL_PRESERVATION
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_sip import ValidateSIP
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.workflowtask import InvalidDatasetError
 from siptools_research.config import Configuration
-from metax_access import Metax, DS_STATE_IN_DIGITAL_PRESERVATION
 
 
 class ReportPreservationStatus(WorkflowTask):
@@ -45,8 +45,11 @@ class ReportPreservationStatus(WorkflowTask):
         :returns: local target: `report-preservation-status.finished`
         :rtype: LocalTarget
         """
-        return LocalTarget(os.path.join(self.workspace,
-                                        'report-preservation-status.finished'))
+        return LocalTarget(
+            os.path.join(
+                self.workspace, 'report-preservation-status.finished'
+            )
+        )
 
     def run(self):
         """Checks the path of ingest report file in digital preservation

@@ -75,8 +75,10 @@ class CreateProvenanceInformation(WorkflowTask):
         :rtype: LocalTarget
         """
         return local_target.LocalTarget(
-            os.path.join(self.workspace,
-                         'create-provenance-information.finished')
+            os.path.join(
+                self.workspace,
+                'create-provenance-information.finished'
+            )
         )
 
     def run(self):

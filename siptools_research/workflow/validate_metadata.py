@@ -32,8 +32,9 @@ class ValidateMetadata(WorkflowTask):
         :returns: local target: `validate-metadata.finished`
         :rtype: LocalTarget
         """
-        return LocalTarget(os.path.join(self.workspace,
-                                        'validate-metadata.finished'))
+        return LocalTarget(
+            os.path.join(self.workspace, 'validate-metadata.finished'),
+        )
 
     def run(self):
         """Reads dataset metadata, file metadata, and additional XML metadata
