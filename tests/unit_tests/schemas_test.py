@@ -276,8 +276,8 @@ def test_validate_invalid_file_charset():
             siptools_research.schemas.FILE_METADATA_SCHEMA
         )
 
-    assert excinfo.value.message \
-        == "'foo' is not one of ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']"
+    assert excinfo.value.message == \
+        "'foo' is not one of ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']"
 
 
 def test_validate_valid_contract():
@@ -400,7 +400,7 @@ def test_validate_directory_directory_path_missing():
             valid_directory_metadata,
             siptools_research.schemas.DIRECTORY_METADATA_SCHEMA)
 
-    assert str(excinfo.value).startswith(
+    assert excinfo.value.message.startswith(
         "'directory_path' is a required property"
     )
 
@@ -423,6 +423,6 @@ def test_validate_directory_parent_identifier_missing():
             valid_directory_metadata,
             siptools_research.schemas.DIRECTORY_METADATA_SCHEMA)
 
-    assert str(excinfo.value).startswith(
+    assert excinfo.value.message.startswith(
         "'identifier' is a required property"
     )

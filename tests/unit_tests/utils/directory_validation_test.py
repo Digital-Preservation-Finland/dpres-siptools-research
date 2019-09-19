@@ -62,8 +62,7 @@ def test_successful_directory_validation(mocker):
         validator = DirectoryValidation(client)
         validator.is_valid_for_file(FILE_METADATA)
     except InvalidMetadataError as exc:
-        pytest.fail('test_successful_directory_validation fails: ' +
-                    exc.message)
+        pytest.fail('test_successful_directory_validation fails: ' + str(exc))
     assert first_par_dir_adapter.call_count == 1
     assert second_par_dir_adapter.call_count == 1
     assert root_dir_adapter.call_count == 1
@@ -118,8 +117,9 @@ def test_directory_validation_caching_works(mocker):
         validator.is_valid_for_file(FILE_METADATA)
         validator.is_valid_for_file(file2_metadata)
     except InvalidMetadataError as exc:
-        pytest.fail('test_successful_directory_validation fails: ' +
-                    exc.message)
+        pytest.fail(
+            'test_successful_directory_validation fails: ' + str(exc)
+        )
     # verify that metax is called only once for directories
     assert first_par_dir_adapter.call_count == 1
     assert second_par_dir_adapter.call_count == 1

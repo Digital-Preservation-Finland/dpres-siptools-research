@@ -43,8 +43,9 @@ def test_verify_file_contained_by_dataset_files():
         dirs = DatasetConsistency(client, dataset)
         dirs.is_consistent_for_file(file_metadata)
     except InvalidMetadataError as exc:
-        pytest.fail('_verify_file_contained_by_dataset raised exception: ' +
-                    exc.message)
+        pytest.fail(
+            '_verify_file_contained_by_dataset raised exception: ' + str(exc)
+        )
 
 
 @requests_mock.Mocker()
@@ -91,8 +92,9 @@ def test_verify_file_contained_by_dataset_directories(mocker):
         dirs = DatasetConsistency(client, dataset)
         dirs.is_consistent_for_file(file_metadata)
     except InvalidMetadataError as exc:
-        pytest.fail('_verify_file_contained_by_dataset raised exception: ' +
-                    exc.message)
+        pytest.fail(
+            '_verify_file_contained_by_dataset raised exception: ' + str(exc)
+        )
 
 
 @requests_mock.Mocker()
@@ -136,8 +138,8 @@ def test_verify_file_contained_by_dataset_missing_from_dataset(mocker):
         dirs = DatasetConsistency(client, dataset)
         dirs.is_consistent_for_file(file_metadata)
 
-    assert exc_info.value.message == ("File not found from dataset files nor "
-                                      "directories: /path/to/file")
+    assert str(exc_info.value) == ("File not found from dataset files nor "
+                                   "directories: /path/to/file")
 
 
 @requests_mock.Mocker()
@@ -214,8 +216,9 @@ def test_dataset_directories_caching_works(mocker):
         dirs.is_consistent_for_file(file_1)
         dirs.is_consistent_for_file(file_2)
     except InvalidMetadataError as exc:
-        pytest.fail('_verify_file_contained_by_dataset raised exception: ' +
-                    exc.message)
+        pytest.fail(
+            '_verify_file_contained_by_dataset raised exception: ' + str(exc)
+        )
     # verify that dataset directory caching works. Metax is called only once
     # for the parent directories for the two files.
     assert first_par_dir_adapter.call_count == 1

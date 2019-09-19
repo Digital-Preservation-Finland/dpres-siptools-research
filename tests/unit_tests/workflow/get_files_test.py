@@ -154,8 +154,8 @@ def test_forbidden_relative_path(testpath, path):
         task._download_files(
             files, siptools_research.config.Configuration(task.config)
         )
-    assert exception_info.value.message \
-        == 'The file path of file pid:urn:1 is invalid: %s' % path
+    assert str(exception_info.value) == \
+        'The file path of file pid:urn:1 is invalid: %s' % path
 
     # Check that file is not saved in workspace root i.e. workspace root
     # contains only the workspace directory
