@@ -57,5 +57,5 @@ def test_invalid_metadata(testpath):
         task.run()
 
     # run should fail the following error message:
-    assert "'contract' is a required property" in exc.value[0]
+    assert "'contract' is a required property" in str(exc.value)
     assert not task.complete()

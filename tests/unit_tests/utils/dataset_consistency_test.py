@@ -1,8 +1,8 @@
+"""dataset_consistency module unit tests"""
 import copy
 import pytest
 
 from metax_access import Metax
-import requests_mock
 from siptools_research.utils.dataset_consistency import DatasetConsistency
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
@@ -26,18 +26,15 @@ def test_verify_file_contained_by_dataset_files():
     )
     dataset = {
         'identifier': 'dataset_identifier',
-        'research_dataset': {
-            'files': [{'identifier': 'file_identifier'}],
-            'directories': []
-        }
+        'research_dataset': {'files': [
+            {'identifier': 'file_identifier'}
+        ], 'directories': []}
     }
 
     file_metadata = {
         'identifier': 'file_identifier',
         'file_path': "/path/to/file",
-        'parent_directory': {
-            'identifier': 'parent_directory_identifier'
-        }
+        'parent_directory': {'identifier': 'parent_directory_identifier'}
     }
     try:
         dirs = DatasetConsistency(client, dataset)
@@ -48,9 +45,8 @@ def test_verify_file_contained_by_dataset_files():
         )
 
 
-@requests_mock.Mocker()
 # pylint: disable=invalid-name
-def test_verify_file_contained_by_dataset_directories(mocker):
+def test_verify_file_contained_by_dataset_directories(requests_mock):
     """Check that ``DatasetConsistency::is_consistent_for_file()`` succeeds
     when dataset directories contains the file
 
@@ -79,13 +75,14 @@ def test_verify_file_contained_by_dataset_directories(mocker):
             'identifier': 'parent_directory_identifier'
         }
     }
-    mocker.get(
+    requests_mock.get(
         tests.conftest.METAX_URL + '/directories/parent_directory_identifier',
-        json={'identifier': 'parent_directory_identifier',
-              'parent_directory': {
-                  'identifier': 'root_directory'
-                  }
-              },
+        json={
+            'identifier': 'parent_directory_identifier',
+            'parent_directory': {
+                'identifier': 'root_directory'
+            }
+        },
         status_code=200
     )
     try:
@@ -97,9 +94,8 @@ def test_verify_file_contained_by_dataset_directories(mocker):
         )
 
 
-@requests_mock.Mocker()
 # pylint: disable=invalid-name
-def test_verify_file_contained_by_dataset_missing_from_dataset(mocker):
+def test_verify_file_contained_by_dataset_missing_from_dataset(requests_mock):
     """Check that ``DatasetConsistency::is_consistent_for_file()`` raises
     exception with descriptive error messages when dataset files nor
     directories do not contain the file.
@@ -129,7 +125,7 @@ def test_verify_file_contained_by_dataset_missing_from_dataset(mocker):
             'identifier': 'parent_directory_identifier'
         }
     }
-    mocker.get(
+    requests_mock.get(
         tests.conftest.METAX_URL + '/directories/parent_directory_identifier',
         json={'identifier': 'parent_directory_identifier'},
         status_code=200
@@ -142,9 +138,8 @@ def test_verify_file_contained_by_dataset_missing_from_dataset(mocker):
                                    "directories: /path/to/file")
 
 
-@requests_mock.Mocker()
 # pylint: disable=invalid-name
-def test_dataset_directories_caching_works(mocker):
+def test_dataset_directories_caching_works(requests_mock):
     """Checks that caching of dataset directories in``DatasetConsistency``
     works and no extra calls are done to Metax. In this test dataset contains
     only one entry in dataset directories which is the root directory of the
@@ -193,22 +188,24 @@ def test_dataset_directories_caching_works(mocker):
         }
     }
 
-    first_par_dir_adapter = mocker.get(
+    first_par_dir_adapter = requests_mock.get(
         tests.conftest.METAX_URL + '/directories/first_par_dir',
-        json={'identifier': 'first_par_dir',
-              'parent_directory': {
-                  'identifier': 'second_par_dir'
-                  }
-              },
+        json={
+            'identifier': 'first_par_dir',
+            'parent_directory': {
+                'identifier': 'second_par_dir'
+            }
+        },
         status_code=200
     )
-    second_par_dir_adapter = mocker.get(
+    second_par_dir_adapter = requests_mock.get(
         tests.conftest.METAX_URL + '/directories/second_par_dir',
-        json={'identifier': 'second_par_dir',
-              'parent_directory': {
-                  'identifier': 'root_dir'
-                  }
-              },
+        json={
+            'identifier': 'second_par_dir',
+            'parent_directory': {
+                'identifier': 'root_dir'
+            }
+        },
         status_code=200
     )
     try:

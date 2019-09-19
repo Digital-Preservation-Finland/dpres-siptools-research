@@ -568,8 +568,8 @@ def test_validate_metadata_missing_xml(requests_mock):
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    assert str(exc.value[0]) == ("Missing technical metadata XML for file: "
-                                 "pid:urn:validate_metadata_test_image")
+    assert str(exc.value) == ("Missing technical metadata XML for file: "
+                              "pid:urn:validate_metadata_test_image")
 
 
 # pylint: disable=invalid-name
@@ -660,7 +660,7 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
                       json=["http://www.loc.gov/audioMD/"])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:testaudio/xml?"
                       "namespace=http://www.loc.gov/audioMD/",
-                      text=get_bad_audiomd())
+                      content=get_bad_audiomd())
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata('dataset_identifier',
@@ -755,7 +755,7 @@ def test_validate_metadata_invalid_datacite(requests_mock):
     )
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=get_invalid_datacite())
+                      content=get_invalid_datacite())
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
@@ -828,7 +828,7 @@ def test_validate_metadata_publisher_missing(requests_mock):
     )
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=get_invalid_datacite())
+                      content=get_invalid_datacite())
 
     # Mock set_preservation_identifier API request
     requests_mock.post(
@@ -1039,7 +1039,7 @@ def test_validate_datacite(requests_mock):
         json=[])
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=get_very_invalid_datacite())
+                      content=get_very_invalid_datacite())
     # Validate datacite
     # pylint: disable=protected-access
     with pytest.raises(InvalidMetadataError) as exception_info:

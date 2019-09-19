@@ -27,7 +27,7 @@ class MetadataGenerationError(Exception):
         self.kwargs = kwargs
 
     def __str__(self):
-        message = self.message
+        message = super(MetadataGenerationError, self).__str__()
         if self.kwargs:
             message += _kwargs2str(self.kwargs)
 

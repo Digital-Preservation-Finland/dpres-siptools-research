@@ -182,7 +182,7 @@ def test_xml_metadata_file_missing(testpath):
     with pytest.raises(MetaxError) as exc:
         task.run()
 
-    assert msg in str(exc)
+    assert msg in str(exc.value)
     assert not task.complete()
 
 
@@ -193,14 +193,14 @@ def test_algorithm_name():
     """
 
     # Valid input
-    assert algorithm_name('md5', hashlib.md5('foo').hexdigest()) == 'MD5'
-    assert algorithm_name('sha2', hashlib.sha224('foo').hexdigest()) \
+    assert algorithm_name('md5', hashlib.md5(b'foo').hexdigest()) == 'MD5'
+    assert algorithm_name('sha2', hashlib.sha224(b'foo').hexdigest()) \
         == 'SHA-224'
-    assert algorithm_name('sha2', hashlib.sha256('foo').hexdigest()) \
+    assert algorithm_name('sha2', hashlib.sha256(b'foo').hexdigest()) \
         == 'SHA-256'
-    assert algorithm_name('sha2', hashlib.sha384('foo').hexdigest()) \
+    assert algorithm_name('sha2', hashlib.sha384(b'foo').hexdigest()) \
         == 'SHA-384'
-    assert algorithm_name('sha2', hashlib.sha512('foo').hexdigest()) \
+    assert algorithm_name('sha2', hashlib.sha512(b'foo').hexdigest()) \
         == 'SHA-512'
 
     # invalid algorithm name
