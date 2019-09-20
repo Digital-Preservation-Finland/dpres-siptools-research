@@ -20,6 +20,7 @@ def main():
             "jsonschema",
             "iso-639",
             "python-dateutil",
+            "configparser",  # required for python2
             "siptools@git+https://gitlab.csc.fi/dpres/dpres-siptools.git"
             "@develop",
             "metax_access@git+https://gitlab.csc.fi/dpres/metax-access.git"
@@ -31,6 +32,7 @@ def main():
             ]
         }
     )
+
 
 if __name__ == '__main__':
     main()

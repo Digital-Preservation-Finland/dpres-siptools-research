@@ -39,6 +39,8 @@ Requires:       python-mongomock
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python-mock
+# python-configparser is required in python2
+Requires:       python-configparser
 BuildRequires:  python-setuptools
 BuildRequires:  pytest
 BuildRequires:  python-httpretty
