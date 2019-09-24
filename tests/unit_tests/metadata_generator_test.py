@@ -12,8 +12,9 @@ from siptools.utils import decode_path
 
 from siptools_research.config import Configuration
 import siptools_research.metadata_generator as metadata_generator
-from siptools_research.metadata_generator import (generate_metadata,
-                                                  MetadataGenerationError)
+from siptools_research.metadata_generator import (
+    generate_metadata, MetadataGenerationError, is_broadcast_wav
+)
 import tests.conftest
 
 
@@ -311,3 +312,12 @@ def test_generate_metadata_provenance(dataset):
     json_message = json.loads(httpretty.last_request().body)
     assert json_message['research_dataset']['provenance'] \
         == [DEFAULT_PROVENANCE]
+
+
+@pytest.mark.parametrize(("fpath", "result"), [
+    ("tests/data/audio/valid__wav.wav", False),
+    ("tests/data/audio/valid_2_bwf.wav", True)
+])
+def test_bwav_detection(fpath, result):
+    """Test that wav and broadcast wav are correctly identified."""
+    assert is_broadcast_wav(fpath) == result
