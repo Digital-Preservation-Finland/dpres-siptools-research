@@ -44,7 +44,6 @@ unit-test-python27:
     - 'cd /tmp/builds/dpres/dpres-siptools-research'
   script:
     - 'unit-test-virtualenv.sh'
-  allow_failure: true
   except:
     - master
 
@@ -59,7 +58,6 @@ unit-test-python36:
     - 'cd /tmp/builds/dpres/dpres-siptools-research'
   script:
     - 'unit-test-virtualenv.sh python36'
-  allow_failure: true
   except:
     - master
 
