@@ -54,15 +54,16 @@ def download_file(identifier, linkpath, config_file):
     )
 
     if not os.path.exists(filepath):
+
         try:
             response = _get_response(identifier, config_file, stream=True)
         except HTTPError as error:
             status_code = error.response.status_code
-
             if status_code == 404:
                 raise IdaError(
                     "File %s not found in Ida." % identifier
                 )
+            raise
 
         with open(filepath, 'wb') as new_file:
             for chunk in response.iter_content(chunk_size=1024):
