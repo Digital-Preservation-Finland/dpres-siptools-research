@@ -6,6 +6,7 @@ import shutil
 import tempfile
 
 from metax_access import Metax
+
 from siptools.scripts import import_object
 from siptools_research.utils import ida
 from siptools_research.utils.database import Database
