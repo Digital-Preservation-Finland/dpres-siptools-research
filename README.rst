@@ -1,14 +1,14 @@
-Digital Preservation Packaging Service for Research
-===================================================
+Digital Preservation Packaging Service
+======================================
 Service for creating submission information packages (SIP) from research datasets.
-The service reads dataset metadata from Metax metadata database and collects files from file servers, such as Ida.
+The service reads dataset metadata from Metax metadata database and collects files from file sources, such as Ida.
 SIP creation workflow is implemented using `Luigi <https://luigi.readthedocs.io>`_ and workflow status is logged in `MongoDB <https://www.mongodb.com/>`_ database.
 
 Installation
 ------------
-On Centos 7 siptools_research can be installed from `DPres RPM repository <https://dpres-rpms.csc.fi/>`_::
+Clone this repository and install with pip::
 
-   yum install dpres-siptools-research
+   pip install --use-pep517 ./dpres-siptools-research/
 
 Packaging service requires MongoDB daemon running on default port (27017) and Luigi scheduler runnig on default port (8082).
 Enable systemd timer that starts/restarts all incomplete and enabled workflows found in database::
@@ -106,6 +106,6 @@ Build RPM::
 
    make rpm
 
-Documentation for modules is automatically generated from docstrings using Sphinx (`https://wiki.csc.fi/KDK/PythonKoodinDokumentointi <https://wiki.csc.fi/KDK/PythonKoodinDokumentointi>`_). Generate documentation::
+Documentation for modules is automatically generated from docstrings using `Sphinx <https://www.sphinx-doc.org/en/master/>`_. Generate documentation::
 
    make doc
