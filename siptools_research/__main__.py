@@ -226,6 +226,8 @@ def _status(args):
     document = _get_workflow_document(args)
     if document:
         print(document["status"])
+        print("completed" if document["completed"] else "incomplete")
+        print("disabled" if document["disabled"] else "enabled")
 
 
 def _tasks(args):
