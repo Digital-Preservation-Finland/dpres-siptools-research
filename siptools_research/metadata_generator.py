@@ -66,9 +66,6 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         dir=TEMPDIR
     )
 
-    # Generate preservation_identifier
-    metax_client.set_preservation_id(dataset_id)
-
     # Generate default provenance metada if provenance list is empty or does
     # not exist at all
     research_dataset = metax_client.get_dataset(dataset_id)['research_dataset']
