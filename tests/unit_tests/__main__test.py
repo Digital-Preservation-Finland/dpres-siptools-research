@@ -147,7 +147,8 @@ def test_main_status(capsys, monkeypatch):
     )
     siptools_research.__main__.main()
     out, _ = capsys.readouterr()
-    assert out == 'Request received\nincomplete\nenabled\n'
+    message = "Status: Request received\nWorkflow is incomplete and enabled\n"
+    assert out == message
 
 
 @pytest.mark.usefixtures('testmongoclient')
