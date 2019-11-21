@@ -115,7 +115,7 @@ def test_validate_invalid_dataset_metadata():
     """
     # Create invalid metadata by deleting required key from valid dataset
     invalid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
-    del invalid_dataset_metadata["preservation_identifier"]
+    del invalid_dataset_metadata["research_dataset"]
 
     # Validation of invalid dataset should raise error
     with pytest.raises(jsonschema.ValidationError) as error:
@@ -124,8 +124,9 @@ def test_validate_invalid_dataset_metadata():
             siptools_research.schemas.DATASET_METADATA_SCHEMA
         )
 
-    assert error.value.message == ("'preservation_identifier' is a "
-                                   "required property")
+    assert error.value.message == (
+        "'research_dataset' is a required property"
+    )
 
 
 def test_invalid_directory():
