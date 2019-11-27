@@ -314,7 +314,7 @@ def _validate_datacite(dataset_id, metax_client):
     :returns: ``None``
     """
     try:
-        datacite = metax_client.get_datacite(dataset_id)
+        datacite = metax_client.get_datacite(dataset_id, dummy_doi="true")
     except (lxml.etree.XMLSyntaxError, DataciteGenerationError) as exception:
         raise InvalidMetadataError(
             DATACITE_VALIDATION_ERROR % (exception)
