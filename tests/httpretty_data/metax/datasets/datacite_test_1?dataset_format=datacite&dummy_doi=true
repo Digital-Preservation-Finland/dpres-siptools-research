@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd" xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <identifier identifierType="DOI">10.1234/datacite-example</identifier>
+    <creators>
+        <creator>
+            <creatorName>Puupää, Pekka</creatorName>
+            <nameIdentifier schemeURI="http://orcid.org/" nameIdentifierScheme="ORCID">0000-0001-1234-5678</nameIdentifier>
+            <affiliation>TAMPEREEN EI-tURKULAINEN YLIOPISTO</affiliation>
+        </creator>
+    </creators>
+    <titles>
+        <title xml:lang="en-us">ExampleDataCite XML</title>
+        <title xml:lang="en-us" titleType="Subtitle">Sample file for TPAS testing</title>
+    </titles>
+    <publisher>CSC Digital Preservation</publisher>
+    <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+    <subjects>
+        <subject>Assessment</subject>
+        <subject>Information Literacy</subject>
+        <subject>Engineering</subject>
+        <subject>Undergraduate Students</subject>
+        <subject>CELT</subject>
+        <subject>Purdue University</subject>
+    </subjects>
+    <publicationYear>2017</publicationYear>
+    <contributors>
+        <contributor contributorType="ProjectLeader">
+            <contributorName>Starr, Joan</contributorName>
+            <nameIdentifier schemeURI="http://orcid.org/" nameIdentifierScheme="ORCID">0000-0002-7285-027X</nameIdentifier>
+            <affiliation>California Digital Library</affiliation>
+        </contributor>
+    </contributors>
+    <dates>
+        <date dateType="Updated">2014-10-17</date>
+    </dates>
+</resource>
