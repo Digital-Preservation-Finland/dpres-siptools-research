@@ -830,13 +830,6 @@ def test_validate_metadata_publisher_missing(requests_mock):
                       "dataset_format=datacite",
                       content=get_invalid_datacite())
 
-    # Mock set_preservation_identifier API request
-    requests_mock.post(
-        tests.conftest.METAX_RPC_URL + '/datasets/set_preservation_identifier'
-        '?identifier=validate_metadata_test_dataset_publisher_missing',
-        text='foobar'
-    )
-
     # Mock datacite request response. Mocked response has status code 400, and
     # response body contains error information.
     response = \
