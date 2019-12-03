@@ -39,6 +39,7 @@ Requires:       python-mongomock
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python-mock
+Requires:       file-scraper-core
 # python-configparser is required in python2
 Requires:       python-configparser
 BuildRequires:  python-setuptools
@@ -46,6 +47,7 @@ BuildRequires:  pytest
 BuildRequires:  python-httpretty
 BuildRequires:  python-sphinx
 BuildRequires:  python-jsonschema2rst
+BuildRequires:  file-scraper-full
 
 %description
 Digital Preservation Packaging Service for Research datasets

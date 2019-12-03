@@ -13,7 +13,7 @@ from siptools.utils import decode_path
 from siptools_research.config import Configuration
 import siptools_research.metadata_generator as metadata_generator
 from siptools_research.metadata_generator import (
-    generate_metadata, MetadataGenerationError, is_broadcast_wav
+    generate_metadata, MetadataGenerationError
 )
 import tests.conftest
 
@@ -85,10 +85,6 @@ def test_generate_metadata(file_storage):
     # The file should recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
 
-    # The format version should be set empty string since there is no
-    # different versions of plain text files
-    assert json_message['file_characteristics']['format_version'] == ''
-
     # Encoding should not be changed since it was already defined by user
     assert json_message['file_characteristics']['encoding'] == \
         'user_defined_charset'
@@ -119,14 +115,6 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
     json_message = json.loads(httpretty.last_request().body)
     # The file should recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
-
-    # The format version should be set empty string since there is no
-    # different versions of plain text files
-    assert json_message['file_characteristics']['format_version'] == ''
-
-    # Encoding should be correctly since it was not defined by user
-    assert json_message['file_characteristics']['encoding'] == \
-        'UTF-8'
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
@@ -312,12 +300,3 @@ def test_generate_metadata_provenance(dataset):
     json_message = json.loads(httpretty.last_request().body)
     assert json_message['research_dataset']['provenance'] \
         == [DEFAULT_PROVENANCE]
-
-
-@pytest.mark.parametrize(("fpath", "result"), [
-    ("tests/data/audio/valid__wav.wav", False),
-    ("tests/data/audio/valid_2_bwf.wav", True)
-])
-def test_bwav_detection(fpath, result):
-    """Test that wav and broadcast wav are correctly identified."""
-    assert is_broadcast_wav(fpath) == result

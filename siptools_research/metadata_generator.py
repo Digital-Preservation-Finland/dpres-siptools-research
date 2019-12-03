@@ -153,7 +153,6 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     # Create file_characteristics object
     file_characteristics = {}
     file_characteristics['file_format'] = metadata['format']['mimetype']
-    file_characteristics['format_version'] = metadata['format']['version']
     if 'charset' in metadata['format'].keys():
         file_characteristics['encoding'] = metadata['format']['charset']
 
@@ -179,70 +178,13 @@ def _get_metadata_info(fname):
     scraper.scrape(check_wellformed=False)
     metadata = scraper.streams[0]
     mimetype = metadata['mimetype']
-    format_version = DEFAULT_VERSIONS.get(mimetype, None)
-    if metadata['version'] and metadata['version'] != UNKNOWN_VERSION:
-        format_version = metadata['version']
-    if format_version == NO_VERSION or format_version is None:
-        format_version = ''
-    charset = ''
-    if 'charset' in metadata:
-        charset = metadata['charset']
     metadata_info_ = {
         'filename': fname,
         'type': 'file',
         'format': {
             'mimetype': mimetype,
-            'version': format_version,
-            'charset': charset
         }
     }
-    if charset == '':
-        del metadata_info_['format']['charset']
-
-    # If Broadcast WAVE file return version
-    if mimetype == 'audio/x-wav':
-        if is_broadcast_wav(fname):
-            metadata_info_['format']['version'] = '2'
-
+    if 'charset' in metadata and metadata['charset'] != "":
+        metadata_info_['format']['charset'] = metadata['charset']
     return metadata_info_
-
-
-def _read_uint(f_in):
-    """Read 4 bytes from f_in and return the corresponding
-    unsigned integer.
-    """
-    uint = 0
-    binary_num = f_in.read(4)
-
-    for i in range(4):
-        try:
-            uint += ord(binary_num[i]) << (8 * i)  # Left shift of 8*i
-        except TypeError:
-            # Python 3 compatibility
-            uint += binary_num[i] << (8 * i)  # Left shift of 8*i
-
-    return uint
-
-
-def is_broadcast_wav(fname):
-    """Check if file fname is WAV or broadcast WAV file.
-    The function reads all the RIFF chunk IDs and returns
-    True if "bext" chunk is found.
-    """
-    with open(fname, "rb") as f_in:
-        f_in.read(4)  # Skip RIFF ID
-        size = _read_uint(f_in) - 4
-        f_in.read(4)  # Skip WAVE ID
-
-        # Iterate all WAVE chunks
-        while size > 0:
-            chunk_id = f_in.read(4)
-            chunk_size = _read_uint(f_in)
-
-            if chunk_id == b"bext":
-                return True
-            else:
-                size -= (chunk_size + 8)
-                f_in.seek(chunk_size, 1)
-
-    return False

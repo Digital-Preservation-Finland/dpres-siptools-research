@@ -21,6 +21,7 @@ def main():
             "iso-639",
             "python-dateutil",
             "configparser",  # required for python2
+            "file-scraper@git+https://gitlab.csc.fi/dpres/file-scraper.git",
             "siptools@git+https://gitlab.csc.fi/dpres/dpres-siptools.git"
             "@develop",
             "metax_access@git+https://gitlab.csc.fi/dpres/metax-access.git"
