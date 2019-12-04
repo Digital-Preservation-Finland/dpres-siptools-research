@@ -47,7 +47,6 @@ BuildRequires:  pytest
 BuildRequires:  python-httpretty
 BuildRequires:  python-sphinx
 BuildRequires:  python-jsonschema2rst
-BuildRequires:  file-scraper-full
 
 %description
 Digital Preservation Packaging Service for Research datasets
