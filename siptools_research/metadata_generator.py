@@ -178,11 +178,17 @@ def _get_metadata_info(fname):
     scraper.scrape(check_wellformed=False)
     metadata = scraper.streams[0]
     mimetype = metadata['mimetype']
+    format_version = DEFAULT_VERSIONS.get(mimetype, None)
+    if metadata['version'] and metadata['version'] != UNKNOWN_VERSION:
+        format_version = metadata['version']
+    if format_version == NO_VERSION:
+        format_version = ''
     metadata_info_ = {
         'filename': fname,
         'type': 'file',
         'format': {
             'mimetype': mimetype,
+            'version': format_version
         }
     }
     if 'charset' in metadata and metadata['charset'] != "":
