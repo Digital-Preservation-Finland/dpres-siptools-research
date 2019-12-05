@@ -153,6 +153,7 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     # Create file_characteristics object
     file_characteristics = {}
     file_characteristics['file_format'] = metadata['format']['mimetype']
+    file_characteristics['format_version'] = metadata['format']['version']
     if 'charset' in metadata['format'].keys():
         file_characteristics['encoding'] = metadata['format']['charset']
 
