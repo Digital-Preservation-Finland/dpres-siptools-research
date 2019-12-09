@@ -355,7 +355,7 @@ def test_validate_metadata_languages(lang, text, monkeypatch, requests_mock):
     # Datacite validation is tested in test_validate_metadata.
     monkeypatch.setattr(
         metadata_validator, "_validate_datacite",
-        lambda dataset_id, client: None
+        lambda dataset_id, client, dummy_doi: None
     )
     dataset = copy.deepcopy(BASE_DATASET)
     add_provenance_to_dataset(lang, text, dataset)
@@ -378,7 +378,7 @@ def test_validate_metadata_language_missing(monkeypatch, requests_mock):
     """
     monkeypatch.setattr(
         metadata_validator, "_validate_datacite",
-        lambda dataset_id, client: None
+        lambda dataset_id, client, dummy_doi: None
     )
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['research_dataset']['provenance'][0]['description'] = {}

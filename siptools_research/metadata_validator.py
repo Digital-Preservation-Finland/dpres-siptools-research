@@ -36,7 +36,11 @@ INVALID_NS_ERROR = "Invalid XML namespace: %s"
 MISSING_XML_METADATA_ERROR = "Missing technical metadata XML for file: %s"
 
 
-def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
+def validate_metadata(
+        dataset_id,
+        config="/etc/siptools_research.conf",
+        dummy_doi="false"
+):
     """Reads dataset metadata, file metadata, and additional techMD XML from
     Metax and validates them against schemas. Raises error if dataset is not
     valid.
@@ -73,7 +77,7 @@ def validate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     _validate_xml_file_metadata(dataset_id, metax_client)
 
     # Validate datacite provided by Metax
-    _validate_datacite(dataset_id, metax_client)
+    _validate_datacite(dataset_id, metax_client, dummy_doi=dummy_doi)
 
     return True
 
@@ -306,7 +310,7 @@ def _validate_with_schematron(filetype, xml, file_id):
         )
 
 
-def _validate_datacite(dataset_id, metax_client):
+def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):
     """Validates datacite.
 
     :param dataset_id: dataset identifier
@@ -314,7 +318,7 @@ def _validate_datacite(dataset_id, metax_client):
     :returns: ``None``
     """
     try:
-        datacite = metax_client.get_datacite(dataset_id, dummy_doi="true")
+        datacite = metax_client.get_datacite(dataset_id, dummy_doi=dummy_doi)
     except (lxml.etree.XMLSyntaxError, DataciteGenerationError) as exception:
         raise InvalidMetadataError(
             DATACITE_VALIDATION_ERROR % (exception)
