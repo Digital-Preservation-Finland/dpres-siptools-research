@@ -89,7 +89,14 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             if local:
                 # Local file storage
                 files_col = Database(config).client.upload.files
-                file_path = files_col.find_one({"_id": file_id})["file_path"]
+                files_doc = files_col.find_one({"_id": file_id})
+                if not files_doc:
+                    path = file_metadata["file_path"]
+                    raise MetadataGenerationError(
+                        "File '%s' not found in pre-ingest file storage" % path,
+                        dataset=dataset_id
+                    )
+                file_path = files_doc["file_path"]
                 os.link(file_path, tmpfile)
             else:
                 # IDA
