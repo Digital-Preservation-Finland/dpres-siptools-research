@@ -85,9 +85,9 @@ def test_generate_metadata(file_storage):
     # The file should recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
 
-    # The format version should be set empty string since there is no
+    # The format version should not be set since there is no
     # different versions of plain text files
-    assert json_message['file_characteristics']['format_version'] == ''
+    assert 'format_version' not in json_message['file_characteristics']
 
     # Encoding should not be changed since it was already defined by user
     assert json_message['file_characteristics']['encoding'] == \
@@ -120,9 +120,9 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
     # The file should recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
 
-    # The format version should be set empty string since there is no
-    # different versions of plain text files
-    assert json_message['file_characteristics']['format_version'] == ''
+    # The format version should not be set  since there is no different
+    # versions of plain text files
+    assert 'format_version' not in json_message['file_characteristics']
 
     # Encoding should be correctly since it was not defined by user
     assert json_message['file_characteristics']['encoding'] == \

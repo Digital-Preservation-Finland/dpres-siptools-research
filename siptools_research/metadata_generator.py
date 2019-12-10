@@ -148,14 +148,24 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     """
 
     # Generate technical metadata from file
-    metadata = _get_metadata_info(filepath)
+    scraper = Scraper(filepath)
+    scraper.scrape(check_wellformed=False)
 
     # Create file_characteristics object
     file_characteristics = {}
-    file_characteristics['file_format'] = metadata['format']['mimetype']
-    file_characteristics['format_version'] = metadata['format']['version']
-    if 'charset' in metadata['format'].keys():
-        file_characteristics['encoding'] = metadata['format']['charset']
+    file_characteristics['file_format'] = scraper.mimetype
+
+    if scraper.version != NO_VERSION:
+        file_characteristics['format_version'] = scraper.version
+
+        # Use default version if file scraper does not return version
+        if (file_characteristics['format_version'] == UNKNOWN_VERSION
+                and file_characteristics['file_format'] in DEFAULT_VERSIONS):
+            file_characteristics['format_version'] \
+                = DEFAULT_VERSIONS[file_characteristics['file_format']]
+
+    if 'charset' in scraper.streams[0]:
+        file_characteristics['encoding'] = scraper.streams[0]['charset']
 
     # Merge generated file_characteristics with original data from Metax.
     # If a field was already defined in original data, it will override the
@@ -164,34 +174,3 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
         original_file_characteristics
     )
     return file_characteristics
-
-
-def _get_metadata_info(fname):
-    """Creates and  returns a dictionary containing mimetype, version and
-    charset values of the file passed in as an argument. Scraper is used to
-    dig out the values to be returned in the dictionary
-
-    :param filepath: path to file for which the metadata is generated
-    :returns: Dictionary containing mimetype, format version and charset
-        of the file
-    """
-    scraper = Scraper(fname)
-    scraper.scrape(check_wellformed=False)
-    metadata = scraper.streams[0]
-    mimetype = metadata['mimetype']
-    format_version = DEFAULT_VERSIONS.get(mimetype, None)
-    if metadata['version'] and metadata['version'] != UNKNOWN_VERSION:
-        format_version = metadata['version']
-    if format_version == NO_VERSION:
-        format_version = ''
-    metadata_info_ = {
-        'filename': fname,
-        'type': 'file',
-        'format': {
-            'mimetype': mimetype,
-            'version': format_version
-        }
-    }
-    if 'charset' in metadata and metadata['charset'] != "":
-        metadata_info_['format']['charset'] = metadata['charset']
-    return metadata_info_
