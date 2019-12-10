@@ -8,6 +8,7 @@ from metax_access import Metax
 
 import siptools_research
 from siptools_research import validate_metadata
+from siptools_research.metadata_validator import _validate_dataset_metadata
 import siptools_research.metadata_validator as metadata_validator
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
@@ -417,6 +418,30 @@ def test_validate_metadata_invalid(requests_mock):
     # Check exception message
     exc = exc_info.value
     assert str(exc).startswith("'contract' is a required property")
+
+
+# pylint: disable=invalid-name
+def test_validate_preservation_identifier():
+    """Test that _validate_dataset_metadata function handles missing
+    preservation_identifier correctly.
+
+    :returns: ``None``
+    """
+    dataset = copy.deepcopy(BASE_DATASET)
+    del dataset['preservation_identifier']
+
+    # Validation with dummy DOI should not raise an exception
+    _validate_dataset_metadata(dataset, dummy_doi="true")
+
+    # Validation without dummy DOI should raise an exception
+    with pytest.raises(InvalidMetadataError) as exc_info:
+        _validate_dataset_metadata(dataset)
+
+    # Check exception message
+    exc = exc_info.value
+    assert str(exc).startswith(
+        "'preservation_identifier' is a required property"
+    )
 
 
 @pytest.mark.parametrize('format_version', ["1.0", ""])

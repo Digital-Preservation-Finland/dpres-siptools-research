@@ -1,6 +1,7 @@
 """Dataset metadata validation tools."""
 
 import os
+import copy
 import jsonschema
 import lxml
 import lxml.isoschematron
@@ -61,7 +62,7 @@ def validate_metadata(
     dataset_metadata = metax_client.get_dataset(dataset_id)
 
     # Validate dataset metadata
-    _validate_dataset_metadata(dataset_metadata)
+    _validate_dataset_metadata(dataset_metadata, dummy_doi=dummy_doi)
 
     # Validate dataset localization
     _validate_dataset_localization(dataset_metadata)
@@ -82,15 +83,20 @@ def validate_metadata(
     return True
 
 
-def _validate_dataset_metadata(dataset_metadata):
+def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
     """Validates dataset metadata from /rest/v1/datasets/<dataset_id>
 
     :param dataset_metadata: dataset metadata dictionary
     :returns: ``None``
     """
+    schema = copy.deepcopy(siptools_research.schemas.DATASET_METADATA_SCHEMA)
+    # If dummy DOI is used, drop preeservation_identifier from schema
+    if dummy_doi == "true":
+        schema["required"] = ["research_dataset", "contract"]
+        del schema["properties"]["preservation_identifier"]
+
     try:
-        jsonschema.validate(dataset_metadata,
-                            siptools_research.schemas.DATASET_METADATA_SCHEMA)
+        jsonschema.validate(dataset_metadata, schema)
     except jsonschema.ValidationError as exc:
         raise InvalidMetadataError(str(exc))
 

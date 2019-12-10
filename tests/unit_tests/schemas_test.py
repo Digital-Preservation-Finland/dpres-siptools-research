@@ -115,7 +115,7 @@ def test_validate_invalid_dataset_metadata():
     """
     # Create invalid metadata by deleting required key from valid dataset
     invalid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
-    del invalid_dataset_metadata["research_dataset"]
+    del invalid_dataset_metadata["preservation_identifier"]
 
     # Validation of invalid dataset should raise error
     with pytest.raises(jsonschema.ValidationError) as error:
@@ -125,7 +125,7 @@ def test_validate_invalid_dataset_metadata():
         )
 
     assert error.value.message == (
-        "'research_dataset' is a required property"
+        "'preservation_identifier' is a required property"
     )
 
 

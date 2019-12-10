@@ -1,7 +1,12 @@
 {
     "type": "object",
-    "required": ["research_dataset", "contract"],
+    "required": ["research_dataset", "contract", "preservation_identifier"],
     "properties": {
+        "preservation_identifier": {
+            "title": "Preservation identifier",
+            "description": "Package identifier i.e. the OBJID attribute in METS document",
+            "type": "string"
+        },
         "contract": {
             "title": "Contract",
             "description": "Metadata for identifying contract",
