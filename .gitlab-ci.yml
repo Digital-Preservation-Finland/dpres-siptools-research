@@ -37,11 +37,6 @@ unit-test-python27:
   stage: local-test
   tags:
     - docker
-  before_script:
-    # Copy /builds volume to the same filesystem with /tmp since hard links
-    # are created from test data to /tmp
-    - 'cp -r /builds /tmp/builds'
-    - 'cd /tmp/builds/dpres/dpres-siptools-research'
   script:
     - 'unit-test-virtualenv.sh'
   except:
@@ -51,11 +46,6 @@ unit-test-python36:
   stage: local-test
   tags:
     - docker
-  before_script:
-    # Copy /builds volume to the same filesystem with /tmp since hard links
-    # are created from test data to /tmp
-    - 'cp -r /builds /tmp/builds'
-    - 'cd /tmp/builds/dpres/dpres-siptools-research'
   script:
     - 'unit-test-virtualenv.sh python36'
   except:
@@ -65,11 +55,6 @@ coverage-python36:
   stage: local-test
   tags:
     - docker
-  before_script:
-    # Copy /builds volume to the same filesystem with /tmp since hard links
-    # are created from test data to /tmp
-    - 'cp -r /builds /tmp/builds'
-    - 'cd /tmp/builds/dpres/dpres-siptools-research'
   script:
     - 'coverage-virtualenv.sh python36'
   coverage: '/TOTAL.*\s+(\d+%)$/'

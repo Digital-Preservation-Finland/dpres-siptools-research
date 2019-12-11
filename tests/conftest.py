@@ -48,6 +48,12 @@ PROJECT_ROOT_PATH = os.path.abspath(
 sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
+@pytest.fixture(autouse=True)
+def mock_os_link(monkeypatch):
+    """Patch os.link with shutil.copyfile"""
+    monkeypatch.setattr(os, "link", shutil.copyfile)
+
+
 @pytest.fixture(autouse=False)
 def mock_metax_access(monkeypatch):
     """Mock metax_access GET requests to files or datasets to return
