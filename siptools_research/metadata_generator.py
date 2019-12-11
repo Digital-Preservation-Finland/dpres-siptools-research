@@ -160,9 +160,9 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     # Merge generated file_characteristics with original data from Metax.
     # If a field was already defined in original data, it will override the
     # generated value.
-        file_characteristics.update(
-            original_file_characteristics
-        )
+    file_characteristics.update(
+        original_file_characteristics
+    )
     return file_characteristics
 
 
