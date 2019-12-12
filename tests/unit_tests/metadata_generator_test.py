@@ -85,8 +85,8 @@ def test_generate_metadata(file_storage):
     # The file should recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
 
-    # The format version should not be set since there is no
-    # different versions of plain text files
+    # The format version should not be set since there is no different versions
+    # of plain text files
     assert 'format_version' not in json_message['file_characteristics']
 
     # Encoding should not be changed since it was already defined by user
@@ -95,8 +95,7 @@ def test_generate_metadata(file_storage):
 
     # All other fields should be same as in the original file_charasteristics
     # object in Metax
-    assert json_message['file_characteristics']['dummy_key'] == \
-        'dummy_value'
+    assert json_message['file_characteristics']['dummy_key'] == 'dummy_value'
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
@@ -124,9 +123,8 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
     # versions of plain text files
     assert 'format_version' not in json_message['file_characteristics']
 
-    # Encoding should be correctly since it was not defined by user
-    assert json_message['file_characteristics']['encoding'] == \
-        'UTF-8'
+    # Encoding should be set correctly since it was not defined by user
+    assert json_message['file_characteristics']['encoding'] == 'UTF-8'
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
