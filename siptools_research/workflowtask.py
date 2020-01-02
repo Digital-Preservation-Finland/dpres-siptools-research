@@ -4,9 +4,7 @@ import os
 import luigi
 from siptools_research.config import Configuration
 from siptools_research.utils.database import Database
-from metax_access import Metax, MetaxConnectionError,\
-    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,\
-    DS_STATE_METADATA_VALIDATION_FAILED
+import metax_access
 
 
 class FatalWorkflowError(Exception):
@@ -159,7 +157,7 @@ def report_task_failure(task, exception):
     if isinstance(exception, InvalidDatasetError):
         # Set preservation status for dataset in Metax
         config_object = Configuration(task.config)
-        metax_client = Metax(
+        metax_client = metax_access.Metax(
             config_object.get('metax_url'),
             config_object.get('metax_user'),
             config_object.get('metax_password'),
@@ -167,20 +165,22 @@ def report_task_failure(task, exception):
         )
         metax_client.set_preservation_state(
             task.dataset_id,
-            state=DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+            state=metax_access.
+            DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
             system_description=_get_description(task, exception)
         )
     elif isinstance(exception, InvalidMetadataError):
         # Set preservation status for dataset in Metax
         config_object = Configuration(task.config)
-        metax_client = Metax(
+        metax_client = metax_access.Metax(
             config_object.get('metax_url'),
             config_object.get('metax_user'),
             config_object.get('metax_password'),
             verify=config_object.getboolean('metax_ssl_verification')
         )
         metax_client.set_preservation_state(
-            task.dataset_id, state=DS_STATE_METADATA_VALIDATION_FAILED,
+            task.dataset_id,
+            state=metax_access.DS_STATE_METADATA_VALIDATION_FAILED,
             system_description=_get_description(task, exception)
         )
 

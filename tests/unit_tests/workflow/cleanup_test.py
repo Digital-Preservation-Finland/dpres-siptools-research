@@ -13,7 +13,7 @@ def test_cleanupworkspace(testpath, requests_mock):
     """Test that task.run() removes workspace.
 
     :param testpath: Temporary directory fixture
-    :param requests_mock 
+    :param requests_mock
     """
 
     requests_mock.get(
