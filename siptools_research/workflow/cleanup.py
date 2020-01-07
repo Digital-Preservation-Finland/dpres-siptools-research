@@ -3,6 +3,7 @@
 import os
 import shutil
 
+import luigi
 from metax_access import Metax
 
 from siptools_research.utils.database import Database
@@ -112,3 +113,14 @@ class CleanupWorkspace(WorkflowTask):
 
         # Check are the IDA files cleaned and if workspace exists
         return self.ida_files_cleaned() and not os.path.exists(self.workspace)
+
+
+@CleanupWorkspace.event_handler(luigi.Event.SUCCESS)
+def report_workflow_completion(task):
+    """Report completion of workflow to workflow database.
+
+    :param task: CleanupWorkspace object
+    :returns: ``None``
+    """
+    database = Database(task.config)
+    database.set_completed(task.document_id)
