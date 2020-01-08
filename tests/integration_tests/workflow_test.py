@@ -152,6 +152,9 @@ def test_workflow(_mock_ssh, testpath, file_storage, module_name, task):
         # Check 'result' field
         assert document['workflow_tasks'][task]['result'] == 'success'
 
+    if module_name == "cleanup":
+        assert document["completed"]
+
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures(
