@@ -110,7 +110,6 @@ def _check_xml_schematron_features(mets_path):
     'testmetax', 'testida', 'testmongoclient',
     'mock_luigi_config_path', 'mock_filetype_conf', 'mock_metax_access'
 )
-@pytest.mark.timeout(600)
 def test_workflow(_mock_ssh, testpath, file_storage, module_name, task):
     """Run a task (and all tasks it requires) and check that check that report
     of successfull task is added to mongodb.
