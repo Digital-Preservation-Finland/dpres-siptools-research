@@ -39,11 +39,14 @@ def _get_response(identifier, config_file, stream=False):
     return response
 
 
-def download_file(identifier, linkpath, config_file):
+def download_file(
+        identifier,
+        linkpath="",
+        config_file="/etc/siptools_research.conf"
+):
     """Download file from IDA to <workspace_root>/ida_files and create a hard
     link to linkpath. Ida url, username, and password are read from
     configuration file.
-
     :param identifier: File identifier (for example "pid:urn:1")
     :param linkpath: Path where the hard link is created
     :param config_file: Configuration file
@@ -70,7 +73,8 @@ def download_file(identifier, linkpath, config_file):
             for chunk in response.iter_content(chunk_size=1024):
                 new_file.write(chunk)
 
-    os.link(filepath, linkpath)
+    if linkpath:
+        os.link(filepath, linkpath)
 
 
 def clean_cache(config_file):
