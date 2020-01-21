@@ -6,8 +6,14 @@ import jsonschema
 import lxml
 import lxml.isoschematron
 from iso639 import languages
-from metax_access import Metax, DataciteGenerationError
+from requests.exceptions import HTTPError
+
 from siptools.xml.mets import NAMESPACES
+
+from metax_access import (Metax, MetaxError, DatasetNotFoundError,
+                          DataciteGenerationError, DS_STATE_INVALID_METADATA,
+                          DS_STATE_VALID_METADATA,
+                          DS_STATE_METADATA_VALIDATION_FAILED)
 import siptools_research.schemas
 from siptools_research.utils import mimetypes
 from siptools_research.utils.dataset_consistency import DatasetConsistency
@@ -57,30 +63,56 @@ def validate_metadata(
         conf.get('metax_password'),
         verify=conf.getboolean('metax_ssl_verification')
     )
+    try:
+        success = False
+        # set default values
+        status_code = DS_STATE_METADATA_VALIDATION_FAILED
+        message = "Metadata validation failed"
+        # Get dataset metadata from Metax
+        dataset_metadata = metax_client.get_dataset(dataset_id)
 
-    # Get dataset metadata from Metax
-    dataset_metadata = metax_client.get_dataset(dataset_id)
+        # Validate dataset metadata
+        _validate_dataset_metadata(dataset_metadata, dummy_doi=dummy_doi)
 
-    # Validate dataset metadata
-    _validate_dataset_metadata(dataset_metadata, dummy_doi=dummy_doi)
+        # Validate dataset localization
+        _validate_dataset_localization(dataset_metadata)
 
-    # Validate dataset localization
-    _validate_dataset_localization(dataset_metadata)
+        # Validate contract metadata
+        _validate_contract_metadata(dataset_metadata['contract']['identifier'],
+                                    metax_client)
 
-    # Validate contract metadata
-    _validate_contract_metadata(dataset_metadata['contract']['identifier'],
-                                metax_client)
+        # Validate file metadata for each file in dataset files
+        _validate_file_metadata(dataset_metadata, metax_client, conf)
 
-    # Validate file metadata for each file in dataset files
-    _validate_file_metadata(dataset_metadata, metax_client, conf)
+        # Validate techMD XML for each file in dataset files
+        _validate_xml_file_metadata(dataset_id, metax_client)
 
-    # Validate techMD XML for each file in dataset files
-    _validate_xml_file_metadata(dataset_id, metax_client)
-
-    # Validate datacite provided by Metax
-    _validate_datacite(dataset_id, metax_client, dummy_doi=dummy_doi)
-
-    return True
+        # Validate datacite provided by Metax
+        _validate_datacite(dataset_id, metax_client, dummy_doi=dummy_doi)
+    except DatasetNotFoundError:
+        # Skip setting preservation state if validation failed because dataset
+        # was not found in Metax.
+        status_code = None
+        raise
+    except (InvalidMetadataError, MetaxError, HTTPError) as exc:
+        detailed_error = str(exc)
+        if isinstance(exc, InvalidMetadataError):
+            status_code = DS_STATE_INVALID_METADATA
+            message = ("Metadata did not pass validation: %s" % detailed_error)
+        else:
+            status_code = DS_STATE_METADATA_VALIDATION_FAILED
+            message = "Metadata validation failed: %s" % detailed_error
+        raise
+    else:
+        success = True
+        status_code = DS_STATE_VALID_METADATA
+        message = "Metadata passed validation"
+    finally:
+        if len(message) > 200:
+            message = message[:199]
+        metax_client.set_preservation_state(dataset_id, state=status_code,
+                                            system_description=message)
+    return success
 
 
 def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):

@@ -5,8 +5,12 @@ import os
 import shutil
 import tempfile
 
+from requests.exceptions import HTTPError
+
 from file_scraper.scraper import Scraper
-from metax_access import Metax
+from metax_access import (Metax, DS_STATE_TECHNICAL_METADATA_GENERATED,
+                          DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
+                          MetaxError)
 from siptools.scripts.import_object import (DEFAULT_VERSIONS,
                                             UNKNOWN_VERSION,
                                             NO_VERSION)
@@ -71,16 +75,19 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
     # Generate default provenance metada if provenance list is empty or does
     # not exist at all
-    research_dataset = metax_client.get_dataset(dataset_id)['research_dataset']
-    if not research_dataset.get('provenance', []):
-        metax_client.patch_dataset(
-            dataset_id,
-            {'research_dataset': {'provenance': [DEFAULT_PROVENANCE]}}
-        )
-
     try:
-        for file_ in metax_client.get_dataset_files(dataset_id):
+        # set default values
+        status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
+        message = "Metadata generation failed"
 
+        dataset = metax_client.get_dataset(dataset_id)
+        research_dataset = dataset['research_dataset']
+        if not research_dataset.get('provenance', []):
+            metax_client.patch_dataset(
+                dataset_id,
+                {'research_dataset': {'provenance': [DEFAULT_PROVENANCE]}}
+            )
+        for file_ in metax_client.get_dataset_files(dataset_id):
             # Get file info
             file_id = file_['identifier']
             file_metadata = metax_client.get_file(file_id)
@@ -96,7 +103,8 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                 if not files_doc:
                     path = file_metadata["file_path"]
                     raise MetadataGenerationError(
-                        "File '%s' not found in pre-ingest file storage" % path,
+                        "File '%s' not found in pre-ingest file"
+                        "storage" % path,
                         dataset=dataset_id
                     )
                 file_path = files_doc["file_path"]
@@ -109,7 +117,6 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                     message = ("File {} was not found in Ida."
                                .format(file_["file_path"]))
                     raise MetadataGenerationError(message, dataset=dataset_id)
-
             # Generate and update file_characteristics
             file_characteristics = _generate_file_characteristics(
                 tmpfile, file_metadata.get('file_characteristics', {})
@@ -132,8 +139,20 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                 )
             if xml is not None:
                 metax_client.set_xml(file_id, xml)
+    except (MetadataGenerationError, MetaxError, HTTPError) as error:
+        if isinstance(error, MetadataGenerationError):
+            message = str(error)[:199] if len(str(error)) > 200 else str(error)
+        else:
+            message = str(error)
+        status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
+        raise
+    else:
+        status_code = DS_STATE_TECHNICAL_METADATA_GENERATED
+        message = 'Technical metadata generated'
     finally:
         shutil.rmtree(tmpdir)
+        _set_preservation_state(config_object, dataset_id, state=status_code,
+                                system_description=message)
 
 
 def _generate_file_characteristics(filepath, original_file_characteristics):
@@ -174,3 +193,24 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
         original_file_characteristics
     )
     return file_characteristics
+
+
+def _set_preservation_state(config_object, dataset_id, state=None,
+                            system_description=None):
+    """ Sets dataset's preservation_state or/and
+    preservation_reason_description attributes in Metax
+
+    :dataset_id: dataset id
+    :state: preservation_state attribute value to be set for the dataset
+    :user_description: preservation_reason_description attribute value to
+        be set for the dataset
+    """
+    metax_client = Metax(
+        config_object.get('metax_url'),
+        config_object.get('metax_user'),
+        config_object.get('metax_password'),
+        verify=config_object.getboolean('metax_ssl_verification')
+    )
+    metax_client.set_preservation_state(
+        dataset_id, state=state, system_description=system_description
+    )

@@ -7,6 +7,7 @@ import pytest
 import pymongo
 import httpretty
 import lxml.etree
+from requests.exceptions import HTTPError
 
 from siptools.utils import decode_path
 
@@ -15,6 +16,8 @@ import siptools_research.metadata_generator as metadata_generator
 from siptools_research.metadata_generator import (
     generate_metadata, MetadataGenerationError
 )
+from siptools_research.utils import ida
+from metax_access import Metax, DatasetNotFoundError
 import tests.conftest
 
 
@@ -80,7 +83,7 @@ def test_generate_metadata(file_storage):
     generate_metadata('generate_metadata_test_dataset_1_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    json_message = json.loads(httpretty.last_request().body)
+    json_message = json.loads(httpretty.HTTPretty.latest_requests[-2].body)
 
     # The file should recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
@@ -96,6 +99,11 @@ def test_generate_metadata(file_storage):
     # All other fields should be same as in the original file_charasteristics
     # object in Metax
     assert json_message['file_characteristics']['dummy_key'] == 'dummy_value'
+
+    # verify preservation_state is set as last operation
+    _assert_metadata_generated(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+    )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
@@ -115,7 +123,7 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    json_message = json.loads(httpretty.last_request().body)
+    json_message = json.loads(httpretty.HTTPretty.latest_requests[-2].body)
     # The file should recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
 
@@ -125,6 +133,11 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
 
     # Encoding should be set correctly since it was not defined by user
     assert json_message['file_characteristics']['encoding'] == 'UTF-8'
+
+    # verify preservation_state is set as last operation
+    _assert_metadata_generated(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+    )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
@@ -143,7 +156,7 @@ def test_generate_metadata_mix(file_storage):
 
     # Read one element from XML to ensure it is valid and contains correct data
     # The file is 10x10px image, so the metadata should contain image width.
-    last_request = httpretty.last_request().body
+    last_request = httpretty.HTTPretty.latest_requests[-2].body
     # pylint: disable=no-member
     xml = lxml.etree.fromstring(last_request)
     assert xml.xpath('//ns0:imageWidth',
@@ -151,11 +164,16 @@ def test_generate_metadata_mix(file_storage):
         == '10'
 
     # Check HTTP request query string
-    assert httpretty.last_request().querystring['namespace'][0] \
+    assert httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0] \
         == 'http://www.loc.gov/mix/v20'
 
     # Check HTTP request method
-    assert httpretty.last_request().method == "POST"
+    assert httpretty.HTTPretty.latest_requests[-2].method == "POST"
+
+    # verify preservation_state is set as last operation
+    _assert_metadata_generated(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+    )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
@@ -176,17 +194,22 @@ def test_generate_metadata_mix_larger_file(file_storage):
     # Read one element from XML to ensure it is valid and contains correct data
     # The file is 10x10px image, so the metadata should contain image width.
     # pylint: disable=no-member
-    xml = lxml.etree.fromstring(httpretty.last_request().body)
+    xml = lxml.etree.fromstring(httpretty.HTTPretty.latest_requests[-2].body)
     assert xml.xpath('//ns0:imageWidth',
                      namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
         == '640'
 
     # Check HTTP request query string
-    assert httpretty.last_request().querystring['namespace'][0] \
+    assert httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0] \
         == 'http://www.loc.gov/mix/v20'
 
     # Check HTTP request method
-    assert httpretty.last_request().method == "POST"
+    assert httpretty.HTTPretty.latest_requests[-2].method == "POST"
+
+    # verify preservation_state is set as last operation
+    _assert_metadata_generated(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+    )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
@@ -206,7 +229,7 @@ def test_generate_metadata_addml(file_storage):
     # Read one element from XML to ensure it is valid and contains correct data
     # The decoded filename should be /testpath/csvfile.csv
     # pylint: disable=no-member
-    xml = lxml.etree.fromstring(httpretty.last_request().body)
+    xml = lxml.etree.fromstring(httpretty.HTTPretty.latest_requests[-2].body)
 
     flatfile = xml.xpath(
         '//addml:flatFile',
@@ -216,11 +239,16 @@ def test_generate_metadata_addml(file_storage):
     assert name == "path/to/file"
 
     # Check HTTP request query string
-    assert httpretty.last_request().querystring['namespace'][0] == \
-        'http://www.arkivverket.no/standarder/addml'
+    query = httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0]
+    assert query == 'http://www.arkivverket.no/standarder/addml'
 
     # Check HTTP request method
-    assert httpretty.last_request().method == "POST"
+    assert httpretty.HTTPretty.latest_requests[-2].method == "POST"
+
+    # verify preservation_state is set as last operation
+    _assert_metadata_generated(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+    )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
@@ -239,7 +267,7 @@ def test_generate_metadata_audiomd(file_storage):
 
     # Read one element from XML to ensure it is valid and contains correct data
     # pylint: disable=no-member
-    xml = lxml.etree.fromstring(httpretty.last_request().body)
+    xml = lxml.etree.fromstring(httpretty.HTTPretty.latest_requests[-2].body)
 
     freq = xml.xpath(
         '//amd:samplingFrequency',
@@ -249,11 +277,17 @@ def test_generate_metadata_audiomd(file_storage):
     assert freq == '48'
 
     # Check HTTP request query string
-    assert httpretty.last_request().querystring['namespace'][0] \
+    http_request = httpretty.HTTPretty.latest_requests[-2]
+    assert http_request.querystring['namespace'][0] \
         == 'http://www.loc.gov/audioMD/'
 
     # Check HTTP request method
-    assert httpretty.last_request().method == "POST"
+    assert httpretty.HTTPretty.latest_requests[-2].method == "POST"
+
+    # verify preservation_state is set as last operation
+    _assert_metadata_generated(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+    )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
@@ -306,7 +340,88 @@ def test_generate_metadata_provenance(dataset):
     """
     generate_metadata(dataset,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    json_message = json.loads(httpretty.last_request().body)
+    json_message = json.loads(httpretty.HTTPretty.latest_requests[-2].body)
     assert json_message['research_dataset']['provenance'] \
         == [DEFAULT_PROVENANCE]
+
+    # verify preservation_state is set as last operation
+    _assert_metadata_generated(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+    )
+
+
+@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
+def test_generate_metadata_dataset_not_found(monkeypatch):
+    """Verifies that preservation state is not set when DatasetNotFoundError is
+    raised by Metax get_dataset.
+
+    :returns: ``None``
+    """
+
+    def get_dataset_exception(*_arg1):
+        raise DatasetNotFoundError
+
+    monkeypatch.setattr(Metax, "get_dataset", get_dataset_exception)
+    with pytest.raises(DatasetNotFoundError):
+        generate_metadata('foobar',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+    # No HTTP request done
+    assert isinstance(httpretty.HTTPretty.last_request,
+                      httpretty.core.HTTPrettyRequestEmpty)
+
+
+@pytest.mark.usefixtures('testmetax', 'testpath',
+                         'mock_metax_access')
+def test_generate_metadata_ida_error(monkeypatch):
+    """Verifies that preservation state is set correctly when
+    MetadataGenerationError is raised.
+
+    :returns: ``None``
+    """
+
+    def get_dataset_exception(*_args):
+        raise ida.IdaError
+
+    monkeypatch.setattr(ida, "download_file", get_dataset_exception)
+    with pytest.raises(MetadataGenerationError):
+        generate_metadata('generate_metadata_test_dataset_1_ida',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+    # Assert preservation state is set correctly
+    assert httpretty.HTTPretty.last_request.method == "PATCH"
+    body = json.loads(httpretty.HTTPretty.last_request.body)
+    assert body['preservation_state'] == 30
+    assert body['preservation_description'] == \
+        ("File path/to/file was not found in Ida. "
+         "[ dataset=generate_metadata_test_dataset_1_ida ]")
+
+
+@pytest.mark.usefixtures('testmetax', 'testpath',
+                         'mock_metax_access')
+def test_generate_metadata_httperror(monkeypatch):
+    """Verifies that preservation state is set when HTTPError occurs.
+
+    :returns: ``None``
+    """
+
+    def get_dataset_exception(*_arg1):
+        raise HTTPError('httperror')
+
+    monkeypatch.setattr(Metax, "get_dataset_files", get_dataset_exception)
+    with pytest.raises(HTTPError):
+        generate_metadata('generate_metadata_test_dataset_1_ida',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+    # Assert preservation state is set correctly
+    assert httpretty.HTTPretty.last_request.method == "PATCH"
+    body = json.loads(httpretty.HTTPretty.last_request.body)
+    assert body['preservation_state'] == 30
+    assert body['preservation_description'] == "httperror"
+
+
+def _assert_metadata_generated(request_body):
+    """Verifies tht preservation state is set as
+    DS_STATE_TECHNICAL_METADATA_GENERATED
+    :param http request body
+    """
+    assert request_body['preservation_description'] == \
+        "Technical metadata generated"
+    assert request_body['preservation_state'] == 20

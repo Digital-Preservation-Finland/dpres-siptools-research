@@ -111,7 +111,7 @@ def testmetax(request):
         :returns: HTTP status code, response headers, response body
         :rtype: tuple
         """
-        logging.debug("Dynamic response for HTTP GET url: %s", url)
+        logging.debug("Dynamic response for HTTP %s url: %s", request.method, url)
         # url without basepath:
         path = url.split(METAX_URL)[1]
         # subdirectory to get file from:
@@ -175,7 +175,7 @@ def testmetax(request):
     def fin():
         """Disable fake http-server"""
         httpretty.disable()
-
+        httpretty.reset()
     request.addfinalizer(fin)
 
 

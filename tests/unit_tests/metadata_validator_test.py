@@ -336,8 +336,13 @@ def test_validate_metadata(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       text=BASE_DATACITE)
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     assert validate_metadata(
         'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE)
+    _assert_metadata_validation_passed(adapter.last_request.json())
 
 
 @pytest.mark.parametrize(
@@ -367,9 +372,14 @@ def test_validate_metadata_languages(lang, text, monkeypatch, requests_mock):
     requests_mock.get(
         "https://metaksi/rest/v1/datasets/dataset_identifier/files",
         json=[])
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     add_provenance_to_dataset(lang, text, dataset)
     assert validate_metadata(
         'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE)
+    _assert_metadata_validation_passed(adapter.last_request.json())
 
 
 # pylint: disable=invalid-name
@@ -387,6 +397,10 @@ def test_validate_metadata_language_missing(monkeypatch, requests_mock):
                       json=dataset)
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=BASE_CONTRACT)
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
 
     with pytest.raises(InvalidMetadataError) as error:
         validate_metadata(
@@ -396,6 +410,11 @@ def test_validate_metadata_language_missing(monkeypatch, requests_mock):
 
     field = "'research_dataset/provenance/description'"
     assert str(error.value) == "No localization provided in field: %s" % field
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: No localization provided in field: "
+        "'research_dataset/provenance/description'"
+    )
 
 
 # pylint: disable=invalid-name
@@ -409,6 +428,10 @@ def test_validate_metadata_invalid(requests_mock):
     del dataset['contract']
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier",
                       json=dataset)
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
 
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -418,6 +441,11 @@ def test_validate_metadata_invalid(requests_mock):
     # Check exception message
     exc = exc_info.value
     assert str(exc).startswith("'contract' is a required property")
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: 'contract' is a required "
+        "property\n\nFailed validating 'required' in schema:\n    "
+        "{'properties': {'contract': {'description': 'Metadata for")
 
 
 # pylint: disable=invalid-name
@@ -478,6 +506,10 @@ def test_validate_invalid_file_type(format_version, requests_mock):
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       text=BASE_DATACITE)
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     # Try to validate dataset with a file that has an unsupported file_format
     with pytest.raises(InvalidMetadataError) as error:
         validate_metadata('dataset_identifier',
@@ -490,7 +522,18 @@ def test_validate_invalid_file_type(format_version, requests_mock):
     )
     if format_version:
         message += ", version 1.0"
-
+        _assert_metadata_validation_failed(
+            adapter.last_request.json(),
+            "Metadata did not pass validation: Validation error in file "
+            "path/to/file: Incorrect file format: application/unsupported, "
+            "version 1.0"
+        )
+    else:
+        _assert_metadata_validation_failed(
+            adapter.last_request.json(),
+            "Metadata did not pass validation: Validation error in file "
+            "path/to/file: Incorrect file format: application/unsupported"
+        )
     assert str(error.value) == message
 
 
@@ -508,6 +551,10 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
     del contract['contract_json']['organization']['name']
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=contract)
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
@@ -520,6 +567,12 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
         "'name' is a required property\n\nFailed validating 'required' in "
         "schema"
     )
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: 'name' is a required "
+        "property\n\nFailed validating 'required' in schema['properties']"
+        "['contract_json']['properties']['organization']:\n    "
+        "{'description': 'Organization")
 
 
 # pylint: disable=invalid-name
@@ -547,6 +600,10 @@ def test_validate_metadata_invalid_file_path(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       text=BASE_DATACITE)
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exception_info:
         validate_metadata('dataset_identifier',
@@ -556,6 +613,11 @@ def test_validate_metadata_invalid_file_path(requests_mock):
     assert str(exception_info.value) \
         == ("The file path of file pid:urn:invalidpath is invalid: "
             "../../file_in_invalid_path")
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: The file path of file "
+        "pid:urn:invalidpath is invalid: ../../file_in_invalid_path"
+    )
 
 
 # pylint: disable=invalid-name
@@ -589,12 +651,21 @@ def test_validate_metadata_missing_xml(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/files/"
                       "pid:urn:validate_metadata_test_image/xml",
                       json={})
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     with pytest.raises(InvalidMetadataError) as exc:
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     assert str(exc.value) == ("Missing technical metadata XML for file: "
                               "pid:urn:validate_metadata_test_image")
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: Missing technical metadata XML for "
+        "file: pid:urn:validate_metadata_test_image"
+    )
 
 
 # pylint: disable=invalid-name
@@ -644,10 +715,15 @@ def test_validate_metadata_audiovideo(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:892/xml?"
                       "namespace=http://www.loc.gov/videoMD/",
                       text=BASE_VIDEO_MD)
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     assert validate_metadata(
         'dataset_identifier',
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
+    _assert_metadata_validation_passed(adapter.last_request.json())
 
 
 # pylint: disable=invalid-name
@@ -686,6 +762,10 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:testaudio/xml?"
                       "namespace=http://www.loc.gov/audioMD/",
                       content=get_bad_audiomd())
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata('dataset_identifier',
@@ -696,6 +776,12 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
     assert str(exc).startswith(
         "Technical metadata XML of file pid:urn:testaudio is invalid: Element "
         "'audiomd:duration' is required in element 'amd:audioInfo'."
+    )
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: Technical metadata XML of file "
+        "pid:urn:testaudio is invalid: Element 'audiomd:duration' is required "
+        "in element 'amd:audioInfo'."
     )
 
 
@@ -736,6 +822,10 @@ def test_validate_metadata_corrupted_mix(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:testimage/xml?"
                       "namespace=http://www.loc.gov/mix/v20",
                       text="<mix:mix\n")
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
@@ -748,6 +838,12 @@ def test_validate_metadata_corrupted_mix(requests_mock):
     assert str(exc).startswith(
         'Technical metadata XML of file pid:urn:testimage is invalid: '
         'Namespace prefix mix on mix is not defined, line 2, column 1'
+    )
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: Technical metadata XML of file "
+        "pid:urn:testimage is invalid: Namespace prefix mix on mix is not "
+        "defined, line 2, column 1"
     )
 
 
@@ -781,6 +877,10 @@ def test_validate_metadata_invalid_datacite(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       content=get_invalid_datacite())
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
@@ -793,6 +893,13 @@ def test_validate_metadata_invalid_datacite(requests_mock):
         "Datacite metadata is invalid: Element "
         "'{http://datacite.org/schema/kernel-4}resource': Missing child "
         "element(s)."
+    )
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: Datacite metadata is invalid: "
+        "Element '{http://datacite.org/schema/kernel-4}resource': Missing "
+        "child element(s). Expected is one of "
+        "( {http://datacite.org/schema/ker"
     )
 
 
@@ -816,6 +923,10 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       text="<resource\n")
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
@@ -828,6 +939,11 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     assert str(exc).startswith(
         "Datacite metadata is invalid: Couldn't find end of Start Tag "
         "resource line 1, line 2, column 1"
+    )
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: Datacite metadata is invalid: "
+        "Couldn't find end of Start Tag resource line 1, line 2, column 1"
     )
 
 
@@ -870,6 +986,10 @@ def test_validate_metadata_publisher_missing(requests_mock):
         json=response,
         status_code=400
     )
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
 
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -884,6 +1004,13 @@ def test_validate_metadata_publisher_missing(requests_mock):
         "Datacite metadata is invalid: Dataset does not have a publisher "
         "(field: research_dataset.publisher), which is a required value for "
         "datacite format"
+    )
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: Datacite metadata is invalid: "
+        "Dataset does not have a publisher (field: "
+        "research_dataset.publisher), which is a required value for datacite "
+        "format"
     )
 
 
@@ -1101,6 +1228,10 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
                       json=dataset)
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=BASE_CONTRACT)
+    adapter = requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/dataset_identifier",
+        json={}
+    )
     file_ = copy.deepcopy(BASE_FILE)
     file_['identifier'] = "file_id"
     files = [file_]
@@ -1117,3 +1248,21 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
     assert str(exception_info.value).startswith(
         "Validation error in metadata of pid:urn:dir:wf1: 'directory_path' is"
         " a required property")
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: Validation error in metadata of "
+        "pid:urn:dir:wf1: 'directory_path' is a required property\n\nFailed "
+        "validating 'required' in schema:\n    {'properties': {'file_path': {'"
+    )
+
+
+def _assert_metadata_validation_passed(body_as_json):
+    assert body_as_json == {
+        'preservation_description': 'Metadata passed validation',
+        'preservation_state': 70
+    }
+
+
+def _assert_metadata_validation_failed(body_as_json, description):
+    assert body_as_json['preservation_state'] == 40
+    assert body_as_json['preservation_description'].startswith(description)
