@@ -201,4 +201,7 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     file_characteristics.update(
         original_file_characteristics
     )
+
+    del scraper
+
     return file_characteristics

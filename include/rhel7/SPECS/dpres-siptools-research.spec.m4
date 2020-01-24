@@ -39,7 +39,7 @@ Requires:       python-mongomock
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python-mock
-Requires:       file-scraper-core
+Requires:       file-scraper-full
 # python-configparser is required in python2
 Requires:       python-configparser
 BuildRequires:  python-setuptools
