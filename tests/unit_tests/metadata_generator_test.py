@@ -20,7 +20,6 @@ from siptools_research.utils import ida
 from metax_access import Metax, DatasetNotFoundError
 import tests.conftest
 
-
 DEFAULT_PROVENANCE = {
     "preservation_event": {
         "identifier":
@@ -164,7 +163,7 @@ def test_generate_metadata_mix(file_storage):
         == '10'
 
     # Check HTTP request query string
-    assert httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0] \
+    assert httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0]\
         == 'http://www.loc.gov/mix/v20'
 
     # Check HTTP request method
@@ -200,7 +199,7 @@ def test_generate_metadata_mix_larger_file(file_storage):
         == '640'
 
     # Check HTTP request query string
-    assert httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0] \
+    assert httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0]\
         == 'http://www.loc.gov/mix/v20'
 
     # Check HTTP request method
@@ -358,10 +357,10 @@ def test_generate_metadata_dataset_not_found(monkeypatch):
     :returns: ``None``
     """
 
-    def get_dataset_exception(*_arg1):
+    def _get_dataset_exception(*_arg1):
         raise DatasetNotFoundError
 
-    monkeypatch.setattr(Metax, "get_dataset", get_dataset_exception)
+    monkeypatch.setattr(Metax, "get_dataset", _get_dataset_exception)
     with pytest.raises(DatasetNotFoundError):
         generate_metadata('foobar',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -372,17 +371,17 @@ def test_generate_metadata_dataset_not_found(monkeypatch):
 
 @pytest.mark.usefixtures('testmetax', 'testpath',
                          'mock_metax_access')
-def test_generate_metadata_ida_error(monkeypatch):
-    """Verifies that preservation state is set correctly when
-    MetadataGenerationError is raised.
+def test_generate_metadata_ida_download_error(monkeypatch):
+    """Verifies that preservation state is set correctly when file download
+    from IDA fails and MetadataGenerationError is raised.
 
     :returns: ``None``
     """
 
-    def get_dataset_exception(*_args):
+    def _get_dataset_exception(*_args):
         raise ida.IdaError
 
-    monkeypatch.setattr(ida, "download_file", get_dataset_exception)
+    monkeypatch.setattr(ida, "download_file", _get_dataset_exception)
     with pytest.raises(MetadataGenerationError):
         generate_metadata('generate_metadata_test_dataset_1_ida',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -403,10 +402,10 @@ def test_generate_metadata_httperror(monkeypatch):
     :returns: ``None``
     """
 
-    def get_dataset_exception(*_arg1):
+    def _get_dataset_exception(*_arg1):
         raise HTTPError('httperror')
 
-    monkeypatch.setattr(Metax, "get_dataset_files", get_dataset_exception)
+    monkeypatch.setattr(Metax, "get_dataset_files", _get_dataset_exception)
     with pytest.raises(HTTPError):
         generate_metadata('generate_metadata_test_dataset_1_ida',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -420,7 +419,7 @@ def test_generate_metadata_httperror(monkeypatch):
 def _assert_metadata_generated(request_body):
     """Verifies tht preservation state is set as
     DS_STATE_TECHNICAL_METADATA_GENERATED
-    :param http request body
+    :param request_body: http request body
     """
     assert request_body['preservation_description'] == \
         "Technical metadata generated"

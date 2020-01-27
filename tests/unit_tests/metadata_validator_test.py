@@ -341,7 +341,8 @@ def test_validate_metadata(requests_mock):
         json={}
     )
     assert validate_metadata(
-        'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE)
+        'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE,
+        set_preservation_state=True)
     _assert_metadata_validation_passed(adapter.last_request.json())
 
 
@@ -377,8 +378,9 @@ def test_validate_metadata_languages(lang, text, monkeypatch, requests_mock):
         json={}
     )
     add_provenance_to_dataset(lang, text, dataset)
-    assert validate_metadata(
-        'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE)
+    assert validate_metadata('dataset_identifier',
+                             tests.conftest.UNIT_TEST_CONFIG_FILE,
+                             set_preservation_state=True)
     _assert_metadata_validation_passed(adapter.last_request.json())
 
 
@@ -405,7 +407,8 @@ def test_validate_metadata_language_missing(monkeypatch, requests_mock):
     with pytest.raises(InvalidMetadataError) as error:
         validate_metadata(
             'dataset_identifier',
-            tests.conftest.UNIT_TEST_CONFIG_FILE
+            tests.conftest.UNIT_TEST_CONFIG_FILE,
+            set_preservation_state=True
         )
 
     field = "'research_dataset/provenance/description'"
@@ -436,7 +439,8 @@ def test_validate_metadata_invalid(requests_mock):
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+                          tests.conftest.UNIT_TEST_CONFIG_FILE,
+                          set_preservation_state=True)
 
     # Check exception message
     exc = exc_info.value
@@ -513,7 +517,8 @@ def test_validate_invalid_file_type(format_version, requests_mock):
     # Try to validate dataset with a file that has an unsupported file_format
     with pytest.raises(InvalidMetadataError) as error:
         validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+                          tests.conftest.UNIT_TEST_CONFIG_FILE,
+                          set_preservation_state=True)
 
     # Check exception message
     message = (
@@ -559,7 +564,8 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
-            tests.conftest.UNIT_TEST_CONFIG_FILE
+            tests.conftest.UNIT_TEST_CONFIG_FILE,
+            set_preservation_state=True
         )
 
     # Check exception message
@@ -607,7 +613,8 @@ def test_validate_metadata_invalid_file_path(requests_mock):
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exception_info:
         validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+                          tests.conftest.UNIT_TEST_CONFIG_FILE,
+                          set_preservation_state=True)
 
     # Check exception message
     assert str(exception_info.value) \
@@ -657,7 +664,8 @@ def test_validate_metadata_missing_xml(requests_mock):
     )
     with pytest.raises(InvalidMetadataError) as exc:
         validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+                          tests.conftest.UNIT_TEST_CONFIG_FILE,
+                          set_preservation_state=True)
 
     assert str(exc.value) == ("Missing technical metadata XML for file: "
                               "pid:urn:validate_metadata_test_image")
@@ -721,7 +729,8 @@ def test_validate_metadata_audiovideo(requests_mock):
     )
     assert validate_metadata(
         'dataset_identifier',
-        tests.conftest.UNIT_TEST_CONFIG_FILE
+        tests.conftest.UNIT_TEST_CONFIG_FILE,
+        set_preservation_state=True
     )
     _assert_metadata_validation_passed(adapter.last_request.json())
 
@@ -769,7 +778,8 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+                          tests.conftest.UNIT_TEST_CONFIG_FILE,
+                          set_preservation_state=True)
 
     # Check exception message
     exc = exc_info.value
@@ -830,7 +840,8 @@ def test_validate_metadata_corrupted_mix(requests_mock):
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
-            tests.conftest.UNIT_TEST_CONFIG_FILE
+            tests.conftest.UNIT_TEST_CONFIG_FILE,
+            set_preservation_state=True
         )
 
     # Check exception message
@@ -885,7 +896,8 @@ def test_validate_metadata_invalid_datacite(requests_mock):
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
-            tests.conftest.UNIT_TEST_CONFIG_FILE)
+            tests.conftest.UNIT_TEST_CONFIG_FILE,
+            set_preservation_state=True)
 
     # Check exception message
     exc = exc_info.value
@@ -931,7 +943,8 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
-            tests.conftest.UNIT_TEST_CONFIG_FILE
+            tests.conftest.UNIT_TEST_CONFIG_FILE,
+            set_preservation_state=True
         )
 
     # Check exception message
@@ -995,7 +1008,8 @@ def test_validate_metadata_publisher_missing(requests_mock):
     with pytest.raises(InvalidMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
-            tests.conftest.UNIT_TEST_CONFIG_FILE
+            tests.conftest.UNIT_TEST_CONFIG_FILE,
+            set_preservation_state=True
         )
 
     # Check exception message
@@ -1242,7 +1256,8 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exception_info:
         validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+                          tests.conftest.UNIT_TEST_CONFIG_FILE,
+                          set_preservation_state=True)
 
     # Check exception message
     assert str(exception_info.value).startswith(

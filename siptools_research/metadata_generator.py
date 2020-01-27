@@ -61,7 +61,6 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     :returns: ``None``
     """
     config_object = Configuration(config)
-    storage_id = config_object.get("pas_storage_id")
     metax_client = Metax(
         config_object.get('metax_url'),
         config_object.get('metax_user'),
@@ -87,63 +86,9 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
                 dataset_id,
                 {'research_dataset': {'provenance': [DEFAULT_PROVENANCE]}}
             )
-        for file_ in metax_client.get_dataset_files(dataset_id):
-            # Get file info
-            file_id = file_['identifier']
-            file_metadata = metax_client.get_file(file_id)
-
-            # Download file to tmp directory
-            tmpfile = os.path.join(tmpdir, file_id)
-
-            local = file_metadata["file_storage"]["identifier"] == storage_id
-            if local:
-                # Local file storage
-                files_col = Database(config).client.upload.files
-                files_doc = files_col.find_one({"_id": file_id})
-                if not files_doc:
-                    path = file_metadata["file_path"]
-                    raise MetadataGenerationError(
-                        "File '%s' not found in pre-ingest file"
-                        "storage" % path,
-                        dataset=dataset_id
-                    )
-                file_path = files_doc["file_path"]
-                os.link(file_path, tmpfile)
-            else:
-                # IDA
-                try:
-                    ida.download_file(file_id, tmpfile, config)
-                except ida.IdaError as error:
-                    message = ("File {} was not found in Ida."
-                               .format(file_["file_path"]))
-                    raise MetadataGenerationError(message, dataset=dataset_id)
-            # Generate and update file_characteristics
-            file_characteristics = _generate_file_characteristics(
-                tmpfile, file_metadata.get('file_characteristics', {})
-            )
-            metax_client.patch_file(
-                file_id,
-                {'file_characteristics': file_characteristics}
-            )
-            file_metadata['file_characteristics'] = file_characteristics
-
-            # Generate file format specific XML metadata
-            generator = XMLMetadataGenerator(tmpfile, file_metadata)
-            try:
-                xml = generator.create()
-            except MetadataGenerationError as error:
-                raise MetadataGenerationError(
-                    str(error),
-                    dataset=dataset_id,
-                    file=os.path.split(tmpfile)[1]
-                )
-            if xml is not None:
-                metax_client.set_xml(file_id, xml)
+        _generate_file_metadata(metax_client, dataset_id, tmpdir, config)
     except (MetadataGenerationError, MetaxError, HTTPError) as error:
-        if isinstance(error, MetadataGenerationError):
-            message = str(error)[:199] if len(str(error)) > 200 else str(error)
-        else:
-            message = str(error)
+        message = str(error)[:199] if len(str(error)) > 200 else str(error)
         status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
         raise
     else:
@@ -151,8 +96,71 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         message = 'Technical metadata generated'
     finally:
         shutil.rmtree(tmpdir)
-        _set_preservation_state(config_object, dataset_id, state=status_code,
+        _set_preservation_state(metax_client, dataset_id, state=status_code,
                                 system_description=message)
+
+
+def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
+    """Generates metadata for dataset files.
+
+    :param metax_client: metax access
+    :param dataset_id: identifier of dataset
+    :param tmpdir: path to directory where files are downloaded to
+    :param config_file: path to configuration file
+    :returns: ``None``
+    """
+    config_object = Configuration(config_file)
+    storage_id = config_object.get("pas_storage_id")
+    for file_ in metax_client.get_dataset_files(dataset_id):
+        # Get file info
+        file_id = file_['identifier']
+        file_metadata = metax_client.get_file(file_id)
+
+        # Download file to tmp directory
+        tmpfile = os.path.join(tmpdir, file_id)
+
+        if file_metadata["file_storage"]["identifier"] == storage_id:
+            # Local file storage
+            files_col = Database(config_file).client.upload.files
+            files_doc = files_col.find_one({"_id": file_id})
+            if not files_doc:
+                path = file_metadata["file_path"]
+                raise MetadataGenerationError(
+                    "File '%s' not found in pre-ingest file"
+                    "storage" % path,
+                    dataset=dataset_id
+                )
+            os.link(files_doc["file_path"], tmpfile)
+        else:
+            # IDA
+            try:
+                ida.download_file(file_id, tmpfile, config_file)
+            except ida.IdaError as error:
+                message = ("File {} was not found in Ida."
+                           .format(file_["file_path"]))
+                raise MetadataGenerationError(message, dataset=dataset_id)
+        # Generate and update file_characteristics
+        file_characteristics = _generate_file_characteristics(
+            tmpfile, file_metadata.get('file_characteristics', {})
+        )
+        metax_client.patch_file(
+            file_id,
+            {'file_characteristics': file_characteristics}
+        )
+        file_metadata['file_characteristics'] = file_characteristics
+
+        # Generate file format specific XML metadata
+        generator = XMLMetadataGenerator(tmpfile, file_metadata)
+        try:
+            xml = generator.create()
+        except MetadataGenerationError as error:
+            raise MetadataGenerationError(
+                str(error),
+                dataset=dataset_id,
+                file=os.path.split(tmpfile)[1]
+            )
+        if xml is not None:
+            metax_client.set_xml(file_id, xml)
 
 
 def _generate_file_characteristics(filepath, original_file_characteristics):
@@ -195,22 +203,17 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     return file_characteristics
 
 
-def _set_preservation_state(config_object, dataset_id, state=None,
+def _set_preservation_state(metax_client, dataset_id, state=None,
                             system_description=None):
     """ Sets dataset's preservation_state or/and
     preservation_reason_description attributes in Metax
 
+    :metax_client: metax access
     :dataset_id: dataset id
     :state: preservation_state attribute value to be set for the dataset
     :user_description: preservation_reason_description attribute value to
         be set for the dataset
     """
-    metax_client = Metax(
-        config_object.get('metax_url'),
-        config_object.get('metax_user'),
-        config_object.get('metax_password'),
-        verify=config_object.getboolean('metax_ssl_verification')
-    )
     metax_client.set_preservation_state(
         dataset_id, state=state, system_description=system_description
     )

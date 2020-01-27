@@ -46,7 +46,8 @@ MISSING_XML_METADATA_ERROR = "Missing technical metadata XML for file: %s"
 def validate_metadata(
         dataset_id,
         config="/etc/siptools_research.conf",
-        dummy_doi="false"
+        dummy_doi="false",
+        set_preservation_state=False
 ):
     """Reads dataset metadata, file metadata, and additional techMD XML from
     Metax and validates them against schemas. Raises error if dataset is not
@@ -54,6 +55,9 @@ def validate_metadata(
 
     :param dataset_id: dataset identifier
     :param config: configuration file path
+    :param: dummy_doi: 'true' if dummy preservation identifier is to be used
+    :param: set_preservation_state: ``True`` if dataset preservation_state is
+        to be set
     :returns: ``True``, if dataset metadata is valid.
     """
     conf = Configuration(config)
@@ -108,10 +112,10 @@ def validate_metadata(
         status_code = DS_STATE_VALID_METADATA
         message = "Metadata passed validation"
     finally:
-        if len(message) > 200:
-            message = message[:199]
-        metax_client.set_preservation_state(dataset_id, state=status_code,
-                                            system_description=message)
+        if set_preservation_state:
+            message = message[:199] if len(message) > 200 else message
+            metax_client.set_preservation_state(dataset_id, state=status_code,
+                                                system_description=message)
     return success
 
 
