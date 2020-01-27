@@ -32,7 +32,16 @@ def _download_files(dataset_id, config="/etc/siptools_research.conf"):
 
 class FileValidationError(Exception):
     """Raised when file validation fails."""
-    pass
+
+    def __init__(self, message, identifiers):
+        super(FileValidationError, self).__init__(message)
+        self.identifiers = identifiers
+
+    def __str__(self):
+        message = self.message + "\n\n"
+        for identifier in self.identifiers:
+            message += (identifier + "\n")
+
 
 
 def validate_files(dataset_id, config="/etc/siptools_research.conf"):
@@ -44,6 +53,7 @@ def validate_files(dataset_id, config="/etc/siptools_research.conf"):
     """
     conf = Configuration(config)
     ida_path = os.path.join(conf.get("workspace_root"), "ida_files")
+    errors = []
 
     dataset_files = _download_files(dataset_id, config=config)
     for dataset_file in dataset_files:
@@ -53,15 +63,17 @@ def validate_files(dataset_id, config="/etc/siptools_research.conf"):
         mimetype = file_chars["mimetype"]
         encoding = file_chars["encoding"]
 
-        scraper = Scraper(filepath, mimetype=mimetype)
+        scraper = Scraper(filepath, mimetype=mimetype, charset=encoding)
         scraper.scrape(check_wellformed=True)
-
-        # TODO: Iterate over all files and raise FileValidationError at the end
-        #       if any files were not valid.
-        assert scraper.well_formed
-        if scraper.streams[0]["stream_type"] == "text":
-            assert scraper.streams[0]["charset"] == encoding
+        if not scraper.well_formed:
+            errors.append(identifier)
 
         del scraper
+
+    if errors:
+        raise FileValidationError(
+            "Following files are not well-formed:",
+            errors
+        )
 
     return True
