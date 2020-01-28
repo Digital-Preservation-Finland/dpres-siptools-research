@@ -241,6 +241,12 @@ DATASETS = {
     "create_digiprov_test_dataset_file_and_logging": {
         "provenance": ["creation", "metadata modification"]
     },
+    "validate_files_valid": {
+        "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
+    },
+    "validate_files_invalid": {
+        "files": ["pid:urn:invalid_mimetype_1", "pid:urn:invalid_mimetype_2"]
+    },
     "create_digiprov_test_dataset_date_data_missing": {
         "set": [(
             "research_dataset", {

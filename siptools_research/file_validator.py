@@ -25,7 +25,7 @@ def _download_files(dataset_id, config="/etc/siptools_research.conf"):
 
     dataset_files = metax_client.get_dataset_files(dataset_id)
     for dataset_file in dataset_files:
-        download_file(dataset_file["identifier"], config)
+        download_file(dataset_file["identifier"], config_file=config)
 
     return dataset_files
 
@@ -38,9 +38,11 @@ class FileValidationError(Exception):
         self.identifiers = identifiers
 
     def __str__(self):
-        message = self.message + "\n\n"
+        message = super(FileValidationError, self).__str__() + "\n"
         for identifier in self.identifiers:
             message += (identifier + "\n")
+
+        return message
 
 
 
@@ -60,8 +62,8 @@ def validate_files(dataset_id, config="/etc/siptools_research.conf"):
         identifier = dataset_file["identifier"]
         filepath = os.path.join(ida_path, identifier)
         file_chars = dataset_file["file_characteristics"]
-        mimetype = file_chars["mimetype"]
-        encoding = file_chars["encoding"]
+        mimetype = file_chars["file_format"]
+        encoding = file_chars.get("encoding", None)
 
         scraper = Scraper(filepath, mimetype=mimetype, charset=encoding)
         scraper.scrape(check_wellformed=True)
