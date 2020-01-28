@@ -96,8 +96,8 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         message = 'Technical metadata generated'
     finally:
         shutil.rmtree(tmpdir)
-        _set_preservation_state(metax_client, dataset_id, state=status_code,
-                                system_description=message)
+        metax_client.set_preservation_state(dataset_id, state=status_code,
+                                            system_description=message)
 
 
 def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
@@ -201,19 +201,3 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
         original_file_characteristics
     )
     return file_characteristics
-
-
-def _set_preservation_state(metax_client, dataset_id, state=None,
-                            system_description=None):
-    """ Sets dataset's preservation_state or/and
-    preservation_reason_description attributes in Metax
-
-    :metax_client: metax access
-    :dataset_id: dataset id
-    :state: preservation_state attribute value to be set for the dataset
-    :user_description: preservation_reason_description attribute value to
-        be set for the dataset
-    """
-    metax_client.set_preservation_state(
-        dataset_id, state=state, system_description=system_description
-    )
