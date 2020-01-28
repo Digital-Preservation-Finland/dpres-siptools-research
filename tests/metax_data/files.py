@@ -144,6 +144,12 @@ FILES = {
     "pid:urn:validate_metadata_test_image": {
         "file_characteristics": TIFF_FILE_CHARS
     },
+    "pid:urn:invalid_mimetype_1": {
+        "file_characteristics": TIFF_FILE_CHARS
+    },
+    "pid:urn:invalid_mimetype_2": {
+        "file_characteristics": TIFF_FILE_CHARS
+    },
     "pid:urn:891": {
         "file_characteristics": {
             "file_created": "2018-01-17T08:19:31Z",
