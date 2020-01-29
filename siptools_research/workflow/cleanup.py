@@ -23,8 +23,7 @@ class CleanupWorkspace(WorkflowTask):
     failure_message = 'Cleaning workspace failed'
 
     def ida_files_cleaned(self):
-        """Check if all the files are cleaned from
-        /var/spool/siptools_research/ida_files
+        """Check if all the files are removed from Ida file cache
 
         :returns: Boolean
         """
@@ -38,7 +37,7 @@ class CleanupWorkspace(WorkflowTask):
         return True
 
     def clean_ida_files(self):
-        """Remove identifiers from /var/spool/siptools_research/ida_files"""
+        """Remove cached Ida files"""
         identifiers, ida_files_path = self.get_identifiers()
 
         for identifier in identifiers:

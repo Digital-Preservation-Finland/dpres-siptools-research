@@ -22,8 +22,6 @@ from siptools_research.xml_metadata import (
     XMLMetadataGenerator, MetadataGenerationError
 )
 
-TEMPDIR = "/var/spool/siptools_research/tmp"
-
 DEFAULT_PROVENANCE = {
     "preservation_event": {
         "identifier":
@@ -69,7 +67,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     )
     tmpdir = tempfile.mkdtemp(
         prefix='generate_metadata-',
-        dir=TEMPDIR
+        dir=os.path.join(config_object.get('workspace_root'), 'tmp')
     )
 
     # set default values

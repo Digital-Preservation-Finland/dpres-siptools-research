@@ -4,7 +4,6 @@ import os
 import sys
 import re
 import logging
-import tempfile
 import shutil
 try:
     from urllib import quote
@@ -241,41 +240,35 @@ def testmongoclient(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def testpath(request, monkeypatch):
-    """Create a temporary directory that will be removed after execution of
-    function.
+# TODO: Replace tmpdir fixture with tmp_path fixture when pytest>=3.9.1 is
+# available on Centos
+def testpath(tmpdir, monkeypatch):
+    """Create a temporary workspace root directory and mock configuration
+    module to use it as workspace root.
 
-    :param request: Pytest `request` fixture
+    :param tmpdir: py.path.local object
+    :param monkeypatch: monkeypatch object
     :returns: path to temporary directory
     """
 
-    temp_path = tempfile.mkdtemp()
-    tmpdir = os.path.join(temp_path, "tmp")
-    ida_dir = os.path.join(temp_path, "ida_files")
-    os.mkdir(tmpdir)
-    os.mkdir(ida_dir)
-
-    def mock_get(self, parameter):
-        """Mock Configuration().get()"""
+    def _mock_get(self, parameter):
+        """Mock Configuration().get() to return temporary directory instead of
+        path found in configuration file
+        """
         if parameter == "workspace_root":
-            return temp_path
+            return str(tmpdir)
 
         return self._parser.get(self.config_section, parameter)
 
     monkeypatch.setattr(
-        siptools_research.metadata_generator, "TEMPDIR", tmpdir
-    )
-    monkeypatch.setattr(
-        siptools_research.config.Configuration, "get", mock_get
+        siptools_research.config.Configuration, "get", _mock_get
     )
 
-    def fin():
-        """remove temporary path"""
-        shutil.rmtree(temp_path)
+    # Create required directory structure in workspace root
+    tmpdir.mkdir("tmp")
+    tmpdir.mkdir("ida_files")
 
-    request.addfinalizer(fin)
-
-    return temp_path
+    return str(tmpdir)
 
 
 @pytest.fixture(scope="function")

@@ -290,22 +290,23 @@ def test_generate_metadata_audiomd(file_storage):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
-                         'mock_metax_access')
+@pytest.mark.usefixtures('testmetax', 'testida', 'mock_metax_access')
 # pylint: disable=invalid-name
-def test_generate_metadata_tempfile_removal(file_storage):
+def test_generate_metadata_tempfile_removal(file_storage, testpath):
     """Tests that temporary files downloaded from Ida are removed.
 
     :returns: ``None``
     """
+    tmp_path = "{}/tmp".format(testpath)
+
     # Check contents of /tmp before calling generate_metadata()
-    tmp_dir_before_test = os.listdir(metadata_generator.TEMPDIR)
+    tmp_dir_before_test = os.listdir(tmp_path)
 
     generate_metadata('generate_metadata_test_dataset_1_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # There should not be new files or directories in /tmp
-    assert os.listdir(metadata_generator.TEMPDIR) == tmp_dir_before_test
+    assert os.listdir(tmp_path) == tmp_dir_before_test
 
 
 @pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
