@@ -5,6 +5,7 @@ import shutil
 
 import luigi
 from metax_access import Metax
+from metax_access.metax import DatasetNotFoundError
 
 from siptools_research.utils.database import Database
 from siptools_research.config import Configuration
@@ -12,7 +13,6 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.report_preservation_status import (
     ReportPreservationStatus
 )
-from metax_access.metax import DatasetNotFoundError
 
 
 class CleanupWorkspace(WorkflowTask):

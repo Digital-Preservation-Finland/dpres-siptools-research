@@ -135,7 +135,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
             # IDA
             try:
                 ida.download_file(file_id, tmpfile, config_file)
-            except ida.IdaError as error:
+            except ida.IdaError:
                 message = ("File {} was not found in Ida."
                            .format(file_["file_path"]))
                 raise MetadataGenerationError(message, dataset=dataset_id)
