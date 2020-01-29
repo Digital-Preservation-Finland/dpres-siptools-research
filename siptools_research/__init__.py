@@ -4,6 +4,7 @@
 #
 #    from siptools_research import preserve_dataset
 #    from siptools_research import validate_metadata
+#    from siptools_research import validate_files
 #    from siptools_research import generate_metadata
 
 # Silence irrelevant import warnings
@@ -12,4 +13,5 @@ with silence_stdout():
 
     from siptools_research.workflow_init import preserve_dataset
     from siptools_research.metadata_validator import validate_metadata
+    from siptools_research.file_validator import validate_files
     from siptools_research.metadata_generator import generate_metadata
