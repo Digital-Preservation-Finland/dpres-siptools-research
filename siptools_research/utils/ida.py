@@ -33,7 +33,7 @@ def _get_response(identifier, config_file, stream=False):
                                 verify=False,
                                 stream=stream)
     except requests.exceptions.ConnectionError as exc:
-        raise IdaError("Could not connect to Ida: %s" % exc.message)
+        raise IdaError("Could not connect to Ida: %s" % str(exc))
 
     response.raise_for_status()
     return response
