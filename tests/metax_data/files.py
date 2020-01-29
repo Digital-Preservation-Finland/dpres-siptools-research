@@ -144,10 +144,28 @@ FILES = {
     "pid:urn:validate_metadata_test_image": {
         "file_characteristics": TIFF_FILE_CHARS
     },
-    "pid:urn:invalid_mimetype_1": {
+    "pid:urn:invalid_mimetype_1_ida": {
         "file_characteristics": TIFF_FILE_CHARS
     },
-    "pid:urn:invalid_mimetype_2": {
+    "pid:urn:invalid_mimetype_2_ida": {
+        "file_characteristics": TIFF_FILE_CHARS
+    },
+    "pid:urn:invalid_mimetype_1_local": {
+        "file_characteristics": TIFF_FILE_CHARS
+    },
+    "pid:urn:invalid_mimetype_2_local": {
+        "file_characteristics": TIFF_FILE_CHARS
+    },
+    "pid:urn:not_found_1_ida": {
+        "file_characteristics": TIFF_FILE_CHARS
+    },
+    "pid:urn:not_found_2_ida": {
+        "file_characteristics": TIFF_FILE_CHARS
+    },
+    "pid:urn:not_found_1_local": {
+        "file_characteristics": TIFF_FILE_CHARS
+    },
+    "pid:urn:not_found_2_local": {
         "file_characteristics": TIFF_FILE_CHARS
     },
     "pid:urn:891": {
