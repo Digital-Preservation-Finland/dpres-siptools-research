@@ -34,7 +34,7 @@ def _download_files(metax_client, dataset_id,
                 download_file(identifier, config_file=config_file)
             except (HTTPError, IdaError):
                 raise FileValidationError(
-                    "Could not download file '%s' from IDA" % path, []
+                    "Could not download file '%s' from IDA" % path
                 )
     return dataset_files
 
@@ -42,14 +42,15 @@ def _download_files(metax_client, dataset_id,
 class FileValidationError(Exception):
     """Raised when file validation fails."""
 
-    def __init__(self, message, paths):
+    def __init__(self, message, paths=None):
         super(FileValidationError, self).__init__(message)
         self.paths = paths
 
     def __str__(self):
         message = super(FileValidationError, self).__str__()
-        for path in self.paths:
-            message += ("\n" + path)
+        if self.paths:
+            for path in self.paths:
+                message += ("\n" + path)
 
         return message
 
@@ -126,8 +127,7 @@ def _validate_file(file_, mongo_file, storage_id, ida_path, errors):
     if file_["file_storage"]["identifier"] == storage_id:
         if not mongo_file:
             raise FileValidationError(
-                "File '%s' not found in pre-ingest file storage" %
-                path, []
+                "File '%s' not found in pre-ingest file storage" % path
             )
         filepath = mongo_file["file_path"]
     else:
