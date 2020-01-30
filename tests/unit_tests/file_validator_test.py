@@ -1,10 +1,13 @@
 """Tests for :mod:`siptools_research.file_validator` module"""
 import os
+import json
 
 import pytest
 import pymongo
+import httpretty
 
-from siptools_research.file_validator import validate_files, FileValidationError
+from siptools_research.file_validator import (validate_files,
+                                              FileValidationError)
 from siptools_research.config import Configuration
 import tests.conftest
 
@@ -37,7 +40,8 @@ def _init_mongo_client(testmongoclient):
     ["ida", "local"],
     ids=["ida", "upload-rest-api"],
 )
-@pytest.mark.usefixtures("testmetax", "testida", "mock_metax_access", "testpath")
+@pytest.mark.usefixtures("testmetax", "testida", "mock_metax_access",
+                         "testpath")
 def test_validate_files(filestorage):
     """Test that validate_metadata function returns ``True`` for valid files.
     """
@@ -52,7 +56,8 @@ def test_validate_files(filestorage):
     ["ida", "local"],
     ids=["ida", "upload-rest-api"],
 )
-@pytest.mark.usefixtures("testmetax", "testida", "mock_metax_access", "testpath")
+@pytest.mark.usefixtures("testmetax", "testida", "mock_metax_access",
+                         "testpath")
 def test_validate_invalid_files(filestorage):
     """Test that validating files with wrong mimetype raises
     FileValidationError.
@@ -75,7 +80,8 @@ def test_validate_invalid_files(filestorage):
     ["ida", "local"],
     ids=["ida", "upload-rest-api"],
 )
-@pytest.mark.usefixtures("testmetax", "testida", "mock_metax_access", "testpath")
+@pytest.mark.usefixtures("testmetax", "testida", "mock_metax_access",
+                         "testpath")
 def test_validate_files_not_found(filestorage):
     """Test that validating files, which are not found.
     """
@@ -91,3 +97,15 @@ def test_validate_files_not_found(filestorage):
         message = "Could not download file 'path/to/file' from IDA"
 
     assert str(error.value) == message
+
+
+def _assert_metadata_validation_passed(body_as_json):
+    assert body_as_json == {
+        'preservation_description': 'Metadata passed validation',
+        'preservation_state': 70
+    }
+
+
+def _assert_metadata_validation_failed(body_as_json, description):
+    assert body_as_json['preservation_state'] == 40
+    assert body_as_json['preservation_description'].startswith(description)
