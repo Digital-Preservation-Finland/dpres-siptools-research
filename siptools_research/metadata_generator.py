@@ -72,21 +72,24 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         dir=TEMPDIR
     )
 
-    # Generate default provenance metada if provenance list is empty or does
-    # not exist at all
-    try:
-        # set default values
-        status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
-        message = "Metadata generation failed"
+    # set default values
+    status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
+    message = "Metadata generation failed"
 
-        dataset = metax_client.get_dataset(dataset_id)
+    dataset = metax_client.get_dataset(dataset_id)
+    try:
+
+        # Generate default provenance metada if provenance list is empty or
+        # does not exist at all
         research_dataset = dataset['research_dataset']
         if not research_dataset.get('provenance', []):
             metax_client.patch_dataset(
                 dataset_id,
                 {'research_dataset': {'provenance': [DEFAULT_PROVENANCE]}}
             )
+
         _generate_file_metadata(metax_client, dataset_id, tmpdir, config)
+
     except (MetadataGenerationError, MetaxError, HTTPError) as error:
         message = str(error)[:199] if len(str(error)) > 200 else str(error)
         status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
