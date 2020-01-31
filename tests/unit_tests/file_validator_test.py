@@ -49,6 +49,10 @@ def test_validate_files(filestorage):
         "validate_files_valid_%s" % filestorage,
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
+    # verify preservation_state is set as last operation
+    _assert_file_validation_passed(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+    )
 
 
 @pytest.mark.parametrize(
@@ -72,6 +76,11 @@ def test_validate_invalid_files(filestorage):
         "Following files are not well-formed:\n"
         "path/to/file\n"
         "path/to/file"
+    )
+    # verify preservation_state is set as last operation
+    _assert_file_validation_failed(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body),
+        "Following files"
     )
 
 
@@ -97,15 +106,20 @@ def test_validate_files_not_found(filestorage):
         message = "Could not download file 'path/to/file' from IDA"
 
     assert str(error.value) == message
+    # verify preservation_state is set as last operation
+    _assert_file_validation_failed(
+        json.loads(httpretty.HTTPretty.latest_requests[-1].body),
+        message
+    )
 
 
-def _assert_metadata_validation_passed(body_as_json):
+def _assert_file_validation_passed(body_as_json):
     assert body_as_json == {
-        'preservation_description': 'Metadata passed validation',
+        'preservation_description': 'Files passed validation',
         'preservation_state': 70
     }
 
 
-def _assert_metadata_validation_failed(body_as_json, description):
+def _assert_file_validation_failed(body_as_json, description):
     assert body_as_json['preservation_state'] == 40
     assert body_as_json['preservation_description'].startswith(description)
