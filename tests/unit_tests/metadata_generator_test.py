@@ -12,7 +12,6 @@ from requests.exceptions import HTTPError
 from siptools.utils import decode_path
 
 from siptools_research.config import Configuration
-import siptools_research.metadata_generator as metadata_generator
 from siptools_research.metadata_generator import (
     generate_metadata, MetadataGenerationError
 )
