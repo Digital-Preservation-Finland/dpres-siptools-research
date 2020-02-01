@@ -33,7 +33,7 @@ HTML_FILE_CHARS = {
 }
 
 XML_FILE_CHARS = {
-    "file_format": "application/xml",
+    "file_format": "text/xml",
     "format_version": "1.0",
     "encoding": "UTF-8"
 }
