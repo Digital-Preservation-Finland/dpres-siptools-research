@@ -1208,19 +1208,7 @@ def test_validate_datacite(requests_mock):
         )
 
     # Check error message
-    assert str(exception_info.value) == (
-        "Datacite metadata is invalid: The following errors were detected:\n\n"
-        "1. Element '{http://datacite.org/schema/kernel-4}resourceType', "
-        "attribute 'resourceTypeGeneral': [facet 'enumeration'] The value "
-        "'INVALID_RESOURCE_TYPE' is not an element of the set {'Audiovisual', "
-        "'Collection', 'DataPaper', 'Dataset', 'Event', 'Image', "
-        "'InteractiveResource', 'Model', 'PhysicalObject', 'Service', "
-        "'Software', 'Sound', 'Text', 'Workflow', 'Other'}.\n"
-        "2. Element '{http://datacite.org/schema/kernel-4}resourceType', "
-        "attribute 'resourceTypeGeneral': 'INVALID_RESOURCE_TYPE' is not a "
-        "valid value of the atomic type "
-        "'{http://datacite.org/schema/kernel-4}resourceType'."
-    )
+    assert str(exception_info.value).startswith("Datacite metadata is invalid:")
 
 
 # pylint: disable=invalid-name
