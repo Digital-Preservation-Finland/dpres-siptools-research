@@ -1,5 +1,6 @@
 """IDA interface module"""
 import os
+import time
 
 import requests
 from requests.exceptions import HTTPError
@@ -39,7 +40,7 @@ def _get_response(identifier, config_file, stream=False):
 
 
 def download_file(identifier, linkpath, config_file):
-    """Download file from IDA to workspace_root/ida_files and create a hard
+    """Download file from IDA to <workspace_root>/ida_files and create a hard
     link to linkpath. Ida url, username, and password are read from
     configuration file.
 
@@ -70,3 +71,24 @@ def download_file(identifier, linkpath, config_file):
                 new_file.write(chunk)
 
     os.link(filepath, linkpath)
+
+
+def clean_cache(config_file):
+    """Remove all files from <workspace_root>/ida_files that have not been
+    accessed in two weeks.
+
+    :returns: ``None``
+    """
+    conf = Configuration(config_file)
+    files_path = os.path.join(conf.get("workspace_root"), "ida_files")
+
+    current_time = time.time()
+    time_lim = 60*60*24*14
+
+    # Remove all old files
+    for dirpath, _, files in os.walk(files_path):
+        for filename in files:
+            filepath = os.path.join(dirpath, filename)
+            last_access = os.stat(filepath).st_atime
+            if current_time - last_access > time_lim:
+                os.remove(filepath)

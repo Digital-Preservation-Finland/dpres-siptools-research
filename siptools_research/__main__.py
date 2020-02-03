@@ -27,6 +27,7 @@ from __future__ import print_function
 import argparse
 import json
 
+import siptools_research.utils.ida
 from siptools_research.metadata_generator import generate_metadata
 from siptools_research.workflow_init import preserve_dataset
 from siptools_research.metadata_validator import validate_metadata
@@ -63,6 +64,7 @@ def _parse_args():
     _setup_workflows_args(subparsers)
     _setup_disable_args(subparsers)
     _setup_enable_args(subparsers)
+    _setup_clean_cache_args(subparsers)
 
     # Define arguments common to all commands
     parser.add_argument(
@@ -179,6 +181,15 @@ def _setup_enable_args(subparsers):
         'workflow_id',
         help="Luigi workflow identifier"
     )
+
+
+def _setup_clean_cache_args(subparsers):
+    """Define clean-cache subparser and its arguments."""
+    clean_cache_parser = subparsers.add_parser(
+        'clean-cache',
+        help='Clean old files from Ida file cache'
+    )
+    clean_cache_parser.set_defaults(func=_clean_cache)
 
 
 def _generate(args):
@@ -303,6 +314,11 @@ def _enable(args):
         _id = document["_id"]
         database.set_enabled(_id)
         print("Workflow %s enabled" % _id)
+
+
+def _clean_cache(args):
+    """Clean files from Ida file cache"""
+    siptools_research.utils.ida.clean_cache(args.config)
 
 
 def main():

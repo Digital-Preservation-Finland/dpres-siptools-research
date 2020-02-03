@@ -270,3 +270,25 @@ def test_main_disabled(capsys, monkeypatch):
     assert database._collection.find_one({"_id": "aineisto_1"})["disabled"]
     out, _ = capsys.readouterr()
     assert "Workflow aineisto_1 disabled" in out
+
+
+@mock.patch('siptools_research.utils.ida.clean_cache')
+def test_main_clean_cache(mocked_clean_cache, monkeypatch):
+    """Test that clean_cache function is called when clean-cache subcommand is
+    used.
+    """
+    # Run siptools-research clean-cache
+    monkeypatch.setattr(
+        sys, "argv", [
+            "siptools-research",
+            "--config", UNIT_TEST_CONFIG_FILE,
+            "clean-cache"
+        ]
+    )
+    siptools_research.__main__.main()
+
+    # Check that clean_cache function was called with configuration file path
+    # as parameter
+    mocked_clean_cache.assert_called_once_with(
+        'tests/data/configuration_files/siptools_research_unit_test.conf'
+    )
