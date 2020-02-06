@@ -53,18 +53,19 @@ class ValidateSIP(WorkflowExternalTask):
             send_timestamp = database.get_event_timestamp(
                 self.document_id, "SendSIPToDP"
             )
-            date = dateutil.parser.parse(send_timestamp)
+            sip_to_dp_date = dateutil.parser.parse(send_timestamp).date()
         except (ValueError, KeyError):
-            date = datetime.utcnow()
+            sip_to_dp_date = datetime.utcnow().date()
 
-        lim_datetime = datetime.today()
+        lim_date = datetime.today().date()
 
         path = []
-        while date < lim_datetime:
-            date_str = date.strftime("%Y-%m-%d")
-            path.append('accepted/%s/%s.tar' % (date_str, self.document_id))
-            path.append('rejected/%s/%s.tar' % (date_str, self.document_id))
-            date += timedelta(days=1)
+        while sip_to_dp_date <= lim_date:
+            path.append('accepted/%s/%s.tar' % (sip_to_dp_date,
+                                                self.document_id))
+            path.append('rejected/%s/%s.tar' % (sip_to_dp_date,
+                                                self.document_id))
+            sip_to_dp_date += timedelta(days=1)
 
         return RemoteAnyTarget(
             path,
