@@ -58,17 +58,11 @@ class FileValidationError(Exception):
 class FileAccessError(Exception):
     """Raised when file cannot be accessed."""
 
-    def __init__(self, message, paths=None):
+    def __init__(self, message):
         super(FileAccessError, self).__init__(message)
-        self.paths = paths
 
     def __str__(self):
-        message = super(FileAccessError, self).__str__()
-        if self.paths:
-            for path in self.paths:
-                message += ("\n" + path)
-
-        return message
+        return super(FileAccessError, self).__str__()
 
 
 def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
