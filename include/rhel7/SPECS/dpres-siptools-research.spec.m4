@@ -40,6 +40,7 @@ Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python-mock
 Requires:       file-scraper-full
+Requires:       upload-rest-api
 # python-configparser is required in python2
 Requires:       python-configparser
 BuildRequires:  python-setuptools

@@ -8,6 +8,7 @@ import tempfile
 from requests.exceptions import HTTPError
 
 from file_scraper.scraper import Scraper
+from upload_rest_api.utils import get_file_path
 from metax_access import (Metax, DS_STATE_TECHNICAL_METADATA_GENERATED,
                           DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
                           MetaxError)
@@ -16,7 +17,6 @@ from siptools.scripts.import_object import (DEFAULT_VERSIONS,
                                             NO_VERSION)
 
 from siptools_research.utils import ida
-from siptools_research.utils.database import Database
 from siptools_research.config import Configuration
 from siptools_research.xml_metadata import (
     XMLMetadataGenerator, MetadataGenerationError
@@ -122,16 +122,14 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
 
         if file_metadata["file_storage"]["identifier"] == storage_id:
             # Local file storage
-            files_col = Database(config_file).client.upload.files
-            files_doc = files_col.find_one({"_id": file_id})
-            if not files_doc:
+            file_path = get_file_path(file_id)
+            if file_path is None:
                 path = file_metadata["file_path"]
                 raise MetadataGenerationError(
-                    "File '%s' not found in pre-ingest file"
-                    "storage" % path,
+                    "File '%s' not found in pre-ingest file storage" % path,
                     dataset=dataset_id
                 )
-            os.link(files_doc["file_path"], tmpfile)
+            os.link(file_path, tmpfile)
         else:
             # IDA
             try:

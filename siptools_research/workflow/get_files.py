@@ -5,8 +5,9 @@ import logging
 import luigi
 
 from metax_access import Metax
+from upload_rest_api.utils import get_file_path
 
-from siptools_research.utils import ida, database as db
+from siptools_research.utils import ida
 from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
@@ -80,16 +81,6 @@ class GetFiles(WorkflowTask):
         with self.output().open('w') as output:
             output.write("Dataset id=" + self.dataset_id)
 
-    def _get_storage_path(self, identifier, fpath):
-        """Returns the path to file with _id == identifier on passipservice"""
-
-        files_col = db.Database(self.config).client.upload.files
-        storage_path = files_col.find_one({"_id": identifier})
-        if storage_path is None:
-            raise UploadApiError("File %s not found in the database" % fpath)
-
-        return files_col.find_one({"_id": identifier})["file_path"]
-
     def _download_files(self, dataset_files, config):
         """Reads and writes files on a path based on
         ``file_path`` in Metax
@@ -125,12 +116,16 @@ class GetFiles(WorkflowTask):
                 os.makedirs(os.path.dirname(target_path))
 
             if file_storage == pas_storage_id:
-                file_path = self._get_storage_path(
-                    identifier, dataset_file["file_path"]
-                )
-                if not os.path.isfile(file_path):
-                    raise UploadApiError("File %s not found on disk"
-                                         % dataset_file["identifier"])
+                file_path = get_file_path(identifier)
+                if file_path is None:
+                    raise UploadApiError(
+                        "File %s not found in the database"
+                        % dataset_file["file_path"]
+                    )
+                elif not os.path.isfile(file_path):
+                    raise UploadApiError(
+                        "File %s not found on disk" % dataset_file["identifier"]
+                    )
                 # Create hard links to the files on workspace
                 os.link(file_path, target_path)
             else:

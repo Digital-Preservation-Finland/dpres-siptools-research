@@ -25,7 +25,9 @@ def main():
             "siptools@git+https://gitlab.csc.fi/dpres/dpres-siptools.git"
             "@develop",
             "metax_access@git+https://gitlab.csc.fi/dpres/metax-access.git"
-            "@develop"
+            "@develop",
+            "upload_rest_api@git+https://gitlab.csc.fi/dpres/"
+            "upload-rest-api.git@develop"
         ],
         entry_points={
             'console_scripts': [

@@ -17,7 +17,7 @@ class Database(object):
     """Workflow status database"""
 
     _collection = None
-    client = None
+    _client = None
 
     def __init__(self, config_file):
         """Initialize new pymongo client if it does not exist already
@@ -28,10 +28,10 @@ class Database(object):
 
         if self._collection is None:
             conf = Configuration(config_file)
-            self.client = pymongo.MongoClient(host=conf.get("mongodb_host"),
-                                              port=27017)
+            self._client = pymongo.MongoClient(host=conf.get("mongodb_host"),
+                                               port=27017)
             self._collection = (
-                self.client[conf.get("mongodb_database")]
+                self._client[conf.get("mongodb_database")]
                 [conf.get("mongodb_collection")]
             )
 
