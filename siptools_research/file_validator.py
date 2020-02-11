@@ -58,12 +58,6 @@ class FileValidationError(Exception):
 class FileAccessError(Exception):
     """Raised when file cannot be accessed."""
 
-    def __init__(self, message):
-        super(FileAccessError, self).__init__(message)
-
-    def __str__(self):
-        return super(FileAccessError, self).__str__()
-
 
 def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
     """Validate all files in a dataset.
@@ -73,22 +67,22 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
     :returns: ``True`` if all files are well-formed.
     """
     # set default values
-    message = "Metadata validation failed"
-    success = False
-    status_code = DS_STATE_METADATA_VALIDATION_FAILED
-    errors = []
-    try:
-        conf = Configuration(config_file)
-        storage_id = conf.get("pas_storage_id")
-        metax_client = Metax(
-            conf.get('metax_url'),
-            conf.get('metax_user'),
-            conf.get('metax_password'),
-            verify=conf.getboolean('metax_ssl_verification')
-        )
-        mongo_files = Database(config_file).client.upload.files
-        ida_path = os.path.join(conf.get("workspace_root"), "ida_files")
+    message = "Files passed validation"
+    status_code = DS_STATE_VALID_METADATA
 
+    errors = []
+    conf = Configuration(config_file)
+    storage_id = conf.get("pas_storage_id")
+    metax_client = Metax(
+        conf.get('metax_url'),
+        conf.get('metax_user'),
+        conf.get('metax_password'),
+        verify=conf.getboolean('metax_ssl_verification')
+    )
+    mongo_files = Database(config_file).client.upload.files
+    ida_path = os.path.join(conf.get("workspace_root"), "ida_files")
+
+    try:
         dataset_files = _download_files(metax_client, dataset_id,
                                         config_file=config_file)
         for dataset_file in dataset_files:
@@ -107,18 +101,15 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         message = str(exc)
         raise
     except FileAccessError as exc:
+        status_code = DS_STATE_METADATA_VALIDATION_FAILED
         message = str(exc)
         raise
-    else:
-        success = True
-        status_code = DS_STATE_VALID_METADATA
-        message = "Files passed validation"
     finally:
         message = message[:199] if len(message) > 200 else message
         metax_client.set_preservation_state(dataset_id,
                                             state=status_code,
                                             system_description=message)
-    return success
+    return True
 
 
 def _validate_file(file_, mongo_file, storage_id, ida_path, errors):
