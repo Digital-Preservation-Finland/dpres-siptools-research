@@ -7,7 +7,8 @@ import pymongo
 import httpretty
 
 from siptools_research.file_validator import (validate_files,
-                                              FileValidationError)
+                                              FileValidationError,
+                                              FileAccessError)
 from siptools_research.config import Configuration
 import tests.conftest
 
@@ -80,7 +81,8 @@ def test_validate_invalid_files(filestorage):
     # verify preservation_state is set as last operation
     _assert_file_validation_failed(
         json.loads(httpretty.HTTPretty.latest_requests[-1].body),
-        "Following files"
+        "Following files",
+        40
     )
 
 
@@ -94,7 +96,7 @@ def test_validate_invalid_files(filestorage):
 def test_validate_files_not_found(filestorage):
     """Test that validating files, which are not found.
     """
-    with pytest.raises(FileValidationError) as error:
+    with pytest.raises(FileAccessError) as error:
         validate_files(
             "validate_files_not_found_%s" % filestorage,
             tests.conftest.UNIT_TEST_CONFIG_FILE
@@ -109,7 +111,8 @@ def test_validate_files_not_found(filestorage):
     # verify preservation_state is set as last operation
     _assert_file_validation_failed(
         json.loads(httpretty.HTTPretty.latest_requests[-1].body),
-        message
+        message,
+        50
     )
 
 
@@ -120,6 +123,6 @@ def _assert_file_validation_passed(body_as_json):
     }
 
 
-def _assert_file_validation_failed(body_as_json, description):
-    assert body_as_json['preservation_state'] == 40
+def _assert_file_validation_failed(body_as_json, description, state):
+    assert body_as_json['preservation_state'] == state
     assert body_as_json['preservation_description'].startswith(description)
