@@ -1,9 +1,11 @@
-"""IDA interface module"""
+"""IDA and upload-rest-api interface module"""
 import os
 import time
 
 import requests
 from requests.exceptions import HTTPError
+
+from upload_rest_api.utils import get_file_path
 
 from siptools_research.config import Configuration
 
@@ -13,15 +15,19 @@ class IdaError(Exception):
     pass
 
 
-def _get_response(identifier, config_file, stream=False):
+class UploadApiError(Exception):
+    """Exception raised when files in upload-rest-api can't be accessed"""
+    pass
+
+
+def _get_response(identifier, conf, stream=False):
     """Send authenticated HTTP request to IDA.
 
     :param identifier: File identifier
-    :param config_file: path to configuration file
+    :param conf: Configuration object
     :param stream (bool): Stream the request content
     :returns: requests Response
     """
-    conf = Configuration(config_file)
     user = conf.get('ida_user')
     password = conf.get('ida_password')
     baseurl = conf.get('ida_url')
@@ -39,33 +45,43 @@ def _get_response(identifier, config_file, stream=False):
     return response
 
 
-def download_file(
-        identifier,
-        linkpath="",
-        config_file="/etc/siptools_research.conf"
-):
-    """Download file from IDA to <workspace_root>/ida_files and create a hard
-    link to linkpath. Ida url, username, and password are read from
-    configuration file.
-    :param identifier: File identifier (for example "pid:urn:1")
-    :param linkpath: Path where the hard link is created
-    :param config_file: Configuration file
-    :returns: ``None``
+def _get_local_file(file_metadata):
+    """Get upload-rest-api file.
+
+    :param file_metadata: Metax file metadata
+    :returns: Path to the file
     """
-    conf = Configuration(config_file)
+    identifier = file_metadata["identifier"]
+    filepath = get_file_path(identifier)
+
+    if (filepath is None) or (not os.path.isfile(filepath)):
+        raise UploadApiError(
+            "File '%s' not found in pre-ingest file storage"
+            % file_metadata["file_path"]
+        )
+
+    return filepath
+
+
+def _get_ida_file(file_metadata, conf):
+    """Get file from IDA. If file is already cached, just return path to it.
+
+    :param file_metadata: Metax file metadata
+    :param conf: Configuration object
+    :returns: Path to the file
+    """
+    identifier = file_metadata["identifier"]
     filepath = os.path.join(
         conf.get("workspace_root"), "ida_files", identifier
     )
 
     if not os.path.exists(filepath):
-
         try:
-            response = _get_response(identifier, config_file, stream=True)
+            response = _get_response(identifier, conf, stream=True)
         except HTTPError as error:
-            status_code = error.response.status_code
-            if status_code == 404:
+            if error.response.status_code == 404:
                 raise IdaError(
-                    "File %s not found in Ida." % identifier
+                    "File '%s' not found in Ida" % file_metadata["file_path"]
                 )
             raise
 
@@ -73,11 +89,36 @@ def download_file(
             for chunk in response.iter_content(chunk_size=1024):
                 new_file.write(chunk)
 
+    return filepath
+
+
+def download_file(
+        file_metadata,
+        linkpath="",
+        config_file="/etc/siptools_research.conf"
+):
+    """Get file from IDA or upload-rest-api and create a hard
+    link to linkpath.
+
+    :param file_metadata: File metadata from Metax
+    :param linkpath: Path where the hard link is created
+    :param config_file: Configuration file
+    :returns: ``None``
+    """
+    conf = Configuration(config_file)
+    pas_storage_id = conf.get("pas_storage_id")
+    file_storage = file_metadata["file_storage"]["identifier"]
+
+    if file_storage == pas_storage_id:
+        filepath = _get_local_file(file_metadata)
+    else:
+        filepath = _get_ida_file(file_metadata, conf)
+
     if linkpath:
         os.link(filepath, linkpath)
 
 
-def clean_cache(config_file):
+def clean_ida_cache(config_file):
     """Remove all files from <workspace_root>/ida_files that have not been
     accessed in two weeks.
 

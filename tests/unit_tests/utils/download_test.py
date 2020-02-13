@@ -1,12 +1,21 @@
-"""Tests for :mod:`siptools_research.utils.ida` module"""
+"""Tests for :mod:`siptools_research.utils.download` module"""
 import os
 import time
 
 import pytest
 
-from siptools_research.utils import ida
-from siptools_research.utils.ida import IdaError
-import tests.conftest
+from siptools_research.utils.download import download_file, clean_ida_cache
+from siptools_research.utils.download import IdaError
+from tests.conftest import UNIT_TEST_CONFIG_FILE
+
+
+def _get_file_metadata(identifier):
+    """Returns Metax file metadata."""
+    return {
+        "file_path": "/path/to/file",
+        "identifier": identifier,
+        "file_storage": {"identifier": "urn:nbn:fi:att:file-storage-ida"}
+    }
 
 
 @pytest.mark.usefixtures('testida')
@@ -18,8 +27,11 @@ def test_download_file(testpath):
     :returns: ``None``
     """
     new_file_path = os.path.join(testpath, 'new_file')
-    ida.download_file('pid:urn:1', new_file_path,
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+    download_file(
+        _get_file_metadata('pid:urn:1'),
+        new_file_path,
+        UNIT_TEST_CONFIG_FILE
+    )
 
     # Remove file from ida_files and test that the workspace copy stays intact
     os.remove(os.path.join(testpath, "ida_files", "pid:urn:1"))
@@ -38,11 +50,14 @@ def test_download_file_404(testpath):
     """
     new_file_path = os.path.join(testpath, 'new_file')
     with pytest.raises(IdaError):
-        ida.download_file('pid:urn:does_not_exist', new_file_path,
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        download_file(
+            _get_file_metadata('pid:urn:does_not_exist'),
+            new_file_path,
+            UNIT_TEST_CONFIG_FILE
+        )
 
 
-def test_clean_cache(testpath):
+def test_clean_ida_cache(testpath):
     """Test that all the expired files are removed from ida_files.
     """
     ida_files_path = os.path.join(testpath, 'ida_files')
@@ -60,7 +75,7 @@ def test_clean_cache(testpath):
     os.utime(fpath_expired, (expired_access, expired_access))
 
     # Clean all files older than two weeks
-    ida.clean_cache(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    clean_ida_cache(UNIT_TEST_CONFIG_FILE)
 
     # ida_files/fresh_file should not be removed
     assert os.path.isfile(fpath_fresh)

@@ -10,14 +10,15 @@ import lxml.etree
 from requests.exceptions import HTTPError
 
 from siptools.utils import decode_path
+from metax_access import Metax, DatasetNotFoundError
 
+import tests.conftest
+import siptools_research
 from siptools_research.config import Configuration
 from siptools_research.metadata_generator import (
     generate_metadata, MetadataGenerationError
 )
-from siptools_research.utils import ida
-from metax_access import Metax, DatasetNotFoundError
-import tests.conftest
+from siptools_research.utils import download
 
 DEFAULT_PROVENANCE = {
     "preservation_event": {
@@ -379,9 +380,13 @@ def test_generate_metadata_ida_download_error(monkeypatch):
     """
 
     def _get_dataset_exception(*_args):
-        raise ida.IdaError
+        raise download.IdaError("File '/path/to/file' not found in Ida")
 
-    monkeypatch.setattr(ida, "download_file", _get_dataset_exception)
+    monkeypatch.setattr(
+        siptools_research.metadata_generator,
+        "download_file",
+        _get_dataset_exception
+    )
     with pytest.raises(MetadataGenerationError):
         generate_metadata('generate_metadata_test_dataset_1_ida',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -389,9 +394,10 @@ def test_generate_metadata_ida_download_error(monkeypatch):
     assert httpretty.HTTPretty.last_request.method == "PATCH"
     body = json.loads(httpretty.HTTPretty.last_request.body)
     assert body['preservation_state'] == 30
-    assert body['preservation_description'] == \
-        ("File path/to/file was not found in Ida. "
-         "[ dataset=generate_metadata_test_dataset_1_ida ]")
+    assert body['preservation_description'] == (
+        "File '/path/to/file' not found in Ida "
+        "[ dataset=generate_metadata_test_dataset_1_ida ]"
+    )
 
 
 @pytest.mark.usefixtures('testmetax', 'testpath',

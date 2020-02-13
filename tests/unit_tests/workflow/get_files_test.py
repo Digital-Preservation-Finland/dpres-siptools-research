@@ -5,9 +5,7 @@ import pytest
 import pymongo
 
 import tests.conftest
-import siptools_research.config
-from siptools_research.utils.ida import IdaError
-from siptools_research.workflow.get_files import UploadApiError
+from siptools_research.utils.download import IdaError, UploadApiError
 from siptools_research.workflow import get_files
 from siptools_research.workflowtask import InvalidMetadataError
 
@@ -96,20 +94,18 @@ def test_missing_files(testpath, file_storage):
         task.run()
 
     # Check exception message
-    if file_storage == "ida":
-        assert str(excinfo.value) \
-            == "File pid:urn:does_not_exist not found in Ida."
-    else:
-        assert str(excinfo.value) \
-            == "File pid:urn:does_not_exist_local not found on disk"
+    storage = "Ida" if file_storage == "ida" else "pre-ingest file storage"
+    error_message = "File '/path/to/file4' not found in %s" % storage
+
+    assert str(excinfo.value) == error_message
 
     # Task should not be completed
     assert not task.complete()
 
     # The first file should be created into correct path
-    with open(os.path.join(testpath, 'sip-in-progress/path/to/file1'))\
-            as open_file:
-        assert open_file.read() == 'foo\n'
+    filepath = os.path.join(testpath, 'sip-in-progress/path/to/file1')
+    with open(filepath) as _file:
+        assert _file.read() == 'foo\n'
 
 
 @pytest.mark.usefixtures('testida')
@@ -151,9 +147,7 @@ def test_forbidden_relative_path(testpath, path):
     # File download should fail
     with pytest.raises(InvalidMetadataError) as exception_info:
         # pylint: disable=protected-access
-        task._download_files(
-            files, siptools_research.config.Configuration(task.config)
-        )
+        task._download_files(files)
     assert str(exception_info.value) == \
         'The file path of file pid:urn:1 is invalid: %s' % path
 
@@ -199,7 +193,5 @@ def test_allowed_relative_paths(testpath, path):
 
     # Download file and check that is found in expected location
     # pylint: disable=protected-access
-    task._download_files(
-        files, siptools_research.config.Configuration(task.config)
-    )
+    task._download_files(files)
     assert os.listdir(sipdirectory) == ['file1']

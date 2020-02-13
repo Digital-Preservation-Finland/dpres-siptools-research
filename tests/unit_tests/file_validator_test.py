@@ -102,11 +102,7 @@ def test_validate_files_not_found(filestorage):
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
-    if filestorage == "local":
-        message = "File 'path/to/file' not found in pre-ingest file storage"
-    else:
-        message = "Could not download file 'path/to/file' from IDA"
-
+    message = "Could not download file 'path/to/file'"
     assert str(error.value) == message
     # verify preservation_state is set as last operation
     _assert_file_validation_failed(

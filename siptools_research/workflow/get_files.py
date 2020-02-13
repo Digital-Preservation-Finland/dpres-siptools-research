@@ -5,9 +5,8 @@ import logging
 import luigi
 
 from metax_access import Metax
-from upload_rest_api.utils import get_file_path
 
-from siptools_research.utils import ida
+from siptools_research.utils.download import download_file
 from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
@@ -15,13 +14,6 @@ from siptools_research.config import Configuration
 
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
-
-
-class UploadApiError(Exception):
-    """Exception raised when files or mongo entries are missing from upload
-    rest API.
-    """
-    pass
 
 
 class GetFiles(WorkflowTask):
@@ -77,23 +69,19 @@ class GetFiles(WorkflowTask):
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
 
         # get files from ida or pas storage
-        self._download_files(dataset_files, config_object)
+        self._download_files(dataset_files)
         with self.output().open('w') as output:
             output.write("Dataset id=" + self.dataset_id)
 
-    def _download_files(self, dataset_files, config):
+    def _download_files(self, dataset_files):
         """Reads and writes files on a path based on
         ``file_path`` in Metax
 
         :param dataset_files: list of files metadata dicts
-        :param config: siptools_research config object
         :returns: ``None``
         """
-        pas_storage_id = config.get("pas_storage_id")
-
         for dataset_file in dataset_files:
             identifier = dataset_file["identifier"]
-            file_storage = dataset_file["file_storage"]["identifier"]
 
             # Full path to file
             target_path = os.path.normpath(
@@ -115,23 +103,4 @@ class GetFiles(WorkflowTask):
                 # TODO: Use exist_ok -parameter when moving to python3
                 os.makedirs(os.path.dirname(target_path))
 
-            if file_storage == pas_storage_id:
-                file_path = get_file_path(identifier)
-                if file_path is None:
-                    raise UploadApiError(
-                        "File %s not found in the database"
-                        % dataset_file["file_path"]
-                    )
-                elif not os.path.isfile(file_path):
-                    raise UploadApiError(
-                        "File %s not found on disk" % dataset_file["identifier"]
-                    )
-                # Create hard links to the files on workspace
-                os.link(file_path, target_path)
-            else:
-                # Download file from IDA
-                ida.download_file(
-                    dataset_file['identifier'],
-                    target_path,
-                    self.config
-                )
+            download_file(dataset_file, target_path, self.config)

@@ -8,34 +8,35 @@ from metax_access.metax import (Metax, DS_STATE_INVALID_METADATA,
 
 from requests.exceptions import HTTPError
 
+from upload_rest_api.utils import get_file_path
+
 from siptools_research.config import Configuration
 from siptools_research.utils.database import Database
-from siptools_research.utils.ida import download_file, IdaError
+from siptools_research.utils.download import download_file
+from siptools_research.utils.download import IdaError, UploadApiError
 
 
-def _download_files(metax_client, dataset_id,
-                    config_file="/etc/siptools_research.conf"):
-    """Download all dataset files from IDA
+def _download_files(
+        metax_client,
+        dataset_id,
+        config_file="/etc/siptools_research.conf"
+):
+    """Download all dataset files.
 
     :param metax_client: metax access
     :param dataset_id: dataset identifier
     :param config_file: configuration file path
     :returns: A list of the metadata of all downloaded files
     """
-    conf = Configuration(config_file)
-    pas_storage_id = conf.get("pas_storage_id")
-
     dataset_files = metax_client.get_dataset_files(dataset_id)
     for dataset_file in dataset_files:
-        identifier = dataset_file["identifier"]
-        path = dataset_file["file_path"]
-        if not dataset_file["file_storage"]["identifier"] == pas_storage_id:
-            try:
-                download_file(identifier, config_file=config_file)
-            except (HTTPError, IdaError):
-                raise FileAccessError(
-                    "Could not download file '%s' from IDA" % path
-                )
+        try:
+            download_file(dataset_file, config_file=config_file)
+        except (HTTPError, IdaError, UploadApiError):
+            raise FileAccessError(
+                "Could not download file '%s'" % dataset_file["file_path"]
+            )
+
     return dataset_files
 
 
@@ -79,18 +80,13 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         conf.get('metax_password'),
         verify=conf.getboolean('metax_ssl_verification')
     )
-    mongo_files = Database(config_file).client.upload.files
     ida_path = os.path.join(conf.get("workspace_root"), "ida_files")
 
     try:
         dataset_files = _download_files(metax_client, dataset_id,
                                         config_file=config_file)
         for dataset_file in dataset_files:
-            mongo_file = mongo_files.find_one(
-                {"_id": dataset_file["identifier"]}
-            )
-            _validate_file(dataset_file, mongo_file, storage_id,
-                           ida_path, errors)
+            _validate_file(dataset_file, storage_id, ida_path, errors)
         if errors:
             raise FileValidationError(
                 "Following files are not well-formed:",
@@ -109,11 +105,12 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         metax_client.set_preservation_state(dataset_id,
                                             state=status_code,
                                             system_description=message)
+
     return True
 
 
-def _validate_file(file_, mongo_file, storage_id, ida_path, errors):
-    """validates file using Scraper
+def _validate_file(file_, storage_id, ida_path, errors):
+    """Validate file using file-scraper.
 
     :param file_: file metadata
     :param mongo_file: file data in mongo
@@ -129,11 +126,7 @@ def _validate_file(file_, mongo_file, storage_id, ida_path, errors):
     encoding = file_chars.get("encoding", None)
 
     if file_["file_storage"]["identifier"] == storage_id:
-        if not mongo_file:
-            raise FileAccessError(
-                "File '%s' not found in pre-ingest file storage" % path
-            )
-        filepath = mongo_file["file_path"]
+        filepath = get_file_path(identifier)
     else:
         filepath = os.path.join(ida_path, identifier)
 

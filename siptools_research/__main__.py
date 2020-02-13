@@ -27,11 +27,11 @@ from __future__ import print_function
 import argparse
 import json
 
-import siptools_research.utils.ida
 from siptools_research.metadata_generator import generate_metadata
 from siptools_research.workflow_init import preserve_dataset
 from siptools_research.metadata_validator import validate_metadata
 from siptools_research.utils.database import Database
+from siptools_research.utils.download import clean_ida_cache
 
 
 # ANSI escape sequences for different colors
@@ -318,7 +318,7 @@ def _enable(args):
 
 def _clean_cache(args):
     """Clean files from Ida file cache"""
-    siptools_research.utils.ida.clean_cache(args.config)
+    clean_ida_cache(args.config)
 
 
 def main():

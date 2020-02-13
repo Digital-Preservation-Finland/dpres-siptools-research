@@ -8,7 +8,6 @@ import tempfile
 from requests.exceptions import HTTPError
 
 from file_scraper.scraper import Scraper
-from upload_rest_api.utils import get_file_path
 from metax_access import (Metax, DS_STATE_TECHNICAL_METADATA_GENERATED,
                           DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
                           MetaxError)
@@ -16,7 +15,8 @@ from siptools.scripts.import_object import (DEFAULT_VERSIONS,
                                             UNKNOWN_VERSION,
                                             NO_VERSION)
 
-from siptools_research.utils import ida
+from siptools_research.utils.download import download_file
+from siptools_research.utils.download import UploadApiError, IdaError
 from siptools_research.config import Configuration
 from siptools_research.xml_metadata import (
     XMLMetadataGenerator, MetadataGenerationError
@@ -111,7 +111,6 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
     :returns: ``None``
     """
     config_object = Configuration(config_file)
-    storage_id = config_object.get("pas_storage_id")
     for file_ in metax_client.get_dataset_files(dataset_id):
         # Get file info
         file_id = file_['identifier']
@@ -119,25 +118,11 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
 
         # Download file to tmp directory
         tmpfile = os.path.join(tmpdir, file_id)
+        try:
+            download_file(file_metadata, tmpfile, config_file)
+        except (UploadApiError, IdaError) as error:
+            raise MetadataGenerationError(str(error), dataset=dataset_id)
 
-        if file_metadata["file_storage"]["identifier"] == storage_id:
-            # Local file storage
-            file_path = get_file_path(file_id)
-            if file_path is None:
-                path = file_metadata["file_path"]
-                raise MetadataGenerationError(
-                    "File '%s' not found in pre-ingest file storage" % path,
-                    dataset=dataset_id
-                )
-            os.link(file_path, tmpfile)
-        else:
-            # IDA
-            try:
-                ida.download_file(file_id, tmpfile, config_file)
-            except ida.IdaError:
-                message = ("File {} was not found in Ida."
-                           .format(file_["file_path"]))
-                raise MetadataGenerationError(message, dataset=dataset_id)
         # Generate and update file_characteristics
         file_characteristics = _generate_file_characteristics(
             tmpfile, file_metadata.get('file_characteristics', {})
