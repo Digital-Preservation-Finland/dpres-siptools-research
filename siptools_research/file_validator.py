@@ -11,7 +11,6 @@ from requests.exceptions import HTTPError
 from upload_rest_api.utils import get_file_path
 
 from siptools_research.config import Configuration
-from siptools_research.utils.database import Database
 from siptools_research.utils.download import download_file
 from siptools_research.utils.download import IdaError, UploadApiError
 

@@ -110,7 +110,6 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
     :param config_file: path to configuration file
     :returns: ``None``
     """
-    config_object = Configuration(config_file)
     for file_ in metax_client.get_dataset_files(dataset_id):
         # Get file info
         file_id = file_['identifier']
