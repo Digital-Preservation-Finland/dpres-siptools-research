@@ -16,8 +16,7 @@ from siptools.scripts.import_object import (DEFAULT_VERSIONS,
                                             UNKNOWN_VERSION,
                                             NO_VERSION)
 
-from siptools_research.utils.download import download_file
-from siptools_research.utils.download import UploadApiError, IdaError
+from siptools_research.utils.download import download_file, FileNotFoundError
 from siptools_research.config import Configuration
 from siptools_research.xml_metadata import (
     XMLMetadataGenerator, MetadataGenerationError
@@ -122,7 +121,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
         tmpfile = os.path.join(tmpdir, file_id)
         try:
             download_file(file_metadata, tmpfile, config_file, upload_files)
-        except (UploadApiError, IdaError) as error:
+        except FileNotFoundError as error:
             raise MetadataGenerationError(str(error), dataset=dataset_id)
 
         # Generate and update file_characteristics

@@ -10,13 +10,8 @@ from upload_rest_api.database import FilesCol
 from siptools_research.config import Configuration
 
 
-class IdaError(Exception):
-    """Exception raised when files in IDA can't be accessed"""
-    pass
-
-
-class UploadApiError(Exception):
-    """Exception raised when files in upload-rest-api can't be accessed"""
+class FileNotFoundError(Exception):
+    """Exception raised when files can't be accessed"""
     pass
 
 
@@ -39,7 +34,7 @@ def _get_response(identifier, conf, stream=False):
                                 verify=False,
                                 stream=stream)
     except requests.exceptions.ConnectionError as exc:
-        raise IdaError("Could not connect to Ida: %s" % str(exc))
+        raise FileNotFoundError("Could not connect to Ida: %s" % str(exc))
 
     response.raise_for_status()
     return response
@@ -56,7 +51,7 @@ def _get_local_file(file_metadata, upload_files):
     filepath = upload_files.get_path(identifier)
 
     if (filepath is None) or (not os.path.isfile(filepath)):
-        raise UploadApiError(
+        raise FileNotFoundError(
             "File '%s' not found in pre-ingest file storage"
             % file_metadata["file_path"]
         )
@@ -81,7 +76,7 @@ def _get_ida_file(file_metadata, conf):
             response = _get_response(identifier, conf, stream=True)
         except HTTPError as error:
             if error.response.status_code == 404:
-                raise IdaError(
+                raise FileNotFoundError(
                     "File '%s' not found in Ida" % file_metadata["file_path"]
                 )
             raise

@@ -5,7 +5,7 @@ import pytest
 import pymongo
 
 import tests.conftest
-from siptools_research.utils.download import IdaError, UploadApiError
+from siptools_research.utils.download import FileNotFoundError
 from siptools_research.workflow import get_files
 from siptools_research.workflowtask import InvalidMetadataError
 
@@ -87,10 +87,8 @@ def test_missing_files(testpath, file_storage):
     )
     assert not task.complete()
 
-    error = IdaError if file_storage == "ida" else UploadApiError
-
     # Run task.
-    with pytest.raises(error) as excinfo:
+    with pytest.raises(FileNotFoundError) as excinfo:
         task.run()
 
     # Check exception message

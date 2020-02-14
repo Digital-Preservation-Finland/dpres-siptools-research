@@ -380,7 +380,9 @@ def test_generate_metadata_ida_download_error(monkeypatch):
     """
 
     def _get_dataset_exception(*_args):
-        raise download.IdaError("File '/path/to/file' not found in Ida")
+        raise download.FileNotFoundError(
+            "File '/path/to/file' not found in Ida"
+        )
 
     monkeypatch.setattr(
         siptools_research.metadata_generator,

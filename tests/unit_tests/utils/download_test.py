@@ -5,7 +5,7 @@ import time
 import pytest
 
 from siptools_research.utils.download import download_file, clean_ida_cache
-from siptools_research.utils.download import IdaError
+from siptools_research.utils.download import FileNotFoundError
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
@@ -49,7 +49,7 @@ def test_download_file_404(testpath):
     :returns: ``None``
     """
     new_file_path = os.path.join(testpath, 'new_file')
-    with pytest.raises(IdaError):
+    with pytest.raises(FileNotFoundError):
         download_file(
             _get_file_metadata('pid:urn:does_not_exist'),
             new_file_path,

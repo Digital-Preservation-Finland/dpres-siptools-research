@@ -11,8 +11,7 @@ from requests.exceptions import HTTPError
 from upload_rest_api.database import FilesCol
 
 from siptools_research.config import Configuration
-from siptools_research.utils.download import download_file
-from siptools_research.utils.download import IdaError, UploadApiError
+from siptools_research.utils.download import download_file, FileNotFoundError
 
 
 def _download_files(
@@ -36,7 +35,7 @@ def _download_files(
                 config_file=config_file,
                 upload_files=upload_files
             )
-        except (HTTPError, IdaError, UploadApiError):
+        except (HTTPError, FileNotFoundError):
             raise FileAccessError(
                 "Could not download file '%s'" % dataset_file["file_path"]
             )
