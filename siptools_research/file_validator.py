@@ -8,7 +8,7 @@ from metax_access.metax import (Metax, DS_STATE_INVALID_METADATA,
 
 from requests.exceptions import HTTPError
 
-from upload_rest_api.utils import get_file_path
+from upload_rest_api.database import FilesCol
 
 from siptools_research.config import Configuration
 from siptools_research.utils.download import download_file
@@ -18,6 +18,7 @@ from siptools_research.utils.download import IdaError, UploadApiError
 def _download_files(
         metax_client,
         dataset_id,
+        upload_files,
         config_file="/etc/siptools_research.conf"
 ):
     """Download all dataset files.
@@ -30,7 +31,11 @@ def _download_files(
     dataset_files = metax_client.get_dataset_files(dataset_id)
     for dataset_file in dataset_files:
         try:
-            download_file(dataset_file, config_file=config_file)
+            download_file(
+                dataset_file,
+                config_file=config_file,
+                upload_files=upload_files
+            )
         except (HTTPError, IdaError, UploadApiError):
             raise FileAccessError(
                 "Could not download file '%s'" % dataset_file["file_path"]
@@ -80,12 +85,15 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         verify=conf.getboolean('metax_ssl_verification')
     )
     ida_path = os.path.join(conf.get("workspace_root"), "ida_files")
+    upload_files = FilesCol()
 
     try:
-        dataset_files = _download_files(metax_client, dataset_id,
+        dataset_files = _download_files(metax_client, dataset_id, upload_files,
                                         config_file=config_file)
         for dataset_file in dataset_files:
-            _validate_file(dataset_file, storage_id, ida_path, errors)
+            _validate_file(
+                dataset_file, storage_id, ida_path, errors, upload_files
+            )
         if errors:
             raise FileValidationError(
                 "Following files are not well-formed:",
@@ -108,7 +116,7 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
     return True
 
 
-def _validate_file(file_, storage_id, ida_path, errors):
+def _validate_file(file_, storage_id, ida_path, errors, upload_files):
     """Validate file using file-scraper.
 
     :param file_: file metadata
@@ -116,6 +124,7 @@ def _validate_file(file_, storage_id, ida_path, errors):
     :param storage_id: pas storage id
     :param ida_path: ida path
     :param errors: array to store non-valid files
+    :param upload_files: FilesCol object
     :returns: None
     """
     identifier = file_["identifier"]
@@ -125,7 +134,7 @@ def _validate_file(file_, storage_id, ida_path, errors):
     encoding = file_chars.get("encoding", None)
 
     if file_["file_storage"]["identifier"] == storage_id:
-        filepath = get_file_path(identifier)
+        filepath = upload_files.get_path(identifier)
     else:
         filepath = os.path.join(ida_path, identifier)
 
