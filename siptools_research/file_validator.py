@@ -6,7 +6,7 @@ from metax_access.metax import (Metax, DS_STATE_INVALID_METADATA,
                                 DS_STATE_VALID_METADATA,
                                 DS_STATE_METADATA_VALIDATION_FAILED)
 
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError
 
 from upload_rest_api.database import FilesCol
 
@@ -35,7 +35,7 @@ def _download_files(
                 config_file=config_file,
                 upload_files=upload_files
             )
-        except (HTTPError, FileNotFoundError):
+        except (HTTPError, ConnectionError, FileNotFoundError):
             raise FileAccessError(
                 "Could not download file '%s'" % dataset_file["file_path"]
             )

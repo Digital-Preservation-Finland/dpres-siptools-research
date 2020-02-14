@@ -3,7 +3,7 @@ import os
 import time
 
 import requests
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError
 
 from upload_rest_api.database import FilesCol
 
@@ -33,8 +33,8 @@ def _get_response(identifier, conf, stream=False):
                                 auth=(user, password),
                                 verify=False,
                                 stream=stream)
-    except requests.exceptions.ConnectionError as exc:
-        raise FileNotFoundError("Could not connect to Ida: %s" % str(exc))
+    except ConnectionError as exc:
+        raise ConnectionError("Could not connect to Ida: %s" % str(exc))
 
     response.raise_for_status()
     return response
