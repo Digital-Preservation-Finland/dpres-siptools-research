@@ -22,38 +22,38 @@ class CleanupWorkspace(WorkflowTask):
     success_message = 'Workspace was cleaned'
     failure_message = 'Cleaning workspace failed'
 
-    def ida_files_cleaned(self):
-        """Check if all the files are removed from Ida file cache
+    def file_cache_cleaned(self):
+        """Check if all the files are removed from file cache
 
         :returns: Boolean
         """
-        identifiers, ida_files_path = self.get_identifiers()
+        identifiers, cache_path = self.get_identifiers()
 
         for identifier in identifiers:
-            filepath = os.path.join(ida_files_path, identifier)
+            filepath = os.path.join(cache_path, identifier)
             if os.path.isfile(filepath):
                 return False
 
         return True
 
-    def clean_ida_files(self):
-        """Remove cached Ida files"""
-        identifiers, ida_files_path = self.get_identifiers()
+    def clean_file_cache(self):
+        """Remove cached files"""
+        identifiers, cache_path = self.get_identifiers()
 
         for identifier in identifiers:
-            filepath = os.path.join(ida_files_path, identifier)
+            filepath = os.path.join(cache_path, identifier)
             if os.path.isfile(filepath):
                 os.remove(filepath)
 
     def get_identifiers(self):
         """Return a list of all the file identifiers and the path to the
-        downloaded IDA files.
+        downloaded files.
 
-        :returns: Tuple (list of identifiers, ida_files_path)
+        :returns: Tuple (list of identifiers, cache_path)
         """
         config_object = Configuration(self.config)
         workspace_root = config_object.get("workspace_root")
-        ida_files_path = os.path.join(workspace_root, "ida_files")
+        cache_path = os.path.join(workspace_root, "file_cache")
 
         metax_client = Metax(
             config_object.get('metax_url'),
@@ -63,10 +63,9 @@ class CleanupWorkspace(WorkflowTask):
         )
         try:
             dataset_files = metax_client.get_dataset_files(self.dataset_id)
-            return ([_file["identifier"] for _file in dataset_files],
-                    ida_files_path)
+            return [_file["identifier"] for _file in dataset_files], cache_path
         except DatasetNotFoundError:
-            return [], ida_files_path
+            return [], cache_path
 
     def requires(self):
         """The Tasks that this Task depends on.
@@ -83,7 +82,7 @@ class CleanupWorkspace(WorkflowTask):
         :returns: None
         """
         shutil.rmtree(self.workspace)
-        self.clean_ida_files()
+        self.clean_file_cache()
 
     def complete(self):
         """Task is complete when workspace does not exist, but
@@ -110,8 +109,8 @@ class CleanupWorkspace(WorkflowTask):
         if result != 'success':
             return False
 
-        # Check are the IDA files cleaned and if workspace exists
-        return self.ida_files_cleaned() and not os.path.exists(self.workspace)
+        # Check are the cached files cleaned and if workspace exists
+        return self.file_cache_cleaned() and not os.path.exists(self.workspace)
 
 
 @CleanupWorkspace.event_handler(luigi.Event.SUCCESS)

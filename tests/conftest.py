@@ -266,7 +266,7 @@ def testpath(tmpdir, monkeypatch):
 
     # Create required directory structure in workspace root
     tmpdir.mkdir("tmp")
-    tmpdir.mkdir("ida_files")
+    tmpdir.mkdir("file_cache")
 
     return str(tmpdir)
 

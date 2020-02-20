@@ -151,7 +151,7 @@ def test_forbidden_relative_path(testpath, path):
 
     # Check that file is not saved in workspace root i.e. workspace root
     # contains only the workspace directory
-    assert set(os.listdir(testpath)) == {'workspace', 'tmp', 'ida_files'}
+    assert set(os.listdir(testpath)) == {'workspace', 'tmp', 'file_cache'}
 
 
 @pytest.mark.usefixtures('testida')

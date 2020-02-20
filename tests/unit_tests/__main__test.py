@@ -272,7 +272,7 @@ def test_main_disabled(capsys, monkeypatch):
     assert "Workflow aineisto_1 disabled" in out
 
 
-@mock.patch('siptools_research.__main__.clean_ida_cache')
+@mock.patch('siptools_research.__main__.clean_file_cache')
 def test_main_clean_cache(mocked_clean_cache, monkeypatch):
     """Test that clean_cache function is called when clean-cache subcommand is
     used.

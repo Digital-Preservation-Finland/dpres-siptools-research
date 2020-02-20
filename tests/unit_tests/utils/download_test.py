@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from siptools_research.utils.download import download_file, clean_ida_cache
+from siptools_research.utils.download import download_file, clean_file_cache
 from siptools_research.utils.download import FileNotFoundError
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 
@@ -33,8 +33,8 @@ def test_download_file(testpath):
         UNIT_TEST_CONFIG_FILE
     )
 
-    # Remove file from ida_files and test that the workspace copy stays intact
-    os.remove(os.path.join(testpath, "ida_files", "pid:urn:1"))
+    # Remove file from file_cache and test that the workspace copy stays intact
+    os.remove(os.path.join(testpath, "file_cache", "pid:urn:1"))
 
     # The file should be a text file that says: "foo\n"
     with open(new_file_path, 'r') as new_file:
@@ -57,28 +57,28 @@ def test_download_file_404(testpath):
         )
 
 
-def test_clean_ida_cache(testpath):
-    """Test that all the expired files are removed from ida_files.
+def test_clean_file_cache(testpath):
+    """Test that all the expired files are removed from file_cache.
     """
-    ida_files_path = os.path.join(testpath, 'ida_files')
+    cache_path = os.path.join(testpath, 'file_cache')
 
     # Create a fresh file
-    fpath_fresh = os.path.join(ida_files_path, "fresh_file")
+    fpath_fresh = os.path.join(cache_path, "fresh_file")
     with open(fpath_fresh, 'w') as file_:
         file_.write('foo')
 
     # Create a file older than two weeks
-    fpath_expired = os.path.join(ida_files_path, "expired_file")
+    fpath_expired = os.path.join(cache_path, "expired_file")
     with open(fpath_expired, 'w') as file_:
         file_.write('foo')
     expired_access = int(time.time() - (60*60*24*14 + 1))
     os.utime(fpath_expired, (expired_access, expired_access))
 
     # Clean all files older than two weeks
-    clean_ida_cache(UNIT_TEST_CONFIG_FILE)
+    clean_file_cache(UNIT_TEST_CONFIG_FILE)
 
-    # ida_files/fresh_file should not be removed
+    # file_cache/fresh_file should not be removed
     assert os.path.isfile(fpath_fresh)
 
-    # ida_files/expired_file should be removed
+    # file_cache/expired_file should be removed
     assert not os.path.isfile(fpath_expired)

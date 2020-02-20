@@ -40,15 +40,19 @@ def _get_response(identifier, conf, stream=False):
     return response
 
 
-def _get_local_file(file_metadata, upload_files):
+def _get_local_file(file_metadata, upload_files, conf):
     """Get upload-rest-api file.
 
     :param file_metadata: Metax file metadata
     :param upload_files: FilesCol object
+    :param conf: Configuration object
     :returns: Path to the file
     """
     identifier = file_metadata["identifier"]
     filepath = upload_files.get_path(identifier)
+    cache_path = os.path.join(
+        conf.get("workspace_root"), "file_cache", identifier
+    )
 
     if (filepath is None) or (not os.path.isfile(filepath)):
         raise FileNotFoundError(
@@ -56,7 +60,10 @@ def _get_local_file(file_metadata, upload_files):
             % file_metadata["file_path"]
         )
 
-    return filepath
+    if not os.path.exists(cache_path):
+        os.link(filepath, cache_path)
+
+    return cache_path
 
 
 def _get_ida_file(file_metadata, conf):
@@ -68,7 +75,7 @@ def _get_ida_file(file_metadata, conf):
     """
     identifier = file_metadata["identifier"]
     filepath = os.path.join(
-        conf.get("workspace_root"), "ida_files", identifier
+        conf.get("workspace_root"), "file_cache", identifier
     )
 
     if not os.path.exists(filepath):
@@ -110,7 +117,7 @@ def download_file(
         upload_files = FilesCol()
 
     if file_storage == pas_storage_id:
-        filepath = _get_local_file(file_metadata, upload_files)
+        filepath = _get_local_file(file_metadata, upload_files, conf)
     else:
         filepath = _get_ida_file(file_metadata, conf)
 
@@ -118,14 +125,14 @@ def download_file(
         os.link(filepath, linkpath)
 
 
-def clean_ida_cache(config_file):
-    """Remove all files from <workspace_root>/ida_files that have not been
+def clean_file_cache(config_file):
+    """Remove all files from <workspace_root>/file_cache that have not been
     accessed in two weeks.
 
     :returns: ``None``
     """
     conf = Configuration(config_file)
-    files_path = os.path.join(conf.get("workspace_root"), "ida_files")
+    files_path = os.path.join(conf.get("workspace_root"), "file_cache")
 
     current_time = time.time()
     time_lim = 60*60*24*14

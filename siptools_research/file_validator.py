@@ -76,23 +76,20 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
 
     errors = []
     conf = Configuration(config_file)
-    storage_id = conf.get("pas_storage_id")
     metax_client = Metax(
         conf.get('metax_url'),
         conf.get('metax_user'),
         conf.get('metax_password'),
         verify=conf.getboolean('metax_ssl_verification')
     )
-    ida_path = os.path.join(conf.get("workspace_root"), "ida_files")
+    cache_path = os.path.join(conf.get("workspace_root"), "file_cache")
     upload_files = FilesCol()
 
     try:
         dataset_files = _download_files(metax_client, dataset_id, upload_files,
                                         config_file=config_file)
         for dataset_file in dataset_files:
-            _validate_file(
-                dataset_file, storage_id, ida_path, errors, upload_files
-            )
+            _validate_file(dataset_file, cache_path, errors)
         if errors:
             raise FileValidationError(
                 "Following files are not well-formed:",
@@ -115,15 +112,13 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
     return True
 
 
-def _validate_file(file_, storage_id, ida_path, errors, upload_files):
+def _validate_file(file_, cache_path, errors):
     """Validate file using file-scraper.
 
     :param file_: file metadata
     :param mongo_file: file data in mongo
-    :param storage_id: pas storage id
-    :param ida_path: ida path
+    :param cache_path: Path to the file_cache
     :param errors: array to store non-valid files
-    :param upload_files: FilesCol object
     :returns: None
     """
     identifier = file_["identifier"]
@@ -132,10 +127,7 @@ def _validate_file(file_, storage_id, ida_path, errors, upload_files):
     mimetype = file_chars["file_format"]
     encoding = file_chars.get("encoding", None)
 
-    if file_["file_storage"]["identifier"] == storage_id:
-        filepath = upload_files.get_path(identifier)
-    else:
-        filepath = os.path.join(ida_path, identifier)
+    filepath = os.path.join(cache_path, identifier)
 
     scraper = Scraper(filepath, mimetype=mimetype, charset=encoding)
     scraper.scrape(check_wellformed=True)
