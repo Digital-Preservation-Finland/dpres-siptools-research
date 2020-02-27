@@ -50,7 +50,7 @@ def _parse_args():
         description='Generate technical metadata for a dataset in Metax, '
                     'validate Metax dataset metadata, start digital '
                     'preservation workflow a Metax dataset, or query/edit '
-                    'workflow documents in MongoDB.'
+                    'workflows in MongoDB.'
     )
 
     # Add the alternative commands
@@ -58,10 +58,10 @@ def _parse_args():
     _setup_generate_args(subparsers)
     _setup_validate_args(subparsers)
     _setup_preserve_args(subparsers)
-    _setup_get_args(subparsers)
+    _setup_workflow_args(subparsers)
     _setup_status_args(subparsers)
     _setup_tasks_args(subparsers)
-    _setup_workflows_args(subparsers)
+    _setup_dataset_args(subparsers)
     _setup_disable_args(subparsers)
     _setup_enable_args(subparsers)
     _setup_clean_cache_args(subparsers)
@@ -84,7 +84,7 @@ def _setup_generate_args(subparsers):
         'generate', help='Generate technical metadata for the dataset'
     )
     generate_parser.set_defaults(func=_generate)
-    generate_parser.add_argument('dataset_id', help="Metax dataset identifier")
+    generate_parser.add_argument('dataset_id', help="Dataset identifier")
 
 
 def _setup_validate_args(subparsers):
@@ -93,7 +93,7 @@ def _setup_validate_args(subparsers):
         'validate', help='Validate dataset metadata'
     )
     validate_parser.set_defaults(func=_validate)
-    validate_parser.add_argument('dataset_id', help="Metax dataset identifier")
+    validate_parser.add_argument('dataset_id', help="Dataset identifier")
 
 
 def _setup_preserve_args(subparsers):
@@ -102,19 +102,19 @@ def _setup_preserve_args(subparsers):
         'preserve', help='Start preservation workflow'
     )
     preserve_parser.set_defaults(func=_preserve)
-    preserve_parser.add_argument('dataset_id', help="Metax dataset identifier")
+    preserve_parser.add_argument('dataset_id', help="Dataset identifier")
 
 
-def _setup_get_args(subparsers):
+def _setup_workflow_args(subparsers):
     """Define get subparser and its arguments."""
     get_parser = subparsers.add_parser(
-        'get',
-        help='Get a workflow document'
+        'workflow',
+        help='Get a workflow'
     )
-    get_parser.set_defaults(func=_get)
+    get_parser.set_defaults(func=_workflow)
     get_parser.add_argument(
         'workflow_id',
-        help="Luigi workflow identifier"
+        help="Workflow identifier"
     )
 
 
@@ -127,7 +127,7 @@ def _setup_status_args(subparsers):
     status_parser.set_defaults(func=_status)
     status_parser.add_argument(
         'workflow_id',
-        help="Luigi workflow identifier"
+        help="Workflow identifier"
     )
 
 
@@ -140,20 +140,20 @@ def _setup_tasks_args(subparsers):
     status_parser.set_defaults(func=_tasks)
     status_parser.add_argument(
         'workflow_id',
-        help="Luigi workflow identifier"
+        help="Workflow identifier"
     )
 
 
-def _setup_workflows_args(subparsers):
+def _setup_dataset_args(subparsers):
     """Define tasks subparser and its arguments."""
     status_parser = subparsers.add_parser(
-        'workflows',
-        help='Get all tasks of a single workflow'
+        'dataset',
+        help='Get all workflows of a dataset'
     )
-    status_parser.set_defaults(func=_workflows)
+    status_parser.set_defaults(func=_dataset)
     status_parser.add_argument(
         'dataset_id',
-        help="Metax dataset identifier"
+        help="Dataset identifier"
     )
 
 
@@ -166,7 +166,7 @@ def _setup_disable_args(subparsers):
     disable_parser.set_defaults(func=_disable)
     disable_parser.add_argument(
         'workflow_id',
-        help="Luigi workflow identifier"
+        help="Workflow identifier"
     )
 
 
@@ -179,7 +179,7 @@ def _setup_enable_args(subparsers):
     enable_parser.set_defaults(func=_enable)
     enable_parser.add_argument(
         'workflow_id',
-        help="Luigi workflow identifier"
+        help="Workflow identifier"
     )
 
 
@@ -225,7 +225,7 @@ def _get_workflow_document(args):
     return document
 
 
-def _get(args):
+def _workflow(args):
     """Get a workflow document"""
     document = _get_workflow_document(args)
     if document:
@@ -284,8 +284,8 @@ def _tasks(args):
             print(ENDC, end="")
 
 
-def _workflows(args):
-    """Get all workflow identifiers the correct dataset identifier"""
+def _dataset(args):
+    """Get all workflow identifiers with the correct dataset identifier"""
     dataset_id = args.dataset_id
     documents = Database(args.config).get_workflows(dataset_id)
 
