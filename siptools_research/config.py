@@ -5,7 +5,7 @@ import configparser
 
 
 DEFAULTS = {
-    'workspace_root': '/var/spool/siptools-research',
+    'packaging_root': '/var/spool/siptools-research',
     'mongodb_host': 'localhost',
     'mongodb_database': 'siptools-research',
     'mongodb_collection': 'workflow',

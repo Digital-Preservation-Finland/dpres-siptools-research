@@ -82,7 +82,7 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         conf.get('metax_password'),
         verify=conf.getboolean('metax_ssl_verification')
     )
-    cache_path = os.path.join(conf.get("workspace_root"), "file_cache")
+    cache_path = os.path.join(conf.get("packaging_root"), "file_cache")
     upload_files = FilesCol()
 
     try:

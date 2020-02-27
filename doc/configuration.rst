@@ -2,7 +2,7 @@ Configuration
 -------------
 All configuration in default configuration file: `/etc/siptools_research.conf`.
 
-workspace_root
+packaging_root
     Directory where workspaces are created for each workflow. Default: ``"/var/spool/siptools-research"``
 mongodb_host
     MongoDB server host. Default: ``"localhost"``

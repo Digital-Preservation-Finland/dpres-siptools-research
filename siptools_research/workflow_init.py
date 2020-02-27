@@ -39,11 +39,11 @@ class InitWorkflows(luigi.WrapperTask):
         :returns: List of CleanupWorkspace tasks
         """
 
-        workspace_root = Configuration(self.config).get('workspace_root')
+        packaging_root = Configuration(self.config).get('packaging_root')
         database = siptools_research.utils.database.Database(self.config)
 
         for workflow in database.get_incomplete_workflows():
-            workspace = os.path.join(workspace_root, workflow['_id'])
+            workspace = os.path.join(packaging_root, workflow['_id'])
 
             yield InitWorkflow(workspace=workspace,
                                dataset_id=workflow['dataset'],
@@ -61,12 +61,12 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     """
     # Read configuration file
     conf = Configuration(config)
-    workspace_root = conf.get('workspace_root')
+    packaging_root = conf.get('packaging_root')
 
     # Set workspace name and path
     workspace_name = "aineisto_%s-%s" % (dataset_id,
                                          str(uuid.uuid4()))
-    workspace = os.path.join(workspace_root, workspace_name)
+    workspace = os.path.join(packaging_root, workspace_name)
 
     # Add information to mongodb
     database = siptools_research.utils.database.Database(config)

@@ -113,8 +113,8 @@ def test_missing_files(testpath, file_storage):
 def test_forbidden_relative_path(testpath, path):
     """Test that files can not be saved outside the workspace by using relative
     file paths in Metax. The tested path would be downloaded to
-    `<workspace_root>/<workspace>/<sip_creation_path>/../../file1` which equals
-    to `<workspace_root>/file1`, if the path was not validated.
+    `<packaging_root>/<workspace>/<sip_creation_path>/../../file1` which equals
+    to `<packaging_root>/file1`, if the path was not validated.
 
     :param testpath: Temporary workspace path fixture
     :param path: sample file path

@@ -255,7 +255,7 @@ def testpath(tmpdir, monkeypatch):
         """Mock Configuration().get() to return temporary directory instead of
         path found in configuration file
         """
-        if parameter == "workspace_root":
+        if parameter == "packaging_root":
             return str(tmpdir)
 
         return self._parser.get(self.config_section, parameter)

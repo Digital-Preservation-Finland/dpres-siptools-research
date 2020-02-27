@@ -54,8 +54,8 @@ def test_initworkflows():
 
     # Only workflows 1 and 3 should be incomplete
     assert set([required_task.workspace for required_task in required_tasks])\
-        == set(['./test_workspace_root/workflow1',
-                './test_workspace_root/workflow3'])
+        == set(['./test_packaging_root/workflow1',
+                './test_packaging_root/workflow3'])
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')

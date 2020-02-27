@@ -52,8 +52,8 @@ class CleanupWorkspace(WorkflowTask):
         :returns: Tuple (list of identifiers, cache_path)
         """
         config_object = Configuration(self.config)
-        workspace_root = config_object.get("workspace_root")
-        cache_path = os.path.join(workspace_root, "file_cache")
+        packaging_root = config_object.get("packaging_root")
+        cache_path = os.path.join(packaging_root, "file_cache")
 
         metax_client = Metax(
             config_object.get('metax_url'),

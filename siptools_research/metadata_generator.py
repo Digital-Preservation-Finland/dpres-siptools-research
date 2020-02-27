@@ -67,7 +67,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     )
     tmpdir = tempfile.mkdtemp(
         prefix='generate_metadata-',
-        dir=os.path.join(config_object.get('workspace_root'), 'tmp')
+        dir=os.path.join(config_object.get('packaging_root'), 'tmp')
     )
 
     # set default values
