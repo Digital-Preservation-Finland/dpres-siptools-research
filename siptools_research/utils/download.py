@@ -51,7 +51,7 @@ def _get_local_file(file_metadata, upload_files, conf):
     identifier = file_metadata["identifier"]
     filepath = upload_files.get_path(identifier)
     cache_path = os.path.join(
-        conf.get("workspace_root"), "file_cache", identifier
+        conf.get("packaging_root"), "file_cache", identifier
     )
 
     if (filepath is None) or (not os.path.isfile(filepath)):
@@ -75,7 +75,7 @@ def _get_ida_file(file_metadata, conf):
     """
     identifier = file_metadata["identifier"]
     filepath = os.path.join(
-        conf.get("workspace_root"), "file_cache", identifier
+        conf.get("packaging_root"), "file_cache", identifier
     )
 
     if not os.path.exists(filepath):
@@ -126,13 +126,13 @@ def download_file(
 
 
 def clean_file_cache(config_file):
-    """Remove all files from <workspace_root>/file_cache that have not been
+    """Remove all files from <packaging_root>/file_cache that have not been
     accessed in two weeks.
 
     :returns: ``None``
     """
     conf = Configuration(config_file)
-    files_path = os.path.join(conf.get("workspace_root"), "file_cache")
+    files_path = os.path.join(conf.get("packaging_root"), "file_cache")
 
     current_time = time.time()
     time_lim = 60*60*24*14
