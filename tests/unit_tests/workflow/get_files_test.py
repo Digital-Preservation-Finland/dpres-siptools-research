@@ -113,15 +113,16 @@ def test_missing_files(testpath, file_storage):
 def test_forbidden_relative_path(testpath, path):
     """Test that files can not be saved outside the workspace by using relative
     file paths in Metax. The tested path would be downloaded to
-    `<packaging_root>/<workspace>/<sip_creation_path>/../../file1` which equals
-    to `<packaging_root>/file1`, if the path was not validated.
+    `<packaging_root>/workspaces/<workspace>/<sip_creation_path>/../../file1`
+    which equals to `<packaging_root>/workspaces/file1`, if the path was not
+    validated.
 
     :param testpath: Temporary workspace path fixture
     :param path: sample file path
     :returns: ``None``
     """
     # Create the workspace and required directories
-    workspace = os.path.join(testpath, 'workspace')
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
     os.makedirs(sipdirectory)
 
@@ -151,7 +152,7 @@ def test_forbidden_relative_path(testpath, path):
 
     # Check that file is not saved in workspace root i.e. workspace root
     # contains only the workspace directory
-    assert set(os.listdir(testpath)) == {'workspace', 'tmp', 'file_cache'}
+    assert set(os.listdir(testpath)) == {'workspaces', 'tmp', 'file_cache'}
 
 
 @pytest.mark.usefixtures('testida')
