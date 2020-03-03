@@ -164,6 +164,14 @@ class Database(object):
             upsert=True
         )
 
+    def get(self, search):
+        """Get workflow documents with arbitrary filter.
+
+        :param search: Filter dictionary
+        :returns: Workflow documents
+        """
+        return self._collection.find(search)
+
     def get_workflows(self, dataset_id):
         """Get workflow documents by dataset_id
 

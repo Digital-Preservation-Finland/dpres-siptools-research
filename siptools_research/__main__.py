@@ -59,6 +59,7 @@ def _parse_args():
     _setup_validate_args(subparsers)
     _setup_preserve_args(subparsers)
     _setup_workflow_args(subparsers)
+    _setup_workflows_args(subparsers)
     _setup_status_args(subparsers)
     _setup_tasks_args(subparsers)
     _setup_dataset_args(subparsers)
@@ -106,7 +107,7 @@ def _setup_preserve_args(subparsers):
 
 
 def _setup_workflow_args(subparsers):
-    """Define get subparser and its arguments."""
+    """Define workflow subparser and its arguments."""
     get_parser = subparsers.add_parser(
         'workflow',
         help='Get a workflow'
@@ -115,6 +116,39 @@ def _setup_workflow_args(subparsers):
     get_parser.add_argument(
         'workflow_id',
         help="Workflow identifier"
+    )
+
+
+def _setup_workflows_args(subparsers):
+    """Define workflows subparser and its arguments."""
+    parser = subparsers.add_parser(
+        'workflows',
+        help='Get workflow documents with specified filters'
+    )
+    parser.set_defaults(func=_workflows)
+    parser.add_argument(
+        '--dataset',
+        help="Dataset identifier"
+    )
+    parser.add_argument(
+        '--disabled',
+        action="store_true", default=False,
+        help="Filter by disabled == True"
+    )
+    parser.add_argument(
+        '--enabled',
+        action="store_true", default=False,
+        help="Filter by disabled == False"
+    )
+    parser.add_argument(
+        '--incomplete',
+        action="store_true", default=False,
+        help="Filter by completed == False"
+    )
+    parser.add_argument(
+        '--completed',
+        action="store_true", default=False,
+        help="Filter by completed == True"
     )
 
 
@@ -225,11 +259,42 @@ def _get_workflow_document(args):
     return document
 
 
+def _get_workflow_documents(args):
+    """Get a workflow documents with filters.
+    """
+    search = {}
+    if args.dataset:
+        search["dataset"] = args.dataset
+    if args.disabled:
+        search["disabled"] = True
+    elif args.enabled:
+        search["disabled"] = False
+    if args.incomplete:
+        search["completed"] = False
+    elif args.completed:
+        search["completed"] = True
+
+    database = Database(args.config)
+    documents = database.get(search)
+    if documents.count() == 0:
+        print(FAILC + "Could not find any workflows" + ENDC)
+
+    return documents
+
+
 def _workflow(args):
     """Get a workflow document"""
     document = _get_workflow_document(args)
     if document:
         print(json.dumps(document, indent=4))
+
+
+def _workflows(args):
+    """Get a workflow documents"""
+    documents = _get_workflow_documents(args)
+    if documents:
+        for document in documents:
+            print(json.dumps(document, indent=4))
 
 
 def _status(args):

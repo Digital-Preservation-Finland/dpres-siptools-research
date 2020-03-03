@@ -104,11 +104,11 @@ def test_main_workflow_match(capsys, monkeypatch):
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_main_workflow_no_matches(capsys, monkeypatch):
-    """Test that worklow command returns the correct workflow.
+    """Test that worklow command prints the correct error message.
 
     :returns: ``None``
     """
-    # Add a single workflow documents to the db
+    # Add a single workflow document to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
     database.add_workflow("aineisto_1", "1")
 
@@ -124,6 +124,55 @@ def test_main_workflow_no_matches(capsys, monkeypatch):
 
     out, _ = capsys.readouterr()
     error = 'Could not find document with workflow identifier: aineisto_2'
+    assert error in out
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_main_workflows_match(capsys, monkeypatch):
+    """Test that workflows command returns the correct workflow.
+
+    :returns: ``None``
+    """
+    # Add a single workflow document to the db
+    database = Database(UNIT_TEST_CONFIG_FILE)
+    database.add_workflow("aineisto_1", "1")
+
+    # Run siptools-research workflows --enabled
+    monkeypatch.setattr(
+        sys, "argv", [
+            "siptools-research",
+            "--config", UNIT_TEST_CONFIG_FILE,
+            "workflows", "--enabled"
+        ]
+    )
+    siptools_research.__main__.main()
+
+    out, _ = capsys.readouterr()
+    assert '"_id": "aineisto_1"' in out
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_main_workflows_no_matches(capsys, monkeypatch):
+    """Test that worklows command prints correct error message.
+
+    :returns: ``None``
+    """
+    # Add a single workflow document to the db
+    database = Database(UNIT_TEST_CONFIG_FILE)
+    database.add_workflow("aineisto_1", "1")
+
+    # Run siptools-research worklow 2
+    monkeypatch.setattr(
+        sys, "argv", [
+            "siptools-research",
+            "--config", UNIT_TEST_CONFIG_FILE,
+            "workflows", "--disabled"
+        ]
+    )
+    siptools_research.__main__.main()
+
+    out, _ = capsys.readouterr()
+    error = 'Could not find any workflows'
     assert error in out
 
 
