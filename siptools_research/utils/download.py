@@ -12,7 +12,10 @@ from siptools_research.config import Configuration
 
 class FileNotFoundError(Exception):
     """Exception raised when files can't be accessed"""
-    pass
+
+
+class FileLockError(Exception):
+    """Exception raised when file is locked by another process"""
 
 
 def _get_response(identifier, conf, stream=False):
@@ -77,8 +80,17 @@ def _get_ida_file(file_metadata, conf):
     filepath = os.path.join(
         conf.get("packaging_root"), "file_cache", identifier
     )
+    tmp_path = os.path.join(
+        conf.get("packaging_root"), "tmp", identifier
+    )
 
+    # Check that no other process is fetching the file from IDA
+    if os.path.exists(tmp_path):
+        raise FileLockError("Lock file '%s' exists" % tmp_path)
+
+    # If cached file doesn't exists, GET it from IDA
     if not os.path.exists(filepath):
+        # Send the GET request
         try:
             response = _get_response(identifier, conf, stream=True)
         except HTTPError as error:
@@ -88,9 +100,15 @@ def _get_ida_file(file_metadata, conf):
                 )
             raise
 
-        with open(filepath, 'wb') as new_file:
-            for chunk in response.iter_content(chunk_size=1024):
-                new_file.write(chunk)
+        # Write the stream to tmp_path, create a hard link to file_cache
+        # and cleanup the tmp_path
+        try:
+            with open(tmp_path, 'wb') as new_file:
+                for chunk in response.iter_content(chunk_size=1024):
+                    new_file.write(chunk)
+            os.link(tmp_path, filepath)
+        finally:
+            os.remove(tmp_path)
 
     return filepath
 
