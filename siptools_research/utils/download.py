@@ -81,7 +81,7 @@ def _get_ida_file(file_metadata, conf):
         conf.get("packaging_root"), "file_cache", identifier
     )
     tmp_path = os.path.join(
-        conf.get("packaging_root"), "tmp", identifier
+        conf.get("packaging_root"), "tmp", "IDA-%s" % identifier
     )
 
     # Check that no other process is fetching the file from IDA
