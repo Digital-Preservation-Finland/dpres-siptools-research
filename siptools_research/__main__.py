@@ -262,16 +262,21 @@ def _get_workflow_document(args):
 def _get_workflow_documents(args):
     """Get a workflow documents with filters.
     """
+    if args.disabled and args.enabled:
+        raise ValueError("Use either disabled or enabled")
+    elif args.incomplete and args.completed:
+        raise ValueError("Use either incomplete or completed")
+
     search = {}
     if args.dataset:
         search["dataset"] = args.dataset
     if args.disabled:
         search["disabled"] = True
-    elif args.enabled:
+    if args.enabled:
         search["disabled"] = False
     if args.incomplete:
         search["completed"] = False
-    elif args.completed:
+    if args.completed:
         search["completed"] = True
 
     database = Database(args.config)
