@@ -158,9 +158,11 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     :param original_file_characteristics: full original metadata dictionary
     :returns: New `file_characteristics` dictionary
     """
+    mimetype = original_file_characteristics.get("file_format", None)
+    charset = original_file_characteristics.get("encoding", None)
 
     # Generate technical metadata from file
-    scraper = Scraper(filepath)
+    scraper = Scraper(filepath, mimetype=mimetype, charset=charset)
     scraper.scrape(check_wellformed=False)
 
     # Create file_characteristics object
