@@ -150,6 +150,11 @@ def _setup_workflows_args(subparsers):
         action="store_true", default=False,
         help="Filter by completed == True"
     )
+    parser.add_argument(
+        '--full',
+        action="store_true", default=False,
+        help="Print the full workflows"
+    )
 
 
 def _setup_status_args(subparsers):
@@ -297,9 +302,12 @@ def _workflow(args):
 def _workflows(args):
     """Get a workflow documents"""
     documents = _get_workflow_documents(args)
-    if documents:
+    if documents.count() > 0:
         for document in documents:
-            print(json.dumps(document, indent=4))
+            if not args.full:
+                print(document["_id"])
+            else:
+                print(json.dumps(document, indent=4))
 
 
 def _status(args):

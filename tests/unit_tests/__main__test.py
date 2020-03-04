@@ -148,7 +148,7 @@ def test_main_workflows_match(capsys, monkeypatch):
     siptools_research.__main__.main()
 
     out, _ = capsys.readouterr()
-    assert '"_id": "aineisto_1"' in out
+    assert out == "aineisto_1\n"
 
 
 @pytest.mark.usefixtures('testmongoclient')
