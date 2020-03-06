@@ -41,9 +41,11 @@ def test_generate_xml_metadata_for_csv_file():
         generator = XMLMetadataGenerator(file_path,
                                          file_md)
         generator.create()
-        mock_create_addml.assert_called_once_with(file_path, ';', False,
-                                                  'UTF-8', 'CR+LF', '"',
-                                                  flatfile_name='/foobar')
+        mock_create_addml.assert_called_once_with(
+            csv_file=file_path, delimiter=';', isheader=False,
+            charset='UTF-8', record_separator='CR+LF', quoting_char='"',
+            flatfile_name='/foobar'
+        )
 
 
 def test_generate_xml_metadata_for_audio_file():
