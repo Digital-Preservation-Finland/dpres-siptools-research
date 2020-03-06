@@ -103,12 +103,12 @@ class _CSVFileXMLMetadata(_XMLMetadata):
                 )
 
         return create_addml.create_addml_metadata(
-            self.file_path,
-            self.file_metadata['file_characteristics']['csv_delimiter'],
-            self.file_metadata['file_characteristics']['csv_has_header'],
-            self.file_metadata['file_characteristics']['encoding'],
-            self.file_metadata['file_characteristics']['csv_record_separator'],
-            self.file_metadata['file_characteristics']['csv_quoting_char'],
+            csv_file=self.file_path,
+            delimiter=self.file_metadata['file_characteristics']['csv_delimiter'],
+            isheader=self.file_metadata['file_characteristics']['csv_has_header'],
+            charset=self.file_metadata['file_characteristics']['encoding'],
+            record_separator=self.file_metadata['file_characteristics']['csv_record_separator'],
+            quoting_char=self.file_metadata['file_characteristics']['csv_quoting_char'],
             flatfile_name=self.file_metadata['file_path']
         )
 
