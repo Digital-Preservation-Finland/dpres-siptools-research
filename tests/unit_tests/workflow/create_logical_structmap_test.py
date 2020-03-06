@@ -73,13 +73,14 @@ def test_create_structmap_ok(testpath, requests_mock):
     event_detail = 'Description of provenance'
 
     create_premis_event_file(
-        sip_creation_path, event_type, event_datetime,
-        event_detail, 'success', event_detail
+        workspace=sip_creation_path, event_type=event_type,
+        event_datetime=event_datetime, event_detail=event_detail,
+        event_outcome='success', event_outcome_detail=event_detail
     )
 
     # Create dmdsec (required to create valid physical structmap)
     import_description(
-        'tests/data/datacite_sample.xml',
+        dmdsec_location='tests/data/datacite_sample.xml',
         workspace=sip_creation_path
     )
     # Create tech metadata

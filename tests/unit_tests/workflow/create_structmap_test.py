@@ -33,7 +33,7 @@ def test_create_structmap_ok(testpath):
     shutil.copy('tests/data/datacite_sample.xml', dmdpath)
 
     # Create dmdsec
-    import_description(dmdpath, workspace=sip_creation_path)
+    import_description(dmdsec_location=dmdpath, workspace=sip_creation_path)
 
     # Create digiprov
     event_type = 'creation'
@@ -41,10 +41,10 @@ def test_create_structmap_ok(testpath):
     event_detail = 'Description of provenance'
     event_outcome = 'success'
     premis_event(
-        event_type,
-        event_datetime,
-        event_detail,
-        event_outcome,
+        event_type=event_type,
+        event_datetime=event_datetime,
+        event_detail=event_detail,
+        event_outcome=event_outcome,
         workspace=sip_creation_path
     )
 

@@ -102,13 +102,14 @@ def create_test_data(workspace):
 
     # Create dmdsec
     import_description(
-        'tests/data/datacite_sample.xml',
+        dmdsec_location='tests/data/datacite_sample.xml',
         workspace=sipdirectory
     )
 
     # Create provenance
     premis_event(
-        'creation', '2016-10-13T12:30:55', 'Poika, 2.985 kg', 'success',
+        event_type='creation', event_datetime='2016-10-13T12:30:55',
+        event_detail='Poika, 2.985 kg', event_outcome='success',
         workspace=sipdirectory
     )
 
