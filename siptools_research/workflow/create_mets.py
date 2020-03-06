@@ -77,19 +77,10 @@ class CreateMets(WorkflowTask):
         # Compile METS
         mets = compile_mets.create_mets(
             workspace=self.sip_creation_path,
-            mets_attributes={
-                'PROFILE': 'tpas',
-                'CONTRACTID': contract_identifier,
-                'OBJID': preservation_id,
-                'LABEL': None,
-                'CONTENTID': None
-            },
-            metshdr_attributes={
-                'CREATEDATE': None,
-                'LASTMODDATE': None,
-                'RECORDSTATUS': 'submission'
-            },
-            organization=contract_org_name,
+            mets_profile='tpas',
+            contractid=contract_identifier,
+            objid=preservation_id,
+            organization_name=contract_org_name,
             packagingservice='Packaging Service'
         )
         compile_mets.clean_metsparts(self.sip_creation_path)
