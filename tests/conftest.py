@@ -19,6 +19,7 @@ import httpretty
 import pytest
 
 from metax_access import Metax
+import upload_rest_api
 
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
@@ -51,6 +52,15 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 def mock_os_link(monkeypatch):
     """Patch os.link with shutil.copyfile"""
     monkeypatch.setattr(os, "link", shutil.copyfile)
+
+
+@pytest.fixture(autouse=True)
+def mock_upload_conf(monkeypatch):
+    """Patch upload_rest_api configuration parsing"""
+    monkeypatch.setattr(
+        upload_rest_api.database, "parse_conf",
+        lambda conf: {"MONGO_HOST": "localhost", "MONGO_PORT": 27017}
+    )
 
 
 @pytest.fixture(autouse=False)
