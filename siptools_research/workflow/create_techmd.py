@@ -195,8 +195,9 @@ def algorithm_name(algorithm, value):
     :param value: the checksum value
     :returns: 'MD5', 'SHA-224', 'SHA-256', 'SHA-384', or 'SHA-512'
     """
-    sha2_bit_lengths \
-        = {224: 'SHA-224', 256: 'SHA-256', 384: 'SHA-384', 512: 'SHA-512'}
+    sha2_bit_lengths = {
+        224: 'SHA-224', 256: 'SHA-256', 384: 'SHA-384', 512: 'SHA-512'
+    }
     hash_bit_length = len(value) * 4
 
     if algorithm == 'md5':
