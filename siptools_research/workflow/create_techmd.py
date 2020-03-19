@@ -131,9 +131,13 @@ class CreateTechnicalMetadata(WorkflowTask):
         except KeyError:
             formatversion = ""
 
+        digest_algorithm = metadata["checksum"]["algorithm"]
+
         # figure out the checksum algorithm
-        digest_algorithm = algorithm_name(metadata["checksum"]["algorithm"],
-                                          metadata["checksum"]["value"])
+        if digest_algorithm in ["md5", "sha2"]:
+            digest_algorithm = algorithm_name(
+                digest_algorithm, metadata["checksum"]["value"]
+            )
 
         # Read file created if it defined for this file
         try:
