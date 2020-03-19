@@ -157,7 +157,7 @@ def test_validate_valid_file_metadata():
     valid_file_metadata = \
         {
             "checksum": {
-                "algorithm": "sha2",
+                "algorithm": "SHA-512",
                 "value": "habeebit"
             },
             "file_path": "path/to/file",
@@ -190,7 +190,7 @@ def test_validate_valid_file_metadata_optional_attribute_missing():
     valid_file_metadata = \
         {
             "checksum": {
-                "algorithm": "sha2",
+                "algorithm": "SHA-512",
                 "value": "habeebit"
             },
             "file_path": "path/to/file",
@@ -222,7 +222,7 @@ def test_validate_invalid_file_metadata():
     invalid_file_metadata = \
         {
             "checksum": {
-                "algorithm": "sha2",
+                "algorithm": "SHA-512",
             },
             "file_format": "html/text",
             "file_storage": {
@@ -253,7 +253,7 @@ def test_validate_invalid_file_charset():
     invalid_file_metadata = \
         {
             "checksum": {
-                "algorithm": "sha2",
+                "algorithm": "SHA-512",
                 "value": "habeebit"
             },
             "file_path": "path/to/file",
