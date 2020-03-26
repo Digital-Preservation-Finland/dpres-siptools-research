@@ -6,8 +6,6 @@ import os
 import luigi.format
 from luigi import LocalTarget
 from siptools.scripts import compile_structmap
-from siptools.mdcreator import (get_objectlist, read_md_references,
-                                read_all_amd_references)
 
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_digiprov import \

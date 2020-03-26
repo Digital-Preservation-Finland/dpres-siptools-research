@@ -9,6 +9,7 @@ import pytest
 from metax_access import MetaxError
 
 from siptools.xml.mets import NAMESPACES
+from siptools.mdcreator import read_all_amd_references
 import tests.conftest
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       algorithm_name)
@@ -41,9 +42,8 @@ def test_create_techmd_ok(testpath):
     # Run task.
     task.run()
     assert task.complete()
-    reference_file = os.path.join(
-        sipdirectory, 'import-object-md-references.xml')
-    xml = lxml.etree.parse(reference_file)
+
+    xml = read_all_amd_references(sipdirectory)
     amd_refs = xml.xpath('/mdReferences/mdReference')
     assert len(amd_refs) == 6
     for amd_ref in amd_refs:
@@ -131,9 +131,8 @@ def test_create_techmd_without_charset(testpath):
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     task.run()
-    reference_file = os.path.join(
-        sipdirectory, 'import-object-md-references.xml')
-    xml = lxml.etree.parse(reference_file)
+
+    xml = read_all_amd_references(sipdirectory)
     amd_refs = xml.xpath('/mdReferences/mdReference')
     assert len(amd_refs) == 1
     # Check that output file is created, and it has desired properties

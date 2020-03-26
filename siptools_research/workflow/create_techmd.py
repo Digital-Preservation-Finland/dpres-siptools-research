@@ -17,19 +17,23 @@ TECH_ATTR_TYPES = [
     {'mdtype': 'NISOIMG',
      'namespace': 'http://www.loc.gov/mix/v20',
      'mdtypeversion': '2.0',
-     'othermdtype': None},
+     'othermdtype': None,
+     'ref_file': 'create-mix-md-references.xml'},
     {'mdtype': 'OTHER',
      'namespace': 'http://www.arkivverket.no/standarder/addml',
      'mdtypeversion': '8.3',
-     'othermdtype': 'ADDML'},
+     'othermdtype': 'ADDML',
+     'ref_file': 'create-addml-md-references.xml'},
     {'mdtype': 'OTHER',
      'namespace': 'http://www.loc.gov/audioMD/',
      'mdtypeversion': '2.0',
-     'othermdtype': 'AudioMD'},
+     'othermdtype': 'AudioMD',
+     'ref_file': 'create-audiomd-md-references.xml'},
     {'mdtype': 'OTHER',
      'namespace': 'http://www.loc.gov/videoMD/',
      'mdtypeversion': '2.0',
-     'othermdtype': 'VideoMD'}
+     'othermdtype': 'VideoMD',
+     'ref_file': 'create-videomd-md-references.xml'},
 ]
 
 
@@ -186,8 +190,7 @@ class CreateTechnicalMetadata(WorkflowTask):
 
                 # Add reference from fileSec to TechMD
                 creator.add_reference(techmd_id, filepath)
-
-        creator.write()
+                creator.write(ref_file=type_["ref_file"])
 
 
 def algorithm_name(algorithm, value):
