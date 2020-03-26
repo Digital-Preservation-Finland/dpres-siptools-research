@@ -6,7 +6,8 @@ import os
 import luigi.format
 from luigi import LocalTarget
 from siptools.scripts import compile_structmap
-from siptools.utils import get_objectlist
+from siptools.mdcreator import (get_objectlist, read_md_references,
+                                read_all_amd_references)
 
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_digiprov import \
@@ -69,11 +70,11 @@ class CreateStructMap(WorkflowTask):
 
         :returns: ``None``
         """
-
+        ref_lists = compile_structmap.get_reference_lists(
+            workspace=self.sip_creation_path
+        )
         # Create fileSec
-        file_list = get_objectlist(self.sip_creation_path)
-        filesec = compile_structmap.create_filesec(self.sip_creation_path,
-                                                   file_list)
+        filesec = compile_structmap.create_filesec(**ref_lists)
         with self.output()[0].open('wb') as filesecxml:
             filesec.write(filesecxml,
                           pretty_print=True,
@@ -82,10 +83,11 @@ class CreateStructMap(WorkflowTask):
 
         # Create physical structmap
         filesec_element = filesec.getroot()[0]
-        structmap = compile_structmap.create_structmap(self.sip_creation_path,
-                                                       filesec_element,
-                                                       file_list,
-                                                       'Fairdata-physical')
+        structmap = compile_structmap.create_structmap(
+            filesec=filesec_element,
+            structmap_type='Fairdata-physical',
+            **ref_lists
+        )
         with self.output()[1].open('wb') as structmapxml:
             structmap.write(structmapxml,
                             pretty_print=True,

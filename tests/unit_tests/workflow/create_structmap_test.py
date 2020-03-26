@@ -45,6 +45,7 @@ def test_create_structmap_ok(testpath):
         event_datetime=event_datetime,
         event_detail=event_detail,
         event_outcome=event_outcome,
+        event_outcome_detail="Outcome detail",
         workspace=sip_creation_path
     )
 

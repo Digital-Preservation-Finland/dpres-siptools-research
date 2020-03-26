@@ -26,7 +26,7 @@ def test_createprovenanceinformation(testpath):
     # directory
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
-    os.makedirs(os.path.join(workspace, 'sip-in-progress'))
+    os.makedirs(os.path.join(workspace, 'sip-in-progress', '*'))
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
@@ -41,13 +41,13 @@ def test_createprovenanceinformation(testpath):
     assert task.complete()
 
     # Check that XML is created in workspace/sip-inprogrss/
-    assert os.path.isfile(os.path.join(workspace,
-                                       'sip-in-progress',
-                                       'creation-event-amd.xml'))
+    assert os.path.isfile(os.path.join(
+        workspace, 'sip-in-progress',
+        '6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml'))
 
-    assert os.path.isfile(os.path.join(workspace,
-                                       'sip-in-progress',
-                                       'metadata+modification-event-amd.xml'))
+    assert os.path.isfile(os.path.join(
+        workspace, 'sip-in-progress',
+        'f1ffc55803b971ab8dd013710766f47e-PREMIS%3AEVENT-amd.xml'))
 
     # Check that target file is created
     with open(os.path.join(workspace, 'create-provenance-information.'
@@ -108,7 +108,8 @@ def test_create_premis_events(testpath):
 
     # Check that the created xml-file contains correct elements.
     # pylint: disable=no-member
-    tree = lxml.etree.parse(os.path.join(testpath, 'creation-event-amd.xml'))
+    tree = lxml.etree.parse(os.path.join(
+        testpath, '24d4d306da97c4fd31c5ff1cc8c28316-PREMIS%3AEVENT-amd.xml'))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
                           namespaces={'mets': "http://www.loc.gov/METS/",

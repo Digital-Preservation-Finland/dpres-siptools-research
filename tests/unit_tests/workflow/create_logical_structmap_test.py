@@ -10,7 +10,7 @@ from metax_access import Metax
 from siptools.scripts.import_description import import_description
 from siptools.scripts.import_object import import_object
 from siptools.scripts.compile_structmap import compile_structmap
-from siptools.scripts.premis_event import create_premis_event_file
+from siptools.scripts.premis_event import premis_event
 from siptools.xml.mets import NAMESPACES
 
 import tests.conftest
@@ -72,7 +72,7 @@ def test_create_structmap_ok(testpath, requests_mock):
     event_datetime = '2014-12-31T08:19:58Z'
     event_detail = 'Description of provenance'
 
-    create_premis_event_file(
+    premis_event(
         workspace=sip_creation_path, event_type=event_type,
         event_datetime=event_datetime, event_detail=event_detail,
         event_outcome='success', event_outcome_detail=event_detail

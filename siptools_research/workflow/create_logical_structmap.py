@@ -10,6 +10,7 @@ import mets
 from metax_access import Metax
 import xml_helpers.utils as h
 from siptools.utils import encode_path
+from siptools.mdcreator import read_md_references, get_md_references
 from siptools.xml.mets import NAMESPACES
 
 from siptools_research.xml_metadata import MetadataGenerationError
@@ -114,19 +115,26 @@ class CreateLogicalStructMap(WorkflowTask):
         metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(metadata)
 
+        event_ids = get_md_references(read_md_references(
+            self.sip_creation_path, "premis-event-md-references.xml"
+        ))
+
+        event_type_ids = {}
+        for event_id in event_ids:
+            event_file = event_id[1:] + "-PREMIS%3AEVENT-amd.xml"
+            root = ET.parse(encode_path(os.path.join(
+                self.sip_creation_path, event_file))).getroot()
+            event_type = root.xpath("//premis:eventType",
+                                    namespaces=NAMESPACES)[0].text
+            event_type_ids[event_type] = event_id
         provenance_ids = []
         for provenance in metadata["research_dataset"]["provenance"]:
             event_type = get_localized_value(
                 provenance["preservation_event"]["pref_label"],
                 languages=languages
             )
-            prov_file = '%s-event-amd.xml' % event_type
-            prov_file = encode_path(os.path.join(self.sip_creation_path,
-                                                 prov_file))
-            prov_xml = ET.parse(prov_file)
-            root = prov_xml.getroot()
-            provenance_ids += root.xpath("//mets:digiprovMD/@ID",
-                                         namespaces=NAMESPACES)
+            provenance_ids += event_type_ids[event_type]
+
         return provenance_ids
 
     def find_file_categories(self):

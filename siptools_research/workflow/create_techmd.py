@@ -5,7 +5,7 @@ import os
 from luigi import LocalTarget
 from metax_access import Metax
 import siptools.scripts.import_object
-import siptools.utils
+import siptools.mdcreator
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
@@ -171,7 +171,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         filepath = metadata['file_path'].strip('/')
         xmls = self.metax_client.get_xml('files', file_id)
 
-        creator = siptools.utils.MdCreator(self.sip_creation_path)
+        creator = siptools.mdcreator.MdCreator(self.sip_creation_path)
 
         for type_ in TECH_ATTR_TYPES:
             if type_["namespace"] in xmls:

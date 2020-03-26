@@ -110,6 +110,7 @@ def create_test_data(workspace):
     premis_event(
         event_type='creation', event_datetime='2016-10-13T12:30:55',
         event_detail='Poika, 2.985 kg', event_outcome='success',
+        event_outcome_detail='Outcome detail',
         workspace=sipdirectory
     )
 

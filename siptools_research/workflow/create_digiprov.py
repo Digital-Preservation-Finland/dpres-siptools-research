@@ -143,7 +143,7 @@ def _create_premis_events(dataset_id, workspace, config):
             languages=dataset_languages
         )
 
-        premis_event.create_premis_event_file(
+        premis_event.premis_event(
             workspace=workspace, event_type=event_type,
             event_datetime=event_datetime, event_detail=event_detail,
             event_outcome=event_outcome,

@@ -41,7 +41,8 @@ def test_create_techmd_ok(testpath):
     # Run task.
     task.run()
     assert task.complete()
-    reference_file = os.path.join(sipdirectory, 'md-references.xml')
+    reference_file = os.path.join(
+        sipdirectory, 'import-object-md-references.xml')
     xml = lxml.etree.parse(reference_file)
     amd_refs = xml.xpath('/mdReferences/mdReference')
     assert len(amd_refs) == 6
@@ -130,7 +131,8 @@ def test_create_techmd_without_charset(testpath):
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     task.run()
-    reference_file = os.path.join(sipdirectory, 'md-references.xml')
+    reference_file = os.path.join(
+        sipdirectory, 'import-object-md-references.xml')
     xml = lxml.etree.parse(reference_file)
     amd_refs = xml.xpath('/mdReferences/mdReference')
     assert len(amd_refs) == 1
