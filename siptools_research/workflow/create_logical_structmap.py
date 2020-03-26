@@ -127,13 +127,14 @@ class CreateLogicalStructMap(WorkflowTask):
             event_type = root.xpath("//premis:eventType",
                                     namespaces=NAMESPACES)[0].text
             event_type_ids[event_type] = event_id
+
         provenance_ids = []
         for provenance in metadata["research_dataset"]["provenance"]:
             event_type = get_localized_value(
                 provenance["preservation_event"]["pref_label"],
                 languages=languages
             )
-            provenance_ids += event_type_ids[event_type]
+            provenance_ids += [event_type_ids[event_type]]
 
         return provenance_ids
 
