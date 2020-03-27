@@ -6,7 +6,7 @@ requests_mock
 mock
 Sphinx
 jsonschema2rst
-httpretty
+httpretty==0.9.7
 mongomock
 
 # Install requirements
