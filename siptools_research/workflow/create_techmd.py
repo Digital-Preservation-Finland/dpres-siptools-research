@@ -165,8 +165,8 @@ class CreateTechnicalMetadata(WorkflowTask):
         )
 
     def create_technical_attributes(self, metadata):
-        """Read technical attribute XML from Metax. Create METS TechMD files for
-        each metadata type, if it is available in Metax.
+        """Read technical attribute XML from Metax. Create METS TechMD files
+        for each metadata type, if it is available in Metax.
 
         :param metadata: file metadata dictionary
         :returns: ``None``
@@ -175,7 +175,8 @@ class CreateTechnicalMetadata(WorkflowTask):
         filepath = metadata['file_path'].strip('/')
         xmls = self.metax_client.get_xml('files', file_id)
 
-        creator = siptools.mdcreator.MdCreator(self.sip_creation_path)
+        creator = siptools.mdcreator.MetsSectionCreator(
+            self.sip_creation_path)
 
         for type_ in TECH_ATTR_TYPES:
             if type_["namespace"] in xmls:
