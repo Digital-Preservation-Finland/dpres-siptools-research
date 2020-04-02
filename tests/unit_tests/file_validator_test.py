@@ -1,75 +1,62 @@
 """Tests for :mod:`siptools_research.file_validator` module"""
-import os
-import json
 
 import pytest
-import pymongo
-import httpretty
 
 from siptools_research.file_validator import (validate_files,
                                               FileValidationError,
                                               FileAccessError)
-from siptools_research.config import Configuration
 import tests.conftest
 
 
-@pytest.fixture(autouse=True)
-# pylint: disable=unused-argument
-def _init_mongo_client(testmongoclient):
-    """Initializes mocked mongo collection upload.files"""
-    conf = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    mongoclient = pymongo.MongoClient(host=conf.get("mongodb_host"))
-    files_col = mongoclient.upload.files
-
-    files = [
-        "pid:urn:invalid_mimetype_1_local",
-        "pid:urn:invalid_mimetype_2_local",
-        "pid:urn:wf_test_1a_local",
-        "pid:urn:wf_test_1b_local",
-    ]
-    for _file in files:
-        files_col.insert_one({
-            "_id": _file,
-            "file_path": os.path.abspath(
-                "tests/httpretty_data/ida/%s" % _file
-            )
-        })
-
-
-@pytest.mark.parametrize(
-    "filestorage",
-    ["ida", "local"],
-    ids=["ida", "upload-rest-api"],
-)
-@pytest.mark.usefixtures("testmetax", "testida", "mock_metax_access",
-                         "testpath")
-def test_validate_files(filestorage):
+@pytest.mark.usefixtures("testmetax", "mock_metax_access", "testpath")
+def test_validate_files(requests_mock):
     """Test that validate_metadata function returns ``True`` for valid files.
+
+    :param requests_mock: Mocker object
     """
+    requests_mock.patch(
+        'https://metaksi/rest/v1/datasets/validate_files_valid'
+    )
+    requests_mock.get(
+        'https://ida.test/files/pid:urn:textfile1/download',
+        content='foo'
+    )
+    requests_mock.get(
+        'https://ida.test/files/pid:urn:textfile2/download',
+        content='bar'
+    )
     assert validate_files(
-        "validate_files_valid_%s" % filestorage,
+        "validate_files_valid",
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
+
     # verify preservation_state is set as last operation
-    _assert_file_validation_passed(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
-    )
+    last_request = requests_mock.request_history[-1].json()
+    assert last_request['preservation_description'] \
+        == 'Files passed validation'
+    assert last_request['preservation_state'] == 70
 
 
-@pytest.mark.parametrize(
-    "filestorage",
-    ["ida", "local"],
-    ids=["ida", "upload-rest-api"],
-)
-@pytest.mark.usefixtures("testmetax", "testida", "mock_metax_access",
-                         "testpath")
-def test_validate_invalid_files(filestorage):
+@pytest.mark.usefixtures("testmetax", "mock_metax_access", "testpath")
+def test_validate_invalid_files(requests_mock):
     """Test that validating files with wrong mimetype raises
     FileValidationError.
+
+    :param requests_mock: Mocker object
     """
+    requests_mock.patch(
+        'https://metaksi/rest/v1/datasets/validate_files_invalid'
+    )
+    requests_mock.get(
+        'https://ida.test/files/pid:urn:invalid_mimetype_1/download'
+    )
+    requests_mock.get(
+        'https://ida.test/files/pid:urn:invalid_mimetype_2/download'
+    )
+
     with pytest.raises(FileValidationError) as error:
         validate_files(
-            "validate_files_invalid_%s" % filestorage,
+            "validate_files_invalid",
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
@@ -79,46 +66,42 @@ def test_validate_invalid_files(filestorage):
         "path/to/file"
     )
     # verify preservation_state is set as last operation
-    _assert_file_validation_failed(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body),
-        "Following files",
-        40
+    last_request = requests_mock.request_history[-1].json()
+    assert last_request['preservation_description']\
+        .startswith("Following files")
+    assert last_request['preservation_state'] == 40
+
+
+@pytest.mark.usefixtures("testmetax", "mock_metax_access", "testpath")
+def test_validate_files_not_found(requests_mock):
+    """Test that validating files, which are not found.
+
+    :param requests_mock: Mocker object
+    """
+    requests_mock.patch(
+        'https://metaksi/rest/v1/datasets/validate_files_not_found'
+    )
+    requests_mock.get(
+        'https://ida.test/files/pid:urn:not_found_1/download',
+        status_code=404
+    )
+    requests_mock.get(
+        'https://ida.test/files/pid:urn:not_found_2/download',
+        status_code=404
     )
 
-
-@pytest.mark.parametrize(
-    "filestorage",
-    ["ida", "local"],
-    ids=["ida", "upload-rest-api"],
-)
-@pytest.mark.usefixtures("testmetax", "testida", "mock_metax_access",
-                         "testpath")
-def test_validate_files_not_found(filestorage):
-    """Test that validating files, which are not found.
-    """
     with pytest.raises(FileAccessError) as error:
         validate_files(
-            "validate_files_not_found_%s" % filestorage,
+            "validate_files_not_found",
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
-    message = "Could not download file 'path/to/file'"
-    assert str(error.value) == message
+    expected_error_message = "Could not download file 'path/to/file'"
+    assert str(error.value) == expected_error_message
+
     # verify preservation_state is set as last operation
-    _assert_file_validation_failed(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body),
-        message,
-        50
+    last_request = requests_mock.request_history[-1].json()
+    assert last_request['preservation_state'] == 50
+    assert last_request['preservation_description'].startswith(
+        expected_error_message
     )
-
-
-def _assert_file_validation_passed(body_as_json):
-    assert body_as_json == {
-        'preservation_description': 'Files passed validation',
-        'preservation_state': 70
-    }
-
-
-def _assert_file_validation_failed(body_as_json, description, state):
-    assert body_as_json['preservation_state'] == state
-    assert body_as_json['preservation_description'].startswith(description)

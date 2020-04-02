@@ -241,34 +241,19 @@ DATASETS = {
     "create_digiprov_test_dataset_file_and_logging": {
         "provenance": ["creation", "metadata modification"]
     },
-    "validate_files_valid_ida": {
-        "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
+    "validate_files_valid": {
+        "files": ["pid:urn:textfile1", "pid:urn:textfile2"]
     },
-    "validate_files_valid_local": {
-        "files": ["pid:urn:wf_test_1a_local", "pid:urn:wf_test_1b_local"]
-    },
-    "validate_files_invalid_ida": {
+    "validate_files_invalid": {
         "files": [
-            "pid:urn:invalid_mimetype_1_ida",
-            "pid:urn:invalid_mimetype_2_ida"
+            "pid:urn:invalid_mimetype_1",
+            "pid:urn:invalid_mimetype_2"
         ]
     },
-    "validate_files_invalid_local": {
+    "validate_files_not_found": {
         "files": [
-            "pid:urn:invalid_mimetype_1_local",
-            "pid:urn:invalid_mimetype_2_local"
-        ]
-    },
-    "validate_files_not_found_ida": {
-        "files": [
-            "pid:urn:not_found_1_ida",
-            "pid:urn:not_found_2_ida"
-        ]
-    },
-    "validate_files_not_found_local": {
-        "files": [
-            "pid:urn:not_found_1_local",
-            "pid:urn:not_found_2_local"
+            "pid:urn:not_found_1",
+            "pid:urn:not_found_2"
         ]
     },
     "create_digiprov_test_dataset_date_data_missing": {

@@ -24,9 +24,8 @@ def _init_files_col(mongoclient):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'testida',
-                         'mock_metax_access')
-def test_getfiles(testpath, file_storage):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
+def test_getfiles(testpath, file_storage, requests_mock):
     """Tests for ``GetFiles`` task for IDA and local files.
 
     - ``Task.complete()`` is true after ``Task.run()``
@@ -38,6 +37,11 @@ def test_getfiles(testpath, file_storage):
     if file_storage == "local":
         mongoclient = pymongo.MongoClient()
         _init_files_col(mongoclient)
+    elif file_storage == "ida":
+        requests_mock.get("https://ida.test/files/pid:urn:1/download",
+                          content='foo\n')
+        requests_mock.get("https://ida.test/files/pid:urn:2/download",
+                          content='bar\n')
 
     # Create required directories to  workspace
     sipdirectory = os.path.join(testpath, 'sip-in-progress')
@@ -64,25 +68,24 @@ def test_getfiles(testpath, file_storage):
         assert open_file.read() == 'bar\n'
 
 
-@pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'testida',
-                         'mock_metax_access')
-def test_missing_files(testpath, file_storage):
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
+def test_missing_ida_files(testpath, requests_mock):
     """Test case where a file can not be found from Ida. The first file should
-    successfully downloaded, but the second file is not found in Ida. Task
-    should fail with Exception.
+    successfully downloaded, but the second file is not found. Task should fail
+    with Exception.
 
     :param testpath: Temporary directory fixture
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
-    if file_storage == "local":
-        mongoclient = pymongo.MongoClient()
-        _init_files_col(mongoclient)
-
+    requests_mock.get('https://ida.test/files/pid:urn:1/download',
+                      content='foo\n')
+    requests_mock.get('https://ida.test/files/pid:urn:does_not_exist/download',
+                      status_code=404)
     # Init task
     task = get_files.GetFiles(
         workspace=testpath,
-        dataset_id="get_files_test_dataset_%s_missing_file" % file_storage,
+        dataset_id="get_files_test_dataset_ida_missing_file",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -91,11 +94,7 @@ def test_missing_files(testpath, file_storage):
     with pytest.raises(FileNotFoundError) as excinfo:
         task.run()
 
-    # Check exception message
-    storage = "Ida" if file_storage == "ida" else "pre-ingest file storage"
-    error_message = "File '/path/to/file4' not found in %s" % storage
-
-    assert str(excinfo.value) == error_message
+    assert str(excinfo.value) == "File '/path/to/file4' not found in Ida"
 
     # Task should not be completed
     assert not task.complete()
@@ -106,7 +105,44 @@ def test_missing_files(testpath, file_storage):
         assert _file.read() == 'foo\n'
 
 
-@pytest.mark.usefixtures('testida')
+@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
+def test_missing_local_files(testpath, requests_mock):
+    """Test case where a file can not be found from pre-ingest file storage.
+    The first file should successfully downloaded, but the second file is not
+    found. Task should fail with Exception.
+
+    :param testpath: Temporary directory fixture
+    :param requests_mock: Mocker object
+    :returns: ``None``
+    """
+    mongoclient = pymongo.MongoClient()
+    _init_files_col(mongoclient)
+
+    # Init task
+    task = get_files.GetFiles(
+        workspace=testpath,
+        dataset_id="get_files_test_dataset_local_missing_file",
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+    assert not task.complete()
+
+    # Run task.
+    with pytest.raises(FileNotFoundError) as excinfo:
+        task.run()
+
+    # Check exception message
+    assert str(excinfo.value) \
+        == "File '/path/to/file4' not found in pre-ingest file storage"
+
+    # Task should not be completed
+    assert not task.complete()
+
+    # The first file should be created into correct path
+    filepath = os.path.join(testpath, 'sip-in-progress/path/to/file1')
+    with open(filepath) as _file:
+        assert _file.read() == 'foo\n'
+
+
 @pytest.mark.parametrize('path', ["../../file1",
                                   "/../../file1",
                                   "//../../file1"])
@@ -155,19 +191,20 @@ def test_forbidden_relative_path(testpath, path):
     assert set(os.listdir(testpath)) == {'workspaces', 'tmp', 'file_cache'}
 
 
-@pytest.mark.usefixtures('testida')
 @pytest.mark.parametrize('path', ["foo/../file1",
                                   "/foo/../file1",
                                   "./file1",
                                   "././file1",
                                   "/./file1"])
-def test_allowed_relative_paths(testpath, path):
+def test_allowed_relative_paths(testpath, path, requests_mock):
     """Test that file is downloaded to correct location in some special cases.
 
     :param testpath: Temporary workspace path fixture
     :param path: sample file path
     :returns: ``None``
     """
+    requests_mock.get('https://ida.test/files/pid:urn:1/download')
+
     # Create the workspace and required directories
     workspace = os.path.join(testpath, 'workspace')
     sipdirectory = os.path.join(workspace, 'sip-in-progress')

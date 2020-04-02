@@ -8,17 +8,17 @@ import pymongo
 import httpretty
 import lxml.etree
 from requests.exceptions import HTTPError
-
 from siptools.utils import decode_path
 from metax_access import Metax, DatasetNotFoundError
 
-import tests.conftest
 import siptools_research
 from siptools_research.config import Configuration
 from siptools_research.metadata_generator import (
     generate_metadata, MetadataGenerationError
 )
 from siptools_research.utils import download
+import tests.conftest
+
 
 DEFAULT_PROVENANCE = {
     "preservation_event": {
@@ -71,18 +71,61 @@ def _init_mongo_client(testmongoclient):
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
-                         'mock_metax_access')
-def test_generate_metadata(file_storage):
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+def test_generate_metadata(file_storage, requests_mock):
     """Tests metadata generation. Generates metadata for a dataset and checks
     that JSON message sent to Metax has correct keys/values.
 
     :returns: ``None``
     """
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_1_local"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_1_local"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_1_local/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_1_local/"
+        "xml?namespace=http://www.loc.gov/mix/vfile_characteristics0",
+        status_code=201
+    )
+
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_1_ida"
+    )
+    requests_mock.get(
+        "https://ida.test/files/"
+        "pid:urn:generate_metadata_1_ida/download",
+        content='foo'
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_1_ida"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_1_ida/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_1_ida/"
+        "xml?namespace=http://www.loc.gov/mix/v20",
+        status_code=201
+    )
     generate_metadata('generate_metadata_test_dataset_1_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    json_message = json.loads(httpretty.HTTPretty.latest_requests[-2].body)
+    json_message = requests_mock.request_history[-2].json()
 
     # The file should recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
@@ -101,29 +144,73 @@ def test_generate_metadata(file_storage):
 
     # verify preservation_state is set as last operation
     _assert_metadata_generated(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+        requests_mock.request_history[-1].json()
     )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
-                         'mock_metax_access')
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
 # pylint: disable=invalid-name
-def test_generate_metadata_file_characteristics_not_present(file_storage):
+def test_generate_metadata_file_characteristics_not_present(file_storage,
+                                                            requests_mock):
     """Tests metadata generation. Generates metadata for a dataset and checks
     that JSON message sent to Metax has correct keys/values when
     file_characteristics block was not present in file metadata
 
     :returns: ``None``
     """
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_file_characteristics_local"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_file_characteristics_local"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_file_characteristics_local/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_file_characteristics_local/"
+        "xml?namespace=http://www.loc.gov/mix/v20",
+        status_code=201
+    )
+
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_file_characteristics_ida"
+    )
+    requests_mock.get(
+        "https://ida.test/files/"
+        "pid:urn:generate_metadata_file_characteristics_ida/download",
+        content='foo'
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_file_characteristics_ida"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_file_characteristics_ida/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/"
+        "pid:urn:generate_metadata_file_characteristics_ida/"
+        "xml?namespace=http://www.loc.gov/mix/v20",
+        status_code=201
+    )
     generate_metadata(
         'generate_metadata_test_dataset_file_characteristics_%s'
         % file_storage,
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    json_message = json.loads(httpretty.HTTPretty.latest_requests[-2].body)
-    # The file should recognised as plain text file
+    json_message = requests_mock.request_history[-2].json()
+    # The file should be recognised as plain text file
     assert json_message['file_characteristics']['file_format'] == 'text/plain'
 
     # The format version should not be set  since there is no different
@@ -135,27 +222,66 @@ def test_generate_metadata_file_characteristics_not_present(file_storage):
 
     # verify preservation_state is set as last operation
     _assert_metadata_generated(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+        requests_mock.request_history[-1].json()
     )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
-                         'mock_metax_access')
-def test_generate_metadata_mix(file_storage):
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+def test_generate_metadata_mix(file_storage, requests_mock):
     """Tests mix metadata generation for a image file. Generates metadata for a
     dataset that contains an image file and checks that message sent to Metax
     is valid XML. The method of last HTTP request should be POST, and the
     querystring should contain the namespace of XML.
 
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_2_local"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_2_local"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_2_local/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_2_local/"
+        "xml?namespace=http://www.loc.gov/mix/v20",
+        status_code=201
+    )
+
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_2_ida"
+    )
+    with open('tests/data/sample_files/image_png.png') as file_:
+        requests_mock.get(
+            "https://ida.test/files/pid:urn:generate_metadata_2_ida/download",
+            content=file_.read()
+        )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_2_ida"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_2_ida/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_2_ida/"
+        "xml?namespace=http://www.loc.gov/mix/v20",
+        status_code=201
+    )
+
     generate_metadata('generate_metadata_test_dataset_2_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
     # The file is 10x10px image, so the metadata should contain image width.
-    last_request = httpretty.HTTPretty.latest_requests[-2].body
+    last_request = requests_mock.request_history[-2].body
     # pylint: disable=no-member
     xml = lxml.etree.fromstring(last_request)
     assert xml.xpath('//ns0:imageWidth',
@@ -163,72 +289,146 @@ def test_generate_metadata_mix(file_storage):
         == '10'
 
     # Check HTTP request query string
-    assert httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0]\
+    assert requests_mock.request_history[-2].qs['namespace'][0]\
         == 'http://www.loc.gov/mix/v20'
 
     # Check HTTP request method
-    assert httpretty.HTTPretty.latest_requests[-2].method == "POST"
+    assert requests_mock.request_history[-2].method == "POST"
 
     # verify preservation_state is set as last operation
     _assert_metadata_generated(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+        requests_mock.request_history[-1].json()
     )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
-                         'mock_metax_access')
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
 # pylint: disable=invalid-name
-def test_generate_metadata_mix_larger_file(file_storage):
+def test_generate_metadata_mix_larger_file(file_storage, requests_mock):
     """Tests mix metadata generation for a image file. Generates metadata for a
     dataset that contains an image file larger than 512 bytes and checks that
     message sent to Metax is valid XML. The method of last HTTP request should
     be POST, and the querystring should contain the namespace of XML.
 
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_5_local"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_5_local"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_5_local/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_5_local/xml"
+        "?namespace=http://www.loc.gov/mix/v20",
+        status_code=201
+    )
+
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_5_ida"
+    )
+    with open('tests/data/sample_files/image_tiff_large.tif') as file_:
+        requests_mock.get(
+            "https://ida.test/files/pid:urn:generate_metadata_5_ida/download",
+            content=file_.read()
+        )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_5_ida"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_5_ida/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_5_ida/xml"
+        "?namespace=http://www.loc.gov/mix/v20",
+        status_code=201
+    )
+
     generate_metadata('generate_metadata_test_dataset_5_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
     # The file is 10x10px image, so the metadata should contain image width.
     # pylint: disable=no-member
-    xml = lxml.etree.fromstring(httpretty.HTTPretty.latest_requests[-2].body)
+    xml = lxml.etree.fromstring(requests_mock.request_history[-2].body)
     assert xml.xpath('//ns0:imageWidth',
                      namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
         == '640'
 
     # Check HTTP request query string
-    assert httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0]\
+    assert requests_mock.request_history[-2].qs['namespace'][0]\
         == 'http://www.loc.gov/mix/v20'
 
     # Check HTTP request method
-    assert httpretty.HTTPretty.latest_requests[-2].method == "POST"
+    assert requests_mock.request_history[-2].method == "POST"
 
     # verify preservation_state is set as last operation
     _assert_metadata_generated(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+        requests_mock.request_history[-1].json()
     )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
-                         'mock_metax_access')
-def test_generate_metadata_addml(file_storage):
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+def test_generate_metadata_addml(file_storage, requests_mock):
     """Tests addml metadata generation for a CSV file. Generates metadata for a
     dataset that contains a CSV file and checks that message sent to Metax
-    is valid XML. The method of last HTTP request should be POST, and the
-    querystring should contain the namespace of XML.
+    is valid XML.
 
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_3_local"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3_local"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3_local/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3_local/"
+        "xml?namespace=http://www.arkivverket.no/standarder/addml",
+        status_code=201
+    )
+
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_3_ida"
+    )
+    requests_mock.get(
+        "https://ida.test/files/pid:urn:generate_metadata_3_ida/download"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3_ida"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3_ida/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3_ida/"
+        "xml?namespace=http://www.arkivverket.no/standarder/addml",
+        status_code=201
+    )
+
     generate_metadata('generate_metadata_test_dataset_3_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
     # The decoded filename should be /testpath/csvfile.csv
     # pylint: disable=no-member
-    xml = lxml.etree.fromstring(httpretty.HTTPretty.latest_requests[-2].body)
+    xml = lxml.etree.fromstring(requests_mock.request_history[-2].body)
 
     flatfile = xml.xpath(
         '//addml:flatFile',
@@ -238,65 +438,122 @@ def test_generate_metadata_addml(file_storage):
     assert name == "path/to/file"
 
     # Check HTTP request query string
-    query = httpretty.HTTPretty.latest_requests[-2].querystring['namespace'][0]
+    query = requests_mock.request_history[-2].qs['namespace'][0]
     assert query == 'http://www.arkivverket.no/standarder/addml'
 
     # Check HTTP request method
-    assert httpretty.HTTPretty.latest_requests[-2].method == "POST"
+    assert requests_mock.request_history[-2].method == "POST"
 
     # verify preservation_state is set as last operation
     _assert_metadata_generated(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+        requests_mock.request_history[-1].json()
     )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
-                         'mock_metax_access')
-def test_generate_metadata_audiomd(file_storage):
-    """Tests addml metadata generation for a WAV file. Generates metadata for a
-    dataset that contains a WAV file and checks that message sent to Metax
-    is valid XML. The method of last HTTP request should be POST, and the
-    querystring should contain the namespace of XML.
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+def test_generate_metadata_audiomd(file_storage, requests_mock):
+    """Tests audiomd metadata generation for a WAV file. Generates metadata for
+    a dataset that contains a WAV file and checks that message sent to Metax is
+    valid XML.
 
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_4_local"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_4_local"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_4_local/xml",
+        content='[]'
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_4_local/"
+        "xml?namespace=http://www.loc.gov/audioMD/",
+        status_code=201
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_4_ida"
+    )
+    with open('tests/data/sample_files/audio_x-wav.wav') as file_:
+        requests_mock.get(
+            "https://ida.test/files/pid:urn:generate_metadata_4_ida/download",
+            content=file_.read()
+        )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_4_ida"
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_4_ida/xml",
+        json=[]
+    )
+    requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_4_ida/"
+        "xml?namespace=http://www.loc.gov/audioMD/",
+        status_code=201
+    )
+
     generate_metadata('generate_metadata_test_dataset_4_%s' % file_storage,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
     # pylint: disable=no-member
-    xml = lxml.etree.fromstring(httpretty.HTTPretty.latest_requests[-2].body)
+    xml = lxml.etree.fromstring(requests_mock.request_history[-2].body)
 
     freq = xml.xpath(
         '//amd:samplingFrequency',
         namespaces={"amd": "http://www.loc.gov/audioMD/"}
     )[0].text
-
     assert freq == '48'
 
     # Check HTTP request query string
-    http_request = httpretty.HTTPretty.latest_requests[-2]
-    assert http_request.querystring['namespace'][0] \
-        == 'http://www.loc.gov/audioMD/'
+    # requests_mock is case insensitive, therefore the querystrings in request
+    # history are always lower case. That functionality might change in future,
+    # and this test must then be modified.
+    assert requests_mock.request_history[-2].qs['namespace'][0] \
+        == 'http://www.loc.gov/audioMD/'.lower()
 
     # Check HTTP request method
-    assert httpretty.HTTPretty.latest_requests[-2].method == "POST"
+    assert requests_mock.request_history[-2].method == "POST"
 
     # verify preservation_state is set as last operation
     _assert_metadata_generated(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
+        requests_mock.request_history[-1].json()
     )
 
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures('testmetax', 'testida', 'mock_metax_access')
+@pytest.mark.usefixtures('testmetax', 'mock_metax_access')
 # pylint: disable=invalid-name
-def test_generate_metadata_tempfile_removal(file_storage, testpath):
+def test_generate_metadata_tempfile_removal(file_storage, testpath,
+                                            requests_mock):
     """Tests that temporary files downloaded from Ida are removed.
 
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.get(
+        "https://ida.test/files/pid:urn:generate_metadata_1_ida/download"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/"
+        "generate_metadata_test_dataset_1_local"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_1_ida"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_1_local"
+    )
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_1_ida"
+    )
+
     tmp_path = "{}/tmp".format(testpath)
 
     # Check contents of /tmp before calling generate_metadata()
@@ -309,15 +566,19 @@ def test_generate_metadata_tempfile_removal(file_storage, testpath):
     assert os.listdir(tmp_path) == tmp_dir_before_test
 
 
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
-                         'mock_metax_access')
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
 # pylint: disable=invalid-name
-def test_generate_metadata_missing_csv_info():
+def test_generate_metadata_missing_csv_info(requests_mock):
     """Tests addml metadata generation for a dataset that does not contain all
     metadata required for addml generation.
 
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.get("https://ida.test/files/missing_csv_info/download")
+    requests_mock.patch("https://metaksi/rest/v1/datasets/missing_csv_info")
+    requests_mock.patch("https://metaksi/rest/v1/files/missing_csv_info")
+
     with pytest.raises(MetadataGenerationError) as exception_info:
         generate_metadata('missing_csv_info',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -330,8 +591,7 @@ def test_generate_metadata_missing_csv_info():
 
 # pylint: disable=invalid-name
 @pytest.mark.parametrize('dataset', ['missing_provenance', 'empty_provenance'])
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath',
-                         'mock_metax_access')
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
 def test_generate_metadata_provenance(dataset):
     """Tests that provenance data is generated and added to Metax if it is
     missing from dataset metadata.
@@ -350,7 +610,7 @@ def test_generate_metadata_provenance(dataset):
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'testida', 'testpath')
+@pytest.mark.usefixtures('testmetax', 'testpath')
 def test_generate_metadata_dataset_not_found(monkeypatch):
     """Verifies that preservation state is not set when DatasetNotFoundError is
     raised by Metax get_dataset.
@@ -370,8 +630,7 @@ def test_generate_metadata_dataset_not_found(monkeypatch):
                       httpretty.core.HTTPrettyRequestEmpty)
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath',
-                         'mock_metax_access')
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
 def test_generate_metadata_ida_download_error(monkeypatch):
     """Verifies that preservation state is set correctly when file download
     from IDA fails and MetadataGenerationError is raised.
@@ -402,8 +661,7 @@ def test_generate_metadata_ida_download_error(monkeypatch):
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath',
-                         'mock_metax_access')
+@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
 def test_generate_metadata_httperror(monkeypatch):
     """Verifies that preservation state is set when HTTPError occurs.
 

@@ -26,6 +26,7 @@ import siptools_research.utils.mimetypes
 import tests.metax_data.datasets as datasets
 import tests.metax_data.files as files
 
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Print debug messages to stdout
@@ -34,8 +35,6 @@ logging.basicConfig(level=logging.DEBUG)
 METAX_PATH = "tests/httpretty_data/metax"
 METAX_URL = "https://metaksi/rest/v1"
 METAX_RPC_URL = "https://metaksi/rpc"
-IDA_PATH = "tests/httpretty_data/ida/"
-IDA_URL = 'https://86.50.169.61:4433'
 TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
 UNIT_TEST_CONFIG_FILE = \
     "tests/data/configuration_files/siptools_research_unit_test.conf"
@@ -185,48 +184,6 @@ def testmetax(request):
         """Disable fake http-server"""
         httpretty.disable()
         httpretty.reset()
-    request.addfinalizer(fin)
-
-
-@pytest.fixture(scope="function")
-def testida(request):
-    """Use fake http-server and local sample files instead of real Ida.
-
-    Files are searched from subdirectories of ``IDA_PATH``. When
-    https://86.50.169.61:4433/<file_id>/download is requested using HTTP GET
-    method, a HTTP response with contents of file: ``IDA_PATH/<file_id>`` as
-    message body is retrieved. The status of message is always *HTTP/1.1 200
-    OK*. To add new test responses just add new  file to ``IDA_PATH``.
-
-    :param request: pytest `request` fixture
-    :returns: ``None``
-    """
-
-    httpretty.enable()
-
-    # Register all files in subdirectories of ``IDA_PATH`` to httpretty.
-    for idafile in os.listdir(IDA_PATH):
-        with open(os.path.join(IDA_PATH, idafile), 'rb') as open_file:
-            body = open_file.read()
-            httpretty.register_uri(
-                httpretty.GET,
-                '%s/files/%s/download' % (IDA_URL, idafile),
-                body=body,
-                status=200,
-            )
-
-    # Register a "404 Not found" response for url:
-    # https://86.50.169.61:4433/pid:urn:does_not_exist/download
-    httpretty.register_uri(
-        httpretty.GET,
-        '%s/files/%s/download' % (IDA_URL, 'pid:urn:does_not_exist'),
-        status=404,
-    )
-
-    def fin():
-        """Disable fake http-server"""
-        httpretty.disable()
-
     request.addfinalizer(fin)
 
 

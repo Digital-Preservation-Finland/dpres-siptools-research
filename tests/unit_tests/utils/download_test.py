@@ -18,14 +18,16 @@ def _get_file_metadata(identifier):
     }
 
 
-@pytest.mark.usefixtures('testida')
-def test_download_file(testpath):
+def test_download_file(testpath, requests_mock):
     """Downloads a file to a temporary directory and checks contents of the
     file.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
+    requests_mock.get("https://ida.test/files/pid:urn:1/download",
+                      content="foo\n")
+
     new_file_path = os.path.join(testpath, 'new_file')
     download_file(
         _get_file_metadata('pid:urn:1'),
@@ -41,13 +43,15 @@ def test_download_file(testpath):
         assert new_file.read() == 'foo\n'
 
 
-@pytest.mark.usefixtures('testida')
-def test_download_file_404(testpath):
+def test_download_file_404(testpath, requests_mock):
     """Tries to download non-existing file from IDA.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
+    requests_mock.get('https://ida.test/files/pid:urn:does_not_exist/download',
+                      status_code=404)
+
     new_file_path = os.path.join(testpath, 'new_file')
     with pytest.raises(FileNotFoundError):
         download_file(

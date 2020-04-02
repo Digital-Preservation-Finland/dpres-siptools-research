@@ -84,6 +84,26 @@ FILES = {
     "pid:urn:generate_metadata_5_local": {},
     "pid:urn:generate_metadata_file_characteristics_ida": {},
     "pid:urn:generate_metadata_file_characteristics_local": {},
+    "pid:urn:textfile1": {
+        "file_characteristics": TXT_FILE_CHARS,
+        "set": [
+            ("file_path", "/path/to/file1"),
+            ("checksum", {
+                "algorithm": "md5",
+                "value": "58284d6cdd8deaffe082d063580a9df3"
+            })
+        ]
+    },
+    "pid:urn:textfile2": {
+        "file_characteristics": TXT_FILE_CHARS,
+        "set": [
+            ("file_path", "/path/to/file2"),
+            ("checksum", {
+                "algorithm": "md5",
+                "value": "90dd1fc82b5d523f6f85716c1c67c0f3"
+            })
+        ]
+    },
     "pid:urn:wf_test_1a_ida": {
         "file_characteristics": TXT_FILE_CHARS,
         "set": [
@@ -144,28 +164,16 @@ FILES = {
     "pid:urn:validate_metadata_test_image": {
         "file_characteristics": TIFF_FILE_CHARS
     },
-    "pid:urn:invalid_mimetype_1_ida": {
+    "pid:urn:invalid_mimetype_1": {
         "file_characteristics": TIFF_FILE_CHARS
     },
-    "pid:urn:invalid_mimetype_2_ida": {
+    "pid:urn:invalid_mimetype_2": {
         "file_characteristics": TIFF_FILE_CHARS
     },
-    "pid:urn:invalid_mimetype_1_local": {
+    "pid:urn:not_found_1": {
         "file_characteristics": TIFF_FILE_CHARS
     },
-    "pid:urn:invalid_mimetype_2_local": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
-    "pid:urn:not_found_1_ida": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
-    "pid:urn:not_found_2_ida": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
-    "pid:urn:not_found_1_local": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
-    "pid:urn:not_found_2_local": {
+    "pid:urn:not_found_2": {
         "file_characteristics": TIFF_FILE_CHARS
     },
     "pid:urn:891": {

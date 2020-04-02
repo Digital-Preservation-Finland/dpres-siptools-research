@@ -34,7 +34,6 @@ def _get_response(identifier, conf, stream=False):
     try:
         response = requests.get(url,
                                 auth=(user, password),
-                                verify=False,
                                 stream=stream)
     except ConnectionError as exc:
         raise ConnectionError("Could not connect to Ida: %s" % str(exc))
