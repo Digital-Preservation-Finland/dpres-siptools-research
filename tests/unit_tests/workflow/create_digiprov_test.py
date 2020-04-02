@@ -26,7 +26,7 @@ def test_createprovenanceinformation(testpath):
     # directory
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
-    os.makedirs(os.path.join(workspace, 'sip-in-progress', '*'))
+    os.makedirs(os.path.join(workspace, 'sip-in-progress'))
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(

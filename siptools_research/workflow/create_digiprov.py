@@ -2,6 +2,7 @@
 
 import os
 
+import luigi
 from luigi import local_target
 from siptools.scripts import premis_event
 from metax_access import Metax
@@ -71,15 +72,26 @@ class CreateProvenanceInformation(WorkflowTask):
         into workspace directory to notify luigi (and dependent tasks) that
         this task has finished.
 
+        We also return the path of the created provenance reference file.
+
         :returns: local target: `create-provenance-information.finished`
+                  local target: 'premis-event-md-references.xml'
         :rtype: LocalTarget
         """
-        return local_target.LocalTarget(
-            os.path.join(
-                self.workspace,
-                'create-provenance-information.finished'
+        return {
+            "finished": local_target.LocalTarget(
+                os.path.join(
+                    self.workspace,
+                    'create-provenance-information.finished'
+                )
+            ),
+            "references": local_target.LocalTarget(
+                os.path.join(
+                    self.sip_creation_path,
+                    'premis-event-md-references.xml'
+                ), format=luigi.format.Nop
             )
-        )
+        }
 
     def run(self):
         """Reads file metadata from Metax and writes digital provenance
@@ -91,7 +103,7 @@ class CreateProvenanceInformation(WorkflowTask):
                               self.sip_creation_path,
                               self.config)
 
-        with self.output().open('w') as output:
+        with self.output()["finished"].open('w') as output:
             output.write('Dataset id=' + self.dataset_id)
 
 

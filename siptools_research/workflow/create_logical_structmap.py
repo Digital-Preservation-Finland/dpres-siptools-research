@@ -36,17 +36,18 @@ class CreateLogicalStructMap(WorkflowTask):
 
     def requires(self):
         """The Tasks that this Task depends on.
+        We need the provenance reference path from CreateProvenanceInformation.
 
         :returns: list of tasks
         """
-        return [
-            CreateStructMap(workspace=self.workspace,
+        return {
+            "structmap": CreateStructMap(workspace=self.workspace,
                             dataset_id=self.dataset_id,
                             config=self.config),
-            CreateProvenanceInformation(workspace=self.workspace,
+            "provenance": CreateProvenanceInformation(workspace=self.workspace,
                                         dataset_id=self.dataset_id,
                                         config=self.config)
-        ]
+        }
 
     def output(self):
         """The output that this Task produces.
@@ -65,6 +66,7 @@ class CreateLogicalStructMap(WorkflowTask):
 
         :returns: ``None``
         """
+
 
         # Read the generated physical structmap from file
         # pylint: disable=no-member
@@ -115,8 +117,12 @@ class CreateLogicalStructMap(WorkflowTask):
         metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(metadata)
 
+        # Get the reference file path from Luigi task input
+        # It already contains the workspace path.
+        ref_file = os.path.basename(
+            self.input()["provenance"]["references"].path)
         event_ids = get_md_references(read_md_references(
-            self.sip_creation_path, "premis-event-md-references.xml"
+            self.sip_creation_path, ref_file
         ))
 
         event_type_ids = {}
