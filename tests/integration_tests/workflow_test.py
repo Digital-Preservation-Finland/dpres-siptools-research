@@ -26,6 +26,19 @@ from siptools_research.config import Configuration
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
 SCHEMATRON_PATH = "/usr/share/dpres-xml-schemas/schematron"
+CONTRACT = {
+    "contract_json": {
+        "title": "Testisopimus",
+        "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
+        "organization": {
+            "name": "Testiorganisaatio"
+        }
+    }
+}
+DIRECTORY = {
+    "identifier": "pid:urn:dir:wf1",
+    "directory_path": "/access"
+}
 
 
 def _init_files_col(mongoclient):
@@ -107,10 +120,11 @@ def _check_xml_schematron_features(mets_path):
 )
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures(
-    'testmetax', 'testida', 'testmongoclient',
-    'mock_luigi_config_path', 'mock_filetype_conf', 'mock_metax_access'
+    'testmetax', 'testmongoclient', 'mock_luigi_config_path',
+    'mock_filetype_conf', 'mock_metax_access'
 )
-def test_workflow(_mock_ssh, testpath, file_storage, module_name, task):
+def test_workflow(_mock_ssh, testpath, file_storage, module_name, task,
+                  requests_mock):
     """Run a task (and all tasks it requires) and check that check that report
     of successfull task is added to mongodb.
 
@@ -119,8 +133,57 @@ def test_workflow(_mock_ssh, testpath, file_storage, module_name, task):
     :param module_name: submodule of siptools_research.workflow that contains
                         Task to be tested
     :param task: Task class name
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.get("https://metaksi/rest/v1/contracts/"
+                      "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
+                      json=CONTRACT)
+    requests_mock.patch("https://metaksi/rest/v1/datasets/"
+                        "workflow_test_dataset_1_local")
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
+        json=DIRECTORY
+    )
+    with open("tests/data/datacite_sample.xml") as file_:
+        requests_mock.get(
+            "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_local"
+            "?dataset_format=datacite&dummy_doi=false",
+            content=file_.read()
+        )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:wf_test_1a_local/xml",
+        json=[]
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:wf_test_1b_local/xml",
+        json=[]
+    )
+    with open("tests/data/datacite_sample.xml") as file_:
+        requests_mock.get(
+            "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_ida"
+            "?dataset_format=datacite&dummy_doi=false",
+            content=file_.read()
+        )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:wf_test_1a_ida/xml",
+        json=[]
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:wf_test_1b_ida/xml",
+        json=[]
+    )
+    requests_mock.get(
+        "https://ida.test/files/pid:urn:wf_test_1a_ida/download",
+        content='foo'
+    )
+    requests_mock.get(
+        "https://ida.test/files/pid:urn:wf_test_1b_ida/download",
+        content='foo'
+    )
+    requests_mock.patch("https://metaksi/rest/v1/datasets/"
+                        "workflow_test_dataset_1_ida")
+
     # Init pymongo client
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
@@ -157,11 +220,10 @@ def test_workflow(_mock_ssh, testpath, file_storage, module_name, task):
 
 @pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures(
-    'testmetax', 'testida', 'testmongoclient',
-    'mock_luigi_config_path', 'mock_filetype_conf',
-    'mock_metax_access'
+    'testmetax', 'testmongoclient', 'mock_luigi_config_path',
+    'mock_filetype_conf', 'mock_metax_access'
 )
-def test_mets_creation(testpath, file_storage):
+def test_mets_creation(testpath, file_storage, requests_mock):
     """Run CompressSIP task (and all tasks it requires) and check that:
 
         #. report of successful task is added to mongodb.
@@ -172,8 +234,57 @@ def test_mets_creation(testpath, file_storage):
         #. mets.xml root element is valid (CONTRACTID, SPECIFICATION)
 
     :param testpath: temporary directory
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.get("https://metaksi/rest/v1/contracts/"
+                      "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
+                      json=CONTRACT)
+    requests_mock.patch("https://metaksi/rest/v1/datasets/"
+                        "workflow_test_dataset_1_local")
+    requests_mock.get(
+        "https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
+        json=DIRECTORY
+    )
+    with open("tests/data/datacite_sample.xml") as file_:
+        requests_mock.get(
+            "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_local"
+            "?dataset_format=datacite&dummy_doi=false",
+            content=file_.read()
+        )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:wf_test_1a_local/xml",
+        json=[]
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:wf_test_1b_local/xml",
+        json=[]
+    )
+    with open("tests/data/datacite_sample.xml") as file_:
+        requests_mock.get(
+            "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_ida"
+            "?dataset_format=datacite&dummy_doi=false",
+            content=file_.read()
+        )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:wf_test_1a_ida/xml",
+        json=[]
+    )
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:wf_test_1b_ida/xml",
+        json=[]
+    )
+    requests_mock.get(
+        "https://ida.test/files/pid:urn:wf_test_1a_ida/download",
+        content='foo'
+    )
+    requests_mock.get(
+        "https://ida.test/files/pid:urn:wf_test_1b_ida/download",
+        content='foo'
+    )
+    requests_mock.patch("https://metaksi/rest/v1/datasets/"
+                        "workflow_test_dataset_1_ida")
+
     # Init pymongo client
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
