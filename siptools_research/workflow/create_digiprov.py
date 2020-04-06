@@ -2,7 +2,7 @@
 
 import os
 
-import luigi
+import luigi.format
 from luigi import local_target
 from siptools.scripts import premis_event
 from metax_access import Metax

@@ -42,11 +42,13 @@ class CreateLogicalStructMap(WorkflowTask):
         """
         return {
             "structmap": CreateStructMap(workspace=self.workspace,
-                            dataset_id=self.dataset_id,
-                            config=self.config),
-            "provenance": CreateProvenanceInformation(workspace=self.workspace,
-                                        dataset_id=self.dataset_id,
-                                        config=self.config)
+                                         dataset_id=self.dataset_id,
+                                         config=self.config),
+            "provenance": CreateProvenanceInformation(
+                workspace=self.workspace,
+                dataset_id=self.dataset_id,
+                config=self.config
+            )
         }
 
     def output(self):
