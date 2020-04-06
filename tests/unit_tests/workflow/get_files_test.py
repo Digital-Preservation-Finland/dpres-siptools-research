@@ -10,38 +10,21 @@ from siptools_research.workflow import get_files
 from siptools_research.workflowtask import InvalidMetadataError
 
 
-def _init_files_col(mongoclient):
-    """Init mocked upload.files collection"""
-    mongo_files = [
-        ("pid:urn:get_files_1_local", "tests/httpretty_data/ida/pid:urn:1"),
-        ("pid:urn:get_files_2_local", "tests/httpretty_data/ida/pid:urn:2"),
-        ("pid:urn:does_not_exist_local", "file/not/found/on/disk")
-    ]
-    for identifier, fpath in mongo_files:
-        mongoclient.upload.files.insert_one(
-            {"_id": identifier, "file_path": os.path.abspath(fpath)}
-        )
-
-
-@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
-def test_getfiles(testpath, file_storage, requests_mock):
+def test_getfiles(testpath, requests_mock):
     """Tests for ``GetFiles`` task for IDA and local files.
 
     - ``Task.complete()`` is true after ``Task.run()``
     - Files are copied to correct path
 
     :param testpath: Testpath fixture
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
-    if file_storage == "local":
-        mongoclient = pymongo.MongoClient()
-        _init_files_col(mongoclient)
-    elif file_storage == "ida":
-        requests_mock.get("https://ida.test/files/pid:urn:1/download",
-                          content='foo\n')
-        requests_mock.get("https://ida.test/files/pid:urn:2/download",
-                          content='bar\n')
+    requests_mock.get("https://ida.test/files/pid:urn:1/download",
+                      content='foo\n')
+    requests_mock.get("https://ida.test/files/pid:urn:2/download",
+                      content='bar\n')
 
     # Create required directories to  workspace
     sipdirectory = os.path.join(testpath, 'sip-in-progress')
@@ -51,7 +34,7 @@ def test_getfiles(testpath, file_storage, requests_mock):
     # Init task
     task = get_files.GetFiles(
         workspace=testpath,
-        dataset_id="get_files_test_dataset_%s" % file_storage,
+        dataset_id="get_files_test_dataset",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -106,17 +89,29 @@ def test_missing_ida_files(testpath, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
-def test_missing_local_files(testpath, requests_mock):
+def test_missing_local_files(testpath):
     """Test case where a file can not be found from pre-ingest file storage.
     The first file should successfully downloaded, but the second file is not
     found. Task should fail with Exception.
 
     :param testpath: Temporary directory fixture
-    :param requests_mock: Mocker object
     :returns: ``None``
     """
+
+    # Init mocked upload.files collection
     mongoclient = pymongo.MongoClient()
-    _init_files_col(mongoclient)
+    mongo_files = [
+        ("pid:urn:get_files_1_local", os.path.join(testpath, "file1")),
+        ("pid:urn:does_not_exist_local", os.path.join(testpath, "file2"))
+    ]
+    for identifier, fpath in mongo_files:
+        mongoclient.upload.files.insert_one(
+            {"_id": identifier, "file_path": os.path.abspath(fpath)}
+        )
+
+    # Create only the first file in test directory
+    with open(os.path.join(testpath, "file1"), 'w') as file1:
+        file1.write('foo\n')
 
     # Init task
     task = get_files.GetFiles(

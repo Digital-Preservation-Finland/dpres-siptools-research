@@ -319,11 +319,8 @@ DATASETS = {
             ("pid:urn:dir:5", "Software files")
         ]
     },
-    "get_files_test_dataset_ida": {
+    "get_files_test_dataset": {
         "files": ["pid:urn:get_files_1", "pid:urn:get_files_2"]
-    },
-    "get_files_test_dataset_local": {
-        "files": ["pid:urn:get_files_1_local", "pid:urn:get_files_2_local"]
     },
     "get_files_test_dataset_ida_missing_file": {
         "files": ["pid:urn:get_files_1", "pid:urn:does_not_exist"]
