@@ -18,10 +18,10 @@ import mock
 import lxml.etree as ET
 from lxml.isoschematron import Schematron
 
-import tests.conftest
 from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.workflow.compress import CompressSIP
 from siptools_research.config import Configuration
+import tests.conftest
 
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
@@ -329,7 +329,7 @@ def assert_mets_root_element(mets_path):
     assert version == '1.7'
 
 
-def _mock_exists(self, path):
+def _mock_exists(_, path):
     if path.startswith('accepted/%s/' % date.today().strftime("%Y-%m-%d")):
         return True
 
