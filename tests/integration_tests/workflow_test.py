@@ -106,13 +106,13 @@ def _init_files_col(mongoclient):
     'testmetax', 'testmongoclient', 'mock_luigi_config_path',
     'mock_filetype_conf', 'mock_metax_access'
 )
-def test_workflow(_mock_ssh, testpath, file_storage, module_name, task,
+def test_workflow(_, testpath, file_storage, module_name, task,
                   requests_mock):
     """Run a task (and all tasks it requires) and check that check that report
     of successfull task is added to mongodb.
 
-    :param _mock_ssh: mocked paramiko.SSHClient
     :param testpath: temporary directory
+    :param file_storage: name of file source used in test ("ida" or "local")
     :param module_name: submodule of siptools_research.workflow that contains
                         Task to be tested
     :param task: Task class name
