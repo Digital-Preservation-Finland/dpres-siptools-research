@@ -43,41 +43,23 @@ BASE_DATASET = {
 
 DATASETS = {
     "1": {},
-    "generate_metadata_test_dataset_1_ida": {
-        "files": ["pid:urn:generate_metadata_1_ida"]
+    "generate_metadata_test_dataset_1": {
+        "files": ["pid:urn:generate_metadata_1"]
     },
-    "generate_metadata_test_dataset_1_local": {
-        "files": ["pid:urn:generate_metadata_1_local"]
+    "generate_metadata_test_dataset_2": {
+        "files": ["pid:urn:generate_metadata_2"]
     },
-    "generate_metadata_test_dataset_2_ida": {
-        "files": ["pid:urn:generate_metadata_2_ida"]
+    "generate_metadata_test_dataset_3": {
+        "files": ["pid:urn:generate_metadata_3"]
     },
-    "generate_metadata_test_dataset_2_local": {
-        "files": ["pid:urn:generate_metadata_2_local"]
+    "generate_metadata_test_dataset_4": {
+        "files": ["pid:urn:generate_metadata_4"]
     },
-    "generate_metadata_test_dataset_3_ida": {
-        "files": ["pid:urn:generate_metadata_3_ida"]
+    "generate_metadata_test_dataset_5": {
+        "files": ["pid:urn:generate_metadata_5"]
     },
-    "generate_metadata_test_dataset_3_local": {
-        "files": ["pid:urn:generate_metadata_3_local"]
-    },
-    "generate_metadata_test_dataset_4_ida": {
-        "files": ["pid:urn:generate_metadata_4_ida"]
-    },
-    "generate_metadata_test_dataset_4_local": {
-        "files": ["pid:urn:generate_metadata_4_local"]
-    },
-    "generate_metadata_test_dataset_5_ida": {
-        "files": ["pid:urn:generate_metadata_5_ida"]
-    },
-    "generate_metadata_test_dataset_5_local": {
-        "files": ["pid:urn:generate_metadata_5_local"]
-    },
-    "generate_metadata_test_dataset_file_characteristics_ida": {
-        "files": ["pid:urn:generate_metadata_file_characteristics_ida"]
-    },
-    "generate_metadata_test_dataset_file_characteristics_local": {
-        "files": ["pid:urn:generate_metadata_file_characteristics_local"]
+    "generate_metadata_test_dataset_file_characteristics": {
+        "files": ["pid:urn:generate_metadata_file_characteristics"]
     },
     "validate_metadata_test_dataset": {
         "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]

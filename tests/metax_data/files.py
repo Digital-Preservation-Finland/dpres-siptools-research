@@ -54,7 +54,7 @@ BASE_FILE = {
 }
 
 FILES = {
-    "pid:urn:generate_metadata_1_ida": {
+    "pid:urn:generate_metadata_1": {
         "file_characteristics": {
             "encoding": "user_defined_charset",
             "file_created": "2014-01-17T08:19:31Z",
@@ -62,28 +62,13 @@ FILES = {
             "dummy_key": "dummy_value"
         }
     },
-    "pid:urn:generate_metadata_1_local": {
-        "file_characteristics": {
-            "encoding": "user_defined_charset",
-            "file_created": "2014-01-17T08:19:31Z",
-            "file_format": "text/plain",
-            "dummy_key": "dummy_value"
-        }
-    },
-    "pid:urn:generate_metadata_2_ida": {},
-    "pid:urn:generate_metadata_2_local": {},
-    "pid:urn:generate_metadata_3_ida": {
+    "pid:urn:generate_metadata_2": {},
+    "pid:urn:generate_metadata_3": {
         "file_characteristics": CSV_FILE_CHARS
     },
-    "pid:urn:generate_metadata_3_local": {
-        "file_characteristics": CSV_FILE_CHARS
-    },
-    "pid:urn:generate_metadata_4_ida": {},
-    "pid:urn:generate_metadata_4_local": {},
-    "pid:urn:generate_metadata_5_ida": {},
-    "pid:urn:generate_metadata_5_local": {},
-    "pid:urn:generate_metadata_file_characteristics_ida": {},
-    "pid:urn:generate_metadata_file_characteristics_local": {},
+    "pid:urn:generate_metadata_4": {},
+    "pid:urn:generate_metadata_5": {},
+    "pid:urn:generate_metadata_file_characteristics": {},
     "pid:urn:textfile1": {
         "file_characteristics": TXT_FILE_CHARS,
         "set": [
