@@ -25,7 +25,6 @@ import tests.conftest
 
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
-SCHEMATRON_PATH = "/usr/share/dpres-xml-schemas/schematron"
 CONTRACT = {
     "contract_json": {
         "title": "Testisopimus",
@@ -39,6 +38,29 @@ DIRECTORY = {
     "identifier": "pid:urn:dir:wf1",
     "directory_path": "/access"
 }
+SCHEMATRONS = [
+    '/usr/share/dpres-xml-schemas/schematron/mets_addml.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_amdsec.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_digiprovmd.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_dmdsec.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_ead3.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_filesec.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_mdwrap.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_metshdr.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_mods.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_premis_digiprovmd.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_premis_rightsmd.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_premis.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_premis_techmd.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_rightsmd.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_root.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_sourcemd.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_structmap.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_techmd.sch',
+    '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'
+]
 
 
 def _init_files_col(mongoclient):
@@ -57,45 +79,6 @@ def _init_files_col(mongoclient):
         mongoclient.upload.files.insert_one(
             {"_id": identifier, "file_path": os.path.abspath(fpath)}
         )
-
-
-def _check_xml_schema_features(mets_path):
-    """Validate mets.xml against schema."""
-    schema = ET.XMLSchema(ET.parse(METS_XSD))
-    assert schema.validate(ET.parse(mets_path))
-
-
-def _check_xml_schematron_features(mets_path):
-    """Validate mets.xml against Schematrons."""
-    schematron_rules = [
-        'mets_addml.sch',
-        'mets_amdsec.sch',
-        'mets_audiomd.sch',
-        'mets_digiprovmd.sch',
-        'mets_dmdsec.sch',
-        'mets_ead3.sch',
-        'mets_filesec.sch',
-        'mets_mdwrap.sch',
-        'mets_metshdr.sch',
-        'mets_mix.sch',
-        'mets_mods.sch',
-        'mets_premis_digiprovmd.sch',
-        'mets_premis_rightsmd.sch',
-        'mets_premis.sch',
-        'mets_premis_techmd.sch',
-        'mets_rightsmd.sch',
-        'mets_root.sch',
-        'mets_sourcemd.sch',
-        'mets_structmap.sch',
-        'mets_techmd.sch',
-        'mets_videomd.sch'
-    ]
-    mets = ET.parse(mets_path)
-
-    for rule in schematron_rules:
-        rule_path = os.path.join(SCHEMATRON_PATH, rule)
-        schematron = Schematron(ET.parse(rule_path))
-        assert schematron.validate(mets)
 
 
 # Run every task as it would be run from commandline
@@ -218,12 +201,11 @@ def test_workflow(_mock_ssh, testpath, file_storage, module_name, task,
         assert document["completed"]
 
 
-@pytest.mark.parametrize("file_storage", ["ida", "local"])
 @pytest.mark.usefixtures(
     'testmetax', 'testmongoclient', 'mock_luigi_config_path',
     'mock_filetype_conf', 'mock_metax_access'
 )
-def test_mets_creation(testpath, file_storage, requests_mock):
+def test_mets_creation(testpath, requests_mock):
     """Run CompressSIP task (and all tasks it requires) and check that:
 
         #. report of successful task is added to mongodb.
@@ -240,25 +222,9 @@ def test_mets_creation(testpath, file_storage, requests_mock):
     requests_mock.get("https://metaksi/rest/v1/contracts/"
                       "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
                       json=CONTRACT)
-    requests_mock.patch("https://metaksi/rest/v1/datasets/"
-                        "workflow_test_dataset_1_local")
     requests_mock.get(
         "https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
         json=DIRECTORY
-    )
-    with open("tests/data/datacite_sample.xml") as file_:
-        requests_mock.get(
-            "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_local"
-            "?dataset_format=datacite&dummy_doi=false",
-            content=file_.read()
-        )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:wf_test_1a_local/xml",
-        json=[]
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:wf_test_1b_local/xml",
-        json=[]
     )
     with open("tests/data/datacite_sample.xml") as file_:
         requests_mock.get(
@@ -285,43 +251,37 @@ def test_mets_creation(testpath, file_storage, requests_mock):
     requests_mock.patch("https://metaksi/rest/v1/datasets/"
                         "workflow_test_dataset_1_ida")
 
-    # Init pymongo client
-    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-    mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-    database = mongoclient[conf.get('mongodb_database')]
-    collection = database[conf.get('mongodb_collection')]
-
-    dataset_id = 'workflow_test_dataset_1_%s' % file_storage
-    # Add test identifiers to upload.files collection
-    if file_storage == 'local':
-        _init_files_col(mongoclient)
-
-    workspace = os.path.join(
-        testpath, 'workspace_' + os.path.basename(testpath)
-    )
-
     luigi.build(
         [CompressSIP(
-            workspace=workspace, dataset_id=dataset_id,
+            workspace=testpath,
+            dataset_id='workflow_test_dataset_1_ida',
             config=tests.conftest.UNIT_TEST_CONFIG_FILE
         )],
         local_scheduler=True
     )
-    document = collection.find_one()
 
-    # Check 'result' field
+    # Check 'result' field in database
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
+    document = (
+        pymongo.MongoClient(host=conf.get('mongodb_host'))
+        [conf.get('mongodb_database')]
+        [conf.get('mongodb_collection')].find_one()
+    )
     assert document['workflow_tasks']['CompressSIP']['result'] == 'success'
-    mets_path = os.path.join(workspace, 'sip-in-progress', 'mets.xml')
 
-    _check_xml_schema_features(mets_path)
-    _check_xml_schematron_features(mets_path)
-    assert_mets_root_element(mets_path)
+    # Read mets.xml
+    mets = ET.parse(os.path.join(testpath, 'sip-in-progress', 'mets.xml'))
 
+    # Validate mets.xml against schema
+    schema = ET.XMLSchema(ET.parse(METS_XSD))
+    assert schema.validate(mets)
 
-def assert_mets_root_element(mets_path):
-    """Check mets root element"""
+    # Validate mets.xml against Schematrons
+    for schematron in SCHEMATRONS:
+        assert Schematron(ET.parse(schematron)).validate(mets)
 
-    mets_xml_root = ET.parse(mets_path).getroot()
+    # Check mets root element
+    mets_xml_root = mets.getroot()
     contractid = mets_xml_root.xpath('@*[local-name() = "CONTRACTID"]')[0]
     assert contractid == 'urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd'
     version = mets_xml_root.xpath('@*[local-name() = "CATALOG"] | '
