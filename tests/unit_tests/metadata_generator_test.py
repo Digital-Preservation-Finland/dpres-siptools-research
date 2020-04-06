@@ -276,7 +276,8 @@ def test_generate_metadata_addml(requests_mock):
         "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_3"
     )
     requests_mock.get(
-        "https://ida.test/files/pid:urn:generate_metadata_3/download"
+        "https://ida.test/files/pid:urn:generate_metadata_3/download",
+        content='foo'
     )
     requests_mock.patch(
         "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3"
