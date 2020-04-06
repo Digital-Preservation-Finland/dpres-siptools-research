@@ -63,24 +63,6 @@ SCHEMATRONS = [
 ]
 
 
-def _init_files_col(mongoclient):
-    """Init mocked upload.files collection"""
-    mongo_files = [
-        (
-            "pid:urn:wf_test_1a_local",
-            "tests/httpretty_data/ida/pid:urn:wf_test_1a_local"
-        ),
-        (
-            "pid:urn:wf_test_1b_local",
-            "tests/httpretty_data/ida/pid:urn:wf_test_1b_local"
-        )
-    ]
-    for identifier, fpath in mongo_files:
-        mongoclient.upload.files.insert_one(
-            {"_id": identifier, "file_path": os.path.abspath(fpath)}
-        )
-
-
 # Run every task as it would be run from commandline
 @mock.patch('siptools_research.workflow.send_sip.paramiko.SSHClient')
 @pytest.mark.parametrize(
@@ -170,13 +152,16 @@ def test_workflow(_, testpath, file_storage, module_name, task,
     # Init pymongo client
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-    database = mongoclient[conf.get('mongodb_database')]
-    collection = database[conf.get('mongodb_collection')]
 
-    dataset_id = 'workflow_test_dataset_1_%s' % file_storage
-    # Add test identifiers to upload.files collection
     if file_storage == 'local':
-        _init_files_col(mongoclient)
+        # Add sample files to pre-ingest file storage
+        mongo_files = ["pid:urn:wf_test_1a_local", "pid:urn:wf_test_1b_local"]
+        for file_id in mongo_files:
+            mongoclient.upload.files.insert_one(
+                {"_id": file_id, "file_path": os.path.join(testpath, file_id)}
+            )
+            with open(os.path.join(testpath, file_id), 'w') as file_:
+                file_.write('foo')
 
     with mock.patch.object(RemoteAnyTarget, '_exists', _mock_exists):
         workspace = os.path.join(testpath, 'workspace_' +
@@ -186,16 +171,19 @@ def test_workflow(_, testpath, file_storage, module_name, task,
         task_class = getattr(module, task)
         luigi.build(
             [task_class(
-                workspace=workspace, dataset_id=dataset_id,
+                workspace=workspace,
+                dataset_id='workflow_test_dataset_1_%s' % file_storage,
                 config=tests.conftest.UNIT_TEST_CONFIG_FILE
             )],
             local_scheduler=True
         )
 
-        document = collection.find_one()
+    collection = (mongoclient[conf.get('mongodb_database')]
+                  [conf.get('mongodb_collection')])
+    document = collection.find_one()
 
-        # Check 'result' field
-        assert document['workflow_tasks'][task]['result'] == 'success'
+    # Check 'result' field
+    assert document['workflow_tasks'][task]['result'] == 'success'
 
     if module_name == "cleanup":
         assert document["completed"]
