@@ -110,7 +110,7 @@ def test_workflow(_, testpath, file_storage, module_name, task,
         "https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
         json=DIRECTORY
     )
-    with open("tests/data/datacite_sample.xml") as file_:
+    with open("tests/data/datacite_sample.xml", 'rb') as file_:
         requests_mock.get(
             "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_local"
             "?dataset_format=datacite&dummy_doi=false",
@@ -124,7 +124,7 @@ def test_workflow(_, testpath, file_storage, module_name, task,
         "https://metaksi/rest/v1/files/pid:urn:wf_test_1b_local/xml",
         json=[]
     )
-    with open("tests/data/datacite_sample.xml") as file_:
+    with open("tests/data/datacite_sample.xml", 'rb') as file_:
         requests_mock.get(
             "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_ida"
             "?dataset_format=datacite&dummy_doi=false",
@@ -140,11 +140,11 @@ def test_workflow(_, testpath, file_storage, module_name, task,
     )
     requests_mock.get(
         "https://ida.test/files/pid:urn:wf_test_1a_ida/download",
-        content='foo'
+        content=b'foo'
     )
     requests_mock.get(
         "https://ida.test/files/pid:urn:wf_test_1b_ida/download",
-        content='foo'
+        content=b'foo'
     )
     requests_mock.patch("https://metaksi/rest/v1/datasets/"
                         "workflow_test_dataset_1_ida")
@@ -214,7 +214,7 @@ def test_mets_creation(testpath, requests_mock):
         "https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
         json=DIRECTORY
     )
-    with open("tests/data/datacite_sample.xml") as file_:
+    with open("tests/data/datacite_sample.xml", 'rb') as file_:
         requests_mock.get(
             "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_ida"
             "?dataset_format=datacite&dummy_doi=false",
@@ -230,11 +230,11 @@ def test_mets_creation(testpath, requests_mock):
     )
     requests_mock.get(
         "https://ida.test/files/pid:urn:wf_test_1a_ida/download",
-        content='foo'
+        content=b'foo'
     )
     requests_mock.get(
         "https://ida.test/files/pid:urn:wf_test_1b_ida/download",
-        content='foo'
+        content=b'foo'
     )
     requests_mock.patch("https://metaksi/rest/v1/datasets/"
                         "workflow_test_dataset_1_ida")

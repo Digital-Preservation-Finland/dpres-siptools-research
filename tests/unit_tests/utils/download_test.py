@@ -26,7 +26,7 @@ def test_download_file(testpath, requests_mock):
     :returns: ``None``
     """
     requests_mock.get("https://ida.test/files/pid:urn:1/download",
-                      content="foo\n")
+                      content=b"foo\n")
 
     new_file_path = os.path.join(testpath, 'new_file')
     download_file(

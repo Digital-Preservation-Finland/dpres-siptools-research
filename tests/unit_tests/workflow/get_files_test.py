@@ -22,9 +22,9 @@ def test_getfiles(testpath, requests_mock):
     :returns: ``None``
     """
     requests_mock.get("https://ida.test/files/pid:urn:1/download",
-                      content='foo\n')
+                      content=b'foo\n')
     requests_mock.get("https://ida.test/files/pid:urn:2/download",
-                      content='bar\n')
+                      content=b'bar\n')
 
     # Create required directories to  workspace
     sipdirectory = os.path.join(testpath, 'sip-in-progress')
@@ -62,7 +62,7 @@ def test_missing_ida_files(testpath, requests_mock):
     :returns: ``None``
     """
     requests_mock.get('https://ida.test/files/pid:urn:1/download',
-                      content='foo\n')
+                      content=b'foo\n')
     requests_mock.get('https://ida.test/files/pid:urn:does_not_exist/download',
                       status_code=404)
     # Init task

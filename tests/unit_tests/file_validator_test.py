@@ -19,11 +19,11 @@ def test_validate_files(requests_mock):
     )
     requests_mock.get(
         'https://ida.test/files/pid:urn:textfile1/download',
-        content='foo'
+        content=b'foo'
     )
     requests_mock.get(
         'https://ida.test/files/pid:urn:textfile2/download',
-        content='bar'
+        content=b'bar'
     )
     assert validate_files(
         "validate_files_valid",

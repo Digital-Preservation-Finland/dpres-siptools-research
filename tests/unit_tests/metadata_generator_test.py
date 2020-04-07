@@ -55,7 +55,7 @@ def test_generate_metadata(requests_mock):
     )
     requests_mock.get(
         "https://ida.test/files/pid:urn:generate_metadata_1/download",
-        content='foo'
+        content=b'foo'
     )
     requests_mock.patch(
         "https://metaksi/rest/v1/files/pid:urn:generate_metadata_1"
@@ -112,7 +112,7 @@ def test_generate_metadata_file_characteristics_not_present(requests_mock):
     requests_mock.get(
         "https://ida.test/files/"
         "pid:urn:generate_metadata_file_characteristics/download",
-        content='foo'
+        content=b'foo'
     )
     requests_mock.patch(
         "https://metaksi/rest/v1/files/"
@@ -164,7 +164,7 @@ def test_generate_metadata_mix(requests_mock):
     requests_mock.patch(
         "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_2"
     )
-    with open('tests/data/sample_files/image_png.png') as file_:
+    with open('tests/data/sample_files/image_png.png', 'rb') as file_:
         requests_mock.get(
             "https://ida.test/files/pid:urn:generate_metadata_2/download",
             content=file_.read()
@@ -221,7 +221,7 @@ def test_generate_metadata_mix_larger_file(requests_mock):
     requests_mock.patch(
         "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_5"
     )
-    with open('tests/data/sample_files/image_tiff_large.tif') as file_:
+    with open('tests/data/sample_files/image_tiff_large.tif', 'rb') as file_:
         requests_mock.get(
             "https://ida.test/files/pid:urn:generate_metadata_5/download",
             content=file_.read()
@@ -277,7 +277,7 @@ def test_generate_metadata_addml(requests_mock):
     )
     requests_mock.get(
         "https://ida.test/files/pid:urn:generate_metadata_3/download",
-        content='foo'
+        content=b'foo'
     )
     requests_mock.patch(
         "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3"
@@ -333,7 +333,7 @@ def test_generate_metadata_audiomd(requests_mock):
     requests_mock.patch(
         "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_4"
     )
-    with open('tests/data/sample_files/audio_x-wav.wav') as file_:
+    with open('tests/data/sample_files/audio_x-wav.wav', 'rb') as file_:
         requests_mock.get(
             "https://ida.test/files/pid:urn:generate_metadata_4/download",
             content=file_.read()
