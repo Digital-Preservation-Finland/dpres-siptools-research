@@ -1,12 +1,10 @@
 """Tests for :mod:`siptools_research.workflowtask` module"""
 
 import os
-import json
 import datetime
 import pytest
 import luigi.cmdline
 import pymongo
-import httpretty
 
 from metax_access import (
     DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
@@ -169,20 +167,21 @@ def test_run_failing_task(testpath, ):
     assert collection.count() == 1
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
-def test_invaliddataseterror(testpath):
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+def test_invaliddataseterror(testpath, requests_mock):
     """Test that event handler of WorkflowTask correctly deals with
     InvalidDatasetError risen in a task. Event handler should report
     preservation state to Metax.
 
     :param testpath: temporary directory
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
     # Run task like it would be run from command line
     run_luigi_task('InvalidDatasetTask', testpath)
 
     # Check the body of last HTTP request
-    request_body = json.loads(httpretty.last_request().body)
+    request_body = requests_mock.last_request.json()
     assert request_body['preservation_state'] ==\
         DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
     assert request_body['preservation_description'] == 'An error '\
@@ -190,24 +189,28 @@ def test_invaliddataseterror(testpath):
         'File validation failed'
 
     # Check the method of last HTTP request
-    assert httpretty.last_request().method == 'PATCH'
+    assert requests_mock.last_request.method == 'PATCH'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax',
-                         'mock_metax_access')
-def test_invalidmetadataerror(testpath):
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+def test_invalidmetadataerror(testpath, requests_mock):
     """Test that event handler of WorkflowTask correctly deals with
     InvalidMetadatatError risen in a task. Event handler should report
     preservation state to Metax.
 
     :param testpath: temporary directory
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/1"
+    )
+
     # Run task like it would be run from command line
     run_luigi_task('InvalidMetadataTask', testpath)
 
     # Check the body of last HTTP request
-    request_body = json.loads(httpretty.last_request().body)
+    request_body = requests_mock.last_request.json()
     assert request_body['preservation_state'] ==\
         DS_STATE_METADATA_VALIDATION_FAILED
     assert request_body['preservation_description'] == 'An error occurred ' + \
@@ -215,7 +218,7 @@ def test_invalidmetadataerror(testpath):
         'important metadata'
 
     # Check the method of last HTTP request
-    assert httpretty.last_request().method == 'PATCH'
+    assert requests_mock.last_request.method == 'PATCH'
 
 
 # TODO: Test for WorkflowWrapperTask

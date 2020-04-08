@@ -15,13 +15,28 @@ from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       algorithm_name)
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
-def test_create_techmd_ok(testpath):
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+def test_create_techmd_ok(testpath, requests_mock):
     """Test the workflow task CreateTechnicalMetadata module.
 
     :param testpath: Temporary directory fixture
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:5/xml", json=[])
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:6/xml", json=[])
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:7/xml", json=[])
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:999/xml", json=[])
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:888/xml",
+                      json=["http://www.loc.gov/mix/v20"])
+
+    with open("tests/data/mix_sample_jpeg.xml", "rb") as mix:
+        requests_mock.get(
+            "https://metaksi/rest/v1/files/pid:urn:888/xml"
+            "?namespace=http://www.loc.gov/mix/v20",
+            content=mix.read()
+        )
+
     # Create workspace with empty "logs" and "sip-in-progress' directories in
     # temporary directory
     workspace = testpath
@@ -110,14 +125,19 @@ def test_create_techmd_ok(testpath):
         assert 'Dataset id=create_techmd_test_dataset' in open_file.read()
 
 
-@pytest.mark.usefixtures('testmetax', 'mock_metax_access')
+@pytest.mark.usefixtures('mock_metax_access')
 # pylint: disable=invalid-name
-def test_create_techmd_without_charset(testpath):
+def test_create_techmd_without_charset(testpath, requests_mock):
     """Test the task with dataset that has files without defined charset
 
+    :param requests_mock: Mocker object
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
+    requests_mock.get(
+        "https://metaksi/rest/v1/files/pid:urn:create_techmd_3/xml",
+        json=[]
+    )
 
     # Create workspace with empty "logs" and "sip-in-progress' directories in
     # temporary directory
@@ -154,15 +174,22 @@ def test_create_techmd_without_charset(testpath):
         == 'text/html; charset=UTF-8'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
-def test_xml_metadata_file_missing(testpath):
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+def test_xml_metadata_file_missing(testpath, requests_mock):
     """Test the workflow task CreateTechnicalMetadata module when XML
     metadata for a file is missing. Behavior not specified yet. Currently
     throws an error.
 
+    :param requests_mock: Mocker object
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:8/xml",
+                      json=["http://www.loc.gov/mix/v20"])
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:8/xml"
+                      "?namespace=http://www.loc.gov/mix/v20",
+                      status_code=404)
+
     # Create workspace with empty "logs" and "sip-in-progress' directories in
     # temporary directory
     workspace = testpath

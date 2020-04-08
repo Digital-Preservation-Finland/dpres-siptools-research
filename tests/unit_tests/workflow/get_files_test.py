@@ -10,7 +10,7 @@ from siptools_research.workflow import get_files
 from siptools_research.workflowtask import InvalidMetadataError
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_getfiles(testpath, requests_mock):
     """Tests for ``GetFiles`` task for IDA and local files.
 
@@ -51,7 +51,7 @@ def test_getfiles(testpath, requests_mock):
         assert open_file.read() == 'bar\n'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_missing_ida_files(testpath, requests_mock):
     """Test case where a file can not be found from Ida. The first file should
     successfully downloaded, but the second file is not found. Task should fail
@@ -88,7 +88,7 @@ def test_missing_ida_files(testpath, requests_mock):
         assert _file.read() == 'foo\n'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_missing_local_files(testpath):
     """Test case where a file can not be found from pre-ingest file storage.
     The first file should successfully downloaded, but the second file is not

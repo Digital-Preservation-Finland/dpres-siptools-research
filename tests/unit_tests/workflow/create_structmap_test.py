@@ -5,9 +5,7 @@ import shutil
 import distutils.dir_util
 import pytest
 import tests.conftest
-from siptools_research.workflow.create_structmap import (
-    CreateTechnicalMetadata,
-    CreateStructMap)
+from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools.scripts.import_object import import_object
 from siptools.scripts.import_description import import_description
 from siptools.scripts.premis_event import premis_event
@@ -15,7 +13,7 @@ from siptools.xml.mets import NAMESPACES
 import lxml.etree
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient')
 def test_create_structmap_ok(testpath):
     """Test the workflow task CreateStructMap.
 
@@ -68,7 +66,7 @@ def test_create_structmap_ok(testpath):
     validate_structmap_file(os.path.join(sip_creation_path, 'structmap.xml'))
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient')
 # pylint: disable=invalid-name
 def test_create_structmap_without_directories(testpath):
     """Test creating structmap for dataset that does not have directories.
@@ -92,7 +90,7 @@ def test_create_structmap_without_directories(testpath):
     assert task.complete()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient')
 def test_filesec_othermd(testpath):
     """Test CreateStructMap task with dataset that has some othermd metadata
     for files.

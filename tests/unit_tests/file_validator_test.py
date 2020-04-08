@@ -8,7 +8,7 @@ from siptools_research.file_validator import (validate_files,
 import tests.conftest
 
 
-@pytest.mark.usefixtures("testmetax", "mock_metax_access", "testpath")
+@pytest.mark.usefixtures("mock_metax_access", "testpath")
 def test_validate_files(requests_mock):
     """Test that validate_metadata function returns ``True`` for valid files.
 
@@ -37,7 +37,7 @@ def test_validate_files(requests_mock):
     assert last_request['preservation_state'] == 70
 
 
-@pytest.mark.usefixtures("testmetax", "mock_metax_access", "testpath")
+@pytest.mark.usefixtures("mock_metax_access", "testpath")
 def test_validate_invalid_files(requests_mock):
     """Test that validating files with wrong mimetype raises
     FileValidationError.
@@ -72,7 +72,7 @@ def test_validate_invalid_files(requests_mock):
     assert last_request['preservation_state'] == 40
 
 
-@pytest.mark.usefixtures("testmetax", "mock_metax_access", "testpath")
+@pytest.mark.usefixtures("mock_metax_access", "testpath")
 def test_validate_files_not_found(requests_mock):
     """Test that validating files, which are not found.
 

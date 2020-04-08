@@ -41,13 +41,25 @@ def _check_workspace(testpath):
     assert files[0] == 'mets.xml'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
-def test_create_mets_ok(testpath):
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+def test_create_mets_ok(testpath, requests_mock):
     """Test the workflow task CreateMets.
 
     :param testpath: Temporary directory fixture
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.get(
+        "https://metaksi/rest/v1/contracts/"
+        "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
+        json={
+            'contract_json':
+            {
+                'identifier': '99ddffff-2f73-46b0-92d1-614409d83001',
+                'organization': {'name': 'Helsingin Yliopisto'}
+            }
+        }
+    )
     # Create workspace with contents required by the tested task
     create_test_data(workspace=testpath)
 

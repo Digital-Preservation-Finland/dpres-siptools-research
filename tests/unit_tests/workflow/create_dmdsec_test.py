@@ -9,13 +9,20 @@ import tests.conftest
 from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
-def test_createdescriptivemetadata(testpath):
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+def test_createdescriptivemetadata(testpath, requests_mock):
     """Test `CreateDescriptiveMetadata` task.
 
     :param testpath: Testpath fixture
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    with open('tests/data/datacite_sample.xml', 'rb') as datacite:
+        requests_mock.get(
+            "https://metaksi/rest/v1/datasets/datacite_test_1"
+            "?dataset_format=datacite&dummy_doi=false",
+            content=datacite.read()
+        )
 
     # Create workspace with "logs" and "sip-in-progress' directories in
     # temporary directory

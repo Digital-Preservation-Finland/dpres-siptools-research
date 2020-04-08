@@ -7,15 +7,42 @@ from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_filetype_conf',
+@pytest.mark.usefixtures('testmongoclient', 'mock_filetype_conf',
                          'mock_metax_access')
-def test_validatemetadata(testpath):
+def test_validatemetadata(testpath, requests_mock):
     """Test ValidateMetadata class. Run task for dataset that has valid
     metadata.
 
     :param testpath: Temporary directory fixture
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.get(
+        'https://metaksi/rest/v1/contracts/'
+        'urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd',
+        json={
+            "contract_json": {
+                "title": "Testisopimus",
+                "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
+                "organization": {
+                    "name": "Testiorganisaatio"
+                }
+            }
+        }
+    )
+    requests_mock.get(
+        'https://metaksi/rest/v1/directories/pid:urn:dir:wf1',
+        json={
+            "identifier": "pid:urn:dir:wf1",
+            "directory_path": "/access"
+        }
+    )
+    with open('tests/data/datacite_sample.xml', 'rb') as datacite:
+        requests_mock.get(
+            'https://metaksi/rest/v1/datasets/validate_metadata_test_dataset'
+            '?dataset_format=datacite&dummy_doi=false',
+            content=datacite.read()
+        )
 
     # Create "logs" directory
     os.mkdir(os.path.join(testpath, 'logs'))
@@ -31,7 +58,7 @@ def test_validatemetadata(testpath):
     assert task.complete()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_invalid_metadata(testpath):
     """Test ValidateMetadata class. Run task for dataset that has invalid
     metadata. The dataset is missing attribute: 'type' for each object in files

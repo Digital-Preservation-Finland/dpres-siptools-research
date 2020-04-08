@@ -19,11 +19,12 @@ from siptools_research.workflow.create_logical_structmap import (
 )
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_create_structmap_ok(testpath, requests_mock):
     """Test the workflow task CreateLogicalStructMap.
 
     :param testpath: Temporary directory fixture
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
     # Mock research_dataset directories
@@ -111,6 +112,8 @@ def test_create_structmap_ok(testpath, requests_mock):
 def test_get_dirpath_dict(requests_mock):
     """Test that get_dirpath_dict returns the correct dictionary, which maps
     dirpath -> use_category.
+
+    :param requests_mock: Mocker object
     """
     requests_mock.get(
         "https://metaksi/rest/v1/directories/1",
@@ -149,6 +152,7 @@ def test_get_dirpath_dict(requests_mock):
     }
 
 
+# pylint: disable=invalid-name
 def test_get_dirpath_dict_no_directories():
     """Test that get_dirpath_dict returns an empty dict when no directories
     are defined in the research_dataset.
@@ -166,8 +170,10 @@ def test_find_dir_use_category():
     languages = ["en"]
 
     # Straightforward cases
-    assert find_dir_use_category("/test1", dirpath_dict, languages) == "testdir1"
-    assert find_dir_use_category("/test2", dirpath_dict, languages) == "testdir2"
+    assert find_dir_use_category("/test1", dirpath_dict, languages) \
+        == "testdir1"
+    assert find_dir_use_category("/test2", dirpath_dict, languages) \
+        == "testdir2"
 
     # Closest parent that matches
     assert find_dir_use_category(

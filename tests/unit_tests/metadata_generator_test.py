@@ -1,10 +1,8 @@
 """Tests for :mod:`siptools_research.metadata_generator` module"""
 
 import os
-import json
 
 import pytest
-import httpretty
 import lxml.etree
 from requests.exceptions import HTTPError
 from siptools.utils import decode_path
@@ -42,7 +40,7 @@ DEFAULT_PROVENANCE = {
 }
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
 def test_generate_metadata(requests_mock):
     """Tests metadata generation. Generates metadata for a dataset and checks
     that JSON message sent to Metax has correct keys/values.
@@ -95,7 +93,7 @@ def test_generate_metadata(requests_mock):
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
 # pylint: disable=invalid-name
 def test_generate_metadata_file_characteristics_not_present(requests_mock):
     """Tests metadata generation. Generates metadata for a dataset and checks
@@ -151,7 +149,7 @@ def test_generate_metadata_file_characteristics_not_present(requests_mock):
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
 def test_generate_metadata_mix(requests_mock):
     """Tests mix metadata generation for a image file. Generates metadata for a
     dataset that contains an image file and checks that message sent to Metax
@@ -207,7 +205,7 @@ def test_generate_metadata_mix(requests_mock):
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
 # pylint: disable=invalid-name
 def test_generate_metadata_mix_larger_file(requests_mock):
     """Tests mix metadata generation for a image file. Generates metadata for a
@@ -263,7 +261,7 @@ def test_generate_metadata_mix_larger_file(requests_mock):
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
 def test_generate_metadata_addml(requests_mock):
     """Tests addml metadata generation for a CSV file. Generates metadata for a
     dataset that contains a CSV file and checks that message sent to Metax
@@ -320,7 +318,7 @@ def test_generate_metadata_addml(requests_mock):
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
 def test_generate_metadata_audiomd(requests_mock):
     """Tests audiomd metadata generation for a WAV file. Generates metadata for
     a dataset that contains a WAV file and checks that message sent to Metax is
@@ -380,7 +378,7 @@ def test_generate_metadata_audiomd(requests_mock):
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'mock_metax_access')
+@pytest.mark.usefixtures('mock_metax_access')
 # pylint: disable=invalid-name
 def test_generate_metadata_tempfile_removal(testpath, requests_mock):
     """Tests that temporary files downloaded from Ida are removed.
@@ -410,7 +408,7 @@ def test_generate_metadata_tempfile_removal(testpath, requests_mock):
     assert os.listdir(tmp_path) == tmp_dir_before_test
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
 # pylint: disable=invalid-name
 def test_generate_metadata_missing_csv_info(requests_mock):
     """Tests addml metadata generation for a dataset that does not contain all
@@ -435,30 +433,36 @@ def test_generate_metadata_missing_csv_info(requests_mock):
 
 # pylint: disable=invalid-name
 @pytest.mark.parametrize('dataset', ['missing_provenance', 'empty_provenance'])
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
-def test_generate_metadata_provenance(dataset):
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
+def test_generate_metadata_provenance(dataset, requests_mock):
     """Tests that provenance data is generated and added to Metax if it is
     missing from dataset metadata.
 
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/{}".format(dataset),
+        json={}
+    )
+
     generate_metadata(dataset,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
-    json_message = json.loads(httpretty.HTTPretty.latest_requests[-2].body)
+    json_message = requests_mock.request_history[-2].json()
     assert json_message['research_dataset']['provenance'] \
         == [DEFAULT_PROVENANCE]
 
     # verify preservation_state is set as last operation
-    _assert_metadata_generated(
-        json.loads(httpretty.HTTPretty.latest_requests[-1].body)
-    )
+    _assert_metadata_generated(requests_mock.request_history[-1].json())
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath')
-def test_generate_metadata_dataset_not_found(monkeypatch):
+@pytest.mark.usefixtures('testpath')
+def test_generate_metadata_dataset_not_found(monkeypatch, requests_mock):
     """Verifies that preservation state is not set when DatasetNotFoundError is
     raised by Metax get_dataset.
 
+    :param monkeypatch: Monkeypatch object
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
 
@@ -469,18 +473,23 @@ def test_generate_metadata_dataset_not_found(monkeypatch):
     with pytest.raises(DatasetNotFoundError):
         generate_metadata('foobar',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     # No HTTP request done
-    assert isinstance(httpretty.HTTPretty.last_request,
-                      httpretty.core.HTTPrettyRequestEmpty)
+    assert not requests_mock.request_history
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
-def test_generate_metadata_ida_download_error(monkeypatch):
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
+def test_generate_metadata_ida_download_error(monkeypatch, requests_mock):
     """Verifies that preservation state is set correctly when file download
     from IDA fails and MetadataGenerationError is raised.
 
+    :param monkeypatch: Monkeypatch object
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.patch(
+        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_1"
+    )
 
     def _get_dataset_exception(*_args):
         raise download.FileNotFoundError(
@@ -496,8 +505,8 @@ def test_generate_metadata_ida_download_error(monkeypatch):
         generate_metadata('generate_metadata_test_dataset_1',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
     # Assert preservation state is set correctly
-    assert httpretty.HTTPretty.last_request.method == "PATCH"
-    body = json.loads(httpretty.HTTPretty.last_request.body)
+    assert requests_mock.last_request.method == "PATCH"
+    body = requests_mock.last_request.json()
     assert body['preservation_state'] == 30
     assert body['preservation_description'] == (
         "File '/path/to/file' not found in Ida "
@@ -505,12 +514,17 @@ def test_generate_metadata_ida_download_error(monkeypatch):
     )
 
 
-@pytest.mark.usefixtures('testmetax', 'testpath', 'mock_metax_access')
-def test_generate_metadata_httperror(monkeypatch):
+@pytest.mark.usefixtures('testpath', 'mock_metax_access')
+def test_generate_metadata_httperror(monkeypatch, requests_mock):
     """Verifies that preservation state is set when HTTPError occurs.
 
+    :param monkeypatch: Monkeypatch object
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.patch(
+        'https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_1'
+    )
 
     def _get_dataset_exception(*_arg1):
         raise HTTPError('httperror')
@@ -520,8 +534,8 @@ def test_generate_metadata_httperror(monkeypatch):
         generate_metadata('generate_metadata_test_dataset_1',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
     # Assert preservation state is set correctly
-    assert httpretty.HTTPretty.last_request.method == "PATCH"
-    body = json.loads(httpretty.HTTPretty.last_request.body)
+    assert requests_mock.last_request.method == "PATCH"
+    body = requests_mock.last_request.json()
     assert body['preservation_state'] == 30
     assert body['preservation_description'] == "httperror"
 

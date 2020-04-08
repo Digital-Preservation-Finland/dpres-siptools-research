@@ -45,7 +45,6 @@ Requires:       upload-rest-api
 Requires:       python-configparser
 BuildRequires:  python-setuptools
 BuildRequires:  pytest
-BuildRequires:  python-httpretty
 BuildRequires:  python-sphinx
 BuildRequires:  python-jsonschema2rst
 

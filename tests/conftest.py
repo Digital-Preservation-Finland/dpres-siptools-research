@@ -2,20 +2,13 @@
 
 import os
 import sys
-import re
 import logging
 import shutil
-try:
-    from urllib import quote
-except ImportError:  # Python 3
-    from urllib.parse import quote
-import json
 
 import urllib3
 import mongomock
 import pymongo
 import luigi.configuration
-import httpretty
 import pytest
 
 from metax_access import Metax
@@ -32,9 +25,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
 
-METAX_PATH = "tests/httpretty_data/metax"
 METAX_URL = "https://metaksi/rest/v1"
-METAX_RPC_URL = "https://metaksi/rpc"
 TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
 UNIT_TEST_CONFIG_FILE = \
     "tests/data/configuration_files/siptools_research_unit_test.conf"
@@ -77,114 +68,6 @@ def _identifier_exists(identifier):
     metax_data.files
     """
     return identifier in files.FILES or identifier in datasets.DATASETS
-
-
-@pytest.fixture(scope="function")
-def testmetax(request):
-    """Use fake http-server and local sample JSON/XML files instead of real
-    Metax-API. Files are searched from subdirectories of ``METAX_PATH`` and
-    ``METAX_XML_PATH``.
-
-    When https://metax-test.csc.fi/rest/v1/<subdir>/<filename> is requested
-    using HTTP GET method, a HTTP response with contents of file:
-    ``METAX_PATH/<subdir>/<filename>`` as message body is retrieved. The status
-    of message is always *HTTP/1.1 200 OK*. To add new test responses just add
-    new JSON or XML file to some subdirectory of ``METAX_PATH``. Using HTTP
-    PATCH method has exactly same effect as HTTP GET methdod. Using HTTP POST
-    method returns empty message with status *HTTP/1.1 201 OK*.
-
-    If file from subsubdirectory is requested, the filename must be url encoded
-    (the files are searched only from subdirectories, not from
-    subsubdirectories). For example, when
-    https://metax-test.csc.fi/rest/v1/<subdir>/<filename>/xml is requested
-    using HTTP GET method, the file from path
-    ``METAX_PATH/<subdir>/<filename>%2Fxml`` is retrieved. Another example:
-    When
-    https://metax-test.csc.fi/rest/v1/<subdir>/<filename>/xml?namespace=http://test.com/ns/
-    is requested using HTTP GET method, the file from path
-    ``METAX_PATH/<subdir>/<filename>%2Fxml%3Fnamespace%3Dhttp%3A%2F%2Ftest.com%2Fns%2F``
-    is retrieved.
-
-    :param request: pytest `request` fixture
-    :returns: ``None``
-    """
-
-    # pylint: disable=unused-argument
-    def dynamic_response(request, url, headers):
-        """Return HTTP response according to url and query string.
-
-        :param request: ghost parameter required by httpretty
-        :param url: HTTP request url
-        :param header: HTTP request headers
-        :returns: HTTP status code, response headers, response body
-        :rtype: tuple
-        """
-        logging.debug("Dynamic response for HTTP %s url: %s", request.method, url)
-        # url without basepath:
-        path = url.split(METAX_URL)[1]
-        # subdirectory to get file from:
-        subdir = path.split('/')[1]
-        # file to be used as response body:
-        body_file = path.split('/')[2]
-        # if url contains query strings or more directories after the filename,
-        # everything is added to the filename url encoded
-        tail = path.split('/%s/%s' % (subdir, body_file))[1]
-        if tail:
-            body_file += quote(tail, safe='%')
-
-        full_path = "%s/%s/%s" % (METAX_PATH, subdir, body_file)
-        logging.debug("Looking for file: %s", full_path)
-        if not os.path.isfile(full_path) and not _identifier_exists(body_file):
-            return (403, headers, "File not found")
-
-        # Retrieve PATCHed files or datasets from metax_data.files
-        if request.method == "PATCH" and subdir == "files":
-            body = json.dumps(files.get_file("", body_file))
-        elif request.method == "PATCH" and subdir == "datasets":
-            body = json.dumps(datasets.get_dataset("", body_file))
-        else:
-            with open(full_path, 'rb') as open_file:
-                body = open_file.read()
-
-        return (200, headers, body)
-
-    # Enable http-server in beginning of test function
-    httpretty.enable()
-
-    # Register response for GET method for any url starting with METAX_URL
-    httpretty.register_uri(
-        httpretty.GET,
-        re.compile(METAX_URL + '/(.*)'),
-        body=dynamic_response,
-    )
-
-    # Register response for PATCH method for any url starting with METAX_URL
-    httpretty.register_uri(
-        httpretty.PATCH,
-        re.compile(METAX_URL + '/(.*)'),
-        body=dynamic_response,
-    )
-
-    # Register response for POST method for any url starting with METAX_URL
-    httpretty.register_uri(
-        httpretty.POST,
-        re.compile(METAX_URL + '/(.*)'),
-        status=201
-    )
-
-    # Register response for POST method for any url starting with METAX_RPC_URL
-    httpretty.register_uri(
-        httpretty.POST,
-        re.compile(METAX_RPC_URL + '/(.*)'),
-        status=200
-    )
-
-    # Didable http-server after executing the test function
-    def fin():
-        """Disable fake http-server"""
-        httpretty.disable()
-        httpretty.reset()
-    request.addfinalizer(fin)
 
 
 @pytest.fixture(scope="function")

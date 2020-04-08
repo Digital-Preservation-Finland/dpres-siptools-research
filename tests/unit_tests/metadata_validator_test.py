@@ -337,8 +337,7 @@ def test_validate_metadata(requests_mock):
                       "dataset_format=datacite",
                       text=BASE_DATACITE)
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     assert validate_metadata(
         'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE,
@@ -374,8 +373,7 @@ def test_validate_metadata_languages(lang, text, monkeypatch, requests_mock):
         "https://metaksi/rest/v1/datasets/dataset_identifier/files",
         json=[])
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     add_provenance_to_dataset(lang, text, dataset)
     assert validate_metadata('dataset_identifier',
@@ -400,8 +398,7 @@ def test_validate_metadata_language_missing(monkeypatch, requests_mock):
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=BASE_CONTRACT)
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
 
     with pytest.raises(InvalidMetadataError) as error:
@@ -432,8 +429,7 @@ def test_validate_metadata_invalid(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier",
                       json=dataset)
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
 
     # Try to validate invalid dataset
@@ -511,8 +507,7 @@ def test_validate_invalid_file_type(format_version, requests_mock):
                       "dataset_format=datacite",
                       text=BASE_DATACITE)
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     # Try to validate dataset with a file that has an unsupported file_format
     with pytest.raises(InvalidMetadataError) as error:
@@ -557,8 +552,7 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=contract)
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -607,8 +601,7 @@ def test_validate_metadata_invalid_file_path(requests_mock):
                       "dataset_format=datacite",
                       text=BASE_DATACITE)
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exception_info:
@@ -659,8 +652,7 @@ def test_validate_metadata_missing_xml(requests_mock):
                       "pid:urn:validate_metadata_test_image/xml",
                       json={})
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     with pytest.raises(InvalidMetadataError) as exc:
         validate_metadata('dataset_identifier',
@@ -724,8 +716,7 @@ def test_validate_metadata_audiovideo(requests_mock):
                       "namespace=http://www.loc.gov/videoMD/",
                       text=BASE_VIDEO_MD)
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     assert validate_metadata(
         'dataset_identifier',
@@ -772,8 +763,7 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
                       "namespace=http://www.loc.gov/audioMD/",
                       content=get_bad_audiomd())
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -833,8 +823,7 @@ def test_validate_metadata_corrupted_mix(requests_mock):
                       "namespace=http://www.loc.gov/mix/v20",
                       text="<mix:mix\n")
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -889,8 +878,7 @@ def test_validate_metadata_invalid_datacite(requests_mock):
                       "dataset_format=datacite",
                       content=get_invalid_datacite())
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -936,8 +924,7 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
                       "dataset_format=datacite",
                       text="<resource\n")
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     # Try to validate invalid dataset
     with pytest.raises(InvalidMetadataError) as exc_info:
@@ -1000,8 +987,7 @@ def test_validate_metadata_publisher_missing(requests_mock):
         status_code=400
     )
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
 
     # Try to validate invalid dataset
@@ -1231,8 +1217,7 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=BASE_CONTRACT)
     adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier",
-        json={}
+        "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
     file_ = copy.deepcopy(BASE_FILE)
     file_['identifier'] = "file_id"
