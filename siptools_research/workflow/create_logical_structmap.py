@@ -130,8 +130,11 @@ class CreateLogicalStructMap(WorkflowTask):
         event_type_ids = {}
         for event_id in event_ids:
             event_file = event_id[1:] + "-PREMIS%3AEVENT-amd.xml"
-            root = ET.parse(encode_path(os.path.join(
-                self.sip_creation_path, event_file))).getroot()
+            event_file_path = os.path.join(
+                self.sip_creation_path, event_file)
+            if not os.path.exists(event_file_path):
+                continue
+            root = ET.parse(encode_path(event_file_path)).getroot()
             event_type = root.xpath("//premis:eventType",
                                     namespaces=NAMESPACES)[0].text
             event_type_ids[event_type] = event_id
