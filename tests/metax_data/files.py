@@ -6,7 +6,7 @@ PAS_STORAGE_ID = "urn:nbn:fi:att:file-storage-pas"
 CSV_FILE_CHARS = {
     "file_created": "2014-01-17T08:19:31Z",
     "file_format": "text/csv",
-    "format_version": "8.3",
+    "format_version": "",
     "encoding": "UTF-8",
     "csv_delimiter": ";",
     "csv_record_separator": "CR+LF",
@@ -28,7 +28,7 @@ TIFF_FILE_CHARS = {
 
 HTML_FILE_CHARS = {
     "file_format": "text/html",
-    "format_version": "4.01",
+    "format_version": "5.0",
     "encoding": "UTF-8"
 }
 
@@ -328,7 +328,7 @@ FILES = {
         "file_characteristics": {
             "file_created": "2014-01-17T08:19:31Z",
             "file_format": "text/html",
-            "format_version": "4.01"
+            "format_version": "5.0"
         },
         "set": [("file_path", "/project_x/some/path/file_name_5")]
     },

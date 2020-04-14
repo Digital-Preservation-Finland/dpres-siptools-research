@@ -75,7 +75,7 @@ def test_create_techmd_ok(testpath):
     assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
         == 'text/html; charset=UTF-8'
     assert root.xpath("//premis:formatVersion",
-                      namespaces=NAMESPACES)[0].text == '4.01'
+                      namespaces=NAMESPACES)[0].text == '5.0'
 
     # Check that the NISOIMG techMD file has desired properties
     output_file = os.path.join(

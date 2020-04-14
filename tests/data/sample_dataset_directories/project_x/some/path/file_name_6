@@ -1,11 +1,7 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<title>Title of the document</title>
-</head>
-
-<body>
-The content of the document......
-</body>
-
-</html>
+<?xml version="1.0" encoding="UTF-8"?>
+<note>
+  <name>John Smith</name>
+  <date>Last Friday</date>
+  <heading>Title</heading>
+  <body>Hello World!</body>
+</note>
