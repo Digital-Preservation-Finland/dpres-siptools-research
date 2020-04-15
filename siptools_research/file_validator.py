@@ -126,10 +126,13 @@ def _validate_file(file_, cache_path, errors):
     file_chars = file_["file_characteristics"]
     mimetype = file_chars["file_format"]
     encoding = file_chars.get("encoding", None)
+    version = file_chars.get("format_version", None)
 
     filepath = os.path.join(cache_path, identifier)
 
-    scraper = Scraper(filepath, mimetype=mimetype, charset=encoding)
+    scraper = Scraper(
+        filepath, mimetype=mimetype, charset=encoding, version=version
+    )
     scraper.scrape(check_wellformed=True)
     if not scraper.well_formed:
         errors.append(path)

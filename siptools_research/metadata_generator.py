@@ -160,9 +160,12 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     """
     mimetype = original_file_characteristics.get("file_format", None)
     charset = original_file_characteristics.get("encoding", None)
+    version = original_file_characteristics.get("format_version", None)
 
     # Generate technical metadata from file
-    scraper = Scraper(filepath, mimetype=mimetype, charset=charset)
+    scraper = Scraper(
+        filepath, mimetype=mimetype, charset=charset, version=version
+    )
     scraper.scrape(check_wellformed=False)
 
     # Create file_characteristics object
