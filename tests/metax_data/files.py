@@ -62,13 +62,9 @@ FILES = {
             "dummy_key": "dummy_value"
         }
     },
-    "pid:urn:generate_metadata_2": {},
     "pid:urn:generate_metadata_3": {
         "file_characteristics": CSV_FILE_CHARS
     },
-    "pid:urn:generate_metadata_4": {},
-    "pid:urn:generate_metadata_5": {},
-    "pid:urn:generate_metadata_file_characteristics": {},
     "pid:urn:textfile1": {
         "file_characteristics": TXT_FILE_CHARS,
         "set": [

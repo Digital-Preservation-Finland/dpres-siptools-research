@@ -46,20 +46,8 @@ DATASETS = {
     "generate_metadata_test_dataset_1": {
         "files": ["pid:urn:generate_metadata_1"]
     },
-    "generate_metadata_test_dataset_2": {
-        "files": ["pid:urn:generate_metadata_2"]
-    },
     "generate_metadata_test_dataset_3": {
         "files": ["pid:urn:generate_metadata_3"]
-    },
-    "generate_metadata_test_dataset_4": {
-        "files": ["pid:urn:generate_metadata_4"]
-    },
-    "generate_metadata_test_dataset_5": {
-        "files": ["pid:urn:generate_metadata_5"]
-    },
-    "generate_metadata_test_dataset_file_characteristics": {
-        "files": ["pid:urn:generate_metadata_file_characteristics"]
     },
     "validate_metadata_test_dataset": {
         "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]

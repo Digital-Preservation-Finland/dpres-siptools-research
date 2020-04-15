@@ -1,6 +1,7 @@
 """Tests for :mod:`siptools_research.metadata_generator` module"""
 
 import os
+import copy
 
 import pytest
 import lxml.etree
@@ -14,6 +15,8 @@ from siptools_research.metadata_generator import (
 )
 from siptools_research.utils import download
 import tests.conftest
+import tests.metax_data.datasets
+import tests.metax_data.files
 
 
 DEFAULT_PROVENANCE = {
@@ -40,225 +43,129 @@ DEFAULT_PROVENANCE = {
 }
 
 
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
-def test_generate_metadata(requests_mock):
-    """Tests metadata generation. Generates metadata for a dataset and checks
-    that JSON message sent to Metax has correct keys/values.
+@pytest.mark.parametrize(
+    ('path', 'file_format', 'encoding', 'namespace'),
+    (
+        ('tests/data/sample_files/text_plain_UTF-8',
+         'text/plain',
+         'UTF-8',
+         None),
+        ('tests/data/sample_files/image_png.png',
+         'image/png',
+         None,
+         'http://www.loc.gov/mix/v20'),
+        ('tests/data/sample_files/image_tiff_large.tif',
+         'image/tiff',
+         None,
+         'http://www.loc.gov/mix/v20'),
+        ('tests/data/sample_files/audio_x-wav.wav',
+         'audio/x-wav',
+         None,
+         'http://www.loc.gov/audioMD/')
+    )
+)
+@pytest.mark.usefixtures('testpath')
+def test_generate_metadata(requests_mock,
+                           path,
+                           file_format,
+                           encoding,
+                           namespace):
+    """Tests metadata generation. Generates metadata for a dataset that
+    contains one file, and checks that correct file characteristics and XML
+    metadata are sent to Metax. Lastly the preservation state should be
+    updated.
+
+    :param requests_mock: Mocker object
+    :param path: path to file for which the metadata is created
+    :param file_format: excepted file format
+    :param encoding: excepted character set
+    :param namespace: name space of xml metadata
+    :returns: ``None``
+    """
+    # create mocked dataset in Metax and Ida
+    file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
+    dataset_metadata = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+
+    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_id",
+                      json=dataset_metadata)
+    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_id/files",
+                      json=[file_metadata])
+    requests_mock.patch("https://metaksi/rest/v1/datasets/dataset_id")
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier",
+                      json=file_metadata)
+    with open(path, 'rb') as file_:
+        requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
+                          content=file_.read())
+    file_metadata_patch = requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:identifier"
+    )
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
+                      json=[])
+    xml_post = requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:identifier/xml?namespace={}"
+        .format(namespace),
+        status_code=201
+    )
+
+    # generate metadata for dataset
+    generate_metadata('dataset_id', tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # verify the file characteristics that were sent to Metax
+    file_characteristics \
+        = file_metadata_patch.last_request.json()['file_characteristics']
+    assert file_characteristics.get('file_format') == file_format
+    assert file_characteristics.get('encoding') == encoding
+
+    # verify xml metadata that was posted to Metax (if required for file type)
+    if namespace:
+        xml = lxml.etree.fromstring(xml_post.last_request.text)
+        # The expected namespace should be defined in posted XML
+        assert namespace in xml.nsmap.values()
+
+    # Verify that preservation state is set as
+    # DS_STATE_TECHNICAL_METADATA_GENERATED
+    request_body = requests_mock.last_request.json()
+    assert request_body['preservation_description'] \
+        == "Technical metadata generated"
+    assert request_body['preservation_state'] == 20
+
+
+@pytest.mark.usefixtures('testpath')
+def test_generate_metadata_predefined(requests_mock):
+    """Tests metadata generation for files that already have some
+    file_characteristics defined. File characteristics should not be
+    overwritten, but missing information should be added.
 
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_1"
-    )
-    requests_mock.get(
-        "https://ida.test/files/pid:urn:generate_metadata_1/download",
-        content=b'foo'
-    )
-    requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_1"
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_1/xml",
-        json=[]
-    )
-    requests_mock.post(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_1/"
-        "xml?namespace=http://www.loc.gov/mix/v20",
-        status_code=201
-    )
-    generate_metadata('generate_metadata_test_dataset_1',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+    dataset_metadata = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
+    file_metadata['file_characteristics'] = {
+        'encoding': 'user_defined',
+        'dummy_key': 'dummy_value'
+    }
 
-    json_message = requests_mock.request_history[-2].json()
+    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_id",
+                      json=dataset_metadata)
+    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_id/files",
+                      json=[file_metadata])
+    requests_mock.patch("https://metaksi/rest/v1/datasets/dataset_id")
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier",
+                      json=file_metadata)
+    requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
+                      content=b'foo')
+    requests_mock.patch("https://metaksi/rest/v1/files/pid:urn:identifier")
 
-    # The file should recognised as plain text file
-    assert json_message['file_characteristics']['file_format'] == 'text/plain'
+    generate_metadata('dataset_id', tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # The format version should not be set since there is no different versions
-    # of plain text files
-    assert 'format_version' not in json_message['file_characteristics']
-
-    # Encoding should not be changed since it was already defined by user
-    assert json_message['file_characteristics']['encoding'] == \
-        'user_defined_charset'
-
-    # All other fields should be same as in the original file_charasteristics
-    # object in Metax
-    assert json_message['file_characteristics']['dummy_key'] == 'dummy_value'
-
-    # verify preservation_state is set as last operation
-    _assert_metadata_generated(
-        requests_mock.request_history[-1].json()
-    )
-
-
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
-# pylint: disable=invalid-name
-def test_generate_metadata_file_characteristics_not_present(requests_mock):
-    """Tests metadata generation. Generates metadata for a dataset and checks
-    that JSON message sent to Metax has correct keys/values when
-    file_characteristics block was not present in file metadata
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/"
-        "generate_metadata_test_dataset_file_characteristics"
-    )
-    requests_mock.get(
-        "https://ida.test/files/"
-        "pid:urn:generate_metadata_file_characteristics/download",
-        content=b'foo'
-    )
-    requests_mock.patch(
-        "https://metaksi/rest/v1/files/"
-        "pid:urn:generate_metadata_file_characteristics"
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/"
-        "pid:urn:generate_metadata_file_characteristics/xml",
-        json=[]
-    )
-    requests_mock.post(
-        "https://metaksi/rest/v1/files/"
-        "pid:urn:generate_metadata_file_characteristics/"
-        "xml?namespace=http://www.loc.gov/mix/v20",
-        status_code=201
-    )
-    generate_metadata(
-        'generate_metadata_test_dataset_file_characteristics',
-        tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-
-    json_message = requests_mock.request_history[-2].json()
-    # The file should be recognised as plain text file
-    assert json_message['file_characteristics']['file_format'] == 'text/plain'
-
-    # The format version should not be set  since there is no different
-    # versions of plain text files
-    assert 'format_version' not in json_message['file_characteristics']
-
-    # Encoding should be set correctly since it was not defined by user
-    assert json_message['file_characteristics']['encoding'] == 'UTF-8'
-
-    # verify preservation_state is set as last operation
-    _assert_metadata_generated(
-        requests_mock.request_history[-1].json()
-    )
-
-
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
-def test_generate_metadata_mix(requests_mock):
-    """Tests mix metadata generation for a image file. Generates metadata for a
-    dataset that contains an image file and checks that message sent to Metax
-    is valid XML. The method of last HTTP request should be POST, and the
-    querystring should contain the namespace of XML.
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_2"
-    )
-    with open('tests/data/sample_files/image_png.png', 'rb') as file_:
-        requests_mock.get(
-            "https://ida.test/files/pid:urn:generate_metadata_2/download",
-            content=file_.read()
-        )
-    requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_2"
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_2/xml",
-        json=[]
-    )
-    requests_mock.post(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_2/"
-        "xml?namespace=http://www.loc.gov/mix/v20",
-        status_code=201
-    )
-
-    generate_metadata('generate_metadata_test_dataset_2',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # Read one element from XML to ensure it is valid and contains correct data
-    # The file is 10x10px image, so the metadata should contain image width.
-    last_request = requests_mock.request_history[-2].body
-    # pylint: disable=no-member
-    xml = lxml.etree.fromstring(last_request)
-    assert xml.xpath('//ns0:imageWidth',
-                     namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
-        == '10'
-
-    # Check HTTP request query string
-    assert requests_mock.request_history[-2].qs['namespace'][0]\
-        == 'http://www.loc.gov/mix/v20'
-
-    # Check HTTP request method
-    assert requests_mock.request_history[-2].method == "POST"
-
-    # verify preservation_state is set as last operation
-    _assert_metadata_generated(
-        requests_mock.request_history[-1].json()
-    )
-
-
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
-# pylint: disable=invalid-name
-def test_generate_metadata_mix_larger_file(requests_mock):
-    """Tests mix metadata generation for a image file. Generates metadata for a
-    dataset that contains an image file larger than 512 bytes and checks that
-    message sent to Metax is valid XML. The method of last HTTP request should
-    be POST, and the querystring should contain the namespace of XML.
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_5"
-    )
-    with open('tests/data/sample_files/image_tiff_large.tif', 'rb') as file_:
-        requests_mock.get(
-            "https://ida.test/files/pid:urn:generate_metadata_5/download",
-            content=file_.read()
-        )
-    requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_5"
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_5/xml",
-        json=[]
-    )
-    requests_mock.post(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_5/xml"
-        "?namespace=http://www.loc.gov/mix/v20",
-        status_code=201
-    )
-
-    generate_metadata('generate_metadata_test_dataset_5',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # Read one element from XML to ensure it is valid and contains correct data
-    # The file is 10x10px image, so the metadata should contain image width.
-    # pylint: disable=no-member
-    xml = lxml.etree.fromstring(requests_mock.request_history[-2].body)
-    assert xml.xpath('//ns0:imageWidth',
-                     namespaces={"ns0": "http://www.loc.gov/mix/v20"})[0].text\
-        == '640'
-
-    # Check HTTP request query string
-    assert requests_mock.request_history[-2].qs['namespace'][0]\
-        == 'http://www.loc.gov/mix/v20'
-
-    # Check HTTP request method
-    assert requests_mock.request_history[-2].method == "POST"
-
-    # verify preservation_state is set as last operation
-    _assert_metadata_generated(
-        requests_mock.request_history[-1].json()
-    )
+    # verify the file characteristics that were sent to Metax
+    patch_request = requests_mock.request_history[-3].json()
+    assert patch_request['file_characteristics'] == {
+        'file_format': 'text/plain',  # missing keys are added
+        'encoding': 'user_defined',  # user defined value is not overwritten
+        'dummy_key': 'dummy_value'  # additional keys are copied
+    }
 
 
 @pytest.mark.usefixtures('testpath', 'mock_metax_access')
@@ -311,71 +218,6 @@ def test_generate_metadata_addml(requests_mock):
 
     # Check HTTP request method
     assert requests_mock.request_history[-2].method == "POST"
-
-    # verify preservation_state is set as last operation
-    _assert_metadata_generated(
-        requests_mock.request_history[-1].json()
-    )
-
-
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
-def test_generate_metadata_audiomd(requests_mock):
-    """Tests audiomd metadata generation for a WAV file. Generates metadata for
-    a dataset that contains a WAV file and checks that message sent to Metax is
-    valid XML.
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-
-    requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_4"
-    )
-    with open('tests/data/sample_files/audio_x-wav.wav', 'rb') as file_:
-        requests_mock.get(
-            "https://ida.test/files/pid:urn:generate_metadata_4/download",
-            content=file_.read()
-        )
-    requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_4"
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_4/xml",
-        json=[]
-    )
-    requests_mock.post(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_4/"
-        "xml?namespace=http://www.loc.gov/audioMD/",
-        status_code=201
-    )
-
-    generate_metadata('generate_metadata_test_dataset_4',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # Read one element from XML to ensure it is valid and contains correct data
-    # pylint: disable=no-member
-    xml = lxml.etree.fromstring(requests_mock.request_history[-2].body)
-
-    freq = xml.xpath(
-        '//amd:samplingFrequency',
-        namespaces={"amd": "http://www.loc.gov/audioMD/"}
-    )[0].text
-    assert freq == '48'
-
-    # Check HTTP request query string
-    # requests_mock is case insensitive, therefore the querystrings in request
-    # history are always lower case. That functionality might change in future,
-    # and this test must then be modified.
-    assert requests_mock.request_history[-2].qs['namespace'][0] \
-        == 'http://www.loc.gov/audioMD/'.lower()
-
-    # Check HTTP request method
-    assert requests_mock.request_history[-2].method == "POST"
-
-    # verify preservation_state is set as last operation
-    _assert_metadata_generated(
-        requests_mock.request_history[-1].json()
-    )
 
 
 @pytest.mark.usefixtures('mock_metax_access')
@@ -451,9 +293,6 @@ def test_generate_metadata_provenance(dataset, requests_mock):
     json_message = requests_mock.request_history[-2].json()
     assert json_message['research_dataset']['provenance'] \
         == [DEFAULT_PROVENANCE]
-
-    # verify preservation_state is set as last operation
-    _assert_metadata_generated(requests_mock.request_history[-1].json())
 
 
 @pytest.mark.usefixtures('testpath')
@@ -538,13 +377,3 @@ def test_generate_metadata_httperror(monkeypatch, requests_mock):
     body = requests_mock.last_request.json()
     assert body['preservation_state'] == 30
     assert body['preservation_description'] == "httperror"
-
-
-def _assert_metadata_generated(request_body):
-    """Verifies tht preservation state is set as
-    DS_STATE_TECHNICAL_METADATA_GENERATED
-    :param request_body: http request body
-    """
-    assert request_body['preservation_description'] == \
-        "Technical metadata generated"
-    assert request_body['preservation_state'] == 20
