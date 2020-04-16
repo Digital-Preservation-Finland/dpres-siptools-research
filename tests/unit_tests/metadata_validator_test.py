@@ -276,10 +276,10 @@ def get_invalid_datacite():
     :returns: Datacite as string
     """
     root = lxml.etree.fromstring(BASE_DATACITE)
-    element = root.xpath('/ns:resource/ns:identifier',
-                         namespaces={'ns': "http://datacite.org/schema/"
-                                           "kernel-4"}
-                        )
+    element = root.xpath(
+        '/ns:resource/ns:identifier',
+        namespaces={'ns': "http://datacite.org/schema/kernel-4"}
+    )
     element[0].getparent().remove(element[0])
     return lxml.etree.tostring(root, pretty_print=True)
 
@@ -289,10 +289,10 @@ def get_very_invalid_datacite():
     :returns: Datacite as string
     """
     root = lxml.etree.fromstring(BASE_DATACITE)
-    element = root.xpath('/ns:resource/ns:resourceType',
-                         namespaces={'ns': "http://datacite.org/schema/"
-                                           "kernel-4"}
-                        )
+    element = root.xpath(
+        '/ns:resource/ns:resourceType',
+        namespaces={'ns': "http://datacite.org/schema/kernel-4"}
+    )
     element[0].attrib['resourceTypeGeneral'] = 'INVALID_RESOURCE_TYPE'
     return lxml.etree.tostring(root, pretty_print=True)
 
@@ -303,10 +303,7 @@ def mock_metax_get_dir(mocker):
     """
     mocker.get(
         "https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
-        json={
-            "identifier": "pid:urn:dir:wf1",
-            "directory_path": "/access"
-            }
+        json={"identifier": "pid:urn:dir:wf1", "directory_path": "/access"}
     )
 
 
@@ -1031,27 +1028,19 @@ def test_validate_file_metadata(requests_mock):
         tests.conftest.METAX_URL + '/directories/pid:urn:dir:wf1',
         json={'identifier': 'first_par_dir',
               'directory_path': '',
-              'parent_directory': {
-                  'identifier': 'second_par_dir'
-                  }
-             },
+              'parent_directory': {'identifier': 'second_par_dir'}},
         status_code=200
     )
     requests_mock.get(
         tests.conftest.METAX_URL + '/directories/second_par_dir',
         json={'identifier': 'second_par_dir',
               'directory_path': '',
-              'parent_directory': {
-                  'identifier': 'root_dir'
-                  }
-             },
+              'parent_directory': {'identifier': 'root_dir'}},
         status_code=200
     )
     requests_mock.get(
         tests.conftest.METAX_URL + '/directories/root_dir',
-        json={'identifier': 'second_par_dir',
-              'directory_path': '/'
-             },
+        json={'identifier': 'second_par_dir', 'directory_path': '/'},
         status_code=200
     )
     files_adapter = requests_mock.get(
@@ -1194,7 +1183,9 @@ def test_validate_datacite(requests_mock):
         )
 
     # Check error message
-    assert str(exception_info.value).startswith("Datacite metadata is invalid:")
+    assert str(exception_info.value).startswith(
+        "Datacite metadata is invalid:"
+    )
 
 
 # pylint: disable=invalid-name
