@@ -22,18 +22,10 @@ from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.workflow.compress import CompressSIP
 from siptools_research.config import Configuration
 import tests.conftest
+import tests.metax_data.contracts
 
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
-CONTRACT = {
-    "contract_json": {
-        "title": "Testisopimus",
-        "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
-        "organization": {
-            "name": "Testiorganisaatio"
-        }
-    }
-}
 DIRECTORY = {
     "identifier": "pid:urn:dir:wf1",
     "directory_path": "/access"
@@ -101,9 +93,8 @@ def test_workflow(_, testpath, file_storage, module_name, task,
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get("https://metaksi/rest/v1/contracts/"
-                      "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
-                      json=CONTRACT)
+    requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
+                      json=tests.metax_data.contracts.BASE_CONTRACT)
     requests_mock.patch("https://metaksi/rest/v1/datasets/"
                         "workflow_test_dataset_1_local")
     requests_mock.get(
@@ -207,9 +198,8 @@ def test_mets_creation(testpath, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get("https://metaksi/rest/v1/contracts/"
-                      "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
-                      json=CONTRACT)
+    requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
+                      json=tests.metax_data.contracts.BASE_CONTRACT)
     requests_mock.get(
         "https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
         json=DIRECTORY

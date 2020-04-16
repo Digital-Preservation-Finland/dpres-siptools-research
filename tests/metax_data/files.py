@@ -53,6 +53,9 @@ BASE_FILE = {
     }
 }
 
+TXT_FILE = deepcopy(BASE_FILE)
+TXT_FILE['file_characteristics'] = TXT_FILE_CHARS
+
 FILES = {
     "pid:urn:generate_metadata_1": {
         "file_characteristics": {

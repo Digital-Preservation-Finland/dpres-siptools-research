@@ -13,216 +13,13 @@ import siptools_research.metadata_validator as metadata_validator
 from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
 import tests.conftest
+from tests.metax_data.datasets import BASE_DATASET
+from tests.metax_data.files import BASE_FILE, TXT_FILE
+from tests.metax_data.contracts import BASE_CONTRACT
 
-BASE_AUDIO_MD = """<mets:mets xmlns:mets="http://www.loc.gov/METS/"
-xmlns:mix="http://www.loc.gov/audioMD"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-OBJID="38acf0b3-7edd-4a73-9dbd-ea67fd3c9c21"
-PROFILE="http://www.kdk.fi/kdk-mets-profile" fi:CATALOG="1.6.0"
-fi:SPECIFICATION="1.6.1"
-xmlns:fi="http://www.kdk.fi/standards/mets/kdk-extensions"
-xmlns:xlink="http://www.w3.org/1999/xlink">
-<mets:amdSec>
-  <mets:techMD CREATED="2018-01-01T07:21:27.005383" ID="123456789098765421">
-   <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="AudioMD" MDTYPEVERSION="2.0">
-    <mets:xmlData>
-     <amd:AUDIOMD xmlns:amd="http://www.loc.gov/audioMD/"
-         ANALOGDIGITALFLAG="FileDigital">
-      <amd:fileData>
-       <amd:audioDataEncoding>PCM</amd:audioDataEncoding>
-       <amd:bitsPerSample>8</amd:bitsPerSample>
-       <amd:compression>
-        <amd:codecCreatorApp>SoundForge</amd:codecCreatorApp>
-        <amd:codecCreatorAppVersion>10</amd:codecCreatorAppVersion>
-        <amd:codecName>(:unap)</amd:codecName>
-        <amd:codecQuality>lossy</amd:codecQuality>
-       </amd:compression>
-       <amd:dataRate>256</amd:dataRate>
-       <amd:dataRateMode>Fixed</amd:dataRateMode>
-       <amd:samplingFrequency>44100</amd:samplingFrequency>
-      </amd:fileData>
-      <amd:audioInfo>
-       <amd:duration>00:08:37.9942</amd:duration>
-       <amd:numChannels>1</amd:numChannels>
-      </amd:audioInfo>
-     </amd:AUDIOMD>
-    </mets:xmlData>
-   </mets:mdWrap>
-  </mets:techMD>
- </mets:amdSec>
-</mets:mets>
-"""
-
-BASE_VIDEO_MD = """<mets:mets xmlns:mets="http://www.loc.gov/METS/"
-xmlns:mix="http://www.loc.gov/videoMD"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-OBJID="38acf0b3-7edd-4a73-9dbd-ea67fd3c9c21"
-PROFILE="http://www.kdk.fi/kdk-mets-profile" fi:CATALOG="1.6.0"
-fi:SPECIFICATION="1.6.1"
-xmlns:fi="http://www.kdk.fi/standards/mets/kdk-extensions"
-xmlns:xlink="http://www.w3.org/1999/xlink">
-<mets:amdSec>
-  <mets:techMD CREATED="2018-01-01T07:21:27.005383" ID="123456789098765421">
-   <mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="AudioMD" MDTYPEVERSION="2.0">
-    <mets:xmlData>
-     <vmd:VIDEOMD xmlns:vmd="http://www.loc.gov/videoMD/"
-         ANALOGDIGITALFLAG="FileDigital">
-      <vmd:fileData>
-       <vmd:duration>01:31:37</vmd:duration>
-       <vmd:dataRate>8</vmd:dataRate>
-       <vmd:bitsPerSample>24</vmd:bitsPerSample>
-       <vmd:color>Color</vmd:color>
-       <vmd:compression>
-        <vmd:codecCreatorApp>SoundForge</vmd:codecCreatorApp>
-        <vmd:codecCreatorAppVersion>10</vmd:codecCreatorAppVersion>
-        <vmd:codecName>(:unav)</vmd:codecName>
-        <vmd:codecQuality>lossy</vmd:codecQuality>
-       </vmd:compression>
-       <vmd:dataRateMode>Fixed</vmd:dataRateMode>
-       <vmd:frame>
-        <vmd:pixelsHorizontal>640</vmd:pixelsHorizontal>
-        <vmd:pixelsVertical>480</vmd:pixelsVertical>
-        <vmd:PAR>1.0</vmd:PAR>
-        <vmd:DAR>4/3</vmd:DAR>
-       </vmd:frame>
-       <vmd:frameRate>24</vmd:frameRate>
-       <vmd:sampling>4:2:2</vmd:sampling>
-       <vmd:signalFormat>PAL</vmd:signalFormat>
-       <vmd:sound>No</vmd:sound>
-      </vmd:fileData>
-     </vmd:VIDEOMD>
-    </mets:xmlData>
-   </mets:mdWrap>
-  </mets:techMD>
- </mets:amdSec>
-</mets:mets>
-"""
-
-BASE_PROVENANCE = {
-    "preservation_event": {
-        "pref_label": {
-            "en": "creation"
-        }
-    },
-    "temporal": {
-        "end_date": "2014-12-31T08:19:58Z",
-        "start_date": "2014-01-01T08:19:58Z"
-    },
-    "description": {
-        "en": "Description of provenance"
-    },
-    "event_outcome": {
-        "pref_label": {
-            "en": "success"
-        }
-    },
-    "outcome_description": {
-        "en": "This is a detail of an successful event"
-    }
-}
-
-BASE_DATACITE = """<resource
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://datacite.org/schema/kernel-4"
-        xsi:schemaLocation="http://datacite.org/schema/kernel-4
-        http://schema.datacite.org/meta/kernel-4.1/metadata.xsd">
-    <identifier identifierType="DOI">10.0/0</identifier>
-    <creators>
-        <creator>
-            <creatorName>Teppo Testaaja</creatorName>
-            <affiliation>Mysteeriorganisaatio</affiliation>
-        </creator>
-    </creators>
-    <titles>
-        <title xml:lang="en">Wonderful Title</title>
-    </titles>
-    <publisher>Teppo Testaaja</publisher>
-    <publicationYear>2014</publicationYear>
-    <dates>
-        <date dateType="Updated">2014-01-17T08:19:58Z</date>
-    </dates>
-    <language>eng</language>
-    <resourceType resourceTypeGeneral="Dataset"/>
-    <alternateIdentifiers>
-        <alternateIdentifier alternateIdentifierType="URN">
-            urn:nbn:fi:att:1955e904-e3dd-4d7e-99f1-3fed446f96d1
-        </alternateIdentifier>
-    </alternateIdentifiers>
-    <sizes>
-        <size>300</size>
-    </sizes>
-    <descriptions>
-        <description descriptionType="Abstract">
-            A descriptive description describing the contents of this dataset.
-            Must be descriptive.
-        </description>
-    </descriptions>
-</resource>"""
-
-BASE_DATASET = {
-    "identifier": "dataset_identifier",
-    "preservation_identifier": "doi:test",
-    "contract": {
-        "identifier": "contract_identifier"
-    },
-    "research_dataset": {
-        "provenance": [
-            {
-                "preservation_event": {
-                    "pref_label": {
-                        "en": "creation"
-                    }
-                },
-                "temporal": {
-                    "end_date": "2014-12-31T08:19:58Z",
-                    "start_date": "2014-01-01T08:19:58Z"
-                },
-                "description": {
-                    "en": "Description of provenance"
-                },
-                'event_outcome': {
-                    "pref_label": {
-                        "en": "outcome"
-                    }
-                },
-                "outcome_description": {
-                    "en": "outcome_description"
-                }
-            }
-        ],
-        "files": [],
-        "directories": []
-    },
-    "preservation_state": 0
-}
-
-BASE_CONTRACT = {
-    "contract_json": {
-        "title": "Testisopimus",
-        "identifier": "contract_identifier",
-        "organization": {
-            "name": "Testiorganisaatio"
-        }
-    }
-}
-
-BASE_FILE = {
-    "identifier": "pid:urn:identifier",
-    "file_path": "path/to/file",
-    "file_storage": {
-        "identifier": "urn:nbn:fi:att:file-storage-ida"
-    },
-    "parent_directory": {
-        "identifier": "pid:urn:dir:wf1"
-    },
-    "checksum": {
-        "algorithm": "md5",
-        "value": "58284d6cdd8deaffe082d063580a9df3"
-    },
-    "file_characteristics": {
-        "file_format": "text/plain",
-    }
-}
+BASE_AUDIO_MD = lxml.etree.parse('tests/data/audiomd_sample.xml')
+BASE_VIDEO_MD = lxml.etree.parse('tests/data/audiomd_sample.xml')
+BASE_DATACITE = lxml.etree.parse('tests/data/datacite_sample.xml')
 
 
 def add_files_to_dataset(files, dataset):
@@ -262,7 +59,7 @@ def get_bad_audiomd():
     """Creates and return invalid audio metadata xml.
     :returns: Audio MD as string
     """
-    root = lxml.etree.fromstring(BASE_AUDIO_MD)
+    root = copy.deepcopy(BASE_AUDIO_MD)
     element = root.xpath('/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/'
                          'mets:xmlData/amd:AUDIOMD/amd:audioInfo/amd:duration',
                          namespaces={'mets': "http://www.loc.gov/METS/",
@@ -275,7 +72,7 @@ def get_invalid_datacite():
     """Creates and returns invalid datacite.
     :returns: Datacite as string
     """
-    root = lxml.etree.fromstring(BASE_DATACITE)
+    root = copy.deepcopy(BASE_DATACITE)
     element = root.xpath(
         '/ns:resource/ns:identifier',
         namespaces={'ns': "http://datacite.org/schema/kernel-4"}
@@ -288,7 +85,7 @@ def get_very_invalid_datacite():
     """Creates and returns very invalid datacite.
     :returns: Datacite as string
     """
-    root = lxml.etree.fromstring(BASE_DATACITE)
+    root = copy.deepcopy(BASE_DATACITE)
     element = root.xpath(
         '/ns:resource/ns:resourceType',
         namespaces={'ns': "http://datacite.org/schema/kernel-4"}
@@ -322,9 +119,9 @@ def test_validate_metadata(requests_mock):
                       json=BASE_CONTRACT)
     requests_mock.post("https://metaksi/rpc/datasets/set_preservation_"
                        "identifier?identifier=dataset_identifier")
-    file1 = copy.deepcopy(BASE_FILE)
+    file1 = copy.deepcopy(TXT_FILE)
     file1['identifier'] = "pid:urn:wf_test_1a_ida"
-    file2 = copy.deepcopy(BASE_FILE)
+    file2 = copy.deepcopy(TXT_FILE)
     file2['identifier'] = "pid:urn:wf_test_1b_ida"
     files = [file1, file2]
     requests_mock.get(
@@ -332,7 +129,7 @@ def test_validate_metadata(requests_mock):
         json=files)
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=BASE_DATACITE)
+                      text=lxml.etree.tostring(BASE_DATACITE))
     adapter = requests_mock.patch(
         "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
@@ -487,12 +284,12 @@ def test_validate_invalid_file_type(format_version, requests_mock):
                       json=BASE_CONTRACT)
     file1 = copy.deepcopy(BASE_FILE)
     file1['identifier'] = "pid:urn:wf_test_1a_ida"
-    file1['file_characteristics']['file_format'] = "application/unsupported"
+    file1['file_characteristics'] = {'file_format': "application/unsupported"}
     if format_version:
         file1['file_characteristics']['format_version'] = "1.0"
     file2 = copy.deepcopy(BASE_FILE)
     file2['identifier'] = "pid:urn:wf_test_1b_ida"
-    file2['file_characteristics']['file_format'] = "application/unsupported"
+    file2['file_characteristics'] = {'file_format': "application/unsupported"}
     if format_version:
         file2['file_characteristics']['format_version'] = "1.0"
     files = [file1, file2]
@@ -502,7 +299,7 @@ def test_validate_invalid_file_type(format_version, requests_mock):
     )
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=BASE_DATACITE)
+                      text=lxml.etree.tostring(BASE_DATACITE))
     adapter = requests_mock.patch(
         "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
@@ -586,7 +383,7 @@ def test_validate_metadata_invalid_file_path(requests_mock):
                       json=dataset)
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=BASE_CONTRACT)
-    file_ = copy.deepcopy(BASE_FILE)
+    file_ = copy.deepcopy(TXT_FILE)
     file_['identifier'] = "pid:urn:invalidpath"
     file_['file_path'] = "../../file_in_invalid_path"
     files = [file_]
@@ -596,7 +393,7 @@ def test_validate_metadata_invalid_file_path(requests_mock):
     )
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=BASE_DATACITE)
+                      text=lxml.etree.tostring(BASE_DATACITE))
     adapter = requests_mock.patch(
         "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
@@ -701,17 +498,17 @@ def test_validate_metadata_audiovideo(requests_mock):
     )
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=BASE_DATACITE)
+                      text=lxml.etree.tostring(BASE_DATACITE))
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:891/xml",
                       json=["http://www.loc.gov/audioMD/"])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:891/xml?"
                       "namespace=http://www.loc.gov/audioMD/",
-                      text=BASE_AUDIO_MD)
+                      text=lxml.etree.tostring(BASE_AUDIO_MD))
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:892/xml",
                       json=["http://www.loc.gov/videoMD/"])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:892/xml?"
                       "namespace=http://www.loc.gov/videoMD/",
-                      text=BASE_VIDEO_MD)
+                      text=lxml.etree.tostring(BASE_VIDEO_MD))
     adapter = requests_mock.patch(
         "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
@@ -753,7 +550,7 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
     )
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=BASE_DATACITE)
+                      text=lxml.etree.tostring(BASE_DATACITE))
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:testaudio/xml",
                       json=["http://www.loc.gov/audioMD/"])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:testaudio/xml?"
@@ -813,7 +610,7 @@ def test_validate_metadata_corrupted_mix(requests_mock):
     )
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=BASE_DATACITE)
+                      text=lxml.etree.tostring(BASE_DATACITE))
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:testimage/xml",
                       json=["http://www.loc.gov/mix/v20"])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:testimage/xml?"
@@ -862,9 +659,9 @@ def test_validate_metadata_invalid_datacite(requests_mock):
                       json=BASE_CONTRACT)
     requests_mock.post("https://metaksi/rpc/datasets/set_preservation_"
                        "identifier?identifier=dataset_identifier")
-    file1 = copy.deepcopy(BASE_FILE)
+    file1 = copy.deepcopy(TXT_FILE)
     file1['identifier'] = "pid:urn:wf_test_1a_ida"
-    file2 = copy.deepcopy(BASE_FILE)
+    file2 = copy.deepcopy(TXT_FILE)
     file2['identifier'] = "pid:urn:wf_test_1b_ida"
     files = [file1, file2]
     requests_mock.get(
@@ -1020,9 +817,9 @@ def test_validate_file_metadata(requests_mock):
     """
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['research_dataset']['directories'] = [{'identifier': 'root_dir'}]
-    file_1 = copy.deepcopy(BASE_FILE)
+    file_1 = copy.deepcopy(TXT_FILE)
     file_1['identifier'] = 'file_identifier1'
-    file_2 = copy.deepcopy(BASE_FILE)
+    file_2 = copy.deepcopy(TXT_FILE)
     file_2['identifier'] = 'file_identifier2'
     requests_mock.get(
         tests.conftest.METAX_URL + '/directories/pid:urn:dir:wf1',
@@ -1099,7 +896,7 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
         json=files)
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
-                      text=BASE_DATACITE)
+                      text=lxml.etree.tostring(BASE_DATACITE))
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:testimage/xml",
                       json=["http://www.loc.gov/mix/v20"])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:testimage/xml?"
@@ -1210,7 +1007,7 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
     adapter = requests_mock.patch(
         "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
-    file_ = copy.deepcopy(BASE_FILE)
+    file_ = copy.deepcopy(TXT_FILE)
     file_['identifier'] = "file_id"
     files = [file_]
     requests_mock.get(

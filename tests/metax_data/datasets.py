@@ -4,11 +4,12 @@ from copy import deepcopy
 
 from tests.metax_data.files import get_file
 
+
 BASE_DATASET = {
-    "identifier": "dataset_id",
+    "identifier": "dataset_identifier",
     "preservation_identifier": "doi:test",
     "contract": {
-        "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd"
+        "identifier": "contract_identifier"
     },
     "research_dataset": {
         "provenance": [

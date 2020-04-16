@@ -18,12 +18,11 @@ def test_validatemetadata(testpath, requests_mock):
     :returns: ``None``
     """
     requests_mock.get(
-        'https://metaksi/rest/v1/contracts/'
-        'urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd',
+        'https://metaksi/rest/v1/contracts/contract_identifier',
         json={
             "contract_json": {
                 "title": "Testisopimus",
-                "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
+                "identifier": "contract_identifier",
                 "organization": {
                     "name": "Testiorganisaatio"
                 }
