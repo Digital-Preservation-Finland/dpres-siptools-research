@@ -128,26 +128,6 @@ FILES = {
             })
         ]
     },
-    "pid:urn:invalidpath": {
-        "file_characteristics": TXT_FILE_CHARS,
-        "set": [("file_path", "../../file_in_invalid_path")]
-    },
-    "pid:urn:invalid_file_type_" : {
-        "file_characteristics": {
-            "file_created": "2018-01-17T08:19:31Z",
-            "file_format": "application/unsupported"
-        }
-    },
-    "pid:urn:invalid_file_type_1.0" : {
-        "file_characteristics": {
-            "file_created": "2018-01-17T08:19:31Z",
-            "file_format": "application/unsupported",
-            "format_version": "1.0"
-        }
-    },
-    "pid:urn:validate_metadata_test_image": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
     "pid:urn:invalid_mimetype_1": {
         "file_characteristics": TIFF_FILE_CHARS
     },
@@ -158,26 +138,6 @@ FILES = {
         "file_characteristics": TIFF_FILE_CHARS
     },
     "pid:urn:not_found_2": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
-    "pid:urn:891": {
-        "file_characteristics": {
-            "file_created": "2018-01-17T08:19:31Z",
-            "file_format": "audio/mp4"
-        }
-    },
-    "pid:urn:892": {
-        "file_characteristics": {
-            "file_created": "2018-01-17T08:19:31Z",
-            "file_format": "video/mp4"
-        }
-    },
-    "pid:urn:testaudio": {
-        "file_characteristics": {
-            "file_format": "audio/mpeg"
-        }
-    },
-    "pid:urn:testimage": {
         "file_characteristics": TIFF_FILE_CHARS
     },
     "pid:urn:wf_test_1a_ida_missing_file_format": {
