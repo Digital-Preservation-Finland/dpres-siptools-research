@@ -44,19 +44,20 @@ def test_create_techmd_ok(testpath):
     assert task.complete()
 
     found_refs = 0
-    mix_xml = read_md_references(sipdirectory, 'create-mix-md-references.xml')
-    mix_refs = mix_xml.xpath('/mdReferences/mdReference')
+    mix_refs = read_md_references(sipdirectory,
+                                  'create-mix-md-references.json')
     found_refs += len(mix_refs)
-    xml = read_md_references(sipdirectory, 'import-object-md-references.xml')
-    amd_refs = xml.xpath('/mdReferences/mdReference')
+    amd_refs = read_md_references(
+        sipdirectory, 'import-object-md-references.json')
     found_refs += len(amd_refs)
     assert found_refs == 6
-    for amd_ref in amd_refs:
-        if amd_ref.text[1:] != '1b2eecde68d99171f70613f14cf21f49':
-            assert os.path.isfile(os.path.join(
-                sipdirectory,
-                amd_ref.text[1:] + '-PREMIS%3AOBJECT-amd.xml'
-                ))
+    for path in amd_refs:
+        for amd_ref in amd_refs[path]['md_ids']:
+            if amd_ref[1:] != '1b2eecde68d99171f70613f14cf21f49':
+                assert os.path.isfile(os.path.join(
+                    sipdirectory,
+                    amd_ref[1:] + '-PREMIS%3AOBJECT-amd.xml'
+                    ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
         '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml'
@@ -64,7 +65,8 @@ def test_create_techmd_ok(testpath):
     # Check that one of the PREMIS techMD files has desired properties
     output_file = os.path.join(
         sipdirectory,
-        amd_refs[0].text[1:] + '-PREMIS%3AOBJECT-amd.xml'
+        amd_refs[next(iter(
+            amd_refs))]['md_ids'][0][1:] + '-PREMIS%3AOBJECT-amd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
@@ -73,9 +75,9 @@ def test_create_techmd_ok(testpath):
     assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] \
         == 'premis:file'
     assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-        == 'text/html; charset=UTF-8'
+        == 'text/xml; charset=UTF-8'
     assert root.xpath("//premis:formatVersion",
-                      namespaces=NAMESPACES)[0].text == '5.0'
+                      namespaces=NAMESPACES)[0].text == '1.0'
 
     # Check that the NISOIMG techMD file has desired properties
     output_file = os.path.join(
@@ -137,13 +139,13 @@ def test_create_techmd_without_charset(testpath):
     )
     task.run()
 
-    xml = read_md_references(sipdirectory, 'import-object-md-references.xml')
-    amd_refs = xml.xpath('/mdReferences/mdReference')
+    amd_refs = read_md_references(
+        sipdirectory, 'import-object-md-references.json')
     assert len(amd_refs) == 1
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
         sipdirectory,
-        amd_refs[0].text[1:] + '-PREMIS%3AOBJECT-amd.xml'
+        amd_refs['project_x/some/path/file_name_5']['md_ids'][0][1:] + '-PREMIS%3AOBJECT-amd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
