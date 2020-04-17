@@ -1,5 +1,6 @@
 """Tests for :mod:`siptools_research.metadata_validator` module"""
 import copy
+import contextlib
 
 import pytest
 import lxml.etree
@@ -22,6 +23,13 @@ BASE_VIDEO_MD = lxml.etree.parse('tests/data/audiomd_sample.xml')
 BASE_DATACITE = lxml.etree.parse('tests/data/datacite_sample.xml')
 
 
+@contextlib.contextmanager
+def does_not_raise():
+    """Dummy context manager that complements pytest.raises when no error is
+    excepted."""
+    yield
+
+
 def add_files_to_dataset(files, dataset):
     """Add files to dataset.
     :param: files: file identifier to be added
@@ -38,21 +46,6 @@ def add_files_to_dataset(files, dataset):
                 }
             }
         })
-
-
-def add_provenance_to_dataset(lang, text, dataset):
-    """Adds attributes and values to provenance.
-    :param: lang: array of languages
-    :param: text: array of values
-    :param: dataset
-    :returns: ``None``
-    """
-    for index, _lang in enumerate(lang):
-        prov = dataset['research_dataset']['provenance'][0]
-        prov['preservation_event']['pref_label'][lang[index]] = text[index]
-        prov['description'][lang[index]] = text[index]
-        prov['event_outcome']['pref_label'][lang[index]] = text[index]
-        prov['outcome_description'][lang[index]] = text[index]
 
 
 def get_bad_audiomd():
@@ -140,75 +133,65 @@ def test_validate_metadata(requests_mock):
 
 
 @pytest.mark.parametrize(
-    "lang,text", [(["en"], ["Something in english"]),
-                  (["fi"], ["Jotain suomeksi"]),
-                  (["en", "fi"], ["Something in english", "Jotain suomeksi"])]
+    ("translations", "expectation"),
+    (
+        (
+            {"en": "Something in english"},
+            does_not_raise()),
+        (
+            {"fi": "Jotain suomeksi"},
+            does_not_raise()
+        ),
+        (
+            {"en": "Something in english", "fi": "Jotain suomeksi"},
+            does_not_raise()
+        ),
+        (
+            {"foo": "Something in invalid language"},
+            pytest.raises(InvalidMetadataError,
+                          match=("Invalid language code: 'foo' in field: "
+                                 "'research_dataset/provenance/description"))
+        ),
+        (
+            {"foo": "Something in invalid language"},
+            pytest.raises(InvalidMetadataError,
+                          match=("Invalid language code: 'foo' in field: "
+                                 "'research_dataset/provenance/description"))
+        ),
+        (
+            {},
+            pytest.raises(InvalidMetadataError,
+                          match=("No localization provided in field: "
+                                 "'research_dataset/provenance/description'"))
+        )
+    )
 )
 # pylint: disable=invalid-name
-def test_validate_metadata_languages(lang, text, monkeypatch, requests_mock):
-    """Test that validate_metadata function returns ``True`` when English,
-    Finnish, or both translations are provided.
+def test_validate_metadata_languages(translations, expectation, requests_mock):
+    """Test that validate_metadata function when one one of the localized
+    fields has different translations. Invalid translations should raise
+    exception.
 
     :returns: ``None``
     """
-    # Datacite validation is patched to only test dataset schema validation.
-    # Datacite validation is tested in test_validate_metadata.
-    monkeypatch.setattr(
-        metadata_validator, "_validate_datacite",
-        lambda dataset_id, client, dummy_doi: None
-    )
     dataset = copy.deepcopy(BASE_DATASET)
-    add_provenance_to_dataset(lang, text, dataset)
+    dataset['research_dataset']['provenance'][0]['description'] = translations
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier",
                       json=dataset)
+    requests_mock.get('https://metaksi/rest/v1/datasets/dataset_identifier'
+                      '?dataset_format=datacite&dummy_doi=false',
+                      content=lxml.etree.tostring(BASE_DATACITE))
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=BASE_CONTRACT)
     requests_mock.get(
         "https://metaksi/rest/v1/datasets/dataset_identifier/files",
         json=[])
-    adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier"
-    )
-    add_provenance_to_dataset(lang, text, dataset)
-    assert validate_metadata('dataset_identifier',
-                             tests.conftest.UNIT_TEST_CONFIG_FILE,
-                             set_preservation_state=True)
-    _assert_metadata_validation_passed(adapter.last_request.json())
+    requests_mock.patch("https://metaksi/rest/v1/datasets/dataset_identifier")
 
-
-# pylint: disable=invalid-name
-def test_validate_metadata_language_missing(monkeypatch, requests_mock):
-    """Test that metadata validation fails if localization is missing on a
-    required field.
-    """
-    monkeypatch.setattr(
-        metadata_validator, "_validate_datacite",
-        lambda dataset_id, client, dummy_doi: None
-    )
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['research_dataset']['provenance'][0]['description'] = {}
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier",
-                      json=dataset)
-    requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
-                      json=BASE_CONTRACT)
-    adapter = requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_identifier"
-    )
-
-    with pytest.raises(InvalidMetadataError) as error:
-        validate_metadata(
-            'dataset_identifier',
-            tests.conftest.UNIT_TEST_CONFIG_FILE,
-            set_preservation_state=True
-        )
-
-    field = "'research_dataset/provenance/description'"
-    assert str(error.value) == "No localization provided in field: %s" % field
-    _assert_metadata_validation_failed(
-        adapter.last_request.json(),
-        "Metadata did not pass validation: No localization provided in field: "
-        "'research_dataset/provenance/description'"
-    )
+    with expectation:
+        assert validate_metadata('dataset_identifier',
+                                 tests.conftest.UNIT_TEST_CONFIG_FILE,
+                                 set_preservation_state=True)
 
 
 # pylint: disable=invalid-name
@@ -266,43 +249,42 @@ def test_validate_preservation_identifier():
     )
 
 
-@pytest.mark.parametrize('format_version', ["1.0", ""])
+@pytest.mark.parametrize(
+    ('file_characteristics',
+     'version_info'),
+    [
+        ({'file_format': 'application/unsupported', 'format_version': '1.0'},
+         ", version 1.0"),
+        ({'file_format': 'application/unsupported'},
+         "")
+    ]
+)
 # pylint: disable=invalid-name
-def test_validate_invalid_file_type(format_version, requests_mock):
+def test_validate_invalid_file_type(file_characteristics, version_info,
+                                    requests_mock):
     """Test that validate_metadata function raises exception with correct error
     message for unsupported file type.
 
+    :param file_characteristics: file characteristics dict in file metadata
+    :param version_info: excepted version information in exception message
+    :param requests_mock: Mocker object
     :returns: ``None``
     """
     mock_metax_get_dir(requests_mock)
-    dataset = copy.deepcopy(BASE_DATASET)
-    add_files_to_dataset(["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"],
-                         dataset)
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier",
-                      json=dataset)
+                      json=BASE_DATASET)
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=BASE_CONTRACT)
-    file1 = copy.deepcopy(BASE_FILE)
-    file1['identifier'] = "pid:urn:wf_test_1a_ida"
-    file1['file_characteristics'] = {'file_format': "application/unsupported"}
-    if format_version:
-        file1['file_characteristics']['format_version'] = "1.0"
-    file2 = copy.deepcopy(BASE_FILE)
-    file2['identifier'] = "pid:urn:wf_test_1b_ida"
-    file2['file_characteristics'] = {'file_format': "application/unsupported"}
-    if format_version:
-        file2['file_characteristics']['format_version'] = "1.0"
-    files = [file1, file2]
+    unsupported_file = copy.deepcopy(BASE_FILE)
+    unsupported_file['file_characteristics'] = file_characteristics
     requests_mock.get(
         "https://metaksi/rest/v1/datasets/dataset_identifier/files",
-        json=files
+        json=[unsupported_file]
     )
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
-                      "dataset_format=datacite",
-                      text=lxml.etree.tostring(BASE_DATACITE))
     adapter = requests_mock.patch(
         "https://metaksi/rest/v1/datasets/dataset_identifier"
     )
+
     # Try to validate dataset with a file that has an unsupported file_format
     with pytest.raises(InvalidMetadataError) as error:
         validate_metadata('dataset_identifier',
@@ -310,25 +292,17 @@ def test_validate_invalid_file_type(format_version, requests_mock):
                           set_preservation_state=True)
 
     # Check exception message
-    message = (
-        "Validation error in file path/to/file:"
-        " Incorrect file format: application/unsupported"
+    excepted_exception = (
+        "Validation error in file path/to/file: Incorrect file format: "
+        "application/unsupported{}".format(version_info)
     )
-    if format_version:
-        message += ", version 1.0"
-        _assert_metadata_validation_failed(
-            adapter.last_request.json(),
-            "Metadata did not pass validation: Validation error in file "
-            "path/to/file: Incorrect file format: application/unsupported, "
-            "version 1.0"
-        )
-    else:
-        _assert_metadata_validation_failed(
-            adapter.last_request.json(),
-            "Metadata did not pass validation: Validation error in file "
-            "path/to/file: Incorrect file format: application/unsupported"
-        )
-    assert str(error.value) == message
+    assert str(error.value) == excepted_exception
+
+    # Check preservation state posted to Metax
+    _assert_metadata_validation_failed(
+        adapter.last_request.json(),
+        "Metadata did not pass validation: {}".format(excepted_exception)
+    )
 
 
 # pylint: disable=invalid-name
