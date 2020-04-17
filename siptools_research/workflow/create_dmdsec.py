@@ -18,7 +18,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
     """Creates METS dmdSec document. Descriptive metadata is read from Metax in
     DataCite format. Output file is written to <sip_creation_path>/dmdsec.xml.
     Metadata references are written:
-    <sip_creation_path>/import-description-md-references.xml.
+    <sip_creation_path>/import-description-md-references.json.
 
     Task requires that workspace is created and dataset metadata is validated.
     """
@@ -50,7 +50,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
             ),
             luigi.LocalTarget(
                 os.path.join(self.sip_creation_path,
-                             'import-description-md-references.xml'),
+                             'import-description-md-references.json'),
                 format=luigi.format.Nop
             )
         ]

@@ -72,7 +72,7 @@ class CreateStructMap(WorkflowTask):
             workspace=self.sip_creation_path
         )
         # Create fileSec
-        filesec = compile_structmap.create_filesec(**ref_lists)
+        (filesec, _) = compile_structmap.create_filesec(**ref_lists)
         with self.output()[0].open('wb') as filesecxml:
             filesec.write(filesecxml,
                           pretty_print=True,

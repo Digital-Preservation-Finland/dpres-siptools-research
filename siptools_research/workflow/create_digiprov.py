@@ -75,7 +75,7 @@ class CreateProvenanceInformation(WorkflowTask):
         We also return the path of the created provenance reference file.
 
         :returns: local target: `create-provenance-information.finished`
-                  local target: 'premis-event-md-references.xml'
+                  local target: 'premis-event-md-references.json'
         :rtype: LocalTarget
         """
         return {
@@ -88,7 +88,7 @@ class CreateProvenanceInformation(WorkflowTask):
             "references": local_target.LocalTarget(
                 os.path.join(
                     self.sip_creation_path,
-                    'premis-event-md-references.xml'
+                    'premis-event-md-references.json'
                 ), format=luigi.format.Nop
             )
         }
