@@ -2,8 +2,11 @@
 """Module for generating test datasets at runtime."""
 from copy import deepcopy
 
+import lxml.etree
+
 from tests.metax_data.files import get_file
 
+BASE_DATACITE = lxml.etree.parse('tests/data/datacite_sample.xml')
 
 BASE_DATASET = {
     "identifier": "dataset_identifier",
@@ -44,12 +47,6 @@ BASE_DATASET = {
 
 DATASETS = {
     "1": {},
-    "generate_metadata_test_dataset_1": {
-        "files": ["pid:urn:generate_metadata_1"]
-    },
-    "generate_metadata_test_dataset_3": {
-        "files": ["pid:urn:generate_metadata_3"]
-    },
     "validate_metadata_test_dataset": {
         "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
     },
@@ -213,9 +210,6 @@ DATASETS = {
     },
     "workflow_test_dataset_1_local": {
         "files": ["pid:urn:wf_test_1a_local", "pid:urn:wf_test_1b_local"]
-    },
-    "missing_csv_info": {
-        "files": ["missing_csv_info"]
     },
     "missing_provenance": {
         "set": [("research_dataset", {"files": []})]

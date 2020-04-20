@@ -1,6 +1,12 @@
 """Module for generating test files at runtime."""
 from copy import deepcopy
 
+import lxml.etree
+
+BASE_AUDIO_MD = lxml.etree.parse('tests/data/audiomd_sample.xml')
+BASE_VIDEO_MD = lxml.etree.parse('tests/data/audiomd_sample.xml')
+
+
 PAS_STORAGE_ID = "urn:nbn:fi:att:file-storage-pas"
 
 CSV_FILE_CHARS = {
@@ -59,19 +65,11 @@ TXT_FILE['file_characteristics'] = TXT_FILE_CHARS
 TIFF_FILE = deepcopy(BASE_FILE)
 TIFF_FILE['file_characteristics'] = TIFF_FILE_CHARS
 
+CSV_FILE = deepcopy(BASE_FILE)
+CSV_FILE['file_characteristics'] = CSV_FILE_CHARS
+
 
 FILES = {
-    "pid:urn:generate_metadata_1": {
-        "file_characteristics": {
-            "encoding": "user_defined_charset",
-            "file_created": "2014-01-17T08:19:31Z",
-            "file_format": "text/plain",
-            "dummy_key": "dummy_value"
-        }
-    },
-    "pid:urn:generate_metadata_3": {
-        "file_characteristics": CSV_FILE_CHARS
-    },
     "pid:urn:textfile1": {
         "file_characteristics": TXT_FILE_CHARS,
         "set": [
@@ -297,11 +295,6 @@ FILES = {
             ),
             ("identifier", "pid:urn:8")
         ]
-    },
-    "missing_csv_info": {
-        "file_characteristics": {
-            "file_format": "text/csv"
-        }
     }
 }
 

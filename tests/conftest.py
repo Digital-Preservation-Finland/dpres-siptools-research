@@ -1,5 +1,6 @@
 """Configure py.test default values and functionality"""
 
+import copy
 import os
 import sys
 import logging
@@ -10,14 +11,16 @@ import mongomock
 import pymongo
 import luigi.configuration
 import pytest
+import lxml.etree
 
 from metax_access import Metax
 import upload_rest_api
 
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
-import tests.metax_data.datasets as datasets
-import tests.metax_data.files as files
+import tests.metax_data.datasets
+import tests.metax_data.files
+import tests.metax_data.contracts
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -58,16 +61,15 @@ def mock_metax_access(monkeypatch):
     """Mock metax_access GET requests to files or datasets to return
     mock functions from metax_data.datasets and metax_data.files modules.
     """
-    monkeypatch.setattr(Metax, "get_dataset", datasets.get_dataset)
-    monkeypatch.setattr(Metax, "get_dataset_files", datasets.get_dataset_files)
-    monkeypatch.setattr(Metax, "get_file", files.get_file)
-
-
-def _identifier_exists(identifier):
-    """Check if identifier is defined in metax_data.datasets or
-    metax_data.files
-    """
-    return identifier in files.FILES or identifier in datasets.DATASETS
+    monkeypatch.setattr(Metax,
+                        "get_dataset",
+                        tests.metax_data.datasets.get_dataset)
+    monkeypatch.setattr(Metax,
+                        "get_dataset_files",
+                        tests.metax_data.datasets.get_dataset_files)
+    monkeypatch.setattr(Metax,
+                        "get_file",
+                        tests.metax_data.files.get_file)
 
 
 @pytest.fixture(scope="function")
@@ -147,3 +149,99 @@ def mock_filetype_conf(monkeypatch):
     monkeypatch.setattr(siptools_research.utils.mimetypes.is_supported,
                         "__defaults__",
                         ('include/etc/dpres_mimetypes.json',))
+
+
+def mock_metax_dataset(requests_mock,
+                       dataset=copy.deepcopy(
+                           tests.metax_data.datasets.BASE_DATASET
+                       ),
+                       files=None,
+                       contract=copy.deepcopy(
+                           tests.metax_data.contracts.BASE_CONTRACT
+                       )):
+    """Mock responses of Metax datasets API, files API, contracts API, and
+    directories API using requests-mock.
+
+    Information about files and contract are inserted to dataset metadata.
+    Metax directories API is mocked based on file paths and parent directories
+    of provided file metadata. The mocked datacite meatada for dataset is hard
+    coded. Technical metadata for audio, video, image etc. files is NOT mocked.
+    The identifiers in provided resource dicts are used in mocked URLs.
+
+
+    :param requests_mok: Mocker object used for creating responses
+    :param dataset: dataset metadata dict
+    :param files: list of file metadata dicts
+    :param contract: contract metadata dict
+    :returns: ``None``
+    """
+    if files is None:
+        files = {}
+
+    # Add contract to dataset
+    dataset['contract']['identifier'] = contract['contract_json']['identifier']
+
+    for file_ in files:
+        # Add files to dataset
+        dataset["research_dataset"]["files"].append(
+            {
+                "identifier": file_['identifier'],
+                "use_category": {
+                    "pref_label": {
+                        "en": file_['identifier']
+                    }
+                }
+            }
+        )
+
+        # Mock Metax contracts API
+        requests_mock.get(
+            "{}/directories/{}".format(
+                METAX_URL, file_['parent_directory']['identifier']
+            ),
+            json={
+                "identifier": file_['parent_directory']['identifier'],
+                "directory_path": os.path.dirname(file_['file_path'])
+            }
+        )
+
+        # Mock Metax files API
+        requests_mock.get("{}/files/{}".format(METAX_URL, file_['identifier']),
+                          json=file_)
+        requests_mock.patch(
+            "{}/files/{}".format(METAX_URL, file_['identifier'])
+        )
+        requests_mock.get(
+            "{}/files/{}/xml".format(METAX_URL, file_['identifier']),
+            json={}
+        )
+        requests_mock.post(
+            "{}/files/{}/xml".format(METAX_URL, file_['identifier']),
+            status_code=201
+        )
+
+    # Mock Metax datasets API
+    requests_mock.get(
+        "{}/datasets/{}".format(METAX_URL, dataset['identifier']),
+        json=dataset
+    )
+    requests_mock.patch(
+        "{}/datasets/{}".format(METAX_URL, dataset['identifier']),
+        json=dataset
+    )
+    requests_mock.get(
+        "{}/datasets/{}?dataset_format=datacite".format(METAX_URL,
+                                                        dataset['identifier']),
+        text=lxml.etree.tostring(tests.metax_data.datasets.BASE_DATACITE)
+    )
+    requests_mock.get(
+        "{}/datasets/{}/files".format(METAX_URL, dataset['identifier']),
+        json=files
+    )
+
+    # Mock Metax contracts API
+    requests_mock.get(
+        "{}/contracts/{}".format(METAX_URL,
+                                 contract['contract_json']["identifier"]),
+        json=contract
+    )

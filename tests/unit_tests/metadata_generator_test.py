@@ -15,6 +15,7 @@ from siptools_research.metadata_generator import (
 )
 from siptools_research.utils import download
 import tests.conftest
+from tests.conftest import mock_metax_dataset
 import tests.metax_data.datasets
 import tests.metax_data.files
 
@@ -83,32 +84,22 @@ def test_generate_metadata(requests_mock,
     :returns: ``None``
     """
     # create mocked dataset in Metax and Ida
-    file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
-    dataset_metadata = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
-
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_id",
-                      json=dataset_metadata)
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_id/files",
-                      json=[file_metadata])
-    requests_mock.patch("https://metaksi/rest/v1/datasets/dataset_id")
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier",
-                      json=file_metadata)
-    with open(path, 'rb') as file_:
-        requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
-                          content=file_.read())
+    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
     file_metadata_patch = requests_mock.patch(
         "https://metaksi/rest/v1/files/pid:urn:identifier"
     )
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
-                      json=[])
     xml_post = requests_mock.post(
         "https://metaksi/rest/v1/files/pid:urn:identifier/xml?namespace={}"
         .format(namespace),
         status_code=201
     )
+    with open(path, 'rb') as file_:
+        requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
+                          content=file_.read())
 
     # generate metadata for dataset
-    generate_metadata('dataset_id', tests.conftest.UNIT_TEST_CONFIG_FILE)
+    generate_metadata('dataset_identifier',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # verify the file characteristics that were sent to Metax
     file_characteristics \
@@ -139,36 +130,30 @@ def test_generate_metadata_predefined(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    dataset_metadata = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
     file_metadata['file_characteristics'] = {
         'encoding': 'user_defined',
         'dummy_key': 'dummy_value'
     }
-
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_id",
-                      json=dataset_metadata)
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_id/files",
-                      json=[file_metadata])
-    requests_mock.patch("https://metaksi/rest/v1/datasets/dataset_id")
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier",
-                      json=file_metadata)
+    mock_metax_dataset(requests_mock, files=[file_metadata])
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       content=b'foo')
-    requests_mock.patch("https://metaksi/rest/v1/files/pid:urn:identifier")
+    patch_request = requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:identifier"
+    )
 
-    generate_metadata('dataset_id', tests.conftest.UNIT_TEST_CONFIG_FILE)
+    generate_metadata('dataset_identifier',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # verify the file characteristics that were sent to Metax
-    patch_request = requests_mock.request_history[-3].json()
-    assert patch_request['file_characteristics'] == {
+    assert patch_request.last_request.json()['file_characteristics'] == {
         'file_format': 'text/plain',  # missing keys are added
         'encoding': 'user_defined',  # user defined value is not overwritten
         'dummy_key': 'dummy_value'  # additional keys are copied
     }
 
 
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
+@pytest.mark.usefixtures('testpath')
 def test_generate_metadata_addml(requests_mock):
     """Tests addml metadata generation for a CSV file. Generates metadata for a
     dataset that contains a CSV file and checks that message sent to Metax
@@ -177,34 +162,22 @@ def test_generate_metadata_addml(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_3"
-    )
-    requests_mock.get(
-        "https://ida.test/files/pid:urn:generate_metadata_3/download",
-        content=b'foo'
-    )
-    requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3"
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3/xml",
-        json=[]
-    )
-    requests_mock.post(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_3/"
-        "xml?namespace=http://www.arkivverket.no/standarder/addml",
+    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.CSV_FILE])
+    addml_post_request = requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
+        "namespace=http://www.arkivverket.no/standarder/addml",
         status_code=201
     )
+    requests_mock.get(
+        "https://ida.test/files/pid:urn:identifier/download", content=b'foo'
+    )
 
-    generate_metadata('generate_metadata_test_dataset_3',
+    generate_metadata('dataset_identifier',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Read one element from XML to ensure it is valid and contains correct data
-    # The decoded filename should be /testpath/csvfile.csv
     # pylint: disable=no-member
-    xml = lxml.etree.fromstring(requests_mock.request_history[-2].body)
-
+    xml = lxml.etree.fromstring(addml_post_request.last_request.body)
     flatfile = xml.xpath(
         '//addml:flatFile',
         namespaces={"addml": "http://www.arkivverket.no/standarder/addml"}
@@ -212,45 +185,35 @@ def test_generate_metadata_addml(requests_mock):
     name = decode_path(flatfile[0].get("name"))
     assert name == "path/to/file"
 
-    # Check HTTP request query string
-    query = requests_mock.request_history[-2].qs['namespace'][0]
-    assert query == 'http://www.arkivverket.no/standarder/addml'
 
-    # Check HTTP request method
-    assert requests_mock.request_history[-2].method == "POST"
-
-
-@pytest.mark.usefixtures('mock_metax_access')
 # pylint: disable=invalid-name
 def test_generate_metadata_tempfile_removal(testpath, requests_mock):
     """Tests that temporary files downloaded from Ida are removed.
 
+    :param testpath: path to packaging root directory
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get(
-        "https://ida.test/files/pid:urn:generate_metadata_1/download"
-    )
-    requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_1"
-    )
-    requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:generate_metadata_1"
-    )
+    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
+    requests_mock.get("https://ida.test/files/pid:urn:identifier/download")
 
     tmp_path = "{}/tmp".format(testpath)
+    file_cache_path = "{}/file_cache".format(testpath)
 
-    # Check contents of /tmp before calling generate_metadata()
-    tmp_dir_before_test = os.listdir(tmp_path)
+    # tmp and file_cache should be empty before calling generate_metadata()
+    assert os.listdir(tmp_path) == []
+    assert os.listdir(file_cache_path) == []
 
-    generate_metadata('generate_metadata_test_dataset_1',
+    generate_metadata('dataset_identifier',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # There should not be new files or directories in /tmp
-    assert os.listdir(tmp_path) == tmp_dir_before_test
+    # There should not be new files or directories in tmp after metadata
+    # generation, but the downloaded file should be left in file cache
+    assert os.listdir(tmp_path) == []
+    assert os.listdir(file_cache_path) == ['pid:urn:identifier']
 
 
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
+@pytest.mark.usefixtures('testpath')
 # pylint: disable=invalid-name
 def test_generate_metadata_missing_csv_info(requests_mock):
     """Tests addml metadata generation for a dataset that does not contain all
@@ -259,40 +222,60 @@ def test_generate_metadata_missing_csv_info(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get("https://ida.test/files/missing_csv_info/download")
-    requests_mock.patch("https://metaksi/rest/v1/datasets/missing_csv_info")
-    requests_mock.patch("https://metaksi/rest/v1/files/missing_csv_info")
+    invalid_file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
+    invalid_file_metadata['file_characteristics'] = {'file_format': 'text/csv'}
+    mock_metax_dataset(requests_mock, files=[invalid_file_metadata])
+    requests_mock.get("https://ida.test/files/pid:urn:identifier/download")
 
     with pytest.raises(MetadataGenerationError) as exception_info:
-        generate_metadata('missing_csv_info',
+        generate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     assert str(exception_info.value) == (
         'Required attribute "csv_delimiter" is missing from file '
         'characteristics of a CSV file. '
-        '[ dataset=missing_csv_info, file=missing_csv_info ]'
+        '[ dataset=dataset_identifier, file=pid:urn:identifier ]'
     )
 
 
 # pylint: disable=invalid-name
-@pytest.mark.parametrize('dataset', ['missing_provenance', 'empty_provenance'])
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
-def test_generate_metadata_provenance(dataset, requests_mock):
+@pytest.mark.parametrize('provenance', (None, [], [{}], [{'foo': 'bar'}]))
+@pytest.mark.usefixtures('testpath')
+def test_generate_metadata_provenance(provenance, requests_mock):
     """Tests that provenance data is generated and added to Metax if it is
-    missing from dataset metadata.
+    missing from dataset metadata. If provenance exists already, it should not
+    be overwritten.
 
+    :param provenance: Provenance metadata dictionary
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/{}".format(dataset),
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    if provenance is None:
+        del dataset['research_dataset']['provenance']
+    else:
+        dataset['research_dataset']['provenance'] = provenance
+    mock_metax_dataset(requests_mock, dataset=dataset)
+    patch_dataset_metadata = requests_mock.patch(
+        'https://metaksi/rest/v1/datasets/dataset_identifier',
         json={}
     )
 
-    generate_metadata(dataset,
+    generate_metadata('dataset_identifier',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
-    json_message = requests_mock.request_history[-2].json()
-    assert json_message['research_dataset']['provenance'] \
-        == [DEFAULT_PROVENANCE]
+
+    if provenance:
+        # Some provenance existed already, so the metadata should not be
+        # patched. Only the preservation status should be updated.
+        assert len(patch_dataset_metadata.request_history) == 1
+    else:
+        # Provenance list did not exist in metadata (or it was empty).
+        # Default provenance should be added to Metax, and the preservation
+        # status should be updated.
+        assert len(patch_dataset_metadata.request_history) == 2
+        provenance_patch = patch_dataset_metadata.request_history[-2].json()
+        assert provenance_patch['research_dataset']['provenance'] \
+            == [DEFAULT_PROVENANCE]
 
 
 @pytest.mark.usefixtures('testpath')
@@ -317,63 +300,54 @@ def test_generate_metadata_dataset_not_found(monkeypatch, requests_mock):
     assert not requests_mock.request_history
 
 
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
-def test_generate_metadata_ida_download_error(monkeypatch, requests_mock):
+@pytest.mark.usefixtures('testpath')
+def test_generate_metadata_ida_download_error(requests_mock):
     """Verifies that preservation state is set correctly when file download
     from IDA fails and MetadataGenerationError is raised.
 
-    :param monkeypatch: Monkeypatch object
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_1"
-    )
+    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
+    requests_mock.get('https://ida.test/files/pid:urn:identifier/download',
+                      status_code=404)
 
-    def _get_dataset_exception(*_args):
-        raise download.FileNotFoundError(
-            "File '/path/to/file' not found in Ida"
-        )
-
-    monkeypatch.setattr(
-        siptools_research.metadata_generator,
-        "download_file",
-        _get_dataset_exception
-    )
     with pytest.raises(MetadataGenerationError):
-        generate_metadata('generate_metadata_test_dataset_1',
+        generate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     # Assert preservation state is set correctly
     assert requests_mock.last_request.method == "PATCH"
     body = requests_mock.last_request.json()
     assert body['preservation_state'] == 30
     assert body['preservation_description'] == (
-        "File '/path/to/file' not found in Ida "
-        "[ dataset=generate_metadata_test_dataset_1 ]"
+        "File 'path/to/file' not found in Ida "
+        "[ dataset=dataset_identifier ]"
     )
 
 
-@pytest.mark.usefixtures('testpath', 'mock_metax_access')
-def test_generate_metadata_httperror(monkeypatch, requests_mock):
+@pytest.mark.usefixtures('testpath')
+def test_generate_metadata_httperror(requests_mock):
     """Verifies that preservation state is set when HTTPError occurs.
 
-    :param monkeypatch: Monkeypatch object
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.patch(
-        'https://metaksi/rest/v1/datasets/generate_metadata_test_dataset_1'
+    mock_metax_dataset(requests_mock)
+    requests_mock.get(
+        'https://metaksi/rest/v1/datasets/dataset_identifier/files',
+        status_code=500,
+        reason='Fake error'
     )
 
-    def _get_dataset_exception(*_arg1):
-        raise HTTPError('httperror')
-
-    monkeypatch.setattr(Metax, "get_dataset_files", _get_dataset_exception)
     with pytest.raises(HTTPError):
-        generate_metadata('generate_metadata_test_dataset_1',
+        generate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     # Assert preservation state is set correctly
     assert requests_mock.last_request.method == "PATCH"
     body = requests_mock.last_request.json()
     assert body['preservation_state'] == 30
-    assert body['preservation_description'] == "httperror"
+    assert body['preservation_description'] \
+        == ("500 Server Error: Fake error for url: "
+            "https://metaksi/rest/v1/datasets/dataset_identifier/files")
