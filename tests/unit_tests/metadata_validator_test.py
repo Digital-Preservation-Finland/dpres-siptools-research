@@ -72,7 +72,7 @@ def get_very_invalid_datacite():
 
 def test_validate_metadata(requests_mock):
     """Test that validate_metadata function returns ``True`` for a valid
-    dataset.
+    dataset and sets preservation state in Metax.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -88,7 +88,10 @@ def test_validate_metadata(requests_mock):
         set_preservation_state=True
     )
 
-    _assert_metadata_validation_passed(requests_mock.last_request.json())
+    # Preservation state should be patched
+    assert requests_mock.last_request.json()['preservation_state'] == 70
+    assert requests_mock.last_request.json()['preservation_description'] \
+        == 'Metadata passed validation'
 
 
 @pytest.mark.parametrize(
@@ -146,7 +149,8 @@ def test_validate_metadata_languages(translations, expectation, requests_mock):
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid(requests_mock):
     """Test that validate_metadata function raises exception with correct error
-    message for invalid dataset.
+    message for invalid dataset. Also check that preservation state is reported
+    to Metax.
 
     :returns: ``None``
     """
@@ -159,19 +163,17 @@ def test_validate_metadata_invalid(requests_mock):
     )
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    excepted_error = "'contract' is a required property"
+    with pytest.raises(InvalidMetadataError, match=excepted_error):
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE,
                           set_preservation_state=True)
 
-    # Check exception message
-    exc = exc_info.value
-    assert str(exc).startswith("'contract' is a required property")
-    _assert_metadata_validation_failed(
-        adapter.last_request.json(),
-        "Metadata did not pass validation: 'contract' is a required "
-        "property\n\nFailed validating 'required' in schema:\n    "
-        "{'properties': {'contract': {'description': 'Metadata for")
+    # Preservation state and error message should be patched
+    assert adapter.last_request.json()['preservation_state'] == 40
+    assert adapter.last_request.json()['preservation_description'].startswith(
+        "Metadata did not pass validation: {}".format(excepted_error)
+    )
 
 
 # pylint: disable=invalid-name
@@ -236,12 +238,6 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
     )
     assert str(error.value) == excepted_exception
 
-    # Check preservation state posted to Metax
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: {}".format(excepted_exception)
-    )
-
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_contract_metadata(requests_mock):
@@ -269,14 +265,6 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
         "Failed validating 'required' in schema"
     )
 
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: 'name' is a required "
-        "property\n\nFailed validating 'required' in schema['properties']"
-        "['contract_json']['properties']['organization']:\n    "
-        "{'description': 'Organization"
-    )
-
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_file_path(requests_mock):
@@ -300,11 +288,6 @@ def test_validate_metadata_invalid_file_path(requests_mock):
     assert str(exception_info.value) \
         == ("The file path of file pid:urn:identifier is invalid: "
             "../../file_in_invalid_path")
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: The file path of file "
-        "pid:urn:identifier is invalid: ../../file_in_invalid_path"
-    )
 
 
 # pylint: disable=invalid-name
@@ -324,11 +307,6 @@ def test_validate_metadata_missing_xml(requests_mock):
 
     assert str(exc.value) == ("Missing technical metadata XML for file: "
                               "pid:urn:identifier")
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: Missing technical metadata XML for "
-        "file: pid:urn:identifier"
-    )
 
 
 # pylint: disable=invalid-name
@@ -369,8 +347,6 @@ def test_validate_metadata_audiovideo(requests_mock,
                              tests.conftest.UNIT_TEST_CONFIG_FILE,
                              set_preservation_state=True)
 
-    _assert_metadata_validation_passed(requests_mock.last_request.json())
-
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_audiomd(requests_mock):
@@ -400,12 +376,6 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
     assert str(exc).startswith(
         "Technical metadata XML of file pid:urn:identifier is invalid: Element"
         " 'audiomd:duration' is required in element 'amd:audioInfo'."
-    )
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: Technical metadata XML of file "
-        "pid:urn:identifier is invalid: Element 'audiomd:duration' is required"
-        " in element 'amd:audioInfo'."
     )
 
 
@@ -438,12 +408,6 @@ def test_validate_metadata_corrupted_mix(requests_mock):
         'Technical metadata XML of file pid:urn:identifier is invalid: '
         'Namespace prefix mix on mix is not defined, line 2, column 1'
     )
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: Technical metadata XML of file "
-        "pid:urn:identifier is invalid: Namespace prefix mix on mix is not "
-        "defined, line 2, column 1"
-    )
 
 
 # pylint: disable=invalid-name
@@ -474,13 +438,6 @@ def test_validate_metadata_invalid_datacite(requests_mock):
         "'{http://datacite.org/schema/kernel-4}resource': Missing child "
         "element(s)."
     )
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: Datacite metadata is invalid: "
-        "Element '{http://datacite.org/schema/kernel-4}resource': Missing "
-        "child element(s). Expected is one of "
-        "( {http://datacite.org/schema/ker"
-    )
 
 
 # pylint: disable=invalid-name
@@ -509,11 +466,6 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     assert str(exc).startswith(
         "Datacite metadata is invalid: Couldn't find end of Start Tag "
         "resource line 1, line 2, column 1"
-    )
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: Datacite metadata is invalid: "
-        "Couldn't find end of Start Tag resource line 1, line 2, column 1"
     )
 
 
@@ -549,12 +501,6 @@ def test_validate_metadata_datacite_bad_request(requests_mock):
     # Check exception message
     exc = exc_info.value
     assert str(exc) == "Datacite metadata is invalid: Bad request"
-
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: Datacite metadata is invalid: "
-        "Bad request"
-    )
 
 
 def test_validate_file_metadata(requests_mock):
@@ -735,22 +681,3 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
     assert str(exception_info.value).startswith(
         "Validation error in metadata of pid:urn:dir:wf1: 'directory_path' is"
         " a required property")
-
-    _assert_metadata_validation_failed(
-        requests_mock.last_request.json(),
-        "Metadata did not pass validation: Validation error in metadata of "
-        "pid:urn:dir:wf1: 'directory_path' is a required property\n\nFailed "
-        "validating 'required' in schema:\n    {'properties': {'file_path': {'"
-    )
-
-
-def _assert_metadata_validation_passed(body_as_json):
-    assert body_as_json == {
-        'preservation_description': 'Metadata passed validation',
-        'preservation_state': 70
-    }
-
-
-def _assert_metadata_validation_failed(body_as_json, description):
-    assert body_as_json['preservation_state'] == 40
-    assert body_as_json['preservation_description'].startswith(description)
