@@ -17,7 +17,7 @@ git+https://gitlab.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
 lxml
 luigi
 pymongo
-requests
+requests==2.6
 paramiko
 jsonschema==2.5.1
 iso-639

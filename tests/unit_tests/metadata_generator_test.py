@@ -348,6 +348,7 @@ def test_generate_metadata_httperror(requests_mock):
     assert requests_mock.last_request.method == "PATCH"
     body = requests_mock.last_request.json()
     assert body['preservation_state'] == 30
-    assert body['preservation_description'] \
-        == ("500 Server Error: Fake error for url: "
-            "https://metaksi/rest/v1/datasets/dataset_identifier/files")
+    # TODO: The message of HTTPErrors will be different in newer versions of
+    # requests library (this test works with version 2.6 which is available in
+    # centos7 repositories).
+    assert body['preservation_description'] == ("500 Server Error: Fake error")
