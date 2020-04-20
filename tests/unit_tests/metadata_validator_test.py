@@ -16,7 +16,7 @@ from siptools_research.workflowtask import InvalidMetadataError
 from siptools_research.config import Configuration
 import tests.conftest
 from tests.metax_data.datasets import BASE_DATASET
-from tests.metax_data.files import BASE_FILE, TXT_FILE
+from tests.metax_data.files import BASE_FILE, TXT_FILE, TIFF_FILE
 from tests.metax_data.contracts import BASE_CONTRACT
 
 BASE_AUDIO_MD = lxml.etree.parse('tests/data/audiomd_sample.xml')
@@ -396,13 +396,7 @@ def test_validate_metadata_missing_xml(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    image_file = copy.deepcopy(BASE_FILE)
-    image_file['file_characteristics'] = {
-        "file_created": "2018-01-17T08:19:31Z",
-        "file_format": "image/tiff",
-        "format_version": "6.0"
-    }
-    mock_dataset(requests_mock, files=[image_file])
+    mock_dataset(requests_mock, files=[TIFF_FILE])
 
     with pytest.raises(InvalidMetadataError) as exc:
         validate_metadata('dataset_identifier',
@@ -504,11 +498,7 @@ def test_validate_metadata_corrupted_mix(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-
-    image_file = copy.deepcopy(BASE_FILE)
-    image_file["file_characteristics"] = {'file_format': 'image/tiff',
-                                          'format_version': '6.0'}
-    mock_dataset(requests_mock, files=[image_file])
+    mock_dataset(requests_mock, files=[TIFF_FILE])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
                       json=["http://www.loc.gov/mix/v20"])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml?"

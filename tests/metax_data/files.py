@@ -56,6 +56,10 @@ BASE_FILE = {
 TXT_FILE = deepcopy(BASE_FILE)
 TXT_FILE['file_characteristics'] = TXT_FILE_CHARS
 
+TIFF_FILE = deepcopy(BASE_FILE)
+TIFF_FILE['file_characteristics'] = TIFF_FILE_CHARS
+
+
 FILES = {
     "pid:urn:generate_metadata_1": {
         "file_characteristics": {
