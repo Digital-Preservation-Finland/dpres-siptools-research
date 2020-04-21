@@ -1,6 +1,7 @@
 """Tests for :mod:`siptools_research.metadata_validator` module"""
 import copy
 import contextlib
+import six
 
 import pytest
 import lxml.etree
@@ -340,7 +341,7 @@ def test_validate_metadata_audiovideo(requests_mock,
     requests_mock.get(
         "https://metaksi/rest/v1/files/{}/xml?"
         "namespace={}".format(file_metadata['identifier'], xml_namespace),
-        text=lxml.etree.tostring(xml)
+        content=six.binary_type(lxml.etree.tostring(xml))
     )
 
     assert validate_metadata('dataset_identifier',

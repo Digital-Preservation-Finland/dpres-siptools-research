@@ -5,6 +5,7 @@ import os
 import sys
 import logging
 import shutil
+import six
 
 import urllib3
 import mongomock
@@ -232,7 +233,9 @@ def mock_metax_dataset(requests_mock,
     requests_mock.get(
         "{}/datasets/{}?dataset_format=datacite".format(METAX_URL,
                                                         dataset['identifier']),
-        text=lxml.etree.tostring(tests.metax_data.datasets.BASE_DATACITE)
+        content=six.binary_type(
+            lxml.etree.tostring(tests.metax_data.datasets.BASE_DATACITE)
+        )
     )
     requests_mock.get(
         "{}/datasets/{}/files".format(METAX_URL, dataset['identifier']),
