@@ -52,7 +52,6 @@ def test_create_techmd_ok(testpath):
     found_refs += len(amd_refs)
     assert found_refs == 6
     for path in amd_refs:
-        print(path)
         for amd_ref in amd_refs[path]['md_ids']:
             if amd_ref[1:] != '1b2eecde68d99171f70613f14cf21f49':
                 assert os.path.isfile(os.path.join(
