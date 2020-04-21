@@ -52,6 +52,7 @@ def test_create_techmd_ok(testpath):
     found_refs += len(amd_refs)
     assert found_refs == 6
     for path in amd_refs:
+        print(path)
         for amd_ref in amd_refs[path]['md_ids']:
             if amd_ref[1:] != '1b2eecde68d99171f70613f14cf21f49':
                 assert os.path.isfile(os.path.join(
@@ -64,9 +65,8 @@ def test_create_techmd_ok(testpath):
     ))
     # Check that one of the PREMIS techMD files has desired properties
     output_file = os.path.join(
-        sipdirectory,
-        amd_refs[next(iter(
-            amd_refs))]['md_ids'][0][1:] + '-PREMIS%3AOBJECT-amd.xml'
+        sipdirectory, amd_refs['project_x/some/path/file_name_5'][
+            'md_ids'][0][1:] + '-PREMIS%3AOBJECT-amd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
@@ -75,9 +75,9 @@ def test_create_techmd_ok(testpath):
     assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] \
         == 'premis:file'
     assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-        == 'text/xml; charset=UTF-8'
+        == 'text/html; charset=UTF-8'
     assert root.xpath("//premis:formatVersion",
-                      namespaces=NAMESPACES)[0].text == '1.0'
+                      namespaces=NAMESPACES)[0].text == '5.0'
 
     # Check that the NISOIMG techMD file has desired properties
     output_file = os.path.join(
