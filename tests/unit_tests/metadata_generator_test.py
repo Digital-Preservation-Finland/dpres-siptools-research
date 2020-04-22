@@ -9,11 +9,9 @@ from requests.exceptions import HTTPError
 from siptools.utils import decode_path
 from metax_access import Metax, DatasetNotFoundError
 
-import siptools_research
 from siptools_research.metadata_generator import (
     generate_metadata, MetadataGenerationError
 )
-from siptools_research.utils import download
 import tests.conftest
 from tests.conftest import mock_metax_dataset
 import tests.metax_data.datasets
