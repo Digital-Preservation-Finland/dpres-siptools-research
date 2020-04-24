@@ -3,6 +3,7 @@
 import os
 import shutil
 import hashlib
+import glob
 import lxml.etree
 import pytest
 
@@ -123,6 +124,13 @@ def test_create_techmd_ok(testpath, requests_mock):
     with open(os.path.join(workspace, 'task-create-technical-'
                            'metadata.finished')) as open_file:
         assert 'Dataset id=create_techmd_test_dataset' in open_file.read()
+
+    # Check that one event file is created and only one reference
+    event_refs = read_md_references(sipdirectory,
+                                    'premis-event-md-references.json')
+    assert len(event_refs) == 1
+    assert event_refs['.']
+    assert len(glob.glob1(sipdirectory, '*-PREMIS%3AEVENT-amd.xml')) == 1
 
 
 @pytest.mark.usefixtures('mock_metax_access')
