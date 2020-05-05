@@ -9,8 +9,7 @@ import lxml.etree as ET
 import mets
 from metax_access import Metax
 import xml_helpers.utils as h
-from siptools.utils import encode_path
-from siptools.mdcreator import read_md_references, get_md_references
+from siptools.utils import encode_path, read_md_references, get_md_references
 from siptools.xml.mets import NAMESPACES
 
 from siptools_research.xml_metadata import MetadataGenerationError
@@ -68,7 +67,6 @@ class CreateLogicalStructMap(WorkflowTask):
 
         :returns: ``None``
         """
-
 
         # Read the generated physical structmap from file
         # pylint: disable=no-member

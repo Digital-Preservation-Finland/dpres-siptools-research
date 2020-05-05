@@ -9,8 +9,8 @@ import pytest
 
 from metax_access import MetaxError
 
+from siptools.utils import read_md_references
 from siptools.xml.mets import NAMESPACES
-from siptools.mdcreator import read_md_references
 import tests.conftest
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       algorithm_name)
@@ -61,10 +61,10 @@ def test_create_techmd_ok(testpath, requests_mock):
 
     found_refs = 0
     mix_refs = read_md_references(sipdirectory,
-                                  'create-mix-md-references.json')
+                                  'create-mix-md-references.jsonl')
     found_refs += len(mix_refs)
-    amd_refs = read_md_references(
-        sipdirectory, 'import-object-md-references.json')
+    amd_refs = read_md_references(sipdirectory,
+                                  'import-object-md-references.jsonl')
     found_refs += len(amd_refs)
     assert found_refs == 6
     for path in amd_refs:
@@ -73,7 +73,7 @@ def test_create_techmd_ok(testpath, requests_mock):
                 assert os.path.isfile(os.path.join(
                     sipdirectory,
                     amd_ref[1:] + '-PREMIS%3AOBJECT-amd.xml'
-                    ))
+                ))
     assert os.path.isfile(os.path.join(
         sipdirectory,
         '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml'
@@ -81,16 +81,16 @@ def test_create_techmd_ok(testpath, requests_mock):
     # Check that one of the PREMIS techMD files has desired properties
     output_file = os.path.join(
         sipdirectory, amd_refs['project_x/some/path/file_name_5'][
-            'md_ids'][0][1:] + '-PREMIS%3AOBJECT-amd.xml'
+                          'md_ids'][0][1:] + '-PREMIS%3AOBJECT-amd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
     assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1
     assert len(root.xpath("//premis:object", namespaces=NAMESPACES)) == 1
     assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] \
-        == 'premis:file'
+           == 'premis:file'
     assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-        == 'text/html; charset=UTF-8'
+           == 'text/html; charset=UTF-8'
     assert root.xpath("//premis:formatVersion",
                       namespaces=NAMESPACES)[0].text == '5.0'
 
@@ -122,12 +122,12 @@ def test_create_techmd_ok(testpath, requests_mock):
 
     # Check that target file is created
     with open(os.path.join(workspace, 'task-create-technical-'
-                           'metadata.finished')) as open_file:
+                                      'metadata.finished')) as open_file:
         assert 'Dataset id=create_techmd_test_dataset' in open_file.read()
 
     # Check that one event file is created and only one reference
     event_refs = read_md_references(sipdirectory,
-                                    'premis-event-md-references.json')
+                                    'premis-event-md-references.jsonl')
     assert len(event_refs) == 1
     assert event_refs['.']
     assert len(glob.glob1(sipdirectory, '*-PREMIS%3AEVENT-amd.xml')) == 1
@@ -166,20 +166,21 @@ def test_create_techmd_without_charset(testpath, requests_mock):
     )
     task.run()
 
-    amd_refs = read_md_references(
-        sipdirectory, 'import-object-md-references.json')
+    amd_refs = read_md_references(sipdirectory,
+                                  'import-object-md-references.jsonl')
     assert len(amd_refs) == 1
     # Check that output file is created, and it has desired properties
     output_file = os.path.join(
         sipdirectory,
-        amd_refs['project_x/some/path/file_name_5']['md_ids'][0][1:] + '-PREMIS%3AOBJECT-amd.xml'
+        amd_refs['project_x/some/path/file_name_5']['md_ids'][0][
+        1:] + '-PREMIS%3AOBJECT-amd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
     # If charset is not defined the siptools.import_objects default value is
     # used. Siptools recognizes ASCII text files as UTF-8 text files.
     assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-        == 'text/html; charset=UTF-8'
+           == 'text/html; charset=UTF-8'
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
@@ -237,13 +238,13 @@ def test_algorithm_name():
     # Valid input
     assert algorithm_name('md5', hashlib.md5(b'foo').hexdigest()) == 'MD5'
     assert algorithm_name('sha2', hashlib.sha224(b'foo').hexdigest()) \
-        == 'SHA-224'
+           == 'SHA-224'
     assert algorithm_name('sha2', hashlib.sha256(b'foo').hexdigest()) \
-        == 'SHA-256'
+           == 'SHA-256'
     assert algorithm_name('sha2', hashlib.sha384(b'foo').hexdigest()) \
-        == 'SHA-384'
+           == 'SHA-384'
     assert algorithm_name('sha2', hashlib.sha512(b'foo').hexdigest()) \
-        == 'SHA-512'
+           == 'SHA-512'
 
     # invalid algorithm name
     with pytest.raises(UnboundLocalError):

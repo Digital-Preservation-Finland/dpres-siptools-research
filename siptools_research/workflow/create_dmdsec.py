@@ -6,7 +6,7 @@ import luigi
 
 from metax_access import Metax
 from siptools.scripts import import_description
-from siptools.mdcreator import remove_dmdsec_references
+from siptools.utils import remove_dmdsec_references
 
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
@@ -18,7 +18,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
     """Creates METS dmdSec document. Descriptive metadata is read from Metax in
     DataCite format. Output file is written to <sip_creation_path>/dmdsec.xml.
     Metadata references are written:
-    <sip_creation_path>/import-description-md-references.json.
+    <sip_creation_path>/import-description-md-references.jsonl.
 
     Task requires that workspace is created and dataset metadata is validated.
     """
@@ -50,7 +50,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
             ),
             luigi.LocalTarget(
                 os.path.join(self.sip_creation_path,
-                             'import-description-md-references.json'),
+                             'import-description-md-references.jsonl'),
                 format=luigi.format.Nop
             )
         ]
