@@ -2,9 +2,9 @@
 
 import os
 import luigi
+import metax_access
 from siptools_research.config import Configuration
 from siptools_research.utils.database import Database
-import metax_access
 
 
 class FatalWorkflowError(Exception):

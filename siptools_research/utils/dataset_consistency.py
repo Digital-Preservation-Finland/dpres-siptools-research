@@ -5,6 +5,7 @@ class DatasetConsistency(object):
     """Motivation for this class is to speed up the process of checking if
     the files returned by Metax API datasets/datasetid/files are contained
     by Metax dataset files or directories attributes"""
+
     def __init__(self, metax_access, dataset):
         self.metax_client = metax_access
         self.dataset = dataset
@@ -29,8 +30,7 @@ class DatasetConsistency(object):
         if file_md['parent_directory']['identifier'] not in self.directories:
             temp_dirs = set()
             if not self._is_directory_contained_by_dataset_directories(
-                file_md['parent_directory']['identifier'], temp_dirs
-            ):
+                    file_md['parent_directory']['identifier'], temp_dirs):
                 raise InvalidMetadataError(
                     'File not found from dataset files nor directories: %s'
                     % (file_md["file_path"])

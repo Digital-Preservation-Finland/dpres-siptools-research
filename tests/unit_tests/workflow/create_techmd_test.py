@@ -79,10 +79,9 @@ def test_create_techmd_ok(testpath, requests_mock):
         '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml'
     ))
     # Check that one of the PREMIS techMD files has desired properties
-    output_file = os.path.join(
-        sipdirectory, amd_refs['project_x/some/path/file_name_5'][
-                          'md_ids'][0][1:] + '-PREMIS%3AOBJECT-amd.xml'
-    )
+    amd_id = amd_refs['project_x/some/path/file_name_5']['md_ids'][0][1:]
+    amd_file = amd_id + '-PREMIS%3AOBJECT-amd.xml'
+    output_file = os.path.join(sipdirectory, amd_file)
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
     assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1

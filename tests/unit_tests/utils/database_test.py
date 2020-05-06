@@ -1,9 +1,9 @@
 """Tests for :mod:`siptools_research.utils.database` module"""
 import uuid
 import pytest
-import tests.conftest
-import siptools_research.utils.database
 import pymongo
+import siptools_research.utils.database
+import tests.conftest
 
 
 @pytest.mark.usefixtures('testmongoclient')
