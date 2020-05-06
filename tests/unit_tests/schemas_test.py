@@ -327,7 +327,8 @@ def test_validate_invalid_contract():
 def test_validate_dataset_with_directories():
     """Test validation of valid dataset metadata that contains only directories
     and no files. Defines a sample metadata dictionary that is known to be
-    valid. The dictionary is then validated against ``DATASET_METADATA_SCHEMA``.
+    valid. The dictionary is then validated against
+    ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """

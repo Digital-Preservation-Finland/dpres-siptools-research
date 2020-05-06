@@ -14,7 +14,7 @@ def _kwargs2str(kwargs):
     keys = sorted(kwargs.keys())
     kwarg_list = " ["
 
-    for i in range(len(keys)-1):
+    for i in range(len(keys) - 1):
         kwarg_list += " %s=%s," % (keys[i], kwargs[keys[i]])
 
     return kwarg_list + " %s=%s ]" % (keys[-1], kwargs[keys[-1]])
@@ -22,6 +22,7 @@ def _kwargs2str(kwargs):
 
 class MetadataGenerationError(Exception):
     """Exception raised when metadata generation fails"""
+
     def __init__(self, message, **kwargs):
         super(MetadataGenerationError, self).__init__(message)
         self.kwargs = kwargs
@@ -66,6 +67,7 @@ class _XMLMetadata:
 
 class _ImageFileXMLMetadata(_XMLMetadata):
     """Class for creating XML metadata for image files."""
+
     def create(self):
         """Creates a MIX metadata XML element for an image file.
         :returns: MIX XML element
@@ -87,6 +89,7 @@ class _ImageFileXMLMetadata(_XMLMetadata):
 
 class _CSVFileXMLMetadata(_XMLMetadata):
     """Class for creating metadata XML element for CSV files."""
+
     def create(self):
         """Creates ADDML metadata XML elementfor a CSV file.
         :returns: ADDML metadata XML element
@@ -104,11 +107,15 @@ class _CSVFileXMLMetadata(_XMLMetadata):
 
         return create_addml.create_addml_metadata(
             csv_file=self.file_path,
-            delimiter=self.file_metadata['file_characteristics']['csv_delimiter'],
-            isheader=self.file_metadata['file_characteristics']['csv_has_header'],
+            delimiter=self.file_metadata['file_characteristics'][
+                'csv_delimiter'],
+            isheader=self.file_metadata['file_characteristics'][
+                'csv_has_header'],
             charset=self.file_metadata['file_characteristics']['encoding'],
-            record_separator=self.file_metadata['file_characteristics']['csv_record_separator'],
-            quoting_char=self.file_metadata['file_characteristics']['csv_quoting_char'],
+            record_separator=self.file_metadata['file_characteristics'][
+                'csv_record_separator'],
+            quoting_char=self.file_metadata['file_characteristics'][
+                'csv_quoting_char'],
             flatfile_name=self.file_metadata['file_path']
         )
 
@@ -123,6 +130,7 @@ class _CSVFileXMLMetadata(_XMLMetadata):
 
 class _AudioXWavFileXMLMetadata(_XMLMetadata):
     """Class for creating XML metadata for audio files."""
+
     def create(self):
         """Creates and returns the root audioMD XML element.
         :returns: audioMD XML element

@@ -87,10 +87,11 @@ def test_create_techmd_ok(testpath, requests_mock):
     root = tree.getroot()
     assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1
     assert len(root.xpath("//premis:object", namespaces=NAMESPACES)) == 1
-    assert root.xpath("//premis:object/@*", namespaces=NAMESPACES)[0] \
-           == 'premis:file'
-    assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-           == 'text/html; charset=UTF-8'
+    assert root.xpath("//premis:object/@*",
+                      namespaces=NAMESPACES)[0] == 'premis:file'
+    format_name = root.xpath("//premis:formatName",
+                             namespaces=NAMESPACES)[0].text
+    assert format_name == 'text/html; charset=UTF-8'
     assert root.xpath("//premis:formatVersion",
                       namespaces=NAMESPACES)[0].text == '5.0'
 
@@ -170,17 +171,18 @@ def test_create_techmd_without_charset(testpath, requests_mock):
                                   'import-object-md-references.jsonl')
     assert len(amd_refs) == 1
     # Check that output file is created, and it has desired properties
+    amd_id = amd_refs['project_x/some/path/file_name_5']['md_ids'][0][1:]
     output_file = os.path.join(
         sipdirectory,
-        amd_refs['project_x/some/path/file_name_5']['md_ids'][0][
-        1:] + '-PREMIS%3AOBJECT-amd.xml'
+        amd_id + '-PREMIS%3AOBJECT-amd.xml'
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
     # If charset is not defined the siptools.import_objects default value is
     # used. Siptools recognizes ASCII text files as UTF-8 text files.
-    assert root.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-           == 'text/html; charset=UTF-8'
+    format_name = root.xpath("//premis:formatName",
+                             namespaces=NAMESPACES)[0].text
+    assert format_name == 'text/html; charset=UTF-8'
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
@@ -229,27 +231,28 @@ def test_xml_metadata_file_missing(testpath, requests_mock):
     assert not task.complete()
 
 
-def test_algorithm_name():
-    """Test ``algorithm_name`` function with valid and invalid inputs.
+@pytest.mark.parametrize(('algorithm', 'hash_function', 'expected'),
+                         [('md5', hashlib.md5, 'MD5'),
+                          ('sha2', hashlib.sha224, 'SHA-224'),
+                          ('sha2', hashlib.sha256, 'SHA-256'),
+                          ('sha2', hashlib.sha384, 'SHA-384'),
+                          ('sha2', hashlib.sha512, 'SHA-512')])
+def test_algorithm_name_valid_input(algorithm, hash_function, expected):
+    """Test ``algorithm_name`` function with valid inputs.
 
     :returns: ``None``
     """
+    assert algorithm_name(algorithm,
+                          hash_function(b'foo').hexdigest()) == expected
 
-    # Valid input
-    assert algorithm_name('md5', hashlib.md5(b'foo').hexdigest()) == 'MD5'
-    assert algorithm_name('sha2', hashlib.sha224(b'foo').hexdigest()) \
-           == 'SHA-224'
-    assert algorithm_name('sha2', hashlib.sha256(b'foo').hexdigest()) \
-           == 'SHA-256'
-    assert algorithm_name('sha2', hashlib.sha384(b'foo').hexdigest()) \
-           == 'SHA-384'
-    assert algorithm_name('sha2', hashlib.sha512(b'foo').hexdigest()) \
-           == 'SHA-512'
 
-    # invalid algorithm name
-    with pytest.raises(UnboundLocalError):
-        algorithm_name('foo', 'bar')
+@pytest.mark.parametrize(('algorithm', 'value', 'expected_exception'),
+                         [('foo', 'bar', UnboundLocalError),
+                          ('sha2', 'foobar', KeyError)])
+def test_algorithm_name_invalid_input(algorithm, value, expected_exception):
+    """Test ``algortih_name`` function with invalid inputs.
 
-    # invalid value length
-    with pytest.raises(KeyError):
-        algorithm_name('sha2', 'foobar')
+    :returns: ``None``
+    """
+    with pytest.raises(expected_exception):
+        algorithm_name(algorithm, value)
