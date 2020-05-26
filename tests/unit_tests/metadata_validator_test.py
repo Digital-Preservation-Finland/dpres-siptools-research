@@ -90,7 +90,14 @@ def test_validate_metadata(requests_mock):
         set_preservation_state=True
     )
 
-    # Preservation state should be patched
+    # At first preservation-state should be patched to
+    # 'validating metadata' (65)
+    data = {
+        "preservation_state": 65
+    }
+    assert requests_mock.request_history[1].method == "PATCH"
+    assert requests_mock.request_history[1].json() == data
+
     assert requests_mock.last_request.json()['preservation_state'] == 70
     assert requests_mock.last_request.json()['preservation_description'] \
         == 'Metadata passed validation'

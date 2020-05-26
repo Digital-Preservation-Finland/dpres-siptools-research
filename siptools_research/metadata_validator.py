@@ -11,8 +11,8 @@ from requests.exceptions import HTTPError
 from siptools.xml.mets import NAMESPACES
 
 from metax_access import (Metax, MetaxError, DatasetNotFoundError,
-                          DataciteGenerationError, DS_STATE_INVALID_METADATA,
-                          DS_STATE_VALID_METADATA,
+                          DataciteGenerationError, DS_STATE_VALIDATING_METADATA,
+                          DS_STATE_INVALID_METADATA, DS_STATE_VALID_METADATA,
                           DS_STATE_METADATA_VALIDATION_FAILED)
 import siptools_research.schemas
 from siptools_research.utils import mimetypes
@@ -72,6 +72,12 @@ def validate_metadata(
         # set default values
         status_code = DS_STATE_METADATA_VALIDATION_FAILED
         message = "Metadata validation failed"
+
+        metax_client.set_preservation_state(
+            dataset_id,
+            state=DS_STATE_VALIDATING_METADATA
+        )
+
         # Get dataset metadata from Metax
         dataset_metadata = metax_client.get_dataset(dataset_id)
 

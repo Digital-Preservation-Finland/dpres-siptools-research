@@ -2,7 +2,8 @@
 import os
 
 from file_scraper.scraper import Scraper
-from metax_access.metax import (Metax, DS_STATE_INVALID_METADATA,
+from metax_access.metax import (Metax, DS_STATE_VALIDATING_METADATA,
+                                DS_STATE_INVALID_METADATA,
                                 DS_STATE_VALID_METADATA,
                                 DS_STATE_METADATA_VALIDATION_FAILED)
 
@@ -83,6 +84,10 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
     cache_path = os.path.join(conf.get("packaging_root"), "file_cache")
 
     try:
+        metax_client.set_preservation_state(
+            dataset_id,
+            state=DS_STATE_VALIDATING_METADATA
+        )
         dataset_files = _download_files(
             metax_client,
             dataset_id,
@@ -99,7 +104,7 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         status_code = DS_STATE_INVALID_METADATA
         message = str(exc)
         raise
-    except FileAccessError as exc:
+    except (FileAccessError, HTTPError) as exc:
         status_code = DS_STATE_METADATA_VALIDATION_FAILED
         message = str(exc)
         raise

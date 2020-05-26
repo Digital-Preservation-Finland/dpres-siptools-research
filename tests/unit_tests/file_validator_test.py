@@ -33,6 +33,14 @@ def test_validate_files(requests_mock):
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
+    # At first preservation-state should be patched to
+    # 'validating metadata' (65)
+    data = {
+        "preservation_state": 65
+    }
+    assert requests_mock.request_history[0].method == "PATCH"
+    assert requests_mock.request_history[0].json() == data
+
     # verify preservation_state is set as last operation
     last_request = requests_mock.request_history[-1].json()
     assert last_request['preservation_description'] \
