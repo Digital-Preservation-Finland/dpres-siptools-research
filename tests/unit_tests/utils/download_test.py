@@ -80,7 +80,7 @@ def test_download_file_502(testpath, requests_mock):
             UNIT_TEST_CONFIG_FILE
         )
     assert str(exc_info.value) == ("Ida service temporarily unavailable. "
-                                  "Please, try again later.")
+                                   "Please, try again later.")
 
 
 def test_clean_file_cache(testpath):
