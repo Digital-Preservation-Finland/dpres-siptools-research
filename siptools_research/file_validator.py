@@ -11,7 +11,9 @@ from requests.exceptions import HTTPError, ConnectionError
 from upload_rest_api.database import FilesCol
 
 from siptools_research.config import Configuration
-from siptools_research.utils.download import download_file, FileNotFoundError
+from siptools_research.utils.download import (
+    download_file, FileNotFoundError, FileAccessError
+)
 
 
 def _download_files(
@@ -57,10 +59,6 @@ class FileValidationError(Exception):
                 message += ("\n" + path)
 
         return message
-
-
-class FileAccessError(Exception):
-    """Raised when file cannot be accessed."""
 
 
 def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):

@@ -2,9 +2,12 @@
 
 import pytest
 
-from siptools_research.file_validator import (validate_files,
-                                              FileValidationError,
-                                              FileAccessError)
+from siptools_research.file_validator import (
+    validate_files,
+    FileValidationError
+)
+from siptools_research.utils.download import FileAccessError
+
 import tests.conftest
 
 

@@ -18,6 +18,10 @@ class FileLockError(Exception):
     """Exception raised when file is locked by another process"""
 
 
+class FileAccessError(Exception):
+    """Raised when file cannot be accessed."""
+
+
 def _get_response(identifier, conf, stream=False):
     """Send authenticated HTTP request to IDA.
 
@@ -97,6 +101,9 @@ def _get_ida_file(file_metadata, conf):
                 raise FileNotFoundError(
                     "File '%s' not found in Ida" % file_metadata["file_path"]
                 )
+            if error.response.status_code == 502:
+                raise FileAccessError("Ida service temporarily unavailable. "
+                                      "Please, try again later.")
             raise
 
         # Write the stream to tmp_path, create a hard link to file_cache

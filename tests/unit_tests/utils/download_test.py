@@ -4,8 +4,10 @@ import time
 
 import pytest
 
-from siptools_research.utils.download import download_file, clean_file_cache
-from siptools_research.utils.download import FileNotFoundError
+from siptools_research.utils.download import (
+    download_file, clean_file_cache,
+    FileNotFoundError, FileAccessError
+)
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
@@ -59,6 +61,26 @@ def test_download_file_404(testpath, requests_mock):
             new_file_path,
             UNIT_TEST_CONFIG_FILE
         )
+
+
+def test_download_file_502(testpath, requests_mock):
+    """Tries to download from IDA returning 502.
+
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
+    """
+    requests_mock.get('https://ida.test/files/pid:urn:502/download',
+                      status_code=502)
+
+    new_file_path = os.path.join(testpath, 'new_file')
+    with pytest.raises(FileAccessError) as excInfo:
+        download_file(
+            _get_file_metadata('pid:urn:502'),
+            new_file_path,
+            UNIT_TEST_CONFIG_FILE
+        )
+    assert str(excInfo.value) == ("Ida service temporarily unavailable. "
+                                  "Please, try again later.")
 
 
 def test_clean_file_cache(testpath):
