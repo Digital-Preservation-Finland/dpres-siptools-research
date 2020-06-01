@@ -73,13 +73,13 @@ def test_download_file_502(testpath, requests_mock):
                       status_code=502)
 
     new_file_path = os.path.join(testpath, 'new_file')
-    with pytest.raises(FileAccessError) as excInfo:
+    with pytest.raises(FileAccessError) as exc_info:
         download_file(
             _get_file_metadata('pid:urn:502'),
             new_file_path,
             UNIT_TEST_CONFIG_FILE
         )
-    assert str(excInfo.value) == ("Ida service temporarily unavailable. "
+    assert str(exc_info.value) == ("Ida service temporarily unavailable. "
                                   "Please, try again later.")
 
 
