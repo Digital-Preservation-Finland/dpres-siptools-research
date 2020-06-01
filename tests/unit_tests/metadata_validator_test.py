@@ -5,6 +5,7 @@ import six
 
 import pytest
 import lxml.etree
+from requests.exceptions import HTTPError
 
 from metax_access import Metax
 
@@ -682,3 +683,33 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
     assert str(exception_info.value).startswith(
         "Validation error in metadata of pid:urn:dir:wf1: 'directory_path' is"
         " a required property")
+
+
+# pylint: disable=invalid-name
+def test_validate_metadata_http_error_raised(requests_mock):
+    """Test that validate_metadata does not write the HTTPError to
+    dataset's preservation_state attribute in Metax when HTTPError occurs 
+
+    :param requests_mock: Mocker object
+    :returns: ``None``
+    """
+    mock_metax_dataset(requests_mock)
+    requests_mock.get(
+        'https://metaksi/rest/v1/datasets/dataset_identifier/files',
+        status_code=500,
+        reason='Something not to be shown to user'
+    )
+
+    with pytest.raises(HTTPError):
+        validate_metadata('dataset_identifier',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE,
+                          set_preservation_state=True)
+
+    # Assert preservation state is set correctly
+    assert requests_mock.last_request.method == "PATCH"
+    body = requests_mock.last_request.json()
+    assert body['preservation_state'] == 50
+    # TODO: The message of HTTPErrors will be different in newer versions of
+    # requests library (this test works with version 2.6 which is available in
+    # centos7 repositories).
+    assert body['preservation_description'] == "System error"

@@ -98,7 +98,7 @@ def validate_metadata(
         # was not found in Metax.
         status_code = None
         raise
-    except (InvalidMetadataError, MetaxError, HTTPError) as exc:
+    except (InvalidMetadataError, MetaxError) as exc:
         detailed_error = str(exc)
         if isinstance(exc, InvalidMetadataError):
             status_code = DS_STATE_INVALID_METADATA
@@ -106,6 +106,10 @@ def validate_metadata(
         else:
             status_code = DS_STATE_METADATA_VALIDATION_FAILED
             message = "Metadata validation failed: %s" % detailed_error
+        raise
+    except HTTPError:
+        message = "System error"
+        status_code = DS_STATE_METADATA_VALIDATION_FAILED
         raise
     else:
         success = True

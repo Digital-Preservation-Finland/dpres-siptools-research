@@ -88,8 +88,12 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
         _generate_file_metadata(metax_client, dataset_id, tmpdir, config)
 
-    except (MetadataGenerationError, MetaxError, HTTPError) as error:
+    except (MetadataGenerationError, MetaxError) as error:
         message = str(error)[:199] if len(str(error)) > 200 else str(error)
+        status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
+        raise
+    except HTTPError as error:
+        message = "System error"
         status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
         raise
     else:
