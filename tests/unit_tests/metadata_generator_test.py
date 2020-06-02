@@ -349,4 +349,4 @@ def test_generate_metadata_httperror(requests_mock):
     # TODO: The message of HTTPErrors will be different in newer versions of
     # requests library (this test works with version 2.6 which is available in
     # centos7 repositories).
-    assert body['preservation_description'] == "System error"
+    assert body['preservation_description'] == "Internal error"

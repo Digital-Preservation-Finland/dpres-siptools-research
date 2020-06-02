@@ -93,7 +93,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
         raise
     except HTTPError as error:
-        message = "System error"
+        message = "Internal error"
         status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
         raise
     else:

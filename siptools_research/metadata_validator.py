@@ -108,7 +108,7 @@ def validate_metadata(
             message = "Metadata validation failed: %s" % detailed_error
         raise
     except HTTPError:
-        message = "System error"
+        message = "Internal error"
         status_code = DS_STATE_METADATA_VALIDATION_FAILED
         raise
     else:
