@@ -1,11 +1,11 @@
-"""Install siptools-research package"""
+"""Install siptools-research package."""
 from setuptools import setup, find_packages
 
 from version import get_version
 
 
 def main():
-    """Install siptools-research"""
+    """Install siptools-research."""
     setup(
         name='siptools-research',
         packages=find_packages(exclude=['tests', 'tests.*']),
@@ -13,7 +13,9 @@ def main():
         version=get_version(),
         install_requires=[
             "lxml",
-            "luigi",
+            # TODO: Luigi v3 does not support Python2. Version specifier should
+            # be removed when Python2 compatibility is not required anymore.
+            "luigi<3",
             "pymongo",
             "requests",
             "paramiko",

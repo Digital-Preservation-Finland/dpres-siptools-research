@@ -16,7 +16,7 @@ git+https://gitlab.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
 
 lxml
 # Luigi version 3.0 does not support Python 2.7, so Luigi 2.8 must be used until migration to Python3 is complete.
-luigi==2.8.13
+luigi<3
 pymongo
 requests==2.6
 paramiko
