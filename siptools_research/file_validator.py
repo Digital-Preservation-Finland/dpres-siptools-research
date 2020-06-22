@@ -19,7 +19,6 @@ from siptools_research.utils.download import (
 def _download_files(
         metax_client,
         dataset_id,
-        upload_database,
         config_file="/etc/siptools_research.conf"
 ):
     """Download all dataset files.
@@ -29,6 +28,7 @@ def _download_files(
     :param config_file: configuration file path
     :returns: A list of the metadata of all downloaded files
     """
+    upload_database = upload_rest_api.database.Database()
     dataset_files = metax_client.get_dataset_files(dataset_id)
     for dataset_file in dataset_files:
         try:
@@ -81,13 +81,11 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         verify=conf.getboolean('metax_ssl_verification')
     )
     cache_path = os.path.join(conf.get("packaging_root"), "file_cache")
-    upload_database = upload_rest_api.database.Database()
 
     try:
         dataset_files = _download_files(
             metax_client,
             dataset_id,
-            upload_database,
             config_file=config_file
         )
         for dataset_file in dataset_files:
