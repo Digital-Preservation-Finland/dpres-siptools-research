@@ -5,8 +5,6 @@ import time
 import requests
 from requests.exceptions import HTTPError, ConnectionError
 
-import upload_rest_api.database
-
 from siptools_research.config import Configuration
 
 
@@ -137,10 +135,10 @@ def download_file(
     conf = Configuration(config_file)
     pas_storage_id = conf.get("pas_storage_id")
     file_storage = file_metadata["file_storage"]["identifier"]
-    if upload_database is None:
-        upload_database = upload_rest_api.database.Database()
 
     if file_storage == pas_storage_id:
+        if upload_database is None:
+            raise ValueError("upload_database parameter required")
         filepath = _get_local_file(file_metadata, upload_database, conf)
     else:
         filepath = _get_ida_file(file_metadata, conf)
