@@ -5,7 +5,7 @@ import time
 import requests
 from requests.exceptions import HTTPError, ConnectionError
 
-from upload_rest_api.database import FilesCol
+import upload_rest_api.database
 
 from siptools_research.config import Configuration
 
@@ -46,16 +46,16 @@ def _get_response(identifier, conf, stream=False):
     return response
 
 
-def _get_local_file(file_metadata, upload_files, conf):
+def _get_local_file(file_metadata, upload_database, conf):
     """Get upload-rest-api file.
 
     :param file_metadata: Metax file metadata
-    :param upload_files: FilesCol object
+    :param upload_database: upload_rest_api.database.Database object
     :param conf: Configuration object
     :returns: Path to the file
     """
     identifier = file_metadata["identifier"]
-    filepath = upload_files.get_path(identifier)
+    filepath = upload_database.files.get_path(identifier)
     cache_path = os.path.join(
         conf.get("packaging_root"), "file_cache", identifier
     )
@@ -123,7 +123,7 @@ def download_file(
         file_metadata,
         linkpath="",
         config_file="/etc/siptools_research.conf",
-        upload_files=None
+        upload_database=None
 ):
     """Get file from IDA or upload-rest-api and create a hard
     link to linkpath.
@@ -131,17 +131,17 @@ def download_file(
     :param file_metadata: File metadata from Metax
     :param linkpath: Path where the hard link is created
     :param config_file: Configuration file
-    :param upload_files: FilesCol object
+    :param upload_database: upload_rest_api.database.Database object
     :returns: ``None``
     """
     conf = Configuration(config_file)
     pas_storage_id = conf.get("pas_storage_id")
     file_storage = file_metadata["file_storage"]["identifier"]
-    if upload_files is None:
-        upload_files = FilesCol()
+    if upload_database is None:
+        upload_database = upload_rest_api.database.Database()
 
     if file_storage == pas_storage_id:
-        filepath = _get_local_file(file_metadata, upload_files, conf)
+        filepath = _get_local_file(file_metadata, upload_database, conf)
     else:
         filepath = _get_ida_file(file_metadata, conf)
 

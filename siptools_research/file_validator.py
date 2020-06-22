@@ -8,7 +8,7 @@ from metax_access.metax import (Metax, DS_STATE_INVALID_METADATA,
 
 from requests.exceptions import HTTPError, ConnectionError
 
-from upload_rest_api.database import FilesCol
+import upload_rest_api.database
 
 from siptools_research.config import Configuration
 from siptools_research.utils.download import (
@@ -19,7 +19,7 @@ from siptools_research.utils.download import (
 def _download_files(
         metax_client,
         dataset_id,
-        upload_files,
+        upload_database,
         config_file="/etc/siptools_research.conf"
 ):
     """Download all dataset files.
@@ -35,7 +35,7 @@ def _download_files(
             download_file(
                 dataset_file,
                 config_file=config_file,
-                upload_files=upload_files
+                upload_database=upload_database
             )
         except (HTTPError, ConnectionError, FileNotFoundError):
             raise FileAccessError(
@@ -81,11 +81,15 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         verify=conf.getboolean('metax_ssl_verification')
     )
     cache_path = os.path.join(conf.get("packaging_root"), "file_cache")
-    upload_files = FilesCol()
+    upload_database = upload_rest_api.database.Database()
 
     try:
-        dataset_files = _download_files(metax_client, dataset_id, upload_files,
-                                        config_file=config_file)
+        dataset_files = _download_files(
+            metax_client,
+            dataset_id,
+            upload_database,
+            config_file=config_file
+        )
         for dataset_file in dataset_files:
             _validate_file(dataset_file, cache_path, errors)
         if errors:

@@ -5,7 +5,7 @@ import logging
 import luigi
 
 from metax_access import Metax
-from upload_rest_api.database import FilesCol
+import upload_rest_api.database
 
 from siptools_research.utils.download import download_file
 from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
@@ -81,7 +81,7 @@ class GetFiles(WorkflowTask):
         :param dataset_files: list of files metadata dicts
         :returns: ``None``
         """
-        upload_files = FilesCol()
+        upload_database = upload_rest_api.database.Database()
 
         for dataset_file in dataset_files:
             identifier = dataset_file["identifier"]
@@ -106,4 +106,6 @@ class GetFiles(WorkflowTask):
                 # TODO: Use exist_ok -parameter when moving to python3
                 os.makedirs(os.path.dirname(target_path))
 
-            download_file(dataset_file, target_path, self.config, upload_files)
+            download_file(
+                dataset_file, target_path, self.config, upload_database
+            )

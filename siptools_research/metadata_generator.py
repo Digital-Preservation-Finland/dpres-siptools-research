@@ -7,7 +7,7 @@ import tempfile
 
 from requests.exceptions import HTTPError
 
-from upload_rest_api.database import FilesCol
+import upload_rest_api.database
 from file_scraper.scraper import Scraper
 from metax_access import (Metax, DS_STATE_TECHNICAL_METADATA_GENERATED,
                           DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
@@ -114,7 +114,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
     :param config_file: path to configuration file
     :returns: ``None``
     """
-    upload_files = FilesCol()
+    upload_database = upload_rest_api.database.Database()
 
     for file_ in metax_client.get_dataset_files(dataset_id):
         # Get file info
@@ -124,7 +124,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
         # Download file to tmp directory
         tmpfile = os.path.join(tmpdir, file_id)
         try:
-            download_file(file_metadata, tmpfile, config_file, upload_files)
+            download_file(file_metadata, tmpfile, config_file, upload_database)
         except FileNotFoundError as error:
             raise MetadataGenerationError(str(error), dataset=dataset_id)
 
