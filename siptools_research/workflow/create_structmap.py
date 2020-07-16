@@ -68,11 +68,12 @@ class CreateStructMap(WorkflowTask):
 
         :returns: ``None``
         """
-        ref_lists = compile_structmap.get_reference_lists(
-            workspace=self.sip_creation_path
-        )
+        attributes = {"workspace": self.sip_creation_path}
+        # Append the reference lists to attributes.
+        attributes = compile_structmap.get_reference_lists(**attributes)
+
         # Create fileSec
-        (filesec, _) = compile_structmap.create_filesec(**ref_lists)
+        (filesec, file_ids) = compile_structmap.create_filesec(**attributes)
         with self.output()[0].open('wb') as filesecxml:
             filesec.write(filesecxml,
                           pretty_print=True,
@@ -84,7 +85,8 @@ class CreateStructMap(WorkflowTask):
         structmap = compile_structmap.create_structmap(
             filesec=filesec_element,
             structmap_type='Fairdata-physical',
-            **ref_lists
+            file_ids=file_ids,
+            **attributes
         )
         with self.output()[1].open('wb') as structmapxml:
             structmap.write(structmapxml,
