@@ -60,10 +60,15 @@ Incomplete workflows can be restarted with::
 
 Testing
 -------
-Install required RPM packages. Gcc and openssl-devel are required to install M2Crypto, ImageMagick, file-5.30, and ffmpeg are required by dpres-ipt, and dpres-xml-schemas is required for testing XML validation::
+Install required RPM packages
+
+* gcc and openssl-devel are required to install M2Crypto
+* ImageMagick, file-5.30, and ffmpeg are required by dpres-ipt
+* dpres-xml-schemas is required for testing XML validation
+* file-scraper-full is required for testing file type detection::
 
    rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
-   yum install gcc openssl-devel swig ImageMagick file-5.30 ffmpeg dpres-xml-schemas libmediainfo jhove
+   yum install gcc openssl-devel swig ImageMagick file-5.30 ffmpeg dpres-xml-schemas libmediainfo jhove file-scraper-full
 
 Create and activate virtualenv::
 
