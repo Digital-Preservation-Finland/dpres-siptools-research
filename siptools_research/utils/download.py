@@ -8,8 +8,8 @@ from requests.exceptions import HTTPError, ConnectionError
 from siptools_research.config import Configuration
 
 
-class FileNotFoundError(Exception):
-    """Exception raised when files can't be accessed"""
+class FileNotAvailableError(Exception):
+    """Exception raised when file is not available."""
 
 
 class FileLockError(Exception):
@@ -59,7 +59,7 @@ def _get_local_file(file_metadata, upload_database, conf):
     )
 
     if (filepath is None) or (not os.path.isfile(filepath)):
-        raise FileNotFoundError(
+        raise FileNotAvailableError(
             "File '%s' not found in pre-ingest file storage"
             % file_metadata["file_path"]
         )
@@ -96,7 +96,7 @@ def _get_ida_file(file_metadata, conf):
             response = _get_response(identifier, conf, stream=True)
         except HTTPError as error:
             if error.response.status_code == 404:
-                raise FileNotFoundError(
+                raise FileNotAvailableError(
                     "File '%s' not found in Ida" % file_metadata["file_path"]
                 )
             if error.response.status_code == 502:

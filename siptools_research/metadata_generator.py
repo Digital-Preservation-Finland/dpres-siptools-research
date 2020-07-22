@@ -16,7 +16,8 @@ from siptools.scripts.import_object import (DEFAULT_VERSIONS,
                                             UNKNOWN_VERSION,
                                             NO_VERSION)
 
-from siptools_research.utils.download import download_file, FileNotFoundError
+from siptools_research.utils.download import (download_file,
+                                              FileNotAvailableError)
 from siptools_research.config import Configuration
 from siptools_research.xml_metadata import (
     XMLMetadataGenerator, MetadataGenerationError
@@ -92,7 +93,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         message = str(error)[:199] if len(str(error)) > 200 else str(error)
         status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
         raise
-    except HTTPError as error:
+    except HTTPError:
         message = "Internal error"
         status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
         raise
@@ -125,7 +126,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
         tmpfile = os.path.join(tmpdir, file_id)
         try:
             download_file(file_metadata, tmpfile, config_file, upload_database)
-        except FileNotFoundError as error:
+        except FileNotAvailableError as error:
             raise MetadataGenerationError(str(error), dataset=dataset_id)
 
         # Generate and update file_characteristics

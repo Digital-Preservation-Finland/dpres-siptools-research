@@ -12,7 +12,7 @@ import upload_rest_api.database
 
 from siptools_research.config import Configuration
 from siptools_research.utils.download import (
-    download_file, FileNotFoundError, FileAccessError
+    download_file, FileNotAvailableError, FileAccessError
 )
 
 
@@ -37,7 +37,7 @@ def _download_files(
                 config_file=config_file,
                 upload_database=upload_database
             )
-        except (HTTPError, ConnectionError, FileNotFoundError):
+        except (HTTPError, ConnectionError, FileNotAvailableError):
             raise FileAccessError(
                 "Could not download file '%s'" % dataset_file["file_path"]
             )

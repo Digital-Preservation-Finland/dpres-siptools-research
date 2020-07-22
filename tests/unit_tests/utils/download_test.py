@@ -6,7 +6,7 @@ import pytest
 
 from siptools_research.utils.download import (
     download_file, clean_file_cache,
-    FileNotFoundError, FileAccessError
+    FileNotAvailableError, FileAccessError
 )
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 
@@ -55,7 +55,7 @@ def test_download_file_404(testpath, requests_mock):
                       status_code=404)
 
     new_file_path = os.path.join(testpath, 'new_file')
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(FileNotAvailableError):
         download_file(
             _get_file_metadata('pid:urn:does_not_exist'),
             new_file_path,

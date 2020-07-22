@@ -5,7 +5,7 @@ import pytest
 import pymongo
 
 import tests.conftest
-from siptools_research.utils.download import FileNotFoundError
+from siptools_research.utils.download import FileNotAvailableError
 from siptools_research.workflow import get_files
 from siptools_research.workflowtask import InvalidMetadataError
 
@@ -74,7 +74,7 @@ def test_missing_ida_files(testpath, requests_mock):
     assert not task.complete()
 
     # Run task.
-    with pytest.raises(FileNotFoundError) as excinfo:
+    with pytest.raises(FileNotAvailableError) as excinfo:
         task.run()
 
     assert str(excinfo.value) == "File '/path/to/file4' not found in Ida"
@@ -122,7 +122,7 @@ def test_missing_local_files(testpath):
     assert not task.complete()
 
     # Run task.
-    with pytest.raises(FileNotFoundError) as excinfo:
+    with pytest.raises(FileNotAvailableError) as excinfo:
         task.run()
 
     # Check exception message
