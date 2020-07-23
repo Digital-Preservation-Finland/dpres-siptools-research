@@ -121,6 +121,29 @@ def test_generate_metadata(requests_mock,
 
 
 @pytest.mark.usefixtures('testpath')
+def test_generate_metadata_unrecognized(requests_mock):
+    """Test metadata generation for unrecognized file.
+
+    File scraper does not recognize for example empty files. Metadata
+    generation should raise error if file type is (:unav).
+
+    :param requests_mock: Mocker object
+    :returns: ``None``
+    """
+    # create mocked dataset in Metax and Ida
+    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
+    requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
+                      text="")
+
+    # generate metadata for dataset
+    with pytest.raises(MetadataGenerationError) as error:
+        generate_metadata('dataset_identifier',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    assert str(error.value) == 'Unknown file format.'
+
+
+@pytest.mark.usefixtures('testpath')
 def test_generate_metadata_predefined(requests_mock):
     """Tests metadata generation for files that already have some
     file_characteristics defined. File characteristics should not be
@@ -195,7 +218,8 @@ def test_generate_metadata_tempfile_removal(testpath, requests_mock):
     :returns: ``None``
     """
     mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
-    requests_mock.get("https://ida.test/files/pid:urn:identifier/download")
+    requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
+                      text='foo')
 
     tmp_path = "{}/tmp".format(testpath)
     file_cache_path = "{}/file_cache".format(testpath)
