@@ -84,7 +84,8 @@ def test_generate_metadata(requests_mock,
     # create mocked dataset in Metax and Ida
     mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
     file_metadata_patch = requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:identifier"
+        "https://metaksi/rest/v1/files/pid:urn:identifier",
+        json={}
     )
     xml_post = requests_mock.post(
         "https://metaksi/rest/v1/files/pid:urn:identifier/xml?namespace={}"
@@ -137,7 +138,8 @@ def test_generate_metadata_predefined(requests_mock):
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       content=b'foo')
     patch_request = requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:identifier"
+        "https://metaksi/rest/v1/files/pid:urn:identifier",
+        json={}
     )
 
     generate_metadata('dataset_identifier',

@@ -210,7 +210,8 @@ def mock_metax_dataset(requests_mock,
         requests_mock.get("{}/files/{}".format(METAX_URL, file_['identifier']),
                           json=file_)
         requests_mock.patch(
-            "{}/files/{}".format(METAX_URL, file_['identifier'])
+            "{}/files/{}".format(METAX_URL, file_['identifier']),
+            json=file_
         )
         requests_mock.get(
             "{}/files/{}/xml".format(METAX_URL, file_['identifier']),
