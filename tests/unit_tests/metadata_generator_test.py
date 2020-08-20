@@ -140,7 +140,7 @@ def test_generate_metadata_unrecognized(requests_mock):
         generate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    assert str(error.value) == 'Unknown file format.'
+    assert str(error.value) == "File 'path/to/file' format not recognized."
 
 
 @pytest.mark.usefixtures('testpath')

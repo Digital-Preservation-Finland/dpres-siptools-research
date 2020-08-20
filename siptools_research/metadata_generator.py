@@ -134,7 +134,9 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
             tmpfile, file_metadata.get('file_characteristics', {})
         )
         if file_characteristics['file_format'] == '(:unav)':
-            raise MetadataGenerationError('Unknown file format.')
+            raise MetadataGenerationError(
+                "File '%s' format not recognized." % file_["file_path"]
+            )
 
         metax_client.patch_file(
             file_id,
