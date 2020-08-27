@@ -59,7 +59,6 @@ class _XMLMetadata:
 
         :returns: metadata XML element
         """
-        pass
 
     @classmethod
     def is_generator_for(cls, file_format):
@@ -68,7 +67,6 @@ class _XMLMetadata:
         :returns: ``Boolean``: True if this generator generates the XML
                   metadata for the given file_format. Otherwise False.
         """
-        pass
 
 
 class _ImageFileXMLMetadata(_XMLMetadata):

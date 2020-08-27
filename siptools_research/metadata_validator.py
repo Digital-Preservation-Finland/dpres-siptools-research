@@ -210,7 +210,7 @@ def _validate_localization(localization_dict, field):
     for language in localization_dict:
         # Per MetaX schema, 'und' and 'zxx' are fallbacks for content that
         # can't be localized
-        if language == "und" or language == "zxx":
+        if language in ("und", "zxx"):
             continue
 
         try:
@@ -391,6 +391,7 @@ def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):
 
     schema = lxml.etree.XMLSchema(lxml.etree.parse(DATACITE_SCHEMA))
     if schema.validate(datacite) is False:
+        # pylint: disable=not-an-iterable
         errors = [error.message for error in schema.error_log]
         raise InvalidMetadataError(
             DATACITE_VALIDATION_ERROR % (_format_error_list(errors))
