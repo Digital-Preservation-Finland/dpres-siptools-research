@@ -3,7 +3,7 @@ import os
 import time
 
 import requests
-from requests.exceptions import HTTPError, ConnectionError
+from requests.exceptions import HTTPError
 
 from siptools_research.config import Configuration
 
@@ -33,12 +33,9 @@ def _get_response(identifier, conf, stream=False):
     baseurl = conf.get('ida_url')
     url = '%s/files/%s/download' % (baseurl, identifier)
 
-    try:
-        response = requests.get(url,
-                                auth=(user, password),
-                                stream=stream)
-    except ConnectionError as exc:
-        raise ConnectionError("Could not connect to Ida: %s" % str(exc))
+    response = requests.get(url,
+                            auth=(user, password),
+                            stream=stream)
 
     response.raise_for_status()
     return response

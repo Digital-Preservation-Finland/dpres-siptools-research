@@ -7,7 +7,7 @@ import pytest
 import lxml.etree
 from requests.exceptions import HTTPError
 from siptools.utils import decode_path
-from metax_access import Metax, DatasetNotFoundError
+from metax_access import Metax, DatasetNotAvailableError
 
 from siptools_research.metadata_generator import (
     generate_metadata, MetadataGenerationError
@@ -312,8 +312,8 @@ def test_generate_metadata_provenance(provenance, requests_mock):
 
 @pytest.mark.usefixtures('testpath')
 def test_generate_metadata_dataset_not_found(monkeypatch, requests_mock):
-    """Verifies that preservation state is not set when DatasetNotFoundError is
-    raised by Metax get_dataset.
+    """Verifies that preservation state is not set when
+    DatasetNotAvailableError is raised by Metax get_dataset.
 
     :param monkeypatch: Monkeypatch object
     :param requests_mock: Mocker object
@@ -321,10 +321,10 @@ def test_generate_metadata_dataset_not_found(monkeypatch, requests_mock):
     """
 
     def _get_dataset_exception(*_arg1):
-        raise DatasetNotFoundError
+        raise DatasetNotAvailableError
 
     monkeypatch.setattr(Metax, "get_dataset", _get_dataset_exception)
-    with pytest.raises(DatasetNotFoundError):
+    with pytest.raises(DatasetNotAvailableError):
         generate_metadata('foobar',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 

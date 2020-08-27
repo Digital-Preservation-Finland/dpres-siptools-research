@@ -10,7 +10,7 @@ from requests.exceptions import HTTPError
 
 from siptools.xml.mets import NAMESPACES
 
-from metax_access import (Metax, MetaxError, DatasetNotFoundError,
+from metax_access import (Metax, MetaxError, DatasetNotAvailableError,
                           DataciteGenerationError, DS_STATE_VALIDATING_METADATA,
                           DS_STATE_INVALID_METADATA, DS_STATE_VALID_METADATA,
                           DS_STATE_METADATA_VALIDATION_FAILED)
@@ -103,7 +103,7 @@ def validate_metadata(
 
         # Validate datacite provided by Metax
         _validate_datacite(dataset_id, metax_client, dummy_doi=dummy_doi)
-    except DatasetNotFoundError:
+    except DatasetNotAvailableError:
         # Skip setting preservation state if validation failed because dataset
         # was not found in Metax.
         status_code = None

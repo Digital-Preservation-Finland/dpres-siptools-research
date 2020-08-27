@@ -4,7 +4,7 @@ import shutil
 
 import luigi
 from metax_access import Metax
-from metax_access.metax import DatasetNotFoundError
+from metax_access.metax import DatasetNotAvailableError
 
 from siptools_research.utils.database import Database
 from siptools_research.config import Configuration
@@ -67,7 +67,7 @@ class CleanupWorkspace(WorkflowTask):
         try:
             dataset_files = metax_client.get_dataset_files(self.dataset_id)
             return [_file["identifier"] for _file in dataset_files], cache_path
-        except DatasetNotFoundError:
+        except DatasetNotAvailableError:
             return [], cache_path
 
     def requires(self):
