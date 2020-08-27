@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.utils.download` module"""
+"""Tests for :mod:`siptools_research.utils.download` module."""
 import os
 import time
 
@@ -12,7 +12,7 @@ from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
 def _get_file_metadata(identifier):
-    """Returns Metax file metadata."""
+    """Return Metax file metadata."""
     return {
         "file_path": "/path/to/file",
         "identifier": identifier,
@@ -21,8 +21,7 @@ def _get_file_metadata(identifier):
 
 
 def test_download_file(testpath, requests_mock):
-    """Downloads a file to a temporary directory and checks contents of the
-    file.
+    """Test downloading a file to a temporary directory.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
@@ -46,7 +45,7 @@ def test_download_file(testpath, requests_mock):
 
 
 def test_download_file_404(testpath, requests_mock):
-    """Tries to download non-existing file from IDA.
+    """Try to download non-existing file from IDA.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
@@ -64,7 +63,7 @@ def test_download_file_404(testpath, requests_mock):
 
 
 def test_download_file_502(testpath, requests_mock):
-    """Tries to download from IDA returning 502.
+    """Try to download from Ida when Ida returns 502.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
@@ -84,8 +83,7 @@ def test_download_file_502(testpath, requests_mock):
 
 
 def test_clean_file_cache(testpath):
-    """Test that all the expired files are removed from file_cache.
-    """
+    """Test that all the expired files are removed from file_cache."""
     cache_path = os.path.join(testpath, 'file_cache')
 
     # Create a fresh file

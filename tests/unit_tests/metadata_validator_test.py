@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.metadata_validator` module"""
+"""Tests for :mod:`siptools_research.metadata_validator` module."""
 import copy
 import contextlib
 import six
@@ -28,13 +28,17 @@ from tests.metax_data.contracts import BASE_CONTRACT
 
 @contextlib.contextmanager
 def does_not_raise():
-    """Dummy context manager that complements pytest.raises when no error is
-    excepted."""
+    """Yield nothing.
+
+    This is a dummy context manager that complements pytest.raises when no
+    error is excepted.
+    """
     yield
 
 
 def get_bad_audiomd():
-    """Creates and return invalid audio metadata xml.
+    """Create invalid audio metadata xml.
+
     :returns: Audio MD as string
     """
     root = copy.deepcopy(BASE_AUDIO_MD)
@@ -47,7 +51,8 @@ def get_bad_audiomd():
 
 
 def get_invalid_datacite():
-    """Creates and returns invalid datacite.
+    """Create invalid datacite.
+
     :returns: Datacite as string
     """
     root = copy.deepcopy(BASE_DATACITE)
@@ -60,7 +65,8 @@ def get_invalid_datacite():
 
 
 def get_very_invalid_datacite():
-    """Creates and returns very invalid datacite.
+    """Create very invalid datacite.
+
     :returns: Datacite as string
     """
     root = copy.deepcopy(BASE_DATACITE)
@@ -73,8 +79,10 @@ def get_very_invalid_datacite():
 
 
 def test_validate_metadata(requests_mock):
-    """Test that validate_metadata function returns ``True`` for a valid
-    dataset and sets preservation state in Metax.
+    """Test validate_metadata.
+
+    Function should return ``True`` for a valid dataset, and set preservation
+    state in Metax.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -124,12 +132,6 @@ def test_validate_metadata(requests_mock):
                                  "'research_dataset/provenance/description"))
         ),
         (
-            {"foo": "Something in invalid language"},
-            pytest.raises(InvalidMetadataError,
-                          match=("Invalid language code: 'foo' in field: "
-                                 "'research_dataset/provenance/description"))
-        ),
-        (
             {},
             pytest.raises(InvalidMetadataError,
                           match=("No localization provided in field: "
@@ -139,9 +141,10 @@ def test_validate_metadata(requests_mock):
 )
 # pylint: disable=invalid-name
 def test_validate_metadata_languages(translations, expectation, requests_mock):
-    """Test that validate_metadata function when one one of the localized
-    fields has different translations. Invalid translations should raise
-    exception.
+    """Test validate_metadata.
+
+    Function should raise exception when one of the localized
+    fields has invalid values.
 
     :returns: ``None``
     """
@@ -157,9 +160,10 @@ def test_validate_metadata_languages(translations, expectation, requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid(requests_mock):
-    """Test that validate_metadata function raises exception with correct error
-    message for invalid dataset. Also check that preservation state is reported
-    to Metax.
+    """Test validate_metadata.
+
+    Function should raise exception with correct error message for invalid
+    dataset. Also check that preservation state is reported to Metax.
 
     :returns: ``None``
     """
@@ -187,8 +191,10 @@ def test_validate_metadata_invalid(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_preservation_identifier():
-    """Test that _validate_dataset_metadata function handles missing
-    preservation_identifier correctly.
+    """Test _validate_dataset_metadata.
+
+    Function should raise exception if preservation_identifier is missing from
+    metadata.
 
     :returns: ``None``
     """
@@ -222,8 +228,10 @@ def test_validate_preservation_identifier():
 # pylint: disable=invalid-name
 def test_validate_invalid_file_type(file_characteristics, version_info,
                                     requests_mock):
-    """Test that validate_metadata function raises exception with correct error
-    message for unsupported file type.
+    """Test validate_metadata.
+
+    Function should raise exception with correct error message for unsupported
+    file type.
 
     :param file_characteristics: file characteristics dict in file metadata
     :param version_info: excepted version information in exception message
@@ -250,8 +258,9 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_contract_metadata(requests_mock):
-    """Test that validate_metadata function raises exception with correct error
-    message for invalid dataset.
+    """Test validate_metadata.
+
+    Function raises exception with correct error message for invalid dataset.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -277,7 +286,9 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_file_path(requests_mock):
-    """Test that validate_metadata function raises exception if some of the
+    """Test validate_metadata.
+
+    Function should raise exception if some of the
     file paths point outside SIP.
 
     :param requests_mock: Mocker object
@@ -301,8 +312,10 @@ def test_validate_metadata_invalid_file_path(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_metadata_missing_xml(requests_mock):
-    """Test that validate_metadata function raises exception if dataset
-    contains image file but not XML metadata.
+    """Test validate_metadata.
+
+    Function should raise exception if dataset contains image file but not XML
+    metadata.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -330,8 +343,9 @@ def test_validate_metadata_audiovideo(requests_mock,
                                       file_format,
                                       xml_namespace,
                                       xml):
-    """Test that validate_metadata function validates AudioMD and VideoMD
-    metadata.
+    """Test validate_metadata.
+
+    Function validates AudioMD and VideoMD metadata.
 
     :param requests_mock: Mocker object
     :param file_format: file mimetype
@@ -359,7 +373,9 @@ def test_validate_metadata_audiovideo(requests_mock,
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_audiomd(requests_mock):
-    """Test that validate_metadata function raises exception if AudioMD is
+    """Test validate_metadata.
+
+    Function should raise exception if AudioMD is
     invalid (missing required audiomd:duration element).
 
     :param requests_mock: Mocker object
@@ -390,7 +406,9 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_metadata_corrupted_mix(requests_mock):
-    """Test that validate_metadata function raises exception if MIX metadata in
+    """Test validate_metadata.
+
+    Function shoudl raise exception if MIX metadata in
     Metax is corrupted (invalid XML).
 
     :param requests_mock: Mocker object
@@ -421,9 +439,10 @@ def test_validate_metadata_corrupted_mix(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_datacite(requests_mock):
-    """Test that validate_metadata function raises exception with correct error
-    message for invalid datacite where required attribute identifier is
-    missing.
+    """Test validate_metadata.
+
+    Function should raise exception with correct error message for invalid
+    datacite where required attribute identifier is missing.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -451,7 +470,9 @@ def test_validate_metadata_invalid_datacite(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_metadata_corrupted_datacite(requests_mock):
-    """Test that validate_metadata function raises exception with correct error
+    """Test validate_metadata.
+
+    Function should raise exception with correct error
     message for corrupted datacite XML.
 
     :param requests_mock: Mocker object
@@ -480,14 +501,15 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_metadata_datacite_bad_request(requests_mock):
-    """Test that validate_metadata function raises exception with correct error
-    message if Metax fails to generate datacite for dataset, for example when
-    `publisher` attribute is missing.
+    """Test validate_metadata.
+
+    Function should raise exception with correct error message if Metax fails
+    to generate datacite for dataset, for example when `publisher` attribute is
+    missing.
 
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-
     mock_metax_dataset(requests_mock)
 
     # Mock datacite request response. Mocked response has status code 400, and
@@ -513,9 +535,11 @@ def test_validate_metadata_datacite_bad_request(requests_mock):
 
 
 def test_validate_file_metadata(requests_mock):
-    """Check that dataset directory caching is working correctly in
-    DatasetConsistency when the files have common root directory
-    in dataset.directories property.
+    """Test _validate_file_metadata.
+
+    Check that dataset directory caching is working correctly in
+    DatasetConsistency when the files have common root directory in
+    dataset.directories property.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -571,8 +595,9 @@ def test_validate_file_metadata(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_file_metadata_invalid_metadata(requests_mock):
-    """Check that ``_validate_file_metadata`` raises exceptions with
-    descriptive error messages.
+    """Test ``_validate_file_metadata``.
+
+    Function should raise exceptions with descriptive error messages.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -610,8 +635,10 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
 
 
 def test_validate_xml_file_metadata():
-    """Test that _validate_xml_file_metadata function raises exception with
-    readable error message when validated XML contains multiple errors.
+    """Test _validate_xml_file_metadata.
+
+    Function should raise exception with readable error message when validated
+    XML contains multiple errors.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -633,13 +660,14 @@ def test_validate_xml_file_metadata():
 
 
 def test_validate_datacite(requests_mock):
-    """Test that _validate_datacite function raises exception with readable
-    error message when datacite XML contains multiple errors.
+    """Test _validate_datacite.
+
+    Function should raises exception with readable error message when datacite
+    XML contains multiple errors.
 
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-
     # Init metax client
     configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
     metax_client = Metax(
@@ -669,8 +697,10 @@ def test_validate_datacite(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_directory_metadata(requests_mock):
-    """Test that validate_metadata function raises exception if directory
-    metadata is not valid (directory_path attribute is missing).
+    """Test validate_metadata wihth invalid directory metadata.
+
+    Function should raise exception if directory metadata is not valid
+    (directory_path attribute is missing).
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -694,8 +724,10 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
 
 # pylint: disable=invalid-name
 def test_validate_metadata_http_error_raised(requests_mock):
-    """Test that validate_metadata does not write the HTTPError to
-    dataset's preservation_state attribute in Metax when HTTPError occurs 
+    """Test validate_metadata.
+
+    Validate_metadata should not write the HTTPError to dataset's
+    preservation_state attribute in Metax when HTTPError occurs.
 
     :param requests_mock: Mocker object
     :returns: ``None``

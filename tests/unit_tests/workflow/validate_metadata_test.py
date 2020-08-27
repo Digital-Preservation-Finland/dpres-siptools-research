@@ -10,8 +10,9 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 @pytest.mark.usefixtures('testmongoclient', 'mock_filetype_conf',
                          'mock_metax_access')
 def test_validatemetadata(testpath, requests_mock):
-    """Test ValidateMetadata class. Run task for dataset that has valid
-    metadata.
+    """Test ValidateMetadata class.
+
+    Run task for dataset that has valid metadata.
 
     :param testpath: Temporary directory fixture
     :param requests_mock: Mocker object
@@ -60,14 +61,14 @@ def test_validatemetadata(testpath, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_invalid_metadata(testpath):
-    """Test ValidateMetadata class. Run task for dataset that has invalid
-    metadata. The dataset is missing attribute: 'type' for each object in files
-    list.
+    """Test ValidateMetadata class.
+
+    Run task for dataset that has invalid metadata. The dataset is missing
+    attribute: 'type' for each object in files list.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-
     # Create "logs" directory
     os.mkdir(os.path.join(testpath, 'logs'))
 

@@ -50,7 +50,9 @@ def validate_metadata(
         set_preservation_state=False,
         set_intermediate_state=True
 ):
-    """Reads dataset metadata, file metadata, and additional techMD XML from
+    """Validate dataset.
+
+    Reads dataset metadata, file metadata, and additional techMD XML from
     Metax and validates them against schemas. Raises error if dataset is not
     valid.
 
@@ -132,7 +134,9 @@ def validate_metadata(
 
 
 def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
-    """Validates dataset metadata from /rest/v1/datasets/<dataset_id>
+    """Validate dataset metadata.
+
+    Validates dataset metadata from /rest/v1/datasets/<dataset_id>
 
     :param dataset_metadata: dataset metadata dictionary
     :returns: ``None``
@@ -150,7 +154,9 @@ def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
 
 
 def _validate_dataset_localization(dataset_metadata):
-    """Validates that all required translations are provided with valid ISO
+    """Validate dataset localization.
+
+    Validates that all required translations are provided with valid ISO
     639-1 language codes.
     """
     research_dataset = dataset_metadata["research_dataset"]
@@ -191,7 +197,9 @@ def _validate_dataset_localization(dataset_metadata):
 
 
 def _validate_localization(localization_dict, field):
-    """Check that the localization dict is not empty and all the keys are valid
+    """Validate languages.
+
+    Check that the localization dict is not empty and all the keys are valid
     ISO 639-1 language codes.
     """
     if not localization_dict:
@@ -216,7 +224,7 @@ def _validate_localization(localization_dict, field):
 
 
 def _validate_contract_metadata(contract_id, metax_client):
-    """Validates dataset metadata from /rest/v1/datasets/<dataset_id>
+    """Validate dataset metadata from /rest/v1/datasets/<dataset_id>.
 
     :param contract_id: contract identifier
     :param metax_clien: metax_access.Metax instance
@@ -261,7 +269,7 @@ def _check_mimetype(file_metadata, conf):
 
 
 def _validate_file_metadata(dataset, metax_client, conf):
-    """Validates file metadata found from /rest/v1/datasets/<dataset_id>/files.
+    """Validate file metadata found from /rest/v1/datasets/<dataset_id>/files.
 
     :param dataset: dataset
     :param metax_client: metax_access.Metax instance
@@ -300,8 +308,9 @@ def _validate_file_metadata(dataset, metax_client, conf):
 
 
 def _validate_xml_file_metadata(dataset_id, metax_client):
-    """Validates additional techMD XML file metadata found from
-    /rest/v1/files/<file_id>/xml.
+    """Validate additional techMD XML.
+
+    XML file metadata found from /rest/v1/files/<file_id>/xml.
 
     :param dataset_id: identifier of file described by XML
     :param metax_client: metax_access.Metax instance
@@ -337,8 +346,10 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
 
 
 def _validate_with_schematron(filetype, xml, file_id):
-    """Validates XML with schematron. Parses validation error from schematron
-    output and raises InvalidMetadataError with clear error message.
+    """Validate XML with schematron.
+
+    Parses validation error from schematron output and raises
+    InvalidMetadataError with clear error message.
 
     :param filetype: Type of file described by XML (image, video, or audio)
     :param xml: XML element
@@ -365,7 +376,7 @@ def _validate_with_schematron(filetype, xml, file_id):
 
 
 def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):
-    """Validates datacite.
+    """Validate datacite.
 
     :param dataset_id: dataset identifier
     :param metax_client: metax_access.Metax instance
@@ -392,7 +403,6 @@ def _format_error_list(errors):
     :param errors: list of strings
     :returns: error message string
     """
-
     if len(errors) == 1:
         message = errors[0]
     elif len(errors) > 1:

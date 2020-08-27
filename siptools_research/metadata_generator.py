@@ -1,6 +1,4 @@
-"""Module that generates metadata required to create SIP, and posts it to
-Metax.
-"""
+"""Generates metadata required to create SIP."""
 import os
 import shutil
 import tempfile
@@ -48,8 +46,9 @@ DEFAULT_PROVENANCE = {
 
 
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
-    """Generates
+    """Generate dataset metadata.
 
+    Generates
     - preservation identifier for dataset
     - provenance metadata if it does not exist already
     - techincal metadata for all dataset files
@@ -107,7 +106,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
 
 
 def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
-    """Generates metadata for dataset files.
+    """Generate metadata for dataset files.
 
     :param metax_client: metax access
     :param dataset_id: identifier of dataset
@@ -159,10 +158,11 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
 
 
 def _generate_file_characteristics(filepath, original_file_characteristics):
-    """Reads file and generates technical metadata. `file_characteristics`
-    object is read from original meta. Generated metadata is appended
-    `file_characteristics` object. If a field already has a value (set by
-    user) it will not be updated.
+    """Read file and generates technical metadata.
+
+    `file_characteristics` object is read from original meta. Generated
+    metadata is appended `file_characteristics` object. If a field already has
+    a value (set by user) it will not be updated.
 
     :param filepath: path to file for which the metadata is generated
     :param original_file_characteristics: full original metadata dictionary

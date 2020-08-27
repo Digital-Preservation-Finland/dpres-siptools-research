@@ -1,4 +1,4 @@
-"""Base task classes for the workflow tasks"""
+"""Base task classes for the workflow tasks."""
 
 import os
 import luigi
@@ -8,28 +8,37 @@ from siptools_research.utils.database import Database
 
 
 class FatalWorkflowError(Exception):
-    """Baseclass for errors that make workflow to completion impossible. When
-    error of this type is encountered, the task should not rescheduled.
+    """Baseclass for errors that make workflow to completion impossible.
+
+    When error of this type is encountered, the task should not rescheduled.
     """
+
     pass
 
 
 class InvalidDatasetError(FatalWorkflowError):
-    """Exception raised when packaged dataset does not pass validation in
-    digital preservation service"""
+    """Exception raised when packaged dataset does not pass validation.
+
+    The SIP is jejected in digital preservation service.
+    """
+
     pass
 
 
 class InvalidMetadataError(FatalWorkflowError):
-    """Exception raised when SIP can not be created for dataset due to missing
-    or invalid metadata.
+    """Exception raised when dataset metadata is invalid.
+
+    SIP can not be created for dataset due to missing or invalid metadata.
     """
+
     pass
 
 
 class WorkflowTask(luigi.Task):
-    """Common base class for all workflow tasks. In addition to functionality
-    of normal luigi Task, every workflow task has some luigi parameters:
+    """Common base class for all workflow tasks.
+
+    In addition to functionality of normal luigi Task, every workflow task has
+    some luigi parameters:
 
     :workspace: Full path to unique self.workspace directory for the task.
     :dataset_id: Metax dataset id.
@@ -53,7 +62,9 @@ class WorkflowTask(luigi.Task):
     config = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
-        """Calls luigi.Task's __init__ and sets additional instance variables.
+        """Initialize workflow task.
+
+        Calls luigi.Task's __init__ and sets additional instance variables.
         """
         super(WorkflowTask, self).__init__(*args, **kwargs)
         self.document_id = os.path.basename(self.workspace)
@@ -63,10 +74,12 @@ class WorkflowTask(luigi.Task):
 
 
 class WorkflowExternalTask(luigi.ExternalTask):
-    """Common base class for all tasks that are executed externally from this
-    process and task does not implement the run() method, only output() and
-    requires() methods. In addition to functionality of normal luigi
-    ExternalTask, every task has some luigi parameters:
+    """Common base class for external workflow tasks.
+
+    External tasks are executed externally from this process and task does not
+    implement the run() method, only output() and requires() methods. In
+    addition to functionality of normal luigi ExternalTask, every task has some
+    luigi parameters:
 
     :workspace: Full path to unique self.workspace directory for the task.
     :dataset_id: Metax dataset id.
@@ -90,7 +103,9 @@ class WorkflowExternalTask(luigi.ExternalTask):
     config = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
-        """Calls luigi.Task's __init__ and sets additional instance variables.
+        """Initialize external workflow task.
+
+        Calls luigi.Task's __init__ and sets additional instance variables.
         """
         super(WorkflowExternalTask, self).__init__(*args, **kwargs)
         self.document_id = os.path.basename(self.workspace)
@@ -100,9 +115,11 @@ class WorkflowExternalTask(luigi.ExternalTask):
 
 
 class WorkflowWrapperTask(luigi.WrapperTask):
-    """Common base class for all workflow tasks which execute other tasks, but
-    does not have implementation itself.  In addition to functionality of
-    normal luigi WrapperTask, every task has three parameters:
+    """Common base class for all workflow wrapper tasks.
+
+    Wrapper tasks execute other tasks, but does not have implementation itself.
+    In addition to functionality of normal luigi WrapperTask, every task has
+    three parameters:
 
     :workspace: Full path to unique self.workspace directory for the task.
     :dataset_id: Metax dataset id.
@@ -116,7 +133,9 @@ class WorkflowWrapperTask(luigi.WrapperTask):
 
 @WorkflowTask.event_handler(luigi.Event.SUCCESS)
 def report_task_success(task):
-    """This function is triggered after each WorkflowTask is executed
+    """Report task success.
+
+    This function is triggered after each WorkflowTask is executed
     succesfully. Adds report of successfull event to workflow database.
 
     :param task: WorkflowTask object
@@ -131,7 +150,9 @@ def report_task_success(task):
 
 @WorkflowTask.event_handler(luigi.Event.FAILURE)
 def report_task_failure(task, exception):
-    """This function is triggered when a WorkflowTask fails. Adds report of
+    """Report task failure.
+
+    This function is triggered when a WorkflowTask fails. Adds report of
     failed event to workflow database.
 
     If task failed because of ``InvalidDatasetError``, the preservation status
@@ -186,9 +207,11 @@ def report_task_failure(task, exception):
 
 
 def _get_description(task, exception):
-    """Max length of the preservation_description attribute in Metax
-     is 200 chars
-     """
+    """Create description for dataset status.
+
+    Max length of the preservation_description attribute in Metax
+     is 200 chars.
+    """
     system_description = "%s: %s: %s" % (task.failure_message,
                                          type(exception).__name__,
                                          str(exception))

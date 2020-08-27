@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.metadata_generator` module"""
+"""Tests for :mod:`siptools_research.metadata_generator` module."""
 
 import os
 import copy
@@ -145,7 +145,9 @@ def test_generate_metadata_unrecognized(requests_mock):
 
 @pytest.mark.usefixtures('testpath')
 def test_generate_metadata_predefined(requests_mock):
-    """Tests metadata generation for files that already have some
+    """Test generate_metadata.
+
+    Tests metadata generation for files that already have some
     file_characteristics defined. File characteristics should not be
     overwritten, but missing information should be added.
 
@@ -178,7 +180,9 @@ def test_generate_metadata_predefined(requests_mock):
 
 @pytest.mark.usefixtures('testpath')
 def test_generate_metadata_addml(requests_mock):
-    """Tests addml metadata generation for a CSV file. Generates metadata for a
+    """Test generate metadata.
+
+    Tests addml metadata generation for a CSV file. Generates metadata for a
     dataset that contains a CSV file and checks that message sent to Metax
     is valid XML.
 
@@ -240,7 +244,9 @@ def test_generate_metadata_tempfile_removal(testpath, requests_mock):
 @pytest.mark.usefixtures('testpath')
 # pylint: disable=invalid-name
 def test_generate_metadata_missing_csv_info(requests_mock):
-    """Tests addml metadata generation for a dataset that does not contain all
+    """Test generate_metadata.
+
+    Tests addml metadata generation for a dataset that does not contain all
     metadata required for addml generation.
 
     :param requests_mock: Mocker object
@@ -266,7 +272,9 @@ def test_generate_metadata_missing_csv_info(requests_mock):
 @pytest.mark.parametrize('provenance', (None, [], [{}], [{'foo': 'bar'}]))
 @pytest.mark.usefixtures('testpath')
 def test_generate_metadata_provenance(provenance, requests_mock):
-    """Tests that provenance data is generated and added to Metax if it is
+    """Test generate metadata.
+
+    Tests that provenance data is generated and added to Metax if it is
     missing from dataset metadata. If provenance exists already, it should not
     be overwritten.
 

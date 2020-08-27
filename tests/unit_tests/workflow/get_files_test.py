@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.get_files` module"""
+"""Test the :mod:`siptools_research.workflow.get_files` module."""
 import os
 
 import pytest
@@ -53,9 +53,10 @@ def test_getfiles(testpath, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_missing_ida_files(testpath, requests_mock):
-    """Test case where a file can not be found from Ida. The first file should
-    successfully downloaded, but the second file is not found. Task should fail
-    with Exception.
+    """Test task when a file can not be found from Ida.
+
+    The first file should successfully downloaded, but the second file is not
+    found. Task should fail with Exception.
 
     :param testpath: Temporary directory fixture
     :param requests_mock: Mocker object
@@ -90,14 +91,14 @@ def test_missing_ida_files(testpath, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_missing_local_files(testpath):
-    """Test case where a file can not be found from pre-ingest file storage.
+    """Test task when a file can not be found from pre-ingest file storage.
+
     The first file should successfully downloaded, but the second file is not
     found. Task should fail with Exception.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-
     # Init mocked upload.files collection
     mongoclient = pymongo.MongoClient()
     mongo_files = [
@@ -142,8 +143,10 @@ def test_missing_local_files(testpath):
                                   "/../../file1",
                                   "//../../file1"])
 def test_forbidden_relative_path(testpath, path):
-    """Test that files can not be saved outside the workspace by using relative
-    file paths in Metax. The tested path would be downloaded to
+    """Test that files can not be saved outside the workspace.
+
+    Saving files outside the workspace by using relative file paths in Metax
+    should not be possible. The tested path would be downloaded to
     `<packaging_root>/workspaces/<workspace>/<sip_creation_path>/../../file1`
     which equals to `<packaging_root>/workspaces/file1`, if the path was not
     validated.

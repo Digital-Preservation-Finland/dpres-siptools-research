@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.workflowtask` module"""
+"""Tests for :mod:`siptools_research.workflowtask` module."""
 
 import os
 import datetime
@@ -19,8 +19,10 @@ from siptools_research.config import Configuration
 
 
 def run_luigi_task(task_name, workspace):
-    """Run a luigi task (using some default parameters) like it would be run
-    from command line.
+    """Run a luigi task.
+
+    Run a task like it would be run from command line, using some default
+    parameters.
 
     :task (str): Name of task to be executed
     :workspace: Workspace directory for task
@@ -40,17 +42,18 @@ def run_luigi_task(task_name, workspace):
 
 class TestTask(WorkflowTask):
     """Test class that only writes an output file."""
+
     success_message = 'Test task was successfull'
 
     def output(self):
-        """Creates output file.
+        """Create output file.
 
         :returns: local target: `<workspace>/output_file`
         """
         return luigi.LocalTarget(os.path.join(self.workspace, 'output_file'))
 
     def run(self):
-        """Writes something to output file
+        """Write something to output file.
 
         :returns:  ``None``
         """
@@ -60,17 +63,18 @@ class TestTask(WorkflowTask):
 
 class FailingTestTask(WorkflowTask):
     """Test class that always fails."""
+
     failure_message = 'An error occurred while running a test task'
 
     def output(self):
-        """Creates output file
+        """Create output file.
 
         :returns: local target: `<workspace>/output_file`
         """
         return luigi.LocalTarget(os.path.join(self.workspace, 'output_file'))
 
     def run(self):
-        """Raises exception
+        """Raise exception.
 
         :returns:  ``None``
         """
@@ -78,10 +82,10 @@ class FailingTestTask(WorkflowTask):
 
 
 class InvalidDatasetTask(FailingTestTask):
-    """Test class that raises InvalidDatasetError"""
+    """Test class that raises InvalidDatasetError."""
 
     def run(self):
-        """Raises InvalidDatasetError
+        """Raise InvalidDatasetError.
 
         :returns:  ``None``
         """
@@ -89,10 +93,10 @@ class InvalidDatasetTask(FailingTestTask):
 
 
 class InvalidMetadataTask(FailingTestTask):
-    """Test class that raises InvalidMetadataError"""
+    """Test class that raises InvalidMetadataError."""
 
     def run(self):
-        """Raises InvalidMetadataError
+        """Raise InvalidMetadataError.
 
         :returns:  ``None``
         """
@@ -102,13 +106,14 @@ class InvalidMetadataTask(FailingTestTask):
 # pylint: disable=unused-argument
 @pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
 def test_run_workflowtask(testpath):
-    """Executes TestTask, checks that output file is created, checks that new
+    """Test WorkflowTask execution.
+
+    Executes a TestTask, checks that output file is created, checks that new
     event field is created to mongo document.
 
     :param testpath: temporary directory
     :returns: ``None``
     """
-
     # Run task like it would be run from command line
     run_luigi_task('TestTask', testpath)
 
@@ -137,13 +142,14 @@ def test_run_workflowtask(testpath):
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_run_failing_task(testpath, ):
-    """Executes FailingTestTask and checks that report of failed event is
+    """Test running task that fails.
+
+    Executes FailingTestTask and checks that report of failed event is
     added to mongo document.
 
     :param testpath: temporary directory
     :returns: ``None``
     """
-
     # Run task like it would be run from command line
     run_luigi_task('FailingTestTask', testpath)
 
@@ -169,9 +175,10 @@ def test_run_failing_task(testpath, ):
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_invaliddataseterror(testpath, requests_mock):
-    """Test that event handler of WorkflowTask correctly deals with
-    InvalidDatasetError risen in a task. Event handler should report
-    preservation state to Metax.
+    """Test that event handler of WorkflowTask.
+
+    Event handler should report preservation state to Metax if
+    InvalidDatasetError raises in a task.
 
     :param testpath: temporary directory
     :param requests_mock: Mocker object
@@ -194,9 +201,10 @@ def test_invaliddataseterror(testpath, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_invalidmetadataerror(testpath, requests_mock):
-    """Test that event handler of WorkflowTask correctly deals with
-    InvalidMetadatatError risen in a task. Event handler should report
-    preservation state to Metax.
+    """Test that event handler of WorkflowTask.
+
+    Event handler should report preservation state to Metax if
+    InvalidMetadatatError raises in a task.
 
     :param testpath: temporary directory
     :param requests_mock: Mocker object

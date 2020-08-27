@@ -1,5 +1,4 @@
-"""Luigi task that removes workspaces of finished workflows.
-"""
+"""Luigi task that removes workspaces of finished workflows."""
 import os
 import shutil
 
@@ -16,14 +15,16 @@ from siptools_research.workflow.report_preservation_status import (
 
 
 class CleanupWorkspace(WorkflowTask):
-    """Removes the workspace when it is ready for cleanup. Task requires that
-    preservation status has been reported.
+    """Removes the workspace when it is ready for cleanup.
+
+    Task requires that preservation status has been reported.
     """
+
     success_message = 'Workspace was cleaned'
     failure_message = 'Cleaning workspace failed'
 
     def file_cache_cleaned(self):
-        """Check if all the files are removed from file cache
+        """Check if all the files are removed from file cache.
 
         :returns: Boolean
         """
@@ -37,7 +38,7 @@ class CleanupWorkspace(WorkflowTask):
         return True
 
     def clean_file_cache(self):
-        """Remove cached files"""
+        """Remove cached files."""
         identifiers, cache_path = self.get_identifiers()
 
         for identifier in identifiers:
@@ -46,7 +47,9 @@ class CleanupWorkspace(WorkflowTask):
                 os.remove(filepath)
 
     def get_identifiers(self):
-        """Return a list of all the file identifiers and the path to the
+        """Get file identifiers.
+
+        Return a list of all the file identifiers and the path to the
         downloaded files.
 
         :returns: Tuple (list of identifiers, cache_path)

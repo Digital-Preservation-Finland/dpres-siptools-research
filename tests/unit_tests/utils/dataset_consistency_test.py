@@ -1,4 +1,4 @@
-"""dataset_consistency module unit tests"""
+"""Unit tests for dataset_consistency module."""
 import copy
 import pytest
 
@@ -11,7 +11,9 @@ import tests.conftest
 
 # pylint: disable=invalid-name
 def test_verify_file_contained_by_dataset_files():
-    """Check that ``DatasetConsistency::is_consistent_for_file()`` succeeds
+    """Test is_consistent_for_file method.
+
+    Check that ``DatasetConsistency::is_consistent_for_file()`` succeeds
     when dataset files contains the file
 
     :returns: ``None``
@@ -47,7 +49,9 @@ def test_verify_file_contained_by_dataset_files():
 
 # pylint: disable=invalid-name
 def test_verify_file_contained_by_dataset_directories(requests_mock):
-    """Check that ``DatasetConsistency::is_consistent_for_file()`` succeeds
+    """Test is_consistent_for_file method.
+
+    Check that ``DatasetConsistency::is_consistent_for_file()`` succeeds
     when dataset directories contains the file
 
     :returns: ``None``
@@ -96,7 +100,9 @@ def test_verify_file_contained_by_dataset_directories(requests_mock):
 
 # pylint: disable=invalid-name
 def test_verify_file_contained_by_dataset_missing_from_dataset(requests_mock):
-    """Check that ``DatasetConsistency::is_consistent_for_file()`` raises
+    """Test is_consistent_for_file method.
+
+    Check that ``DatasetConsistency::is_consistent_for_file()`` raises
     exception with descriptive error messages when dataset files nor
     directories do not contain the file.
 
@@ -140,7 +146,9 @@ def test_verify_file_contained_by_dataset_missing_from_dataset(requests_mock):
 
 # pylint: disable=invalid-name
 def test_dataset_directories_caching_works(requests_mock):
-    """Checks that caching of dataset directories in``DatasetConsistency``
+    """Test is_consistent_for_file method.
+
+    Checks that caching of dataset directories in``DatasetConsistency``
     works and no extra calls are done to Metax. In this test dataset contains
     only one entry in dataset directories which is the root directory of the
     dataset files:
