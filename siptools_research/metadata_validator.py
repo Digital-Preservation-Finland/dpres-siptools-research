@@ -323,7 +323,7 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
         if file_format_prefix in SCHEMATRONS:
             file_id = file_metadata['identifier']
             try:
-                xmls = metax_client.get_xml('files', file_id)
+                xmls = metax_client.get_xml(file_id)
             except lxml.etree.XMLSyntaxError as exception:
                 raise InvalidMetadataError(
                     TECHMD_XML_VALIDATION_ERROR % (file_id, exception)

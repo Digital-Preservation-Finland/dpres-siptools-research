@@ -181,7 +181,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         """
         file_id = metadata["identifier"]
         filepath = metadata['file_path'].strip('/')
-        xmls = self.metax_client.get_xml('files', file_id)
+        xmls = self.metax_client.get_xml(file_id)
 
         creator = siptools.mdcreator.MetsSectionCreator(
             self.sip_creation_path)

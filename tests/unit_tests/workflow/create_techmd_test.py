@@ -7,7 +7,7 @@ import glob
 import lxml.etree
 import pytest
 
-from metax_access import MetaxError
+from requests import HTTPError
 
 from siptools.utils import read_md_references
 from siptools.xml.mets import NAMESPACES
@@ -222,11 +222,10 @@ def test_xml_metadata_file_missing(testpath, requests_mock):
     assert not task.complete()
 
     # Run task.
-    msg = "Could not retrieve additional metadata XML for dataset pid:urn:8"
-    with pytest.raises(MetaxError) as exc:
+    with pytest.raises(HTTPError) as exc:
         task.run()
 
-    assert msg in str(exc.value)
+    assert exc.value.response.status_code == 404
     assert not task.complete()
 
 
