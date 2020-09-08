@@ -7,6 +7,8 @@ from siptools.scripts.create_mix import MixGenerationError
 from siptools.scripts import create_addml
 from siptools.scripts import create_audiomd
 
+from siptools_research.exceptions import InvalidFileError
+
 
 def _kwargs2str(kwargs):
     """Format dict kwargs into a human readable list."""
@@ -17,23 +19,6 @@ def _kwargs2str(kwargs):
         kwarg_list += " %s=%s," % (keys[i], kwargs[keys[i]])
 
     return kwarg_list + " %s=%s ]" % (keys[-1], kwargs[keys[-1]])
-
-
-class MetadataGenerationError(Exception):
-    """Exception raised when metadata generation fails."""
-
-    def __init__(self, message, **kwargs):
-        """Initialize metadata generation error."""
-        super(MetadataGenerationError, self).__init__(message)
-        self.kwargs = kwargs
-
-    def __str__(self):
-        """Create string presentation for metadata generation error."""
-        message = super(MetadataGenerationError, self).__str__()
-        if self.kwargs:
-            message += _kwargs2str(self.kwargs)
-
-        return message
 
 
 class _XMLMetadata:
@@ -80,8 +65,10 @@ class _ImageFileXMLMetadata(_XMLMetadata):
         try:
             return create_mix.create_mix_metadata(self.file_path)
         except MixGenerationError as error:
+            # Clean up file path in original exception message and raise error
             error.filename = os.path.split(error.filename)[1]
-            raise MetadataGenerationError(str(error))
+            raise InvalidFileError(str(error),
+                                   [self.file_metadata['identifier']])
 
     @classmethod
     def is_generator_for(cls, file_format):
@@ -107,9 +94,10 @@ class _CSVFileXMLMetadata(_XMLMetadata):
                           'csv_record_separator',
                           'csv_quoting_char'):
             if attribute not in self.file_metadata['file_characteristics']:
-                raise MetadataGenerationError(
+                raise InvalidFileError(
                     'Required attribute "%s" is missing from file '
-                    'characteristics of a CSV file.' % attribute
+                    'characteristics of a CSV file.' % attribute,
+                    [self.file_metadata['identifier']]
                 )
 
         return create_addml.create_addml_metadata(
@@ -144,10 +132,11 @@ class _AudioXWavFileXMLMetadata(_XMLMetadata):
 
         :returns: audioMD XML element
         """
-        try:
-            return create_audiomd.create_audiomd_metadata(self.file_path)['0']
-        except ValueError as error:
-            raise MetadataGenerationError(str(error))
+        audiomd = create_audiomd.create_audiomd_metadata(self.file_path)
+        if not audiomd:
+            raise InvalidFileError("Audio file has no audio streams.",
+                                   [self.file_metadata['identifier']])
+        return audiomd['0']
 
     @classmethod
     def is_generator_for(cls, file_format):

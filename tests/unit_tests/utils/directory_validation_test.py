@@ -1,10 +1,10 @@
-"""directory_validation module unit tests"""
+"""Unit tests for directory_validation module."""
 import copy
 import pytest
 
 from metax_access import Metax
 import tests.conftest
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.config import Configuration
 from siptools_research.utils.directory_validation import DirectoryValidation
 
@@ -18,10 +18,10 @@ FILE_METADATA = {
 
 # pylint: disable=invalid-name
 def test_successful_directory_validation(requests_mock):
-    """Directory validation of /second_par/first_par/file1
+    """Directory validation of valid directory tree.
+
     :returns: ``None``
     """
-
     # Init metax client
     configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
     client = Metax(
@@ -30,6 +30,7 @@ def test_successful_directory_validation(requests_mock):
         configuration.get('metax_password'),
         verify=configuration.getboolean('metax_ssl_verification')
     )
+
     first_par_dir_adapter = requests_mock.get(
         tests.conftest.METAX_URL + '/directories/first_par',
         json={
@@ -63,7 +64,7 @@ def test_successful_directory_validation(requests_mock):
     try:
         validator = DirectoryValidation(client)
         validator.is_valid_for_file(FILE_METADATA)
-    except InvalidMetadataError as exc:
+    except InvalidDatasetMetadataError as exc:
         pytest.fail('test_successful_directory_validation fails: ' + str(exc))
     assert first_par_dir_adapter.call_count == 1
     assert second_par_dir_adapter.call_count == 1
@@ -72,8 +73,11 @@ def test_successful_directory_validation(requests_mock):
 
 # pylint: disable=invalid-name
 def test_directory_validation_caching_works(requests_mock):
-    """ Two files are contained by same directory. Metax is called only once
-    for each directory in tree and hence the directory validation as well.
+    """Test directory validation caching.
+
+    Two files are contained by same directory. Metax is called only once for
+    each directory in tree and hence the directory validation as well.
+
     :returns: ``None``
     """
     # Init metax client
@@ -116,7 +120,7 @@ def test_directory_validation_caching_works(requests_mock):
         validator = DirectoryValidation(client)
         validator.is_valid_for_file(FILE_METADATA)
         validator.is_valid_for_file(file2_metadata)
-    except InvalidMetadataError as exc:
+    except InvalidDatasetMetadataError as exc:
         pytest.fail(
             'test_successful_directory_validation fails: ' + str(exc)
         )
@@ -128,8 +132,10 @@ def test_directory_validation_caching_works(requests_mock):
 
 # pylint: disable=invalid-name
 def test_successful_directory_validation_fails(requests_mock):
-    """Directory validation of /second_par/first_par/file1. The root directory
-    is missing the `directory_path` attribute
+    """Test validation of invalid directory tree.
+
+    The root directory is missing the `directory_path` attribute
+
     :returns: ``None``
     """
     # Init metax client
@@ -163,7 +169,7 @@ def test_successful_directory_validation_fails(requests_mock):
         json={'identifier': 'root'},
         status_code=200
     )
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidDatasetMetadataError) as exc_info:
         validator = DirectoryValidation(client)
         validator.is_valid_for_file(FILE_METADATA)
 

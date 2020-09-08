@@ -13,8 +13,8 @@ from metax_access import (
 
 import tests.conftest
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflowtask import InvalidDatasetError
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetMetadataError
+from siptools_research.exceptions import InvalidSIPError
 from siptools_research.config import Configuration
 
 
@@ -81,26 +81,26 @@ class FailingTestTask(WorkflowTask):
         raise Exception('Shit hit the fan')
 
 
-class InvalidDatasetTask(FailingTestTask):
-    """Test class that raises InvalidDatasetError."""
+class InvalidSIPTask(FailingTestTask):
+    """Test class that raises InvalidSIPError."""
 
     def run(self):
-        """Raise InvalidDatasetError.
+        """Raise InvalidSIPError.
 
         :returns:  ``None``
         """
-        raise InvalidDatasetError('File validation failed')
+        raise InvalidSIPError('File validation failed')
 
 
-class InvalidMetadataTask(FailingTestTask):
-    """Test class that raises InvalidMetadataError."""
+class InvalidDatasetMetadataTask(FailingTestTask):
+    """Test class that raises InvalidDatasetMetadataError."""
 
     def run(self):
-        """Raise InvalidMetadataError.
+        """Raise InvalidDatasetMetadataError.
 
         :returns:  ``None``
         """
-        raise InvalidMetadataError('Missing some important metadata')
+        raise InvalidDatasetMetadataError('Missing some important metadata')
 
 
 # pylint: disable=unused-argument
@@ -178,21 +178,21 @@ def test_invaliddataseterror(testpath, requests_mock):
     """Test that event handler of WorkflowTask.
 
     Event handler should report preservation state to Metax if
-    InvalidDatasetError raises in a task.
+    InvalidSIPError raises in a task.
 
     :param testpath: temporary directory
     :param requests_mock: Mocker object
     :returns: ``None``
     """
     # Run task like it would be run from command line
-    run_luigi_task('InvalidDatasetTask', testpath)
+    run_luigi_task('InvalidSIPTask', testpath)
 
     # Check the body of last HTTP request
     request_body = requests_mock.last_request.json()
     assert request_body['preservation_state'] ==\
         DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
     assert request_body['preservation_description'] == 'An error '\
-        'occurred while running a test task: InvalidDatasetError: '\
+        'occurred while running a test task: InvalidSIPError: '\
         'File validation failed'
 
     # Check the method of last HTTP request
@@ -204,7 +204,7 @@ def test_invalidmetadataerror(testpath, requests_mock):
     """Test that event handler of WorkflowTask.
 
     Event handler should report preservation state to Metax if
-    InvalidMetadatatError raises in a task.
+    InvalidDatasetMetadataError raises in a task.
 
     :param testpath: temporary directory
     :param requests_mock: Mocker object
@@ -215,15 +215,15 @@ def test_invalidmetadataerror(testpath, requests_mock):
     )
 
     # Run task like it would be run from command line
-    run_luigi_task('InvalidMetadataTask', testpath)
+    run_luigi_task('InvalidDatasetMetadataTask', testpath)
 
     # Check the body of last HTTP request
     request_body = requests_mock.last_request.json()
     assert request_body['preservation_state'] ==\
         DS_STATE_METADATA_VALIDATION_FAILED
-    assert request_body['preservation_description'] == 'An error occurred ' + \
-        'while running a test task: InvalidMetadataError: Missing some ' + \
-        'important metadata'
+    assert request_body['preservation_description'] \
+        == ('An error occurred while running a test task: '
+            'InvalidDatasetMetadataError: Missing some important metadata')
 
     # Check the method of last HTTP request
     assert requests_mock.last_request.method == 'PATCH'

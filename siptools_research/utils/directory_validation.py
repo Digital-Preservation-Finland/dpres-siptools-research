@@ -1,6 +1,6 @@
 import jsonschema
 
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetMetadataError
 import siptools_research.schemas
 
 
@@ -14,11 +14,11 @@ class DirectoryValidation(object):
 
     def is_valid_for_file(self, file_md):
         """Validates the directory tree of the file.
-        If not, raises `InvalidMetadataError`.
+
+        Raises ``InvalidDatasetMetadataError`` if directory tree is invalid.
 
         :param file_md: Metax file metadata dictionary
-        :returns: Raises `InvalidMetadataError` if any of the directories in
-            directory tree is not valid
+        :returns: ``None``
         """
         self._is_directory_valid(file_md['parent_directory']['identifier'])
 
@@ -26,8 +26,8 @@ class DirectoryValidation(object):
         """Checks recursively to top if directory tree is valid.
 
         :param dir_identifier: directory identifier of the directory to be
-            validated
-        :returns: Raises `InvalidMetadataError` if directory is not valid
+                               validated
+        :returns: ``None``
         """
 
         if dir_identifier not in self.valid_directories:
@@ -42,7 +42,7 @@ class DirectoryValidation(object):
                 directory_id = (dir_metadata['directory_path']
                                 if 'directory_path' in dir_metadata
                                 else dir_identifier)
-                raise InvalidMetadataError(
+                raise InvalidDatasetMetadataError(
                     "Validation error in metadata of {directory_id}: {error}"
                     .format(directory_id=directory_id, error=str(exc))
                 )

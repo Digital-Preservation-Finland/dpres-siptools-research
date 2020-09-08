@@ -13,7 +13,9 @@ import siptools_research
 from siptools_research import validate_metadata
 from siptools_research.metadata_validator import _validate_dataset_metadata
 import siptools_research.metadata_validator as metadata_validator
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetMetadataError
+from siptools_research.exceptions import InvalidFileMetadataError
+from siptools_research.exceptions import InvalidContractMetadataError
 from siptools_research.config import Configuration
 import tests.conftest
 from tests.conftest import mock_metax_dataset
@@ -127,13 +129,13 @@ def test_validate_metadata(requests_mock):
         ),
         (
             {"foo": "Something in invalid language"},
-            pytest.raises(InvalidMetadataError,
+            pytest.raises(InvalidDatasetMetadataError,
                           match=("Invalid language code: 'foo' in field: "
                                  "'research_dataset/provenance/description"))
         ),
         (
             {},
-            pytest.raises(InvalidMetadataError,
+            pytest.raises(InvalidDatasetMetadataError,
                           match=("No localization provided in field: "
                                  "'research_dataset/provenance/description'"))
         )
@@ -177,7 +179,7 @@ def test_validate_metadata_invalid(requests_mock):
 
     # Try to validate invalid dataset
     excepted_error = "'contract' is a required property"
-    with pytest.raises(InvalidMetadataError, match=excepted_error):
+    with pytest.raises(InvalidDatasetMetadataError, match=excepted_error):
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE,
                           set_preservation_state=True)
@@ -205,7 +207,7 @@ def test_validate_preservation_identifier():
     _validate_dataset_metadata(dataset, dummy_doi="true")
 
     # Validation without dummy DOI should raise an exception
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidDatasetMetadataError) as exc_info:
         _validate_dataset_metadata(dataset)
 
     # Check exception message
@@ -243,7 +245,7 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
     mock_metax_dataset(requests_mock, files=[unsupported_file])
 
     # Try to validate dataset with a file that has an unsupported file_format
-    with pytest.raises(InvalidMetadataError) as error:
+    with pytest.raises(InvalidFileMetadataError) as error:
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE,
                           set_preservation_state=True)
@@ -270,7 +272,7 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
     mock_metax_dataset(requests_mock, contract=invalid_contract)
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidContractMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
             tests.conftest.UNIT_TEST_CONFIG_FILE,
@@ -299,7 +301,7 @@ def test_validate_metadata_invalid_file_path(requests_mock):
     mock_metax_dataset(requests_mock, files=[invalid_file])
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidMetadataError) as exception_info:
+    with pytest.raises(InvalidFileMetadataError) as exception_info:
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE,
                           set_preservation_state=True)
@@ -322,7 +324,7 @@ def test_validate_metadata_missing_xml(requests_mock):
     """
     mock_metax_dataset(requests_mock, files=[TIFF_FILE])
 
-    with pytest.raises(InvalidMetadataError) as exc:
+    with pytest.raises(InvalidFileMetadataError) as exc:
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE,
                           set_preservation_state=True)
@@ -391,7 +393,7 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
                       content=get_bad_audiomd())
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidFileMetadataError) as exc_info:
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE,
                           set_preservation_state=True)
@@ -399,7 +401,7 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
     # Check exception message
     exc = exc_info.value
     assert str(exc).startswith(
-        "Technical metadata XML of file pid:urn:identifier is invalid: Element"
+        "Technical metadata XML of file is invalid: Element"
         " 'audiomd:duration' is required in element 'amd:audioInfo'."
     )
 
@@ -422,7 +424,7 @@ def test_validate_metadata_corrupted_mix(requests_mock):
                       text="<mix:mix\n")
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidFileMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
             tests.conftest.UNIT_TEST_CONFIG_FILE,
@@ -432,7 +434,7 @@ def test_validate_metadata_corrupted_mix(requests_mock):
     # Check exception message
     exc = exc_info.value
     assert str(exc).startswith(
-        'Technical metadata XML of file pid:urn:identifier is invalid: '
+        'Technical metadata XML of file is invalid: '
         'Namespace prefix mix on mix is not defined, line 2, column 1'
     )
 
@@ -453,7 +455,7 @@ def test_validate_metadata_invalid_datacite(requests_mock):
                       content=get_invalid_datacite())
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidDatasetMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
             tests.conftest.UNIT_TEST_CONFIG_FILE,
@@ -484,7 +486,7 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
                       text="<resource\n")
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidDatasetMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
             tests.conftest.UNIT_TEST_CONFIG_FILE,
@@ -522,7 +524,7 @@ def test_validate_metadata_datacite_bad_request(requests_mock):
     )
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidDatasetMetadataError) as exc_info:
         validate_metadata(
             'dataset_identifier',
             tests.conftest.UNIT_TEST_CONFIG_FILE,
@@ -617,7 +619,7 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
         verify=configuration.getboolean('metax_ssl_verification')
     )
 
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidFileMetadataError) as exc_info:
         # pylint: disable=protected-access
         siptools_research.metadata_validator._validate_file_metadata(
             {
@@ -645,13 +647,11 @@ def test_validate_xml_file_metadata():
     """
     xml = lxml.etree.parse('tests/data/invalid_audiomd.xml')
     # pylint: disable=protected-access
-    with pytest.raises(InvalidMetadataError) as exception_info:
-        metadata_validator._validate_with_schematron(
-            'audio', xml, 'foo'
-        )
+    with pytest.raises(InvalidFileMetadataError) as exception_info:
+        metadata_validator._validate_with_schematron('audio', xml)
 
     assert str(exception_info.value) == (
-        "Technical metadata XML of file foo is invalid: The following errors "
+        "Technical metadata XML of file is invalid: The following errors "
         "were detected:\n\n"
         "1. Element 'audiomd:samplingFrequency' is required in element "
         "'amd:fileData'.\n"
@@ -683,7 +683,7 @@ def test_validate_datacite(requests_mock):
 
     # Validate datacite
     # pylint: disable=protected-access
-    with pytest.raises(InvalidMetadataError) as exception_info:
+    with pytest.raises(InvalidDatasetMetadataError) as exception_info:
         metadata_validator._validate_datacite(
             'dataset_identifier',
             metax_client
@@ -711,7 +711,7 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
                       json={"identifier": "pid:urn:dir:wf1"})
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidMetadataError) as exception_info:
+    with pytest.raises(InvalidDatasetMetadataError) as exception_info:
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE,
                           set_preservation_state=True)

@@ -3,7 +3,7 @@
 import os
 import pytest
 import tests.conftest
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
@@ -81,7 +81,7 @@ def test_invalid_metadata(testpath):
     assert not task.complete()
 
     # Run task
-    with pytest.raises(InvalidMetadataError) as exc:
+    with pytest.raises(InvalidDatasetMetadataError) as exc:
         task.run()
 
     # run should fail the following error message:

@@ -12,12 +12,11 @@ import xml_helpers.utils as h
 from siptools.utils import encode_path, read_md_references, get_md_references
 from siptools.xml.mets import NAMESPACES
 
-from siptools_research.xml_metadata import MetadataGenerationError
 from siptools_research.config import Configuration
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools_research.workflow.create_digiprov \
     import CreateProvenanceInformation
@@ -189,8 +188,9 @@ class CreateLogicalStructMap(WorkflowTask):
             # If file category was not found even for the parent directory,
             # raise error
             if filecategory is None:
-                raise InvalidMetadataError("File category for file {} was not "
-                                           "found".format(file_id))
+                raise InvalidDatasetMetadataError(
+                    "File category for file {} was not found".format(file_id)
+                )
 
             # Append path to logical_struct[filecategory] list. Create list if
             # it does not exist already
@@ -220,7 +220,7 @@ class CreateLogicalStructMap(WorkflowTask):
                         == filename.strip('/'):
                     return file_.get('ID')
 
-        raise MetadataGenerationError(
+        raise ValueError(
             "File ID for file %s not found from fileSec: %s" % (
                 filename, filesec_xml
             )

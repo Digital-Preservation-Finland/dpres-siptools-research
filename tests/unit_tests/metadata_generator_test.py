@@ -9,9 +9,7 @@ from requests.exceptions import HTTPError
 from siptools.utils import decode_path
 from metax_access import Metax, DatasetNotAvailableError
 
-from siptools_research.metadata_generator import (
-    generate_metadata, MetadataGenerationError
-)
+from siptools_research.metadata_generator import generate_metadata
 import tests.conftest
 from tests.conftest import mock_metax_dataset
 import tests.metax_data.datasets
@@ -69,10 +67,11 @@ def test_generate_metadata(requests_mock,
                            file_format,
                            encoding,
                            namespace):
-    """Tests metadata generation. Generates metadata for a dataset that
-    contains one file, and checks that correct file characteristics and XML
-    metadata are sent to Metax. Lastly the preservation state should be
-    updated.
+    """Test metadata generation.
+
+    Generates metadata for a dataset that contains one file, and checks that
+    correct file characteristics and XML metadata are sent to Metax. Lastly the
+    preservation state should be updated.
 
     :param requests_mock: Mocker object
     :param path: path to file for which the metadata is created
@@ -135,12 +134,16 @@ def test_generate_metadata_unrecognized(requests_mock):
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       text="")
 
-    # generate metadata for dataset
-    with pytest.raises(MetadataGenerationError) as error:
-        generate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+    generate_metadata('dataset_identifier',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    assert str(error.value) == "File 'path/to/file' format not recognized."
+    # Assert preservation state is set correctly
+    assert requests_mock.last_request.method == "PATCH"
+    body = requests_mock.last_request.json()
+    assert body['preservation_state'] == 40
+    assert body['preservation_description'] \
+        == ('File pid:urn:identifier is invalid: File format was not '
+            'recognized.')
 
 
 @pytest.mark.usefixtures('testpath')
@@ -257,15 +260,17 @@ def test_generate_metadata_missing_csv_info(requests_mock):
     mock_metax_dataset(requests_mock, files=[invalid_file_metadata])
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download")
 
-    with pytest.raises(MetadataGenerationError) as exception_info:
-        generate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+    generate_metadata('dataset_identifier',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    assert str(exception_info.value) == (
-        'Required attribute "csv_delimiter" is missing from file '
-        'characteristics of a CSV file. '
-        '[ dataset=dataset_identifier, file=pid:urn:identifier ]'
-    )
+    # Assert preservation state is set correctly
+    assert requests_mock.last_request.method == "PATCH"
+    body = requests_mock.last_request.json()
+    assert body['preservation_state'] == 40
+    assert body['preservation_description'] \
+        == ('File pid:urn:identifier is invalid: Required attribute '
+            '"csv_delimiter" is missing from file characteristics of a CSV '
+            'file.')
 
 
 # pylint: disable=invalid-name
@@ -334,8 +339,10 @@ def test_generate_metadata_dataset_not_found(monkeypatch, requests_mock):
 
 @pytest.mark.usefixtures('testpath')
 def test_generate_metadata_ida_download_error(requests_mock):
-    """Verifies that preservation state is set correctly when file download
-    from IDA fails and MetadataGenerationError is raised.
+    """Test metadatageneration when file is available.
+
+    If file is not available, the dataset is not valid. The preservation state
+    should be to "Invalid metadata".
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -344,18 +351,15 @@ def test_generate_metadata_ida_download_error(requests_mock):
     requests_mock.get('https://ida.test/files/pid:urn:identifier/download',
                       status_code=404)
 
-    with pytest.raises(MetadataGenerationError):
-        generate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+    generate_metadata('dataset_identifier',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Assert preservation state is set correctly
     assert requests_mock.last_request.method == "PATCH"
     body = requests_mock.last_request.json()
-    assert body['preservation_state'] == 30
-    assert body['preservation_description'] == (
-        "File 'path/to/file' not found in Ida "
-        "[ dataset=dataset_identifier ]"
-    )
+    assert body['preservation_state'] == 40
+    assert body['preservation_description'] \
+        == "File pid:urn:identifier is invalid: File is not available"
 
 
 @pytest.mark.usefixtures('testpath')

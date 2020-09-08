@@ -4,7 +4,7 @@ import pytest
 
 from metax_access import Metax
 from siptools_research.utils.dataset_consistency import DatasetConsistency
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.config import Configuration
 import tests.conftest
 
@@ -41,7 +41,7 @@ def test_verify_file_contained_by_dataset_files():
     try:
         dirs = DatasetConsistency(client, dataset)
         dirs.is_consistent_for_file(file_metadata)
-    except InvalidMetadataError as exc:
+    except InvalidDatasetMetadataError as exc:
         pytest.fail(
             '_verify_file_contained_by_dataset raised exception: ' + str(exc)
         )
@@ -92,7 +92,7 @@ def test_verify_file_contained_by_dataset_directories(requests_mock):
     try:
         dirs = DatasetConsistency(client, dataset)
         dirs.is_consistent_for_file(file_metadata)
-    except InvalidMetadataError as exc:
+    except InvalidDatasetMetadataError as exc:
         pytest.fail(
             '_verify_file_contained_by_dataset raised exception: ' + str(exc)
         )
@@ -136,7 +136,7 @@ def test_verify_file_contained_by_dataset_missing_from_dataset(requests_mock):
         json={'identifier': 'parent_directory_identifier'},
         status_code=200
     )
-    with pytest.raises(InvalidMetadataError) as exc_info:
+    with pytest.raises(InvalidDatasetMetadataError) as exc_info:
         dirs = DatasetConsistency(client, dataset)
         dirs.is_consistent_for_file(file_metadata)
 
@@ -220,7 +220,7 @@ def test_dataset_directories_caching_works(requests_mock):
         dirs = DatasetConsistency(client, dataset)
         dirs.is_consistent_for_file(file_1)
         dirs.is_consistent_for_file(file_2)
-    except InvalidMetadataError as exc:
+    except InvalidDatasetMetadataError as exc:
         pytest.fail(
             '_verify_file_contained_by_dataset raised exception: ' + str(exc)
         )

@@ -4,34 +4,8 @@ import os
 import luigi
 import metax_access
 from siptools_research.config import Configuration
+import siptools_research.exceptions
 from siptools_research.utils.database import Database
-
-
-class FatalWorkflowError(Exception):
-    """Baseclass for errors that make workflow to completion impossible.
-
-    When error of this type is encountered, the task should not rescheduled.
-    """
-
-    pass
-
-
-class InvalidDatasetError(FatalWorkflowError):
-    """Exception raised when packaged dataset does not pass validation.
-
-    The SIP is jejected in digital preservation service.
-    """
-
-    pass
-
-
-class InvalidMetadataError(FatalWorkflowError):
-    """Exception raised when dataset metadata is invalid.
-
-    SIP can not be created for dataset due to missing or invalid metadata.
-    """
-
-    pass
 
 
 class WorkflowTask(luigi.Task):
@@ -155,11 +129,8 @@ def report_task_failure(task, exception):
     This function is triggered when a WorkflowTask fails. Adds report of
     failed event to workflow database.
 
-    If task failed because of ``InvalidDatasetError``, the preservation status
-    of dataset in Metax is updated.
-
-    If task failed because of ``InvalidMetadataError``, the preservation status
-    of dataset in Metax is updated.
+    If task failed because dataset is invalid, the preservation status of
+    dataset is updated in Metax, and the workflow is disabled.
 
     :param task: WorkflowTask object
     :param exception: Exception that caused failure
@@ -171,11 +142,11 @@ def report_task_failure(task, exception):
                        'failure',
                        "%s: %s" % (task.failure_message, str(exception)))
 
-    if isinstance(exception, FatalWorkflowError):
+    if isinstance(exception, siptools_research.exceptions.InvalidDatasetError):
         # Disable workflow
         database.set_disabled(task.document_id)
 
-    if isinstance(exception, InvalidDatasetError):
+    if isinstance(exception, siptools_research.exceptions.InvalidSIPError):
         # Set preservation status for dataset in Metax
         config_object = Configuration(task.config)
         metax_client = metax_access.Metax(
@@ -190,7 +161,8 @@ def report_task_failure(task, exception):
             DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
             system_description=_get_description(task, exception)
         )
-    elif isinstance(exception, InvalidMetadataError):
+    elif isinstance(exception,
+                    siptools_research.exceptions.InvalidDatasetMetadataError):
         # Set preservation status for dataset in Metax
         config_object = Configuration(task.config)
         metax_client = metax_access.Metax(

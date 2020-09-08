@@ -7,19 +7,22 @@ from requests.exceptions import HTTPError
 
 import upload_rest_api.database
 from file_scraper.scraper import Scraper
-from metax_access import (Metax, DS_STATE_TECHNICAL_METADATA_GENERATED,
+from metax_access import (Metax,
+                          DS_STATE_TECHNICAL_METADATA_GENERATED,
                           DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
+                          DS_STATE_INVALID_METADATA,
                           MetaxError)
 from siptools.scripts.import_object import (DEFAULT_VERSIONS,
                                             UNKNOWN_VERSION,
                                             NO_VERSION)
 
+from siptools_research.exceptions import InvalidDatasetError
+from siptools_research.exceptions import InvalidFileError
 from siptools_research.utils.download import (download_file,
                                               FileNotAvailableError)
 from siptools_research.config import Configuration
-from siptools_research.xml_metadata import (
-    XMLMetadataGenerator, MetadataGenerationError
-)
+from siptools_research.xml_metadata import XMLMetadataGenerator
+
 
 DEFAULT_PROVENANCE = {
     "preservation_event": {
@@ -87,8 +90,13 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             )
 
         _generate_file_metadata(metax_client, dataset_id, tmpdir, config)
-
-    except (MetadataGenerationError, MetaxError) as error:
+    except InvalidFileError as error:
+        message = "File {} is invalid: {}".format(error.files[0], str(error))
+        status_code = DS_STATE_INVALID_METADATA
+    except InvalidDatasetError as error:
+        message = str(error)[:199] if len(str(error)) > 200 else str(error)
+        status_code = DS_STATE_INVALID_METADATA
+    except MetaxError as error:
         message = str(error)[:199] if len(str(error)) > 200 else str(error)
         status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
         raise
@@ -125,17 +133,16 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
         tmpfile = os.path.join(tmpdir, file_id)
         try:
             download_file(file_metadata, tmpfile, config_file, upload_database)
-        except FileNotAvailableError as error:
-            raise MetadataGenerationError(str(error), dataset=dataset_id)
+        except FileNotAvailableError:
+            raise InvalidFileError("File is not available", [file_id])
 
         # Generate and update file_characteristics
         file_characteristics = _generate_file_characteristics(
             tmpfile, file_metadata.get('file_characteristics', {})
         )
         if file_characteristics['file_format'] == '(:unav)':
-            raise MetadataGenerationError(
-                "File '%s' format not recognized." % file_["file_path"]
-            )
+            raise InvalidFileError("File format was not recognized.",
+                                   [file_id])
 
         metax_client.patch_file(
             file_id,
@@ -145,14 +152,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
 
         # Generate file format specific XML metadata
         generator = XMLMetadataGenerator(tmpfile, file_metadata)
-        try:
-            xml = generator.create()
-        except MetadataGenerationError as error:
-            raise MetadataGenerationError(
-                str(error),
-                dataset=dataset_id,
-                file=os.path.split(tmpfile)[1]
-            )
+        xml = generator.create()
         if xml is not None:
             metax_client.set_xml(file_id, xml)
 

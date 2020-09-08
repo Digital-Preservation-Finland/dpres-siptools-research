@@ -1,4 +1,4 @@
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetMetadataError
 
 
 class DatasetConsistency(object):
@@ -15,12 +15,13 @@ class DatasetConsistency(object):
         self.directories = set()
 
     def is_consistent_for_file(self, file_md):
-        """Verifies that file is contained by dataset files or directories.
-        If not, raises `InvalidMetadataError`.
+        """Verifies that file is contained by dataset.
+
+        Raises ``InvalidDatasetMetadataError`` if file is not dataset files or
+        directories.
 
         :param file_md: Metax file metadata dictionary
-        :returns: ``None`` if file contained by dataset. Otherwise raises
-            `InvalidMetadataError`
+        :returns: ``None``
         """
         file_identifier = file_md['identifier']
         if 'files' in self.dataset['research_dataset']:
@@ -31,7 +32,7 @@ class DatasetConsistency(object):
             temp_dirs = set()
             if not self._is_directory_contained_by_dataset_directories(
                     file_md['parent_directory']['identifier'], temp_dirs):
-                raise InvalidMetadataError(
+                raise InvalidDatasetMetadataError(
                     'File not found from dataset files nor directories: %s'
                     % (file_md["file_path"])
                 )

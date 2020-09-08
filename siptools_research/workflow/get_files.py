@@ -8,7 +8,8 @@ from metax_access import Metax
 import upload_rest_api.database
 
 from siptools_research.utils.download import download_file
-from siptools_research.workflowtask import WorkflowTask, InvalidMetadataError
+from siptools_research.workflowtask import WorkflowTask
+from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
@@ -94,7 +95,7 @@ class GetFiles(WorkflowTask):
                 )
             )
             if not target_path.startswith(self.sip_creation_path):
-                raise InvalidMetadataError(
+                raise InvalidFileMetadataError(
                     'The file path of file %s is invalid: %s' % (
                         identifier, dataset_file["file_path"]
                     )

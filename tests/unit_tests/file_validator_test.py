@@ -1,11 +1,9 @@
-"""Tests for :mod:`siptools_research.file_validator` module"""
+"""Tests for :mod:`siptools_research.file_validator` module."""
 
 import pytest
 
-from siptools_research.file_validator import (
-    validate_files,
-    FileValidationError
-)
+from siptools_research.exceptions import InvalidFileError
+from siptools_research.file_validator import validate_files
 from siptools_research.utils.download import FileAccessError
 
 import tests.conftest
@@ -50,8 +48,9 @@ def test_validate_files(requests_mock):
 
 @pytest.mark.usefixtures("mock_metax_access", "testpath")
 def test_validate_invalid_files(requests_mock):
-    """Test that validating files with wrong mimetype raises
-    FileValidationError.
+    """Test validating files with wrong mimetype.
+
+    Wrong mimetype should raise InvalidFileError.
 
     :param requests_mock: Mocker object
     """
@@ -65,21 +64,17 @@ def test_validate_invalid_files(requests_mock):
         'https://ida.test/files/pid:urn:invalid_mimetype_2/download'
     )
 
-    with pytest.raises(FileValidationError) as error:
+    with pytest.raises(InvalidFileError) as error:
         validate_files(
             "validate_files_invalid",
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
-    assert str(error.value) == (
-        "Following files are not well-formed:\n"
-        "path/to/file\n"
-        "path/to/file"
-    )
+    assert str(error.value) == ("Some files are not well-formed.")
     # verify preservation_state is set as last operation
     last_request = requests_mock.request_history[-1].json()
     assert last_request['preservation_description']\
-        .startswith("Following files")
+        == "Following files are not well-formed:\npath/to/file\npath/to/file"
     assert last_request['preservation_state'] == 40
 
 

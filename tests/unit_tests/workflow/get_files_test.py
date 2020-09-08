@@ -7,7 +7,8 @@ import pymongo
 import tests.conftest
 from siptools_research.utils.download import FileNotAvailableError
 from siptools_research.workflow import get_files
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetMetadataError
+from siptools_research.exceptions import InvalidFileMetadataError
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
@@ -178,7 +179,7 @@ def test_forbidden_relative_path(testpath, path):
     ]
 
     # File download should fail
-    with pytest.raises(InvalidMetadataError) as exception_info:
+    with pytest.raises(InvalidFileMetadataError) as exception_info:
         # pylint: disable=protected-access
         task._download_files(files)
     assert str(exception_info.value) == \

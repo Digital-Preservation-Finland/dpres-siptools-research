@@ -10,15 +10,20 @@ from requests.exceptions import HTTPError
 
 from siptools.xml.mets import NAMESPACES
 
-from metax_access import (Metax, MetaxError, DatasetNotAvailableError,
-                          DataciteGenerationError, DS_STATE_VALIDATING_METADATA,
-                          DS_STATE_INVALID_METADATA, DS_STATE_VALID_METADATA,
+from metax_access import (Metax, DatasetNotAvailableError,
+                          DataciteGenerationError,
+                          DS_STATE_VALIDATING_METADATA,
+                          DS_STATE_INVALID_METADATA,
+                          DS_STATE_VALID_METADATA,
                           DS_STATE_METADATA_VALIDATION_FAILED)
 import siptools_research.schemas
 from siptools_research.utils import mimetypes
 from siptools_research.utils.dataset_consistency import DatasetConsistency
 from siptools_research.utils.directory_validation import DirectoryValidation
-from siptools_research.workflowtask import InvalidMetadataError
+from siptools_research.exceptions import InvalidDatasetError
+from siptools_research.exceptions import InvalidDatasetMetadataError
+from siptools_research.exceptions import InvalidFileMetadataError
+from siptools_research.exceptions import InvalidContractMetadataError
 from siptools_research.config import Configuration
 
 
@@ -36,8 +41,7 @@ DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
 
 
-TECHMD_XML_VALIDATION_ERROR \
-    = "Technical metadata XML of file %s is invalid: %s"
+TECHMD_XML_VALIDATION_ERROR = "Technical metadata XML of file is invalid: %s"
 DATACITE_VALIDATION_ERROR = 'Datacite metadata is invalid: %s'
 INVALID_NS_ERROR = "Invalid XML namespace: %s"
 MISSING_XML_METADATA_ERROR = "Missing technical metadata XML for file: %s"
@@ -108,14 +112,10 @@ def validate_metadata(
         # was not found in Metax.
         status_code = None
         raise
-    except (InvalidMetadataError, MetaxError) as exc:
+    except InvalidDatasetError as exc:
         detailed_error = str(exc)
-        if isinstance(exc, InvalidMetadataError):
-            status_code = DS_STATE_INVALID_METADATA
-            message = ("Metadata did not pass validation: %s" % detailed_error)
-        else:
-            status_code = DS_STATE_METADATA_VALIDATION_FAILED
-            message = "Metadata validation failed: %s" % detailed_error
+        status_code = DS_STATE_INVALID_METADATA
+        message = ("Metadata did not pass validation: %s" % detailed_error)
         raise
     except HTTPError:
         message = "Internal error"
@@ -150,7 +150,7 @@ def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
     try:
         jsonschema.validate(dataset_metadata, schema)
     except jsonschema.ValidationError as exc:
-        raise InvalidMetadataError(str(exc))
+        raise InvalidDatasetMetadataError(str(exc))
 
 
 def _validate_dataset_localization(dataset_metadata):
@@ -203,7 +203,7 @@ def _validate_localization(localization_dict, field):
     ISO 639-1 language codes.
     """
     if not localization_dict:
-        raise InvalidMetadataError(
+        raise InvalidDatasetMetadataError(
             "No localization provided in field: 'research_dataset/%s'" % field
         )
 
@@ -220,11 +220,11 @@ def _validate_localization(localization_dict, field):
                 "Invalid language code: '%s' in field: 'research_dataset/%s'"
             ) % (language, field)
 
-            raise InvalidMetadataError(message)
+            raise InvalidDatasetMetadataError(message)
 
 
 def _validate_contract_metadata(contract_id, metax_client):
-    """Validate dataset metadata from /rest/v1/datasets/<dataset_id>.
+    """Validate contract metadata from /rest/v1/contracts/<contract_id>.
 
     :param contract_id: contract identifier
     :param metax_clien: metax_access.Metax instance
@@ -235,7 +235,7 @@ def _validate_contract_metadata(contract_id, metax_client):
         jsonschema.validate(contract_metadata,
                             siptools_research.schemas.CONTRACT_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
-        raise InvalidMetadataError(str(exc))
+        raise InvalidContractMetadataError(str(exc))
 
 
 def _check_mimetype(file_metadata, conf):
@@ -265,7 +265,7 @@ def _check_mimetype(file_metadata, conf):
         if format_version:
             message += ", version %s" % format_version
 
-        raise InvalidMetadataError(message)
+        raise InvalidFileMetadataError(message)
 
 
 def _validate_file_metadata(dataset, metax_client, conf):
@@ -282,25 +282,29 @@ def _validate_file_metadata(dataset, metax_client, conf):
     consistency = DatasetConsistency(metax_client, dataset)
     directory_validation = DirectoryValidation(metax_client)
     for file_metadata in metax_client.get_dataset_files(dataset['identifier']):
+
         file_identifier = file_metadata["identifier"]
         file_path = file_metadata["file_path"]
+
         # Validate metadata against JSON schema
         try:
             jsonschema.validate(file_metadata,
                                 siptools_research.schemas.FILE_METADATA_SCHEMA)
         except jsonschema.ValidationError as exc:
-            raise InvalidMetadataError(
+            raise InvalidFileMetadataError(
                 "Validation error in metadata of {file_path}: {error}"
                 .format(file_path=file_path, error=str(exc))
             )
+
         directory_validation.is_valid_for_file(file_metadata)
+
         # Check that mimetype is supported
         _check_mimetype(file_metadata, conf)
 
         # Check that file path does not point outside SIP
         normalised_path = os.path.normpath(file_path.strip('/'))
         if normalised_path.startswith('..'):
-            raise InvalidMetadataError(
+            raise InvalidFileMetadataError(
                 'The file path of file %s is invalid: %s' % (file_identifier,
                                                              file_path)
             )
@@ -325,8 +329,8 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
             try:
                 xmls = metax_client.get_xml(file_id)
             except lxml.etree.XMLSyntaxError as exception:
-                raise InvalidMetadataError(
-                    TECHMD_XML_VALIDATION_ERROR % (file_id, exception)
+                raise InvalidFileMetadataError(
+                    TECHMD_XML_VALIDATION_ERROR % (exception)
                 )
 
             for namespace in xmls:
@@ -334,22 +338,21 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
                     raise TypeError(INVALID_NS_ERROR % namespace)
 
             if SCHEMATRONS[file_format_prefix]['ns'] not in xmls:
-                raise InvalidMetadataError(
+                raise InvalidFileMetadataError(
                     MISSING_XML_METADATA_ERROR % file_id
                 )
 
             _validate_with_schematron(
                 file_format_prefix,
-                xmls[SCHEMATRONS[file_format_prefix]['ns']],
-                file_id
+                xmls[SCHEMATRONS[file_format_prefix]['ns']]
             )
 
 
-def _validate_with_schematron(filetype, xml, file_id):
+def _validate_with_schematron(filetype, xml):
     """Validate XML with schematron.
 
     Parses validation error from schematron output and raises
-    InvalidMetadataError with clear error message.
+    InvalidFileMetadataError with clear error message.
 
     :param filetype: Type of file described by XML (image, video, or audio)
     :param xml: XML element
@@ -370,8 +373,8 @@ def _validate_with_schematron(filetype, xml, file_id):
             )[0].text.strip()
             errors.append(error_string)
 
-        raise InvalidMetadataError(
-            TECHMD_XML_VALIDATION_ERROR % (file_id, _format_error_list(errors))
+        raise InvalidFileMetadataError(
+            TECHMD_XML_VALIDATION_ERROR % (_format_error_list(errors))
         )
 
 
@@ -385,7 +388,7 @@ def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):
     try:
         datacite = metax_client.get_datacite(dataset_id, dummy_doi=dummy_doi)
     except (lxml.etree.XMLSyntaxError, DataciteGenerationError) as exception:
-        raise InvalidMetadataError(
+        raise InvalidDatasetMetadataError(
             DATACITE_VALIDATION_ERROR % (exception)
         )
 
@@ -393,7 +396,7 @@ def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):
     if schema.validate(datacite) is False:
         # pylint: disable=not-an-iterable
         errors = [error.message for error in schema.error_log]
-        raise InvalidMetadataError(
+        raise InvalidDatasetMetadataError(
             DATACITE_VALIDATION_ERROR % (_format_error_list(errors))
         )
 

@@ -12,6 +12,7 @@ from requests.exceptions import HTTPError
 import upload_rest_api.database
 
 from siptools_research.config import Configuration
+from siptools_research.exceptions import InvalidFileError
 from siptools_research.utils.download import (
     download_file, FileNotAvailableError, FileAccessError
 )
@@ -44,22 +45,6 @@ def _download_files(
             )
 
     return dataset_files
-
-
-class FileValidationError(Exception):
-    """Raised when file validation fails."""
-
-    def __init__(self, message, paths=None):
-        super(FileValidationError, self).__init__(message)
-        self.paths = paths
-
-    def __str__(self):
-        message = super(FileValidationError, self).__str__()
-        if self.paths:
-            for path in self.paths:
-                message += ("\n" + path)
-
-        return message
 
 
 def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
@@ -96,17 +81,19 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         for dataset_file in dataset_files:
             _validate_file(dataset_file, cache_path, errors)
         if errors:
-            raise FileValidationError(
-                "Following files are not well-formed:",
+            raise InvalidFileError(
+                "Some files are not well-formed.",
                 errors
             )
-    except FileValidationError as exc:
+    except InvalidFileError as exception:
         status_code = DS_STATE_INVALID_METADATA
-        message = str(exc)
+        message = "Following files are not well-formed:\n{}".format(
+            "\n".join(exception.files)
+        )
         raise
-    except (FileAccessError, HTTPError) as exc:
+    except FileAccessError as exception:
         status_code = DS_STATE_METADATA_VALIDATION_FAILED
-        message = str(exc)
+        message = str(exception)
         raise
     finally:
         message = message[:199] if len(message) > 200 else message

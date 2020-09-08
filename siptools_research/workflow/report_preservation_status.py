@@ -8,7 +8,7 @@ from metax_access import Metax, DS_STATE_IN_DIGITAL_PRESERVATION
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_sip import ValidateSIP
 from siptools_research.workflow.send_sip import SendSIPToDP
-from siptools_research.workflowtask import InvalidDatasetError
+from siptools_research.exceptions import InvalidSIPError
 from siptools_research.config import Configuration
 
 
@@ -90,7 +90,7 @@ class ReportPreservationStatus(WorkflowTask):
         elif directory == 'rejected':
             # Raise exception that informs event handler that dataset
             # did not pass validation
-            raise InvalidDatasetError("SIP was rejected")
+            raise InvalidSIPError("SIP was rejected")
         else:
             raise ValueError('Report was found in incorrect '
                              'path: %s' % ingest_report_paths[0])
