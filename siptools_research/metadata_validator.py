@@ -387,10 +387,8 @@ def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):
     """
     try:
         datacite = metax_client.get_datacite(dataset_id, dummy_doi=dummy_doi)
-    except (lxml.etree.XMLSyntaxError, DataciteGenerationError) as exception:
-        raise InvalidDatasetMetadataError(
-            DATACITE_VALIDATION_ERROR % (exception)
-        )
+    except DataciteGenerationError as exception:
+        raise InvalidDatasetMetadataError(str(exception))
 
     schema = lxml.etree.XMLSchema(lxml.etree.parse(DATACITE_SCHEMA))
     if schema.validate(datacite) is False:

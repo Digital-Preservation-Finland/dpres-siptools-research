@@ -474,8 +474,7 @@ def test_validate_metadata_invalid_datacite(requests_mock):
 def test_validate_metadata_corrupted_datacite(requests_mock):
     """Test validate_metadata.
 
-    Function should raise exception with correct error
-    message for corrupted datacite XML.
+    Function should raise exception  if datacite XML is corrupted.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -486,7 +485,7 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
                       text="<resource\n")
 
     # Try to validate invalid dataset
-    with pytest.raises(InvalidDatasetMetadataError) as exc_info:
+    with pytest.raises(Exception) as exc_info:
         validate_metadata(
             'dataset_identifier',
             tests.conftest.UNIT_TEST_CONFIG_FILE,
@@ -496,8 +495,7 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     # Check exception message
     exc = exc_info.value
     assert str(exc).startswith(
-        "Datacite metadata is invalid: Couldn't find end of Start Tag "
-        "resource line 1, line 2, column 1"
+        "Couldn't find end of Start Tag resource line 1, line 2, column 1"
     )
 
 
@@ -533,7 +531,7 @@ def test_validate_metadata_datacite_bad_request(requests_mock):
 
     # Check exception message
     exc = exc_info.value
-    assert str(exc) == "Datacite metadata is invalid: Bad request"
+    assert str(exc) == "Datacite generation failed: Bad request"
 
 
 def test_validate_file_metadata(requests_mock):
