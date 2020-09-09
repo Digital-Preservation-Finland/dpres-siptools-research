@@ -7,8 +7,6 @@ from metax_access.metax import (Metax, DS_STATE_VALIDATING_METADATA,
                                 DS_STATE_VALID_METADATA,
                                 DS_STATE_METADATA_VALIDATION_FAILED)
 
-from requests.exceptions import HTTPError
-
 import upload_rest_api.database
 
 from siptools_research.config import Configuration
@@ -33,16 +31,11 @@ def _download_files(
     upload_database = upload_rest_api.database.Database()
     dataset_files = metax_client.get_dataset_files(dataset_id)
     for dataset_file in dataset_files:
-        try:
-            download_file(
-                dataset_file,
-                config_file=config_file,
-                upload_database=upload_database
-            )
-        except (HTTPError, FileNotAvailableError):
-            raise FileAccessError(
-                "Could not download file '%s'" % dataset_file["file_path"]
-            )
+        download_file(
+            dataset_file,
+            config_file=config_file,
+            upload_database=upload_database
+        )
 
     return dataset_files
 
@@ -95,6 +88,11 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         status_code = DS_STATE_METADATA_VALIDATION_FAILED
         message = str(exception)
         raise
+    except FileNotAvailableError as exception:
+        status_code = DS_STATE_INVALID_METADATA
+        message = str(exception)
+        raise
+
     finally:
         message = message[:199] if len(message) > 200 else message
         metax_client.set_preservation_state(dataset_id,

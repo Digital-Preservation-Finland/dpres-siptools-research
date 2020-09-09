@@ -4,7 +4,7 @@ import pytest
 
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.file_validator import validate_files
-from siptools_research.utils.download import FileAccessError
+from siptools_research.utils.download import FileNotAvailableError
 
 import tests.conftest
 
@@ -96,18 +96,18 @@ def test_validate_files_not_found(requests_mock):
         status_code=404
     )
 
-    with pytest.raises(FileAccessError) as error:
+    with pytest.raises(FileNotAvailableError) as error:
         validate_files(
             "validate_files_not_found",
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
-    expected_error_message = "Could not download file 'path/to/file'"
+    expected_error_message = "File 'path/to/file' not found in Ida"
     assert str(error.value) == expected_error_message
 
     # verify preservation_state is set as last operation
     last_request = requests_mock.request_history[-1].json()
-    assert last_request['preservation_state'] == 50
+    assert last_request['preservation_state'] == 40
     assert last_request['preservation_description'].startswith(
         expected_error_message
     )
