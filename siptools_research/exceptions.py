@@ -44,3 +44,16 @@ class InvalidFileError(InvalidDatasetError):
         """
         super(InvalidFileError, self).__init__(message)
         self.files = files
+
+
+class MissingFileError(InvalidDatasetError):
+    """Exception raised when some files are not available."""
+
+    def __init__(self, message, files=None):
+        """Initialize exception.
+
+        :param message: Error message
+        :param files: List of missing files
+        """
+        super(MissingFileError, self).__init__(message)
+        self.files = files

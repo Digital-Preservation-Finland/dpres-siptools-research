@@ -4,7 +4,7 @@ import pytest
 
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.file_validator import validate_files
-from siptools_research.utils.download import FileNotAvailableError
+from siptools_research.exceptions import MissingFileError
 
 import tests.conftest
 
@@ -70,11 +70,13 @@ def test_validate_invalid_files(requests_mock):
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
-    assert str(error.value) == ("Some files are not well-formed.")
+    assert str(error.value) == ("2 files are not well-formed")
     # verify preservation_state is set as last operation
     last_request = requests_mock.request_history[-1].json()
     assert last_request['preservation_description']\
-        == "Following files are not well-formed:\npath/to/file\npath/to/file"
+        == ("2 files are not well-formed:\n"
+            "pid:urn:invalid_mimetype_1\n"
+            "pid:urn:invalid_mimetype_2")
     assert last_request['preservation_state'] == 40
 
 
@@ -96,18 +98,18 @@ def test_validate_files_not_found(requests_mock):
         status_code=404
     )
 
-    with pytest.raises(FileNotAvailableError) as error:
+    with pytest.raises(MissingFileError) as error:
         validate_files(
             "validate_files_not_found",
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
-    expected_error_message = "File 'path/to/file' not found in Ida"
-    assert str(error.value) == expected_error_message
+    assert str(error.value) == "2 files are missing"
 
     # verify preservation_state is set as last operation
     last_request = requests_mock.request_history[-1].json()
     assert last_request['preservation_state'] == 40
-    assert last_request['preservation_description'].startswith(
-        expected_error_message
-    )
+    assert last_request['preservation_description']\
+        == ("2 files are missing:\n"
+            "pid:urn:not_found_1\n"
+            "pid:urn:not_found_2")

@@ -18,6 +18,7 @@ from siptools.scripts.import_object import (DEFAULT_VERSIONS,
 
 from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.exceptions import InvalidFileError
+from siptools_research.exceptions import MissingFileError
 from siptools_research.utils.download import (download_file,
                                               FileNotAvailableError)
 from siptools_research.config import Configuration
@@ -90,7 +91,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             )
 
         _generate_file_metadata(metax_client, dataset_id, tmpdir, config)
-    except InvalidFileError as error:
+    except (InvalidFileError, MissingFileError) as error:
         message = "File {} is invalid: {}".format(error.files[0], str(error))
         status_code = DS_STATE_INVALID_METADATA
     except InvalidDatasetError as error:
@@ -134,7 +135,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
         try:
             download_file(file_metadata, tmpfile, config_file, upload_database)
         except FileNotAvailableError:
-            raise InvalidFileError("File is not available", [file_id])
+            raise MissingFileError("File is not available", [file_id])
 
         # Generate and update file_characteristics
         file_characteristics = _generate_file_characteristics(

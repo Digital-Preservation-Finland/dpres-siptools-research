@@ -11,16 +11,13 @@ import upload_rest_api.database
 
 from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidFileError
+from siptools_research.exceptions import MissingFileError
 from siptools_research.utils.download import (
     download_file, FileNotAvailableError, FileAccessError
 )
 
 
-def _download_files(
-        metax_client,
-        dataset_id,
-        config_file="/etc/siptools_research.conf"
-):
+def _download_files(metax_client, dataset_id, config_file, missing_files):
     """Download all dataset files.
 
     :param metax_client: metax access
@@ -31,11 +28,14 @@ def _download_files(
     upload_database = upload_rest_api.database.Database()
     dataset_files = metax_client.get_dataset_files(dataset_id)
     for dataset_file in dataset_files:
-        download_file(
-            dataset_file,
-            config_file=config_file,
-            upload_database=upload_database
-        )
+        try:
+            download_file(
+                dataset_file,
+                config_file=config_file,
+                upload_database=upload_database
+            )
+        except FileNotAvailableError:
+            missing_files.append(dataset_file['identifier'])
 
     return dataset_files
 
@@ -51,7 +51,8 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
     message = "Files passed validation"
     status_code = DS_STATE_VALID_METADATA
 
-    errors = []
+    invalid_files = []
+    missing_files = []
     conf = Configuration(config_file)
     metax_client = Metax(
         conf.get('metax_url'),
@@ -67,29 +68,34 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
             state=DS_STATE_VALIDATING_METADATA
         )
         dataset_files = _download_files(
-            metax_client,
-            dataset_id,
-            config_file=config_file
+            metax_client, dataset_id, config_file, missing_files
         )
-        for dataset_file in dataset_files:
-            _validate_file(dataset_file, cache_path, errors)
-        if errors:
-            raise InvalidFileError(
-                "Some files are not well-formed.",
-                errors
+        if missing_files:
+            raise MissingFileError(
+                "{} files are missing".format(len(missing_files)),
+                missing_files
             )
+
+        for dataset_file in dataset_files:
+            _validate_file(dataset_file, cache_path, invalid_files)
+        if invalid_files:
+            raise InvalidFileError(
+                "{} files are not well-formed".format(len(invalid_files)),
+                invalid_files
+            )
+
+    except MissingFileError as exception:
+        status_code = DS_STATE_INVALID_METADATA
+        message = "{}:\n{}".format(str(exception), "\n".join(exception.files))
+        raise
+
     except InvalidFileError as exception:
         status_code = DS_STATE_INVALID_METADATA
-        message = "Following files are not well-formed:\n{}".format(
-            "\n".join(exception.files)
-        )
+        message = "{}:\n{}".format(str(exception), "\n".join(exception.files))
         raise
+
     except FileAccessError as exception:
         status_code = DS_STATE_METADATA_VALIDATION_FAILED
-        message = str(exception)
-        raise
-    except FileNotAvailableError as exception:
-        status_code = DS_STATE_INVALID_METADATA
         message = str(exception)
         raise
 
@@ -112,7 +118,6 @@ def _validate_file(file_, cache_path, errors):
     :returns: None
     """
     identifier = file_["identifier"]
-    path = file_["file_path"]
     file_chars = file_["file_characteristics"]
     mimetype = file_chars["file_format"]
     encoding = file_chars.get("encoding", None)
@@ -125,6 +130,6 @@ def _validate_file(file_, cache_path, errors):
     )
     scraper.scrape(check_wellformed=True)
     if not scraper.well_formed:
-        errors.append(path)
+        errors.append(identifier)
 
     del scraper
