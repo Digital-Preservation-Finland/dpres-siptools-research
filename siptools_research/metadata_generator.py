@@ -3,20 +3,14 @@ import os
 import shutil
 import tempfile
 
-from requests.exceptions import HTTPError
 
 import upload_rest_api.database
 from file_scraper.scraper import Scraper
-from metax_access import (Metax,
-                          DS_STATE_TECHNICAL_METADATA_GENERATED,
-                          DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
-                          DS_STATE_INVALID_METADATA,
-                          MetaxError)
+from metax_access import Metax
 from siptools.scripts.import_object import (DEFAULT_VERSIONS,
                                             UNKNOWN_VERSION,
                                             NO_VERSION)
 
-from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.exceptions import MissingFileError
 from siptools_research.utils.download import (download_file,
@@ -52,11 +46,13 @@ DEFAULT_PROVENANCE = {
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Generate dataset metadata.
 
-    Generates
-    - preservation identifier for dataset
+    Generates metadata required for creating SIP:
     - provenance metadata if it does not exist already
     - techincal metadata for all dataset files
     - file format specific metadata for files
+
+    Raises InvalidDatasetError if metadata can not be generated due to
+    missing/invalid files or metadata.
 
     :param dataset_id: identifier of dataset
     :param config: path to configuration file
@@ -74,10 +70,6 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         dir=os.path.join(config_object.get('packaging_root'), 'tmp')
     )
 
-    # set default values
-    status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
-    message = "Metadata generation failed"
-
     dataset = metax_client.get_dataset(dataset_id)
     try:
 
@@ -91,27 +83,8 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
             )
 
         _generate_file_metadata(metax_client, dataset_id, tmpdir, config)
-    except (InvalidFileError, MissingFileError) as error:
-        message = "File {} is invalid: {}".format(error.files[0], str(error))
-        status_code = DS_STATE_INVALID_METADATA
-    except InvalidDatasetError as error:
-        message = str(error)[:199] if len(str(error)) > 200 else str(error)
-        status_code = DS_STATE_INVALID_METADATA
-    except MetaxError as error:
-        message = str(error)[:199] if len(str(error)) > 200 else str(error)
-        status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
-        raise
-    except HTTPError:
-        message = "Internal error"
-        status_code = DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
-        raise
-    else:
-        status_code = DS_STATE_TECHNICAL_METADATA_GENERATED
-        message = 'Technical metadata generated'
     finally:
         shutil.rmtree(tmpdir)
-        metax_client.set_preservation_state(dataset_id, state=status_code,
-                                            system_description=message)
 
 
 def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):

@@ -8,6 +8,7 @@ from siptools.scripts import create_addml
 from siptools.scripts import create_audiomd
 
 from siptools_research.exceptions import InvalidFileError
+from siptools_research.exceptions import InvalidFileMetadataError
 
 
 def _kwargs2str(kwargs):
@@ -94,7 +95,7 @@ class _CSVFileXMLMetadata(_XMLMetadata):
                           'csv_record_separator',
                           'csv_quoting_char'):
             if attribute not in self.file_metadata['file_characteristics']:
-                raise InvalidFileError(
+                raise InvalidFileMetadataError(
                     'Required attribute "%s" is missing from file '
                     'characteristics of a CSV file.' % attribute,
                     [self.file_metadata['identifier']]

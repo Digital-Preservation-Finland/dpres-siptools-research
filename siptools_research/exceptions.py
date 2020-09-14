@@ -25,6 +25,15 @@ class InvalidFileMetadataError(InvalidDatasetError):
     SIP can not be created for dataset due to missing or invalid metadata.
     """
 
+    def __init__(self, message, files=None):
+        """Initialize exception.
+
+        :param message: Error message
+        :param files: List of invalid files
+        """
+        super(InvalidFileMetadataError, self).__init__(message)
+        self.files = files
+
 
 class InvalidContractMetadataError(InvalidDatasetError):
     """Exception raised when dataset metadata is invalid.

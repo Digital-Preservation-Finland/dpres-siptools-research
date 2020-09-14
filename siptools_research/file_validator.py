@@ -2,19 +2,15 @@
 import os
 
 from file_scraper.scraper import Scraper
-from metax_access.metax import (Metax, DS_STATE_VALIDATING_METADATA,
-                                DS_STATE_INVALID_METADATA,
-                                DS_STATE_VALID_METADATA,
-                                DS_STATE_METADATA_VALIDATION_FAILED)
+from metax_access.metax import Metax
 
 import upload_rest_api.database
 
 from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.exceptions import MissingFileError
-from siptools_research.utils.download import (
-    download_file, FileNotAvailableError, FileAccessError
-)
+from siptools_research.utils.download import (download_file,
+                                              FileNotAvailableError)
 
 
 def _download_files(metax_client, dataset_id, config_file, missing_files):
@@ -43,14 +39,12 @@ def _download_files(metax_client, dataset_id, config_file, missing_files):
 def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
     """Validate all files in a dataset.
 
+    Raises InvalidFileError or MissingFileError if files are invalid.
+
     :param dataset_id: dataset identifier
     :param config: configuration file path
     :returns: ``True`` if all files are well-formed.
     """
-    # set default values
-    message = "Files passed validation"
-    status_code = DS_STATE_VALID_METADATA
-
     invalid_files = []
     missing_files = []
     conf = Configuration(config_file)
@@ -62,48 +56,21 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
     )
     cache_path = os.path.join(conf.get("packaging_root"), "file_cache")
 
-    try:
-        metax_client.set_preservation_state(
-            dataset_id,
-            state=DS_STATE_VALIDATING_METADATA
+    dataset_files = _download_files(
+        metax_client, dataset_id, config_file, missing_files
+    )
+    if missing_files:
+        raise MissingFileError(
+            "{} files are missing".format(len(missing_files)), missing_files
         )
-        dataset_files = _download_files(
-            metax_client, dataset_id, config_file, missing_files
+
+    for dataset_file in dataset_files:
+        _validate_file(dataset_file, cache_path, invalid_files)
+    if invalid_files:
+        raise InvalidFileError(
+            "{} files are not well-formed".format(len(invalid_files)),
+            invalid_files
         )
-        if missing_files:
-            raise MissingFileError(
-                "{} files are missing".format(len(missing_files)),
-                missing_files
-            )
-
-        for dataset_file in dataset_files:
-            _validate_file(dataset_file, cache_path, invalid_files)
-        if invalid_files:
-            raise InvalidFileError(
-                "{} files are not well-formed".format(len(invalid_files)),
-                invalid_files
-            )
-
-    except MissingFileError as exception:
-        status_code = DS_STATE_INVALID_METADATA
-        message = "{}:\n{}".format(str(exception), "\n".join(exception.files))
-        raise
-
-    except InvalidFileError as exception:
-        status_code = DS_STATE_INVALID_METADATA
-        message = "{}:\n{}".format(str(exception), "\n".join(exception.files))
-        raise
-
-    except FileAccessError as exception:
-        status_code = DS_STATE_METADATA_VALIDATION_FAILED
-        message = str(exception)
-        raise
-
-    finally:
-        message = message[:199] if len(message) > 200 else message
-        metax_client.set_preservation_state(dataset_id,
-                                            state=status_code,
-                                            system_description=message)
 
     return True
 

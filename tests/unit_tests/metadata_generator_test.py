@@ -7,9 +7,12 @@ import pytest
 import lxml.etree
 from requests.exceptions import HTTPError
 from siptools.utils import decode_path
-from metax_access import Metax, DatasetNotAvailableError
+from metax_access import DatasetNotAvailableError
 
 from siptools_research.metadata_generator import generate_metadata
+from siptools_research.exceptions import MissingFileError
+from siptools_research.exceptions import InvalidFileMetadataError
+from siptools_research.exceptions import InvalidFileError
 import tests.conftest
 from tests.conftest import mock_metax_dataset
 import tests.metax_data.datasets
@@ -70,13 +73,12 @@ def test_generate_metadata(requests_mock,
     """Test metadata generation.
 
     Generates metadata for a dataset that contains one file, and checks that
-    correct file characteristics and XML metadata are sent to Metax. Lastly the
-    preservation state should be updated.
+    correct file characteristics and XML metadata are sent to Metax.
 
     :param requests_mock: Mocker object
     :param path: path to file for which the metadata is created
-    :param file_format: excepted file format
-    :param encoding: excepted character set
+    :param file_format: expected file format
+    :param encoding: expected character set
     :param namespace: name space of xml metadata
     :returns: ``None``
     """
@@ -111,13 +113,6 @@ def test_generate_metadata(requests_mock,
         # The expected namespace should be defined in posted XML
         assert namespace in xml.nsmap.values()
 
-    # Verify that preservation state is set as
-    # DS_STATE_TECHNICAL_METADATA_GENERATED
-    request_body = requests_mock.last_request.json()
-    assert request_body['preservation_description'] \
-        == "Technical metadata generated"
-    assert request_body['preservation_state'] == 20
-
 
 @pytest.mark.usefixtures('testpath')
 def test_generate_metadata_unrecognized(requests_mock):
@@ -134,16 +129,12 @@ def test_generate_metadata_unrecognized(requests_mock):
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       text="")
 
-    generate_metadata('dataset_identifier',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+    with pytest.raises(InvalidFileError) as exception_info:
+        generate_metadata('dataset_identifier',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Assert preservation state is set correctly
-    assert requests_mock.last_request.method == "PATCH"
-    body = requests_mock.last_request.json()
-    assert body['preservation_state'] == 40
-    assert body['preservation_description'] \
-        == ('File pid:urn:identifier is invalid: File format was not '
-            'recognized.')
+    assert str(exception_info.value) == 'File format was not recognized.'
+    assert exception_info.value.files == ['pid:urn:identifier']
 
 
 @pytest.mark.usefixtures('testpath')
@@ -260,17 +251,15 @@ def test_generate_metadata_missing_csv_info(requests_mock):
     mock_metax_dataset(requests_mock, files=[invalid_file_metadata])
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download")
 
-    generate_metadata('dataset_identifier',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+    with pytest.raises(InvalidFileMetadataError) as exception_info:
+        generate_metadata('dataset_identifier',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Assert preservation state is set correctly
-    assert requests_mock.last_request.method == "PATCH"
-    body = requests_mock.last_request.json()
-    assert body['preservation_state'] == 40
-    assert body['preservation_description'] \
-        == ('File pid:urn:identifier is invalid: Required attribute '
-            '"csv_delimiter" is missing from file characteristics of a CSV '
-            'file.')
+    assert str(exception_info.value) == (
+        'Required attribute "csv_delimiter" is missing from file '
+        'characteristics of a CSV file.'
+    )
+    assert exception_info.value.files == ['pid:urn:identifier']
 
 
 # pylint: disable=invalid-name
@@ -303,46 +292,41 @@ def test_generate_metadata_provenance(provenance, requests_mock):
 
     if provenance:
         # Some provenance existed already, so the metadata should not be
-        # patched. Only the preservation status should be updated.
-        assert len(patch_dataset_metadata.request_history) == 1
+        # patched.
+        assert not patch_dataset_metadata.request_history
     else:
         # Provenance list did not exist in metadata (or it was empty).
-        # Default provenance should be added to Metax, and the preservation
-        # status should be updated.
-        assert len(patch_dataset_metadata.request_history) == 2
-        provenance_patch = patch_dataset_metadata.request_history[-2].json()
+        # Default provenance should be added to Metax.
+        assert len(patch_dataset_metadata.request_history) == 1
+        provenance_patch = patch_dataset_metadata.last_request.json()
         assert provenance_patch['research_dataset']['provenance'] \
             == [DEFAULT_PROVENANCE]
 
 
 @pytest.mark.usefixtures('testpath')
-def test_generate_metadata_dataset_not_found(monkeypatch, requests_mock):
-    """Verifies that preservation state is not set when
-    DatasetNotAvailableError is raised by Metax get_dataset.
+def test_generate_metadata_dataset_not_found(requests_mock):
+    """Test metadatageneration for dataset that does not exist.
+
+    DatasetNotAvailableError should be raised.
 
     :param monkeypatch: Monkeypatch object
     :param requests_mock: Mocker object
     :returns: ``None``
     """
+    requests_mock.get('https://metaksi/rest/v1/datasets/foobar',
+                      status_code=404)
 
-    def _get_dataset_exception(*_arg1):
-        raise DatasetNotAvailableError
-
-    monkeypatch.setattr(Metax, "get_dataset", _get_dataset_exception)
-    with pytest.raises(DatasetNotAvailableError):
+    expected_error = 'Dataset not found'
+    with pytest.raises(DatasetNotAvailableError, match=expected_error):
         generate_metadata('foobar',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # No HTTP request done
-    assert not requests_mock.request_history
 
 
 @pytest.mark.usefixtures('testpath')
 def test_generate_metadata_ida_download_error(requests_mock):
     """Test metadatageneration when file is available.
 
-    If file is not available, the dataset is not valid. The preservation state
-    should be to "Invalid metadata".
+    If file is not available, the dataset is not valid.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -351,20 +335,17 @@ def test_generate_metadata_ida_download_error(requests_mock):
     requests_mock.get('https://ida.test/files/pid:urn:identifier/download',
                       status_code=404)
 
-    generate_metadata('dataset_identifier',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+    with pytest.raises(MissingFileError) as exception_info:
+        generate_metadata('dataset_identifier',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Assert preservation state is set correctly
-    assert requests_mock.last_request.method == "PATCH"
-    body = requests_mock.last_request.json()
-    assert body['preservation_state'] == 40
-    assert body['preservation_description'] \
-        == "File pid:urn:identifier is invalid: File is not available"
+    assert str(exception_info.value) == "File is not available"
+    assert exception_info.value.files == ['pid:urn:identifier']
 
 
 @pytest.mark.usefixtures('testpath')
 def test_generate_metadata_httperror(requests_mock):
-    """Verifies that preservation state is set when HTTPError occurs.
+    """Test metadata generation when Metax fails.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -376,15 +357,10 @@ def test_generate_metadata_httperror(requests_mock):
         reason='Fake error'
     )
 
-    with pytest.raises(HTTPError):
-        generate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # Assert preservation state is set correctly
-    assert requests_mock.last_request.method == "PATCH"
-    body = requests_mock.last_request.json()
-    assert body['preservation_state'] == 30
     # TODO: The message of HTTPErrors will be different in newer versions of
     # requests library (this test works with version 2.6 which is available in
     # centos7 repositories).
-    assert body['preservation_description'] == "Internal error"
+    expected_error = "500 Server Error: Fake error"
+    with pytest.raises(HTTPError, match=expected_error):
+        generate_metadata('dataset_identifier',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)

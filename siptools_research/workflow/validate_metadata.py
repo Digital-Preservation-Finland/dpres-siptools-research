@@ -43,11 +43,7 @@ class ValidateMetadata(WorkflowTask):
         :returns: ``None``
         """
         # Validate dataset metadata
-        validate_metadata(
-            self.dataset_id,
-            self.config,
-            set_intermediate_state=False
-        )
+        validate_metadata(self.dataset_id, self.config)
 
         with self.output().open('w') as log:
             log.write('Dataset id=' + self.dataset_id)
