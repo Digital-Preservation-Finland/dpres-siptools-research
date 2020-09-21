@@ -47,7 +47,8 @@ def validate_metadata(
         dataset_id,
         config="/etc/siptools_research.conf",
         dummy_doi="false",
-        set_preservation_state=False
+        set_preservation_state=False,
+        set_intermediate_state=True
 ):
     """Reads dataset metadata, file metadata, and additional techMD XML from
     Metax and validates them against schemas. Raises error if dataset is not
@@ -73,10 +74,11 @@ def validate_metadata(
         status_code = DS_STATE_METADATA_VALIDATION_FAILED
         message = "Metadata validation failed"
 
-        metax_client.set_preservation_state(
-            dataset_id,
-            state=DS_STATE_VALIDATING_METADATA
-        )
+        if set_intermediate_state:
+            metax_client.set_preservation_state(
+                dataset_id,
+                state=DS_STATE_VALIDATING_METADATA
+            )
 
         # Get dataset metadata from Metax
         dataset_metadata = metax_client.get_dataset(dataset_id)

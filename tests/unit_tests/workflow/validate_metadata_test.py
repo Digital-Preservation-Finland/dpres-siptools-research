@@ -17,9 +17,6 @@ def test_validatemetadata(testpath, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    patch_request = requests_mock.patch(
-        'https://metaksi/rest/v1/datasets/validate_metadata_test_dataset',
-    )
     requests_mock.get(
         'https://metaksi/rest/v1/contracts/contract_identifier',
         json={
@@ -57,15 +54,12 @@ def test_validatemetadata(testpath, requests_mock):
 
     # Run task
     task.run()
-    # verify that dataset preservation_state is set as validating
-    assert patch_request.last_request.json().get(
-        'preservation_state') == 65
 
     assert task.complete()
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_invalid_metadata(testpath, requests_mock):
+def test_invalid_metadata(testpath):
     """Test ValidateMetadata class. Run task for dataset that has invalid
     metadata. The dataset is missing attribute: 'type' for each object in files
     list.
@@ -74,10 +68,6 @@ def test_invalid_metadata(testpath, requests_mock):
     :returns: ``None``
     """
 
-    patch_request = requests_mock.patch(
-        'https://metaksi/rest/v1/datasets/'
-        'validate_metadata_test_dataset_invalid_metadata',
-    )
     # Create "logs" directory
     os.mkdir(os.path.join(testpath, 'logs'))
 
@@ -92,9 +82,6 @@ def test_invalid_metadata(testpath, requests_mock):
     # Run task
     with pytest.raises(InvalidMetadataError) as exc:
         task.run()
-
-    # verify that dataset preservation_state is set as validating
-    assert patch_request.last_request.json().get('preservation_state') == 65
 
     # run should fail the following error message:
     assert "'contract' is a required property" in str(exc.value)
