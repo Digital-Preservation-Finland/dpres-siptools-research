@@ -2,8 +2,10 @@
 
 import os
 import datetime
-import pytest
+
+import requests
 import luigi.cmdline
+import pytest
 import pymongo
 
 from metax_access import (
@@ -101,6 +103,20 @@ class InvalidDatasetMetadataTask(FailingTestTask):
         :returns:  ``None``
         """
         raise InvalidDatasetMetadataError('Missing some important metadata')
+
+
+class HTTPRequestTask(WorkflowTask):
+    """Test class that makes HTTP a request."""
+
+    failure_message = 'HTTP request failed'
+
+    def run(self):
+        """Send a HTTP GET request to https://test.foo/bar.
+
+        :returns:  ``None``
+        """
+        response = requests.get('https://test.foo/bar')
+        response.raise_for_status()
 
 
 # pylint: disable=unused-argument
@@ -227,6 +243,33 @@ def test_invalidmetadataerror(testpath, requests_mock):
 
     # Check the method of last HTTP request
     assert requests_mock.last_request.method == 'PATCH'
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_logging(testpath, requests_mock, caplog):
+    """Test logging failed HTTP responses."""
+    # Create mocked response for HTTP request.
+    requests_mock.get('https://test.foo/bar',
+                      status_code=403,
+                      reason='Server error',
+                      text='This server sucks')
+
+    # Run task that sends HTTP request
+    run_luigi_task('HTTPRequestTask', testpath)
+
+    # Check errors in logs
+    errors = [r for r in caplog.records if r.levelname == 'ERROR']
+
+    # first logged error should be the raised HTTPError
+    assert errors[0].exc_text.startswith('Traceback ')
+    exception = errors[0].exc_info[1]
+    assert isinstance(exception, requests.HTTPError)
+    assert str(exception) == '403 Client Error: Server error'
+
+    # second error should be additional information about the failed HTTP
+    # response
+    assert errors[1].msg == ('HTTP request to https://test.foo/bar failed. '
+                             'Response from server was: This server sucks')
 
 
 # TODO: Test for WorkflowWrapperTask

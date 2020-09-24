@@ -1,6 +1,5 @@
 """Luigi task that gets files from Ida."""
 import os
-import logging
 
 import luigi
 
@@ -13,9 +12,6 @@ from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
-
-# Print debug messages to stdout
-logging.basicConfig(level=logging.DEBUG)
 
 
 class GetFiles(WorkflowTask):
