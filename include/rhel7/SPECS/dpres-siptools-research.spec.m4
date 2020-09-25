@@ -47,6 +47,8 @@ BuildRequires:  python-setuptools
 BuildRequires:  pytest
 BuildRequires:  python-sphinx
 BuildRequires:  python-jsonschema2rst
+# python2-pytest-catchlog is required for running tests with pytest<3.3
+BuildRequires:  python2-pytest-catchlog
 
 %description
 Digital Preservation Packaging Service for Research datasets
