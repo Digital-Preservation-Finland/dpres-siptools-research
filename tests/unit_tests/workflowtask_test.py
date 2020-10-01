@@ -9,6 +9,7 @@ import pytest
 import pymongo
 
 from metax_access import (
+    Metax,
     DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
     DS_STATE_METADATA_VALIDATION_FAILED
 )
@@ -105,18 +106,24 @@ class InvalidDatasetMetadataTask(FailingTestTask):
         raise InvalidDatasetMetadataError('Missing some important metadata')
 
 
-class HTTPRequestTask(WorkflowTask):
-    """Test class that makes HTTP a request."""
+class MetaxTask(WorkflowTask):
+    """Test class that retrieves dataset from Metax."""
 
-    failure_message = 'HTTP request failed'
+    failure_message = 'Failed retrieving dataste from Metax'
 
     def run(self):
-        """Send a HTTP GET request to https://test.foo/bar.
+        """Get dataset 1 from Metax.
 
         :returns:  ``None``
         """
-        response = requests.get('https://test.foo/bar')
-        response.raise_for_status()
+        config_object = Configuration(self.config)
+        metax_client = Metax(
+            config_object.get('metax_url'),
+            config_object.get('metax_user'),
+            config_object.get('metax_password'),
+            verify=config_object.getboolean('metax_ssl_verification')
+        )
+        metax_client.get_dataset('1')
 
 
 # pylint: disable=unused-argument
@@ -249,27 +256,28 @@ def test_invalidmetadataerror(testpath, requests_mock):
 def test_logging(testpath, requests_mock, caplog):
     """Test logging failed HTTP responses."""
     # Create mocked response for HTTP request.
-    requests_mock.get('https://test.foo/bar',
+    requests_mock.get('https://metaksi/rest/v1/datasets/1',
                       status_code=403,
-                      reason='Server error',
-                      text='This server sucks')
+                      reason='Access denied',
+                      text='No rights to view dataset')
 
     # Run task that sends HTTP request
-    run_luigi_task('HTTPRequestTask', testpath)
+    run_luigi_task('MetaxTask', testpath)
 
     # Check errors in logs
     errors = [r for r in caplog.records if r.levelname == 'ERROR']
 
-    # first logged error should be the raised HTTPError
-    assert errors[0].exc_text.startswith('Traceback ')
-    exception = errors[0].exc_info[1]
-    assert isinstance(exception, requests.HTTPError)
-    assert str(exception) == '403 Client Error: Server error'
+    # First error should contain the the body of response to failed request
+    assert errors[0].msg == (
+        'HTTP request to https://metaksi/rest/v1/datasets/1 failed. '
+        'Response from server was: No rights to view dataset'
+    )
 
-    # second error should be additional information about the failed HTTP
-    # response
-    assert errors[1].msg == ('HTTP request to https://test.foo/bar failed. '
-                             'Response from server was: This server sucks')
+    # Second logged error should be the raised HTTPError
+    assert errors[1].exc_text.startswith('Traceback ')
+    exception = errors[1].exc_info[1]
+    assert isinstance(exception, requests.HTTPError)
+    assert str(exception) == '403 Client Error: Access denied'
 
 
 # TODO: Test for WorkflowWrapperTask

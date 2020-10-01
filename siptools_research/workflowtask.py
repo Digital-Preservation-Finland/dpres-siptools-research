@@ -1,10 +1,8 @@
 """Base task classes for the workflow tasks."""
 import os
 
-import logging
 import luigi
 import metax_access
-import requests
 
 from siptools_research.config import Configuration
 import siptools_research.exceptions
@@ -172,13 +170,6 @@ def report_task_failure(task, exception):
             state=metax_access.DS_STATE_METADATA_VALIDATION_FAILED,
             system_description=_get_description(task, exception)
         )
-
-    if isinstance(exception, requests.HTTPError):
-        message \
-            = 'HTTP request to {} failed. Response from server was: {}'.format(
-                exception.response.url, exception.response.text
-            )
-        logging.error(message)
 
 
 def _get_description(task, exception):
