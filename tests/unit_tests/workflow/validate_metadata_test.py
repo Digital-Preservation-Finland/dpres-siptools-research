@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.workflow.validate_metadata` module."""
+"""Tests for :mod:`siptools_research.workflow.validate_metadata`."""
 
 import os
 import pytest
@@ -63,8 +63,8 @@ def test_validatemetadata(testpath, requests_mock):
 def test_invalid_metadata(testpath):
     """Test ValidateMetadata class.
 
-    Run task for dataset that has invalid metadata. The dataset is missing
-    attribute: 'type' for each object in files list.
+    Run task for dataset that has invalid metadata. The dataset is
+    missing attribute: 'type' for each object in files list.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``

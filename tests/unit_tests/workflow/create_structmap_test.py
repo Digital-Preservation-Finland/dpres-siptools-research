@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.create_structmap` module"""
+"""Tests for :mod:`siptools_research.workflow.create_structmap`."""
 
 import os
 import shutil
@@ -69,7 +69,7 @@ def test_create_structmap_ok(testpath):
 @pytest.mark.usefixtures('testmongoclient')
 # pylint: disable=invalid-name
 def test_create_structmap_without_directories(testpath):
-    """Test creating structmap for dataset that does not have directories.
+    """Test creating structmap for dataset without directories.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
@@ -92,8 +92,7 @@ def test_create_structmap_without_directories(testpath):
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_filesec_othermd(testpath):
-    """Test CreateStructMap task with dataset that has some othermd metadata
-    for files.
+    """Test CreateStructMap task for dataset with othermd metadata.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
@@ -115,7 +114,9 @@ def test_filesec_othermd(testpath):
 
 
 def validate_filesec_file(filesec_file):
-    """Validates logical filesec XML-file. Checks that XML-file has the
+    """Validate logical filesec XML-file.
+
+    Checks that XML-file has the
     correct elements. Raises exception if XML is not valid.
 
     :param filesec_file: XML file to be validated
@@ -150,7 +151,9 @@ def validate_filesec_file(filesec_file):
 
 
 def validate_structmap_file(structmap_file):
-    """Validates logical structuremap XML-file. Checks that XML-file has the
+    """Validate logical structuremap XML-file.
+
+    Checks that XML-file has the
     correct elements. Raises exception if XML is not valid.
 
     :param structmap_file: XML file to be validated

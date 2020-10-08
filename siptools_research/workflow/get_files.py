@@ -15,22 +15,24 @@ from siptools_research.config import Configuration
 
 
 class GetFiles(WorkflowTask):
-    """A task that reads file metadata from Metax and downloads the required
-    files. Task requires that workspace directory exists and metadata is
+    """A task that reads downloads the dataset files to workspace.
+
+    Task requires that workspace directory exists and metadata is
     validated.
 
     Because output files are not known beforehand, a false target
-    `get-files.finished` is created into workspace directory to notify luigi
-    that this task has finished.
+    `get-files.finished` is created into workspace directory to notify
+    luigi that this task has finished.
 
-    Task requires that workspace directory is created and dataset metadata is
-    validated.
+    Task requires that workspace directory is created and dataset
+    metadata is validated.
     """
+
     success_message = 'Files were downloaded'
     failure_message = 'Could not get files'
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """List the Tasks that this Task depends on.
 
         :returns: list of required tasks
         """
@@ -42,7 +44,7 @@ class GetFiles(WorkflowTask):
                                  config=self.config)]
 
     def output(self):
-        """The output that this Task produces.
+        """Return the output target of this Task.
 
         :returns: local target: ``task-getfiles.finished``
         :rtype: LocalTarget
@@ -52,7 +54,7 @@ class GetFiles(WorkflowTask):
         )
 
     def run(self):
-        """Reads list of required files from Metax and downloads them.
+        """Read list of required files from Metax and download them.
 
         :returns: ``None``
         """
@@ -72,8 +74,9 @@ class GetFiles(WorkflowTask):
             output.write("Dataset id=" + self.dataset_id)
 
     def _download_files(self, dataset_files):
-        """Reads and writes files on a path based on
-        ``file_path`` in Metax
+        """Download dataset fiels.
+
+        Files are written to path based on ``file_path`` in Metax.
 
         :param dataset_files: list of files metadata dicts
         :returns: ``None``
@@ -97,8 +100,8 @@ class GetFiles(WorkflowTask):
                     )
                 )
 
-            # Create the download directory for file if it does not exist
-            # already
+            # Create the download directory for file if it does not
+            # exist already
             if not os.path.isdir(os.path.dirname(target_path)):
                 # TODO: Use exist_ok -parameter when moving to python3
                 os.makedirs(os.path.dirname(target_path))

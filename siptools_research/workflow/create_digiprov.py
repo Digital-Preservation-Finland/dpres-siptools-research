@@ -17,23 +17,24 @@ from siptools_research.config import Configuration
 
 
 class CreateProvenanceInformation(WorkflowTask):
-    """Creates METS documents that contain PREMIS event element for each
-    provenance event. Each document contains a digiprovMD element identified by
-    hash generated from the document filename. The METS documents are written
-    to `<sip_creation_path>/<event_type>-event.xml`. Because siptools requires
-    these undeterministic filenames, a false target
+    """Create provenance information.
+
+    Creates METS documents that contain PREMIS event element for each
+    provenance event. Each document contains a digiprovMD element
+    identified by hash generated from the document filename. The METS
+    documents are written to
+    `<sip_creation_path>/<event_type>-event.xml`. Because siptools
+    requires these undeterministic filenames, a false target
     `create-provenance-information.finished` is created into workspace
     directory to notify luigi (and dependent tasks) that this task has
     finished.
 
-    The Task requires that workspace directory is created and dataset metadata
-    is validated.
+    The Task requires that workspace directory is created and dataset
+    metadata is validated.
     """
 
     def __init__(self, *args, **kwargs):
-        """Calls WorkflowTask's __init__ and sets additional instance
-        variables.
-        """
+        """Initialize task."""
         super(CreateProvenanceInformation, self).__init__(*args, **kwargs)
         config_object = Configuration(self.config)
         metax = Metax(
@@ -48,7 +49,7 @@ class CreateProvenanceInformation(WorkflowTask):
     failure_message = "Could not create provenance metadata"
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """List the Tasks that this Task depends on.
 
         :returns: CreateWorkspace task and ValidateMetadata task
         """
@@ -66,7 +67,7 @@ class CreateProvenanceInformation(WorkflowTask):
         ]
 
     def output(self):
-        """The output that this Task produces.
+        """List the output targets of the task.
 
         A false target `create-provenance-information.finished` is created
         into workspace directory to notify luigi (and dependent tasks) that
@@ -94,7 +95,9 @@ class CreateProvenanceInformation(WorkflowTask):
         }
 
     def run(self):
-        """Reads file metadata from Metax and writes digital provenance
+        """Create premis events.
+
+        Reads file metadata from Metax and writes digital provenance
         information to `sip-in-progress/creation-event.xml` file.
 
         :returns: None
@@ -108,8 +111,11 @@ class CreateProvenanceInformation(WorkflowTask):
 
 
 def _create_premis_events(dataset_id, workspace, config):
-    """Reads dataset provenance metadata from Metax. For each provenance
-    object a METS document that contains a PREMIS event element is created.
+    """Create premis events from provenance metadata.
+
+    Reads dataset provenance metadata from Metax. For each provenance
+    object a METS document that contains a PREMIS event element is
+    created.
 
     :param dataset_id: dataset identifier
     :param workspace: SIP creation directory

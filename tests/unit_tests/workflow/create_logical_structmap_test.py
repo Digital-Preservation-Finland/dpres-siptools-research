@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.create_structmap` module"""
+"""Tests for :mod:`siptools_research.workflow.create_structmap`."""
 
 import os
 
@@ -110,8 +110,9 @@ def test_create_structmap_ok(testpath, requests_mock):
 
 
 def test_get_dirpath_dict(requests_mock):
-    """Test that get_dirpath_dict returns the correct dictionary, which maps
-    dirpath -> use_category.
+    """Test that get_dirpath_dict returns the correct dictionary.
+
+    The dictionary maps dirpath to use_category.
 
     :param requests_mock: Mocker object
     """
@@ -154,15 +155,17 @@ def test_get_dirpath_dict(requests_mock):
 
 # pylint: disable=invalid-name
 def test_get_dirpath_dict_no_directories():
-    """Test that get_dirpath_dict returns an empty dict when no directories
-    are defined in the research_dataset.
+    """Test get_dirpath_dict function with dataset without directories.
+
+    The function should return an empty dict when no directories are
+    defined in the research_dataset.
     """
     metax_client = Metax("https://metaksi", "test", "test")
     assert not get_dirpath_dict(metax_client, {"research_dataset": {}})
 
 
 def test_find_dir_use_category():
-    """Test that find_dir_use_category returns the correct label"""
+    """Test that find_dir_use_category returns the correct label."""
     dirpath_dict = {
         "/test1": {"pref_label": {"en": "testdir1"}},
         "/test2": {"pref_label": {"en": "testdir2"}}
@@ -196,8 +199,10 @@ def test_find_dir_use_category():
 
 
 def validate_logical_structmap_file(logical_structmap_file):
-    """Validates logical structuremap XML-file. Checks that XML-file has the
-    correct elements. Raises exception if XML is not valid.
+    """Validate logical structuremap XML-file.
+
+    Checks that XML-file has the correct elements. Raises exception if
+    XML is not valid.
 
     :param logical_structmap_file: XML file to be validated
     :returns: ``None``

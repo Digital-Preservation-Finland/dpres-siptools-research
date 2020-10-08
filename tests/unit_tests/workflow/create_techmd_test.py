@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.create_techmd` module"""
+"""Test the :mod:`siptools_research.workflow.create_techmd` module."""
 
 import os
 import shutil
@@ -38,8 +38,8 @@ def test_create_techmd_ok(testpath, requests_mock):
             content=mix.read()
         )
 
-    # Create workspace with empty "logs" and "sip-in-progress' directories in
-    # temporary directory
+    # Create workspace with empty "logs" and "sip-in-progress'
+    # directories in temporary directory
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
@@ -136,7 +136,7 @@ def test_create_techmd_ok(testpath, requests_mock):
 @pytest.mark.usefixtures('mock_metax_access')
 # pylint: disable=invalid-name
 def test_create_techmd_without_charset(testpath, requests_mock):
-    """Test the task with dataset that has files without defined charset
+    """Test techmd creation for files without defined charset.
 
     :param requests_mock: Mocker object
     :param testpath: Temporary directory fixture
@@ -147,8 +147,8 @@ def test_create_techmd_without_charset(testpath, requests_mock):
         json=[]
     )
 
-    # Create workspace with empty "logs" and "sip-in-progress' directories in
-    # temporary directory
+    # Create workspace with empty "logs" and "sip-in-progress'
+    # directories in temporary directory
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
@@ -177,8 +177,9 @@ def test_create_techmd_without_charset(testpath, requests_mock):
     )
     tree = lxml.etree.parse(output_file)
     root = tree.getroot()
-    # If charset is not defined the siptools.import_objects default value is
-    # used. Siptools recognizes ASCII text files as UTF-8 text files.
+    # If charset is not defined the siptools.import_objects default
+    # value is used. Siptools recognizes ASCII text files as UTF-8 text
+    # files.
     format_name = root.xpath("//premis:formatName",
                              namespaces=NAMESPACES)[0].text
     assert format_name == 'text/html; charset=UTF-8'
@@ -186,9 +187,10 @@ def test_create_techmd_without_charset(testpath, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_xml_metadata_file_missing(testpath, requests_mock):
-    """Test the workflow task CreateTechnicalMetadata module when XML
-    metadata for a file is missing. Behavior not specified yet. Currently
-    throws an error.
+    """Test the workflow task when XML metadata is missing.
+
+    Behavior not specified yet. Currently the task throws an error if
+    XML metadata for a file is missing.
 
     :param requests_mock: Mocker object
     :param testpath: Temporary directory fixture
@@ -200,8 +202,8 @@ def test_xml_metadata_file_missing(testpath, requests_mock):
                       "?namespace=http://www.loc.gov/mix/v20",
                       status_code=404)
 
-    # Create workspace with empty "logs" and "sip-in-progress' directories in
-    # temporary directory
+    # Create workspace with empty "logs" and "sip-in-progress'
+    # directories in temporary directory
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
     sipdirectory = os.path.join(workspace, 'sip-in-progress')

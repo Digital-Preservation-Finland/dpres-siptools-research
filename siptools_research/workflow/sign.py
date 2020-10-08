@@ -1,4 +1,4 @@
-"""Luigi task that signs METS document"""
+"""Luigi task that signs METS document."""
 
 import os
 
@@ -12,16 +12,18 @@ from siptools_research.workflow.create_mets import CreateMets
 
 
 class SignSIP(WorkflowTask):
-    """Task that signs METS file. Signature is written to
-    `<sip_creation_path>/signature.sig`.
+    """Task that signs METS file.
 
-    Task requires METS file to be created."""
+    Signature is written to `<sip_creation_path>/signature.sig`.
+
+    Task requires METS file to be created.
+    """
 
     success_message = "Signing SIP completed succesfully"
     failure_message = "Could not sign SIP"
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """List the Tasks that this Task depends on.
 
         :returns: CreateMets task
         """
@@ -30,7 +32,7 @@ class SignSIP(WorkflowTask):
                           config=self.config)
 
     def output(self):
-        """The output that this Task produces.
+        """Return the output target of this Task.
 
         :returns: local target: `sip-in-progress/signature.sig`
         :rtype: LocalTarget
@@ -45,7 +47,6 @@ class SignSIP(WorkflowTask):
 
         :returns: ``None``
         """
-
         signature = dpres_signature.signature.create_signature(
             os.path.join(self.sip_creation_path, 'signature.sig'),
             Configuration(self.config).get("sip_sign_key"),

@@ -1,6 +1,4 @@
-"""A luigi task that reads the ingest report locations from preservation
-service and updates preservation status to Metax.
-"""
+"""Task that reports preservation status after SIP ingestion."""
 
 import os
 from luigi import LocalTarget
@@ -13,13 +11,15 @@ from siptools_research.config import Configuration
 
 
 class ReportPreservationStatus(WorkflowTask):
-    """A workflowtask that updates the preservation status of dataset in Metax
-    based on the directory where ingest report was found in digital
-    preservation system.
+    """Task that reports preservation status after SIP ingestion.
+
+    A workflowtask that updates the preservation status of dataset in
+    Metax based on the directory where ingest report was found in
+    digital preservation system.
 
     A false target `report-preservation-status.finished` is created into
-    workspace directory to notify luigi (and dependent tasks) that this task
-    has finished.
+    workspace directory to notify luigi (and dependent tasks) that this
+    task has finished.
 
     Task requires SIP to be sent to digital preservation service and the
     validation to be finished.
@@ -29,9 +29,10 @@ class ReportPreservationStatus(WorkflowTask):
     failure_message = "Dataset was not accepted to preservation"
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """List the Tasks that this Task depends on.
 
-        :returns: list of required tasks"""
+        :returns: list of required tasks
+        """
         return [ValidateSIP(workspace=self.workspace,
                             dataset_id=self.dataset_id,
                             config=self.config),
@@ -40,7 +41,7 @@ class ReportPreservationStatus(WorkflowTask):
                             config=self.config)]
 
     def output(self):
-        """The output that this Task produces.
+        """Return the output targets of this Task.
 
         :returns: local target: `report-preservation-status.finished`
         :rtype: LocalTarget
@@ -52,12 +53,13 @@ class ReportPreservationStatus(WorkflowTask):
         )
 
     def run(self):
-        """Checks the path of ingest report file in digital preservation
-        service. If the ingest report is in ~/accepted/.../ directory, the
-        dataset has passed validation. The preservation status is reported to
-        Metax. If the report is found in ~/rejected/.../ directory, or
-        somewhere else, an exception is risen. The event handlers will deal
-        with the exceptions.
+        """Report preservation status to Metax.
+
+        Checks the path of ingest report file in digital preservation
+        service. If the ingest report is in ~/accepted/.../ directory,
+        the dataset has passed validation.If the report is found in
+        ~/rejected/.../ directory, or somewhere else, an exception is
+        risen. The event handlers will deal with the exceptions.
 
         :returns: ``None``
         """

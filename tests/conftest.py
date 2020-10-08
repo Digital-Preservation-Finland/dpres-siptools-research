@@ -1,4 +1,4 @@
-"""Configure py.test default values and functionality"""
+"""Configure py.test default values and functionality."""
 
 import copy
 import os
@@ -44,13 +44,13 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 
 @pytest.fixture(autouse=True)
 def mock_os_link(monkeypatch):
-    """Patch os.link with shutil.copyfile"""
+    """Patch os.link with shutil.copyfile."""
     monkeypatch.setattr(os, "link", shutil.copyfile)
 
 
 @pytest.fixture(autouse=True)
 def mock_upload_conf(monkeypatch):
-    """Patch upload_rest_api configuration parsing"""
+    """Patch upload_rest_api configuration parsing."""
     monkeypatch.setattr(
         upload_rest_api.database, "parse_conf",
         lambda conf: {"MONGO_HOST": "localhost", "MONGO_PORT": 27017}
@@ -59,8 +59,10 @@ def mock_upload_conf(monkeypatch):
 
 @pytest.fixture(autouse=False)
 def mock_metax_access(monkeypatch):
-    """Mock metax_access GET requests to files or datasets to return
-    mock functions from metax_data.datasets and metax_data.files modules.
+    """Mock metax_access GET requests.
+
+    Replaces get-methods of Metax object with mock functions from
+    metax_data package.
     """
     monkeypatch.setattr(Metax,
                         "get_dataset",
@@ -75,10 +77,11 @@ def mock_metax_access(monkeypatch):
 
 @pytest.fixture(scope="function")
 def testmongoclient(monkeypatch):
-    """Monkeypatch pymongo.MongoClient class. An instance of
-    mongomock.MongoClient is created in beginning of test. Whenever
-    pymongo.MongoClient() is called during the test, the already initialized
-    mongomoc.MongoClient is used instead.
+    """Monkeypatch pymongo.MongoClient class.
+
+    An instance of mongomock.MongoClient is created in beginning of
+    test. Whenever pymongo.MongoClient() is called during the test, the
+    already initialized mongomoc.MongoClient is used instead.
 
     :param monkeypatch: pytest `monkeypatch` fixture
     :returns: ``None``
@@ -87,17 +90,19 @@ def testmongoclient(monkeypatch):
     # pylint: disable=unused-argument
 
     def mock_mongoclient(*args, **kwargs):
-        """Returns already initialized mongomock.MongoClient"""
+        """Return already initialized mongomock.MongoClient."""
         return mongoclient
     monkeypatch.setattr(pymongo, 'MongoClient', mock_mongoclient)
 
 
 @pytest.fixture(scope="function")
-# TODO: Replace tmpdir fixture with tmp_path fixture when pytest>=3.9.1 is
-# available on Centos
+# TODO: Replace tmpdir fixture with tmp_path fixture when pytest>=3.9.1
+# is available on Centos
 def testpath(tmpdir, monkeypatch):
-    """Create a temporary workspace root directory and mock configuration
-    module to use it as workspace root.
+    """Create a temporary packaging root directory.
+
+    Mocks configuration module to use the temporary directory as
+    packaging root directory.
 
     :param tmpdir: py.path.local object
     :param monkeypatch: monkeypatch object
@@ -105,12 +110,10 @@ def testpath(tmpdir, monkeypatch):
     """
 
     def _mock_get(self, parameter):
-        """Mock Configuration().get() to return temporary directory instead of
-        path found in configuration file
-        """
+        """Mock get method."""
         if parameter == "packaging_root":
             return str(tmpdir)
-
+        # pylint: disable=protected-access
         return self._parser.get(self.config_section, parameter)
 
     monkeypatch.setattr(
@@ -127,8 +130,10 @@ def testpath(tmpdir, monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_luigi_config_path(monkeypatch):
-    """Monkeypatch luigi config file path to prevent using system luigi
-    configuration file (/etc/luigi/luigi.cfg) in tests.
+    """Patch luigi config file.
+
+    Replace system luigi configuration file (/etc/luigi/luigi.cfg) with
+    local sample config file.
 
     :param monkeypatch: pytest `monkeypatch` fixture
     :returns: ``None``
@@ -145,8 +150,9 @@ def mock_filetype_conf(monkeypatch):
     :param monkeypatch: pytest `monkeypatch` fixture
     :returns: ``None``
     """
-    # Patching DEFAULT_CONFIG variable would not affect is_supported -function
-    # default arguments. Therefore, the argument defaults are patched instead.
+    # Patching DEFAULT_CONFIG variable would not affect is_supported
+    # -function default arguments. Therefore, the argument defaults are
+    # patched instead.
     monkeypatch.setattr(siptools_research.utils.mimetypes.is_supported,
                         "__defaults__",
                         ('include/etc/dpres_mimetypes.json',))
@@ -160,15 +166,16 @@ def mock_metax_dataset(requests_mock,
                        contract=copy.deepcopy(
                            tests.metax_data.contracts.BASE_CONTRACT
                        )):
-    """Mock responses of Metax datasets API, files API, contracts API, and
-    directories API using requests-mock.
+    """Mock responses of Metax APIs.
 
-    Information about files and contract are inserted to dataset metadata.
-    Metax directories API is mocked based on file paths and parent directories
-    of provided file metadata. The mocked datacite meatada for dataset is hard
-    coded. Technical metadata for audio, video, image etc. files is NOT mocked.
-    The identifiers in provided resource dicts are used in mocked URLs.
+    Mocks datasets API, files API, contracts API, and directories API
+    using requests-mock.
 
+    Information about files and contract are inserted to dataset
+    metadata. Metax directories API is mocked based on file paths and
+    parent directories of provided file metadata. Technical metadata for
+    audio, video, image etc. files is NOT mocked. The identifiers in
+    provided resource dicts are used in mocked URLs.
 
     :param requests_mok: Mocker object used for creating responses
     :param dataset: dataset metadata dict

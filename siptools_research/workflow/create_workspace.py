@@ -16,7 +16,7 @@ class CreateWorkspace(WorkflowTask):
     failure_message = 'Creating workspace directory failed'
 
     def output(self):
-        """The output that this Task produces.
+        """List the output targets of this Task.
 
         :returns: list of local targets
         """
@@ -24,7 +24,7 @@ class CreateWorkspace(WorkflowTask):
                 luigi.LocalTarget(self.sip_creation_path)]
 
     def run(self):
-        """Creates workspace directory.
+        """Create workspace directory.
 
         :returns: ``None``
         """

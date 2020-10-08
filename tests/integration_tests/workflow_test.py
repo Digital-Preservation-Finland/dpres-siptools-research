@@ -1,10 +1,12 @@
-"""Each workflow task should be able complete if it is directly called by luigi
-i.e. each task should know which other tasks are required to complete before it
-itself can be run. This module tests that each task will succesfully run all
-it's required tasks when it is called by luigi. Metax, Ida, mongodb,
-paramiko.SSHClient and RemoteAnyTarget are mocked. Same sample dataset is used
-for testing all tasks. It is only tested that each task will complete, the
-output of task is NOT examined.
+"""Tests for packaging workflow.
+
+Each workflow task should be able complete if it is directly called
+by luigi i.e. each task should know which other tasks are required to
+complete before it itself can be run. This module tests that each task
+will succesfully run all it's required tasks when it is called by luigi.
+Metax, Ida, mongodb, paramiko.SSHClient and RemoteAnyTarget are mocked.
+Same sample dataset is used for testing all tasks. It is only tested
+that each task will complete, the output of task is NOT examined.
 """
 
 import os
@@ -82,13 +84,16 @@ SCHEMATRONS = [
 )
 def test_workflow(_, testpath, file_storage, module_name, task,
                   requests_mock):
-    """Run a task (and all tasks it requires) and check that check that report
-    of successfull task is added to mongodb.
+    """Test workflow requirement tree.
+
+    Run a task (and all tasks it requires) and check that check that
+    report of successfull task is added to mongodb.
 
     :param testpath: temporary directory
-    :param file_storage: name of file source used in test ("ida" or "local")
-    :param module_name: submodule of siptools_research.workflow that contains
-                        Task to be tested
+    :param file_storage: name of file source used in test ("ida" or
+                         "local")
+    :param module_name: submodule of siptools_research.workflow that
+                        contains Task to be tested
     :param task: Task class name
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -185,7 +190,9 @@ def test_workflow(_, testpath, file_storage, module_name, task,
     'mock_metax_access'
 )
 def test_mets_creation(testpath, requests_mock):
-    """Run CompressSIP task (and all tasks it requires) and check that:
+    """Test SIP validity.
+
+    Run CompressSIP task (and all tasks it requires) and check that:
 
         #. report of successful task is added to mongodb.
         #. mets.xml validates against the schema

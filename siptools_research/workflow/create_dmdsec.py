@@ -15,18 +15,22 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
 class CreateDescriptiveMetadata(WorkflowTask):
-    """Creates METS dmdSec document. Descriptive metadata is read from Metax in
-    DataCite format. Output file is written to <sip_creation_path>/dmdsec.xml.
-    Metadata references are written:
+    """Create METS dmdSec document.
+
+    Descriptive metadata is read from Metax in DataCite format. Output
+    file is written to <sip_creation_path>/dmdsec.xml. Metadata
+    references are written:
     <sip_creation_path>/import-description-md-references.jsonl.
 
-    Task requires that workspace is created and dataset metadata is validated.
+    Task requires that workspace is created and dataset metadata is
+    validated.
     """
+
     success_message = "Descriptive metadata created"
     failure_message = "Creating descriptive metadata failed"
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """List the Tasks that this Task depends on.
 
         :returns: list of tasks: CreateWorkspace and ValidateMetadata
         """
@@ -38,7 +42,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
                                  config=self.config)]
 
     def output(self):
-        """The output that this Task produces.
+        """List the output targets of this Task.
 
         :returns: list of local targets
         :rtype: LocalTarget
@@ -56,8 +60,10 @@ class CreateDescriptiveMetadata(WorkflowTask):
         ]
 
     def run(self):
-        """Copies datacite.xml metadatafile from Metax. Creates a METS document
-        that contains dmdSec element with datacite metadata.
+        """Copy datacite.xml metadatafile from Metax.
+
+        Creates a METS document that contains dmdSec element with
+        datacite metadata.
 
         :returns: ``None``
         """
@@ -80,7 +86,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
         # Clean up possible dmdSec references created by earlier runs
         remove_dmdsec_references(self.sip_creation_path)
 
-        # Create METS dmdSec element tree that contains datacite, and write it
+        # Create METS dmdSec element tree that contains datacite
         dmd_id = '_' + str(uuid4())
         _mets = import_description.create_mets(datacite_path, dmd_id)
         creator = import_description.DmdCreator(self.sip_creation_path)

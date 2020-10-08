@@ -71,7 +71,7 @@ class CleanupWorkspace(WorkflowTask):
             return [], cache_path
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """List the Tasks that this Task depends on.
 
         :returns: ReportPreservationStatus task
         """
@@ -80,7 +80,7 @@ class CleanupWorkspace(WorkflowTask):
                                         config=self.config)
 
     def run(self):
-        """Removes a finished workspace.
+        """Remove a finished workspace.
 
         :returns: None
         """
@@ -88,19 +88,22 @@ class CleanupWorkspace(WorkflowTask):
         self.clean_file_cache()
 
     def complete(self):
-        """Task is complete when workspace does not exist, but
-        ReportPreservationStatus has finished according to workflow database.
+        """Check if task is complete.
+
+        Task is complete when workspace does not exist, but
+        ReportPreservationStatus has finished according to workflow
+        database.
 
         :returns: ``True`` or ``False``
         """
-
         # Check if ReportPreservationStatus has finished
         database = Database(self.config)
         try:
             result = database.get_event_result(self.document_id,
                                                'ReportPreservationStatus')
 
-        # TODO: Maybe these exceptions should be handled by Database module?
+        # TODO: Maybe these exceptions should be handled by Database
+        # module?
         except KeyError:
             # ReportPreservationStatus has not run yet
             return False

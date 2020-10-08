@@ -30,20 +30,21 @@ def test_cleanupworkspace(testpath, requests_mock, metax_status_code):
     task = CleanupWorkspace(workspace=workspace, dataset_id='identifier',
                             config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Running the task should remove the workspace, but the task should not yet
-    # be complete, because no there is no information of workflow in database.
+    # Running the task should remove the workspace, but the task should
+    # not yet be complete, because no there is no information of
+    # workflow in database.
     assert os.path.exists(workspace)
     task.run()
     assert not os.path.exists(workspace)
     assert not task.complete()
 
-    # The task should be incomplete when ReportPreservationStatus task has not
-    # yet run
+    # The task should be incomplete when ReportPreservationStatus task
+    # has not yet run
     database.add_workflow(os.path.basename(workspace), 'test_id')
     assert not task.complete()
 
-    # The task should be incomplete when ReportPreservationStatus task has
-    # failed
+    # The task should be incomplete when ReportPreservationStatus task
+    # has failed
     database.add_event(os.path.basename(workspace), 'ReportPreservationStatus',
                        'failure',
                        'Preservation state could not be reported.')

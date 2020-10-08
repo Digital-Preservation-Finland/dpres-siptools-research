@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.create_workspace` module"""
+"""Tests for :mod:`siptools_research.workflow.create_workspace`."""
 
 import os
 import pytest
@@ -17,7 +17,6 @@ def test_createworkspace(testpath):
     :param testpath: Testpath fixture
     :returns: ``None``
     """
-
     workspace = os.path.join(testpath, 'test_workspace')
     assert not os.path.isdir(workspace)
 

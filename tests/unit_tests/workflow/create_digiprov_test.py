@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.create_digiprov` module"""
+"""Test the :mod:`siptools_research.workflow.create_digiprov` module."""
 
 import os
 
@@ -12,7 +12,7 @@ import tests.conftest
 @pytest.mark.usefixtures("testmongoclient", 'mock_metax_access')
 # pylint: disable=invalid-name
 def test_createprovenanceinformation(testpath):
-    """Tests for `CreateProvenanceInformation` task.
+    """Test `CreateProvenanceInformation` task.
 
     - `Task.complete()` is true after `Task.run()`
     - XML file created
@@ -21,9 +21,8 @@ def test_createprovenanceinformation(testpath):
     :param testpath: Testpath fixture
     :returns: ``None``
     """
-
-    # Create workspace with "logs" and "transfers" directories in temporary
-    # directory
+    # Create workspace with "logs" and "transfers" directories in
+    # temporary directory
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
     os.makedirs(os.path.join(workspace, 'sip-in-progress'))
@@ -59,14 +58,14 @@ def test_createprovenanceinformation(testpath):
 @pytest.mark.usefixtures("testmongoclient", 'mock_metax_access')
 # pylint: disable=invalid-name
 def test_failed_createprovenanceinformation(testpath):
-    """Test case where `CreateProvenanceInformation` task should fail.
-    The dataset requested does not have all the required fields (date) in
-    provenance information, which should cause exception.
+    """Test `CreateProvenanceInformation` task failure.
+
+    The dataset requested does not have all the required fields (date)
+    in provenance information, which should cause exception.
 
     :param testpath: Testpath fixture
     :returns: ``None``
     """
-
     # Create empty workspace
     workspace = os.path.join(testpath, 'workspace')
     os.makedirs(os.path.join(workspace, 'logs'))
@@ -90,13 +89,14 @@ def test_failed_createprovenanceinformation(testpath):
 
 @pytest.mark.usefixtures('mock_metax_access')
 def test_create_premis_events(testpath):
-    """Test `create_premis_event` function. Output XML file should be produced
-    and it should contain some specified elements.
+    """Test `create_premis_event` function.
+
+    Output XML file should be produced and it should contain some
+    specified elements.
 
     :param testpath: Testpath fixture
     :returns: ``None``
     """
-
     # Create provenance info xml-file to tempdir
     workspace = testpath
     # pylint: disable=protected-access

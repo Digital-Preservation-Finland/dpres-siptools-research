@@ -56,8 +56,8 @@ def test_getfiles(testpath, requests_mock):
 def test_missing_ida_files(testpath, requests_mock):
     """Test task when a file can not be found from Ida.
 
-    The first file should successfully downloaded, but the second file is not
-    found. Task should fail with Exception.
+    The first file should successfully downloaded, but the second file
+    is not found. Task should fail with Exception.
 
     :param testpath: Temporary directory fixture
     :param requests_mock: Mocker object
@@ -92,10 +92,10 @@ def test_missing_ida_files(testpath, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_missing_local_files(testpath):
-    """Test task when a file can not be found from pre-ingest file storage.
+    """Test task when a local file is not available.
 
-    The first file should successfully downloaded, but the second file is not
-    found. Task should fail with Exception.
+    The first file should successfully downloaded, but the second file
+    is not found. Task should fail with Exception.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
@@ -146,11 +146,11 @@ def test_missing_local_files(testpath):
 def test_forbidden_relative_path(testpath, path):
     """Test that files can not be saved outside the workspace.
 
-    Saving files outside the workspace by using relative file paths in Metax
-    should not be possible. The tested path would be downloaded to
+    Saving files outside the workspace by using relative file paths in
+    Metax should not be possible. The tested path would be downloaded to
     `<packaging_root>/workspaces/<workspace>/<sip_creation_path>/../../file1`
-    which equals to `<packaging_root>/workspaces/file1`, if the path was not
-    validated.
+    which equals to `<packaging_root>/workspaces/file1`, if the path was
+    not validated.
 
     :param testpath: Temporary workspace path fixture
     :param path: sample file path
@@ -196,7 +196,7 @@ def test_forbidden_relative_path(testpath, path):
                                   "././file1",
                                   "/./file1"])
 def test_allowed_relative_paths(testpath, path, requests_mock):
-    """Test that file is downloaded to correct location in some special cases.
+    """Test that file is downloaded to correct location.
 
     :param testpath: Temporary workspace path fixture
     :param path: sample file path

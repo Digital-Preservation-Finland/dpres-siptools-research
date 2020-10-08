@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.sign` module"""
+"""Test the :mod:`siptools_research.workflow.sign` module."""
 
 import os
 import shutil
@@ -16,9 +16,8 @@ def test_signsip(testpath):
     :param testpath: Testpath fixture
     :returns: ``None``
     """
-
-    # Create workspace with "logs" and "transfers" directories in temporary
-    # directory
+    # Create workspace with "logs" and "transfers" directories in
+    # temporary directory
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'logs'))
     sip_path = os.path.join(workspace, 'sip-in-progress')

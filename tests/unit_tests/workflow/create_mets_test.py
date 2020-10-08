@@ -1,4 +1,4 @@
-"""Tests for module :mod:`siptools_research.workflow.create_mets`"""
+"""Tests for module :mod:`siptools_research.workflow.create_mets`."""
 import os
 
 import pytest
@@ -35,7 +35,7 @@ METS_ATTRIBUTES = {
 
 
 def _check_workspace(testpath):
-    """Check that workspace does not contain anything else than mets.xml"""
+    """Check that workspace contains only mets.xml."""
     files = os.listdir(os.path.join(testpath, 'sip-in-progress'))
     assert len(files) == 1
     assert files[0] == 'mets.xml'
@@ -102,11 +102,10 @@ def test_create_mets_ok(testpath, requests_mock):
 
 
 def create_test_data(workspace):
-    """Create data needed to run ``CreateMets`` task
+    """Create data needed to run ``CreateMets`` task.
 
     :workspace: Workspace directory in which the data is created.
     """
-
     # Create directory structure
     os.makedirs(os.path.join(workspace, 'logs'))
     sipdirectory = os.path.join(workspace, 'sip-in-progress')

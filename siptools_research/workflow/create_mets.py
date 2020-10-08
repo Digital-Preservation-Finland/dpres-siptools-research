@@ -15,17 +15,21 @@ from siptools_research.workflow.create_logical_structmap \
 
 
 class CreateMets(WorkflowTask):
-    """Merges all partial METS documents found from <sip_creation_path> to one
-    METS document. The METS document is written to <sip_creation_path>/mets.xml
-    and partial METS documents are removed.
+    """Task that creates the METS document.
 
-    Task requires structural map and logical structural map to be created.
+    Merges all partial METS documents found from <sip_creation_path> to
+    one METS document. The METS document is written to
+    <sip_creation_path>/mets.xml and partial METS documents are removed.
+
+    Task requires structural map and logical structural map to be
+    created.
     """
+
     success_message = "METS document compiled"
     failure_message = "Compiling METS document failed"
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """List the Tasks that this Task depends on.
 
         :returns: list of required tasks
         """
@@ -39,7 +43,7 @@ class CreateMets(WorkflowTask):
         ]
 
     def output(self):
-        """The output that this Task produces.
+        """Return the output target of this Task.
 
         :returns: local targets: `sip-in-progress/mets.xml`
         :rtype: LocalTarget
@@ -50,11 +54,10 @@ class CreateMets(WorkflowTask):
         )
 
     def run(self):
-        """Compiles all metadata files into METS document.
+        """Compile all metadata files into METS document.
 
         :returns: ``None``
         """
-
         config_object = Configuration(self.config)
         metax_client = Metax(
             config_object.get('metax_url'),

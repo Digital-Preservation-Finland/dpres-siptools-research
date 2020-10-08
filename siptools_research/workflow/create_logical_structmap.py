@@ -23,18 +23,22 @@ from siptools_research.workflow.create_digiprov \
 
 
 class CreateLogicalStructMap(WorkflowTask):
-    """Create METS document that contains logical structMap. File is written to
-    `<sip_creation_path>/logical_structmap.xml`
+    """Create METS document that contains logical structMap.
+
+    File is written to `<sip_creation_path>/logical_structmap.xml`
 
     Task requires that physical structure map, fileSec and provenance
     information are created.
     """
+
     success_message = "Logical structure map created"
     failure_message = "Logical structure map could not be created"
 
     def requires(self):
-        """The Tasks that this Task depends on.
-        We need the provenance reference path from CreateProvenanceInformation.
+        """List the the Tasks that this Task depends on.
+
+        Provenance reference path from CreateProvenanceInformation is
+        required.
 
         :returns: list of tasks
         """
@@ -50,9 +54,9 @@ class CreateLogicalStructMap(WorkflowTask):
         }
 
     def output(self):
-        """The output that this Task produces.
+        """List the output targets of this Task.
 
-        :returns: local target: ``sip-in-progress/logical_structmap.xml`` ,
+        :returns: local target: `sip-in-progress/logical_structmap.xml`
         :rtype: LocalTarget
         """
         return LocalTarget(
@@ -61,12 +65,13 @@ class CreateLogicalStructMap(WorkflowTask):
         )
 
     def run(self):
-        """Creates a METS document that contains logical structural map.
-        Logical structural map is based on dataset metada retrieved from Metax.
+        """Create a METS document that contains logical structural map.
+
+        Logical structural map is based on dataset metada retrieved from
+        Metax.
 
         :returns: ``None``
         """
-
         # Read the generated physical structmap from file
         # pylint: disable=no-member
         physical_structmap = ET.parse(os.path.join(self.sip_creation_path,
@@ -100,7 +105,9 @@ class CreateLogicalStructMap(WorkflowTask):
             output.write(h.serialize(mets_structmap))
 
     def get_provenance_ids(self):
-        """Gets list of dataset provenance events from Metax, and reads
+        """List identifiers of provenance events.
+
+        Gets list of dataset provenance events from Metax, and reads
         provenance IDs of the events from event.xml files found in the
         workspace directory.
 
@@ -119,7 +126,8 @@ class CreateLogicalStructMap(WorkflowTask):
         # Get the reference file path from Luigi task input
         # It already contains the workspace path.
         ref_file = os.path.basename(
-            self.input()["provenance"]["references"].path)
+            self.input()["provenance"]["references"].path
+        )
         event_ids = get_md_references(read_md_references(
             self.sip_creation_path, ref_file
         ))
@@ -147,8 +155,10 @@ class CreateLogicalStructMap(WorkflowTask):
         return provenance_ids
 
     def find_file_categories(self):
-        """Creates logical structure map of dataset files. Returns dictionary
-        with filecategories as keys and filepaths as values.
+        """Create logical structure map of dataset files.
+
+        Returns dictionary with filecategories as keys and filepaths as
+        values.
 
         :returns: logical structure map dictionary
         """
@@ -169,14 +179,15 @@ class CreateLogicalStructMap(WorkflowTask):
 
             file_id = dataset_file['identifier']
 
-            # Get the use category of file. The path to the file in logical
-            # structmap is stored in 'use_category' in metax.
+            # Get the use category of file. The path to the file in
+            # logical structmap is stored in 'use_category' in metax.
             filecategory = find_file_use_category(file_id, dataset_metadata)
 
-            # If file listed in datasets/<id>/files is not listed in 'files'
-            # section of dataset metadata, look for parent_directory of the
-            # file from  'directories' section. The "use_category" of file is
-            # the "use_category" of the parent directory.
+            # If file listed in datasets/<id>/files is not listed in
+            # 'files' section of dataset metadata, look for
+            # parent_directory of the file from  'directories' section.
+            # The "use_category" of file is the "use_category" of the
+            # parent directory.
             if filecategory is None:
                 name_len = len(dataset_file["file_name"])
 
@@ -185,15 +196,15 @@ class CreateLogicalStructMap(WorkflowTask):
                     dirpath2usecategory, languages
                 )
 
-            # If file category was not found even for the parent directory,
-            # raise error
+            # If file category was not found even for the parent
+            # directory, raise error
             if filecategory is None:
                 raise InvalidDatasetMetadataError(
                     "File category for file {} was not found".format(file_id)
                 )
 
-            # Append path to logical_struct[filecategory] list. Create list if
-            # it does not exist already
+            # Append path to logical_struct[filecategory] list. Create
+            # list if it does not exist already
             if filecategory not in logical_struct.keys():
                 logical_struct[filecategory] = []
             logical_struct[filecategory].append(dataset_file['file_path'])
@@ -206,7 +217,6 @@ class CreateLogicalStructMap(WorkflowTask):
         :param filename: filename
         :returns: file identifier
         """
-
         # pylint: disable=no-member
         filesec_xml = ET.parse(os.path.join(self.sip_creation_path,
                                             'filesec.xml'))
@@ -228,9 +238,10 @@ class CreateLogicalStructMap(WorkflowTask):
 
 
 def find_file_use_category(identifier, dataset_metadata):
-    """Looks for file with identifier from dataset metadata. Returns the
-    `use_category` of file if it is found. If file is not found from list,
-    return None.
+    """Look for file with identifier from dataset metadata.
+
+    Returns the `use_category` of file if it is found. If file is not
+    found from list, return None.
 
     :param identifier: file identifier
     :param dataset_metadata: dataset metadata dictionary
@@ -250,9 +261,11 @@ def find_file_use_category(identifier, dataset_metadata):
 
 
 def _match_paths(parent_path, dir_path):
-    """Retuns the depth to which the two paths match. Returns 0 if dir_path
-    is deeper than parent_path since we don't want to consider directories,
-    which are lower in the directory tree than the parent directory.
+    """Retun the depth to which the two paths match.
+
+    Returns 0 if dir_path is deeper than parent_path since we don't want
+    to consider directories, which are lower in the directory tree than
+    the parent directory.
     """
     parent_path = parent_path[1:] if parent_path[0] == "/" else parent_path
     dir_path = dir_path[1:] if dir_path[0] == "/" else dir_path
@@ -273,8 +286,10 @@ def _match_paths(parent_path, dir_path):
 
 
 def get_dirpath_dict(metax_client, dataset_metadata):
-    """Returns a dict, which maps all research_dataset directory paths to the
-    correcponding use_category values.
+    """Map directory paths to use categories.
+
+    Returns a dict, which maps all research_dataset directory paths to
+    the correcponding use_category values.
 
     :param metax_client: metax access
     :dataset_metadata: dataset metadata dictionary
@@ -295,16 +310,18 @@ def get_dirpath_dict(metax_client, dataset_metadata):
 
 
 def find_dir_use_category(parent_path, dirpath2usecategory, languages):
-    """Find use_category of the closest parent directory listed in the
-    research_dataset. This is done by checking how well the directory paths in
-    the research_dataset match with the parent directory path.
+    """Find use category of path.
+
+    Find use_category of the closest parent directory listed in the
+    research_dataset. This is done by checking how well the directory
+    paths in the research_dataset match with the parent directory path.
 
     :param parent_path: path to the parent directory of the file
     :param dirpath2usecategory: Dictionary, which maps research_dataset
                                 directory paths to the corresponding
                                 use_categories.
-    :param languages: A list of ISO 639-1 formatted language codes of the
-                      dataset
+    :param languages: A list of ISO 639-1 formatted language codes of
+                      the dataset
     :returns: `use_category` attribute of directory
     """
     max_matches = 0

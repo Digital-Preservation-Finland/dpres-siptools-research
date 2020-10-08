@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.workflow.compress` module"""
+"""Tests for :mod:`siptools_research.workflow.compress` module."""
 import os
 import shutil
 import tarfile
@@ -7,8 +7,10 @@ from siptools_research.workflow.compress import CompressSIP
 
 
 def test_compresssip(testpath):
-    """Test that run-function of CompresSIP task creates tar-file
-    complete-function returns True when tar-file exists.
+    """Test CompresSIP task.
+
+    Run function should create a tar-file and complete function should
+    return ``True`` when tar-file exists.
 
     :param testpath: Temporary directory fixture
     """
@@ -27,8 +29,8 @@ def test_compresssip(testpath):
     task.run()
     assert task.complete()
 
-    # Extract tar file created by task and that it contains same files/dirs as
-    # the original sip-in-progress directory
+    # Extract tar file created by task and that it contains same
+    # files/dirs as the original sip-in-progress directory
     with tarfile.open(
         os.path.join(testpath, os.path.basename(testpath)) + '.tar'
     ) as tar:

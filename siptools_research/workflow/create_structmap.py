@@ -15,18 +15,21 @@ from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
 
 
 class CreateStructMap(WorkflowTask):
-    """Create METS documents that contain structural map and file section.
-    Files are written to `<sip_creation_path>/structmap.xml` and
+    """Creates structural map and file section.
+
+    Structural map and file section are written to separate METS
+    documents: `<sip_creation_path>/structmap.xml` and
     `<sip_creation_path>/filesec.xml`
 
-    Task requires descriptive metadata, provenance information, and technical
-    metadata to be created.
+    Task requires descriptive metadata, provenance information, and
+    technical metadata to be created.
     """
+
     success_message = "Structure map created"
     failure_message = "Structure map could not be created"
 
     def requires(self):
-        """The Tasks that this Task depends on.
+        """List the Tasks that this Task depends on.
 
         :returns: list of tasks
         """
@@ -43,10 +46,10 @@ class CreateStructMap(WorkflowTask):
         ]
 
     def output(self):
-        """The output that this Task produces.
+        """List the output targets of this Task.
 
-        :returns: list of local targets: `sip-in-progress/filesec.xml` and
-                  `sip-in-progress/structmap.xml`
+        :returns: list of local targets: `sip-in-progress/filesec.xml`
+                  and `sip-in-progress/structmap.xml`
         :rtype: LocalTarget
         """
         return [
@@ -61,10 +64,12 @@ class CreateStructMap(WorkflowTask):
         ]
 
     def run(self):
-        """Creates METS fileSec element based on contents of `sip-in-progress`
-        directory and writes it to METS document `filesec.xml`. FileSec element
-        is used to create physical structure map which is written to METS
-        document `structmap.xml`.
+        """Create structural map.
+
+        Creates METS fileSec element based on contents of
+        `sip-in-progress` directory and writes it to METS document
+        `filesec.xml`. FileSec element is used to create physical
+        structure map which is written to METS document `structmap.xml`.
 
         :returns: ``None``
         """
