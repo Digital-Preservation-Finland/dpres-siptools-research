@@ -32,7 +32,7 @@ def test_compresssip(testpath):
     # Extract tar file created by task and that it contains same
     # files/dirs as the original sip-in-progress directory
     with tarfile.open(
-        os.path.join(testpath, os.path.basename(testpath)) + '.tar'
+            os.path.join(testpath, os.path.basename(testpath)) + '.tar'
     ) as tar:
         tar.extractall(os.path.join(testpath, 'extracted_tar'))
 

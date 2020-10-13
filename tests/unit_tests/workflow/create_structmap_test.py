@@ -4,13 +4,14 @@ import os
 import shutil
 import distutils.dir_util
 import pytest
-import tests.conftest
-from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools.scripts.import_object import import_object
 from siptools.scripts.import_description import import_description
 from siptools.scripts.premis_event import premis_event
 from siptools.xml.mets import NAMESPACES
 import lxml.etree
+
+import tests.conftest
+from siptools_research.workflow.create_structmap import CreateStructMap
 
 
 @pytest.mark.usefixtures('testmongoclient')

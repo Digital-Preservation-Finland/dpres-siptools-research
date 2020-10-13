@@ -7,7 +7,6 @@ import pymongo
 import tests.conftest
 from siptools_research.utils.download import FileNotAvailableError
 from siptools_research.workflow import get_files
-from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.exceptions import InvalidFileMetadataError
 
 
