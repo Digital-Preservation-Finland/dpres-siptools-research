@@ -2,8 +2,7 @@
 
 import os
 
-import luigi.format
-from luigi import local_target
+import luigi
 from siptools.scripts import premis_event
 from metax_access import Metax
 
@@ -23,11 +22,8 @@ class CreateProvenanceInformation(WorkflowTask):
     provenance event. Each document contains a digiprovMD element
     identified by hash generated from the document filename. The METS
     documents are written to
-    `<sip_creation_path>/<event_type>-event.xml`. Because siptools
-    requires these undeterministic filenames, a false target
-    `create-provenance-information.finished` is created into workspace
-    directory to notify luigi (and dependent tasks) that this task has
-    finished.
+    `<sip_creation_path>/<event_type>-event.xml`. List of references to
+    PREMIS events is written to `premis-event-md-references.jsonl`.
 
     The Task requires that workspace directory is created and dataset
     metadata is validated.
@@ -69,30 +65,14 @@ class CreateProvenanceInformation(WorkflowTask):
     def output(self):
         """List the output targets of the task.
 
-        A false target `create-provenance-information.finished` is created
-        into workspace directory to notify luigi (and dependent tasks) that
-        this task has finished.
-
-        We also return the path of the created provenance reference file.
-
-        :returns: local target: `create-provenance-information.finished`
-                  local target: 'premis-event-md-references.jsonl'
+        :returns:  local target: 'premis-event-md-references.jsonl'
         :rtype: LocalTarget
         """
-        return {
-            "finished": local_target.LocalTarget(
-                os.path.join(
-                    self.workspace,
-                    'create-provenance-information.finished'
-                )
-            ),
-            "references": local_target.LocalTarget(
-                os.path.join(
-                    self.sip_creation_path,
-                    'premis-event-md-references.jsonl'
-                ), format=luigi.format.Nop
-            )
-        }
+        return luigi.LocalTarget(
+            os.path.join(self.sip_creation_path,
+                         'premis-event-md-references.jsonl'),
+            format=luigi.format.Nop
+        )
 
     def run(self):
         """Create premis events.
@@ -100,14 +80,11 @@ class CreateProvenanceInformation(WorkflowTask):
         Reads file metadata from Metax and writes digital provenance
         information to `sip-in-progress/creation-event.xml` file.
 
-        :returns: None
+        :returns: ``None``
         """
         _create_premis_events(self.dataset_id,
                               self.sip_creation_path,
                               self.config)
-
-        with self.output()["finished"].open('w') as output:
-            output.write('Dataset id=' + self.dataset_id)
 
 
 def _create_premis_events(dataset_id, workspace, config):

@@ -1,5 +1,6 @@
 """Test the :mod:`siptools_research.workflow.create_digiprov` module."""
 
+import json
 import os
 
 import pytest
@@ -15,8 +16,8 @@ def test_createprovenanceinformation(testpath):
     """Test `CreateProvenanceInformation` task.
 
     - `Task.complete()` is true after `Task.run()`
-    - XML file created
-    - Log file is created
+    - XML files are created
+    - Metadata reference file is created
 
     :param testpath: Testpath fixture
     :returns: ``None``
@@ -39,7 +40,7 @@ def test_createprovenanceinformation(testpath):
     task.run()
     assert task.complete()
 
-    # Check that XML is created in workspace/sip-inprogrss/
+    # Check that XML is created in workspace/sip-inprogress/
     assert os.path.isfile(os.path.join(
         workspace, 'sip-in-progress',
         '6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml'))
@@ -48,11 +49,13 @@ def test_createprovenanceinformation(testpath):
         workspace, 'sip-in-progress',
         'f1ffc55803b971ab8dd013710766f47e-PREMIS%3AEVENT-amd.xml'))
 
-    # Check that target file is created
-    with open(os.path.join(workspace, 'create-provenance-information.'
-                           'finished')) as open_file:
-        assert 'Dataset id=create_digiprov_test_dataset_file_and_logging' in\
-            open_file.read()
+    # Check that Metadata references file is created
+    with open(os.path.join(workspace, 'sip-in-progress',
+                           'premis-event-md-references.jsonl')) as file_:
+        references = json.load(file_)
+        assert set(references['.']['md_ids']) \
+            == set(['_6fc8a863bb6ed3cee2b1e853aa38d2db',
+                    '_f1ffc55803b971ab8dd013710766f47e'])
 
 
 @pytest.mark.usefixtures("testmongoclient", 'mock_metax_access')

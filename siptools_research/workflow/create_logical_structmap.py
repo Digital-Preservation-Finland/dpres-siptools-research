@@ -125,11 +125,8 @@ class CreateLogicalStructMap(WorkflowTask):
 
         # Get the reference file path from Luigi task input
         # It already contains the workspace path.
-        ref_file = os.path.basename(
-            self.input()["provenance"]["references"].path
-        )
         event_ids = get_md_references(read_md_references(
-            self.sip_creation_path, ref_file
+            self.sip_creation_path, self.input()["provenance"].path
         ))
 
         event_type_ids = {}
