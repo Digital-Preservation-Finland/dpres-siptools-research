@@ -1,5 +1,6 @@
 """Test the :mod:`siptools_research.workflow.create_digiprov` module."""
 
+import copy
 import json
 import os
 
@@ -8,6 +9,7 @@ import lxml
 
 from siptools_research.workflow import create_digiprov
 import tests.conftest
+import tests.metax_data
 
 
 @pytest.mark.usefixtures("testmongoclient", 'mock_metax_access')
@@ -22,10 +24,8 @@ def test_createprovenanceinformation(testpath):
     :param testpath: Testpath fixture
     :returns: ``None``
     """
-    # Create workspace with "logs" and "transfers" directories in
-    # temporary directory
+    # Create workspace with required directories
     workspace = testpath
-    os.makedirs(os.path.join(workspace, 'logs'))
     os.makedirs(os.path.join(workspace, 'sip-in-progress'))
 
     # Init task
@@ -58,36 +58,44 @@ def test_createprovenanceinformation(testpath):
                     '_f1ffc55803b971ab8dd013710766f47e'])
 
 
-@pytest.mark.usefixtures("testmongoclient", 'mock_metax_access')
+@pytest.mark.usefixtures("testmongoclient")
 # pylint: disable=invalid-name
-def test_failed_createprovenanceinformation(testpath):
+def test_failed_createprovenanceinformation(testpath, requests_mock):
     """Test `CreateProvenanceInformation` task failure.
 
-    The dataset requested does not have all the required fields (date)
-    in provenance information, which should cause exception.
+    One of the provenance events of the dataset is invalid, which should
+    cause exception.
 
     :param testpath: Testpath fixture
     :returns: ``None``
     """
+    # Mock metax. Create a dataset with invalid provenance metadata.
+    provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
+    del provenance["preservation_event"]
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset['research_dataset']['provenance'].append(provenance)
+    tests.conftest.mock_metax_dataset(requests_mock, dataset=dataset)
+
     # Create empty workspace
     workspace = os.path.join(testpath, 'workspace')
-    os.makedirs(os.path.join(workspace, 'logs'))
     os.makedirs(os.path.join(workspace, 'sip-in-progress'))
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
-        dataset_id="create_digiprov_test_dataset_date_data_missing",
+        dataset_id="dataset_identifier",
         workspace=workspace,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
     # Run task.
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match='preservation_event'):
         task.run()
     assert not task.complete()
 
-    # There should not be anything else in the workspace
-    assert set(os.listdir(workspace)) == {'sip-in-progress', 'logs'}
+    # There should not be anything else in the workspace, and the SIP
+    # creation directory should be empty.
+    assert set(os.listdir(workspace)) == {'sip-in-progress'}
+    assert not os.listdir(os.path.join(workspace, 'sip-in-progress'))
 
 
 @pytest.mark.usefixtures('mock_metax_access')

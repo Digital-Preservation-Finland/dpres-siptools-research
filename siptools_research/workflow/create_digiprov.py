@@ -1,6 +1,8 @@
 """Luigi task that creates digital provenance information."""
 
 import os
+import shutil
+import tempfile
 
 import luigi
 from siptools.scripts import premis_event
@@ -32,12 +34,12 @@ class CreateProvenanceInformation(WorkflowTask):
     def __init__(self, *args, **kwargs):
         """Initialize task."""
         super(CreateProvenanceInformation, self).__init__(*args, **kwargs)
-        config_object = Configuration(self.config)
+        self.config_object = Configuration(self.config)
         metax = Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
+            self.config_object.get('metax_url'),
+            self.config_object.get('metax_user'),
+            self.config_object.get('metax_password'),
+            verify=self.config_object.getboolean('metax_ssl_verification')
         )
         self.dataset = metax.get_dataset(self.dataset_id)
 
@@ -82,9 +84,18 @@ class CreateProvenanceInformation(WorkflowTask):
 
         :returns: ``None``
         """
-        _create_premis_events(self.dataset_id,
-                              self.sip_creation_path,
-                              self.config)
+        tmp = os.path.join(self.config_object.get('packaging_root'), 'tmp/')
+        with tempfile.TemporaryDirectory(prefix=tmp) as temporary_workspace:
+
+            _create_premis_events(self.dataset_id,
+                                  temporary_workspace,
+                                  self.config)
+
+            # Move files to SIP creation path when all of them are
+            # succesfully created to avoid atomicity problems
+            for file_ in os.listdir(temporary_workspace):
+                shutil.move(os.path.join(temporary_workspace, file_),
+                            self.sip_creation_path)
 
 
 def _create_premis_events(dataset_id, workspace, config):

@@ -8,6 +8,29 @@ from tests.metax_data.files import get_file
 
 BASE_DATACITE = lxml.etree.parse('tests/data/datacite_sample.xml')
 
+BASE_PROVENANCE = {
+    "preservation_event": {
+        "pref_label": {
+            "en": "creation"
+        }
+    },
+    "temporal": {
+        "end_date": "2014-12-31T08:19:58Z",
+        "start_date": "2014-01-01T08:19:58Z"
+    },
+    "description": {
+        "en": "Description of provenance"
+    },
+    'event_outcome': {
+        "pref_label": {
+            "en": "outcome"
+        }
+    },
+    'outcome_description': {
+        "en": "outcome_description"
+    }
+}
+
 BASE_DATASET = {
     "identifier": "dataset_identifier",
     "preservation_identifier": "doi:test",
@@ -15,30 +38,7 @@ BASE_DATASET = {
         "identifier": "contract_identifier"
     },
     "research_dataset": {
-        "provenance": [
-            {
-                "preservation_event": {
-                    "pref_label": {
-                        "en": "creation"
-                    }
-                },
-                "temporal": {
-                    "end_date": "2014-12-31T08:19:58Z",
-                    "start_date": "2014-01-01T08:19:58Z"
-                },
-                "description": {
-                    "en": "Description of provenance"
-                },
-                'event_outcome': {
-                    "pref_label": {
-                        "en": "outcome"
-                    }
-                },
-                'outcome_description': {
-                    "en": "outcome_description"
-                }
-            }
-        ],
+        "provenance": [BASE_PROVENANCE],
         "files": [],
         "directories": []
     },
@@ -70,22 +70,6 @@ DATASETS = {
             "pid:urn:not_found_1",
             "pid:urn:not_found_2"
         ]
-    },
-    "create_digiprov_test_dataset_date_data_missing": {
-        "set": [(
-            "research_dataset", {
-                "provenance": [{
-                    "preservation_event": {
-                        "pref_label": {
-                            "en": "creation"
-                        }
-                    },
-                    "description": {
-                        "en": "Description of provenance"
-                    }
-                }]
-            }
-        )]
     },
     "create_digiprov_test_dataset_detailed_check": {
         "set": [(
