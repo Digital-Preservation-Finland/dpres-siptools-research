@@ -2,7 +2,6 @@
 
 import os
 import shutil
-import tempfile
 
 import luigi
 from siptools.scripts import premis_event
@@ -15,6 +14,9 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
+# TODO: Use tempfile.TemporaryDirectory from standard libraries when
+# support for Python 2 is required anymore
+from siptools_research.temporarydirectory import TemporaryDirectory
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -85,7 +87,7 @@ class CreateProvenanceInformation(WorkflowTask):
         :returns: ``None``
         """
         tmp = os.path.join(self.config_object.get('packaging_root'), 'tmp/')
-        with tempfile.TemporaryDirectory(prefix=tmp) as temporary_workspace:
+        with TemporaryDirectory(prefix=tmp) as temporary_workspace:
 
             _create_premis_events(self.dataset_id,
                                   temporary_workspace,

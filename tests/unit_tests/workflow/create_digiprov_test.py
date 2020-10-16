@@ -25,8 +25,10 @@ def test_createprovenanceinformation(testpath):
     :returns: ``None``
     """
     # Create workspace with required directories
-    workspace = testpath
-    os.makedirs(os.path.join(workspace, 'sip-in-progress'))
+    workspace = os.path.join(testpath, 'workspaces/workspace')
+    os.mkdir(workspace)
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.mkdir(sipdirectory)
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
@@ -40,22 +42,26 @@ def test_createprovenanceinformation(testpath):
     task.run()
     assert task.complete()
 
-    # Check that XML is created in workspace/sip-inprogress/
+    # Check that XMLs are created in workspace/sip-inprogress/
     assert os.path.isfile(os.path.join(
-        workspace, 'sip-in-progress',
-        '6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml'))
+        sipdirectory,
+        '6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml'
+    ))
 
     assert os.path.isfile(os.path.join(
-        workspace, 'sip-in-progress',
-        'f1ffc55803b971ab8dd013710766f47e-PREMIS%3AEVENT-amd.xml'))
+        sipdirectory, 'f1ffc55803b971ab8dd013710766f47e-PREMIS%3AEVENT-amd.xml'
+    ))
 
     # Check that Metadata references file is created
-    with open(os.path.join(workspace, 'sip-in-progress',
+    with open(os.path.join(sipdirectory,
                            'premis-event-md-references.jsonl')) as file_:
         references = json.load(file_)
         assert set(references['.']['md_ids']) \
             == set(['_6fc8a863bb6ed3cee2b1e853aa38d2db',
                     '_f1ffc55803b971ab8dd013710766f47e'])
+
+    # Temporary directories should be removed
+    assert not os.listdir(os.path.join(testpath, 'tmp'))
 
 
 @pytest.mark.usefixtures("testmongoclient")
@@ -77,8 +83,10 @@ def test_failed_createprovenanceinformation(testpath, requests_mock):
     tests.conftest.mock_metax_dataset(requests_mock, dataset=dataset)
 
     # Create empty workspace
-    workspace = os.path.join(testpath, 'workspace')
-    os.makedirs(os.path.join(workspace, 'sip-in-progress'))
+    workspace = os.path.join(testpath, 'workspaces/workspace')
+    os.mkdir(workspace)
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.mkdir(sipdirectory)
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
@@ -92,10 +100,11 @@ def test_failed_createprovenanceinformation(testpath, requests_mock):
         task.run()
     assert not task.complete()
 
-    # There should not be anything else in the workspace, and the SIP
-    # creation directory should be empty.
+    # No files should have been created in workspace directory and
+    # temporary directories should cleaned
     assert set(os.listdir(workspace)) == {'sip-in-progress'}
-    assert not os.listdir(os.path.join(workspace, 'sip-in-progress'))
+    assert not os.listdir(sipdirectory)
+    assert not os.listdir(os.path.join(testpath, 'tmp'))
 
 
 @pytest.mark.usefixtures('mock_metax_access')
