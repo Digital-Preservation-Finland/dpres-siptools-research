@@ -162,6 +162,7 @@ def mock_metax_dataset(requests_mock,
                        dataset=copy.deepcopy(
                            tests.metax_data.datasets.BASE_DATASET
                        ),
+                       datacite=tests.metax_data.datasets.BASE_DATACITE,
                        files=None,
                        contract=copy.deepcopy(
                            tests.metax_data.contracts.BASE_CONTRACT
@@ -179,6 +180,7 @@ def mock_metax_dataset(requests_mock,
 
     :param requests_mok: Mocker object used for creating responses
     :param dataset: dataset metadata dict
+    :param datacite: dataset metadata in datacite XML format
     :param files: list of file metadata dicts
     :param contract: contract metadata dict
     :returns: ``None``
@@ -241,9 +243,7 @@ def mock_metax_dataset(requests_mock,
     requests_mock.get(
         "{}/datasets/{}?dataset_format=datacite".format(METAX_URL,
                                                         dataset['identifier']),
-        content=six.binary_type(
-            lxml.etree.tostring(tests.metax_data.datasets.BASE_DATACITE)
-        )
+        content=six.binary_type(lxml.etree.tostring(datacite))
     )
     requests_mock.get(
         "{}/datasets/{}/files".format(METAX_URL, dataset['identifier']),
