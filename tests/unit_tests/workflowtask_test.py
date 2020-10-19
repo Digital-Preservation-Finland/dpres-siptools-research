@@ -268,7 +268,7 @@ def test_logging(testpath, requests_mock, caplog):
     errors = [r for r in caplog.records if r.levelname == 'ERROR']
 
     # First error should contain the the body of response to failed request
-    assert errors[0].msg == (
+    assert errors[0].getMessage() == (
         'HTTP request to https://metaksi/rest/v1/datasets/1 failed. '
         'Response from server was: No rights to view dataset'
     )
