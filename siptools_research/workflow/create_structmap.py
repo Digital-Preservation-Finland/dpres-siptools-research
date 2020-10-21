@@ -103,7 +103,8 @@ class CreateStructMap(WorkflowTask):
         attributes = compile_structmap.get_reference_lists(
             workspace=self.sip_creation_path
         )
-        (filesec, file_ids) = compile_structmap.create_filesec(**attributes)
+        (filesec, file_ids, _, _) = compile_structmap.create_filesec(
+            **attributes)
         with self.output()[0].open('wb') as filesecxml:
             filesec.write(filesecxml,
                           pretty_print=True,
