@@ -34,13 +34,6 @@ METS_ATTRIBUTES = {
 }
 
 
-def _check_workspace(testpath):
-    """Check that workspace contains only mets.xml."""
-    files = os.listdir(os.path.join(testpath, 'sip-in-progress'))
-    assert len(files) == 1
-    assert files[0] == 'mets.xml'
-
-
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_create_mets_ok(testpath, requests_mock):
     """Test the workflow task CreateMets.
@@ -61,18 +54,23 @@ def test_create_mets_ok(testpath, requests_mock):
         }
     )
     # Create workspace with contents required by the tested task
-    create_test_data(workspace=testpath)
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    create_test_data(workspace=workspace)
 
     # Init and run task
-    task = CreateMets(workspace=testpath, dataset_id='create_mets_dataset',
+    task = CreateMets(workspace=workspace,
+                      dataset_id='create_mets_dataset',
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
-    _check_workspace(testpath)
+
+    # SIP directory should contain only mets.xml
+    assert os.listdir(os.path.join(workspace, 'sip-in-progress')) \
+        == ['mets.xml']
 
     # Read created mets.xml
     tree = lxml.etree.parse(
-        os.path.join(testpath, 'sip-in-progress', 'mets.xml')
+        os.path.join(workspace, 'sip-in-progress', 'mets.xml')
     )
 
     # Check that the root element contains expected attributes.

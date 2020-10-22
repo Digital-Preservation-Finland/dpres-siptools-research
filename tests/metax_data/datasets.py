@@ -145,18 +145,6 @@ DATASETS = {
     "get_files_test_dataset_local_missing_file": {
         "files": ["pid:urn:get_files_1_local", "pid:urn:does_not_exist_local"]
     },
-    "create_techmd_test_dataset": {
-        "files": [
-            "pid:urn:techmd_5",
-            "pid:urn:techmd_6",
-            "pid:urn:techmd_7",
-            "pid:urn:techmd_999",
-            "pid:urn:techmd_888"
-        ]
-    },
-    "create_techmd_test_dataset_charset_not_defined": {
-        "files": ["pid:urn:create_techmd_3"]
-    },
     "create_techmd_test_dataset_xml_metadata_missing": {
         "files": ["pid:urn:create_techmd_8"]
     },

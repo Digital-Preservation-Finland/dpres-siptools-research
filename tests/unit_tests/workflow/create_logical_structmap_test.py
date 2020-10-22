@@ -65,48 +65,50 @@ def test_create_structmap_ok(testpath, requests_mock):
     )
 
     # Create sip directory in workspace
-    sip_creation_path = os.path.join(testpath, "sip-in-progress")
+    sip_directory = os.path.join(testpath, "sip-in-progress")
     os.makedirs(os.path.join(testpath, 'sip-in-progress'))
 
-    # Create digiprov
-    event_type = 'creation'
-    event_datetime = '2014-12-31T08:19:58Z'
-    event_detail = 'Description of provenance'
-
+    # Create metadata required metadata to SIP directory:
+    # * digital provenance metadata
+    # * descriptive metadata
+    # * technical metadata
+    # * physical structure map
     premis_event(
-        workspace=sip_creation_path, event_type=event_type,
-        event_datetime=event_datetime, event_detail=event_detail,
-        event_outcome='success', event_outcome_detail=event_detail
+        workspace=sip_directory,
+        event_type='creation',
+        event_datetime='2014-12-31T08:19:58Z',
+        event_detail='foo',
+        event_outcome='success',
+        event_outcome_detail='bar'
     )
-
-    # Create dmdsec (required to create valid physical structmap)
     import_description(
         dmdsec_location='tests/data/datacite_sample.xml',
-        workspace=sip_creation_path
+        workspace=sip_directory
     )
-    # Create tech metadata
-    test_data_folder = './tests/data/structured'
     import_object(
-        workspace=sip_creation_path,
+        workspace=sip_directory,
         skip_wellformed_check=True,
-        filepaths=[test_data_folder]
+        filepaths=['./tests/data/structured']
     )
-
-    # Create physical structmap
     compile_structmap(
-        workspace=sip_creation_path,
+        workspace=sip_directory,
         structmap_type='Fairdata-physical'
     )
 
     # Init and run CreateStructMap task
+    sip_directory_content_before_run = os.listdir(sip_directory)
     task = CreateLogicalStructMap(workspace=testpath,
                                   dataset_id='create_structmap_test_dataset',
                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
 
-    validate_logical_structmap_file(os.path.join(sip_creation_path,
+    validate_logical_structmap_file(os.path.join(sip_directory,
                                                  'logical_structmap.xml'))
+
+    # Nothing else should be created SIP directory
+    assert set(os.listdir(sip_directory)) \
+        == set(sip_directory_content_before_run + ['logical_structmap.xml'])
 
 
 def test_get_dirpath_dict(requests_mock):

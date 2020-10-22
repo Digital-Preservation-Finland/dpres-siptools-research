@@ -26,8 +26,9 @@ class CreateProvenanceInformation(WorkflowTask):
     provenance event. Each document contains a digiprovMD element
     identified by hash generated from the document filename. The METS
     documents are written to
-    `<sip_creation_path>/<event_type>-event.xml`. List of references to
-    PREMIS events is written to `premis-event-md-references.jsonl`.
+    `<sip_creation_path>/<uuid>-PREMIS%3AEVENT-amd.xml`. List of
+    references to PREMIS events is written to
+    `<sip_creation_path>/premis-event-md-references.jsonl`.
 
     The Task requires that workspace directory is created and dataset
     metadata is validated.

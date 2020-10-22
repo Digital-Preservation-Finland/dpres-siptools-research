@@ -72,6 +72,10 @@ def test_createdescriptivemetadata(testpath, requests_mock):
         assert references['.']["streams"] == {}
         assert len(references['.']["md_ids"]) == 1
 
+    # Nothing else should be written in `sip-in-progress` directory
+    assert set(os.listdir(os.path.join(workspace, 'sip-in-progress'))) \
+        == set(['dmdsec.xml', 'import-description-md-references.jsonl'])
+
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_createdescriptivemetadata_invalid_datacite(testpath, requests_mock):

@@ -243,49 +243,6 @@ FILES = {
     "pid:urn:does_not_exist_local": {
         "set": [("file_path", "/path/to/file4")]
     },
-    "pid:urn:techmd_5": {
-        "file_characteristics": HTML_FILE_CHARS,
-        "set": [
-            ("identifier", "pid:urn:5"),
-            ("file_path", "project_x/some/path/file_name_5")
-        ]
-    },
-    "pid:urn:techmd_6": {
-        "file_characteristics": XML_FILE_CHARS,
-        "set": [
-            ("identifier", "pid:urn:6"),
-            ("file_path", "project_x/some/path/file_name_6")
-        ]
-    },
-    "pid:urn:techmd_7": {
-        "file_characteristics": TXT_FILE_CHARS,
-        "set": [
-            ("identifier", "pid:urn:7"),
-            ("file_path", "project_x/some/path/file_name_7.txt")
-        ]
-    },
-    "pid:urn:techmd_888": {
-        "file_characteristics": TIFF_FILE_CHARS,
-        "set": [
-            ("identifier", "pid:urn:888"),
-            ("file_path", "project_x/some/path/valid_tiff.tiff")
-        ]
-    },
-    "pid:urn:techmd_999": {
-        "file_characteristics": CSV_FILE_CHARS,
-        "set": [
-            ("identifier", "pid:urn:999"),
-            ("file_path", "project_x/some/path/file.csv")
-        ]
-    },
-    "pid:urn:create_techmd_3": {
-        "file_characteristics": {
-            "file_created": "2014-01-17T08:19:31Z",
-            "file_format": "text/html",
-            "format_version": "5.0"
-        },
-        "set": [("file_path", "/project_x/some/path/file_name_5")]
-    },
     "pid:urn:create_techmd_8": {
         "file_characteristics": TIFF_FILE_CHARS,
         "set": [

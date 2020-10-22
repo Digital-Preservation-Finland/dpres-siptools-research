@@ -1,7 +1,6 @@
 """Tests for :mod:`siptools_research.workflow.create_structmap`."""
 
 import os
-import shutil
 import distutils.dir_util
 import pytest
 from siptools.scripts.import_object import import_object
@@ -21,30 +20,23 @@ def test_create_structmap_ok(testpath):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    sip_creation_path = os.path.join(testpath, "sip-in-progress")
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    sip_creation_path = os.path.join(workspace, "sip-in-progress")
 
     # Clean workspace and create "logs" directory in temporary directory
-    os.makedirs(os.path.join(testpath, 'logs'))
-    os.makedirs(os.path.join(testpath, 'sip-in-progress'))
-
-    # Copy sample datacite.xml to workspace directory
-    dmdpath = os.path.join(testpath, 'datacite.xml')
-    shutil.copy('tests/data/datacite_sample.xml', dmdpath)
+    os.makedirs(os.path.join(sip_creation_path))
 
     # Create dmdsec
-    import_description(dmdsec_location=dmdpath, workspace=sip_creation_path)
+    import_description(dmdsec_location='tests/data/datacite_sample.xml',
+                       workspace=sip_creation_path)
 
     # Create digiprov
-    event_type = 'creation'
-    event_datetime = '2014-12-31T08:19:58Z'
-    event_detail = 'Description of provenance'
-    event_outcome = 'success'
     premis_event(
-        event_type=event_type,
-        event_datetime=event_datetime,
-        event_detail=event_detail,
-        event_outcome=event_outcome,
-        event_outcome_detail="Outcome detail",
+        event_type='creation',
+        event_datetime='2014-12-31T08:19:58Z',
+        event_detail='foo',
+        event_outcome='success',
+        event_outcome_detail="bar",
         workspace=sip_creation_path
     )
 
@@ -57,7 +49,8 @@ def test_create_structmap_ok(testpath):
     )
 
     # Init and run CreateStructMap task
-    task = CreateStructMap(workspace=testpath,
+    sip_content_before_run = os.listdir(sip_creation_path)
+    task = CreateStructMap(workspace=workspace,
                            dataset_id='create_structmap_test_dataset',
                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
@@ -65,6 +58,10 @@ def test_create_structmap_ok(testpath):
 
     validate_filesec_file(os.path.join(sip_creation_path, 'filesec.xml'))
     validate_structmap_file(os.path.join(sip_creation_path, 'structmap.xml'))
+
+    # Only filesec.xml and structmap.xml be created into SIP directory
+    assert set(os.listdir(sip_creation_path)) \
+        == set(sip_content_before_run + ['filesec.xml', 'structmap.xml'])
 
 
 @pytest.mark.usefixtures('testmongoclient')

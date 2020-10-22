@@ -110,13 +110,13 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         :returns: ``None``
         """
-        file_metadata = self.metax_client.get_dataset_files(self.dataset_id)
+        files = self.metax_client.get_dataset_files(self.dataset_id)
 
         # Create one timestamp for import_object events to avoid
         # creating new events each time import_object is iterated
         event_datetime = datetime.datetime.utcnow().isoformat()
 
-        for file_ in file_metadata:
+        for file_ in files:
             # Create METS document that contains PREMIS metadata
             self.create_objects(file_, event_datetime)
 
@@ -143,7 +143,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         except KeyError:
             charset = None
 
-        # Read format version if it defined for this file
+        # Read format version if it is defined for this file
         try:
             formatversion = metadata["file_characteristics"]["format_version"]
         except KeyError:
@@ -157,11 +157,11 @@ class CreateTechnicalMetadata(WorkflowTask):
                 digest_algorithm, metadata["checksum"]["value"]
             )
 
-        # Read file created if it defined for this file
+        # Read file creation date if it is defined for this file
         try:
-            file_created = metadata["file_characteristics"]["file_created"]
+            date_created = metadata["file_characteristics"]["file_created"]
         except KeyError:
-            file_created = None
+            date_created = None
 
         # Create PREMIS file metadata XML
         siptools.scripts.import_object.import_object(
@@ -175,7 +175,7 @@ class CreateTechnicalMetadata(WorkflowTask):
             ),
             checksum=(digest_algorithm, metadata["checksum"]["value"]),
             charset=charset,
-            date_created=file_created,
+            date_created=date_created,
             event_datetime=event_datetime,
             event_target='.'
         )
@@ -193,8 +193,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         filepath = metadata['file_path'].strip('/')
         xmls = self.metax_client.get_xml(file_id)
 
-        creator = siptools.mdcreator.MetsSectionCreator(
-            self.sip_creation_path)
+        creator = siptools.mdcreator.MetsSectionCreator(self.sip_creation_path)
 
         for type_ in TECH_ATTR_TYPES:
             if type_["namespace"] in xmls:

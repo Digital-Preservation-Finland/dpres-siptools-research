@@ -1,22 +1,42 @@
 """Test the :mod:`siptools_research.workflow.create_techmd` module."""
 
+import copy
+import hashlib
+import json
 import os
 import shutil
-import hashlib
-import glob
+
 import lxml.etree
 import pytest
-
-from requests import HTTPError
-
+import requests
 from siptools.utils import read_md_references
 from siptools.xml.mets import NAMESPACES
-import tests.conftest
+import xmltodict
+
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       algorithm_name)
+import tests.conftest
+import tests.metax_data
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+def xml2simpledict(element):
+    """Convert XML element to simple dict.
+
+    :param element: XML element
+    :returns: Dictionary
+    """
+    # Convert XML to dictionary. Expand namespace prefixes.
+    dictionary = xmltodict.parse(lxml.etree.tostring(element),
+                                 process_namespaces=True,
+                                 dict_constructor=dict)
+    # Remove namespace element
+    for key in dictionary:
+        del dictionary[key]['@xmlns']
+
+    return dictionary
+
+
+@pytest.mark.usefixtures('testmongoclient')
 def test_create_techmd_ok(testpath, requests_mock):
     """Test the workflow task CreateTechnicalMetadata module.
 
@@ -24,116 +44,127 @@ def test_create_techmd_ok(testpath, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:5/xml", json=[])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:6/xml", json=[])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:7/xml", json=[])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:999/xml", json=[])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:888/xml",
+    # Mock metax
+    tests.conftest.mock_metax_dataset(requests_mock,
+                                      files=[tests.metax_data.files.TIFF_FILE])
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
                       json=["http://www.loc.gov/mix/v20"])
-
     with open("tests/data/mix_sample_jpeg.xml", "rb") as mix:
         requests_mock.get(
-            "https://metaksi/rest/v1/files/pid:urn:888/xml"
+            "https://metaksi/rest/v1/files/pid:urn:identifier/xml"
             "?namespace=http://www.loc.gov/mix/v20",
             content=mix.read()
         )
 
-    # Create workspace with empty "logs" and "sip-in-progress'
-    # directories in temporary directory
-    workspace = testpath
-    os.makedirs(os.path.join(workspace, 'logs'))
+    # Create workspace that already contains the dataset files
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sipdirectory)
-
-    # Copy sample directory with some files to SIP
-    shutil.copytree('tests/data/sample_dataset_directories/project_x',
-                    os.path.join(sipdirectory, 'project_x'))
+    tiff_path = os.path.join(sipdirectory, 'path/to/file')
+    os.makedirs(os.path.dirname(tiff_path))
+    shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
 
     # Init task
     task = CreateTechnicalMetadata(workspace=workspace,
-                                   dataset_id='create_techmd_test_dataset',
+                                   dataset_id='dataset_identifier',
                                    config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
-    # Run task.
+    # Run task
     task.run()
     assert task.complete()
 
-    found_refs = 0
-    mix_refs = read_md_references(sipdirectory,
-                                  'create-mix-md-references.jsonl')
-    found_refs += len(mix_refs)
-    amd_refs = read_md_references(sipdirectory,
-                                  'import-object-md-references.jsonl')
-    found_refs += len(amd_refs)
-    assert found_refs == 6
-    for path in amd_refs:
-        for amd_ref in amd_refs[path]['md_ids']:
-            if amd_ref[1:] != '1b2eecde68d99171f70613f14cf21f49':
-                assert os.path.isfile(os.path.join(
-                    sipdirectory,
-                    amd_ref[1:] + '-PREMIS%3AOBJECT-amd.xml'
-                ))
-    assert os.path.isfile(os.path.join(
-        sipdirectory,
-        '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml'
-    ))
-    # Check that one of the PREMIS techMD files has desired properties
-    amd_id = amd_refs['project_x/some/path/file_name_5']['md_ids'][0][1:]
-    amd_file = amd_id + '-PREMIS%3AOBJECT-amd.xml'
-    output_file = os.path.join(sipdirectory, amd_file)
-    tree = lxml.etree.parse(output_file)
-    root = tree.getroot()
-    assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1
-    assert len(root.xpath("//premis:object", namespaces=NAMESPACES)) == 1
-    assert root.xpath("//premis:object/@*",
-                      namespaces=NAMESPACES)[0] == 'premis:file'
-    format_name = root.xpath("//premis:formatName",
-                             namespaces=NAMESPACES)[0].text
-    assert format_name == 'text/html; charset=UTF-8'
-    assert root.xpath("//premis:formatVersion",
-                      namespaces=NAMESPACES)[0].text == '5.0'
+    # Premis object references should be written to file.
+    premis_object_references \
+        = read_md_references(sipdirectory, 'import-object-md-references.jsonl')
+    assert len(premis_object_references) == 1
+    assert len(premis_object_references['path/to/file']['md_ids']) == 1
 
-    # Check that the NISOIMG techMD file has desired properties
-    output_file = os.path.join(
-        sipdirectory,
-        '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml'
+    # Check that the PREMIS object file has desired properties
+    premis_object_identifier \
+        = premis_object_references['path/to/file']['md_ids'][0][1:]
+    premis_object_file \
+        = '{}-PREMIS%3AOBJECT-amd.xml'.format(premis_object_identifier)
+    premis_object_xml = lxml.etree.parse(os.path.join(sipdirectory,
+                                                      premis_object_file))
+    assert len(premis_object_xml.xpath('//mets:amdSec',
+                                       namespaces=NAMESPACES)) == 1
+    assert len(premis_object_xml.xpath("//premis:object",
+                                       namespaces=NAMESPACES)) == 1
+    assert premis_object_xml.xpath(
+        "//premis:object/@*", namespaces=NAMESPACES
+    )[0] == 'premis:file'
+    assert premis_object_xml.xpath(
+        "//premis:formatName", namespaces=NAMESPACES
+    )[0].text == 'image/tiff'
+    assert premis_object_xml.xpath("//premis:formatVersion",
+                                   namespaces=NAMESPACES)[0].text == '6.0'
+
+    # The file properties of premis object should written to json file
+    file_properties_file = '{}-scraper.json'.format(premis_object_identifier)
+    with open(os.path.join(sipdirectory, file_properties_file)) as file_:
+        file_properties = json.load(file_)
+    assert file_properties['0']['mimetype'] == 'image/tiff'
+    assert file_properties['0']['version'] == '6.0'
+
+    # One premis event file should be created
+    premis_event_files = [file_ for file_ in os.listdir(sipdirectory)
+                          if file_.endswith('-PREMIS%3AEVENT-amd.xml')]
+    assert len(premis_event_files) == 1
+    premis_event_id \
+        = premis_event_files[0].rsplit('-PREMIS%3AEVENT-amd.xml')[0]
+
+    # A bunch of premis agent files should be created
+    premis_references = read_md_references(sipdirectory,
+                                           'premis-event-md-references.jsonl')
+    premis_agent_files = ['{}-PREMIS%3AAGENT-amd.xml'.format(id_[1:])
+                          for id_ in premis_references['.']['md_ids']
+                          if id_[1:] != premis_event_id]
+    assert len(premis_agent_files) == 7
+    for file_ in premis_agent_files:
+        assert os.path.isfile(os.path.join(sipdirectory, file_))
+
+    # MIX references should be written to file
+    mix_references \
+        = read_md_references(sipdirectory, 'create-mix-md-references.jsonl')
+    assert len(mix_references) == 1
+    assert len(mix_references['path/to/file']["md_ids"]) == 1
+    assert mix_references['path/to/file']["md_ids"][0] \
+        == '_1b2eecde68d99171f70613f14cf21f49'
+
+    # Compare MIX metadata in techMD file to original MIX metadata in
+    # Metax
+    mets = lxml.etree.parse(
+        os.path.join(
+            sipdirectory,
+            '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml'
+        )
     )
-    tree = lxml.etree.parse(output_file)
-    root = tree.getroot()
-    assert len(root.findall('{http://www.loc.gov/METS/}amdSec')) == 1
-    assert len(root.xpath("//mix:mix", namespaces=NAMESPACES)) == 1
-    assert len(root.xpath("//mix:mix/mix:BasicDigitalObjectInformation",
-                          namespaces=NAMESPACES)) == 1
-    assert len(root.xpath("//mix:mix/mix:BasicImageInformation",
-                          namespaces=NAMESPACES)) == 1
-    assert len(root.xpath("//mix:mix/mix:BasicImageInformation/"
-                          "mix:BasicImageCharacteristics",
-                          namespaces=NAMESPACES)) == 1
-    assert len(root.xpath("//mix:mix/mix:BasicImageInformation/"
-                          "mix:BasicImageCharacteristics/"
-                          "mix:PhotometricInterpretation",
-                          namespaces=NAMESPACES)) == 1
-    assert len(root.xpath("//mix:mix/mix:BasicImageInformation/"
-                          "mix:SpecialFormatCharacteristics",
-                          namespaces=NAMESPACES)) == 1
-    assert len(root.xpath("//mix:mix/mix:ImageAssessmentMetadata",
-                          namespaces=NAMESPACES)) == 1
+    mdwrap = mets.xpath('/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap',
+                        namespaces=NAMESPACES)[0]
+    mix = mdwrap.xpath('mets:xmlData/mix:mix', namespaces=NAMESPACES)[0]
+    original_mix = lxml.etree.fromstring(
+        requests.get(
+            "https://metaksi/rest/v1/files/pid:urn:identifier/xml"
+            "?namespace=http://www.loc.gov/mix/v20"
+        ).content
+    )
+    assert xml2simpledict(mix) == xml2simpledict(original_mix)
 
-    # Check that target file is created
-    with open(os.path.join(workspace, 'task-create-technical-'
-                                      'metadata.finished')) as open_file:
-        assert 'Dataset id=create_techmd_test_dataset' in open_file.read()
-
-    # Check that one event file is created and only one reference
-    event_refs = read_md_references(sipdirectory,
-                                    'premis-event-md-references.jsonl')
-    assert len(event_refs) == 1
-    assert event_refs['.']
-    assert len(glob.glob1(sipdirectory, '*-PREMIS%3AEVENT-amd.xml')) == 1
+    # SIP directory should contain a bunch of files
+    assert set(os.listdir(sipdirectory)) \
+        == set(['import-object-md-references.jsonl',
+                premis_object_file,
+                file_properties_file,
+                'premis-event-md-references.jsonl',
+                'create-mix-md-references.jsonl',
+                '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml',
+                'import-object-extraction-AGENTS-amd.json',
+                'path']
+               + premis_agent_files
+               + premis_event_files)
 
 
-@pytest.mark.usefixtures('mock_metax_access')
+@pytest.mark.usefixtures()
 # pylint: disable=invalid-name
 def test_create_techmd_without_charset(testpath, requests_mock):
     """Test techmd creation for files without defined charset.
@@ -142,47 +173,43 @@ def test_create_techmd_without_charset(testpath, requests_mock):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:create_techmd_3/xml",
-        json=[]
-    )
+    text_file = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+    del text_file['file_characteristics']['encoding']
+    tests.conftest.mock_metax_dataset(requests_mock,
+                                      files=[text_file])
 
-    # Create workspace with empty "logs" and "sip-in-progress'
-    # directories in temporary directory
-    workspace = testpath
-    os.makedirs(os.path.join(workspace, 'logs'))
+    # Create workspace that contains a textfile
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sipdirectory)
-
-    # Copy sample directory with some files to SIP
-    shutil.copytree('tests/data/sample_dataset_directories/project_x',
-                    os.path.join(sipdirectory, 'project_x'))
+    text_file_path = os.path.join(sipdirectory, 'path', 'to', 'file')
+    os.makedirs(os.path.dirname(text_file_path))
+    with open(text_file_path, 'w') as file_:
+        file_.write('foo')
 
     # Init and run task
     task = CreateTechnicalMetadata(
         workspace=workspace,
-        dataset_id='create_techmd_test_dataset_charset_not_defined',
+        dataset_id='dataset_identifier',
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     task.run()
 
+    # Metadata reference file and premis object XML file should be
+    # created in SIP directory
     amd_refs = read_md_references(sipdirectory,
                                   'import-object-md-references.jsonl')
     assert len(amd_refs) == 1
-    # Check that output file is created, and it has desired properties
-    amd_id = amd_refs['project_x/some/path/file_name_5']['md_ids'][0][1:]
-    output_file = os.path.join(
-        sipdirectory,
-        amd_id + '-PREMIS%3AOBJECT-amd.xml'
+    amd_id = amd_refs['path/to/file']['md_ids'][0][1:]
+    premis_object_xml = lxml.etree.parse(
+        os.path.join(sipdirectory, '{}-PREMIS%3AOBJECT-amd.xml'.format(amd_id))
     )
-    tree = lxml.etree.parse(output_file)
-    root = tree.getroot()
+
     # If charset is not defined the siptools.import_objects default
     # value is used. Siptools recognizes ASCII text files as UTF-8 text
     # files.
-    format_name = root.xpath("//premis:formatName",
-                             namespaces=NAMESPACES)[0].text
-    assert format_name == 'text/html; charset=UTF-8'
+    format_name = premis_object_xml.xpath("//premis:formatName",
+                                          namespaces=NAMESPACES)[0].text
+    assert format_name == 'text/plain; charset=UTF-8'
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
@@ -224,7 +251,7 @@ def test_xml_metadata_file_missing(testpath, requests_mock):
     assert not task.complete()
 
     # Run task.
-    with pytest.raises(HTTPError) as exc:
+    with pytest.raises(requests.HTTPError) as exc:
         task.run()
 
     assert exc.value.response.status_code == 404

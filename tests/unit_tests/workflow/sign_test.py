@@ -44,3 +44,6 @@ def test_signsip(testpath):
                            'signature.sig'))\
             as open_file:
         assert "This is an S/MIME signed message" in open_file.read()
+
+    # SIP directory should contain only METS and signature
+    assert set(os.listdir(sip_path)) == set(['signature.sig', 'mets.xml'])

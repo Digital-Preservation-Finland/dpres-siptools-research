@@ -84,8 +84,7 @@ class CreateLogicalStructMap(WorkflowTask):
         provenance_ids = self.get_provenance_ids()
 
         # Init logical structmap
-        logical_structmap \
-            = mets.structmap(type_attr='Fairdata-logical')
+        logical_structmap = mets.structmap(type_attr='Fairdata-logical')
         mets_structmap = mets.mets(child_elements=[logical_structmap])
 
         # Create logical structmap
