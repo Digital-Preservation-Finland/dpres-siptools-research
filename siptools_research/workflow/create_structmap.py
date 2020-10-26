@@ -5,6 +5,7 @@ import json
 import os
 
 import luigi.format
+import lxml
 from luigi import LocalTarget
 from siptools.scripts import compile_structmap
 from siptools.utils import read_md_references
@@ -103,21 +104,42 @@ class CreateStructMap(WorkflowTask):
         attributes = compile_structmap.get_reference_lists(
             workspace=self.sip_creation_path
         )
-        (filesec, file_ids, _, _) = compile_structmap.create_filesec(
-            **attributes)
+        # Setup required reference list and supplementary files information.
+        (all_amd_refs,
+         all_dmd_refs,
+         object_refs,
+         filelist,
+         file_properties) = compile_structmap.get_reference_lists(
+            workspace=self.sip_creation_path)
+        (supplementary_files,
+         supplementary_types) = compile_structmap.iter_supplementary(
+            file_properties=file_properties)
+
+        # Create fileSec
+        (filesec, file_ids) = compile_structmap.create_filesec(
+            all_amd_refs=all_amd_refs,
+            object_refs=object_refs,
+            file_properties=file_properties,
+            supplementary_files=supplementary_files,
+            supplementary_types=supplementary_types)
         with self.output()[0].open('wb') as filesecxml:
-            filesec.write(filesecxml,
-                          pretty_print=True,
-                          xml_declaration=True,
-                          encoding='UTF-8')
+            lxml.etree.ElementTree(filesec).write(filesecxml,
+                                                  pretty_print=True,
+                                                  xml_declaration=True,
+                                                  encoding='UTF-8')
 
         # Create physical structmap
-        filesec_element = filesec.getroot()[0]
         structmap = compile_structmap.create_structmap(
-            filesec=filesec_element,
+            filesec=filesec,
             structmap_type='Fairdata-physical',
             file_ids=file_ids,
-            **attributes
+            all_amd_refs=all_amd_refs,
+            all_dmd_refs=all_dmd_refs,
+            filelist=filelist,
+            supplementary_files=supplementary_files,
+            supplementary_types=supplementary_types,
+            file_properties=file_properties,
+            workspace=self.sip_creation_path
         )
         with self.output()[1].open('wb') as structmapxml:
             structmap.write(structmapxml,
