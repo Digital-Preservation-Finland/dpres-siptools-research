@@ -5,10 +5,10 @@ import json
 import os
 
 import luigi.format
-import lxml
 from luigi import LocalTarget
 from siptools.scripts import compile_structmap
 from siptools.utils import read_md_references
+from xml_helpers.utils import serialize
 
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_digiprov import \
@@ -123,10 +123,7 @@ class CreateStructMap(WorkflowTask):
             supplementary_files=supplementary_files,
             supplementary_types=supplementary_types)
         with self.output()[0].open('wb') as filesecxml:
-            lxml.etree.ElementTree(filesec).write(filesecxml,
-                                                  pretty_print=True,
-                                                  xml_declaration=True,
-                                                  encoding='UTF-8')
+            filesecxml.write(serialize(filesec))
 
         # Create physical structmap
         structmap = compile_structmap.create_structmap(
