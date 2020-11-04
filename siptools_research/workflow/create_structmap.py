@@ -8,6 +8,7 @@ import luigi.format
 from luigi import LocalTarget
 from siptools.scripts import compile_structmap
 from siptools.utils import read_md_references
+from siptools.utils import get_reference_lists, iter_supplementary
 from xml_helpers.utils import serialize
 
 from siptools_research.workflowtask import WorkflowTask
@@ -100,20 +101,16 @@ class CreateStructMap(WorkflowTask):
                                                "streams": {},
                                                "md_ids": md_ids}}))
 
-        # Create fileSec
-        attributes = compile_structmap.get_reference_lists(
-            workspace=self.sip_creation_path
-        )
         # Setup required reference list and supplementary files information.
         (all_amd_refs,
          all_dmd_refs,
          object_refs,
          filelist,
-         file_properties) = compile_structmap.get_reference_lists(
-            workspace=self.sip_creation_path)
+         file_properties) = get_reference_lists(
+             workspace=self.sip_creation_path)
         (supplementary_files,
-         supplementary_types) = compile_structmap.iter_supplementary(
-            file_properties=file_properties)
+         supplementary_types) = iter_supplementary(
+             file_properties=file_properties)
 
         # Create fileSec
         (filesec, file_ids) = compile_structmap.create_filesec(
