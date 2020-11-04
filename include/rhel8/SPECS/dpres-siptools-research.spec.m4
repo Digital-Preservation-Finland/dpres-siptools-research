@@ -10,8 +10,8 @@
 
 %define user_name siptools_research
 %define user_group siptools_research
-%define user_gid 335
-%define user_uid 335
+%define user_gid 10335
+%define user_uid 10335
 
 Name:           dpres-siptools-research
 Version:        %{file_version}
