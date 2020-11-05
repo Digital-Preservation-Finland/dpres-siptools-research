@@ -15,14 +15,15 @@ def main():
             "lxml",
             # TODO: Luigi v3 does not support Python2. Version specifier should
             # be removed when Python2 compatibility is not required anymore.
-            "luigi<3",
+            "luigi<3; python_version=='2.7'",
+            "luigi; python_version>'3'",
             "pymongo",
             "requests",
             "paramiko",
             "jsonschema",
             "iso-639",
             "python-dateutil",
-            "configparser",  # required for python2
+            "configparser; python_version=='2.7'",
             "file-scraper@git+https://gitlab.csc.fi/dpres/file-scraper.git",
             "siptools@git+https://gitlab.csc.fi/dpres/dpres-siptools.git"
             "@develop",

@@ -35,6 +35,27 @@ install:
 	rm ${DESTDIR}${PREFIX}/lib/python2.7/site-packages/*.egg-info/requires.txt
 	sed -i '/\.egg-info\/requires.txt$$/d' INSTALLED_FILES
 
+install3:
+	# Cleanup temporary files
+	rm -f INSTALLED_FILES
+
+	# Create log, share and processing directories
+	mkdir -p "${LOGDIR}"
+	mkdir -p "${PROCESSINGDIR}"
+	mkdir -p "${SHAREDIR}"
+	mkdir -p "${ETC}"
+	mkdir -p "${LIB}"
+	mkdir -p "${LIB}/systemd/system"
+
+	# Copy config files
+	cp include/etc/siptools_research.conf ${ETC}/
+	cp include/etc/dpres_mimetypes.json ${ETC}/
+	cp include/usr/lib/systemd/system/siptools_research.service ${LIB}/systemd/system/siptools_research.service
+	cp include/usr/lib/systemd/system/siptools_research.timer ${LIB}/systemd/system/siptools_research.timer
+
+	# Use Python setuptools
+	python3 ./setup.py install -O1 --prefix="${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
+
 test:
 	py.test  tests/unit_tests tests/integration_tests/workflow_test.py \
 	    -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml
