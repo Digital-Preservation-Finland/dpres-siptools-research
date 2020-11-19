@@ -29,9 +29,10 @@ def xml2simpledict(element):
     dictionary = xmltodict.parse(lxml.etree.tostring(element),
                                  process_namespaces=True,
                                  dict_constructor=dict)
-    # Remove namespace element
+    # Remove namespace elements
     for key in dictionary:
-        del dictionary[key]['@xmlns']
+        if '@xmlns' in dictionary[key]:
+            del dictionary[key]['@xmlns']
 
     return dictionary
 
