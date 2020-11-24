@@ -116,26 +116,6 @@ DATASETS = {
         )]
     },
     "datacite_test_1": {},
-    "create_structmap_test_dataset": {
-        "files_with_labels": [
-            ("pid:urn:1", "Access and use rights files"),
-            ("pid:urn:2", "Documentation files"),
-            ("pid:urn:3", "Documentation files"),
-            ("pid:urn:4", "Documentation files"),
-            ("pid:urn:5", "Documentation files"),
-            ("pid:urn:6", "Documentation files"),
-            ("pid:urn:7", "Machine-readable metadata"),
-            ("pid:urn:8", "Publication files"),
-            ("pid:urn:9", "Software files")
-        ],
-        "directories": [
-            ("pid:urn:dir:1", "Access and use rights files"),
-            ("pid:urn:dir:2", "Documentation files"),
-            ("pid:urn:dir:3", "Machine-readable metadata"),
-            ("pid:urn:dir:4", "Publication files"),
-            ("pid:urn:dir:5", "Software files")
-        ]
-    },
     "get_files_test_dataset": {
         "files": ["pid:urn:get_files_1", "pid:urn:get_files_2"]
     },

@@ -13,19 +13,19 @@ from siptools.utils import encode_path, read_md_references, get_md_references
 from siptools.xml.mets import NAMESPACES
 
 from siptools_research.config import Configuration
+from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.exceptions import InvalidDatasetMetadataError
-from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools_research.workflow.create_digiprov \
     import CreateProvenanceInformation
+from siptools_research.workflow.create_structmap import CreateStructMap
 
 
 class CreateLogicalStructMap(WorkflowTask):
     """Create METS document that contains logical structMap.
 
-    File is written to `<sip_creation_path>/logical_structmap.xml`
+    The file is written to `<sip_creation_path>/logical_structmap.xml`.
 
     Task requires that physical structure map, fileSec and provenance
     information are created.
@@ -37,16 +37,18 @@ class CreateLogicalStructMap(WorkflowTask):
     def requires(self):
         """List the the Tasks that this Task depends on.
 
-        Provenance reference path from CreateProvenanceInformation is
-        required.
+        Provenance premise event reference file from
+        CreateProvenanceInformation is required.
 
         :returns: list of tasks
         """
         return {
-            "structmap": CreateStructMap(workspace=self.workspace,
-                                         dataset_id=self.dataset_id,
-                                         config=self.config),
-            "provenance": CreateProvenanceInformation(
+            'create_provenance_information': CreateProvenanceInformation(
+                workspace=self.workspace,
+                dataset_id=self.dataset_id,
+                config=self.config
+            ),
+            'create_struct_map': CreateStructMap(
                 workspace=self.workspace,
                 dataset_id=self.dataset_id,
                 config=self.config
@@ -67,13 +69,12 @@ class CreateLogicalStructMap(WorkflowTask):
     def run(self):
         """Create a METS document that contains logical structural map.
 
-        Logical structural map is based on dataset metada retrieved from
-        Metax.
+        Logical structural map is based on dataset metadata retrieved
+        from Metax.
 
         :returns: ``None``
         """
         # Read the generated physical structmap from file
-        # pylint: disable=no-member
         physical_structmap = ET.parse(os.path.join(self.sip_creation_path,
                                                    'structmap.xml'))
 
@@ -125,7 +126,10 @@ class CreateLogicalStructMap(WorkflowTask):
         # Get the reference file path from Luigi task input
         # It already contains the workspace path.
         event_ids = get_md_references(read_md_references(
-            self.sip_creation_path, self.input()["provenance"].path
+            self.workspace,
+            os.path.basename(
+                self.input()['create_provenance_information'].path
+            )
         ))
 
         event_type_ids = {}

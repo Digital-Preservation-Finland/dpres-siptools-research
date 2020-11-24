@@ -1,14 +1,14 @@
 """Luigi task that creates descriptive metadata."""
 import os
-from uuid import uuid4
+import shutil
 
 import luigi
 
 from metax_access import Metax
 from siptools.scripts import import_description
-from siptools.utils import remove_dmdsec_references
 
 from siptools_research.config import Configuration
+from siptools_research.temporarydirectory import TemporaryDirectory
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
@@ -17,10 +17,14 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 class CreateDescriptiveMetadata(WorkflowTask):
     """Create METS dmdSec document.
 
-    Descriptive metadata is read from Metax in DataCite format. Output
-    file is written to <sip_creation_path>/dmdsec.xml. Metadata
-    references are written:
+    Descriptive metadata is read from Metax in DataCite format.
+    Descriptive metadata is written to <sip_creation_path>/dmdsec.xml.
+    Descriptive metadata references are written to
     <sip_creation_path>/import-description-md-references.jsonl.
+    Premis event is written to
+    <sip_creation_path>/<event_identifier>-PREMIS%3AEVENT-amd.xml.
+    Premis event reference is written to
+    `<workspace>/create-descriptive-metadata.jsonl`.
 
     Task requires that workspace is created and dataset metadata is
     validated.
@@ -44,20 +48,13 @@ class CreateDescriptiveMetadata(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: list of local targets
+        :returns: output target
         :rtype: LocalTarget
         """
-        return [
-            luigi.LocalTarget(
-                os.path.join(self.sip_creation_path, 'dmdsec.xml'),
-                format=luigi.format.Nop
-            ),
-            luigi.LocalTarget(
-                os.path.join(self.sip_creation_path,
-                             'import-description-md-references.jsonl'),
-                format=luigi.format.Nop
-            )
-        ]
+        return luigi.LocalTarget(os.path.join(
+            self.workspace,
+            'create-descriptive-metadata.jsonl'
+        ))
 
     def run(self):
         """Copy datacite.xml metadatafile from Metax.
@@ -83,17 +80,23 @@ class CreateDescriptiveMetadata(WorkflowTask):
                                      'datacite.xml')
         datacite.write(datacite_path)
 
-        # Clean up possible dmdSec references created by earlier runs
-        remove_dmdsec_references(self.sip_creation_path)
+        tmp = os.path.join(config_object.get('packaging_root'), 'tmp/')
+        with TemporaryDirectory(prefix=tmp) as temporary_workspace:
+            # Create output files with siptools
+            import_description.import_description(
+                dmdsec_location=datacite_path,
+                workspace=temporary_workspace,
+                without_uuid=True
+            )
 
-        # Create METS dmdSec element tree that contains datacite
-        dmd_id = '_' + str(uuid4())
-        _mets = import_description.create_mets(datacite_path, dmd_id)
-        creator = import_description.DmdCreator(self.sip_creation_path)
-        creator.write_dmd_ref(_mets, dmd_id, '.')
+            # Move created files to SIP creation directory. PREMIS event
+            # reference file is moved to output path after everything
+            # else id done.
+            for file_ in os.listdir(temporary_workspace):
+                if file_ != 'premis-event-md-references.jsonl':
+                    shutil.move(os.path.join(temporary_workspace, file_),
+                                self.sip_creation_path)
 
-        with self.output()[0].open('wb') as outputfile:
-            _mets.write(outputfile,
-                        pretty_print=True,
-                        xml_declaration=True,
-                        encoding='UTF-8')
+            shutil.move(os.path.join(temporary_workspace,
+                                     'premis-event-md-references.jsonl'),
+                        self.output().path)

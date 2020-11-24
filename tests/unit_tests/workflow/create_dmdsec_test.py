@@ -62,19 +62,34 @@ def test_createdescriptivemetadata(testpath, requests_mock):
     metax_datacite = tests.metax_data.datasets.BASE_DATACITE.getroot()
     assert etree.tostring(mets_datacite) == etree.tostring(metax_datacite)
 
-    # Check that metadata refence file is created in sip creation
-    # directory and it contains correct elements
-    referencefile = os.path.join(workspace, 'sip-in-progress',
-                                 'import-description-md-references.jsonl')
-    with open(referencefile) as file_:
+    # Check that descriptive metadata reference file is created in sip
+    # creation directory and it contains correct elements
+    import_description_reference_file \
+        = os.path.join(workspace,
+                       'sip-in-progress',
+                       'import-description-md-references.jsonl')
+    with open(import_description_reference_file) as file_:
         references = json.load(file_)
         assert references['.']["path_type"] == "directory"
         assert references['.']["streams"] == {}
         assert len(references['.']["md_ids"]) == 1
 
-    # Nothing else should be written in `sip-in-progress` directory
+    # Premis event reference file should be created in workspace
+    # directory
+    premis_event_reference_file \
+        = os.path.join(workspace,
+                       'create-descriptive-metadata.jsonl')
+    with open(premis_event_reference_file) as file_:
+        references = json.load(file_)
+        assert len(references['.']["md_ids"]) == 1
+        premis_event_identifier = references['.']["md_ids"][0][1:]
+
+    # SIP creation directory should contain only descriptive metadata
+    # XML, descriptive metadata reference file and premis event XML.
     assert set(os.listdir(os.path.join(workspace, 'sip-in-progress'))) \
-        == set(['dmdsec.xml', 'import-description-md-references.jsonl'])
+        == set(['dmdsec.xml',
+                'import-description-md-references.jsonl',
+                '{}-PREMIS%3AEVENT-amd.xml'.format(premis_event_identifier)])
 
 
 @pytest.mark.usefixtures('testmongoclient')

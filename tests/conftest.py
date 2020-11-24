@@ -204,7 +204,7 @@ def mock_metax_dataset(requests_mock,
             }
         )
 
-        # Mock Metax contracts API
+        # Mock Metax directories API
         requests_mock.get(
             "{}/directories/{}".format(
                 METAX_URL, file_['parent_directory']['identifier']

@@ -74,7 +74,7 @@ class GetFiles(WorkflowTask):
             output.write("Dataset id=" + self.dataset_id)
 
     def _download_files(self, dataset_files):
-        """Download dataset fiels.
+        """Download dataset files.
 
         Files are written to path based on ``file_path`` in Metax.
 

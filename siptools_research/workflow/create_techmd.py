@@ -1,12 +1,16 @@
 """Luigi task that creates technical metadata."""
 # encoding=utf8
 
-import os
 import datetime
+import os
+import shutil
+
 from luigi import LocalTarget
 from metax_access import Metax
 import siptools.scripts.import_object
 import siptools.mdcreator
+
+from siptools_research.temporarydirectory import TemporaryDirectory
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
@@ -41,18 +45,27 @@ TECH_ATTR_TYPES = [
 class CreateTechnicalMetadata(WorkflowTask):
     """Create METS documents that contain technical metadata.
 
-    The PREMIS metadata is created to all dataset files and it is
+    The PREMIS object metadata is created to all dataset files and it is
     written to
-    `<sip_creation_path>/<url_encoded_filepath>-premis-techmd.xml`.
+    `<sip_creation_path>/<url_encoded_filepath>-PREMIS%3AOBJECT-amd.xml`.
+    File properties are written to
+    `<sip_creation_path>/<url_encoded_filepath>-scraper.json`.
+    PREMIS event metadata and PREMIS agent metadata are written to
+    `<sip_creation_path>/<premis_event_id>-PREMIS%3AEVENT-amd.xml` and
+    `<sip_creation_path>/<premis_agent_id>-PREMIS%3AEVENT-amd.xml`.
+    Import object PREMIS event metadata references are written to
+    `<sip_creation_path>/import-object-md-references.jsonl`.
 
     The file format specific metadata is copied from metax if it is
-    available.  It is written to
-    `<sip_creation_path>/<url_encoded_filepath>-<metadata_type>-techmd.xml`,
+    available. It is written to
+    `<sip_creation_path>/<url_encoded_filepath>-<metadata_type>-amd.xml`,
     where <metadata_type> is NISOIMG, ADDML, AudioMD, or VideoMD.
+    File format specific metadata references are written to a json-file
+    depending on file format. For example, refences to NISOIMG metadata
+    are written to `<sip_creation_path>/create-mix-md-references`.
 
-    Since the output files are not known beforehand, a false target
-    `task-create-technical-metadata.finished` is created into workspace
-    directory to notify luigi that this task has finished.
+    List of PREMIS event references is written to
+    `<workspace>/create-technical-metadata.jsonl`
 
     The task requires workspace to be created, dataset metadata to be
     validated and dataset files to be downloaded.
@@ -64,12 +77,12 @@ class CreateTechnicalMetadata(WorkflowTask):
     def __init__(self, *args, **kwargs):
         """Initialize Task."""
         super(CreateTechnicalMetadata, self).__init__(*args, **kwargs)
-        config_object = Configuration(self.config)
+        self.config_object = Configuration(self.config)
         self.metax_client = Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
+            self.config_object.get('metax_url'),
+            self.config_object.get('metax_user'),
+            self.config_object.get('metax_password'),
+            verify=self.config_object.getboolean('metax_ssl_verification')
         )
 
     def requires(self):
@@ -91,14 +104,13 @@ class CreateTechnicalMetadata(WorkflowTask):
     def output(self):
         """Return output target of this Task.
 
-        :returns: local target:
-                  `task-create-technical-metadata.finished`
+        :returns: PREMIS event reference file
         :rtype: LocalTarget
         """
         return LocalTarget(
             os.path.join(
                 self.workspace,
-                'task-create-technical-metadata.finished'
+                'create-technical-metadata.jsonl'
             )
         )
 
@@ -116,17 +128,30 @@ class CreateTechnicalMetadata(WorkflowTask):
         # creating new events each time import_object is iterated
         event_datetime = datetime.datetime.utcnow().isoformat()
 
-        for file_ in files:
-            # Create METS document that contains PREMIS metadata
-            self.create_objects(file_, event_datetime)
+        tmp = os.path.join(self.config_object.get('packaging_root'), 'tmp/')
+        with TemporaryDirectory(prefix=tmp) as temporary_workspace:
+            for file_ in files:
+                # Create METS document that contains PREMIS metadata
+                self.create_objects(file_, event_datetime, temporary_workspace)
 
-            # Create METS documents that contain technical attributes
-            self.create_technical_attributes(file_)
+                # Create METS documents that contain technical
+                # attributes
+                self.create_technical_attributes(file_, temporary_workspace)
 
-        with self.output().open('w') as output:
-            output.write("Dataset id=" + self.dataset_id)
+            # Move created files to sip creation directory. PREMIS event
+            # reference file is moved to workspace after everything else
+            # is done.
+            for file_ in os.listdir(temporary_workspace):
+                if file_ != 'premis-event-md-references.jsonl':
+                    shutil.move(os.path.join(temporary_workspace, file_),
+                                self.sip_creation_path)
+            shutil.move(
+                os.path.join(temporary_workspace,
+                             'premis-event-md-references.jsonl'),
+                self.output().path
+            )
 
-    def create_objects(self, metadata, event_datetime):
+    def create_objects(self, metadata, event_datetime, workspace):
         """Create PREMIS metadata for file.
 
         Reads file metadata from Metax. Technical metadata is generated
@@ -135,6 +160,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         :param metadata: file metadata dictionary
         :param event_datetime: the timestamp for the import_object
                                events
+        :param workspace: workspace directory for import_object script
         :returns: ``None``
         """
         # Read character set if it defined for this file
@@ -167,7 +193,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         siptools.scripts.import_object.import_object(
             filepaths=[metadata['file_path'].strip('/')],
             base_path=self.sip_creation_path,
-            workspace=self.sip_creation_path,
+            workspace=workspace,
             skip_wellformed_check=True,
             file_format=(
                 metadata["file_characteristics"]["file_format"],
@@ -180,20 +206,21 @@ class CreateTechnicalMetadata(WorkflowTask):
             event_target='.'
         )
 
-    def create_technical_attributes(self, metadata):
+    def create_technical_attributes(self, metadata, workspace):
         """Read technical attribute XML from Metax.
 
         Create METS TechMD files for each metadata type, if it is
         available in Metax.
 
         :param metadata: file metadata dictionary
+        :param workspace: output directory for mdcreator
         :returns: ``None``
         """
         file_id = metadata["identifier"]
         filepath = metadata['file_path'].strip('/')
         xmls = self.metax_client.get_xml(file_id)
 
-        creator = siptools.mdcreator.MetsSectionCreator(self.sip_creation_path)
+        creator = siptools.mdcreator.MetsSectionCreator(workspace)
 
         for type_ in TECH_ATTR_TYPES:
             if type_["namespace"] in xmls:

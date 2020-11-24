@@ -1,11 +1,13 @@
 # encoding=utf8
 """Luigi task that creates fileSec and physical structure map."""
 
+import json
 import os
 
 import luigi.format
 from luigi import LocalTarget
 from siptools.scripts import compile_structmap
+from siptools.utils import read_md_references
 
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_digiprov import \
@@ -31,19 +33,25 @@ class CreateStructMap(WorkflowTask):
     def requires(self):
         """List the Tasks that this Task depends on.
 
-        :returns: list of tasks
+        :returns: dictionary of tasks
         """
-        return [
-            CreateDescriptiveMetadata(workspace=self.workspace,
-                                      dataset_id=self.dataset_id,
-                                      config=self.config),
-            CreateProvenanceInformation(workspace=self.workspace,
-                                        dataset_id=self.dataset_id,
-                                        config=self.config),
-            CreateTechnicalMetadata(workspace=self.workspace,
-                                    dataset_id=self.dataset_id,
-                                    config=self.config)
-        ]
+        return {
+            'create_provenance_information': CreateProvenanceInformation(
+                workspace=self.workspace,
+                dataset_id=self.dataset_id,
+                config=self.config
+            ),
+            'create_descriptive_metadata': CreateDescriptiveMetadata(
+                workspace=self.workspace,
+                dataset_id=self.dataset_id,
+                config=self.config
+            ),
+            'create_technical_metadata': CreateTechnicalMetadata(
+                workspace=self.workspace,
+                dataset_id=self.dataset_id,
+                config=self.config
+            )
+        }
 
     def output(self):
         """List the output targets of this Task.
@@ -73,11 +81,27 @@ class CreateStructMap(WorkflowTask):
 
         :returns: ``None``
         """
-        attributes = {"workspace": self.sip_creation_path}
-        # Append the reference lists to attributes.
-        attributes = compile_structmap.get_reference_lists(**attributes)
+        # Merge premis event reference files
+        md_ids = []
+        for input_target in ('create_provenance_information',
+                             'create_descriptive_metadata',
+                             'create_technical_metadata'):
+            md_ids += (
+                read_md_references(
+                    self.workspace,
+                    self.input()[input_target].path
+                )['.']['md_ids']
+            )
+        with open(os.path.join(self.sip_creation_path,
+                               'premis-event-md-references.jsonl'), 'w') \
+                as references:
+            references.write(json.dumps({".": {"path_type": "directory",
+                                               "streams": {},
+                                               "md_ids": md_ids}}))
 
         # Create fileSec
+        attributes = {"workspace": self.sip_creation_path}
+        attributes = compile_structmap.get_reference_lists(**attributes)
         (filesec, file_ids) = compile_structmap.create_filesec(**attributes)
         with self.output()[0].open('wb') as filesecxml:
             filesec.write(filesecxml,

@@ -9,7 +9,6 @@ from siptools.scripts import compile_mets
 
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools_research.workflow.create_logical_structmap \
     import CreateLogicalStructMap
 
@@ -21,8 +20,7 @@ class CreateMets(WorkflowTask):
     one METS document. The METS document is written to
     <sip_creation_path>/mets.xml and partial METS documents are removed.
 
-    Task requires structural map and logical structural map to be
-    created.
+    Task requires logical structural map to be created.
     """
 
     success_message = "METS document compiled"
@@ -31,16 +29,11 @@ class CreateMets(WorkflowTask):
     def requires(self):
         """List the Tasks that this Task depends on.
 
-        :returns: list of required tasks
+        :returns: Required task
         """
-        return [
-            CreateStructMap(workspace=self.workspace,
-                            dataset_id=self.dataset_id,
-                            config=self.config),
-            CreateLogicalStructMap(workspace=self.workspace,
-                                   dataset_id=self.dataset_id,
-                                   config=self.config)
-        ]
+        return CreateLogicalStructMap(workspace=self.workspace,
+                                      dataset_id=self.dataset_id,
+                                      config=self.config)
 
     def output(self):
         """Return the output target of this Task.

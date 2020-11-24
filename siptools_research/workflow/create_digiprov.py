@@ -28,23 +28,11 @@ class CreateProvenanceInformation(WorkflowTask):
     documents are written to
     `<sip_creation_path>/<uuid>-PREMIS%3AEVENT-amd.xml`. List of
     references to PREMIS events is written to
-    `<sip_creation_path>/premis-event-md-references.jsonl`.
+    `<workspace>/create-provenance-information.jsonl`.
 
     The Task requires that workspace directory is created and dataset
     metadata is validated.
     """
-
-    def __init__(self, *args, **kwargs):
-        """Initialize task."""
-        super(CreateProvenanceInformation, self).__init__(*args, **kwargs)
-        self.config_object = Configuration(self.config)
-        metax = Metax(
-            self.config_object.get('metax_url'),
-            self.config_object.get('metax_user'),
-            self.config_object.get('metax_password'),
-            verify=self.config_object.getboolean('metax_ssl_verification')
-        )
-        self.dataset = metax.get_dataset(self.dataset_id)
 
     success_message = "Provenance metadata created."
     failure_message = "Could not create provenance metadata"
@@ -70,35 +58,44 @@ class CreateProvenanceInformation(WorkflowTask):
     def output(self):
         """List the output targets of the task.
 
-        :returns:  local target: 'premis-event-md-references.jsonl'
+        :returns:  local target: 'create-provenance-information.jsonl'
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
-            os.path.join(self.sip_creation_path,
-                         'premis-event-md-references.jsonl'),
-            format=luigi.format.Nop
+            os.path.join(self.workspace, 'create-provenance-information.jsonl')
         )
 
     def run(self):
         """Create premis events.
 
-        Reads file metadata from Metax and writes digital provenance
-        information to `sip-in-progress/creation-event.xml` file.
+        Reads dataset metadata from Metax and creates premis event XML
+        files. Premis event XML files are written to SIP creation
+        directory and premis event reference file is written to
+        workspace directory.
 
         :returns: ``None``
         """
-        tmp = os.path.join(self.config_object.get('packaging_root'), 'tmp/')
+        config_object = Configuration(self.config)
+        tmp = os.path.join(config_object.get('packaging_root'), 'tmp/')
         with TemporaryDirectory(prefix=tmp) as temporary_workspace:
 
             _create_premis_events(self.dataset_id,
                                   temporary_workspace,
                                   self.config)
 
-            # Move files to SIP creation path when all of them are
-            # succesfully created to avoid atomicity problems
+            # Move PREMIS event files to SIP creation path when all of
+            # them are succesfully created to avoid atomicity problems
             for file_ in os.listdir(temporary_workspace):
-                shutil.move(os.path.join(temporary_workspace, file_),
-                            self.sip_creation_path)
+                if file_.endswith('-PREMIS%3AEVENT-amd.xml'):
+                    shutil.move(os.path.join(temporary_workspace, file_),
+                                self.sip_creation_path)
+
+            # Move reference file to target path
+            shutil.move(
+                os.path.join(temporary_workspace,
+                             'premis-event-md-references.jsonl'),
+                self.output().path
+            )
 
 
 def _create_premis_events(dataset_id, workspace, config):

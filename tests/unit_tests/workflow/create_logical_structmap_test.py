@@ -1,6 +1,8 @@
-"""Tests for :mod:`siptools_research.workflow.create_structmap`."""
+"""Tests for :mod:`siptools_research.workflow.create_logical_structmap`."""  # noqa: W505,E501
 
 import os
+import copy
+import shutil
 
 import pytest
 import lxml.etree
@@ -13,13 +15,13 @@ from siptools.scripts.compile_structmap import compile_structmap
 from siptools.scripts.premis_event import premis_event
 from siptools.xml.mets import NAMESPACES
 
-import tests.conftest
+import tests
 from siptools_research.workflow.create_logical_structmap import (
     CreateLogicalStructMap, find_dir_use_category, get_dirpath_dict
 )
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient')
 def test_create_structmap_ok(testpath, requests_mock):
     """Test the workflow task CreateLogicalStructMap.
 
@@ -27,48 +29,25 @@ def test_create_structmap_ok(testpath, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    # Mock research_dataset directories
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/pid:urn:dir:1",
-        json={
-            "identifier": "pid:urn:dir:1",
-            "directory_path": "/access"
-        }
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/pid:urn:dir:2",
-        json={
-            "identifier": "pid:urn:dir:2",
-            "directory_path": "/docs"
-        }
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/pid:urn:dir:3",
-        json={
-            "identifier": "pid:urn:dir:3",
-            "directory_path": "/metadata"
-        }
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/pid:urn:dir:4",
-        json={
-            "identifier": "pid:urn:dir:4",
-            "directory_path": "/pubs"
-        }
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/pid:urn:dir:5",
-        json={
-            "identifier": "pid:urn:dir:5",
-            "directory_path": "/software"
-        }
-    )
+    # Create a dataset that contains two files
+    files = [copy.deepcopy(tests.metax_data.files.BASE_FILE),
+             copy.deepcopy(tests.metax_data.files.BASE_FILE)]
+    files[0]['file_path'] = 'files/file1'
+    files[1]['file_path'] = 'files/file2'
+    tests.conftest.mock_metax_dataset(requests_mock, files=files)
 
-    # Create sip directory in workspace
-    sip_directory = os.path.join(testpath, "sip-in-progress")
-    os.makedirs(os.path.join(testpath, 'sip-in-progress'))
+    # Create workspace that already contains dataset files in sip
+    # directory
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    sip_directory = os.path.join(workspace, "sip-in-progress")
+    file_directory = os.path.join(sip_directory, 'files')
+    os.makedirs(file_directory)
+    with open(os.path.join(file_directory, 'file1'), 'w') as file_:
+        file_.write('foo')
+    with open(os.path.join(file_directory, 'file2'), 'w') as file_:
+        file_.write('bar')
 
-    # Create metadata required metadata to SIP directory:
+    # Create metadata required metadata to workspace:
     # * digital provenance metadata
     # * descriptive metadata
     # * technical metadata
@@ -81,24 +60,30 @@ def test_create_structmap_ok(testpath, requests_mock):
         event_outcome='success',
         event_outcome_detail='bar'
     )
+    shutil.copy(
+        os.path.join(sip_directory, 'premis-event-md-references.jsonl'),
+        os.path.join(workspace,
+                     'create-provenance-information.jsonl')
+    )
     import_description(
         dmdsec_location='tests/data/datacite_sample.xml',
         workspace=sip_directory
     )
     import_object(
         workspace=sip_directory,
+        base_path=sip_directory,
         skip_wellformed_check=True,
-        filepaths=['./tests/data/structured']
+        filepaths=[file_directory]
     )
     compile_structmap(
         workspace=sip_directory,
         structmap_type='Fairdata-physical'
     )
 
-    # Init and run CreateStructMap task
+    # Init and run CreateLogicalStructMap task
     sip_directory_content_before_run = os.listdir(sip_directory)
-    task = CreateLogicalStructMap(workspace=testpath,
-                                  dataset_id='create_structmap_test_dataset',
+    task = CreateLogicalStructMap(workspace=workspace,
+                                  dataset_id='dataset_identifier',
                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
@@ -210,36 +195,17 @@ def validate_logical_structmap_file(logical_structmap_file):
     :returns: ``None``
     """
     tree = lxml.etree.parse(logical_structmap_file)
+    assert tree.xpath('/mets:mets/mets:structMap',
+                      namespaces=NAMESPACES)[0].attrib['TYPE'] \
+        == "Fairdata-logical"
 
     directories = tree.xpath(
         '/mets:mets/mets:structMap/mets:div/mets:div/@TYPE',
         namespaces=NAMESPACES
     )
-    assert len(directories) == 5
-    assert 'Documentation files' in directories
-    assert 'Machine-readable metadata' in directories
-    assert 'Access and use rights files' in directories
-    assert 'Software files' in directories
-    assert 'Publication files' in directories
-
-    assert tree.xpath('/mets:mets/mets:structMap',
-                      namespaces=NAMESPACES)[0].attrib['TYPE'] \
-        == "Fairdata-logical"
+    assert len(directories) == 1
+    assert 'pid:urn:identifier' in directories
 
     assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Documentation files"]/mets:fptr/@FILEID',
-                          namespaces=NAMESPACES)) == 5
-    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Machine-readable metadata"]/mets:fptr'
-                          '[@FILEID]',
-                          namespaces=NAMESPACES)) == 1
-    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Access and use rights files"]/mets:fptr'
-                          '/@FILEID',
-                          namespaces=NAMESPACES)) == 1
-    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Software files"]/mets:fptr/@FILEID',
-                          namespaces=NAMESPACES)) == 1
-    assert len(tree.xpath('/mets:mets/mets:structMap/mets:div/mets:div'
-                          '[@TYPE="Publication files"]/mets:fptr/@FILEID',
-                          namespaces=NAMESPACES)) == 1
+                          '[@TYPE="pid:urn:identifier"]/mets:fptr/@FILEID',
+                          namespaces=NAMESPACES)) == 2

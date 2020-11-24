@@ -205,6 +205,7 @@ def test_mets_creation(testpath, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
+
     requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
                       json=tests.metax_data.contracts.BASE_CONTRACT)
     requests_mock.get(
@@ -236,9 +237,10 @@ def test_mets_creation(testpath, requests_mock):
     requests_mock.patch("https://metaksi/rest/v1/datasets/"
                         "workflow_test_dataset_1_ida")
 
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     luigi.build(
         [CompressSIP(
-            workspace=testpath,
+            workspace=workspace,
             dataset_id='workflow_test_dataset_1_ida',
             config=tests.conftest.UNIT_TEST_CONFIG_FILE
         )],
@@ -255,7 +257,7 @@ def test_mets_creation(testpath, requests_mock):
     assert document['workflow_tasks']['CompressSIP']['result'] == 'success'
 
     # Read mets.xml
-    mets = ET.parse(os.path.join(testpath, 'sip-in-progress', 'mets.xml'))
+    mets = ET.parse(os.path.join(workspace, 'sip-in-progress', 'mets.xml'))
 
     # Validate mets.xml against schema
     schema = ET.XMLSchema(ET.parse(METS_XSD))
@@ -263,7 +265,7 @@ def test_mets_creation(testpath, requests_mock):
 
     # Validate mets.xml against Schematrons
     for schematron in SCHEMATRONS:
-        assert Schematron(ET.parse(schematron)).validate(mets)
+        Schematron(ET.parse(schematron)).assertValid(mets)
 
     # Check mets root element
     mets_xml_root = mets.getroot()

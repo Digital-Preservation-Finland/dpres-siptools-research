@@ -114,9 +114,10 @@ def test_create_techmd_ok(testpath, requests_mock):
     premis_event_id \
         = premis_event_files[0].rsplit('-PREMIS%3AEVENT-amd.xml')[0]
 
-    # A bunch of premis agent files should be created
-    premis_references = read_md_references(sipdirectory,
-                                           'premis-event-md-references.jsonl')
+    # Some premis agent files should be created
+    premis_references = read_md_references(
+        workspace, 'create-technical-metadata.jsonl'
+    )
     premis_agent_files = ['{}-PREMIS%3AAGENT-amd.xml'.format(id_[1:])
                           for id_ in premis_references['.']['md_ids']
                           if id_[1:] != premis_event_id]
@@ -151,12 +152,12 @@ def test_create_techmd_ok(testpath, requests_mock):
     )
     assert xml2simpledict(mix) == xml2simpledict(original_mix)
 
-    # SIP directory should contain a bunch of files
+    # SIP directory should contain all technical metadata and related
+    # files
     assert set(os.listdir(sipdirectory)) \
         == set(['import-object-md-references.jsonl',
                 premis_object_file,
                 file_properties_file,
-                'premis-event-md-references.jsonl',
                 'create-mix-md-references.jsonl',
                 '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml',
                 'import-object-extraction-AGENTS-amd.json',
@@ -257,6 +258,9 @@ def test_xml_metadata_file_missing(testpath, requests_mock):
 
     assert exc.value.response.status_code == 404
     assert not task.complete()
+
+    # The should not have created any files in sip creation directory
+    assert os.listdir(sipdirectory) == ['project_xml_metadata_missing']
 
 
 @pytest.mark.parametrize(('algorithm', 'hash_function', 'expected'),

@@ -105,7 +105,6 @@ def create_test_data(workspace):
     :workspace: Workspace directory in which the data is created.
     """
     # Create directory structure
-    os.makedirs(os.path.join(workspace, 'logs'))
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
     os.makedirs(sipdirectory)
 
