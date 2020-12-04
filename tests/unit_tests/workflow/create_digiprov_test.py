@@ -115,18 +115,18 @@ def test_create_premis_events(testpath):
     :returns: ``None``
     """
     # Create provenance info xml-file to tempdir
-    workspace = testpath
     # pylint: disable=protected-access
     create_digiprov._create_premis_events(
         'create_digiprov_test_dataset_detailed_check',
-        workspace,
+        testpath,
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
     # Check that the created xml-file contains correct elements.
     # pylint: disable=no-member
     tree = lxml.etree.parse(os.path.join(
-        testpath, '24d4d306da97c4fd31c5ff1cc8c28316-PREMIS%3AEVENT-amd.xml'))
+        testpath, '24d4d306da97c4fd31c5ff1cc8c28316-PREMIS%3AEVENT-amd.xml'
+    ))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
                           namespaces={'mets': "http://www.loc.gov/METS/",

@@ -14,13 +14,13 @@ def test_compresssip(testpath):
 
     :param testpath: Temporary directory fixture
     """
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     # Create required contents to workspace
-    os.makedirs(os.path.join(testpath, 'logs'))
     shutil.copytree('tests/data/testsips/simple_sip',
-                    os.path.join(testpath, 'sip-in-progress'))
+                    os.path.join(workspace, 'sip-in-progress'))
 
     # Init task
-    task = CompressSIP(workspace=testpath,
+    task = CompressSIP(workspace=workspace,
                        dataset_id="1",
                        config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
@@ -32,9 +32,9 @@ def test_compresssip(testpath):
     # Extract tar file created by task and that it contains same
     # files/dirs as the original sip-in-progress directory
     with tarfile.open(
-            os.path.join(testpath, os.path.basename(testpath)) + '.tar'
+            os.path.join(workspace, os.path.basename(workspace)) + '.tar'
     ) as tar:
-        tar.extractall(os.path.join(testpath, 'extracted_tar'))
+        tar.extractall(os.path.join(workspace, 'extracted_tar'))
 
-    assert set(os.listdir(os.path.join(testpath, 'extracted_tar'))) \
+    assert set(os.listdir(os.path.join(workspace, 'extracted_tar'))) \
         == set(['signature.sig', 'mets.xml', 'tests'])

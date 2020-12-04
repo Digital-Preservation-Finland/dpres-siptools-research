@@ -1,5 +1,6 @@
 """Unit tests for :mod:`siptools_research.workflow.validate_sip`."""
 from datetime import datetime
+import os
 
 import tests.conftest
 from siptools_research.workflow.validate_sip import ValidateSIP
@@ -20,7 +21,7 @@ def test_validatesip_accepted(testpath, monkeypatch):
         Database, 'get_event_timestamp',
         lambda self, workflow, task: datetime.utcnow().isoformat()
     )
-    workspace = testpath
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
 
     # Init task
     task = ValidateSIP(workspace=workspace, dataset_id="1",

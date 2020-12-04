@@ -231,10 +231,8 @@ def test_xml_metadata_file_missing(testpath, requests_mock):
                       "?namespace=http://www.loc.gov/mix/v20",
                       status_code=404)
 
-    # Create workspace with empty "logs" and "sip-in-progress'
-    # directories in temporary directory
-    workspace = testpath
-    os.makedirs(os.path.join(workspace, 'logs'))
+    # Create empty workspace directory
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
     os.makedirs(sipdirectory)
 

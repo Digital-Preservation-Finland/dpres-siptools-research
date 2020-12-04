@@ -27,7 +27,6 @@ def test_send_sip(testpath):
     # Create workspace with directories and files required by the task
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'sip-in-progress'))
-    os.makedirs(os.path.join(workspace, 'logs'))
     tar_file_name = os.path.basename(workspace) + ".tar"
     shutil.copy('tests/data/testsips/simple_sip.tar',
                 os.path.join(workspace, tar_file_name))

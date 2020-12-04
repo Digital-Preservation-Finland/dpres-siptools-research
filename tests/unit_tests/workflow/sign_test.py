@@ -16,10 +16,8 @@ def test_signsip(testpath):
     :param testpath: Testpath fixture
     :returns: ``None``
     """
-    # Create workspace with "logs" and "transfers" directories in
-    # temporary directory
-    workspace = testpath
-    os.makedirs(os.path.join(workspace, 'logs'))
+    # Create empty workspace
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sip_path = os.path.join(workspace, 'sip-in-progress')
     os.makedirs(sip_path)
 

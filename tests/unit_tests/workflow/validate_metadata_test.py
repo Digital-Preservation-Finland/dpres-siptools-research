@@ -44,11 +44,9 @@ def test_validatemetadata(testpath, requests_mock):
             content=datacite.read()
         )
 
-    # Create "logs" directory
-    os.mkdir(os.path.join(testpath, 'logs'))
-
     # Init task
-    task = ValidateMetadata(workspace=testpath,
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    task = ValidateMetadata(workspace=workspace,
                             dataset_id='validate_metadata_test_dataset',
                             config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
@@ -69,12 +67,10 @@ def test_invalid_metadata(testpath):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    # Create "logs" directory
-    os.mkdir(os.path.join(testpath, 'logs'))
-
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     # Init task
     task = ValidateMetadata(
-        workspace=testpath,
+        workspace=workspace,
         dataset_id='validate_metadata_test_dataset_invalid_metadata',
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )

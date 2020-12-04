@@ -27,13 +27,13 @@ def test_getfiles(testpath, requests_mock):
                       content=b'bar\n')
 
     # Create required directories to  workspace
-    sipdirectory = os.path.join(testpath, 'sip-in-progress')
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
     os.makedirs(sipdirectory)
-    os.makedirs(os.path.join(testpath, 'logs'))
 
     # Init task
     task = get_files.GetFiles(
-        workspace=testpath,
+        workspace=workspace,
         dataset_id="get_files_test_dataset",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -67,8 +67,9 @@ def test_missing_ida_files(testpath, requests_mock):
     requests_mock.get('https://ida.test/files/pid:urn:does_not_exist/download',
                       status_code=404)
     # Init task
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     task = get_files.GetFiles(
-        workspace=testpath,
+        workspace=workspace,
         dataset_id="get_files_test_dataset_ida_missing_file",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -84,7 +85,7 @@ def test_missing_ida_files(testpath, requests_mock):
     assert not task.complete()
 
     # The first file should be created into correct path
-    filepath = os.path.join(testpath, 'sip-in-progress/path/to/file1')
+    filepath = os.path.join(workspace, 'sip-in-progress/path/to/file1')
     with open(filepath) as _file:
         assert _file.read() == 'foo\n'
 
@@ -99,11 +100,13 @@ def test_missing_local_files(testpath):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
+    workspace = os.path.join(testpath, 'workspace', 'workspace')
+    os.makedirs(workspace)
     # Init mocked upload.files collection
     mongoclient = pymongo.MongoClient()
     mongo_files = [
-        ("pid:urn:get_files_1_local", os.path.join(testpath, "file1")),
-        ("pid:urn:does_not_exist_local", os.path.join(testpath, "file2"))
+        ("pid:urn:get_files_1_local", os.path.join(workspace, "file1")),
+        ("pid:urn:does_not_exist_local", os.path.join(workspace, "file2"))
     ]
     for identifier, fpath in mongo_files:
         mongoclient.upload.files.insert_one(
@@ -111,12 +114,12 @@ def test_missing_local_files(testpath):
         )
 
     # Create only the first file in test directory
-    with open(os.path.join(testpath, "file1"), 'w') as file1:
+    with open(os.path.join(workspace, "file1"), 'w') as file1:
         file1.write('foo\n')
 
     # Init task
     task = get_files.GetFiles(
-        workspace=testpath,
+        workspace=workspace,
         dataset_id="get_files_test_dataset_local_missing_file",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -134,7 +137,7 @@ def test_missing_local_files(testpath):
     assert not task.complete()
 
     # The first file should be created into correct path
-    filepath = os.path.join(testpath, 'sip-in-progress/path/to/file1')
+    filepath = os.path.join(workspace, 'sip-in-progress/path/to/file1')
     with open(filepath) as _file:
         assert _file.read() == 'foo\n'
 
@@ -204,7 +207,7 @@ def test_allowed_relative_paths(testpath, path, requests_mock):
     requests_mock.get('https://ida.test/files/pid:urn:1/download')
 
     # Create the workspace and required directories
-    workspace = os.path.join(testpath, 'workspace')
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
     os.makedirs(sipdirectory)
 
