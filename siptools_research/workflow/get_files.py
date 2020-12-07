@@ -1,12 +1,13 @@
 """Luigi task that gets files from Ida."""
 import os
+import shutil
 
 import luigi
-
 from metax_access import Metax
 import upload_rest_api.database
 
 from siptools_research.utils.download import download_file
+from siptools_research.temporarydirectory import TemporaryDirectory
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
@@ -83,29 +84,39 @@ class GetFiles(WorkflowTask):
         """
         upload_database = upload_rest_api.database.Database()
 
-        for dataset_file in dataset_files:
-            identifier = dataset_file["identifier"]
+        config_object = Configuration(self.config)
+        tmp = os.path.join(config_object.get('packaging_root'), 'tmp/')
+        with TemporaryDirectory(prefix=tmp) as temporary_directory:
+            for dataset_file in dataset_files:
+                identifier = dataset_file["identifier"]
 
-            # Full path to file
-            target_path = os.path.normpath(
-                os.path.join(
-                    self.sip_creation_path,
-                    dataset_file["file_path"].strip('/')
-                )
-            )
-            if not target_path.startswith(self.sip_creation_path):
-                raise InvalidFileMetadataError(
-                    'The file path of file %s is invalid: %s' % (
-                        identifier, dataset_file["file_path"]
+                # Full path to file
+                target_path = os.path.normpath(
+                    os.path.join(
+                        temporary_directory,
+                        dataset_file["file_path"].strip('/')
                     )
                 )
+                if not target_path.startswith(temporary_directory):
+                    raise InvalidFileMetadataError(
+                        'The file path of file %s is invalid: %s' % (
+                            identifier, dataset_file["file_path"]
+                        )
+                    )
 
-            # Create the download directory for file if it does not
-            # exist already
-            if not os.path.isdir(os.path.dirname(target_path)):
-                # TODO: Use exist_ok -parameter when moving to python3
-                os.makedirs(os.path.dirname(target_path))
+                # Create the download directory for file if it does not
+                # exist already
+                if not os.path.isdir(os.path.dirname(target_path)):
+                    # TODO: Use exist_ok -parameter when moving to
+                    # python3
+                    os.makedirs(os.path.dirname(target_path))
 
-            download_file(
-                dataset_file, target_path, self.config, upload_database
-            )
+                download_file(
+                    dataset_file, target_path, self.config, upload_database
+                )
+
+            # Move files to SIP directory when all files have been
+            # succesfully downloaded
+            for file_ in os.listdir(temporary_directory):
+                shutil.move(os.path.join(temporary_directory, file_),
+                            self.sip_creation_path)

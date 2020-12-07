@@ -68,6 +68,8 @@ def test_missing_ida_files(testpath, requests_mock):
                       status_code=404)
     # Init task
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    sip_creation_path = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sip_creation_path)
     task = get_files.GetFiles(
         workspace=workspace,
         dataset_id="get_files_test_dataset_ida_missing_file",
@@ -84,10 +86,8 @@ def test_missing_ida_files(testpath, requests_mock):
     # Task should not be completed
     assert not task.complete()
 
-    # The first file should be created into correct path
-    filepath = os.path.join(workspace, 'sip-in-progress/path/to/file1')
-    with open(filepath) as _file:
-        assert _file.read() == 'foo\n'
+    # Nothing should be written to SIP creation directory
+    assert not os.listdir(sip_creation_path)
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
@@ -101,7 +101,8 @@ def test_missing_local_files(testpath):
     :returns: ``None``
     """
     workspace = os.path.join(testpath, 'workspace', 'workspace')
-    os.makedirs(workspace)
+    sip_creation_path = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sip_creation_path)
     # Init mocked upload.files collection
     mongoclient = pymongo.MongoClient()
     mongo_files = [
@@ -136,10 +137,8 @@ def test_missing_local_files(testpath):
     # Task should not be completed
     assert not task.complete()
 
-    # The first file should be created into correct path
-    filepath = os.path.join(workspace, 'sip-in-progress/path/to/file1')
-    with open(filepath) as _file:
-        assert _file.read() == 'foo\n'
+    # Nothing should be written to SIP creation directory
+    assert not os.listdir(sip_creation_path)
 
 
 @pytest.mark.parametrize('path', ["../../file1",
