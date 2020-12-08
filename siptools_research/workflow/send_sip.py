@@ -59,10 +59,15 @@ class SendSIPToDP(WorkflowTask):
                         key_filename=conf.get('dp_ssh_key'))
 
             with ssh.open_sftp() as sftp:
-                # Copy tar to remote host
+                # Copy tar to remote host. Validation workflow starts
+                # when ".incomplete" suffix is removed from target file
+                # path.
                 tar_file = os.path.basename(self.workspace) + '.tar'
                 sftp.put(os.path.join(self.workspace, tar_file),
-                         'transfer/' + tar_file,
+                         os.path.join('transfer', tar_file + '.incomplete'),
                          confirm=False)
-                with self.output().open('w') as log:
-                    log.write('Dataset id=' + self.dataset_id)
+                sftp.rename(os.path.join('transfer', tar_file + '.incomplete'),
+                            os.path.join('transfer', tar_file))
+
+            with self.output().open('w') as log:
+                log.write('Dataset id=' + self.dataset_id)
