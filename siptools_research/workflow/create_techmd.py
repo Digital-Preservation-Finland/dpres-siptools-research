@@ -4,13 +4,17 @@
 import datetime
 import os
 import shutil
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    # TODO: Remove this when Python 2 support can be dropped
+    from siptools_research.temporarydirectory import TemporaryDirectory
 
 from luigi import LocalTarget
 from metax_access import Metax
 import siptools.scripts.import_object
 import siptools.mdcreator
 
-from siptools_research.temporarydirectory import TemporaryDirectory
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace

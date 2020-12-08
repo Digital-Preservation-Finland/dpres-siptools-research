@@ -1,6 +1,11 @@
 """Luigi task that creates descriptive metadata."""
 import os
 import shutil
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    # TODO: Remove this when Python 2 support can be dropped
+    from siptools_research.temporarydirectory import TemporaryDirectory
 
 import luigi
 
@@ -8,7 +13,6 @@ from metax_access import Metax
 from siptools.scripts import import_description
 
 from siptools_research.config import Configuration
-from siptools_research.temporarydirectory import TemporaryDirectory
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata

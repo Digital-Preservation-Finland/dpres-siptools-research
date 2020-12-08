@@ -2,6 +2,11 @@
 
 import os
 import shutil
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    # TODO: Remove this when Python 2 support can be dropped
+    from siptools_research.temporarydirectory import TemporaryDirectory
 
 import luigi
 from siptools.scripts import premis_event
@@ -14,9 +19,6 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
-# TODO: Use tempfile.TemporaryDirectory from standard libraries when
-# support for Python 2 is required anymore
-from siptools_research.temporarydirectory import TemporaryDirectory
 
 
 class CreateProvenanceInformation(WorkflowTask):
