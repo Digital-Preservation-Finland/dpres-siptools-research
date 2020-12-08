@@ -45,6 +45,7 @@ BuildRequires:  python3-setuptools
 BuildRequires:  python3-pytest
 BuildRequires:  python3-sphinx
 BuildRequires:  python3-jsonschema2rst
+BuildRequires:  python3-xmltodict
 
 %description
 Digital Preservation Packaging Service for Research datasets
