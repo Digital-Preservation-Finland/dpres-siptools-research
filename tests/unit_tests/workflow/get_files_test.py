@@ -28,8 +28,7 @@ def test_getfiles(testpath, requests_mock):
 
     # Create required directories to  workspace
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sipdirectory)
+    os.makedirs(workspace)
 
     # Init task
     task = get_files.GetFiles(
@@ -44,10 +43,12 @@ def test_getfiles(testpath, requests_mock):
     assert task.complete()
 
     # Check that correct files are created into correct path
-    with open(os.path.join(sipdirectory, 'path/to/file1')) as open_file:
+    with open(os.path.join(workspace,
+                           'dataset_files/path/to/file1')) as open_file:
         assert open_file.read() == 'foo\n'
 
-    with open(os.path.join(sipdirectory, 'path/to/file2')) as open_file:
+    with open(os.path.join(workspace,
+                           'dataset_files/path/to/file2')) as open_file:
         assert open_file.read() == 'bar\n'
 
 
@@ -68,8 +69,7 @@ def test_missing_ida_files(testpath, requests_mock):
                       status_code=404)
     # Init task
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    sip_creation_path = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sip_creation_path)
+    os.makedirs(workspace)
     task = get_files.GetFiles(
         workspace=workspace,
         dataset_id="get_files_test_dataset_ida_missing_file",
@@ -86,8 +86,8 @@ def test_missing_ida_files(testpath, requests_mock):
     # Task should not be completed
     assert not task.complete()
 
-    # Nothing should be written to SIP creation directory
-    assert not os.listdir(sip_creation_path)
+    # Nothing should be written to workspace/dataset_files
+    assert not os.path.exists(os.path.join(workspace, 'dataset_files'))
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
@@ -101,13 +101,12 @@ def test_missing_local_files(testpath):
     :returns: ``None``
     """
     workspace = os.path.join(testpath, 'workspace', 'workspace')
-    sip_creation_path = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sip_creation_path)
+    os.makedirs(workspace)
     # Init mocked upload.files collection
     mongoclient = pymongo.MongoClient()
     mongo_files = [
-        ("pid:urn:get_files_1_local", os.path.join(workspace, "file1")),
-        ("pid:urn:does_not_exist_local", os.path.join(workspace, "file2"))
+        ("pid:urn:get_files_1_local", os.path.join(testpath, "file1")),
+        ("pid:urn:does_not_exist_local", os.path.join(testpath, "file2"))
     ]
     for identifier, fpath in mongo_files:
         mongoclient.upload.files.insert_one(
@@ -115,7 +114,7 @@ def test_missing_local_files(testpath):
         )
 
     # Create only the first file in test directory
-    with open(os.path.join(workspace, "file1"), 'w') as file1:
+    with open(os.path.join(testpath, "file1"), 'w') as file1:
         file1.write('foo\n')
 
     # Init task
@@ -137,52 +136,55 @@ def test_missing_local_files(testpath):
     # Task should not be completed
     assert not task.complete()
 
-    # Nothing should be written to SIP creation directory
-    assert not os.listdir(sip_creation_path)
+    # Nothing should be written to workspace/dataset_files
+    assert not os.path.exists(os.path.join(workspace, 'dataset_files'))
 
 
 @pytest.mark.parametrize('path', ["../../file1",
                                   "/../../file1",
                                   "//../../file1"])
-def test_forbidden_relative_path(testpath, path):
+def test_forbidden_relative_path(testpath, requests_mock, path):
     """Test that files can not be saved outside the workspace.
 
     Saving files outside the workspace by using relative file paths in
     Metax should not be possible. The tested path would be downloaded to
-    `<packaging_root>/workspaces/<workspace>/<sip_creation_path>/../../file1`
+    `<packaging_root>/workspaces/<workspace>/dataset_files/../../file1`
     which equals to `<packaging_root>/workspaces/file1`, if the path was
     not validated.
 
     :param testpath: Temporary workspace path fixture
+    :param requests_mock: Request mocker
     :param path: sample file path
     :returns: ``None``
     """
-    # Create the workspace and required directories
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sipdirectory)
-
-    # Init task
-    task = get_files.GetFiles(
-        workspace=workspace,
-        dataset_id="foo",
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-
+    # Mock metax
     files = [
         {
             "file_path": path,
+            "parent_directory": {'identifier': 'foo'},
             "identifier": "pid:urn:1",
             "file_storage": {
                 "identifier": "urn:nbn:fi:att:file-storage-ida"
             }
         }
     ]
+    tests.conftest.mock_metax_dataset(requests_mock, files=files)
+
+    # Create the workspace and required directories
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    os.makedirs(workspace)
+
+    # Init task
+    task = get_files.GetFiles(
+        workspace=workspace,
+        dataset_id="dataset_identifier",
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
 
     # File download should fail
     with pytest.raises(InvalidFileMetadataError) as exception_info:
         # pylint: disable=protected-access
-        task._download_files(files)
+        task.run()
     assert str(exception_info.value) == \
         'The file path of file pid:urn:1 is invalid: %s' % path
 
@@ -196,38 +198,41 @@ def test_forbidden_relative_path(testpath, path):
                                   "./file1",
                                   "././file1",
                                   "/./file1"])
-def test_allowed_relative_paths(testpath, path, requests_mock):
+def test_allowed_relative_paths(testpath, requests_mock, path):
     """Test that file is downloaded to correct location.
 
     :param testpath: Temporary workspace path fixture
+    :param requests_mock: Request mocker
     :param path: sample file path
     :returns: ``None``
     """
+    # Mock Ida and Metax
     requests_mock.get('https://ida.test/files/pid:urn:1/download')
-
-    # Create the workspace and required directories
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sipdirectory)
-
-    # Init task
-    task = get_files.GetFiles(
-        workspace=workspace,
-        dataset_id="foo",
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-
     files = [
         {
             "file_path": path,
+            "parent_directory": {'identifier': 'foo'},
             "identifier": "pid:urn:1",
             "file_storage": {
                 "identifier": "urn:nbn:fi:att:file-storage-ida"
             }
         }
     ]
+    tests.conftest.mock_metax_dataset(requests_mock, files=files)
+
+    # Create the workspace and required directories
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    os.makedirs(workspace)
+
+    # Init task
+    task = get_files.GetFiles(
+        workspace=workspace,
+        dataset_id="dataset_identifier",
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
 
     # Download file and check that is found in expected location
     # pylint: disable=protected-access
-    task._download_files(files)
-    assert os.listdir(sipdirectory) == ['file1']
+    task.run()
+    assert os.listdir(os.path.join(workspace,
+                                   'dataset_files')) == ['file1']

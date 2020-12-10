@@ -257,7 +257,7 @@ def test_mets_creation(testpath, requests_mock):
     assert document['workflow_tasks']['CompressSIP']['result'] == 'success'
 
     # Read mets.xml
-    mets = ET.parse(os.path.join(workspace, 'sip-in-progress', 'mets.xml'))
+    mets = ET.parse(os.path.join(workspace, 'mets.xml'))
 
     # Validate mets.xml against schema
     schema = ET.XMLSchema(ET.parse(METS_XSD))

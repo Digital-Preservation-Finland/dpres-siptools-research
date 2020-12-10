@@ -14,7 +14,7 @@ from siptools_research.workflow.create_mets import CreateMets
 class SignSIP(WorkflowTask):
     """Task that signs METS file.
 
-    Signature is written to `<sip_creation_path>/signature.sig`.
+    Signature is written to `<workspace>/signature.sig`.
 
     Task requires METS file to be created.
     """
@@ -34,11 +34,11 @@ class SignSIP(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: local target: `sip-in-progress/signature.sig`
+        :returns: local target: `<workspace>/signature.sig`
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.sip_creation_path, "signature.sig"),
+            os.path.join(self.workspace, "signature.sig"),
             format=luigi.format.Nop
         )
 
@@ -48,7 +48,7 @@ class SignSIP(WorkflowTask):
         :returns: ``None``
         """
         signature = dpres_signature.signature.create_signature(
-            os.path.join(self.sip_creation_path, 'signature.sig'),
+            os.path.join(self.workspace, 'foo'),
             Configuration(self.config).get("sip_sign_key"),
             ['mets.xml']
         )

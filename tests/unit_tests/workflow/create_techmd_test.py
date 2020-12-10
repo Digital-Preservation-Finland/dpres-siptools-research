@@ -60,7 +60,9 @@ def test_create_techmd_ok(testpath, requests_mock):
     # Create workspace that already contains the dataset files
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    tiff_path = os.path.join(sipdirectory, 'path/to/file')
+    os.makedirs(sipdirectory)
+    dataset_files = os.path.join(workspace, 'dataset_files')
+    tiff_path = os.path.join(dataset_files, 'path/to/file')
     os.makedirs(os.path.dirname(tiff_path))
     shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
 
@@ -160,8 +162,7 @@ def test_create_techmd_ok(testpath, requests_mock):
                 file_properties_file,
                 'create-mix-md-references.jsonl',
                 '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml',
-                'import-object-extraction-AGENTS-amd.json',
-                'path']
+                'import-object-extraction-AGENTS-amd.json']
                + premis_agent_files
                + premis_event_files)
 
@@ -183,7 +184,9 @@ def test_create_techmd_without_charset(testpath, requests_mock):
     # Create workspace that contains a textfile
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    text_file_path = os.path.join(sipdirectory, 'path', 'to', 'file')
+    os.makedirs(sipdirectory)
+    dataset_files = os.path.join(workspace, 'dataset_files')
+    text_file_path = os.path.join(dataset_files, 'path', 'to', 'file')
     os.makedirs(os.path.dirname(text_file_path))
     with open(text_file_path, 'w') as file_:
         file_.write('foo')
@@ -214,7 +217,7 @@ def test_create_techmd_without_charset(testpath, requests_mock):
     assert format_name == 'text/plain; charset=UTF-8'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient')
 def test_xml_metadata_file_missing(testpath, requests_mock):
     """Test the workflow task when XML metadata is missing.
 
@@ -225,27 +228,26 @@ def test_xml_metadata_file_missing(testpath, requests_mock):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:8/xml",
+    tests.conftest.mock_metax_dataset(requests_mock,
+                                      files=[tests.metax_data.files.TIFF_FILE])
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
                       json=["http://www.loc.gov/mix/v20"])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:8/xml"
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml"
                       "?namespace=http://www.loc.gov/mix/v20",
                       status_code=404)
 
-    # Create empty workspace directory
+    # Create workspace directory that contains a TIFF file
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sipdirectory = os.path.join(workspace, 'sip-in-progress')
     os.makedirs(sipdirectory)
-
-    # Copy sample directory with some files to SIP
-    shutil.copytree(
-        'tests/data/sample_dataset_directories/project_xml_metadata_missing',
-        os.path.join(sipdirectory, 'project_xml_metadata_missing')
-    )
+    tiff_path = os.path.join(workspace, 'dataset_files/path/to/file')
+    os.makedirs(os.path.dirname(tiff_path))
+    shutil.copy('tests/data/sample_files/image_tiff_large.tif', tiff_path)
 
     # Init task
     task = CreateTechnicalMetadata(
         workspace=workspace,
-        dataset_id="create_techmd_test_dataset_xml_metadata_missing",
+        dataset_id="dataset_identifier",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -257,8 +259,9 @@ def test_xml_metadata_file_missing(testpath, requests_mock):
     assert exc.value.response.status_code == 404
     assert not task.complete()
 
-    # The should not have created any files in sip creation directory
-    assert os.listdir(sipdirectory) == ['project_xml_metadata_missing']
+    # The task should not have created any files in sip creation
+    # directory
+    assert os.listdir(sipdirectory) == []
 
 
 @pytest.mark.parametrize(('algorithm', 'hash_function', 'expected'),

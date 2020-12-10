@@ -4,6 +4,8 @@ import os
 import tarfile
 import luigi
 from siptools_research.workflowtask import WorkflowTask
+from siptools_research.workflow.create_mets import CreateMets
+from siptools_research.workflow.get_files import GetFiles
 from siptools_research.workflow.sign import SignSIP
 
 
@@ -23,9 +25,17 @@ class CompressSIP(WorkflowTask):
 
         :returns: SignSIP task
         """
-        return SignSIP(workspace=self.workspace,
-                       dataset_id=self.dataset_id,
-                       config=self.config)
+        return {
+            'signature': SignSIP(workspace=self.workspace,
+                                 dataset_id=self.dataset_id,
+                                 config=self.config),
+            'mets': CreateMets(workspace=self.workspace,
+                               dataset_id=self.dataset_id,
+                               config=self.config),
+            'files': GetFiles(workspace=self.workspace,
+                              dataset_id=self.dataset_id,
+                              config=self.config),
+        }
 
     def output(self):
         """Return the output target of the Task.
@@ -50,4 +60,7 @@ class CompressSIP(WorkflowTask):
         # On exit luigi moves the temp file to targeted file
         with self.output().temporary_path() as temp_output_path:
             with tarfile.open(temp_output_path, 'w') as tar:
-                tar.add(self.sip_creation_path, arcname='.')
+                tar.add(self.input()['files'].path, arcname='.')
+                tar.add(self.input()['mets'].path, arcname='mets.xml')
+                tar.add(self.input()['signature'].path,
+                        arcname='signature.sig')

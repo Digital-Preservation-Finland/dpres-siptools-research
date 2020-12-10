@@ -125,9 +125,6 @@ DATASETS = {
     "get_files_test_dataset_local_missing_file": {
         "files": ["pid:urn:get_files_1_local", "pid:urn:does_not_exist_local"]
     },
-    "create_techmd_test_dataset_xml_metadata_missing": {
-        "files": ["pid:urn:create_techmd_8"]
-    },
     "create_mets_dataset": {
         "contract": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
         "remove": ["research_dataset"]

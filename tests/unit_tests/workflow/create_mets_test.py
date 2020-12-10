@@ -64,13 +64,9 @@ def test_create_mets_ok(testpath, requests_mock):
     task.run()
     assert task.complete()
 
-    # SIP directory should contain only mets.xml
-    assert os.listdir(os.path.join(workspace, 'sip-in-progress')) \
-        == ['mets.xml']
-
     # Read created mets.xml
     tree = lxml.etree.parse(
-        os.path.join(workspace, 'sip-in-progress', 'mets.xml')
+        os.path.join(workspace, 'mets.xml')
     )
 
     # Check that the root element contains expected attributes.

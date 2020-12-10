@@ -18,12 +18,11 @@ def test_signsip(testpath):
     """
     # Create empty workspace
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    sip_path = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sip_path)
+    os.makedirs(workspace)
 
     # Copy sample METS file to workspace
     shutil.copy(
-        'tests/data/sample_mets.xml', os.path.join(sip_path, 'mets.xml')
+        'tests/data/sample_mets.xml', os.path.join(workspace, 'mets.xml')
     )
 
     # Init task
@@ -36,12 +35,9 @@ def test_signsip(testpath):
     task.run()
     assert task.complete()
 
-    # Check that signature.sig is created in workspace/sip-in-progress/
-    with open(os.path.join(workspace,
-                           'sip-in-progress',
-                           'signature.sig'))\
-            as open_file:
+    # Check that signature.sig is created in workspace
+    with open(os.path.join(workspace, 'signature.sig')) as open_file:
         assert "This is an S/MIME signed message" in open_file.read()
 
     # SIP directory should contain only METS and signature
-    assert set(os.listdir(sip_path)) == set(['signature.sig', 'mets.xml'])
+    assert set(os.listdir(workspace)) == set(['signature.sig', 'mets.xml'])

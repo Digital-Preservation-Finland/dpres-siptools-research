@@ -18,7 +18,7 @@ class CreateMets(WorkflowTask):
 
     Merges all partial METS documents found from <sip_creation_path> to
     one METS document. The METS document is written to
-    <sip_creation_path>/mets.xml and partial METS documents are removed.
+    <workspace>/mets.xml.
 
     Task requires logical structural map to be created.
     """
@@ -38,11 +38,11 @@ class CreateMets(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: local targets: `sip-in-progress/mets.xml`
+        :returns: local targets: `<workspace>/mets.xml`
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.sip_creation_path, 'mets.xml'),
+            os.path.join(self.workspace, 'mets.xml'),
             format=luigi.format.Nop
         )
 
@@ -79,7 +79,6 @@ class CreateMets(WorkflowTask):
             organization_name=contract_org_name,
             packagingservice='Packaging Service'
         )
-        compile_mets.clean_metsparts(self.sip_creation_path)
 
         with self.output().open('wb') as outputfile:
             mets.write(outputfile,

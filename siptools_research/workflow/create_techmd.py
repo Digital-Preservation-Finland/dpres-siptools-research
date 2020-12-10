@@ -93,17 +93,19 @@ class CreateTechnicalMetadata(WorkflowTask):
         """List the Tasks that this Task depends on.
 
         :returns: list of tasks: CreateWorkspace, ValidateMetadata, and
-           GetFiles
+                  GetFiles
         """
-        return [CreateWorkspace(workspace=self.workspace,
-                                dataset_id=self.dataset_id,
-                                config=self.config),
-                ValidateMetadata(workspace=self.workspace,
-                                 dataset_id=self.dataset_id,
-                                 config=self.config),
-                GetFiles(workspace=self.workspace,
-                         dataset_id=self.dataset_id,
-                         config=self.config)]
+        return {
+            'workspace': CreateWorkspace(workspace=self.workspace,
+                                         dataset_id=self.dataset_id,
+                                         config=self.config),
+            'validation': ValidateMetadata(workspace=self.workspace,
+                                           dataset_id=self.dataset_id,
+                                           config=self.config),
+            'files': GetFiles(workspace=self.workspace,
+                              dataset_id=self.dataset_id,
+                              config=self.config)
+        }
 
     def output(self):
         """Return output target of this Task.
@@ -196,7 +198,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         # Create PREMIS file metadata XML
         siptools.scripts.import_object.import_object(
             filepaths=[metadata['file_path'].strip('/')],
-            base_path=self.sip_creation_path,
+            base_path=os.path.join(self.input()['files'].path),
             workspace=workspace,
             skip_wellformed_check=True,
             file_format=(
