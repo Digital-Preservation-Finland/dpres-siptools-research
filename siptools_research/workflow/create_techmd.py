@@ -145,17 +145,17 @@ class CreateTechnicalMetadata(WorkflowTask):
                 self.create_technical_attributes(file_, temporary_workspace)
 
             # Move created files to sip creation directory. PREMIS event
-            # reference file is moved to workspace after everything else
-            # is done.
-            for file_ in os.listdir(temporary_workspace):
-                if file_ != 'premis-event-md-references.jsonl':
+            # reference file is moved to output target path after
+            # everything else is done.
+            with self.output().temporary_path() as target_path:
+                shutil.move(
+                    os.path.join(temporary_workspace,
+                                 'premis-event-md-references.jsonl'),
+                    target_path
+                )
+                for file_ in os.listdir(temporary_workspace):
                     shutil.move(os.path.join(temporary_workspace, file_),
                                 self.sip_creation_path)
-            shutil.move(
-                os.path.join(temporary_workspace,
-                             'premis-event-md-references.jsonl'),
-                self.output().path
-            )
 
     def create_objects(self, metadata, event_datetime, workspace):
         """Create PREMIS metadata for file.

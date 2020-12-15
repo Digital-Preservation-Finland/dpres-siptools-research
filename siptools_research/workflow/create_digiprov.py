@@ -86,18 +86,19 @@ class CreateProvenanceInformation(WorkflowTask):
                                   self.config)
 
             # Move PREMIS event files to SIP creation path when all of
-            # them are succesfully created to avoid atomicity problems
-            for file_ in os.listdir(temporary_workspace):
-                if file_.endswith('-PREMIS%3AEVENT-amd.xml'):
+            # them are succesfully created to avoid atomicity problems.
+            # PREMIS event reference file is moved to ouput target path
+            # after other files are moved to SIP creation directory.
+            with self.output().temporary_path() as target_path:
+                shutil.move(
+                    os.path.join(temporary_workspace,
+                                 'premis-event-md-references.jsonl'),
+                    target_path
+                )
+
+                for file_ in os.listdir(temporary_workspace):
                     shutil.move(os.path.join(temporary_workspace, file_),
                                 self.sip_creation_path)
-
-            # Move reference file to target path
-            shutil.move(
-                os.path.join(temporary_workspace,
-                             'premis-event-md-references.jsonl'),
-                self.output().path
-            )
 
 
 def _create_premis_events(dataset_id, workspace, config):

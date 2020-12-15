@@ -94,13 +94,13 @@ class CreateDescriptiveMetadata(WorkflowTask):
             )
 
             # Move created files to SIP creation directory. PREMIS event
-            # reference file is moved to output path after everything
-            # else id done.
-            for file_ in os.listdir(temporary_workspace):
-                if file_ != 'premis-event-md-references.jsonl':
+            # reference file is moved to output target path after
+            # everything else is done.
+            with self.output().temporary_path() as target_path:
+                shutil.move(os.path.join(temporary_workspace,
+                                         'premis-event-md-references.jsonl'),
+                            target_path)
+                for file_ in os.listdir(temporary_workspace):
                     shutil.move(os.path.join(temporary_workspace, file_),
                                 self.sip_creation_path)
 
-            shutil.move(os.path.join(temporary_workspace,
-                                     'premis-event-md-references.jsonl'),
-                        self.output().path)
