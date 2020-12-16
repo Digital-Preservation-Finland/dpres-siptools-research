@@ -1,37 +1,22 @@
-"""Tests for packaging workflow.
+"""Test that packaging workflow produces valid SIPs."""
 
-Each workflow task should be able complete if it is directly called
-by luigi i.e. each task should know which other tasks are required to
-complete before it itself can be run. This module tests that each task
-will succesfully run all it's required tasks when it is called by luigi.
-Metax, Ida, mongodb, paramiko.SSHClient and RemoteAnyTarget are mocked.
-Same sample dataset is used for testing all tasks. It is only tested
-that each task will complete, the output of task is NOT examined.
-"""
-
+import copy
 import os
-import importlib
-from datetime import date
 
+import pymongo
 import pytest
 import luigi
-import pymongo
-import mock
 import lxml.etree as ET
 from lxml.isoschematron import Schematron
 
-from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.workflow.compress import CompressSIP
-from siptools_research.config import Configuration
+import siptools_research.config
 import tests.conftest
 import tests.metax_data.contracts
+from tests.metax_data.files import PAS_STORAGE_ID
 
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
-DIRECTORY = {
-    "identifier": "pid:urn:dir:wf1",
-    "directory_path": "/access"
-}
 SCHEMATRONS = [
     '/usr/share/dpres-xml-schemas/schematron/mets_addml.sch',
     '/usr/share/dpres-xml-schemas/schematron/mets_amdsec.sch',
@@ -55,146 +40,30 @@ SCHEMATRONS = [
     '/usr/share/dpres-xml-schemas/schematron/mets_techmd.sch',
     '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'
 ]
+PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+PAS_STORAGE_TXT_FILE["file_storage"]["identifier"] = PAS_STORAGE_ID
 
 
-# Run every task as it would be run from commandline
-@mock.patch('siptools_research.workflow.send_sip.paramiko.SSHClient')
+@pytest.mark.usefixtures(
+    'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf'
+)
 @pytest.mark.parametrize(
-    "module_name,task", [
-        ('create_workspace', 'CreateWorkspace'),
-        ('validate_metadata', 'ValidateMetadata'),
-        ('create_digiprov', 'CreateProvenanceInformation'),
-        ('create_dmdsec', 'CreateDescriptiveMetadata'),
-        ('get_files', 'GetFiles'),
-        ('create_techmd', 'CreateTechnicalMetadata'),
-        ('create_structmap', 'CreateStructMap'),
-        ('create_logical_structmap', 'CreateLogicalStructMap'),
-        ('create_mets', 'CreateMets'),
-        ('sign', 'SignSIP'),
-        ('compress', 'CompressSIP'),
-        ('send_sip', 'SendSIPToDP'),
-        ('report_preservation_status', 'ReportPreservationStatus'),
-        ('cleanup', 'CleanupWorkspace'),
+    ['dataset', 'files'],
+    [
+        (
+            tests.metax_data.datasets.BASE_DATASET,
+            [tests.metax_data.files.TXT_FILE]),
+        (
+            tests.metax_data.datasets.BASE_DATASET,
+            [PAS_STORAGE_TXT_FILE]
+        )
     ]
 )
-@pytest.mark.parametrize("file_storage", ["ida", "local"])
-@pytest.mark.usefixtures(
-    'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf',
-    'mock_metax_access'
-)
-def test_workflow(_, testpath, file_storage, module_name, task,
-                  requests_mock):
-    """Test workflow requirement tree.
-
-    Run a task (and all tasks it requires) and check that check that
-    report of successfull task is added to mongodb.
-
-    :param testpath: temporary directory
-    :param file_storage: name of file source used in test ("ida" or
-                         "local")
-    :param module_name: submodule of siptools_research.workflow that
-                        contains Task to be tested
-    :param task: Task class name
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
-                      json=tests.metax_data.contracts.BASE_CONTRACT)
-    requests_mock.patch("https://metaksi/rest/v1/datasets/"
-                        "workflow_test_dataset_1_local")
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
-        json=DIRECTORY
-    )
-    with open("tests/data/datacite_sample.xml", 'rb') as file_:
-        requests_mock.get(
-            "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_local"
-            "?dataset_format=datacite&dummy_doi=false",
-            content=file_.read()
-        )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:wf_test_1a_local/xml",
-        json=[]
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:wf_test_1b_local/xml",
-        json=[]
-    )
-    with open("tests/data/datacite_sample.xml", 'rb') as file_:
-        requests_mock.get(
-            "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_ida"
-            "?dataset_format=datacite&dummy_doi=false",
-            content=file_.read()
-        )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:wf_test_1a_ida/xml",
-        json=[]
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:wf_test_1b_ida/xml",
-        json=[]
-    )
-    requests_mock.get(
-        "https://ida.test/files/pid:urn:wf_test_1a_ida/download",
-        content=b'foo'
-    )
-    requests_mock.get(
-        "https://ida.test/files/pid:urn:wf_test_1b_ida/download",
-        content=b'foo'
-    )
-    requests_mock.patch("https://metaksi/rest/v1/datasets/"
-                        "workflow_test_dataset_1_ida")
-
-    # Init pymongo client
-    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-    mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-
-    if file_storage == 'local':
-        # Add sample files to pre-ingest file storage
-        mongo_files = ["pid:urn:wf_test_1a_local", "pid:urn:wf_test_1b_local"]
-        for file_id in mongo_files:
-            mongoclient.upload.files.insert_one(
-                {"_id": file_id, "file_path": os.path.join(testpath, file_id)}
-            )
-            with open(os.path.join(testpath, file_id), 'w') as file_:
-                file_.write('foo')
-
-    with mock.patch.object(RemoteAnyTarget, '_exists', _mock_exists):
-        workspace = os.path.join(testpath, 'workspace_' +
-                                 os.path.basename(testpath))
-        module = importlib.import_module('siptools_research.workflow.' +
-                                         module_name)
-        task_class = getattr(module, task)
-        luigi.build(
-            [task_class(
-                workspace=workspace,
-                dataset_id='workflow_test_dataset_1_%s' % file_storage,
-                config=tests.conftest.UNIT_TEST_CONFIG_FILE
-            )],
-            local_scheduler=True
-        )
-
-    collection = (mongoclient[conf.get('mongodb_database')]
-                  [conf.get('mongodb_collection')])
-    document = collection.find_one()
-
-    # Check 'result' field
-    assert document['workflow_tasks'][task]['result'] == 'success'
-
-    if module_name == "cleanup":
-        assert document["completed"]
-
-
-@pytest.mark.usefixtures(
-    'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf',
-    'mock_metax_access'
-)
-def test_mets_creation(testpath, requests_mock):
+def test_mets_creation(testpath, requests_mock, dataset, files):
     """Test SIP validity.
 
     Run CompressSIP task (and all tasks it requires) and check that:
 
-        #. report of successful task is added to mongodb.
         #. mets.xml validates against the schema
         #. mets.xml passes schematron verification
         #. digital object fixity (checksums) is correct in mets.xml
@@ -203,58 +72,48 @@ def test_mets_creation(testpath, requests_mock):
 
     :param testpath: temporary directory
     :param requests_mock: Mocker object
+    :param dataset: dataset metadata
+    :param files: list of file metadata objects
     :returns: ``None``
     """
+    # Mock Metax
+    tests.conftest.mock_metax_dataset(requests_mock,
+                                      dataset=dataset,
+                                      files=files)
 
-    requests_mock.get("https://metaksi/rest/v1/contracts/contract_identifier",
-                      json=tests.metax_data.contracts.BASE_CONTRACT)
-    requests_mock.get(
-        "https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
-        json=DIRECTORY
-    )
-    with open("tests/data/datacite_sample.xml", 'rb') as file_:
-        requests_mock.get(
-            "https://metaksi/rest/v1/datasets/workflow_test_dataset_1_ida"
-            "?dataset_format=datacite&dummy_doi=false",
-            content=file_.read()
-        )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:wf_test_1a_ida/xml",
-        json=[]
-    )
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/pid:urn:wf_test_1b_ida/xml",
-        json=[]
-    )
-    requests_mock.get(
-        "https://ida.test/files/pid:urn:wf_test_1a_ida/download",
-        content=b'foo'
-    )
-    requests_mock.get(
-        "https://ida.test/files/pid:urn:wf_test_1b_ida/download",
-        content=b'foo'
-    )
-    requests_mock.patch("https://metaksi/rest/v1/datasets/"
-                        "workflow_test_dataset_1_ida")
+    # Mock file download sources
+    for file_ in files:
+        if file_['file_storage']['identifier'] == PAS_STORAGE_ID:
+            # Mock upload-rest-api
+            conf = siptools_research.config.Configuration(
+                tests.conftest.TEST_CONFIG_FILE
+            )
+            mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
+            mongoclient.upload.files.insert_one(
+                {
+                    "_id": file_['identifier'],
+                    "file_path": os.path.join(testpath, file_['identifier'])
+                }
+            )
+            with open(os.path.join(testpath,
+                                   file_['identifier']), 'w') as file_:
+                file_.write('foo')
+        else:
+            # Mock Ida
+            requests_mock.get(
+                'https://ida.test/files/pid:urn:identifier/download',
+                text='foo'
+            )
 
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
     luigi.build(
         [CompressSIP(
             workspace=workspace,
-            dataset_id='workflow_test_dataset_1_ida',
+            dataset_id='dataset_identifier',
             config=tests.conftest.UNIT_TEST_CONFIG_FILE
         )],
         local_scheduler=True
     )
-
-    # Check 'result' field in database
-    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-    document = (
-        pymongo.MongoClient(host=conf.get('mongodb_host'))
-        [conf.get('mongodb_database')]
-        [conf.get('mongodb_collection')].find_one()
-    )
-    assert document['workflow_tasks']['CompressSIP']['result'] == 'success'
 
     # Read mets.xml
     mets = ET.parse(os.path.join(workspace, 'mets.xml'))
@@ -274,10 +133,3 @@ def test_mets_creation(testpath, requests_mock):
     version = mets_xml_root.xpath('@*[local-name() = "CATALOG"] | '
                                   '@*[local-name() = "SPECIFICATION"]')[0][:3]
     assert version == '1.7'
-
-
-def _mock_exists(_, path):
-    if path.startswith('accepted/%s/' % date.today().strftime("%Y-%m-%d")):
-        return True
-
-    return False

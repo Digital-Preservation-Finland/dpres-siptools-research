@@ -48,7 +48,7 @@ BASE_DATASET = {
 DATASETS = {
     "1": {},
     "validate_metadata_test_dataset": {
-        "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
+        "files": ["pid:urn:textfile1", "pid:urn:textfile2"]
     },
     "validate_metadata_test_dataset_invalid_metadata": {
         "remove": ["contract"]
@@ -153,12 +153,6 @@ DATASETS = {
                 }
             }
         )]
-    },
-    "workflow_test_dataset_1_ida": {
-        "files": ["pid:urn:wf_test_1a_ida", "pid:urn:wf_test_1b_ida"]
-    },
-    "workflow_test_dataset_1_local": {
-        "files": ["pid:urn:wf_test_1a_local", "pid:urn:wf_test_1b_local"]
     },
     "missing_provenance": {
         "set": [("research_dataset", {"files": []})]
