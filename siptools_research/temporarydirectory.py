@@ -1,7 +1,7 @@
 """Implementation of tempfile.TemporaryDirectory for python2.7."""
 import tempfile
 import shutil
-import os
+import logging
 
 
 class TemporaryDirectory(object):
@@ -24,10 +24,11 @@ class TemporaryDirectory(object):
 
     def __exit__(self, *args):
         """Remove temporary directory."""
-        if os.path.exists(self.name):
-            shutil.rmtree(self.name)
+        shutil.rmtree(self.name)
+        self.name = None
 
     def __del__(self):
-        """Remove temporary directory."""
-        if os.path.exists(self.name):
+        """Ensure directory is removed."""
+        if self.name:
+            logging.warning("Cleaning %s implicitly", self.name)
             shutil.rmtree(self.name)
