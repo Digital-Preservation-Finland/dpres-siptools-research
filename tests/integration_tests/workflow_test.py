@@ -2,6 +2,7 @@
 
 import copy
 import os
+import tarfile
 
 import pymongo
 import pytest
@@ -42,6 +43,10 @@ SCHEMATRONS = [
 ]
 PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
 PAS_STORAGE_TXT_FILE["file_storage"]["identifier"] = PAS_STORAGE_ID
+XML_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+XML_FILE["file_path"] = "mets.xml"
+SIG_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+SIG_FILE["file_path"] = "signature.sig"
 
 
 @pytest.mark.usefixtures(
@@ -56,6 +61,14 @@ PAS_STORAGE_TXT_FILE["file_storage"]["identifier"] = PAS_STORAGE_ID
         (
             tests.metax_data.datasets.BASE_DATASET,
             [PAS_STORAGE_TXT_FILE]
+        ),
+        (
+            tests.metax_data.datasets.BASE_DATASET,
+            [XML_FILE]
+        ),
+        (
+            tests.metax_data.datasets.BASE_DATASET,
+            [SIG_FILE]
         )
     ]
 )
@@ -69,6 +82,7 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
         #. digital object fixity (checksums) is correct in mets.xml
         #. digital objects of the SIP are valid
         #. mets.xml root element is valid (CONTRACTID, SPECIFICATION)
+        #. all files are found in correct path
 
     :param testpath: temporary directory
     :param requests_mock: Mocker object
@@ -115,8 +129,12 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
         local_scheduler=True
     )
 
+    # Extract SIP
+    with tarfile.open(os.path.join(workspace, 'workspace.tar')) as tar:
+        tar.extractall(os.path.join(testpath, 'extracted_sip'))
+
     # Read mets.xml
-    mets = ET.parse(os.path.join(workspace, 'mets.xml'))
+    mets = ET.parse(os.path.join(testpath, 'extracted_sip', 'mets.xml'))
 
     # Validate mets.xml against schema
     schema = ET.XMLSchema(ET.parse(METS_XSD))
@@ -133,3 +151,10 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
     version = mets_xml_root.xpath('@*[local-name() = "CATALOG"] | '
                                   '@*[local-name() = "SPECIFICATION"]')[0][:3]
     assert version == '1.7'
+
+    # Check that all files are included in SIP
+    for file_metadata in files:
+        with open(os.path.join(testpath,
+                               'extracted_sip',
+                               file_metadata['file_path'])) as file_:
+            assert file_.read() == 'foo'
