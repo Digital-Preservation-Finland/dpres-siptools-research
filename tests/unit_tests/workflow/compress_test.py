@@ -42,4 +42,4 @@ def test_compresssip(testpath):
         tar.extractall(os.path.join(testpath, 'extracted_tar'))
 
     assert set(os.listdir(os.path.join(testpath, 'extracted_tar'))) \
-        == set(['signature.sig', 'mets.xml', 'tests'])
+        == set(['signature.sig', 'mets.xml', 'dataset_files'])

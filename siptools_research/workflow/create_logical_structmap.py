@@ -211,10 +211,10 @@ class CreateLogicalStructMap(WorkflowTask):
 
         return logical_struct
 
-    def get_fileid(self, filename):
-        """Get file id from filesec.xml by filename.
+    def get_fileid(self, filepath):
+        """Get file id from filesec.xml by filepath.
 
-        :param filename: filename
+        :param filepath: file path
         :returns: file identifier
         """
         # pylint: disable=no-member
@@ -227,12 +227,12 @@ class CreateLogicalStructMap(WorkflowTask):
         for file_ in files:
             for file__ in file_:
                 if str(file__.get('{http://www.w3.org/1999/xlink}href'))[7:] \
-                        == filename.strip('/'):
+                        == os.path.join('dataset_files', filepath.strip('/')):
                     return file_.get('ID')
 
         raise ValueError(
             "File ID for file %s not found from fileSec: %s" % (
-                filename, filesec_xml
+                filepath, filesec_xml
             )
         )
 

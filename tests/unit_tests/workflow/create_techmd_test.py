@@ -80,11 +80,14 @@ def test_create_techmd_ok(testpath, requests_mock):
     premis_object_references \
         = read_md_references(sipdirectory, 'import-object-md-references.jsonl')
     assert len(premis_object_references) == 1
-    assert len(premis_object_references['path/to/file']['md_ids']) == 1
+    assert len(
+        premis_object_references['dataset_files/path/to/file']['md_ids']
+    ) == 1
 
     # Check that the PREMIS object file has desired properties
     premis_object_identifier \
-        = premis_object_references['path/to/file']['md_ids'][0][1:]
+        = (premis_object_references['dataset_files/path/to/file']
+           ['md_ids'][0][1:])
     premis_object_file \
         = '{}-PREMIS%3AOBJECT-amd.xml'.format(premis_object_identifier)
     premis_object_xml = lxml.etree.parse(os.path.join(sipdirectory,
@@ -131,8 +134,8 @@ def test_create_techmd_ok(testpath, requests_mock):
     mix_references \
         = read_md_references(sipdirectory, 'create-mix-md-references.jsonl')
     assert len(mix_references) == 1
-    assert len(mix_references['path/to/file']["md_ids"]) == 1
-    assert mix_references['path/to/file']["md_ids"][0] \
+    assert len(mix_references['dataset_files/path/to/file']["md_ids"]) == 1
+    assert mix_references['dataset_files/path/to/file']["md_ids"][0] \
         == '_1b2eecde68d99171f70613f14cf21f49'
 
     # Compare MIX metadata in techMD file to original MIX metadata in
@@ -204,7 +207,7 @@ def test_create_techmd_without_charset(testpath, requests_mock):
     amd_refs = read_md_references(sipdirectory,
                                   'import-object-md-references.jsonl')
     assert len(amd_refs) == 1
-    amd_id = amd_refs['path/to/file']['md_ids'][0][1:]
+    amd_id = amd_refs['dataset_files/path/to/file']['md_ids'][0][1:]
     premis_object_xml = lxml.etree.parse(
         os.path.join(sipdirectory, '{}-PREMIS%3AOBJECT-amd.xml'.format(amd_id))
     )

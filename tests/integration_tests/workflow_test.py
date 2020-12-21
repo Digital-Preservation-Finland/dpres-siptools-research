@@ -156,5 +156,6 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
     for file_metadata in files:
         with open(os.path.join(testpath,
                                'extracted_sip',
+                               'dataset_files',
                                file_metadata['file_path'])) as file_:
             assert file_.read() == 'foo'

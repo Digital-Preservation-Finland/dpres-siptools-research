@@ -36,11 +36,11 @@ def test_create_structmap_ok(testpath, requests_mock):
     files[1]['file_path'] = 'files/file2'
     tests.conftest.mock_metax_dataset(requests_mock, files=files)
 
-    # Create workspace that already contains dataset files in sip
-    # directory
+    # Create workspace that already contains dataset files
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
     sip_directory = os.path.join(workspace, "sip-in-progress")
-    file_directory = os.path.join(sip_directory, 'files')
+    os.makedirs(sip_directory)
+    file_directory = os.path.join(workspace, 'dataset_files', 'files')
     os.makedirs(file_directory)
     with open(os.path.join(file_directory, 'file1'), 'w') as file_:
         file_.write('foo')
@@ -71,7 +71,7 @@ def test_create_structmap_ok(testpath, requests_mock):
     )
     import_object(
         workspace=sip_directory,
-        base_path=sip_directory,
+        base_path=workspace,
         skip_wellformed_check=True,
         filepaths=[file_directory]
     )

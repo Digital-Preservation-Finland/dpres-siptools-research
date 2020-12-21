@@ -136,12 +136,18 @@ class CreateTechnicalMetadata(WorkflowTask):
         tmp = os.path.join(self.config_object.get('packaging_root'), 'tmp/')
         with TemporaryDirectory(prefix=tmp) as temporary_workspace:
             for file_ in files:
+
+                filepath = os.path.join('dataset_files',
+                                        file_['file_path'].strip('/'))
+
                 # Create METS document that contains PREMIS metadata
-                self.create_objects(file_, event_datetime, temporary_workspace)
+                self.create_objects(file_, filepath, event_datetime,
+                                    temporary_workspace)
 
                 # Create METS documents that contain technical
                 # attributes
-                self.create_technical_attributes(file_, temporary_workspace)
+                self.create_technical_attributes(file_['identifier'], filepath,
+                                                 temporary_workspace)
 
             # Move created files to sip creation directory. PREMIS event
             # reference file is moved to output target path after
@@ -156,16 +162,17 @@ class CreateTechnicalMetadata(WorkflowTask):
                     shutil.move(os.path.join(temporary_workspace, file_),
                                 self.sip_creation_path)
 
-    def create_objects(self, metadata, event_datetime, workspace):
+    def create_objects(self, metadata, filepath, event_datetime, output):
         """Create PREMIS metadata for file.
 
         Reads file metadata from Metax. Technical metadata is generated
         by siptools import_object script.
 
         :param metadata: file metadata dictionary
+        :param filepath: file path in SIP
         :param event_datetime: the timestamp for the import_object
                                events
-        :param workspace: workspace directory for import_object script
+        :param output: output directory for import_object script
         :returns: ``None``
         """
         # Read character set if it defined for this file
@@ -196,9 +203,9 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         # Create PREMIS file metadata XML
         siptools.scripts.import_object.import_object(
-            filepaths=[metadata['file_path'].strip('/')],
-            base_path=os.path.join(self.input()['files'].path),
-            workspace=workspace,
+            filepaths=[filepath],
+            base_path=self.workspace,
+            workspace=output,
             skip_wellformed_check=True,
             file_format=(
                 metadata["file_characteristics"]["file_format"],
@@ -211,21 +218,19 @@ class CreateTechnicalMetadata(WorkflowTask):
             event_target='.'
         )
 
-    def create_technical_attributes(self, metadata, workspace):
+    def create_technical_attributes(self, file_identifier, filepath, output):
         """Read technical attribute XML from Metax.
 
         Create METS TechMD files for each metadata type, if it is
         available in Metax.
 
-        :param metadata: file metadata dictionary
-        :param workspace: output directory for mdcreator
+        :param file_identifier: file identifier
+        :param filepath: path of file in SIP
         :returns: ``None``
         """
-        file_id = metadata["identifier"]
-        filepath = metadata['file_path'].strip('/')
-        xmls = self.metax_client.get_xml(file_id)
+        xmls = self.metax_client.get_xml(file_identifier)
 
-        creator = siptools.mdcreator.MetsSectionCreator(workspace)
+        creator = siptools.mdcreator.MetsSectionCreator(output)
 
         for type_ in TECH_ATTR_TYPES:
             if type_["namespace"] in xmls:
