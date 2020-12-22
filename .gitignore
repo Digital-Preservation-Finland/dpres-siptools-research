@@ -11,3 +11,5 @@ doc/schemas/
 htmlcov/
 venv/
 .venv/
+ssh_key
+sign_key

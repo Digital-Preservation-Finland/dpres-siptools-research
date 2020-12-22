@@ -1,5 +1,5 @@
-"""Integration test for :mod:`siptools_research.workflow.send_sip` module and
-digital preservation service."""
+"""Integration test for :mod:`siptools_research.workflow.send_sip` module."""  # noqa: W505,E501
+
 import os
 import shutil
 import logging
@@ -15,15 +15,15 @@ logging.basicConfig(level=logging.DEBUG)
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_send_sip(testpath):
-    """Test the SendSipToDP workflow task. Run task and check that .tar is
-    copied to digital preservation server.
+    """Test the SendSipToDP task.
+
+    Run task and check that .tar is copied to digital preservation
+    server. This test uses real DPS test instance. To run this test,
+    valid ssh key must be copied current working directory.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    # Set permissions of ssh key
-    os.chmod('tests/data/pas_ssh_key', 0600)
-
     # Create workspace with directories and files required by the task
     workspace = testpath
     os.makedirs(os.path.join(workspace, 'sip-in-progress'))
@@ -49,10 +49,10 @@ def test_send_sip(testpath):
     assert task.complete()
 
     # Check that tar-file is created on remote host.
-    # NOTE: Tar is copied to ~/transfer/. From there it is automatically moved
-    # to /var/spool/preservation/ and after validation it is moved to
-    # ~/rejected/<datedir>/<workspace>.tar/. There is a risk that file is moved
-    # from ~/transfer before this test is finished.
+    # NOTE: Tar is copied to ~/transfer/. From there it is automatically
+    # moved to /var/spool/preservation/ and after validation it is moved
+    # to ~/rejected/<datedir>/<workspace>.tar/. There is a risk that
+    # file is moved from ~/transfer before this test is finished.
     target_file_path = "transfer/" + tar_file_name
     logging.debug('Looking for file: %s on server: %s',
                   target_file_path, conf.get('dp_host'))
