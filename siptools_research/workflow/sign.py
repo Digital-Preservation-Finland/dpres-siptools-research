@@ -48,7 +48,7 @@ class SignSIP(WorkflowTask):
         :returns: ``None``
         """
         signature = dpres_signature.signature.create_signature(
-            os.path.join(self.workspace, 'foo'),
+            self.workspace,
             Configuration(self.config).get("sip_sign_key"),
             ['mets.xml']
         )
