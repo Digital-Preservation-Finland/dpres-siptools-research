@@ -42,7 +42,7 @@ class CreateProvenanceInformation(WorkflowTask):
     def requires(self):
         """List the Tasks that this Task depends on.
 
-        :returns: CreateWorkspace task and ValidateMetadata task
+        :returns: list of required tasks
         """
         return [
             CreateWorkspace(
@@ -60,7 +60,7 @@ class CreateProvenanceInformation(WorkflowTask):
     def output(self):
         """List the output targets of the task.
 
-        :returns:  local target: 'create-provenance-information.jsonl'
+        :returns: `<workspace>/create-provenance-information.jsonl`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(

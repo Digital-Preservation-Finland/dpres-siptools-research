@@ -34,7 +34,7 @@ class SignSIP(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: local target: `<workspace>/signature.sig`
+        :returns: `<workspace>/signature.sig`
         :rtype: LocalTarget
         """
         return LocalTarget(

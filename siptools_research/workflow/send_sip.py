@@ -36,7 +36,7 @@ class SendSIPToDP(WorkflowTask):
     def output(self):
         """Return output target of this Task.
 
-        :returns: local target: `task-send-sip-to-dp.finished`
+        :returns: `<workspace>/task-send-sip-to-dp.finished`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(

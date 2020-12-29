@@ -38,7 +38,7 @@ class CreateMets(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: local targets: `<workspace>/mets.xml`
+        :returns: `<workspace>/mets.xml`
         :rtype: LocalTarget
         """
         return LocalTarget(

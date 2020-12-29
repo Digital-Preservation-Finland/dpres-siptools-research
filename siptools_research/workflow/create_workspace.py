@@ -6,11 +6,7 @@ from siptools_research.workflowtask import WorkflowTask
 
 
 class CreateWorkspace(WorkflowTask):
-    """Creates directories required by the workflow.
-
-    :returns: list of local targets
-    :rtype: LocalTarget
-    """
+    """Creates directories required by the workflow."""
 
     success_message = 'Workspace directory created.'
     failure_message = 'Creating workspace directory failed'
@@ -18,7 +14,8 @@ class CreateWorkspace(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: list of local targets
+        :returns: `<workspace>` and `<workspace>/sip-in-progress`
+        :rtype: list of local targets
         """
         return [luigi.LocalTarget(self.workspace),
                 luigi.LocalTarget(self.sip_creation_path)]

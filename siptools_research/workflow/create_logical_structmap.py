@@ -40,7 +40,7 @@ class CreateLogicalStructMap(WorkflowTask):
         Provenance premise event reference file from
         CreateProvenanceInformation is required.
 
-        :returns: list of tasks
+        :returns: dictionary of required tasks
         """
         return {
             'create_provenance_information': CreateProvenanceInformation(
@@ -58,7 +58,7 @@ class CreateLogicalStructMap(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: local target: `sip-in-progress/logical_structmap.xml`
+        :returns: `<workspace>/sip-in-progress/logical_structmap.xml`
         :rtype: LocalTarget
         """
         return LocalTarget(

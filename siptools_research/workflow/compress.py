@@ -14,7 +14,8 @@ class CompressSIP(WorkflowTask):
 
     Outputs `<document_id>.tar` to workspace.
 
-    Task requires that SIP has been signed.
+    Task requires that SIP has been signed, METS document has been
+    created, and dataset files have been downloaded.
     """
 
     success_message = "TAR archive was created"
@@ -23,7 +24,7 @@ class CompressSIP(WorkflowTask):
     def requires(self):
         """List the Tasks that this Task depends on.
 
-        :returns: SignSIP task
+        :returns: dictionary of required tasks
         """
         return {
             'signature': SignSIP(workspace=self.workspace,
@@ -40,7 +41,7 @@ class CompressSIP(WorkflowTask):
     def output(self):
         """Return the output target of the Task.
 
-        :returns: local target: `<document_id>.tar`
+        :returns: `<workspace>/<document_id>.tar`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(

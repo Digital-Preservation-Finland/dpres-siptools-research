@@ -92,8 +92,7 @@ class CreateTechnicalMetadata(WorkflowTask):
     def requires(self):
         """List the Tasks that this Task depends on.
 
-        :returns: list of tasks: CreateWorkspace, ValidateMetadata, and
-                  GetFiles
+        :returns: dictionary of required tasks
         """
         return {
             'workspace': CreateWorkspace(workspace=self.workspace,
@@ -110,7 +109,7 @@ class CreateTechnicalMetadata(WorkflowTask):
     def output(self):
         """Return output target of this Task.
 
-        :returns: PREMIS event reference file
+        :returns: `<workspace>/create-technical-metadata.jsonl`
         :rtype: LocalTarget
         """
         return LocalTarget(

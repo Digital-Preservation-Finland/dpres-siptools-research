@@ -33,7 +33,7 @@ class CreateStructMap(WorkflowTask):
     def requires(self):
         """List the Tasks that this Task depends on.
 
-        :returns: dictionary of tasks
+        :returns: dictionary of required tasks
         """
         return {
             'create_provenance_information': CreateProvenanceInformation(
@@ -56,9 +56,9 @@ class CreateStructMap(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: list of local targets: `sip-in-progress/filesec.xml`
-                  and `sip-in-progress/structmap.xml`
-        :rtype: LocalTarget
+        :returns: `sip-in-progress/filesec.xml` and
+                  `sip-in-progress/structmap.xml`
+        :rtype: list of local targets
         """
         return [
             LocalTarget(

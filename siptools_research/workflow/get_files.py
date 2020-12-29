@@ -41,7 +41,7 @@ class GetFiles(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: local target: ``<workspace>/dataset_files``
+        :returns: `<workspace>/dataset_files`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(

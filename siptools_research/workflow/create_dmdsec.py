@@ -40,7 +40,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
     def requires(self):
         """List the Tasks that this Task depends on.
 
-        :returns: list of tasks: CreateWorkspace and ValidateMetadata
+        :returns: list of required tasks
         """
         return [CreateWorkspace(workspace=self.workspace,
                                 dataset_id=self.dataset_id,
@@ -52,12 +52,11 @@ class CreateDescriptiveMetadata(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: output target
+        :returns: `<workspace>/create-descriptive-metadata.jsonl`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(os.path.join(
-            self.workspace,
-            'create-descriptive-metadata.jsonl'
+            self.workspace, 'create-descriptive-metadata.jsonl'
         ))
 
     def run(self):
