@@ -10,10 +10,10 @@ mongomock
 xmltodict
 
 # Install requirements
-git+https://gitlab.csc.fi/dpres/file-scraper.git@develop#egg=file-scraper
-git+https://gitlab.csc.fi/dpres/dpres-siptools.git@develop#egg=siptools
-git+https://gitlab.csc.fi/dpres/metax-access.git@develop#egg=metax_access
-git+https://gitlab.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
+git+https://gitlab.ci.csc.fi/dpres/file-scraper.git@develop#egg=file-scraper
+git+https://gitlab.ci.csc.fi/dpres/dpres-siptools.git@develop#egg=siptools
+git+https://gitlab.ci.csc.fi/dpres/metax-access.git@develop#egg=metax_access
+git+https://gitlab.ci.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
 
 lxml
 # Luigi version 3.0 does not support Python 2.7, so Luigi 2.8 must be used until migration to Python3 is complete.
