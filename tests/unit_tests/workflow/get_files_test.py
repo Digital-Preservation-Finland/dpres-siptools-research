@@ -183,7 +183,6 @@ def test_forbidden_relative_path(testpath, requests_mock, path):
 
     # File download should fail
     with pytest.raises(InvalidFileMetadataError) as exception_info:
-        # pylint: disable=protected-access
         task.run()
     assert str(exception_info.value) == \
         'The file path of file pid:urn:1 is invalid: %s' % path
@@ -232,7 +231,6 @@ def test_allowed_relative_paths(testpath, requests_mock, path):
     )
 
     # Download file and check that is found in expected location
-    # pylint: disable=protected-access
     task.run()
     assert os.listdir(os.path.join(workspace,
                                    'dataset_files')) == ['file1']
