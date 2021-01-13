@@ -35,7 +35,6 @@ Requires:       python-requests
 Requires:       python-scandir
 Requires:       python-iso-639 ImageMagick
 Requires:       python-dateutil
-Requires:       python-mongomock
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python-mock
@@ -50,6 +49,7 @@ BuildRequires:  python-jsonschema2rst
 # python2-pytest-catchlog is required for running tests with pytest<3.3
 BuildRequires:  python2-pytest-catchlog
 BuildRequires:  python-xmltodict
+BuildRequires:  python-mongomock
 
 %description
 Digital Preservation Packaging Service for Research datasets

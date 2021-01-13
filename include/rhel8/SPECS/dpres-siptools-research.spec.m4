@@ -35,7 +35,6 @@ Requires:       python3-requests
 Requires:       python3-iso-639
 Requires:       ImageMagick
 Requires:       python3-dateutil
-Requires:       python3-mongomock
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python3-mock
@@ -46,6 +45,7 @@ BuildRequires:  python3-pytest
 BuildRequires:  python3-sphinx
 BuildRequires:  python3-jsonschema2rst
 BuildRequires:  python3-xmltodict
+BuildRequires:  python3-mongomock
 
 %description
 Digital Preservation Packaging Service for Research datasets
