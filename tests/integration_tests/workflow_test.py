@@ -57,7 +57,8 @@ SIG_FILE["file_path"] = "signature.sig"
     [
         (
             tests.metax_data.datasets.BASE_DATASET,
-            [tests.metax_data.files.TXT_FILE]),
+            [tests.metax_data.files.TXT_FILE]
+        ),
         (
             tests.metax_data.datasets.BASE_DATASET,
             [PAS_STORAGE_TXT_FILE]
@@ -144,13 +145,13 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
     for schematron in SCHEMATRONS:
         Schematron(ET.parse(schematron)).assertValid(mets)
 
-    # Check mets root element
+    # Check mets root element contract identifier and spec version
     mets_xml_root = mets.getroot()
-    contractid = mets_xml_root.xpath('@*[local-name() = "CONTRACTID"]')[0]
-    assert contractid == 'urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd'
-    version = mets_xml_root.xpath('@*[local-name() = "CATALOG"] | '
-                                  '@*[local-name() = "SPECIFICATION"]')[0][:3]
-    assert version == '1.7'
+    assert mets_xml_root.xpath('@*[local-name() = "CONTRACTID"]')[0] \
+        == 'urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd'
+    assert mets_xml_root.xpath('@*[local-name() = "CATALOG"] | '
+                               '@*[local-name() = "SPECIFICATION"]')[0][:3] \
+        == '1.7'
 
     # Check that all files are included in SIP
     for file_metadata in files:

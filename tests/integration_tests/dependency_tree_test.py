@@ -96,9 +96,6 @@ def test_workflow(_, testpath, module_name, task, requests_mock):
 
 
 def _mock_exists(_, path):
-    if path.startswith(
+    return path.startswith(
             'accepted/%s/' % datetime.date.today().strftime("%Y-%m-%d")
-    ):
-        return True
-
-    return False
+    )
