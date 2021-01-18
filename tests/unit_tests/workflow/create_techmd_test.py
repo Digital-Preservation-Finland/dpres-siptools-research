@@ -15,8 +15,8 @@ import xmltodict
 
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       algorithm_name)
-import tests.conftest
 import tests.metax_data
+import tests.utils
 
 
 def xml2simpledict(element):
@@ -46,8 +46,8 @@ def test_create_techmd_ok(testpath, requests_mock):
     :returns: ``None``
     """
     # Mock metax
-    tests.conftest.mock_metax_dataset(requests_mock,
-                                      files=[tests.metax_data.files.TIFF_FILE])
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[tests.metax_data.files.TIFF_FILE])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
                       json=["http://www.loc.gov/mix/v20"])
     with open("tests/data/mix_sample_jpeg.xml", "rb") as mix:
@@ -181,8 +181,7 @@ def test_create_techmd_without_charset(testpath, requests_mock):
     """
     text_file = copy.deepcopy(tests.metax_data.files.TXT_FILE)
     del text_file['file_characteristics']['encoding']
-    tests.conftest.mock_metax_dataset(requests_mock,
-                                      files=[text_file])
+    tests.utils.add_metax_dataset(requests_mock, files=[text_file])
 
     # Create workspace that contains a textfile
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
@@ -231,8 +230,8 @@ def test_xml_metadata_file_missing(testpath, requests_mock):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    tests.conftest.mock_metax_dataset(requests_mock,
-                                      files=[tests.metax_data.files.TIFF_FILE])
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[tests.metax_data.files.TIFF_FILE])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
                       json=["http://www.loc.gov/mix/v20"])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml"

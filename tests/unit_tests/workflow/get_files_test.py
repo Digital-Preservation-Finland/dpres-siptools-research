@@ -4,10 +4,10 @@ import os
 import pytest
 import pymongo
 
-import tests.conftest
 from siptools_research.utils.download import FileNotAvailableError
 from siptools_research.workflow import get_files
 from siptools_research.exceptions import InvalidFileMetadataError
+import tests.utils
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
@@ -168,7 +168,7 @@ def test_forbidden_relative_path(testpath, requests_mock, path):
             }
         }
     ]
-    tests.conftest.mock_metax_dataset(requests_mock, files=files)
+    tests.utils.add_metax_dataset(requests_mock, files=files)
 
     # Create the workspace and required directories
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
@@ -217,7 +217,7 @@ def test_allowed_relative_paths(testpath, requests_mock, path):
             }
         }
     ]
-    tests.conftest.mock_metax_dataset(requests_mock, files=files)
+    tests.utils.add_metax_dataset(requests_mock, files=files)
 
     # Create the workspace and required directories
     workspace = os.path.join(testpath, 'workspaces', 'workspace')

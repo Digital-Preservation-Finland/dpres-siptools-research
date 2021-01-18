@@ -20,8 +20,8 @@ import mock
 
 from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.config import Configuration
-import tests.conftest
 import tests.metax_data.contracts
+import tests.utils
 
 
 # Run every task as it would be run from commandline
@@ -60,9 +60,9 @@ def test_workflow(_, testpath, module_name, task, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    tests.conftest.mock_metax_dataset(requests_mock,
-                                      tests.metax_data.datasets.BASE_DATASET,
-                                      files=[tests.metax_data.files.TXT_FILE])
+    tests.utils.add_metax_dataset(requests_mock,
+                                  tests.metax_data.datasets.BASE_DATASET,
+                                  files=[tests.metax_data.files.TXT_FILE])
     requests_mock.get('https://ida.test/files/pid:urn:identifier/download',
                       text='foo')
 

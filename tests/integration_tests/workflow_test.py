@@ -12,9 +12,9 @@ from lxml.isoschematron import Schematron
 
 from siptools_research.workflow.compress import CompressSIP
 import siptools_research.config
-import tests.conftest
 import tests.metax_data.contracts
 from tests.metax_data.files import PAS_STORAGE_ID
+import tests.utils
 
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
@@ -92,9 +92,9 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
     :returns: ``None``
     """
     # Mock Metax
-    tests.conftest.mock_metax_dataset(requests_mock,
-                                      dataset=dataset,
-                                      files=files)
+    tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
+                                  files=files)
 
     # Mock file download sources
     for file_ in files:

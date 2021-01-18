@@ -15,7 +15,7 @@ from siptools.scripts.compile_structmap import compile_structmap
 from siptools.scripts.premis_event import premis_event
 from siptools.xml.mets import NAMESPACES
 
-import tests
+import tests.utils
 from siptools_research.workflow.create_logical_structmap import (
     CreateLogicalStructMap, find_dir_use_category, get_dirpath_dict
 )
@@ -34,7 +34,7 @@ def test_create_structmap_ok(testpath, requests_mock):
              copy.deepcopy(tests.metax_data.files.BASE_FILE)]
     files[0]['file_path'] = 'files/file1'
     files[1]['file_path'] = 'files/file2'
-    tests.conftest.mock_metax_dataset(requests_mock, files=files)
+    tests.utils.add_metax_dataset(requests_mock, files=files)
 
     # Create workspace that already contains dataset files
     workspace = os.path.join(testpath, 'workspaces', 'workspace')

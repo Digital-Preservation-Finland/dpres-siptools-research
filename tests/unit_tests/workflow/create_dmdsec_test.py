@@ -6,7 +6,7 @@ import os
 import pytest
 from lxml import etree
 
-import tests
+import tests.utils
 from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 
 
@@ -19,7 +19,7 @@ def test_createdescriptivemetadata(testpath, requests_mock):
     :returns: ``None``
     """
     # Mock Metax
-    tests.conftest.mock_metax_dataset(requests_mock)
+    tests.utils.add_metax_dataset(requests_mock)
 
     # Create empty workspace
     workspace = os.path.join(testpath, 'workspaces/workspace')
@@ -105,7 +105,7 @@ def test_createdescriptivemetadata_invalid_datacite(testpath, requests_mock):
     """
     # Create dataset that contains invalid datacite metadata
     datacite = etree.Element("{foo}bar")
-    tests.conftest.mock_metax_dataset(requests_mock, datacite=datacite)
+    tests.utils.add_metax_dataset(requests_mock, datacite=datacite)
 
     # Create empty workspace
     workspace = os.path.join(testpath, 'workspaces/workspace')

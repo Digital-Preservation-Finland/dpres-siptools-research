@@ -8,8 +8,8 @@ import pytest
 import lxml
 
 from siptools_research.workflow import create_digiprov
-import tests.conftest
 import tests.metax_data
+import tests.utils
 
 
 @pytest.mark.usefixtures("testmongoclient", 'mock_metax_access')
@@ -77,7 +77,7 @@ def test_failed_createprovenanceinformation(testpath, requests_mock):
     del provenance["preservation_event"]
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset['research_dataset']['provenance'].append(provenance)
-    tests.conftest.mock_metax_dataset(requests_mock, dataset=dataset)
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create empty workspace
     workspace = os.path.join(testpath, 'workspaces/workspace')

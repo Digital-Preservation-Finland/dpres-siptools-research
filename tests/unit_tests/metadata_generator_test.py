@@ -13,10 +13,9 @@ from siptools_research.metadata_generator import generate_metadata
 from siptools_research.exceptions import MissingFileError
 from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.exceptions import InvalidFileError
-import tests.conftest
-from tests.conftest import mock_metax_dataset
 import tests.metax_data.datasets
 import tests.metax_data.files
+import tests.utils
 
 
 DEFAULT_PROVENANCE = {
@@ -83,7 +82,8 @@ def test_generate_metadata(requests_mock,
     :returns: ``None``
     """
     # create mocked dataset in Metax and Ida
-    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[tests.metax_data.files.BASE_FILE])
     file_metadata_patch = requests_mock.patch(
         "https://metaksi/rest/v1/files/pid:urn:identifier",
         json={}
@@ -125,7 +125,8 @@ def test_generate_metadata_unrecognized(requests_mock):
     :returns: ``None``
     """
     # create mocked dataset in Metax and Ida
-    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[tests.metax_data.files.BASE_FILE])
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       text="")
 
@@ -153,7 +154,7 @@ def test_generate_metadata_predefined(requests_mock):
         'encoding': 'user_defined',
         'dummy_key': 'dummy_value'
     }
-    mock_metax_dataset(requests_mock, files=[file_metadata])
+    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       content=b'foo')
     patch_request = requests_mock.patch(
@@ -183,7 +184,8 @@ def test_generate_metadata_addml(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.CSV_FILE])
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[tests.metax_data.files.CSV_FILE])
     addml_post_request = requests_mock.post(
         "https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
         "namespace=http://www.arkivverket.no/standarder/addml",
@@ -215,7 +217,8 @@ def test_generate_metadata_tempfile_removal(testpath, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[tests.metax_data.files.BASE_FILE])
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       text='foo')
 
@@ -248,7 +251,7 @@ def test_generate_metadata_missing_csv_info(requests_mock):
     """
     invalid_file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
     invalid_file_metadata['file_characteristics'] = {'file_format': 'text/csv'}
-    mock_metax_dataset(requests_mock, files=[invalid_file_metadata])
+    tests.utils.add_metax_dataset(requests_mock, files=[invalid_file_metadata])
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download")
 
     with pytest.raises(InvalidFileMetadataError) as exception_info:
@@ -281,7 +284,7 @@ def test_generate_metadata_provenance(provenance, requests_mock):
         del dataset['research_dataset']['provenance']
     else:
         dataset['research_dataset']['provenance'] = provenance
-    mock_metax_dataset(requests_mock, dataset=dataset)
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
     patch_dataset_metadata = requests_mock.patch(
         'https://metaksi/rest/v1/datasets/dataset_identifier',
         json={}
@@ -331,7 +334,8 @@ def test_generate_metadata_ida_download_error(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    mock_metax_dataset(requests_mock, files=[tests.metax_data.files.BASE_FILE])
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[tests.metax_data.files.BASE_FILE])
     requests_mock.get('https://ida.test/files/pid:urn:identifier/download',
                       status_code=404)
 
@@ -350,7 +354,7 @@ def test_generate_metadata_httperror(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    mock_metax_dataset(requests_mock)
+    tests.utils.add_metax_dataset(requests_mock)
     requests_mock.get(
         'https://metaksi/rest/v1/datasets/dataset_identifier/files',
         status_code=500,
