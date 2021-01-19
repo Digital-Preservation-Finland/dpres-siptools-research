@@ -50,8 +50,8 @@ import tests.utils
 def test_workflow(_, testpath, module_name, task, requests_mock):
     """Test workflow dependency tree.
 
-    Run a task (and all tasks it requires) and check that check that
-    report of successfull task is added to mongodb.
+    Run a task (and all tasks it requires) and check that report of
+    successful task is added to mongodb.
 
     :param testpath: temporary directory
     :param module_name: submodule of siptools_research.workflow that
