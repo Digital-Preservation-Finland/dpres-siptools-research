@@ -19,7 +19,8 @@ def test_send_sip(testpath):
 
     Run task and check that .tar is copied to digital preservation
     server. This test uses real DPS test instance. To run this test,
-    valid ssh key must be copied current working directory.
+    a valid ssh key for `tpas` user on `customer-test-tpas-1` must be
+    copied to current working directory and renamed as `ssh_key`.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
