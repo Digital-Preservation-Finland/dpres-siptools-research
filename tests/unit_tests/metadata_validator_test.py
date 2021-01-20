@@ -98,9 +98,10 @@ def test_validate_metadata(requests_mock):
 
 
 def test_validate_metadata_missing_file(requests_mock):
-    """Test validate_metadata.
+    """Test validate_metadata with an empty dataset.
 
-    Function should return ``True`` for a valid dataset.
+    Function should raise InvalidDatasetMetadataError for datasets, which do
+    not contain any files.
 
     :param requests_mock: Mocker object
     :returns: ``None``
