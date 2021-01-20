@@ -97,6 +97,24 @@ def test_validate_metadata(requests_mock):
                              tests.conftest.UNIT_TEST_CONFIG_FILE)
 
 
+def test_validate_metadata_missing_file(requests_mock):
+    """Test validate_metadata.
+
+    Function should return ``True`` for a valid dataset.
+
+    :param requests_mock: Mocker object
+    :returns: ``None``
+    """
+    mock_metax_dataset(requests_mock)
+    expected_error = "Dataset must contain at least one file"
+
+    with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
+        validate_metadata(
+            'dataset_identifier',
+            tests.conftest.UNIT_TEST_CONFIG_FILE
+        )
+
+
 @pytest.mark.parametrize(
     ("translations", "expectation"),
     (
@@ -135,8 +153,9 @@ def test_validate_metadata_languages(translations, expectation, requests_mock):
     :returns: ``None``
     """
     dataset = copy.deepcopy(BASE_DATASET)
+    dataset_file = copy.deepcopy(TXT_FILE)
     dataset['research_dataset']['provenance'][0]['description'] = translations
-    mock_metax_dataset(requests_mock, dataset=dataset)
+    mock_metax_dataset(requests_mock, dataset=dataset, files=[dataset_file])
 
     with expectation:
         assert validate_metadata('dataset_identifier',
@@ -389,7 +408,8 @@ def test_validate_metadata_invalid_datacite(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    mock_metax_dataset(requests_mock)
+    dataset_file = copy.deepcopy(TXT_FILE)
+    mock_metax_dataset(requests_mock, files=[dataset_file])
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       content=get_invalid_datacite())
@@ -416,7 +436,8 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    mock_metax_dataset(requests_mock)
+    dataset_file = copy.deepcopy(TXT_FILE)
+    mock_metax_dataset(requests_mock, files=[dataset_file])
     requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       text="<resource\n")
@@ -440,7 +461,8 @@ def test_validate_metadata_datacite_bad_request(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    mock_metax_dataset(requests_mock)
+    dataset_file = copy.deepcopy(TXT_FILE)
+    mock_metax_dataset(requests_mock, files=[dataset_file])
 
     # Mock datacite request response. Mocked response has status code 400, and
     # response body contains error information.

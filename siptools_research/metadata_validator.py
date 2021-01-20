@@ -236,7 +236,13 @@ def _validate_file_metadata(dataset, metax_client, conf):
     # can be found from dataset.file or dataset.directories properties
     consistency = DatasetConsistency(metax_client, dataset)
     directory_validation = DirectoryValidation(metax_client)
-    for file_metadata in metax_client.get_dataset_files(dataset['identifier']):
+
+    dataset_files = metax_client.get_dataset_files(dataset['identifier'])
+    if not dataset_files:
+        raise InvalidDatasetMetadataError(
+            "Dataset must contain at least one file"
+        )
+    for file_metadata in dataset_files:
 
         file_identifier = file_metadata["identifier"]
         file_path = file_metadata["file_path"]
