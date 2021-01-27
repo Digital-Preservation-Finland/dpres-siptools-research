@@ -25,7 +25,8 @@ import tests.utils
 
 
 # Run every task as it would be run from commandline
-@mock.patch('siptools_research.workflow.send_sip.paramiko.SSHClient')
+@mock.patch('siptools_research.workflow.send_sip.paramiko.SSHClient',
+            new=mock.MagicMock)
 @pytest.mark.parametrize(
     "module_name,task", [
         ('create_workspace', 'CreateWorkspace'),
@@ -47,7 +48,7 @@ import tests.utils
 @pytest.mark.usefixtures(
     'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf'
 )
-def test_workflow(_, testpath, module_name, task, requests_mock):
+def test_workflow(testpath, module_name, task, requests_mock):
     """Test workflow dependency tree.
 
     Run a task (and all tasks it requires) and check that report of

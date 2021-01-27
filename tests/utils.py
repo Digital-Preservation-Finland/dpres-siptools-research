@@ -31,7 +31,7 @@ def add_metax_dataset(requests_mock,
     audio, video, image etc. files is NOT mocked. The identifiers in
     provided resource dicts are used in mocked URLs.
 
-    :param requests_mok: Mocker object used for creating responses
+    :param requests_mock: Mocker object used for creating responses
     :param dataset: dataset metadata dict
     :param datacite: dataset metadata in datacite XML format
     :param files: list of file metadata dicts
