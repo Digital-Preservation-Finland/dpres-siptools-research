@@ -16,6 +16,7 @@ DEFAULTS = {
     'ida_url': 'https://86.50.169.61:4433',
     'ida_user': 'testuser_1',
     'ida_password': '',
+    'ida_ssl_verification': 'True',
     'dp_host': '86.50.168.218',
     'dp_user': 'tpas',
     'dp_ssh_key': '~/.ssh/id_rsa_tpas_pouta',

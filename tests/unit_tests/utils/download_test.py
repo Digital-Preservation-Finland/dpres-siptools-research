@@ -8,7 +8,7 @@ from siptools_research.utils.download import (
     download_file, clean_file_cache,
     FileNotAvailableError, FileAccessError
 )
-from tests.conftest import UNIT_TEST_CONFIG_FILE
+from tests.conftest import UNIT_TEST_CONFIG_FILE, UNIT_TEST_SSL_CONFIG_FILE
 
 
 def _get_file_metadata(identifier):
@@ -20,10 +20,18 @@ def _get_file_metadata(identifier):
     }
 
 
-def test_download_file(testpath, requests_mock):
+@pytest.mark.parametrize(('config_file', 'request_verified'),
+                         [
+                             (UNIT_TEST_CONFIG_FILE, False),
+                             (UNIT_TEST_SSL_CONFIG_FILE, True)
+                         ])
+def test_download_file(testpath, requests_mock, config_file, request_verified):
     """Test downloading a file to a temporary directory.
 
     :param testpath: Temporary directory fixture
+    :param requests_mock: HTTP request mocker
+    :param config_file: used configuration file
+    :param request_verified: should HTTP request to Ida be verified?
     :returns: ``None``
     """
     requests_mock.get("https://ida.test/files/pid:urn:1/download",
@@ -33,15 +41,18 @@ def test_download_file(testpath, requests_mock):
     download_file(
         _get_file_metadata('pid:urn:1'),
         new_file_path,
-        UNIT_TEST_CONFIG_FILE
+        config_file
     )
 
-    # Remove file from file_cache and test that the workspace copy stays intact
+    # Remove file from file_cache and test that the workspace copy stays
+    # intact
     os.remove(os.path.join(testpath, "file_cache", "pid:urn:1"))
 
     # The file should be a text file that says: "foo\n"
     with open(new_file_path, 'r') as new_file:
         assert new_file.read() == 'foo\n'
+
+    assert requests_mock.last_request.verify is request_verified
 
 
 def test_download_file_404(testpath, requests_mock):

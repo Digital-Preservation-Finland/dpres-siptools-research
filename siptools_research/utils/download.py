@@ -30,11 +30,13 @@ def _get_response(identifier, conf, stream=False):
     """
     user = conf.get('ida_user')
     password = conf.get('ida_password')
+    verify = conf.getboolean('ida_ssl_verification')
     baseurl = conf.get('ida_url')
     url = '%s/files/%s/download' % (baseurl, identifier)
 
     response = requests.get(url,
                             auth=(user, password),
+                            verify=verify,
                             stream=stream)
 
     response.raise_for_status()

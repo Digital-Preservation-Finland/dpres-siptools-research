@@ -30,6 +30,8 @@ METAX_URL = "https://metaksi/rest/v1"
 TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
 UNIT_TEST_CONFIG_FILE = \
     "tests/data/configuration_files/siptools_research_unit_test.conf"
+UNIT_TEST_SSL_CONFIG_FILE = \
+    "tests/data/configuration_files/siptools_research_unit_test_ssl.conf"
 
 
 # Prefer modules from source directory rather than from site-python
