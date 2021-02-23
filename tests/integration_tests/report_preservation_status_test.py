@@ -4,16 +4,15 @@
 import os
 import time
 
-import pytest
-import paramiko
 import mock
-
+import pytest
 from metax_access import Metax
 
+import paramiko
 import tests.conftest
-from tests.metax_data import datasets
+from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
-from siptools_research.workflowtask import InvalidDatasetError
+from tests.metax_data import datasets
 
 
 @pytest.fixture(autouse=True)
@@ -41,7 +40,7 @@ def test_reportpreservationstatus(testpath):
     workspace = testpath
 
     # Set permissions of ssh-key (required by paramiko)
-    os.chmod('tests/data/pas_ssh_key', 0600)
+    os.chmod('tests/data/pas_ssh_key', 0o600)
     # Create new directory to digital preservation server
     with paramiko.SSHClient() as ssh:
         # Initialize SSH connection to digital preservation server
@@ -89,7 +88,7 @@ def test_reportpreservationstatus_rejected(testpath):
     workspace = testpath
 
     # Set permissions of ssh-key (required by paramiko)
-    os.chmod('tests/data/pas_ssh_key', 0600)
+    os.chmod('tests/data/pas_ssh_key', 0o600)
 
     # Create new directory to digital preservation server
     with paramiko.SSHClient() as ssh:
@@ -146,7 +145,7 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
     workspace = testpath
 
     # Set permissions of ssh-key (required by paramiko)
-    os.chmod('tests/data/pas_ssh_key', 0600)
+    os.chmod('tests/data/pas_ssh_key', 0o600)
 
     # Create new directory to digital preservation server
     with paramiko.SSHClient() as ssh:
