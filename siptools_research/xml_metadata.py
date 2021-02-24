@@ -2,13 +2,11 @@
 import os
 from abc import ABCMeta, abstractmethod
 
-from siptools.scripts import create_mix
+from siptools.scripts import (create_addml, create_audiomd, create_mix,
+                              create_videomd)
 from siptools.scripts.create_mix import MixGenerationError
-from siptools.scripts import create_addml
-from siptools.scripts import create_audiomd
-
-from siptools_research.exceptions import InvalidFileError
-from siptools_research.exceptions import InvalidFileMetadataError
+from siptools_research.exceptions import (InvalidFileError,
+                                          InvalidFileMetadataError)
 
 
 def _kwargs2str(kwargs):
@@ -78,7 +76,7 @@ class _ImageFileXMLMetadata(_XMLMetadata):
         :returns: ``Boolean``: True if provided file_format starts with
                   ``image``. Otherwise False.
         """
-        return file_format.startswith('image')
+        return file_format.startswith('image/')
 
 
 class _CSVFileXMLMetadata(_XMLMetadata):
@@ -125,7 +123,7 @@ class _CSVFileXMLMetadata(_XMLMetadata):
         return file_format == 'text/csv'
 
 
-class _AudioXWavFileXMLMetadata(_XMLMetadata):
+class _AudioFileXMLMetadata(_XMLMetadata):
     """Class for creating XML metadata for audio files."""
 
     def create(self):
@@ -143,17 +141,41 @@ class _AudioXWavFileXMLMetadata(_XMLMetadata):
     def is_generator_for(cls, file_format):
         """Check if class is generator for file format.
 
-        :returns: ``Boolean``: True if provided file_format is ``audio/x-wav``.
+        :returns: ``Boolean``: True if provided file_format is an audio format.
                   Otherwise False.
         """
-        return file_format == 'audio/x-wav'
+        return file_format.startswith('audio/')
+
+
+class _VideoFileXMLMetadata(_XMLMetadata):
+    """Class for creating XML metadata for video files."""
+
+    def create(self):
+        """Create the root audioMD XML element.
+
+        :returns: videoMD XML element
+        """
+        videomd = create_videomd.create_videomd_metadata(self.file_path)
+        if not videomd:
+            raise InvalidFileError("Video file has no video streams.",
+                                   [self.file_metadata['identifier']])
+        return videomd['0']
+
+    @classmethod
+    def is_generator_for(cls, file_format):
+        """Check if class is generator for file format.
+
+        :returns: ``Boolean``: True if provided file_format is a video format.
+                  Otherwise False.
+        """
+        return file_format.startswith('video/')
 
 
 class XMLMetadataGenerator(object):
     """Class for generating a file type specific XML metadata."""
 
     METADATA_GENERATORS = [_ImageFileXMLMetadata, _CSVFileXMLMetadata,
-                           _AudioXWavFileXMLMetadata]
+                           _AudioFileXMLMetadata, _VideoFileXMLMetadata]
 
     def __init__(self, file_path, file_metadata):
         """Initialize XML metadata generator.

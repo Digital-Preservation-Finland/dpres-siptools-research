@@ -62,3 +62,18 @@ def test_generate_xml_metadata_for_audio_file():
                                          file_metadata)
         generator.create()
         mock_create_audiomd.assert_called_once_with(file_path)
+
+
+def test_generate_xml_metadata_for_video_file():
+    """Tests metadata XML generation for audio file.
+    """
+    with mock.patch(
+        'siptools.scripts.create_videomd.create_videomd_metadata'
+    ) as mock_create_videomd:
+        file_path = '/foo/bar'
+        file_metadata = {
+            'file_characteristics': {'file_format': 'video/ogg'}
+        }
+        generator = XMLMetadataGenerator(file_path, file_metadata)
+        generator.create()
+        mock_create_videomd.assert_called_once_with(file_path)
