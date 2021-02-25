@@ -9,7 +9,7 @@ doc/build/
 doc/modules/
 doc/schemas/
 htmlcov/
-venv/
-.venv/
+venv*/
+.venv*/
 ssh_key
 sign_key
