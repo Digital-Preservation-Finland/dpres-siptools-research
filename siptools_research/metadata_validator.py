@@ -21,14 +21,34 @@ from siptools_research.config import Configuration
 
 
 # SCHEMATRONS is a dictionary that contains mapping:
-#    file_format_prefix=>xml_metadata_namespace_and_schematron_file
+# (format_type, format_subtype) => xml_metadata_namespace_and_schematron_file
+# Only the file format type is required, and the default mapping
+# (denoted by None) is used if there isn't a schema specific to a type + subtype
 SCHEMATRONS = {
-    'image': {'ns': 'http://www.loc.gov/mix/v20', 'schema':
-              '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch'},
-    'audio': {'ns': 'http://www.loc.gov/audioMD/', 'schema':
-              '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch'},
-    'video': {'ns': 'http://www.loc.gov/videoMD/', 'schema':
-              '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'}
+    'image': {
+        None: {
+            'ns': 'http://www.loc.gov/mix/v20',
+            'schema': '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch'
+        },
+    },
+    'audio': {
+        None: {
+            'ns': 'http://www.loc.gov/audioMD/',
+            'schema': '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch'
+        },
+    },
+    'video': {
+        None: {
+            'ns': 'http://www.loc.gov/videoMD/',
+            'schema': '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'
+        }
+    },
+    'text': {
+        'csv': {
+            'ns': 'http://www.arkivverket.no/standarder/addml',
+            'schema': '/usr/share/dpres-xml-schemas/schematron/mets_addml.sch'
+        }
+    }
 }
 DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
@@ -282,10 +302,20 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
     :returns: ``None``
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
-        file_format_prefix = file_metadata['file_characteristics'][
-            'file_format'].split('/')[0]
+        file_format_type, file_format_subtype = \
+            file_metadata['file_characteristics']['file_format'].split('/')
 
-        if file_format_prefix in SCHEMATRONS:
+        # Try retrieving a Schematron entry based on 'type' + 'subtype',
+        # falling back to just 'type' if a more specific entry isn't available
+        try:
+            schematron = SCHEMATRONS[file_format_type][file_format_subtype]
+        except KeyError:
+            schematron = (
+                SCHEMATRONS.get(file_format_type, {})
+                .get(None, None)
+            )
+
+        if schematron:
             file_id = file_metadata['identifier']
             try:
                 xmls = metax_client.get_xml(file_id)
@@ -298,29 +328,28 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
                 if namespace not in NAMESPACES.values():
                     raise TypeError(INVALID_NS_ERROR % namespace)
 
-            if SCHEMATRONS[file_format_prefix]['ns'] not in xmls:
+            if schematron['ns'] not in xmls:
                 raise InvalidFileMetadataError(
                     MISSING_XML_METADATA_ERROR % file_id
                 )
 
             _validate_with_schematron(
-                file_format_prefix,
-                xmls[SCHEMATRONS[file_format_prefix]['ns']]
+                schematron['schema'],
+                xmls[schematron['ns']]
             )
 
 
-def _validate_with_schematron(filetype, xml):
+def _validate_with_schematron(schema_file, xml):
     """Validate XML with schematron.
 
     Parses validation error from schematron output and raises
     InvalidFileMetadataError with clear error message.
 
-    :param filetype: Type of file described by XML (image, video, or audio)
+    :param schema_file: Location of the Schematron file
     :param xml: XML element
     :param file_id: identifier of file described by XML
     :returns: ``None``
     """
-    schema_file = SCHEMATRONS[filetype]['schema']
     schema = lxml.isoschematron.Schematron(lxml.etree.parse(schema_file))
     if schema.validate(xml) is False:
 

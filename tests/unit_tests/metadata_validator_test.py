@@ -21,6 +21,7 @@ from tests.metax_data.datasets import BASE_DATASET, BASE_DATACITE
 from tests.metax_data.files import (BASE_FILE,
                                     TXT_FILE,
                                     TIFF_FILE,
+                                    BASE_ADDML_MD,
                                     BASE_AUDIO_MD,
                                     BASE_VIDEO_MD)
 from tests.metax_data.contracts import BASE_CONTRACT
@@ -307,17 +308,19 @@ def test_validate_metadata_missing_xml(requests_mock):
 @pytest.mark.parametrize(
     ('file_format', 'xml_namespace', 'xml'),
     (
+        (
+            'text/csv',
+            "http://www.arkivverket.no/standarder/addml", BASE_ADDML_MD
+        ),
         ('audio/mp4', "http://www.loc.gov/audioMD/", BASE_AUDIO_MD),
         ('video/mp4', "http://www.loc.gov/videoMD/", BASE_VIDEO_MD)
     )
 )
-def test_validate_metadata_audiovideo(requests_mock,
-                                      file_format,
-                                      xml_namespace,
-                                      xml):
+def test_validate_metadata_multiple_formats(
+        requests_mock, file_format, xml_namespace, xml):
     """Test validate_metadata.
 
-    Function validates AudioMD and VideoMD metadata.
+    Function validates different types of technical metadata.
 
     :param requests_mock: Mocker object
     :param file_format: file mimetype
@@ -596,7 +599,9 @@ def test_validate_xml_file_metadata():
     )
     # pylint: disable=protected-access
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        metadata_validator._validate_with_schematron('audio', xml)
+        metadata_validator._validate_with_schematron(
+            '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch', xml
+        )
 
 
 def test_validate_datacite(requests_mock):

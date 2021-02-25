@@ -1,0 +1,60 @@
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:addml="http://www.arkivverket.no/standarder/addml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="38acf0b3-7edd-4a73-9dbd-ea67fd3c9c21" PROFILE="http://www.kdk.fi/kdk-mets-profile" fi:CATALOG="1.6.0" fi:SPECIFICATION="1.6.1" xmlns:fi="http://www.kdk.fi/standards/mets/kdk-extensions" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<mets:amdSec>
+		<mets:techMD CREATED="2018-01-01T07:21:27.005383" ID="123456789098765421">
+			<mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="AudioMD" MDTYPEVERSION="2.0">
+                <mets:xmlData>
+                    <addml:addml>
+                        <addml:dataset name="Testdata">
+                            <addml:description>Testdata</addml:description>
+                            <addml:reference/>
+                            <addml:flatFiles>
+                                <addml:flatFile name="csvfile.csv" definitionReference="testdef" />
+                                <addml:flatFileDefinitions>
+                                    <addml:flatFileDefinition name="testdef" typeReference="testtype">
+                                        <addml:recordDefinitions>
+                                            <addml:recordDefinition name="testrecord" typeReference="testrectype">
+                                                <addml:fieldDefinitions>
+                                                    <addml:fieldDefinition name="test" typeReference="String">
+                                                        <addml:description/>
+                                                    </addml:fieldDefinition>
+                                                    <addml:fieldDefinition name="test" typeReference="String">
+                                                        <addml:description/>
+                                                    </addml:fieldDefinition>
+                                                    <addml:fieldDefinition name="test" typeReference="String">
+                                                        <addml:description/>
+                                                    </addml:fieldDefinition>
+                                                </addml:fieldDefinitions>
+                                            </addml:recordDefinition>
+                                        </addml:recordDefinitions>
+                                    </addml:flatFileDefinition>
+                                </addml:flatFileDefinitions>
+                                <addml:structureTypes>
+                                    <addml:flatFileTypes>
+                                        <addml:flatFileType name="testtype">
+                                            <addml:charset>UTF-8</addml:charset>
+                                            <addml:delimFileFormat>
+                                                <addml:recordSeparator>CR+LF</addml:recordSeparator>
+                                                <addml:fieldSeparatingChar>;</addml:fieldSeparatingChar>
+                                                <addml:quotingChar>"</addml:quotingChar>
+                                            </addml:delimFileFormat>
+                                        </addml:flatFileType>
+                                    </addml:flatFileTypes>
+                                    <addml:recordTypes>
+                                        <addml:recordType name="testrectype">
+                                            <addml:trimmed />
+                                        </addml:recordType>
+                                    </addml:recordTypes>
+                                    <addml:fieldTypes>
+                                        <addml:fieldType name="String">
+                                            <addml:dataType>string</addml:dataType>
+                                        </addml:fieldType>
+                                    </addml:fieldTypes>
+                                </addml:structureTypes>
+                            </addml:flatFiles>
+                        </addml:dataset>
+                    </addml:addml>
+				</mets:xmlData>
+			</mets:mdWrap>
+		</mets:techMD>
+	</mets:amdSec>
+</mets:mets>

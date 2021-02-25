@@ -3,8 +3,9 @@ from copy import deepcopy
 
 import lxml.etree
 
+BASE_ADDML_MD = lxml.etree.parse('tests/data/addml_sample.xml')
 BASE_AUDIO_MD = lxml.etree.parse('tests/data/audiomd_sample.xml')
-BASE_VIDEO_MD = lxml.etree.parse('tests/data/audiomd_sample.xml')
+BASE_VIDEO_MD = lxml.etree.parse('tests/data/videomd_sample.xml')
 
 
 PAS_STORAGE_ID = "urn:nbn:fi:att:file-storage-pas"
