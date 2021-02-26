@@ -60,7 +60,11 @@ DEFAULT_PROVENANCE = {
         ('tests/data/sample_files/audio_x-wav.wav',
          'audio/x-wav',
          None,
-         'http://www.loc.gov/audioMD/')
+         'http://www.loc.gov/audioMD/'),
+        ('tests/data/sample_files/video_ffv1.mkv',
+         'video/x-matroska',
+         None,
+         'http://www.loc.gov/videoMD/')
     )
 )
 @pytest.mark.usefixtures('testpath')
@@ -169,7 +173,16 @@ def test_generate_metadata_predefined(requests_mock):
     assert patch_request.last_request.json()['file_characteristics'] == {
         'file_format': 'text/plain',  # missing keys are added
         'encoding': 'user_defined',  # user defined value is not overwritten
-        'dummy_key': 'dummy_value'  # additional keys are copied
+        'dummy_key': 'dummy_value',  # additional keys are copied
+        'streams': {
+            '0': {
+                'charset': 'user_defined',
+                'index': 0,
+                'mimetype': 'text/plain',
+                'stream_type': 'text',
+                'version': '(:unap)'
+            }
+        }
     }
 
 

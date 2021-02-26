@@ -6,16 +6,33 @@ except ImportError:
     from unittest import mock
 
 
-def test_generate_xml_metadata_for_image_file():
+class DictMagicMock(mock.MagicMock):
+    """
+    Magic mock that fakes a dictionary with a single value
+    """
+    keys = lambda _: [0]
+    values = lambda _: [{}]
+
+
+def test_generate_xml_metadata_for_image_file(monkeypatch):
     """Tests metadata XML generation for image file.
     :returns: ``None``
     """
     with mock.patch(
-        'siptools.scripts.create_mix.create_mix_metadata'
+        'siptools.scripts.create_mix.create_mix_metadata',
+        new_callable=DictMagicMock
     ) as mock_create_mix:
         file_path = '/foo/bar'
         file_metadata = {}
-        file_metadata['file_characteristics'] = {'file_format': 'image/tiff'}
+        file_metadata['file_characteristics'] = {
+            'file_format': 'image/tiff',
+            'streams': {
+                0: {
+                    'mimetype': 'image/tiff',
+                    'stream_type': 'image'
+                }
+            }
+        }
         generator = XMLMetadataGenerator(file_path,
                                          file_metadata)
         generator.create()
@@ -27,16 +44,37 @@ def test_generate_xml_metadata_for_csv_file():
     :returns: ``None``
     """
     with mock.patch(
-        'siptools.scripts.create_addml.create_addml_metadata'
+        'siptools.scripts.create_addml.create_addml_metadata',
+        new_callable=DictMagicMock
     ) as mock_create_addml:
         file_path = '/foo/bar'
         file_md = {}
-        file_md['file_characteristics'] = {'file_format': 'text/csv',
-                                           'csv_delimiter': ';',
-                                           'csv_has_header': False,
-                                           'encoding': 'UTF-8',
-                                           'csv_record_separator': 'CR+LF',
-                                           'csv_quoting_char': '\"'}
+        file_md['file_characteristics'] = {
+            'file_format': 'text/csv',
+            'csv_delimiter': ';',
+            'csv_has_header': False,
+            'encoding': 'UTF-8',
+            'csv_record_separator': 'CR+LF',
+            'csv_quoting_char': '\"',
+            'streams': {
+                0: {
+                    "mimetype": "text/csv",
+                    "index": 0,
+                    "charset": "UTF-8",
+                    "stream_type": "text",
+                    "delimiter": ",",
+                    "version": "(:unap)",
+                    "separator": "\r\n",
+                    "first_line": [
+                        "Year",
+                        "Make",
+                        "Model",
+                        "Length"
+                    ]
+                }
+            }
+        }
+
         file_md['file_path'] = '/foobar'
         generator = XMLMetadataGenerator(file_path,
                                          file_md)
@@ -53,11 +91,22 @@ def test_generate_xml_metadata_for_audio_file():
     :returns: ``None``
     """
     with mock.patch(
-        'siptools.scripts.create_audiomd.create_audiomd_metadata'
+        'siptools.scripts.create_audiomd.create_audiomd_metadata',
+        new_callable=DictMagicMock
     ) as mock_create_audiomd:
         file_path = '/foo/bar'
-        file_metadata = {}
-        file_metadata['file_characteristics'] = {'file_format': 'audio/x-wav'}
+        file_metadata = {
+            'file_characteristics': {
+                'file_format': 'audio/x-wav',
+                'streams': {
+                    0: {
+                        'mimetype': 'audio-xwav',
+                        'stream_type': 'audio',
+                        'bits_per_sample': '16'
+                    }
+                }
+            }
+        }
         generator = XMLMetadataGenerator(file_path,
                                          file_metadata)
         generator.create()
@@ -65,14 +114,31 @@ def test_generate_xml_metadata_for_audio_file():
 
 
 def test_generate_xml_metadata_for_video_file():
-    """Tests metadata XML generation for audio file.
+    """Tests metadata XML generation for video file.
     """
     with mock.patch(
-        'siptools.scripts.create_videomd.create_videomd_metadata'
+        'siptools.scripts.create_videomd.create_videomd_metadata',
+        new_callable=DictMagicMock
     ) as mock_create_videomd:
         file_path = '/foo/bar'
         file_metadata = {
-            'file_characteristics': {'file_format': 'video/ogg'}
+            'file_characteristics': {
+                'file_format': 'video/x-matroska',
+                'streams': {
+                    0: {
+                        'mimetype': 'video/x-matroska',
+                        'stream_type': 'videocontainer',
+                    },
+                    1: {
+                        'mimetype': 'video/x-ffv',
+                        'stream_type': 'video',
+                    },
+                    2: {
+                        'mimetype': 'audio/flac',
+                        'stream_type': 'audio',
+                    }
+                }
+            }
         }
         generator = XMLMetadataGenerator(file_path, file_metadata)
         generator.create()

@@ -45,12 +45,13 @@ class _XMLMetadata:
         """
 
     @classmethod
-    def is_generator_for(cls, file_format):
+    def is_generator_for(cls, file_characteristics):
         """Class method to be implemented by a subclass.
 
         :returns: ``Boolean``: True if this generator generates the XML
-                  metadata for the given file_format. Otherwise False.
+                  metadata for the given file_characteristics. Otherwise False.
         """
+        raise NotImplementedError
 
 
 class _ImageFileXMLMetadata(_XMLMetadata):
@@ -70,13 +71,16 @@ class _ImageFileXMLMetadata(_XMLMetadata):
                                    [self.file_metadata['identifier']])
 
     @classmethod
-    def is_generator_for(cls, file_format):
+    def is_generator_for(cls, file_characteristics):
         """Check if class is generator for file format.
 
-        :returns: ``Boolean``: True if provided file_format starts with
-                  ``image``. Otherwise False.
+        :returns: ``Boolean``: True if provided file_characteristics contains
+                  at least one ``image`` stream. Otherwise False.
         """
-        return file_format.startswith('image/')
+        return any(
+            stream for stream in file_characteristics["streams"].values()
+            if stream["stream_type"] == "image"
+        )
 
 
 class _CSVFileXMLMetadata(_XMLMetadata):
@@ -114,13 +118,13 @@ class _CSVFileXMLMetadata(_XMLMetadata):
         )
 
     @classmethod
-    def is_generator_for(cls, file_format):
+    def is_generator_for(cls, file_characteristics):
         """Check if class is generator for file format.
 
-        :returns: ``Boolean``: True if provided file_format is ``text/csv``.
+        :returns: ``Boolean``: True if provided file format is ``text/csv``.
                   Otherwise False.
         """
-        return file_format == 'text/csv'
+        return file_characteristics['file_format'] == 'text/csv'
 
 
 class _AudioFileXMLMetadata(_XMLMetadata):
@@ -135,16 +139,23 @@ class _AudioFileXMLMetadata(_XMLMetadata):
         if not audiomd:
             raise InvalidFileError("Audio file has no audio streams.",
                                    [self.file_metadata['identifier']])
-        return audiomd['0']
+
+        # TODO: There can technically be multiple audioMD entries, but only
+        # pick one for now.
+        return list(audiomd.values())[0]
 
     @classmethod
-    def is_generator_for(cls, file_format):
+    def is_generator_for(cls, file_characteristics):
         """Check if class is generator for file format.
 
-        :returns: ``Boolean``: True if provided file_format is an audio format.
+        :returns: ``Boolean``: True if provided file_characteristics
+                  contains at least one audio stream.
                   Otherwise False.
         """
-        return file_format.startswith('audio/')
+        return any(
+            stream for stream in file_characteristics["streams"].values()
+            if stream["stream_type"] == "audio"
+        )
 
 
 class _VideoFileXMLMetadata(_XMLMetadata):
@@ -159,16 +170,23 @@ class _VideoFileXMLMetadata(_XMLMetadata):
         if not videomd:
             raise InvalidFileError("Video file has no video streams.",
                                    [self.file_metadata['identifier']])
-        return videomd['0']
+
+        # TODO: There can technically be multiple videoMD entries, but only
+        # pick one for now.
+        return list(videomd.values())[0]
 
     @classmethod
-    def is_generator_for(cls, file_format):
+    def is_generator_for(cls, file_characteristics):
         """Check if class is generator for file format.
 
-        :returns: ``Boolean``: True if provided file_format is a video format.
+        :returns: ``Boolean``: True if provided file_characteristics
+                  contains at least one video stream.
                   Otherwise False.
         """
-        return file_format.startswith('video/')
+        return any(
+            stream for stream in file_characteristics["streams"].values()
+            if stream["stream_type"] == "video"
+        )
 
 
 class XMLMetadataGenerator(object):
@@ -186,8 +204,8 @@ class XMLMetadataGenerator(object):
         """
         self.generator = None
         for generator in self.METADATA_GENERATORS:
-            if generator.is_generator_for(file_metadata['file_characteristics']
-                                          ['file_format']):
+            if generator.is_generator_for(
+                    file_metadata['file_characteristics']):
                 self.generator = generator(file_path, file_metadata)
 
     def create(self):

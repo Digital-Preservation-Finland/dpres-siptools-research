@@ -152,8 +152,10 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     scraper.scrape(check_wellformed=False)
 
     # Create file_characteristics object
-    file_characteristics = {}
-    file_characteristics['file_format'] = scraper.mimetype
+    file_characteristics = {
+        'file_format': scraper.mimetype,
+        'streams': scraper.streams
+    }
 
     if scraper.version != NO_VERSION:
         file_characteristics['format_version'] = scraper.version
