@@ -18,6 +18,13 @@ def test_generate_xml_metadata_for_image_file(monkeypatch):
     """Tests metadata XML generation for image file.
     :returns: ``None``
     """
+    streams = {
+        0: {
+            'mimetype': 'image/tiff',
+            'stream_type': 'image'
+        }
+    }
+
     with mock.patch(
         'siptools.scripts.create_mix.create_mix_metadata',
         new_callable=DictMagicMock
@@ -26,17 +33,12 @@ def test_generate_xml_metadata_for_image_file(monkeypatch):
         file_metadata = {}
         file_metadata['file_characteristics'] = {
             'file_format': 'image/tiff',
-            'streams': {
-                0: {
-                    'mimetype': 'image/tiff',
-                    'stream_type': 'image'
-                }
-            }
+            'streams': streams
         }
         generator = XMLMetadataGenerator(file_path,
                                          file_metadata)
         generator.create()
-        mock_create_mix.assert_called_once_with(file_path)
+        mock_create_mix.assert_called_once_with(file_path, streams=streams)
 
 
 def test_generate_xml_metadata_for_csv_file():
@@ -90,6 +92,14 @@ def test_generate_xml_metadata_for_audio_file():
     """Tests metadata XML generation for audio file.
     :returns: ``None``
     """
+    streams = {
+        0: {
+            'mimetype': 'audio-xwav',
+            'stream_type': 'audio',
+            'bits_per_sample': '16'
+        }
+    }
+
     with mock.patch(
         'siptools.scripts.create_audiomd.create_audiomd_metadata',
         new_callable=DictMagicMock
@@ -98,24 +108,33 @@ def test_generate_xml_metadata_for_audio_file():
         file_metadata = {
             'file_characteristics': {
                 'file_format': 'audio/x-wav',
-                'streams': {
-                    0: {
-                        'mimetype': 'audio-xwav',
-                        'stream_type': 'audio',
-                        'bits_per_sample': '16'
-                    }
-                }
+                'streams': streams
             }
         }
         generator = XMLMetadataGenerator(file_path,
                                          file_metadata)
         generator.create()
-        mock_create_audiomd.assert_called_once_with(file_path)
+        mock_create_audiomd.assert_called_once_with(file_path, streams=streams)
 
 
 def test_generate_xml_metadata_for_video_file():
     """Tests metadata XML generation for video file.
     """
+    streams = {
+        0: {
+            'mimetype': 'video/x-matroska',
+            'stream_type': 'videocontainer',
+        },
+        1: {
+            'mimetype': 'video/x-ffv',
+            'stream_type': 'video',
+        },
+        2: {
+            'mimetype': 'audio/flac',
+            'stream_type': 'audio'
+        }
+    }
+
     with mock.patch(
         'siptools.scripts.create_videomd.create_videomd_metadata',
         new_callable=DictMagicMock
@@ -124,22 +143,9 @@ def test_generate_xml_metadata_for_video_file():
         file_metadata = {
             'file_characteristics': {
                 'file_format': 'video/x-matroska',
-                'streams': {
-                    0: {
-                        'mimetype': 'video/x-matroska',
-                        'stream_type': 'videocontainer',
-                    },
-                    1: {
-                        'mimetype': 'video/x-ffv',
-                        'stream_type': 'video',
-                    },
-                    2: {
-                        'mimetype': 'audio/flac',
-                        'stream_type': 'audio',
-                    }
-                }
+                'streams': streams
             }
         }
         generator = XMLMetadataGenerator(file_path, file_metadata)
         generator.create()
-        mock_create_videomd.assert_called_once_with(file_path)
+        mock_create_videomd.assert_called_once_with(file_path, streams=streams)

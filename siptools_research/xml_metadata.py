@@ -63,7 +63,10 @@ class _ImageFileXMLMetadata(_XMLMetadata):
         :returns: MIX XML element
         """
         try:
-            return create_mix.create_mix_metadata(self.file_path)
+            return create_mix.create_mix_metadata(
+                self.file_path,
+                streams=self.file_metadata["file_characteristics"]["streams"]
+            )
         except MixGenerationError as error:
             # Clean up file path in original exception message and raise error
             error.filename = os.path.split(error.filename)[1]
@@ -135,7 +138,10 @@ class _AudioFileXMLMetadata(_XMLMetadata):
 
         :returns: audioMD XML element
         """
-        audiomd = create_audiomd.create_audiomd_metadata(self.file_path)
+        audiomd = create_audiomd.create_audiomd_metadata(
+            self.file_path,
+            streams=self.file_metadata["file_characteristics"]["streams"]
+        )
         if not audiomd:
             raise InvalidFileError("Audio file has no audio streams.",
                                    [self.file_metadata['identifier']])
@@ -166,7 +172,10 @@ class _VideoFileXMLMetadata(_XMLMetadata):
 
         :returns: videoMD XML element
         """
-        videomd = create_videomd.create_videomd_metadata(self.file_path)
+        videomd = create_videomd.create_videomd_metadata(
+            self.file_path,
+            streams=self.file_metadata["file_characteristics"]["streams"]
+        )
         if not videomd:
             raise InvalidFileError("Video file has no video streams.",
                                    [self.file_metadata['identifier']])
