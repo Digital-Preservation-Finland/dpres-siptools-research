@@ -302,19 +302,15 @@ def test_validate_metadata_missing_xml(requests_mock):
 
 # pylint: disable=invalid-name
 @pytest.mark.parametrize(
-    ('file_format', 'stream_type', 'xml_namespace', 'xml'),
+    ('file_format', 'stream_type', 'xml'),
     (
-        (
-            'text/csv',
-            'text',
-            "http://www.arkivverket.no/standarder/addml", BASE_ADDML_MD
-        ),
-        ('audio/mp4', "audio", "http://www.loc.gov/audioMD/", BASE_AUDIO_MD),
-        ('video/mp4', "video", "http://www.loc.gov/videoMD/", BASE_VIDEO_MD)
+        ('text/csv', 'text', BASE_ADDML_MD),
+        ('audio/mp4', "audio", BASE_AUDIO_MD),
+        ('video/mp4', "video", BASE_VIDEO_MD)
     )
 )
 def test_validate_metadata_multiple_formats(
-        requests_mock, file_format, stream_type, xml_namespace, xml):
+        requests_mock, file_format, stream_type, xml):
     """Test validate_metadata.
 
     Function validates different types of technical metadata.
@@ -322,7 +318,6 @@ def test_validate_metadata_multiple_formats(
     :param requests_mock: Mocker object
     :param file_format: file mimetype
     :param stream_type: stream type contained within the file
-    :param xml_namespace: namespace for of technical metadata
     :param xml: techincal metada as xml object
     :returns: ``None``
     """

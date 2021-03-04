@@ -129,6 +129,55 @@ def test_generate_metadata(requests_mock,
 
 
 @pytest.mark.usefixtures('testpath')
+def test_generate_metadata_multiple_metadata_entries(requests_mock):
+    """
+    Test metadata generation for a video file that contains two stereo audio
+    streams.
+
+    Generates metadata for a dataset that contains one file, and checks that
+    correct file characteristics and XML metadata are sent to Metax.
+
+    :param requests_mock: Mocker object
+    :param path: path to file for which the metadata is created
+    :param file_format: expected file format
+    :param encoding: expected character set
+    :param namespace: name space of xml metadata
+    :returns: ``None``
+    """
+    # create mocked dataset in Metax and Ida
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[tests.metax_data.files.BASE_FILE])
+    requests_mock.patch(
+        "https://metaksi/rest/v1/files/pid:urn:identifier",
+        json={}
+    )
+    xml_post = requests_mock.post(
+        "https://metaksi/rest/v1/files/pid:urn:identifier/xml?namespace={}"
+        .format(METS_NS),
+        status_code=201
+    )
+    with open('tests/data/sample_files/video_ffv1.mkv', 'rb') as file_:
+        requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
+                          content=file_.read())
+
+    # generate metadata for dataset
+    generate_metadata('dataset_identifier',
+                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # verify xml metadata that was posted to Metax (if required for file type)
+    xml = lxml.etree.fromstring(xml_post.last_request.text)
+
+    md_elems = xml.xpath(
+        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
+        namespaces=NAMESPACES
+    )
+
+    # Two AudioMD entries and one VideoMD entry were created
+    assert len([md for md in md_elems if md.tag.endswith("AUDIOMD")]) == 2
+    assert len([md for md in md_elems if md.tag.endswith("VIDEOMD")]) == 1
+
+
+@pytest.mark.usefixtures('testpath')
 def test_generate_metadata_unrecognized(requests_mock):
     """Test metadata generation for unrecognized file.
 
