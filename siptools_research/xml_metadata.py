@@ -1,12 +1,50 @@
 """Module that generates file metadata XML element to be stored into Metax."""
+import datetime
 import os
+import uuid
 from abc import ABCMeta, abstractmethod
+
+from mets import amdsec, mdwrap, mets, techmd, xmldata
 
 from siptools.scripts import (create_addml, create_audiomd, create_mix,
                               create_videomd)
 from siptools.scripts.create_mix import MixGenerationError
+from siptools.xml.mets import METS_MDTYPES, NAMESPACES
 from siptools_research.exceptions import (InvalidFileError,
                                           InvalidFileMetadataError)
+
+# Subset of NAMESPACES imported from dpres-siptools,
+# but only containing mdtypes that we generate in this module
+TECH_ATTR_TYPES = {
+    'http://www.loc.gov/mix/v20': {
+        'mdtype': 'NISOIMG',
+        'namespace': 'http://www.loc.gov/mix/v20',
+        'mdtypeversion': '2.0',
+        'othermdtype': None,
+        'ref_file': 'create-mix-md-references.jsonl'
+    },
+    'http://www.arkivverket.no/standarder/addml': {
+        'mdtype': 'OTHER',
+        'namespace': 'http://www.arkivverket.no/standarder/addml',
+        'mdtypeversion': '8.3',
+        'othermdtype': 'ADDML',
+        'ref_file': 'create-addml-md-references.jsonl'
+    },
+    'http://www.loc.gov/audioMD/': {
+        'mdtype': 'OTHER',
+        'namespace': 'http://www.loc.gov/audioMD/',
+        'mdtypeversion': '2.0',
+        'othermdtype': 'AudioMD',
+        'ref_file': 'create-audiomd-md-references.jsonl'
+    },
+    'http://www.loc.gov/videoMD/': {
+        'mdtype': 'OTHER',
+        'namespace': 'http://www.loc.gov/videoMD/',
+        'mdtypeversion': '2.0',
+        'othermdtype': 'VideoMD',
+        'ref_file': 'create-videomd-md-references.jsonl'
+    },
+}
 
 
 def _kwargs2str(kwargs):
@@ -18,6 +56,44 @@ def _kwargs2str(kwargs):
         kwarg_list += " %s=%s," % (keys[i], kwargs[keys[i]])
 
     return kwarg_list + " %s=%s ]" % (keys[-1], kwargs[keys[-1]])
+
+
+def _combine_metadata(elems):
+    """
+    Combine list of technical metadata XML elements into a single amdSec XML
+    element
+    """
+    techmd_elems = []
+    for elem in elems:
+        # Find the mdtype entry for this metadata element
+        mdtype_entry = next(
+            (TECH_ATTR_TYPES[ns]) for ns in elem.nsmap.values()
+            if ns in TECH_ATTR_TYPES.keys()
+        )
+        mdtype_name = mdtype_entry["mdtype"]
+        mdtypeversion = mdtype_entry["mdtypeversion"]
+        othermdtype = mdtype_entry["othermdtype"]
+
+        mdwrap_elem = mdwrap(
+            mdtype=mdtype_name,
+            mdtypeversion=mdtypeversion,
+            othermdtype=othermdtype,
+            child_elements=[
+                xmldata([
+                    elem
+                ])
+            ]
+        )
+
+        techmd_elem = techmd(
+            element_id=str(uuid.uuid4()),
+            child_elements=[mdwrap_elem]
+        )
+        techmd_elems.append(techmd_elem)
+
+    mets_elem = mets(child_elements=[amdsec(techmd_elems)])
+
+    return mets_elem
 
 
 class _XMLMetadata:
@@ -63,10 +139,11 @@ class _ImageFileXMLMetadata(_XMLMetadata):
         :returns: MIX XML element
         """
         try:
-            return create_mix.create_mix_metadata(
+            mix_elem = create_mix.create_mix_metadata(
                 self.file_path,
                 streams=self.file_metadata["file_characteristics"]["streams"]
             )
+            return [mix_elem]
         except MixGenerationError as error:
             # Clean up file path in original exception message and raise error
             error.filename = os.path.split(error.filename)[1]
@@ -106,7 +183,7 @@ class _CSVFileXMLMetadata(_XMLMetadata):
                     [self.file_metadata['identifier']]
                 )
 
-        return create_addml.create_addml_metadata(
+        addml_elem = create_addml.create_addml_metadata(
             csv_file=self.file_path,
             delimiter=self.file_metadata['file_characteristics'][
                 'csv_delimiter'],
@@ -119,6 +196,8 @@ class _CSVFileXMLMetadata(_XMLMetadata):
                 'csv_quoting_char'],
             flatfile_name=self.file_metadata['file_path']
         )
+
+        return [addml_elem]
 
     @classmethod
     def is_generator_for(cls, file_characteristics):
@@ -146,9 +225,7 @@ class _AudioFileXMLMetadata(_XMLMetadata):
             raise InvalidFileError("Audio file has no audio streams.",
                                    [self.file_metadata['identifier']])
 
-        # TODO: There can technically be multiple audioMD entries, but only
-        # pick one for now.
-        return list(audiomd.values())[0]
+        return list(audiomd.values())
 
     @classmethod
     def is_generator_for(cls, file_characteristics):
@@ -180,9 +257,7 @@ class _VideoFileXMLMetadata(_XMLMetadata):
             raise InvalidFileError("Video file has no video streams.",
                                    [self.file_metadata['identifier']])
 
-        # TODO: There can technically be multiple videoMD entries, but only
-        # pick one for now.
-        return list(videomd.values())[0]
+        return list(videomd.values())
 
     @classmethod
     def is_generator_for(cls, file_characteristics):
@@ -211,18 +286,22 @@ class XMLMetadataGenerator(object):
         :param file_metadata: metax file metadata as dict
         :returns: ``None``
         """
-        self.generator = None
+        self.generators = []
         for generator in self.METADATA_GENERATORS:
             if generator.is_generator_for(
                     file_metadata['file_characteristics']):
-                self.generator = generator(file_path, file_metadata)
+                self.generators.append(generator(file_path, file_metadata))
 
     def create(self):
         """Create file specific XML metadata element or None.
 
         :returns: metadata XML element or ``None``
         """
-        if self.generator is not None:
-            return self.generator.create()
+        results = []
+        for generator in self.generators:
+            results += generator.create()
+
+        if results:
+            return _combine_metadata(results)
 
         return None

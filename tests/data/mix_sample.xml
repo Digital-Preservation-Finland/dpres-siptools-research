@@ -1,28 +1,38 @@
-<ns0:mix xmlns:ns0="http://www.loc.gov/mix/v20" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mix/v20 http://www.loc.gov/mix/mix.xsd">
-  <ns0:BasicDigitalObjectInformation>
-    <ns0:Compression>
-      <ns0:compressionScheme>losslessjpeg</ns0:compressionScheme>
-      <ns0:compressionRatio/>
-    </ns0:Compression>
-  </ns0:BasicDigitalObjectInformation>
-  <ns0:BasicImageInformation>
-    <ns0:BasicImageCharacteristics>
-      <ns0:imageWidth>10</ns0:imageWidth>
-      <ns0:imageHeight>10</ns0:imageHeight>
-      <ns0:PhotometricInterpretation>
-        <ns0:colorSpace>srgb</ns0:colorSpace>
-      </ns0:PhotometricInterpretation>
-    </ns0:BasicImageCharacteristics>
-  </ns0:BasicImageInformation>
-  <ns0:ImageAssessmentMetadata>
-    <ns0:SpatialMetrics/>
-    <ns0:ImageColorEncoding>
-      <ns0:BitsPerSample>
-        <ns0:bitsPerSampleValue>8</ns0:bitsPerSampleValue>
-        <ns0:bitsPerSampleUnit>integer</ns0:bitsPerSampleUnit>
-      </ns0:BitsPerSample>
-      <ns0:samplesPerPixel>3</ns0:samplesPerPixel>
-      <ns0:Colormap/>
-    </ns0:ImageColorEncoding>
-  </ns0:ImageAssessmentMetadata>
-</ns0:mix>
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:addml="http://www.arkivverket.no/standarder/addml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="38acf0b3-7edd-4a73-9dbd-ea67fd3c9c21" PROFILE="http://www.kdk.fi/kdk-mets-profile" fi:CATALOG="1.6.0" fi:SPECIFICATION="1.6.1" xmlns:fi="http://www.kdk.fi/standards/mets/kdk-extensions" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<mets:amdSec>
+		<mets:techMD CREATED="2018-01-01T07:21:27.005383" ID="123456789098765421">
+			<mets:mdWrap MDTYPE="OTHER" OTHERMDTYPE="AudioMD" MDTYPEVERSION="2.0">
+                <mets:xmlData>
+                    <ns0:mix xmlns:ns0="http://www.loc.gov/mix/v20" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mix/v20 http://www.loc.gov/mix/mix.xsd">
+                      <ns0:BasicDigitalObjectInformation>
+                        <ns0:Compression>
+                          <ns0:compressionScheme>losslessjpeg</ns0:compressionScheme>
+                          <ns0:compressionRatio/>
+                        </ns0:Compression>
+                      </ns0:BasicDigitalObjectInformation>
+                      <ns0:BasicImageInformation>
+                        <ns0:BasicImageCharacteristics>
+                          <ns0:imageWidth>10</ns0:imageWidth>
+                          <ns0:imageHeight>10</ns0:imageHeight>
+                          <ns0:PhotometricInterpretation>
+                            <ns0:colorSpace>srgb</ns0:colorSpace>
+                          </ns0:PhotometricInterpretation>
+                        </ns0:BasicImageCharacteristics>
+                      </ns0:BasicImageInformation>
+                      <ns0:ImageAssessmentMetadata>
+                        <ns0:SpatialMetrics/>
+                        <ns0:ImageColorEncoding>
+                          <ns0:BitsPerSample>
+                            <ns0:bitsPerSampleValue>8</ns0:bitsPerSampleValue>
+                            <ns0:bitsPerSampleUnit>integer</ns0:bitsPerSampleUnit>
+                          </ns0:BitsPerSample>
+                          <ns0:samplesPerPixel>3</ns0:samplesPerPixel>
+                          <ns0:Colormap/>
+                        </ns0:ImageColorEncoding>
+                      </ns0:ImageAssessmentMetadata>
+                  </ns0:mix>
+                </mets:xmlData>
+            </mets:mdWrap>
+        </mets:techMD>
+    </mets:amdSec>
+</mets:mets>

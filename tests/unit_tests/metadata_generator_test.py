@@ -1,22 +1,22 @@
 """Tests for :mod:`siptools_research.metadata_generator` module."""
 
-import os
 import copy
+import os
 
-import pytest
 import lxml.etree
-from requests.exceptions import HTTPError
-from siptools.utils import decode_path
+import pytest
 from metax_access import DatasetNotAvailableError
+from mets import METS_NS, NAMESPACES
+from requests.exceptions import HTTPError
 
-from siptools_research.metadata_generator import generate_metadata
-from siptools_research.exceptions import MissingFileError
-from siptools_research.exceptions import InvalidFileMetadataError
-from siptools_research.exceptions import InvalidFileError
 import tests.metax_data.datasets
 import tests.metax_data.files
 import tests.utils
-
+from siptools.utils import decode_path
+from siptools_research.exceptions import (InvalidFileError,
+                                          InvalidFileMetadataError,
+                                          MissingFileError)
+from siptools_research.metadata_generator import generate_metadata
 
 DEFAULT_PROVENANCE = {
     "preservation_event": {
@@ -94,7 +94,7 @@ def test_generate_metadata(requests_mock,
     )
     xml_post = requests_mock.post(
         "https://metaksi/rest/v1/files/pid:urn:identifier/xml?namespace={}"
-        .format(namespace),
+        .format(METS_NS),
         status_code=201
     )
     with open(path, 'rb') as file_:
@@ -114,8 +114,18 @@ def test_generate_metadata(requests_mock,
     # verify xml metadata that was posted to Metax (if required for file type)
     if namespace:
         xml = lxml.etree.fromstring(xml_post.last_request.text)
-        # The expected namespace should be defined in posted XML
-        assert namespace in xml.nsmap.values()
+
+        # The expected namespace should be contained in the posted XML
+        found_namespaces = set()
+
+        md_elems = xml.xpath(
+            "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
+            namespaces=NAMESPACES
+        )
+        for md_elem in md_elems:
+            found_namespaces |= set(md_elem.nsmap.values())
+
+        assert namespace in found_namespaces
 
 
 @pytest.mark.usefixtures('testpath')
@@ -201,7 +211,7 @@ def test_generate_metadata_addml(requests_mock):
                                   files=[tests.metax_data.files.CSV_FILE])
     addml_post_request = requests_mock.post(
         "https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
-        "namespace=http://www.arkivverket.no/standarder/addml",
+        "namespace={}".format(METS_NS),
         status_code=201
     )
     requests_mock.get(

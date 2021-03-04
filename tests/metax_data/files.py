@@ -18,31 +18,61 @@ CSV_FILE_CHARS = {
     "csv_delimiter": ";",
     "csv_record_separator": "CR+LF",
     "csv_quoting_char": "'",
-    "csv_has_header": False
+    "csv_has_header": False,
+    "streams": {
+        0: {
+            "mimetype": "text/csv",
+            "stream_type": "text"
+        }
+    }
 }
 
 TXT_FILE_CHARS = {
     "encoding": "UTF-8",
     "file_created": "2014-01-17T08:19:31Z",
-    "file_format": "text/plain"
+    "file_format": "text/plain",
+    "streams": {
+        0: {
+            "mimetype": "text/plain",
+            "stream_type": "text"
+        }
+    }
 }
 
 TIFF_FILE_CHARS = {
     "file_created": "2018-01-17T08:19:31Z",
     "file_format": "image/tiff",
-    "format_version": "6.0"
+    "format_version": "6.0",
+    "streams": {
+        0: {
+            "mimetype": "image/tiff",
+            "stream_type": "image"
+        }
+    }
 }
 
 HTML_FILE_CHARS = {
     "file_format": "text/html",
     "format_version": "5.0",
-    "encoding": "UTF-8"
+    "encoding": "UTF-8",
+    "streams": {
+        0: {
+            "mimetype": "text/html",
+            "stream_type": "text"
+       }
+    }
 }
 
 XML_FILE_CHARS = {
     "file_format": "text/xml",
     "format_version": "1.0",
-    "encoding": "UTF-8"
+    "encoding": "UTF-8",
+    "streams": {
+        0: {
+            "mimetype": "text/xml",
+            "stream_type": "text"
+       }
+    }
 }
 
 BASE_FILE = {

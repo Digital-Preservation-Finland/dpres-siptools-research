@@ -13,3 +13,4 @@ venv*/
 .venv*/
 ssh_key
 sign_key
+build/

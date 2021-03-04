@@ -1,63 +1,73 @@
 """Dataset metadata validation tools."""
 
-import os
 import copy
-import jsonschema
+import os
+
 import lxml
 import lxml.isoschematron
 from iso639 import languages
+from metax_access import DataciteGenerationError, Metax
+from mets import METS_NS
 
-from siptools.xml.mets import NAMESPACES
-
-from metax_access import Metax, DataciteGenerationError
+import jsonschema
 import siptools_research.schemas
+from siptools.xml.mets import NAMESPACES
+from siptools_research.config import Configuration
+from siptools_research.exceptions import (InvalidContractMetadataError,
+                                          InvalidDatasetMetadataError,
+                                          InvalidFileMetadataError)
 from siptools_research.utils import mimetypes
 from siptools_research.utils.dataset_consistency import DatasetConsistency
 from siptools_research.utils.directory_validation import DirectoryValidation
-from siptools_research.exceptions import InvalidDatasetMetadataError
-from siptools_research.exceptions import InvalidFileMetadataError
-from siptools_research.exceptions import InvalidContractMetadataError
-from siptools_research.config import Configuration
-
 
 # SCHEMATRONS is a dictionary that contains mapping:
-# (format_type, format_subtype) => xml_metadata_namespace_and_schematron_file
-# Only the file format type is required, and the default mapping
-# (denoted by None) is used if there isn't a schema specific to a type + subtype
+# xml_namespace => schematron_file
 SCHEMATRONS = {
-    'image': {
-        None: {
-            'ns': 'http://www.loc.gov/mix/v20',
-            'schema': '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch'
-        },
-    },
-    'audio': {
-        None: {
-            'ns': 'http://www.loc.gov/audioMD/',
-            'schema': '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch'
-        },
-    },
-    'video': {
-        None: {
-            'ns': 'http://www.loc.gov/videoMD/',
-            'schema': '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'
-        }
-    },
-    'text': {
-        'csv': {
-            'ns': 'http://www.arkivverket.no/standarder/addml',
-            'schema': '/usr/share/dpres-xml-schemas/schematron/mets_addml.sch'
-        }
-    }
+    'http://www.loc.gov/mix/v20': \
+        '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch',
+    'http://www.loc.gov/audioMD/': \
+        '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch',
+    'http://www.loc.gov/videoMD/': \
+        '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch',
+    'http://www.arkivverket.no/standarder/addml': \
+        '/usr/share/dpres-xml-schemas/schematron/mets_addml.sch'
 }
 DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
+
+STREAM_TYPE_NAMESPACES = {
+    "audio": "http://www.loc.gov/audioMD/",
+    "video": "http://www.loc.gov/videoMD/",
+    "image": "http://www.loc.gov/mix/v20"
+}
 
 
 TECHMD_XML_VALIDATION_ERROR = "Technical metadata XML of file is invalid: %s"
 DATACITE_VALIDATION_ERROR = 'Datacite metadata is invalid: %s'
 INVALID_NS_ERROR = "Invalid XML namespace: %s"
 MISSING_XML_METADATA_ERROR = "Missing technical metadata XML for file: %s"
+
+
+def _get_expected_md_namespaces(file_metadata):
+    """
+    Return a set of metadata XML namespaces that should be contained
+    in the METS document.
+    """
+    expected_namespaces = set()
+
+    for stream in file_metadata["file_characteristics"]["streams"].values():
+        if stream["stream_type"] in STREAM_TYPE_NAMESPACES:
+            expected_namespaces.add(
+                STREAM_TYPE_NAMESPACES[stream["stream_type"]]
+            )
+
+        if stream["mimetype"] == "text/csv":
+            # Special case for CSV files, which have ADDML metadata
+            expected_namespaces.add(
+                "http://www.arkivverket.no/standarder/addml"
+            )
+
+    return expected_namespaces
 
 
 def validate_metadata(
@@ -302,40 +312,54 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
     :returns: ``None``
     """
     for file_metadata in metax_client.get_dataset_files(dataset_id):
-        file_format_type, file_format_subtype = \
-            file_metadata['file_characteristics']['file_format'].split('/')
-
-        # Try retrieving a Schematron entry based on 'type' + 'subtype',
-        # falling back to just 'type' if a more specific entry isn't available
+        file_id = file_metadata['identifier']
         try:
-            schematron = SCHEMATRONS[file_format_type][file_format_subtype]
-        except KeyError:
-            schematron = (
-                SCHEMATRONS.get(file_format_type, {})
-                .get(None, None)
+            xmls = metax_client.get_xml(file_id)
+        except lxml.etree.XMLSyntaxError as exception:
+            raise InvalidFileMetadataError(
+                TECHMD_XML_VALIDATION_ERROR % (exception)
             )
 
-        if schematron:
-            file_id = file_metadata['identifier']
-            try:
-                xmls = metax_client.get_xml(file_id)
-            except lxml.etree.XMLSyntaxError as exception:
-                raise InvalidFileMetadataError(
-                    TECHMD_XML_VALIDATION_ERROR % (exception)
-                )
+        namespaces = set()
+        mets_root = None
+        try:
+            mets_root = xmls[METS_NS]
+            mets_root = mets_root.getroot()
+        except KeyError:
+            # METS document does not exist; no technical metadata was created.
+            # This is not necessarily a problem as some file formats don't have
+            # corresponding technical metadata.
+            pass
 
-            for namespace in xmls:
-                if namespace not in NAMESPACES.values():
-                    raise TypeError(INVALID_NS_ERROR % namespace)
+        # Retrieve all namespaces contained within the metadata elements
+        namespaces = set()
+        if mets_root:
+            md_elems = mets_root.xpath(
+                "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
+                namespaces=NAMESPACES
+            )
 
-            if schematron['ns'] not in xmls:
-                raise InvalidFileMetadataError(
-                    MISSING_XML_METADATA_ERROR % file_id
-                )
+            for md_elem in md_elems:
+                namespaces |= set(md_elem.nsmap.values())
 
+        required_namespaces = _get_expected_md_namespaces(file_metadata)
+
+        if not required_namespaces.issubset(namespaces):
+            # Technical metadata is missing
+            raise InvalidFileMetadataError(
+                MISSING_XML_METADATA_ERROR % file_id
+            )
+
+        # Determine which validators to run
+        schema_files = [
+            SCHEMATRONS[ns] for ns in namespaces
+            if ns in SCHEMATRONS
+        ]
+
+        for schema_file in schema_files:
             _validate_with_schematron(
-                schematron['schema'],
-                xmls[schematron['ns']]
+                schema_file=schema_file,
+                xml=xmls[METS_NS]
             )
 
 

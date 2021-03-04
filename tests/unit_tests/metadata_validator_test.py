@@ -1,31 +1,27 @@
 """Tests for :mod:`siptools_research.metadata_validator` module."""
-import copy
 import contextlib
-import six
+import copy
 
-import pytest
 import lxml.etree
+import pytest
+import six
+from metax_access import Metax
+from mets import METS_NS
 from requests.exceptions import HTTPError
 
-from metax_access import Metax
-
 import siptools_research
-from siptools_research import validate_metadata
-from siptools_research.metadata_validator import _validate_dataset_metadata
 import siptools_research.metadata_validator as metadata_validator
-from siptools_research.exceptions import InvalidDatasetMetadataError
-from siptools_research.exceptions import InvalidFileMetadataError
-from siptools_research.exceptions import InvalidContractMetadataError
-from siptools_research.config import Configuration
-from tests.metax_data.datasets import BASE_DATASET, BASE_DATACITE
-from tests.metax_data.files import (BASE_FILE,
-                                    TXT_FILE,
-                                    TIFF_FILE,
-                                    BASE_ADDML_MD,
-                                    BASE_AUDIO_MD,
-                                    BASE_VIDEO_MD)
-from tests.metax_data.contracts import BASE_CONTRACT
 import tests.utils
+from siptools_research import validate_metadata
+from siptools_research.config import Configuration
+from siptools_research.exceptions import (InvalidContractMetadataError,
+                                          InvalidDatasetMetadataError,
+                                          InvalidFileMetadataError)
+from siptools_research.metadata_validator import _validate_dataset_metadata
+from tests.metax_data.contracts import BASE_CONTRACT
+from tests.metax_data.datasets import BASE_DATACITE, BASE_DATASET
+from tests.metax_data.files import (BASE_ADDML_MD, BASE_AUDIO_MD, BASE_FILE,
+                                    BASE_VIDEO_MD, TIFF_FILE, TXT_FILE)
 
 
 @contextlib.contextmanager
@@ -306,38 +302,47 @@ def test_validate_metadata_missing_xml(requests_mock):
 
 # pylint: disable=invalid-name
 @pytest.mark.parametrize(
-    ('file_format', 'xml_namespace', 'xml'),
+    ('file_format', 'stream_type', 'xml_namespace', 'xml'),
     (
         (
             'text/csv',
+            'text',
             "http://www.arkivverket.no/standarder/addml", BASE_ADDML_MD
         ),
-        ('audio/mp4', "http://www.loc.gov/audioMD/", BASE_AUDIO_MD),
-        ('video/mp4', "http://www.loc.gov/videoMD/", BASE_VIDEO_MD)
+        ('audio/mp4', "audio", "http://www.loc.gov/audioMD/", BASE_AUDIO_MD),
+        ('video/mp4', "video", "http://www.loc.gov/videoMD/", BASE_VIDEO_MD)
     )
 )
 def test_validate_metadata_multiple_formats(
-        requests_mock, file_format, xml_namespace, xml):
+        requests_mock, file_format, stream_type, xml_namespace, xml):
     """Test validate_metadata.
 
     Function validates different types of technical metadata.
 
     :param requests_mock: Mocker object
     :param file_format: file mimetype
+    :param stream_type: stream type contained within the file
     :param xml_namespace: namespace for of technical metadata
     :param xml: techincal metada as xml object
     :returns: ``None``
     """
     file_metadata = copy.deepcopy(BASE_FILE)
-    file_metadata['file_characteristics'] = {"file_format": file_format}
+    file_metadata['file_characteristics'] = {
+        "file_format": file_format,
+        "streams": {
+            0: {
+                "mimetype": file_format,
+                "stream_type": stream_type
+            }
+        }}
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
 
     requests_mock.get("https://metaksi/rest/v1/files/{}/xml"
                       .format(file_metadata['identifier']),
-                      json=[xml_namespace])
+                      json=[METS_NS])
     requests_mock.get(
         "https://metaksi/rest/v1/files/{}/xml?"
-        "namespace={}".format(file_metadata['identifier'], xml_namespace),
+        "namespace={}".format(file_metadata['identifier'], METS_NS),
         content=six.binary_type(lxml.etree.tostring(xml))
     )
 
@@ -356,12 +361,19 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
     :returns: ``None``
     """
     audio_file = copy.deepcopy(BASE_FILE)
-    audio_file['file_characteristics'] = {"file_format": "audio/mp4"}
+    audio_file['file_characteristics'] = {
+        "file_format": "audio/mp4",
+        "streams": {
+            0: {
+                "mimetype": "audio/mp4",
+                "stream_type": "audio"
+            }
+        }}
     tests.utils.add_metax_dataset(requests_mock, files=[audio_file])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
-                      json=["http://www.loc.gov/audioMD/"])
+                      json=[METS_NS])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
-                      "namespace=http://www.loc.gov/audioMD/",
+                      "namespace={}".format(METS_NS),
                       content=get_bad_audiomd())
 
     # Try to validate invalid dataset
@@ -378,7 +390,7 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
 def test_validate_metadata_corrupted_mix(requests_mock):
     """Test validate_metadata.
 
-    Function shoudl raise exception if MIX metadata in
+    Function shoudl raise exception if METS metadata in
     Metax is corrupted (invalid XML).
 
     :param requests_mock: Mocker object
@@ -386,15 +398,15 @@ def test_validate_metadata_corrupted_mix(requests_mock):
     """
     tests.utils.add_metax_dataset(requests_mock, files=[TIFF_FILE])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
-                      json=["http://www.loc.gov/mix/v20"])
+                      json=[METS_NS])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
-                      "namespace=http://www.loc.gov/mix/v20",
-                      text="<mix:mix\n")
+                      "namespace={}".format(METS_NS),
+                      text="<mets:mets\n")
 
     # Try to validate invalid dataset
     expected_error = (
         'Technical metadata XML of file is invalid: '
-        'Namespace prefix mix on mix is not defined, line 2, column 1'
+        'Namespace prefix mets on mets is not defined, line 2, column 1'
     )
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
         validate_metadata('dataset_identifier',

@@ -37,6 +37,15 @@ def test_validatemetadata(testpath, requests_mock):
             "directory_path": "/access"
         }
     )
+    # Fake text files don't have technical metadata
+    requests_mock.get(
+        'https://metaksi/rest/v1/files/pid:urn:textfile1/xml',
+        json=[]
+    )
+    requests_mock.get(
+        'https://metaksi/rest/v1/files/pid:urn:textfile2/xml',
+        json=[]
+    )
     with open('tests/data/datacite_sample.xml', 'rb') as datacite:
         requests_mock.get(
             'https://metaksi/rest/v1/datasets/validate_metadata_test_dataset'

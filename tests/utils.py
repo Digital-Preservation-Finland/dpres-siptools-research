@@ -10,6 +10,8 @@ import tests.metax_data.datasets
 import tests.metax_data.files
 import tests.metax_data.contracts
 
+from mets import METS_NS
+
 
 def add_metax_dataset(requests_mock,
                       dataset=copy.deepcopy(
@@ -79,9 +81,11 @@ def add_metax_dataset(requests_mock,
             json=file_
         )
         requests_mock.get(
-            "{}/files/{}/xml".format(tests.conftest.METAX_URL,
-                                     file_['identifier']),
-            json={}
+            "{}/files/{}/xml".format(
+                tests.conftest.METAX_URL,
+                file_['identifier']
+            ),
+            json=[]
         )
         requests_mock.post(
             "{}/files/{}/xml".format(tests.conftest.METAX_URL,

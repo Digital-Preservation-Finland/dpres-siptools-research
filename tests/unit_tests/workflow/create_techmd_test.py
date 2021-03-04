@@ -18,6 +18,8 @@ from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
 import tests.metax_data
 import tests.utils
 
+from mets import METS_NS
+
 
 def xml2simpledict(element):
     """Convert XML element to simple dict.
@@ -49,11 +51,11 @@ def test_create_techmd_ok(testpath, requests_mock):
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.TIFF_FILE])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
-                      json=["http://www.loc.gov/mix/v20"])
+                      json=[METS_NS])
     with open("tests/data/mix_sample_jpeg.xml", "rb") as mix:
         requests_mock.get(
             "https://metaksi/rest/v1/files/pid:urn:identifier/xml"
-            "?namespace=http://www.loc.gov/mix/v20",
+            "?namespace={}".format(METS_NS),
             content=mix.read()
         )
 
@@ -136,14 +138,14 @@ def test_create_techmd_ok(testpath, requests_mock):
     assert len(mix_references) == 1
     assert len(mix_references['dataset_files/path/to/file']["md_ids"]) == 1
     assert mix_references['dataset_files/path/to/file']["md_ids"][0] \
-        == '_1b2eecde68d99171f70613f14cf21f49'
+        == '_b7773ac3c874f7ccfd316b51404de729'
 
     # Compare MIX metadata in techMD file to original MIX metadata in
     # Metax
     mets = lxml.etree.parse(
         os.path.join(
             sipdirectory,
-            '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml'
+            'b7773ac3c874f7ccfd316b51404de729-NISOIMG-amd.xml'
         )
     )
     mdwrap = mets.xpath('/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap',
@@ -152,9 +154,13 @@ def test_create_techmd_ok(testpath, requests_mock):
     original_mix = lxml.etree.fromstring(
         requests.get(
             "https://metaksi/rest/v1/files/pid:urn:identifier/xml"
-            "?namespace=http://www.loc.gov/mix/v20"
+            "?namespace={}".format(METS_NS)
         ).content
     )
+    original_mix = original_mix.xpath(
+        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
+        namespaces=NAMESPACES
+    )[0]
     assert xml2simpledict(mix) == xml2simpledict(original_mix)
 
     # SIP directory should contain all technical metadata and related
@@ -164,7 +170,7 @@ def test_create_techmd_ok(testpath, requests_mock):
                 premis_object_file,
                 file_properties_file,
                 'create-mix-md-references.jsonl',
-                '1b2eecde68d99171f70613f14cf21f49-NISOIMG-amd.xml',
+                'b7773ac3c874f7ccfd316b51404de729-NISOIMG-amd.xml',
                 'import-object-extraction-AGENTS-amd.json']
                + premis_agent_files
                + premis_event_files)

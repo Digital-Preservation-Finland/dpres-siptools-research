@@ -1,5 +1,8 @@
 """Tests for :mod:`siptools_research.xml_metadata` module"""
+import pytest
+
 from siptools_research.xml_metadata import XMLMetadataGenerator
+
 try:
     import mock
 except ImportError:
@@ -14,7 +17,18 @@ class DictMagicMock(mock.MagicMock):
     values = lambda _: [{}]
 
 
-def test_generate_xml_metadata_for_image_file(monkeypatch):
+@pytest.fixture(autouse=True)
+def mock_combine_metadata(monkeypatch):
+    """
+    Monkeypatch `_combine_metadata` to a no-op
+    """
+    monkeypatch.setattr(
+        "siptools_research.xml_metadata._combine_metadata",
+        lambda results: results
+    )
+
+
+def test_generate_xml_metadata_for_image_file():
     """Tests metadata XML generation for image file.
     :returns: ``None``
     """
@@ -135,10 +149,17 @@ def test_generate_xml_metadata_for_video_file():
         }
     }
 
-    with mock.patch(
+    mock_create_videomd = mock.patch(
         'siptools.scripts.create_videomd.create_videomd_metadata',
         new_callable=DictMagicMock
-    ) as mock_create_videomd:
+    )
+    mock_create_audiomd = mock.patch(
+        'siptools.scripts.create_audiomd.create_audiomd_metadata',
+        new_callable=DictMagicMock
+    )
+
+    with mock_create_videomd as mock_create_videomd, \
+            mock_create_audiomd as mock_create_audiomd:
         file_path = '/foo/bar'
         file_metadata = {
             'file_characteristics': {
@@ -149,3 +170,4 @@ def test_generate_xml_metadata_for_video_file():
         generator = XMLMetadataGenerator(file_path, file_metadata)
         generator.create()
         mock_create_videomd.assert_called_once_with(file_path, streams=streams)
+        mock_create_audiomd.assert_called_once_with(file_path, streams=streams)

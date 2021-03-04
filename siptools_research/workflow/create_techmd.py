@@ -4,46 +4,25 @@
 import datetime
 import os
 import shutil
+
+from metax_access import Metax
+from mets import METS_NS, NAMESPACES
+
+import siptools.mdcreator
+import siptools.scripts.import_object
+from luigi import LocalTarget
+from siptools_research.config import Configuration
+from siptools_research.workflow.create_workspace import CreateWorkspace
+from siptools_research.workflow.get_files import GetFiles
+from siptools_research.workflow.validate_metadata import ValidateMetadata
+from siptools_research.workflowtask import WorkflowTask
+from siptools_research.xml_metadata import TECH_ATTR_TYPES
+
 try:
     from tempfile import TemporaryDirectory
 except ImportError:
     # TODO: Remove this when Python 2 support can be dropped
     from siptools_research.temporarydirectory import TemporaryDirectory
-
-from luigi import LocalTarget
-from metax_access import Metax
-import siptools.scripts.import_object
-import siptools.mdcreator
-
-from siptools_research.config import Configuration
-from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.create_workspace import CreateWorkspace
-from siptools_research.workflow.validate_metadata import ValidateMetadata
-from siptools_research.workflow.get_files import GetFiles
-
-
-TECH_ATTR_TYPES = [
-    {'mdtype': 'NISOIMG',
-     'namespace': 'http://www.loc.gov/mix/v20',
-     'mdtypeversion': '2.0',
-     'othermdtype': None,
-     'ref_file': 'create-mix-md-references.jsonl'},
-    {'mdtype': 'OTHER',
-     'namespace': 'http://www.arkivverket.no/standarder/addml',
-     'mdtypeversion': '8.3',
-     'othermdtype': 'ADDML',
-     'ref_file': 'create-addml-md-references.jsonl'},
-    {'mdtype': 'OTHER',
-     'namespace': 'http://www.loc.gov/audioMD/',
-     'mdtypeversion': '2.0',
-     'othermdtype': 'AudioMD',
-     'ref_file': 'create-audiomd-md-references.jsonl'},
-    {'mdtype': 'OTHER',
-     'namespace': 'http://www.loc.gov/videoMD/',
-     'mdtypeversion': '2.0',
-     'othermdtype': 'VideoMD',
-     'ref_file': 'create-videomd-md-references.jsonl'},
-]
 
 
 class CreateTechnicalMetadata(WorkflowTask):
@@ -226,26 +205,48 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         :param file_identifier: file identifier
         :param filepath: path of file in SIP
+        :param output: Path to the temporary workspace
         :returns: ``None``
         """
         xmls = self.metax_client.get_xml(file_identifier)
 
         creator = siptools.mdcreator.MetsSectionCreator(output)
 
-        for type_ in TECH_ATTR_TYPES:
-            if type_["namespace"] in xmls:
+        try:
+            mets_root = xmls[METS_NS].getroot()
+        except KeyError:
+            # No technical metadata exists for this file; skip
+            return
 
-                # Create METS TechMD file
-                techmd_id, _ = creator.write_md(
-                    xmls[type_['namespace']].getroot(),
-                    type_['mdtype'],
-                    type_['mdtypeversion'],
-                    type_['othermdtype']
-                )
+        # Retrieve all the technical metadata elements we created earlier.
+        # Although they're contained within techMD elements, we're not reusing
+        # those; instead, we're using dpres-siptools' mdcreator module.
+        md_wraps = mets_root.xpath(
+            "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap",
+            namespaces=NAMESPACES
+        )
 
-                # Add reference from fileSec to TechMD
-                creator.add_reference(techmd_id, filepath)
-                creator.write(ref_file=type_["ref_file"])
+        for md_wrap in md_wraps:
+            # Retrieve the wrapped MD document
+            md_elem = md_wrap.xpath("mets:xmlData/*", namespaces=NAMESPACES)[0]
+            mdtype = md_wrap.attrib["MDTYPE"]
+            mdtypeversion = md_wrap.attrib["MDTYPEVERSION"]
+            othermdtype = md_wrap.attrib.get("OTHERMDTYPE", None)
+
+            md_namespace = md_elem.nsmap[md_elem.prefix]
+            ref_file = TECH_ATTR_TYPES[md_namespace]["ref_file"]
+
+            # Create METS TechMD file
+            techmd_id, _ = creator.write_md(
+                metadata=md_elem,
+                mdtype=mdtype,
+                mdtypeversion=mdtypeversion,
+                othermdtype=othermdtype
+            )
+
+            # Add reference from fileSec to TechMD
+            creator.add_reference(techmd_id, filepath)
+            creator.write(ref_file=ref_file)
 
 
 def algorithm_name(algorithm, value):
