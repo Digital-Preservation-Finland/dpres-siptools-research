@@ -13,8 +13,7 @@ from siptools.xml.mets import METS_MDTYPES, NAMESPACES
 from siptools_research.exceptions import (InvalidFileError,
                                           InvalidFileMetadataError)
 
-# Subset of NAMESPACES imported from dpres-siptools,
-# but only containing mdtypes that we generate in this module
+# XML namespace -> technical metadata dict mapping
 TECH_ATTR_TYPES = {
     'http://www.loc.gov/mix/v20': {
         'mdtype': 'NISOIMG',
@@ -60,14 +59,18 @@ def _kwargs2str(kwargs):
 
 def _combine_metadata(elems):
     """
-    Combine list of technical metadata XML elements into a single amdSec XML
-    element
+    Combine list of technical metadata XML elements into a single METS XML
+    document.
+
+    The created METS is *not* used as the actual METS document we create
+    later in the workflow, it's simply a container for technical metadata we
+    store in Metax.
     """
     techmd_elems = []
     for elem in elems:
         # Find the mdtype entry for this metadata element
         mdtype_entry = next(
-            (TECH_ATTR_TYPES[ns]) for ns in elem.nsmap.values()
+            TECH_ATTR_TYPES[ns] for ns in elem.nsmap.values()
             if ns in TECH_ATTR_TYPES.keys()
         )
         mdtype_name = mdtype_entry["mdtype"]
@@ -79,13 +82,14 @@ def _combine_metadata(elems):
             mdtypeversion=mdtypeversion,
             othermdtype=othermdtype,
             child_elements=[
-                xmldata([
-                    elem
-                ])
+                xmldata(
+                    child_elements=[elem]
+                )
             ]
         )
 
         techmd_elem = techmd(
+            # The element ID here is arbitrary
             element_id=str(uuid.uuid4()),
             child_elements=[mdwrap_elem]
         )
