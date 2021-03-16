@@ -12,6 +12,7 @@ from requests.exceptions import HTTPError
 import siptools_research
 import siptools_research.metadata_validator as metadata_validator
 import tests.utils
+from siptools.xml.mets import NAMESPACES
 from siptools_research import validate_metadata
 from siptools_research.config import Configuration
 from siptools_research.exceptions import (InvalidContractMetadataError,
@@ -392,6 +393,60 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
 
+def test_validate_metadata_disallowed_namespace(requests_mock):
+    """Test validate_metadata with an XML document containing a forbidden
+    namespace.
+    """
+    mets_etree = copy.deepcopy(BASE_AUDIO_MD)
+    audiomd = mets_etree.getroot().xpath(
+        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
+        namespaces=NAMESPACES
+    )[0]
+
+    # Make a copy of the audioMD element and add a new namespace
+    new_nsmap = copy.deepcopy(audiomd.nsmap)
+    new_nsmap["fake"] = "http://fakeschema.com/fake"
+    new_audiomd = lxml.etree.Element(
+        "AUDIOMD",
+        attrib=audiomd.attrib,
+        nsmap=new_nsmap
+    )
+    new_audiomd.append(audiomd.xpath("*")[0])
+
+    mets_etree.getroot().xpath(
+        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData",
+        namespaces=NAMESPACES
+    )[0].replace(audiomd, new_audiomd)
+
+    audio_file = copy.deepcopy(BASE_FILE)
+    audio_file.update({
+        "file_characteristics": {
+            "file_format": "audio/mp4"
+
+        },
+        "file_characteristics_extension": {
+            "streams": {
+                0: {
+                    "mimetype": "audio/mp4",
+                    "stream_type": "audio"
+                }
+            }
+        }
+    })
+    tests.utils.add_metax_dataset(requests_mock, files=[audio_file])
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
+                      json=[METS_NS])
+    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
+                      "namespace={}".format(METS_NS),
+                      content=lxml.etree.tostring(mets_etree))
+
+    # Try to validate XML with forbidden namespace
+    expected_error = "Invalid XML namespace: http://fakeschema.com/fake"
+    with pytest.raises(TypeError, match=expected_error):
+        validate_metadata('dataset_identifier',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+
 # pylint: disable=invalid-name
 def test_validate_metadata_corrupted_mix(requests_mock):
     """Test validate_metadata.
@@ -598,8 +653,8 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
         )
 
 
-def test_validate_xml_file_metadata():
-    """Test _validate_xml_file_metadata.
+def test_validate_with_schematron_invalid():
+    """Test _validate_with_schematron.
 
     Function should raise exception with readable error message when validated
     XML contains multiple errors.
