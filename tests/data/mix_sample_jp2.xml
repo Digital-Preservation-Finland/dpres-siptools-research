@@ -1,4 +1,4 @@
-<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:mix="http://www.loc.gov/videoMD" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="38acf0b3-7edd-4a73-9dbd-ea67fd3c9c21" PROFILE="http://www.kdk.fi/kdk-mets-profile" fi:CATALOG="1.6.0" fi:SPECIFICATION="1.6.1" xmlns:fi="http://www.kdk.fi/standards/mets/kdk-extensions" xmlns:xlink="http://www.w3.org/1999/xlink">
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:mix="http://www.loc.gov/mix/v20" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="38acf0b3-7edd-4a73-9dbd-ea67fd3c9c21" PROFILE="http://www.digitalpreservation.fi/mets-profiles/research-data" fi:CATALOG="1.7.3" fi:SPECIFICATION="1.7.3" xmlns:fi="http://www.kdk.fi/standards/mets/fi-extensions" xmlns:xlink="http://www.w3.org/1999/xlink">
 	<mets:amdSec>
 		<mets:techMD CREATED="2018-01-01T07:21:27.005383" ID="123456789098765421">
 			<mets:mdWrap MDTYPE="NISOIMG" MDTYPEVERSION="2.0">

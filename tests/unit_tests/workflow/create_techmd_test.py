@@ -52,7 +52,7 @@ def test_create_techmd_ok(testpath, requests_mock):
                                   files=[tests.metax_data.files.TIFF_FILE])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
                       json=[METS_NS])
-    with open("tests/data/mix_sample_jpeg.xml", "rb") as mix:
+    with open("tests/data/mix_sample_jp2.xml", "rb") as mix:
         requests_mock.get(
             "https://metaksi/rest/v1/files/pid:urn:identifier/xml"
             "?namespace={}".format(METS_NS),
