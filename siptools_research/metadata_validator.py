@@ -2,6 +2,7 @@
 
 import copy
 import os
+from collections import defaultdict
 
 import lxml
 import lxml.isoschematron
@@ -48,29 +49,58 @@ INVALID_NS_ERROR = "Invalid XML namespace: %s"
 MISSING_XML_METADATA_ERROR = "Missing technical metadata XML for file: %s"
 
 
-def _get_expected_md_namespaces(file_metadata):
+def _get_namespace_count(mets_root):
     """
-    Return a set of metadata XML namespaces that should be contained
-    in the METS document.
+    Return a {namespace: count} dict detailing how many technical metadata
+    documents have been generated per each XML namespace
+
+    :param mets_root: METS document as an XML element. Can be None.
     """
-    expected_namespaces = set()
+    namespace_count = defaultdict(int)
+
+    if not mets_root:
+        return namespace_count
+
+    md_elems = mets_root.xpath(
+        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
+        namespaces=NAMESPACES
+    )
+
+    for md_elem in md_elems:
+        for namespace in md_elem.nsmap.values():
+            if namespace not in NAMESPACES.values():
+                raise TypeError(INVALID_NS_ERROR % namespace)
+
+            if namespace not in SCHEMATRONS:
+                continue
+
+            namespace_count[namespace] += 1
+
+    return namespace_count
+
+
+def _get_expected_namespace_count(file_metadata):
+    """
+    Return a {namespace: count} dict detailing how many technical metadata
+    documents should have been generated per XML namespace
+
+    :param file_metadata: File metadata dict
+    """
+    namespace_count = defaultdict(int)
 
     streams = \
         file_metadata["file_characteristics_extension"]["streams"].values()
 
     for stream in streams:
         if stream["stream_type"] in STREAM_TYPE_NAMESPACES:
-            expected_namespaces.add(
-                STREAM_TYPE_NAMESPACES[stream["stream_type"]]
-            )
+            namespace = STREAM_TYPE_NAMESPACES[stream["stream_type"]]
+            namespace_count[namespace] += 1
 
         if stream["mimetype"] == "text/csv":
             # Special case for CSV files, which have ADDML metadata
-            expected_namespaces.add(
-                "http://www.arkivverket.no/standarder/addml"
-            )
+            namespace_count["http://www.arkivverket.no/standarder/addml"] += 1
 
-    return expected_namespaces
+    return namespace_count
 
 
 def validate_metadata(
@@ -323,7 +353,6 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
                 TECHMD_XML_VALIDATION_ERROR % (exception)
             )
 
-        namespaces = set()
         mets_root = None
         try:
             mets_root = xmls[METS_NS]
@@ -334,20 +363,12 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
             # corresponding technical metadata.
             pass
 
-        # Retrieve all namespaces contained within the metadata elements
-        namespaces = set()
-        if mets_root:
-            md_elems = mets_root.xpath(
-                "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
-                namespaces=NAMESPACES
-            )
+        # Check how many metadata documents of each type have been generated
+        # for this file and how many should have been generated
+        namespace_count = _get_namespace_count(mets_root)
+        expected_namespace_count = _get_expected_namespace_count(file_metadata)
 
-            for md_elem in md_elems:
-                namespaces |= set(md_elem.nsmap.values())
-
-        required_namespaces = _get_expected_md_namespaces(file_metadata)
-
-        if not required_namespaces.issubset(namespaces):
+        if expected_namespace_count != namespace_count:
             # Technical metadata is missing
             raise InvalidFileMetadataError(
                 MISSING_XML_METADATA_ERROR % file_id
@@ -355,7 +376,7 @@ def _validate_xml_file_metadata(dataset_id, metax_client):
 
         # Determine which validators to run
         schema_files = [
-            SCHEMATRONS[ns] for ns in namespaces
+            SCHEMATRONS[ns] for ns in namespace_count.keys()
             if ns in SCHEMATRONS
         ]
 
