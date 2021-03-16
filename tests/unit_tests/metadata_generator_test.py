@@ -1,4 +1,5 @@
 """Tests for :mod:`siptools_research.metadata_generator` module."""
+from __future__ import unicode_literals
 
 import copy
 import os
@@ -217,6 +218,17 @@ def test_generate_metadata_predefined(requests_mock):
         'encoding': 'user_defined',
         'dummy_key': 'dummy_value'
     }
+    file_metadata['file_characteristics_extension'] = {
+        'streams': {
+            '0': {
+                'charset': 'user_defined',
+                'index': 0,
+                'mimetype': 'text/plain',
+                'stream_type': 'text',
+                'version': '(:unap)'
+            }
+        }
+    }
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       content=b'foo')
@@ -229,17 +241,21 @@ def test_generate_metadata_predefined(requests_mock):
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # verify the file characteristics that were sent to Metax
-    assert patch_request.last_request.json()['file_characteristics'] == {
-        'file_format': 'text/plain',  # missing keys are added
-        'encoding': 'user_defined',  # user defined value is not overwritten
-        'dummy_key': 'dummy_value',  # additional keys are copied
-        'streams': {
-            '0': {
-                'charset': 'user_defined',
-                'index': 0,
-                'mimetype': 'text/plain',
-                'stream_type': 'text',
-                'version': '(:unap)'
+    assert patch_request.last_request.json() == {
+        'file_characteristics': {
+            'file_format': 'text/plain',  # missing keys are added
+            'encoding': 'user_defined',  # user defined value is not overwritten
+            'dummy_key': 'dummy_value',  # additional keys are copied
+        },
+        'file_characteristics_extension': {
+            'streams': {
+                '0': {
+                    'charset': 'user_defined',
+                    'index': 0,
+                    'mimetype': 'text/plain',
+                    'stream_type': 'text',
+                    'version': '(:unap)'
+                }
             }
         }
     }

@@ -125,11 +125,11 @@ class _XMLMetadata:
         """
 
     @classmethod
-    def is_generator_for(cls, file_characteristics):
+    def is_generator_for(cls, file_metadata):
         """Class method to be implemented by a subclass.
 
         :returns: ``Boolean``: True if this generator generates the XML
-                  metadata for the given file_characteristics. Otherwise False.
+                  metadata for the given file_metadata. Otherwise False.
         """
         raise NotImplementedError
 
@@ -140,12 +140,14 @@ class _ImageFileXMLMetadata(_XMLMetadata):
     def create(self):
         """Create a MIX metadata XML element for an image file.
 
-        :returns: MIX XML element
+        :returns: List containing a MIX XML element
         """
         try:
+            streams = \
+                self.file_metadata["file_characteristics_extension"]["streams"]
             mix_elem = create_mix.create_mix_metadata(
                 self.file_path,
-                streams=self.file_metadata["file_characteristics"]["streams"]
+                streams=streams
             )
             return [mix_elem]
         except MixGenerationError as error:
@@ -155,14 +157,15 @@ class _ImageFileXMLMetadata(_XMLMetadata):
                                    [self.file_metadata['identifier']])
 
     @classmethod
-    def is_generator_for(cls, file_characteristics):
+    def is_generator_for(cls, file_metadata):
         """Check if class is generator for file format.
 
         :returns: ``Boolean``: True if provided file_characteristics contains
                   at least one ``image`` stream. Otherwise False.
         """
+        file_char_ext = file_metadata["file_characteristics_extension"]
         return any(
-            stream for stream in file_characteristics["streams"].values()
+            stream for stream in file_char_ext["streams"].values()
             if stream["stream_type"] == "image"
         )
 
@@ -173,7 +176,7 @@ class _CSVFileXMLMetadata(_XMLMetadata):
     def create(self):
         """Create ADDML metadata XML elementfor a CSV file.
 
-        :returns: ADDML metadata XML element
+        :returns: List containing an ADDML metadata XML element
         """
         for attribute in ('csv_delimiter',
                           'csv_has_header',
@@ -204,13 +207,14 @@ class _CSVFileXMLMetadata(_XMLMetadata):
         return [addml_elem]
 
     @classmethod
-    def is_generator_for(cls, file_characteristics):
+    def is_generator_for(cls, file_metadata):
         """Check if class is generator for file format.
 
         :returns: ``Boolean``: True if provided file format is ``text/csv``.
                   Otherwise False.
         """
-        return file_characteristics['file_format'] == 'text/csv'
+        return file_metadata['file_characteristics']['file_format'] \
+            == 'text/csv'
 
 
 class _AudioFileXMLMetadata(_XMLMetadata):
@@ -219,11 +223,13 @@ class _AudioFileXMLMetadata(_XMLMetadata):
     def create(self):
         """Create the root audioMD XML element.
 
-        :returns: audioMD XML element
+        :returns: List of audioMD XML elements
         """
+        file_char_ext = self.file_metadata["file_characteristics_extension"]
+        streams = file_char_ext["streams"]
         audiomd = create_audiomd.create_audiomd_metadata(
             self.file_path,
-            streams=self.file_metadata["file_characteristics"]["streams"]
+            streams=streams
         )
         if not audiomd:
             raise InvalidFileError("Audio file has no audio streams.",
@@ -232,15 +238,16 @@ class _AudioFileXMLMetadata(_XMLMetadata):
         return list(audiomd.values())
 
     @classmethod
-    def is_generator_for(cls, file_characteristics):
+    def is_generator_for(cls, file_metadata):
         """Check if class is generator for file format.
 
         :returns: ``Boolean``: True if provided file_characteristics
                   contains at least one audio stream.
                   Otherwise False.
         """
+        file_char_ext = file_metadata["file_characteristics_extension"]
         return any(
-            stream for stream in file_characteristics["streams"].values()
+            stream for stream in file_char_ext["streams"].values()
             if stream["stream_type"] == "audio"
         )
 
@@ -251,11 +258,13 @@ class _VideoFileXMLMetadata(_XMLMetadata):
     def create(self):
         """Create the root audioMD XML element.
 
-        :returns: videoMD XML element
+        :returns: List of videoMD XML elements
         """
+        file_char_ext = self.file_metadata["file_characteristics_extension"]
+        streams = file_char_ext["streams"]
         videomd = create_videomd.create_videomd_metadata(
             self.file_path,
-            streams=self.file_metadata["file_characteristics"]["streams"]
+            streams=streams
         )
         if not videomd:
             raise InvalidFileError("Video file has no video streams.",
@@ -264,15 +273,16 @@ class _VideoFileXMLMetadata(_XMLMetadata):
         return list(videomd.values())
 
     @classmethod
-    def is_generator_for(cls, file_characteristics):
+    def is_generator_for(cls, file_metadata):
         """Check if class is generator for file format.
 
         :returns: ``Boolean``: True if provided file_characteristics
                   contains at least one video stream.
                   Otherwise False.
         """
+        file_char_ext = file_metadata["file_characteristics_extension"]
         return any(
-            stream for stream in file_characteristics["streams"].values()
+            stream for stream in file_char_ext["streams"].values()
             if stream["stream_type"] == "video"
         )
 
@@ -292,8 +302,7 @@ class XMLMetadataGenerator(object):
         """
         self.generators = []
         for generator in self.METADATA_GENERATORS:
-            if generator.is_generator_for(
-                    file_metadata['file_characteristics']):
+            if generator.is_generator_for(file_metadata):
                 self.generators.append(generator(file_path, file_metadata))
 
     def create(self):

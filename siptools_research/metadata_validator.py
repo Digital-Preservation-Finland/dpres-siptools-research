@@ -55,7 +55,10 @@ def _get_expected_md_namespaces(file_metadata):
     """
     expected_namespaces = set()
 
-    for stream in file_metadata["file_characteristics"]["streams"].values():
+    streams = \
+        file_metadata["file_characteristics_extension"]["streams"].values()
+
+    for stream in streams:
         if stream["stream_type"] in STREAM_TYPE_NAMESPACES:
             expected_namespaces.add(
                 STREAM_TYPE_NAMESPACES[stream["stream_type"]]

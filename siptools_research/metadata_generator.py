@@ -111,18 +111,27 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
             raise MissingFileError("File is not available", [file_id])
 
         # Generate and update file_characteristics
-        file_characteristics = _generate_file_characteristics(
-            tmpfile, file_metadata.get('file_characteristics', {})
+        tech_metadata = _generate_file_tech_metadata(
+            tmpfile, file_metadata
         )
+        file_characteristics = tech_metadata['file_characteristics']
+
         if file_characteristics['file_format'] == '(:unav)':
             raise InvalidFileError("File format was not recognized.",
                                    [file_id])
 
         metax_client.patch_file(
             file_id,
-            {'file_characteristics': file_characteristics}
+            {
+                'file_characteristics': tech_metadata['file_characteristics'],
+                'file_characteristics_extension': \
+                    tech_metadata['file_characteristics_extension']
+            }
         )
-        file_metadata['file_characteristics'] = file_characteristics
+        file_metadata['file_characteristics'] = \
+            tech_metadata['file_characteristics']
+        file_metadata['file_characteristics_extension'] = \
+            tech_metadata['file_characteristics_extension']
 
         # Generate file format specific XML metadata
         generator = XMLMetadataGenerator(tmpfile, file_metadata)
@@ -131,7 +140,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
             metax_client.set_xml(file_id, xml)
 
 
-def _generate_file_characteristics(filepath, original_file_characteristics):
+def _generate_file_tech_metadata(filepath, original_file_metadata):
     """Read file and generates technical metadata.
 
     `file_characteristics` object is read from original meta. Generated
@@ -139,10 +148,15 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     a value (set by user) it will not be updated.
 
     :param filepath: path to file for which the metadata is generated
-    :param original_file_characteristics: full original metadata dictionary
-    :returns: New `file_characteristics` dictionary
+    :param original_file_metadata: full original metadata dictionary
+    :returns: New dictionary containing 'file_characteristics'
+              and 'file_characteristics_extension' fields
     """
     # Generate technical metadata from file
+    original_file_characteristics = original_file_metadata.get(
+        "file_characteristics", {}
+    )
+
     mimetype = original_file_characteristics.get("file_format", None)
     charset = original_file_characteristics.get("encoding", None)
     version = original_file_characteristics.get("format_version", None)
@@ -154,6 +168,8 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     # Create file_characteristics object
     file_characteristics = {
         'file_format': scraper.mimetype,
+    }
+    file_characteristics_extension = {
         'streams': scraper.streams
     }
 
@@ -172,10 +188,11 @@ def _generate_file_characteristics(filepath, original_file_characteristics):
     # Merge generated file_characteristics with original data from Metax.
     # If a field was already defined in original data, it will override the
     # generated value.
-    file_characteristics.update(
-        original_file_characteristics
-    )
+    file_characteristics.update(original_file_characteristics)
 
     del scraper
 
-    return file_characteristics
+    return {
+        'file_characteristics': file_characteristics,
+        'file_characteristics_extension': file_characteristics_extension
+    }

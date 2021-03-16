@@ -322,14 +322,19 @@ def test_validate_metadata_multiple_formats(
     :returns: ``None``
     """
     file_metadata = copy.deepcopy(BASE_FILE)
-    file_metadata['file_characteristics'] = {
-        "file_format": file_format,
-        "streams": {
-            0: {
-                "mimetype": file_format,
-                "stream_type": stream_type
+    file_metadata.update({
+        "file_characteristics": {
+            "file_format": file_format
+        },
+        "file_characteristics_extension": {
+            "streams": {
+                0: {
+                    "mimetype": file_format,
+                    "stream_type": stream_type
+                }
             }
-        }}
+        }
+    })
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
 
     requests_mock.get("https://metaksi/rest/v1/files/{}/xml"
@@ -356,14 +361,20 @@ def test_validate_metadata_invalid_audiomd(requests_mock):
     :returns: ``None``
     """
     audio_file = copy.deepcopy(BASE_FILE)
-    audio_file['file_characteristics'] = {
-        "file_format": "audio/mp4",
-        "streams": {
-            0: {
-                "mimetype": "audio/mp4",
-                "stream_type": "audio"
+    audio_file.update({
+        "file_characteristics": {
+            "file_format": "audio/mp4"
+
+        },
+        "file_characteristics_extension": {
+            "streams": {
+                0: {
+                    "mimetype": "audio/mp4",
+                    "stream_type": "audio"
+                }
             }
-        }}
+        }
+    })
     tests.utils.add_metax_dataset(requests_mock, files=[audio_file])
     requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
                       json=[METS_NS])

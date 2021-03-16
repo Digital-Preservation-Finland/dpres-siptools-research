@@ -10,68 +10,88 @@ BASE_VIDEO_MD = lxml.etree.parse('tests/data/videomd_sample.xml')
 
 PAS_STORAGE_ID = "urn:nbn:fi:att:file-storage-pas"
 
-CSV_FILE_CHARS = {
-    "file_created": "2014-01-17T08:19:31Z",
-    "file_format": "text/csv",
-    "format_version": "",
-    "encoding": "UTF-8",
-    "csv_delimiter": ";",
-    "csv_record_separator": "CR+LF",
-    "csv_quoting_char": "'",
-    "csv_has_header": False,
-    "streams": {
-        0: {
-            "mimetype": "text/csv",
-            "stream_type": "text"
+CSV_FILE_METADATA = {
+    "file_characteristics": {
+        "file_created": "2014-01-17T08:19:31Z",
+        "file_format": "text/csv",
+        "format_version": "",
+        "encoding": "UTF-8",
+        "csv_delimiter": ";",
+        "csv_record_separator": "CR+LF",
+        "csv_quoting_char": "'",
+        "csv_has_header": False,
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            0: {
+                "mimetype": "text/csv",
+                "stream_type": "text"
+            }
         }
     }
 }
 
-TXT_FILE_CHARS = {
-    "encoding": "UTF-8",
-    "file_created": "2014-01-17T08:19:31Z",
-    "file_format": "text/plain",
-    "streams": {
-        0: {
-            "mimetype": "text/plain",
-            "stream_type": "text"
+TXT_FILE_METADATA = {
+    "file_characteristics": {
+        "encoding": "UTF-8",
+        "file_created": "2014-01-17T08:19:31Z",
+        "file_format": "text/plain"
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            0: {
+                "mimetype": "text/plain",
+                "stream_type": "text"
+            }
         }
     }
 }
 
-TIFF_FILE_CHARS = {
-    "file_created": "2018-01-17T08:19:31Z",
-    "file_format": "image/tiff",
-    "format_version": "6.0",
-    "streams": {
-        0: {
-            "mimetype": "image/tiff",
-            "stream_type": "image"
+TIFF_FILE_METADATA = {
+    "file_characteristics": {
+        "file_created": "2018-01-17T08:19:31Z",
+        "file_format": "image/tiff",
+        "format_version": "6.0",
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            0: {
+                "mimetype": "image/tiff",
+                "stream_type": "image"
+            }
         }
     }
 }
 
-HTML_FILE_CHARS = {
-    "file_format": "text/html",
-    "format_version": "5.0",
-    "encoding": "UTF-8",
-    "streams": {
-        0: {
-            "mimetype": "text/html",
-            "stream_type": "text"
-       }
+HTML_FILE_METADATA = {
+    "file_characteristics": {
+        "file_format": "text/html",
+        "format_version": "5.0",
+        "encoding": "UTF-8",
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            0: {
+                "mimetype": "text/html",
+                "stream_type": "text"
+           }
+        }
     }
 }
 
-XML_FILE_CHARS = {
-    "file_format": "text/xml",
-    "format_version": "1.0",
-    "encoding": "UTF-8",
-    "streams": {
-        0: {
-            "mimetype": "text/xml",
-            "stream_type": "text"
-       }
+XML_FILE_METADATA = {
+    "file_characteristics": {
+        "file_format": "text/xml",
+        "format_version": "1.0",
+        "encoding": "UTF-8",
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            0: {
+                "mimetype": "text/xml",
+                "stream_type": "text"
+           }
+        }
     }
 }
 
@@ -91,18 +111,20 @@ BASE_FILE = {
 }
 
 TXT_FILE = deepcopy(BASE_FILE)
-TXT_FILE['file_characteristics'] = TXT_FILE_CHARS
+TXT_FILE.update(TXT_FILE_METADATA)
 
 TIFF_FILE = deepcopy(BASE_FILE)
-TIFF_FILE['file_characteristics'] = TIFF_FILE_CHARS
+TIFF_FILE.update(TIFF_FILE_METADATA)
 
 CSV_FILE = deepcopy(BASE_FILE)
-CSV_FILE['file_characteristics'] = CSV_FILE_CHARS
+CSV_FILE.update(CSV_FILE_METADATA)
 
 
 FILES = {
     "pid:urn:textfile1": {
-        "file_characteristics": TXT_FILE_CHARS,
+        "file_characteristics": TXT_FILE_METADATA["file_characteristics"],
+        "file_characteristics_extension": \
+            TXT_FILE_METADATA["file_characteristics_extension"],
         "set": [
             ("file_path", "/path/to/file1"),
             ("checksum", {
@@ -112,7 +134,9 @@ FILES = {
         ]
     },
     "pid:urn:textfile2": {
-        "file_characteristics": TXT_FILE_CHARS,
+        "file_characteristics": TXT_FILE_METADATA["file_characteristics"],
+        "file_characteristics_extension": \
+            TXT_FILE_METADATA["file_characteristics_extension"],
         "set": [
             ("file_path", "/path/to/file2"),
             ("checksum", {
@@ -121,18 +145,10 @@ FILES = {
             })
         ]
     },
-    "pid:urn:invalid_mimetype_1": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
-    "pid:urn:invalid_mimetype_2": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
-    "pid:urn:not_found_1": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
-    "pid:urn:not_found_2": {
-        "file_characteristics": TIFF_FILE_CHARS
-    },
+    "pid:urn:invalid_mimetype_1": TIFF_FILE_METADATA,
+    "pid:urn:invalid_mimetype_2": TIFF_FILE_METADATA,
+    "pid:urn:not_found_1": TIFF_FILE_METADATA,
+    "pid:urn:not_found_2": TIFF_FILE_METADATA,
     "pid:urn:get_files_1": {
         "set": [
             ("file_path", "/path/to/file1"),
@@ -170,6 +186,11 @@ def get_file(self, file_id):
     if "file_characteristics" in FILES[file_id]:
         file_chars = FILES[file_id]["file_characteristics"]
         new_file["file_characteristics"] = file_chars
+
+    # Set file_characteristics_extension field
+    if "file_characteristics_extension" in FILES[file_id]:
+        file_char_ext = FILES[file_id]["file_characteristics_extension"]
+        new_file["file_characteristics_extension"] = file_char_ext
 
     # Set arbitrary field
     if "set" in _file:
