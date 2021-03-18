@@ -88,8 +88,11 @@ def _get_expected_namespace_count(file_metadata):
     """
     namespace_count = defaultdict(int)
 
-    streams = \
-        file_metadata["file_characteristics_extension"]["streams"].values()
+    try:
+        streams = \
+            file_metadata["file_characteristics_extension"]["streams"].values()
+    except KeyError:
+        return {}
 
     for stream in streams:
         if stream["stream_type"] in STREAM_TYPE_NAMESPACES:
