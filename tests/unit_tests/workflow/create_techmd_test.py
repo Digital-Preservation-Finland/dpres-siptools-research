@@ -126,7 +126,7 @@ def test_create_techmd_ok(testpath, requests_mock):
     premis_agent_files = ['{}-PREMIS%3AAGENT-amd.xml'.format(id_[1:])
                           for id_ in premis_references['.']['md_ids']
                           if id_[1:] != premis_event_id]
-    assert len(premis_agent_files) == 7
+    assert len(premis_agent_files) == 8
     for file_ in premis_agent_files:
         assert os.path.isfile(os.path.join(sipdirectory, file_))
 
