@@ -89,8 +89,8 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %config(noreplace) /etc/siptools_research.conf
 %config /etc/dpres_mimetypes.json
-%config /usr/lib/systemd/system/siptools_research.service
-%config /usr/lib/systemd/system/siptools_research.timer
+%config /usr/lib/systemd/system/siptools_research-3.service
+%config /usr/lib/systemd/system/siptools_research-3.timer
 %attr(-,siptools_research,siptools_research) /var/log/siptools_research
 %attr(-,siptools_research,siptools_research) /var/spool/siptools_research
 

@@ -49,8 +49,8 @@ install3:
 	# Copy config files
 	cp include/etc/siptools_research.conf ${ETC}/
 	cp include/etc/dpres_mimetypes.json ${ETC}/
-	cp include/usr/lib/systemd/system/siptools_research.service ${LIB}/systemd/system/siptools_research.service
-	cp include/usr/lib/systemd/system/siptools_research.timer ${LIB}/systemd/system/siptools_research.timer
+	cp include/usr/lib/systemd/system/siptools_research-3.service ${LIB}/systemd/system/siptools_research-3.service
+	cp include/usr/lib/systemd/system/siptools_research.timer ${LIB}/systemd/system/siptools_research-3.timer
 
 	# Use Python setuptools
 	python3 ./setup.py install -O1 --prefix="${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
