@@ -91,6 +91,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f INSTALLED_FILES
 %defattr(-,root,root,-)
+%config(noreplace) /etc/siptools_research.conf
 %config /etc/dpres_mimetypes.json
 %config /usr/lib/systemd/system/siptools_research.service
 %config /usr/lib/systemd/system/siptools_research.timer

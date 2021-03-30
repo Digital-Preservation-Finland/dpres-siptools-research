@@ -47,6 +47,7 @@ install3:
 	mkdir -p "${LIB}/systemd/system"
 
 	# Copy config files
+	cp include/etc/siptools_research.conf ${ETC}/
 	cp include/etc/dpres_mimetypes.json ${ETC}/
 	cp include/usr/lib/systemd/system/siptools_research.service ${LIB}/systemd/system/siptools_research.service
 	cp include/usr/lib/systemd/system/siptools_research.timer ${LIB}/systemd/system/siptools_research.timer
