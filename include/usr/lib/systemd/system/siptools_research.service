@@ -2,7 +2,7 @@
 Description=Start/restart siptools_research workflows
 Requires=luigid.service mongod.service
 After=luigid.service mongod.service
-Conflicts=siptools_research-3.service
+Conflicts=siptools_research-3.timer siptools_research-3.service
 
 [Service]
 User=siptools_research
