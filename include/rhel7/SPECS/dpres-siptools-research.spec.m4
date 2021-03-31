@@ -92,10 +92,10 @@ rm -rf $RPM_BUILD_ROOT
 %files -f INSTALLED_FILES
 %defattr(-,root,root,-)
 %config /etc/dpres_mimetypes.json
-%config /usr/lib/systemd/system/siptools_research.service
-%config /usr/lib/systemd/system/siptools_research.timer
 %attr(-,siptools_research,siptools_research) /var/log/siptools_research
 %attr(-,siptools_research,siptools_research) /var/spool/siptools_research
+/usr/lib/systemd/system/siptools_research.service
+/usr/lib/systemd/system/siptools_research.timer
 
 
 # TODO: For now changelog must be last, because it is generated automatically
