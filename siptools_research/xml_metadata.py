@@ -57,49 +57,6 @@ def _kwargs2str(kwargs):
     return kwarg_list + " %s=%s ]" % (keys[-1], kwargs[keys[-1]])
 
 
-def _combine_metadata(elems):
-    """
-    Combine list of technical metadata XML elements into a single METS XML
-    document.
-
-    The created METS is *not* used as the actual METS document we create
-    later in the workflow, it's simply a container for technical metadata we
-    store in Metax.
-    """
-    techmd_elems = []
-    for elem in elems:
-        # Find the mdtype entry for this metadata element
-        mdtype_entry = next(
-            TECH_ATTR_TYPES[ns] for ns in elem.nsmap.values()
-            if ns in TECH_ATTR_TYPES.keys()
-        )
-        mdtype_name = mdtype_entry["mdtype"]
-        mdtypeversion = mdtype_entry["mdtypeversion"]
-        othermdtype = mdtype_entry["othermdtype"]
-
-        mdwrap_elem = mdwrap(
-            mdtype=mdtype_name,
-            mdtypeversion=mdtypeversion,
-            othermdtype=othermdtype,
-            child_elements=[
-                xmldata(
-                    child_elements=[elem]
-                )
-            ]
-        )
-
-        techmd_elem = techmd(
-            # The element ID here is arbitrary
-            element_id=str(uuid.uuid4()),
-            child_elements=[mdwrap_elem]
-        )
-        techmd_elems.append(techmd_elem)
-
-    mets_elem = mets(child_elements=[amdsec(techmd_elems)])
-
-    return mets_elem
-
-
 class _XMLMetadata:
     """Abstract base class for XML metadata generators."""
 
@@ -124,6 +81,26 @@ class _XMLMetadata:
         :returns: metadata XML element
         """
 
+    @property
+    def streams(self):
+        """Return streams as an integer-indexed dict
+
+        The stream dict returned by file-scraper is serialized into JSON and
+        then back into a Python dict. When serialized into JSON, any integer
+        keys are implicitly converted into strings.
+
+        Since this means that any integer keys
+        will be converted to strings, we restore the original integer keys
+        in this property if necessary.
+        """
+        orig_streams = \
+            self.file_metadata["file_characteristics_extension"]["streams"]
+
+        return {
+            int(key): value for key, value in orig_streams.items()
+        }
+
+
     @classmethod
     def is_generator_for(cls, file_metadata):
         """Class method to be implemented by a subclass.
@@ -143,11 +120,9 @@ class _ImageFileXMLMetadata(_XMLMetadata):
         :returns: List containing a MIX XML element
         """
         try:
-            streams = \
-                self.file_metadata["file_characteristics_extension"]["streams"]
             mix_elem = create_mix.create_mix_metadata(
                 self.file_path,
-                streams=streams
+                streams=self.streams
             )
             return [mix_elem]
         except MixGenerationError as error:
@@ -225,11 +200,9 @@ class _AudioFileXMLMetadata(_XMLMetadata):
 
         :returns: List of audioMD XML elements
         """
-        file_char_ext = self.file_metadata["file_characteristics_extension"]
-        streams = file_char_ext["streams"]
         audiomd = create_audiomd.create_audiomd_metadata(
             self.file_path,
-            streams=streams
+            streams=self.streams
         )
         if not audiomd:
             raise InvalidFileError("Audio file has no audio streams.",
@@ -260,11 +233,9 @@ class _VideoFileXMLMetadata(_XMLMetadata):
 
         :returns: List of videoMD XML elements
         """
-        file_char_ext = self.file_metadata["file_characteristics_extension"]
-        streams = file_char_ext["streams"]
         videomd = create_videomd.create_videomd_metadata(
             self.file_path,
-            streams=streams
+            streams=self.streams
         )
         if not videomd:
             raise InvalidFileError("Video file has no video streams.",
@@ -314,7 +285,4 @@ class XMLMetadataGenerator(object):
         for generator in self.generators:
             results += generator.create()
 
-        if results:
-            return _combine_metadata(results)
-
-        return None
+        return results

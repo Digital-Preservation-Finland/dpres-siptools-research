@@ -1,0 +1,41 @@
+<mets:mets xmlns:mets="http://www.loc.gov/METS/" xmlns:mix="http://www.loc.gov/mix/v20" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OBJID="38acf0b3-7edd-4a73-9dbd-ea67fd3c9c21" PROFILE="http://digitalpreservation.fi/mets-profiles/research-data" fi:CATALOG="1.7.3" fi:SPECIFICATION="1.7.3" xmlns:fi="http://digitalpreservation.fi/schemas/mets/fi-extensions" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<mets:amdSec>
+		<mets:techMD CREATED="2018-01-01T07:21:27.005383" ID="123456789098765421">
+			<mets:mdWrap MDTYPE="NISOIMG" MDTYPEVERSION="2.0">
+                <mets:xmlData>
+                    <mix:mix xmlns:mix="http://www.loc.gov/mix/v20" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/mix/v20 http://www.loc.gov/mix/mix.xsd">
+                      <mix:BasicDigitalObjectInformation>
+                        <mix:Compression>
+                          <mix:compressionScheme>no</mix:compressionScheme>
+                        </mix:Compression>
+                        <mix:byteOrder>little endian</mix:byteOrder>
+                      </mix:BasicDigitalObjectInformation>
+                      <mix:BasicImageInformation>
+                        <mix:BasicImageCharacteristics>
+                          <mix:imageWidth>640</mix:imageWidth>
+                          <mix:imageHeight>400</mix:imageHeight>
+                          <mix:PhotometricInterpretation>
+                            <mix:ColorProfile>
+                              <mix:IccProfile>
+                                <mix:iccProfileName>(:unav)</mix:iccProfileName>
+                              </mix:IccProfile>
+                            </mix:ColorProfile>
+                            <mix:colorSpace>rgb</mix:colorSpace>
+                          </mix:PhotometricInterpretation>
+                        </mix:BasicImageCharacteristics>
+                      </mix:BasicImageInformation>
+                      <mix:ImageAssessmentMetadata>
+                        <mix:ImageColorEncoding>
+                          <mix:BitsPerSample>
+                            <mix:bitsPerSampleValue>8</mix:bitsPerSampleValue>
+                            <mix:bitsPerSampleUnit>integer</mix:bitsPerSampleUnit>
+                          </mix:BitsPerSample>
+                          <mix:samplesPerPixel>3</mix:samplesPerPixel>
+                        </mix:ImageColorEncoding>
+                      </mix:ImageAssessmentMetadata>
+                  </mix:mix>
+                </mets:xmlData>
+            </mets:mdWrap>
+        </mets:techMD>
+    </mets:amdSec>
+</mets:mets>

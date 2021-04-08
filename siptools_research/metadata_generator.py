@@ -128,16 +128,6 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
                     tech_metadata['file_characteristics_extension']
             }
         )
-        file_metadata['file_characteristics'] = \
-            tech_metadata['file_characteristics']
-        file_metadata['file_characteristics_extension'] = \
-            tech_metadata['file_characteristics_extension']
-
-        # Generate file format specific XML metadata
-        generator = XMLMetadataGenerator(tmpfile, file_metadata)
-        xml = generator.create()
-        if xml is not None:
-            metax_client.set_xml(file_id, xml)
 
 
 def _generate_file_tech_metadata(filepath, original_file_metadata):

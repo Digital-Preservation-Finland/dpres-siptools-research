@@ -57,7 +57,18 @@ TIFF_FILE_METADATA = {
         "streams": {
             0: {
                 "mimetype": "image/tiff",
-                "stream_type": "image"
+                "index": 0,
+                "bps_unit": "integer",
+                "bps_value": "8",
+                "byte_order": "little endian",
+                "icc_profile_name": "(:unav)",
+                "colorspace": "rgb",
+                "stream_type": "image",
+                "height": "400",
+                "width": "640",
+                "version": "6.0",
+                "samples_per_pixel": "3",
+                "compression": "no"
             }
         }
     }
@@ -95,6 +106,83 @@ XML_FILE_METADATA = {
     }
 }
 
+MKV_FILE_METADATA = {
+    "file_characteristics": {
+        "file_format": "video/x-matroska",
+        "format_version": "4",
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            0: {
+                "mimetype": "video/x-matroska",
+                "index": 0,
+                "stream_type": "videocontainer",
+                "version": "4",
+                "codec_name": "Matroska",
+                "codec_creator_app_version": "57.71.100",
+                "codec_creator_app": "Lavf57.71.100"
+            },
+            1: {
+                "mimetype": "video/x-ffv",
+                "index": 1,
+                "par": "1",
+                "frame_rate": "15",
+                "data_rate": "(:unav)",
+                "bits_per_sample": "8",
+                "data_rate_mode": "Variable",
+                "color": "Color",
+                "codec_quality": "lossless",
+                "signal_format": "(:unap)",
+                "dar": "1",
+                "height": "16",
+                "sound": "Yes",
+                "version": "0",
+                "codec_name": "FFV1",
+                "codec_creator_app_version": "57.71.100",
+                "duration": "PT1.73S",
+                "sampling": "4:2:2",
+                "stream_type": "video",
+                "width": "16",
+                "codec_creator_app": "Lavf57.71.100"
+            },
+            2: {
+                "mimetype": "audio/flac",
+                "index": 2,
+                "audio_data_encoding": "FLAC",
+                "bits_per_sample": "16",
+                "data_rate_mode": "Variable",
+                "codec_quality": "lossless",
+                "version": "1.2.1",
+                "stream_type": "audio",
+                "sampling_frequency": "48",
+                "num_channels": "2",
+                "codec_name": "FLAC",
+                "codec_creator_app_version": "57.71.100",
+                "duration": "PT1.82S",
+                "data_rate": "(:unav)",
+                "codec_creator_app": "Lavf57.71.100"
+            },
+            3: {
+                "mimetype": "audio/flac",
+                "index": 3,
+                "audio_data_encoding": "FLAC",
+                "bits_per_sample": "16",
+                "data_rate_mode": "Variable",
+                "codec_quality": "lossless",
+                "version": "1.2.1",
+                "stream_type": "audio",
+                "sampling_frequency": "48",
+                "num_channels": "2",
+                "codec_name": "FLAC",
+                "codec_creator_app_version": "57.71.100",
+                "duration": "PT1.82S",
+                "data_rate": "(:unav)",
+                "codec_creator_app": "Lavf57.71.100"
+            }
+        }
+    }
+}
+
 BASE_FILE = {
     "identifier": "pid:urn:identifier",
     "file_path": "path/to/file",
@@ -118,6 +206,9 @@ TIFF_FILE.update(TIFF_FILE_METADATA)
 
 CSV_FILE = deepcopy(BASE_FILE)
 CSV_FILE.update(CSV_FILE_METADATA)
+
+MKV_FILE = deepcopy(BASE_FILE)
+MKV_FILE.update(MKV_FILE_METADATA)
 
 
 FILES = {

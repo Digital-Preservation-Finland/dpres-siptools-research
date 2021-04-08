@@ -5,20 +5,21 @@ import hashlib
 import json
 import os
 import shutil
+from collections import defaultdict
+from glob import glob
 
 import lxml.etree
 import pytest
 import requests
+from mets import METS_NS
 from siptools.utils import read_md_references
 from siptools.xml.mets import NAMESPACES
-import xmltodict
-
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       algorithm_name)
+
 import tests.metax_data
 import tests.utils
-
-from mets import METS_NS
+import xmltodict
 
 
 def xml2simpledict(element):
@@ -50,14 +51,6 @@ def test_create_techmd_ok(testpath, requests_mock):
     # Mock metax
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.TIFF_FILE])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
-                      json=[METS_NS])
-    with open("tests/data/mix_sample_jp2.xml", "rb") as mix:
-        requests_mock.get(
-            "https://metaksi/rest/v1/files/pid:urn:identifier/xml"
-            "?namespace={}".format(METS_NS),
-            content=mix.read()
-        )
 
     # Create workspace that already contains the dataset files
     workspace = os.path.join(testpath, 'workspaces', 'workspace')
@@ -138,25 +131,22 @@ def test_create_techmd_ok(testpath, requests_mock):
     assert len(mix_references) == 1
     assert len(mix_references['dataset_files/path/to/file']["md_ids"]) == 1
     assert mix_references['dataset_files/path/to/file']["md_ids"][0] \
-        == '_b7773ac3c874f7ccfd316b51404de729'
+        == '_dd0f489d6e47cc2dca598beb608cc78d'
 
     # Compare MIX metadata in techMD file to original MIX metadata in
     # Metax
     mets = lxml.etree.parse(
         os.path.join(
             sipdirectory,
-            'b7773ac3c874f7ccfd316b51404de729-NISOIMG-amd.xml'
+            'dd0f489d6e47cc2dca598beb608cc78d-NISOIMG-amd.xml'
         )
     )
     mdwrap = mets.xpath('/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap',
                         namespaces=NAMESPACES)[0]
     mix = mdwrap.xpath('mets:xmlData/mix:mix', namespaces=NAMESPACES)[0]
-    original_mix = lxml.etree.fromstring(
-        requests.get(
-            "https://metaksi/rest/v1/files/pid:urn:identifier/xml"
-            "?namespace={}".format(METS_NS)
-        ).content
-    )
+    with open("tests/data/mix_sample_tiff.xml", "rb") as mix_file:
+        original_mix = lxml.etree.fromstring(mix_file.read())
+
     original_mix = original_mix.xpath(
         "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
         namespaces=NAMESPACES
@@ -170,10 +160,119 @@ def test_create_techmd_ok(testpath, requests_mock):
                 premis_object_file,
                 file_properties_file,
                 'create-mix-md-references.jsonl',
-                'b7773ac3c874f7ccfd316b51404de729-NISOIMG-amd.xml',
+                'dd0f489d6e47cc2dca598beb608cc78d-NISOIMG-amd.xml',
                 'import-object-extraction-AGENTS-amd.json']
                + premis_agent_files
                + premis_event_files)
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_create_techmd_multiple_metadata_documents(
+        testpath, requests_mock):
+    """Test techmd creation for a file with multiple streams.
+
+    Multiple technical metadata documents should be created.
+    """
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        files=[tests.metax_data.files.MKV_FILE]
+    )
+
+    # Create workspace that already contains the dataset files
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sipdirectory)
+    dataset_files = os.path.join(workspace, 'dataset_files')
+    mkv_path = os.path.join(dataset_files, 'path/to/file')
+    os.makedirs(os.path.dirname(mkv_path))
+    shutil.copy('tests/data/sample_files/video_ffv1.mkv', mkv_path)
+
+    # Init task
+    task = CreateTechnicalMetadata(workspace=workspace,
+                                   dataset_id='dataset_identifier',
+                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    assert not task.complete()
+
+    # Run task
+    task.run()
+    assert task.complete()
+
+    premis_object_paths = glob(
+        os.path.join(
+            sipdirectory, "*-PREMIS%3AOBJECT-amd.xml"
+        )
+    )
+    premis_objects = []
+    for path in premis_object_paths:
+        with open(path, "rb") as file_:
+            premis_objects.append(
+                lxml.etree.fromstring(file_.read())
+            )
+
+    mime_type_count = defaultdict(int)
+
+    for premis_object in premis_objects:
+        file_type = premis_object.xpath(
+            "//premis:format/premis:formatDesignation/premis:formatName",
+            namespaces=NAMESPACES
+        )[0].text
+        mime_type_count[file_type] += 1
+
+    # Four PREMIS objects in total, two for audio streams
+    assert mime_type_count["audio/flac"] == 2
+    assert mime_type_count["video/x-ffv"] == 1
+    assert mime_type_count["video/x-matroska"] == 1
+
+    videomd = glob(os.path.join(sipdirectory, "*VideoMD-amd.xml"))[0]
+    audiomd = glob(os.path.join(sipdirectory, "*AudioMD-amd.xml"))[0]
+
+    with open(videomd, "rb") as file_:
+        videomd = lxml.etree.fromstring(file_.read())
+
+    with open(audiomd, "rb") as file_:
+        audiomd = lxml.etree.fromstring(file_.read())
+
+    assert audiomd.xpath(
+        "//audiomd:codecName", namespaces=NAMESPACES
+    )[0].text == "FLAC"
+
+    assert videomd.xpath(
+        "//videomd:codecName", namespaces=NAMESPACES
+    )[0].text == "FFV1"
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_create_techmd_incomplete_file_characteristics(
+        testpath, requests_mock):
+    """Test techmd creation for a file without all the necessary file
+    characteristics
+    """
+    tiff_file_incomplete = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
+    del tiff_file_incomplete["file_characteristics_extension"]["streams"] \
+                            [0]["bps_value"]
+    # Mock metax
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[tiff_file_incomplete])
+
+    # Create workspace that already contains the dataset files
+    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    sipdirectory = os.path.join(workspace, 'sip-in-progress')
+    os.makedirs(sipdirectory)
+    dataset_files = os.path.join(workspace, 'dataset_files')
+    tiff_path = os.path.join(dataset_files, 'path/to/file')
+    os.makedirs(os.path.dirname(tiff_path))
+    shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
+
+    # Init task
+    task = CreateTechnicalMetadata(workspace=workspace,
+                                   dataset_id='dataset_identifier',
+                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Run task
+    with pytest.raises(KeyError) as exc:
+        task.run()
+
+    assert "bps_value" in str(exc.value)
 
 
 @pytest.mark.usefixtures()
@@ -223,53 +322,6 @@ def test_create_techmd_without_charset(testpath, requests_mock):
     format_name = premis_object_xml.xpath("//premis:formatName",
                                           namespaces=NAMESPACES)[0].text
     assert format_name == 'text/plain; charset=UTF-8'
-
-
-@pytest.mark.usefixtures('testmongoclient')
-def test_xml_metadata_file_missing(testpath, requests_mock):
-    """Test the workflow task when XML metadata is missing.
-
-    Behavior not specified yet. Currently the task throws an error if
-    XML metadata for a file is missing.
-
-    :param requests_mock: Mocker object
-    :param testpath: Temporary directory fixture
-    :returns: ``None``
-    """
-    tests.utils.add_metax_dataset(requests_mock,
-                                  files=[tests.metax_data.files.TIFF_FILE])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
-                      json=["http://www.loc.gov/mix/v20"])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml"
-                      "?namespace=http://www.loc.gov/mix/v20",
-                      status_code=404)
-
-    # Create workspace directory that contains a TIFF file
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sipdirectory)
-    tiff_path = os.path.join(workspace, 'dataset_files/path/to/file')
-    os.makedirs(os.path.dirname(tiff_path))
-    shutil.copy('tests/data/sample_files/image_tiff_large.tif', tiff_path)
-
-    # Init task
-    task = CreateTechnicalMetadata(
-        workspace=workspace,
-        dataset_id="dataset_identifier",
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-    assert not task.complete()
-
-    # Run task.
-    with pytest.raises(requests.HTTPError) as exc:
-        task.run()
-
-    assert exc.value.response.status_code == 404
-    assert not task.complete()
-
-    # The task should not have created any files in sip creation
-    # directory
-    assert os.listdir(sipdirectory) == []
 
 
 @pytest.mark.parametrize(('algorithm', 'hash_function', 'expected'),

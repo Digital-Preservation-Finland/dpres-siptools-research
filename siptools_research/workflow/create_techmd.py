@@ -5,18 +5,18 @@ import datetime
 import os
 import shutil
 
-from metax_access import Metax
-from mets import METS_NS, NAMESPACES
-
 import siptools.mdcreator
 import siptools.scripts.import_object
 from luigi import LocalTarget
+from metax_access import Metax
+from mets import NAMESPACES
 from siptools_research.config import Configuration
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.get_files import GetFiles
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.xml_metadata import TECH_ATTR_TYPES
+from siptools_research.xml_metadata import (TECH_ATTR_TYPES,
+                                            XMLMetadataGenerator)
 
 try:
     from tempfile import TemporaryDirectory
@@ -125,7 +125,7 @@ class CreateTechnicalMetadata(WorkflowTask):
 
                 # Create METS documents that contain technical
                 # attributes
-                self.create_technical_attributes(file_['identifier'], filepath,
+                self.create_technical_attributes(file_, filepath,
                                                  temporary_workspace)
 
             # Move created files to sip creation directory. PREMIS event
@@ -197,43 +197,35 @@ class CreateTechnicalMetadata(WorkflowTask):
             event_target='.'
         )
 
-    def create_technical_attributes(self, file_identifier, filepath, output):
-        """Read technical attribute XML from Metax.
+    def create_technical_attributes(self, metadata, filepath, output):
+        """Create technical metadata for a file
 
-        Create METS TechMD files for each metadata type, if it is
-        available in Metax.
+        Create METS TechMD files for each metadata type based on previously
+        scraped file characteristics
 
         :param file_identifier: file identifier
         :param filepath: path of file in SIP
         :param output: Path to the temporary workspace
         :returns: ``None``
         """
-        xmls = self.metax_client.get_xml(file_identifier)
-
         creator = siptools.mdcreator.MetsSectionCreator(output)
-
-        try:
-            mets_root = xmls[METS_NS].getroot()
-        except KeyError:
-            # No technical metadata exists for this file; skip
-            return
-
-        # Retrieve all the technical metadata elements we created earlier.
-        # Although they're contained within techMD elements, we're not reusing
-        # those; instead, we're using dpres-siptools' mdcreator module.
-        md_wraps = mets_root.xpath(
-            "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap",
-            namespaces=NAMESPACES
+        metadata_generator = XMLMetadataGenerator(
+            file_path=os.path.join(
+                self.input()['files'].path,
+                metadata['file_path'].strip('/')
+            ),
+            file_metadata=metadata
         )
 
-        for md_wrap in md_wraps:
-            # Retrieve the wrapped MD document
-            md_elem = md_wrap.xpath("mets:xmlData/*", namespaces=NAMESPACES)[0]
-            mdtype = md_wrap.attrib["MDTYPE"]
-            mdtypeversion = md_wrap.attrib["MDTYPEVERSION"]
-            othermdtype = md_wrap.attrib.get("OTHERMDTYPE", None)
+        md_elems = metadata_generator.create()
 
+        for md_elem in md_elems:
+            # Retrieve the wrapped MD document
             md_namespace = md_elem.nsmap[md_elem.prefix]
+
+            mdtype = TECH_ATTR_TYPES[md_namespace]["mdtype"]
+            mdtypeversion = TECH_ATTR_TYPES[md_namespace]["mdtypeversion"]
+            othermdtype = TECH_ATTR_TYPES[md_namespace].get("othermdtype", None)
             ref_file = TECH_ATTR_TYPES[md_namespace]["ref_file"]
 
             # Create METS TechMD file

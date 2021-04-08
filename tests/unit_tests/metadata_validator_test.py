@@ -35,20 +35,6 @@ def does_not_raise():
     yield
 
 
-def get_bad_audiomd():
-    """Create invalid audio metadata xml.
-
-    :returns: Audio MD as string
-    """
-    root = copy.deepcopy(BASE_AUDIO_MD)
-    element = root.xpath('/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/'
-                         'mets:xmlData/amd:AUDIOMD/amd:audioInfo/amd:duration',
-                         namespaces={'mets': "http://www.loc.gov/METS/",
-                                     'amd': "http://www.loc.gov/audioMD/"})
-    element[0].getparent().remove(element[0])
-    return lxml.etree.tostring(root, pretty_print=True)
-
-
 def get_invalid_datacite():
     """Create invalid datacite.
 
@@ -283,25 +269,6 @@ def test_validate_metadata_invalid_file_path(requests_mock):
 
 
 # pylint: disable=invalid-name
-def test_validate_metadata_missing_xml(requests_mock):
-    """Test validate_metadata.
-
-    Function should raise exception if dataset contains image file but not XML
-    metadata.
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    tests.utils.add_metax_dataset(requests_mock, files=[TIFF_FILE])
-
-    expected_error \
-        = "Missing technical metadata XML for file: pid:urn:identifier"
-    with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
-# pylint: disable=invalid-name
 @pytest.mark.parametrize(
     ('file_format', 'stream_type', 'xml'),
     (
@@ -349,129 +316,6 @@ def test_validate_metadata_multiple_formats(
 
     assert validate_metadata('dataset_identifier',
                              tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
-# pylint: disable=invalid-name
-def test_validate_metadata_invalid_audiomd(requests_mock):
-    """Test validate_metadata.
-
-    Function should raise exception if AudioMD is
-    invalid (missing required audiomd:duration element).
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    audio_file = copy.deepcopy(BASE_FILE)
-    audio_file.update({
-        "file_characteristics": {
-            "file_format": "audio/mp4"
-
-        },
-        "file_characteristics_extension": {
-            "streams": {
-                0: {
-                    "mimetype": "audio/mp4",
-                    "stream_type": "audio"
-                }
-            }
-        }
-    })
-    tests.utils.add_metax_dataset(requests_mock, files=[audio_file])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
-                      json=[METS_NS])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
-                      "namespace={}".format(METS_NS),
-                      content=get_bad_audiomd())
-
-    # Try to validate invalid dataset
-    expected_error = (
-        "Technical metadata XML of file is invalid: Element"
-        " 'audiomd:duration' is required in element 'amd:audioInfo'."
-    )
-    with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
-def test_validate_metadata_disallowed_namespace(requests_mock):
-    """Test validate_metadata with an XML document containing a forbidden
-    namespace.
-    """
-    mets_etree = copy.deepcopy(BASE_AUDIO_MD)
-    audiomd = mets_etree.getroot().xpath(
-        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
-        namespaces=NAMESPACES
-    )[0]
-
-    # Make a copy of the audioMD element and add a new namespace
-    new_nsmap = copy.deepcopy(audiomd.nsmap)
-    new_nsmap["fake"] = "http://fakeschema.com/fake"
-    new_audiomd = lxml.etree.Element(
-        "AUDIOMD",
-        attrib=audiomd.attrib,
-        nsmap=new_nsmap
-    )
-    new_audiomd.append(audiomd.xpath("*")[0])
-
-    mets_etree.getroot().xpath(
-        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData",
-        namespaces=NAMESPACES
-    )[0].replace(audiomd, new_audiomd)
-
-    audio_file = copy.deepcopy(BASE_FILE)
-    audio_file.update({
-        "file_characteristics": {
-            "file_format": "audio/mp4"
-
-        },
-        "file_characteristics_extension": {
-            "streams": {
-                0: {
-                    "mimetype": "audio/mp4",
-                    "stream_type": "audio"
-                }
-            }
-        }
-    })
-    tests.utils.add_metax_dataset(requests_mock, files=[audio_file])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
-                      json=[METS_NS])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
-                      "namespace={}".format(METS_NS),
-                      content=lxml.etree.tostring(mets_etree))
-
-    # Try to validate XML with forbidden namespace
-    expected_error = "Invalid XML namespace: http://fakeschema.com/fake"
-    with pytest.raises(TypeError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
-# pylint: disable=invalid-name
-def test_validate_metadata_corrupted_mix(requests_mock):
-    """Test validate_metadata.
-
-    Function shoudl raise exception if METS metadata in
-    Metax is corrupted (invalid XML).
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    tests.utils.add_metax_dataset(requests_mock, files=[TIFF_FILE])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml",
-                      json=[METS_NS])
-    requests_mock.get("https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
-                      "namespace={}".format(METS_NS),
-                      text="<mets:mets\n")
-
-    # Try to validate invalid dataset
-    expected_error = (
-        'Technical metadata XML of file is invalid: '
-        'Namespace prefix mets on mets is not defined, line 2, column 1'
-    )
-    with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
 
 
 # pylint: disable=invalid-name
@@ -650,30 +494,6 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
                 'identifier': 'dataset_identifier'
             },
             client, configuration
-        )
-
-
-def test_validate_with_schematron_invalid():
-    """Test _validate_with_schematron.
-
-    Function should raise exception with readable error message when validated
-    XML contains multiple errors.
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    xml = lxml.etree.parse('tests/data/invalid_audiomd.xml')
-    expected_error = (
-        "Technical metadata XML of file is invalid: The following errors "
-        "were detected:\n\n"
-        "1. Element 'audiomd:samplingFrequency' is required in element "
-        "'amd:fileData'.\n"
-        "2. Element 'audiomd:duration' is required in element 'amd:audioInfo'."
-    )
-    # pylint: disable=protected-access
-    with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        metadata_validator._validate_with_schematron(
-            '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch', xml
         )
 
 

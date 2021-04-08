@@ -3,21 +3,22 @@ from __future__ import unicode_literals
 
 import copy
 import os
+from collections import defaultdict
 
 import lxml.etree
 import pytest
 from metax_access import DatasetNotAvailableError
 from mets import METS_NS, NAMESPACES
 from requests.exceptions import HTTPError
-
-import tests.metax_data.datasets
-import tests.metax_data.files
-import tests.utils
 from siptools.utils import decode_path
 from siptools_research.exceptions import (InvalidFileError,
                                           InvalidFileMetadataError,
                                           MissingFileError)
 from siptools_research.metadata_generator import generate_metadata
+
+import tests.metax_data.datasets
+import tests.metax_data.files
+import tests.utils
 
 DEFAULT_PROVENANCE = {
     "preservation_event": {
@@ -44,28 +45,28 @@ DEFAULT_PROVENANCE = {
 
 
 @pytest.mark.parametrize(
-    ('path', 'file_format', 'encoding', 'namespace'),
+    ('path', 'file_format', 'encoding', 'stream_type'),
     (
         ('tests/data/sample_files/text_plain_UTF-8',
          'text/plain',
          'UTF-8',
-         None),
+         'text'),
         ('tests/data/sample_files/image_png.png',
          'image/png',
          None,
-         'http://www.loc.gov/mix/v20'),
+         'image'),
         ('tests/data/sample_files/image_tiff_large.tif',
          'image/tiff',
          None,
-         'http://www.loc.gov/mix/v20'),
+         'image'),
         ('tests/data/sample_files/audio_x-wav.wav',
          'audio/x-wav',
          None,
-         'http://www.loc.gov/audioMD/'),
+         'audio'),
         ('tests/data/sample_files/video_ffv1.mkv',
          'video/x-matroska',
          None,
-         'http://www.loc.gov/videoMD/')
+         'videocontainer')
     )
 )
 @pytest.mark.usefixtures('testpath')
@@ -73,17 +74,20 @@ def test_generate_metadata(requests_mock,
                            path,
                            file_format,
                            encoding,
-                           namespace):
+                           stream_type):
     """Test metadata generation.
 
     Generates metadata for a dataset that contains one file, and checks that
-    correct file characteristics and XML metadata are sent to Metax.
+    correct file characteristics are sent to Metax.
+
+    The file characteristics are later used to generate XML metadata without
+    having to scrape the file again.
 
     :param requests_mock: Mocker object
     :param path: path to file for which the metadata is created
     :param file_format: expected file format
     :param encoding: expected character set
-    :param namespace: name space of xml metadata
+    :param stream_type: expected stream type
     :returns: ``None``
     """
     # create mocked dataset in Metax and Ida
@@ -92,11 +96,6 @@ def test_generate_metadata(requests_mock,
     file_metadata_patch = requests_mock.patch(
         "https://metaksi/rest/v1/files/pid:urn:identifier",
         json={}
-    )
-    xml_post = requests_mock.post(
-        "https://metaksi/rest/v1/files/pid:urn:identifier/xml?namespace={}"
-        .format(METS_NS),
-        status_code=201
     )
     with open(path, 'rb') as file_:
         requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
@@ -112,70 +111,54 @@ def test_generate_metadata(requests_mock,
     assert file_characteristics.get('file_format') == file_format
     assert file_characteristics.get('encoding') == encoding
 
-    # verify xml metadata that was posted to Metax (if required for file type)
-    if namespace:
-        xml = lxml.etree.fromstring(xml_post.last_request.text)
-
-        # The expected namespace should be contained in the posted XML
-        found_namespaces = set()
-
-        md_elems = xml.xpath(
-            "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
-            namespaces=NAMESPACES
-        )
-        for md_elem in md_elems:
-            found_namespaces |= set(md_elem.nsmap.values())
-
-        assert namespace in found_namespaces
+    file_char_ext = \
+        file_metadata_patch.last_request.json()['file_characteristics_extension']
+    assert file_char_ext['streams']['0']['mimetype'] == file_format
+    assert file_char_ext['streams']['0']['stream_type'] == stream_type
 
 
 @pytest.mark.usefixtures('testpath')
-def test_generate_metadata_multiple_metadata_entries(requests_mock):
-    """
-    Test metadata generation for a video file that contains two stereo audio
+def test_generate_metadata_video_streams(requests_mock):
+    """Test metadata generation for a video file with multiple different
     streams.
 
-    Generates metadata for a dataset that contains one file, and checks that
-    correct file characteristics and XML metadata are sent to Metax.
-
-    :param requests_mock: Mocker object
-    :param path: path to file for which the metadata is created
-    :param file_format: expected file format
-    :param encoding: expected character set
-    :param namespace: name space of xml metadata
-    :returns: ``None``
+    Generates file characteristics for a file with multiple streams.
     """
-    # create mocked dataset in Metax and Ida
-    tests.utils.add_metax_dataset(requests_mock,
-                                  files=[tests.metax_data.files.BASE_FILE])
-    requests_mock.patch(
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        files=[tests.metax_data.files.BASE_FILE])
+    file_metadata_patch = requests_mock.patch(
         "https://metaksi/rest/v1/files/pid:urn:identifier",
         json={}
     )
-    xml_post = requests_mock.post(
-        "https://metaksi/rest/v1/files/pid:urn:identifier/xml?namespace={}"
-        .format(METS_NS),
-        status_code=201
-    )
     with open('tests/data/sample_files/video_ffv1.mkv', 'rb') as file_:
-        requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
-                          content=file_.read())
+        requests_mock.get(
+            "https://ida.test/files/pid:urn:identifier/download",
+            content=file_.read()
+        )
 
-    # generate metadata for dataset
-    generate_metadata('dataset_identifier',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # verify xml metadata that was posted to Metax (if required for file type)
-    xml = lxml.etree.fromstring(xml_post.last_request.text)
-
-    md_elems = xml.xpath(
-        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
-        namespaces=NAMESPACES
+    generate_metadata(
+        'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    # Two AudioMD entries and one VideoMD entry were created
-    assert len([md for md in md_elems if md.tag.endswith("AUDIOMD")]) == 2
-    assert len([md for md in md_elems if md.tag.endswith("VIDEOMD")]) == 1
+    file_char_ext = \
+        file_metadata_patch.last_request.json()['file_characteristics_extension']
+
+    # Four different streams found
+    assert set(['0', '1', '2', '3']) == set(file_char_ext['streams'].keys())
+
+    streams_by_type = defaultdict(list)
+    for stream in file_char_ext['streams'].values():
+        streams_by_type[stream['stream_type']].append(stream)
+
+    assert len(streams_by_type['audio']) == 2
+    assert len(streams_by_type['videocontainer']) == 1
+    assert len(streams_by_type['video']) == 1
+
+    assert streams_by_type['audio'][0]['mimetype'] == 'audio/flac'
+    assert streams_by_type['videocontainer'][0]['mimetype'] == \
+        'video/x-matroska'
+    assert streams_by_type['video'][0]['mimetype'] == 'video/x-ffv'
 
 
 @pytest.mark.usefixtures('testpath')
@@ -262,23 +245,18 @@ def test_generate_metadata_predefined(requests_mock):
 
 
 @pytest.mark.usefixtures('testpath')
-def test_generate_metadata_addml(requests_mock):
+def test_generate_metadata_csv(requests_mock):
     """Test generate metadata.
 
-    Tests addml metadata generation for a CSV file. Generates metadata for a
-    dataset that contains a CSV file and checks that message sent to Metax
-    is valid XML.
+    Tests addml metadata generation for a CSV file. Generates file
+    characteristics metadata that is later used to generate an ADDML
+    document.
 
     :param requests_mock: Mocker object
     :returns: ``None``
     """
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.CSV_FILE])
-    addml_post_request = requests_mock.post(
-        "https://metaksi/rest/v1/files/pid:urn:identifier/xml?"
-        "namespace={}".format(METS_NS),
-        status_code=201
-    )
     requests_mock.get(
         "https://ida.test/files/pid:urn:identifier/download", content=b'foo'
     )
@@ -286,15 +264,14 @@ def test_generate_metadata_addml(requests_mock):
     generate_metadata('dataset_identifier',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Read one element from XML to ensure it is valid and contains correct data
-    # pylint: disable=no-member
-    xml = lxml.etree.fromstring(addml_post_request.last_request.body)
-    flatfile = xml.xpath(
-        '//addml:flatFile',
-        namespaces={"addml": "http://www.arkivverket.no/standarder/addml"}
-    )
-    name = decode_path(flatfile[0].get("name"))
-    assert name == "path/to/file"
+    tech_metadata = requests_mock.last_request.json()
+    file_characteristics = tech_metadata['file_characteristics']
+    file_char_ext = tech_metadata['file_characteristics_extension']
+
+    assert file_characteristics['file_format'] == 'text/csv'
+    assert file_characteristics['csv_delimiter'] == ';'
+
+    assert file_char_ext['streams']['0']['mimetype'] == 'text/csv'
 
 
 # pylint: disable=invalid-name
@@ -324,33 +301,6 @@ def test_generate_metadata_tempfile_removal(testpath, requests_mock):
     # generation, but the downloaded file should be left in file cache
     assert os.listdir(tmp_path) == []
     assert os.listdir(file_cache_path) == ['pid:urn:identifier']
-
-
-@pytest.mark.usefixtures('testpath')
-# pylint: disable=invalid-name
-def test_generate_metadata_missing_csv_info(requests_mock):
-    """Test generate_metadata.
-
-    Tests addml metadata generation for a dataset that does not contain all
-    metadata required for addml generation.
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    invalid_file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
-    invalid_file_metadata['file_characteristics'] = {'file_format': 'text/csv'}
-    tests.utils.add_metax_dataset(requests_mock, files=[invalid_file_metadata])
-    requests_mock.get("https://ida.test/files/pid:urn:identifier/download")
-
-    with pytest.raises(InvalidFileMetadataError) as exception_info:
-        generate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    assert str(exception_info.value) == (
-        'Required attribute "csv_delimiter" is missing from file '
-        'characteristics of a CSV file.'
-    )
-    assert exception_info.value.files == ['pid:urn:identifier']
 
 
 # pylint: disable=invalid-name

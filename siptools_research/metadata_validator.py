@@ -21,89 +21,11 @@ from siptools_research.utils import mimetypes
 from siptools_research.utils.dataset_consistency import DatasetConsistency
 from siptools_research.utils.directory_validation import DirectoryValidation
 
-# SCHEMATRONS is a dictionary that contains mapping:
-# xml_namespace => schematron_file
-SCHEMATRONS = {
-    'http://www.loc.gov/mix/v20': \
-        '/usr/share/dpres-xml-schemas/schematron/mets_mix.sch',
-    'http://www.loc.gov/audioMD/': \
-        '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch',
-    'http://www.loc.gov/videoMD/': \
-        '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch',
-    'http://www.arkivverket.no/standarder/addml': \
-        '/usr/share/dpres-xml-schemas/schematron/mets_addml.sch'
-}
 DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
 
-STREAM_TYPE_NAMESPACES = {
-    "audio": "http://www.loc.gov/audioMD/",
-    "video": "http://www.loc.gov/videoMD/",
-    "image": "http://www.loc.gov/mix/v20"
-}
 
-
-TECHMD_XML_VALIDATION_ERROR = "Technical metadata XML of file is invalid: %s"
 DATACITE_VALIDATION_ERROR = 'Datacite metadata is invalid: %s'
-INVALID_NS_ERROR = "Invalid XML namespace: %s"
-MISSING_XML_METADATA_ERROR = "Missing technical metadata XML for file: %s"
-
-
-def _get_namespace_count(mets_root):
-    """
-    Return a {namespace: count} dict detailing how many technical metadata
-    documents have been generated per each XML namespace
-
-    :param mets_root: METS document as an XML element. Can be None.
-    """
-    namespace_count = defaultdict(int)
-
-    if not mets_root:
-        return namespace_count
-
-    md_elems = mets_root.xpath(
-        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
-        namespaces=NAMESPACES
-    )
-
-    for md_elem in md_elems:
-        for namespace in md_elem.nsmap.values():
-            if namespace not in NAMESPACES.values():
-                raise TypeError(INVALID_NS_ERROR % namespace)
-
-            if namespace not in SCHEMATRONS:
-                continue
-
-            namespace_count[namespace] += 1
-
-    return namespace_count
-
-
-def _get_expected_namespace_count(file_metadata):
-    """
-    Return a {namespace: count} dict detailing how many technical metadata
-    documents should have been generated per XML namespace
-
-    :param file_metadata: File metadata dict
-    """
-    namespace_count = defaultdict(int)
-
-    try:
-        streams = \
-            file_metadata["file_characteristics_extension"]["streams"].values()
-    except KeyError:
-        return {}
-
-    for stream in streams:
-        if stream["stream_type"] in STREAM_TYPE_NAMESPACES:
-            namespace = STREAM_TYPE_NAMESPACES[stream["stream_type"]]
-            namespace_count[namespace] += 1
-
-        if stream["mimetype"] == "text/csv":
-            # Special case for CSV files, which have ADDML metadata
-            namespace_count["http://www.arkivverket.no/standarder/addml"] += 1
-
-    return namespace_count
 
 
 def validate_metadata(
@@ -144,9 +66,6 @@ def validate_metadata(
 
     # Validate file metadata for each file in dataset files
     _validate_file_metadata(dataset_metadata, metax_client, conf)
-
-    # Validate techMD XML for each file in dataset files
-    _validate_xml_file_metadata(dataset_id, metax_client)
 
     # Validate datacite provided by Metax
     _validate_datacite(dataset_id, metax_client, dummy_doi=dummy_doi)
@@ -336,87 +255,6 @@ def _validate_file_metadata(dataset, metax_client, conf):
                                                              file_path)
             )
         consistency.is_consistent_for_file(file_metadata)
-
-
-def _validate_xml_file_metadata(dataset_id, metax_client):
-    """Validate additional techMD XML.
-
-    XML file metadata found from /rest/v1/files/<file_id>/xml.
-
-    :param dataset_id: identifier of file described by XML
-    :param metax_client: metax_access.Metax instance
-    :returns: ``None``
-    """
-    for file_metadata in metax_client.get_dataset_files(dataset_id):
-        file_id = file_metadata['identifier']
-        try:
-            xmls = metax_client.get_xml(file_id)
-        except lxml.etree.XMLSyntaxError as exception:
-            raise InvalidFileMetadataError(
-                TECHMD_XML_VALIDATION_ERROR % (exception)
-            )
-
-        mets_root = None
-        try:
-            mets_root = xmls[METS_NS]
-            mets_root = mets_root.getroot()
-        except KeyError:
-            # METS document does not exist; no technical metadata was created.
-            # This is not necessarily a problem as some file formats don't have
-            # corresponding technical metadata.
-            pass
-
-        # Check how many metadata documents of each type have been generated
-        # for this file and how many should have been generated
-        namespace_count = _get_namespace_count(mets_root)
-        expected_namespace_count = _get_expected_namespace_count(file_metadata)
-
-        if expected_namespace_count != namespace_count:
-            # Technical metadata is missing
-            raise InvalidFileMetadataError(
-                MISSING_XML_METADATA_ERROR % file_id
-            )
-
-        # Determine which validators to run
-        schema_files = [
-            SCHEMATRONS[ns] for ns in namespace_count.keys()
-            if ns in SCHEMATRONS
-        ]
-
-        for schema_file in schema_files:
-            _validate_with_schematron(
-                schema_file=schema_file,
-                xml=xmls[METS_NS]
-            )
-
-
-def _validate_with_schematron(schema_file, xml):
-    """Validate XML with schematron.
-
-    Parses validation error from schematron output and raises
-    InvalidFileMetadataError with clear error message.
-
-    :param schema_file: Location of the Schematron file
-    :param xml: XML element
-    :param file_id: identifier of file described by XML
-    :returns: ``None``
-    """
-    schema = lxml.isoschematron.Schematron(lxml.etree.parse(schema_file))
-    if schema.validate(xml) is False:
-
-        # Parse error messages from schematron output
-        errors = []
-        for error in schema.error_log:
-            error_xml = lxml.etree.fromstring(error.message)
-            error_string = error_xml.xpath(
-                '//svrl:text',
-                namespaces={'svrl': 'http://purl.oclc.org/dsdl/svrl'}
-            )[0].text.strip()
-            errors.append(error_string)
-
-        raise InvalidFileMetadataError(
-            TECHMD_XML_VALIDATION_ERROR % (_format_error_list(errors))
-        )
 
 
 def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):

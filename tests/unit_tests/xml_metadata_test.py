@@ -9,25 +9,6 @@ except ImportError:
     from unittest import mock
 
 
-class DictMagicMock(mock.MagicMock):
-    """
-    Magic mock that fakes a dictionary with a single value
-    """
-    keys = lambda _: [0]
-    values = lambda _: [{}]
-
-
-@pytest.fixture(autouse=True)
-def mock_combine_metadata(monkeypatch):
-    """
-    Monkeypatch `_combine_metadata` to a no-op
-    """
-    monkeypatch.setattr(
-        "siptools_research.xml_metadata._combine_metadata",
-        lambda results: results
-    )
-
-
 def test_generate_xml_metadata_for_image_file():
     """Tests metadata XML generation for image file.
     :returns: ``None``
@@ -40,8 +21,7 @@ def test_generate_xml_metadata_for_image_file():
     }
 
     with mock.patch(
-        'siptools.scripts.create_mix.create_mix_metadata',
-        new_callable=DictMagicMock
+        'siptools.scripts.create_mix.create_mix_metadata'
     ) as mock_create_mix:
         file_path = '/foo/bar'
         file_metadata = {
@@ -63,8 +43,7 @@ def test_generate_xml_metadata_for_csv_file():
     :returns: ``None``
     """
     with mock.patch(
-        'siptools.scripts.create_addml.create_addml_metadata',
-        new_callable=DictMagicMock
+        'siptools.scripts.create_addml.create_addml_metadata'
     ) as mock_create_addml:
         file_path = '/foo/bar'
         file_md = {
@@ -121,8 +100,7 @@ def test_generate_xml_metadata_for_audio_file():
     }
 
     with mock.patch(
-        'siptools.scripts.create_audiomd.create_audiomd_metadata',
-        new_callable=DictMagicMock
+        'siptools.scripts.create_audiomd.create_audiomd_metadata'
     ) as mock_create_audiomd:
         file_path = '/foo/bar'
         file_metadata = {
@@ -158,12 +136,10 @@ def test_generate_xml_metadata_for_video_file():
     }
 
     mock_create_videomd = mock.patch(
-        'siptools.scripts.create_videomd.create_videomd_metadata',
-        new_callable=DictMagicMock
+        'siptools.scripts.create_videomd.create_videomd_metadata'
     )
     mock_create_audiomd = mock.patch(
-        'siptools.scripts.create_audiomd.create_audiomd_metadata',
-        new_callable=DictMagicMock
+        'siptools.scripts.create_audiomd.create_audiomd_metadata'
     )
 
     with mock_create_videomd as mock_create_videomd, \
