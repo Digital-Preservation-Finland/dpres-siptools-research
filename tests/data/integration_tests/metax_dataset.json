@@ -89,6 +89,32 @@
                 }
             ]
         },
+        "provenance": [
+            {
+                "preservation_event": {
+                    "identifier": "http://uri.suomi.fi/codelist/fairdata/preservation_event/code/upd",
+                    "pref_label": {
+                        "en": "creation"
+                    }
+                },
+                "temporal": {
+                    "end_date": "2014-12-31T08:19:58Z",
+                    "start_date": "2014-01-01T08:19:58Z"
+                },
+                "description": {
+                    "en": "Description of provenance"
+                },
+                "event_outcome": {
+                    "identifier": "Success",
+                    "pref_label": {
+                        "en": "outcome"
+                    }
+                },
+                "outcome_description": {
+                    "en": "outcome_description"
+                }
+            }
+        ],
         "modified": "2014-01-17T08:19:58Z",
         "description": {
             "en": "Dataset for integration testing."

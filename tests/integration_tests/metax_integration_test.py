@@ -14,6 +14,12 @@ import requests_mock
 from siptools_research.config import Configuration
 
 
+try:
+    from configparser import ConfigParser
+except ImportError:  # Python 2
+    from ConfigParser import ConfigParser
+
+
 def run_luigi_task(module, task, workspace, dataset_id):
     """Run any WorkflowTask with luigi as it would be run from commandline.
 
@@ -31,6 +37,24 @@ def run_luigi_task(module, task, workspace, dataset_id):
              '--config', tests.conftest.TEST_CONFIG_FILE,
              '--local-scheduler')
         )
+
+
+def get_metax_password():
+    """
+    Retrieve the Metax password, trying first to read from a local
+    configuration file and then using a password prompt
+    """
+    try:
+        config = ConfigParser()
+        config.read(os.path.expanduser("~/.metax.cfg"))
+        if config["metax"]["user"] == "tpas":
+            return config["metax"]["password"]
+    except KeyError:
+        # Config file does not exist
+        pass
+
+    # Fall back to a password prompt
+    return getpass.getpass(prompt='Metax password for user \'tpas\':')
 
 
 @pytest.mark.usefixtures(
@@ -54,7 +78,7 @@ def test_workflow(testpath):
         # pylint: disable=protected-access
         conf._parser.set(
             'siptools_research', 'metax_password',
-            getpass.getpass(prompt='Metax password for user \'tpas\':')
+            get_metax_password()
         )
 
         # Post files to Metax
@@ -127,6 +151,8 @@ def post_metax_dataset(metadatafile, file_ids, conf):
     :param conf: Configuration
     :returns: Id of added dataset
     """
+    auth = (conf.get("metax_user"), conf.get("metax_password"))
+
     # Edit metadata
     with open(metadatafile) as open_file:
         data = json.load(open_file)
@@ -141,11 +167,23 @@ def post_metax_dataset(metadatafile, file_ids, conf):
     url = "%s/rest/v1/datasets/" % conf.get("metax_url")
     response = requests.post(
         url, json=data,
-        auth=(conf.get("metax_user"), conf.get("metax_password"))
+        auth=auth
     )
     assert response.status_code == 201
 
-    return response.json()['identifier']
+    identifier = response.json()['identifier']
+
+    # Add preservation identifier
+    response = requests.post(
+        "{}/rpc/datasets/set_preservation_identifier".format(
+            conf.get("metax_url")
+        ),
+        params={"identifier": identifier},
+        auth=auth
+    )
+    assert response.status_code == 200
+
+    return identifier
 
 
 def delete_metax_file(identifier, conf):
