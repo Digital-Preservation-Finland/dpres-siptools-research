@@ -6,15 +6,20 @@ class RemoteAnyTarget(luigi.Target):
     """ A list of possible file paths is given instead of one path.
     The target exists if any of those paths exist at remote host."""
 
-    def __init__(self, path, host, username, keyfile):
+    def __init__(self, path, host, port, username, keyfile):
         self.path = path
         self.host = host
+        self.port = port
         self.username = username
         self.keyfile = keyfile
 
     def exists(self):
         """Returns ``True`` if any of paths exist."""
-        return any([self._exists(p) for p in self.path])
+        for path in self.path:
+            if self._exists(path):
+                return True
+
+        return False
 
     def existing_paths(self):
         """Returns the paths that exists."""
@@ -33,6 +38,7 @@ class RemoteAnyTarget(luigi.Target):
         with paramiko.SSHClient() as ssh:
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(self.host,
+                        port=int(self.port),
                         username=self.username,
                         key_filename=self.keyfile)
             with ssh.open_sftp() as sftp:

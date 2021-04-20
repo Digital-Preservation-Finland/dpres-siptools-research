@@ -1,6 +1,7 @@
 """External task that waits for SIP validation in DPS."""
 from datetime import datetime, timedelta
 
+import os
 import dateutil.parser
 
 from siptools_research.config import Configuration
@@ -59,18 +60,30 @@ class ValidateSIP(WorkflowExternalTask):
             sip_to_dp_date = datetime.utcnow().date()
 
         lim_date = datetime.today().date()
+        sftp_root = conf.get('dp_home')
 
-        path = []
+        paths = []
         while sip_to_dp_date <= lim_date:
-            path.append('accepted/%s/%s.tar' % (sip_to_dp_date,
-                                                self.document_id))
-            path.append('rejected/%s/%s.tar' % (sip_to_dp_date,
-                                                self.document_id))
+            paths.append(
+                os.path.join(
+                    sftp_root,
+                    'accepted/%s/%s.tar' % (sip_to_dp_date,
+                                            self.document_id)
+                )
+            )
+            paths.append(
+                os.path.join(
+                    sftp_root,
+                    'rejected/%s/%s.tar' % (sip_to_dp_date,
+                                            self.document_id)
+                )
+            )
             sip_to_dp_date += timedelta(days=1)
 
         return RemoteAnyTarget(
-            path,
-            conf.get('dp_host'),
-            conf.get('dp_user'),
-            conf.get('dp_ssh_key')
+            paths,
+            host=conf.get('dp_host'),
+            port=int(conf.get('dp_port')),
+            username=conf.get('dp_user'),
+            keyfile=conf.get('dp_ssh_key')
         )

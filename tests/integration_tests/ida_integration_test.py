@@ -9,8 +9,7 @@ from siptools_research.utils.download import download_file
 
 
 def test_ida_download(testpath):
-    """Add test dataset metadata and associated file metadata to Metax. Run
-    partial workflow by calling CreateMets task with luigi.
+    """Download a file from Ida
 
     :param testpath: temporary directory fixture
     """

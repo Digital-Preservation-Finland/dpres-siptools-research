@@ -54,20 +54,27 @@ class SendSIPToDP(WorkflowTask):
         # Init SFTP connection
         with paramiko.SSHClient() as ssh:
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(conf.get('dp_host'),
+            ssh.connect(hostname=conf.get('dp_host'),
+                        port=int(conf.get('dp_port')),
                         username=conf.get('dp_user'),
                         key_filename=conf.get('dp_ssh_key'))
+
+            sftp_root = conf.get('dp_home')
 
             with ssh.open_sftp() as sftp:
                 # Copy tar to remote host. Validation workflow starts
                 # when ".incomplete" suffix is removed from target file
                 # path.
                 tar_file = os.path.basename(self.workspace) + '.tar'
-                sftp.put(os.path.join(self.workspace, tar_file),
-                         os.path.join('transfer', tar_file + '.incomplete'),
+                sftp.put(os.path.join(sftp_root, self.workspace, tar_file),
+                         os.path.join(sftp_root, 'transfer', tar_file + '.incomplete'),
                          confirm=False)
-                sftp.rename(os.path.join('transfer', tar_file + '.incomplete'),
-                            os.path.join('transfer', tar_file))
+                sftp.rename(
+                    os.path.join(
+                        sftp_root, 'transfer', tar_file + '.incomplete'
+                    ),
+                    os.path.join(sftp_root, 'transfer', tar_file)
+                )
 
             with self.output().open('w') as log:
                 log.write('Dataset id=' + self.dataset_id)

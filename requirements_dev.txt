@@ -9,6 +9,7 @@ jsonschema2rst
 mongomock
 xmltodict
 six
+mock-ssh-server
 
 # Install requirements
 git+https://gitlab.ci.csc.fi/dpres/file-scraper.git@develop#egg=file-scraper

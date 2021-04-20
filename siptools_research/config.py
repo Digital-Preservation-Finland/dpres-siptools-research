@@ -18,6 +18,8 @@ DEFAULTS = {
     'ida_password': '',
     'ida_ssl_verification': 'True',
     'dp_host': '86.50.168.218',
+    'dp_home': '/',
+    'dp_port': '22',
     'dp_user': 'tpas',
     'dp_ssh_key': '~/.ssh/id_rsa_tpas_pouta',
     'sip_sign_key': '~/sip_sign_pas.pem',

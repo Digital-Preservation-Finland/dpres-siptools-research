@@ -1,15 +1,22 @@
 """Integration tests for digital preservation service and
 :mod:`siptools_research.workflow.validate_sip` module.
 """
+from __future__ import unicode_literals
 
+import copy
 import os
+import shutil
 import time
-import tests.conftest
+
 import paramiko
+import pytest
 from siptools_research.workflow.validate_sip import ValidateSIP
 
+import tests.conftest
 
-def test_validatesip_accepted(testpath):
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_validatesip_accepted(testpath, luigi_mock_ssh_config, sftp_dir):
     """Initializes validate_sip task and tests that it is not complete. Then
     creates new directory to "accepted" directory in digital preservation
     server and tests that task is complete.
@@ -21,19 +28,23 @@ def test_validatesip_accepted(testpath):
 
     # Init task
     task = ValidateSIP(workspace=workspace, dataset_id="1",
-                       config=tests.conftest.TEST_CONFIG_FILE)
+                       config=luigi_mock_ssh_config)
     assert not task.complete()
 
     # Create new directory to digital preservation server
     datedir = time.strftime("%Y-%m-%d")
     tar_name = os.path.basename(workspace) + '.tar'
-    _create_remote_dir("accepted/%s/%s" % (datedir, tar_name))
+    path = os.path.join(
+        str(sftp_dir), "accepted/{}/{}".format(datedir, tar_name)
+    )
+    _create_sftp_dir(path)
 
     # Check that task is completed after new directory is created
     assert task.complete()
 
 
-def test_validatesip_rejected(testpath):
+@pytest.mark.usefixtures('testmongoclient')
+def test_validatesip_rejected(testpath, luigi_mock_ssh_config, sftp_dir):
     """Initializes validate-sip task and tests that it is not complete. Then
     creates new directory to "rejected" directory in digital preservation
     server and tests that task is complete.
@@ -45,50 +56,30 @@ def test_validatesip_rejected(testpath):
 
     # Init task
     task = ValidateSIP(workspace=workspace, dataset_id="1",
-                       config=tests.conftest.TEST_CONFIG_FILE)
+                       config=luigi_mock_ssh_config)
     assert not task.complete()
 
     # Create new directory to digital preservation server
     datedir = time.strftime("%Y-%m-%d")
     tar_name = os.path.basename(workspace) + '.tar'
-    _create_remote_dir("rejected/%s/%s" % (datedir, tar_name))
+    path = os.path.join(
+        str(sftp_dir), "rejected/{}/{}".format(datedir, tar_name)
+    )
+    _create_sftp_dir(path)
 
     # Check that task is completed after new directory is created
     assert task.complete()
 
 
-def _create_remote_dir(path):
+def _create_sftp_dir(path):
     """Creates new directory to digital preservation server and sets
     permissions of the new directory and its parent directory.
 
     :param path: Path of new directory
     :returns: ``None``
     """
-    with paramiko.SSHClient() as ssh:
-        # Initialize SSH connection to digital preservation server
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(
-            '86.50.168.218',
-            username='cloud-user',
-            key_filename=os.path.expanduser("~") + '/.ssh/pouta-key.pem'
-        )
-        parent_path = os.path.dirname(path.strip('/'))
-        _remote_cmd(ssh, 'sudo mkdir /home/tpas/' + parent_path)
-        _remote_cmd(ssh, 'sudo chown tpas:access-rest-api /home/'
-                    'tpas/' + parent_path, raise_error=True)
-        _remote_cmd(ssh, 'sudo chmod 0775 /home/tpas/' + parent_path,
-                    raise_error=True)
-        _remote_cmd(ssh, 'sudo mkdir /home/tpas/' + path, raise_error=True)
-
-
-def _remote_cmd(ssh, command, raise_error=False):
-    """Runs a command on remote host.
-
-    :param ssh: SSHClient used for running the command
-    :param command: Command to be run on remote host
-    :param raise_error: When true raises an Exception if command fails
-    :returns: ``None``
-    """
-    _, stdout, _ = ssh.exec_command(command)
-    if raise_error and stdout.channel.recv_exit_status() != 0:
-        raise Exception('Remote command: ' + command + ' failed')
+    try:
+        os.makedirs(path)
+    except OSError:
+        # Directory already exists
+        pass

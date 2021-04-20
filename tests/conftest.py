@@ -1,25 +1,34 @@
 """Configure py.test default values and functionality."""
+from __future__ import unicode_literals
 
-import os
-import sys
 import logging
+import os
 import shutil
+import socket
+import subprocess
+import sys
+import time
+from contextlib import closing
 
-import urllib3
+import luigi.configuration
 import mongomock
 import pymongo
-import luigi.configuration
 import pytest
-
-from metax_access import Metax
-import upload_rest_api
-
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
+import upload_rest_api
+import urllib3
+from metax_access import Metax
+
+import mockssh
+import tests.metax_data.contracts
 import tests.metax_data.datasets
 import tests.metax_data.files
-import tests.metax_data.contracts
 
+try:
+    from configparser import ConfigParser
+except ImportError:  # Python 2
+    from ConfigParser import ConfigParser
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -33,6 +42,10 @@ UNIT_TEST_CONFIG_FILE = \
 UNIT_TEST_SSL_CONFIG_FILE = \
     "tests/data/configuration_files/siptools_research_unit_test_ssl.conf"
 
+SSH_KEY_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "data", "ssh", "test_ssh_key"
+)
 
 # Prefer modules from source directory rather than from site-python
 PROJECT_ROOT_PATH = os.path.abspath(
@@ -111,7 +124,7 @@ def testpath(tmpdir, monkeypatch):
     def _mock_get(self, parameter):
         """Mock get method."""
         if parameter == "packaging_root":
-            return str(tmpdir)
+            return str(tmpdir.join("packaging"))
         # pylint: disable=protected-access
         return self._parser.get(self.config_section, parameter)
 
@@ -119,12 +132,14 @@ def testpath(tmpdir, monkeypatch):
         siptools_research.config.Configuration, "get", _mock_get
     )
 
-    # Create required directory structure in workspace root
-    tmpdir.mkdir("tmp")
-    tmpdir.mkdir("file_cache")
-    tmpdir.mkdir("workspaces")
+    pkg_root = tmpdir.mkdir("packaging")
 
-    return str(tmpdir)
+    # Create required directory structure in workspace root
+    pkg_root.mkdir("tmp")
+    pkg_root.mkdir("file_cache")
+    pkg_root.mkdir("workspaces")
+
+    return str(pkg_root)
 
 
 @pytest.fixture(scope="function")
@@ -155,3 +170,75 @@ def mock_filetype_conf(monkeypatch):
     monkeypatch.setattr(siptools_research.utils.mimetypes.is_supported,
                         "__defaults__",
                         ('include/etc/dpres_mimetypes.json',))
+
+
+@pytest.yield_fixture(scope="function")
+def sftp_dir(tmpdir):
+    """
+    Local directory that corresponds to the DPS' SFTP server
+    """
+    sftp_dir_ = tmpdir.mkdir("sftp_server")
+    yield sftp_dir_
+
+
+@pytest.yield_fixture(scope="function")
+@pytest.mark.usefixtures("sftp_dir")
+def sftp_server():
+    """
+    Return a directory in the filesystem that is served by a test SFTP server
+    """
+    users = {
+        "tpas": SSH_KEY_PATH
+    }
+
+    with mockssh.Server(users) as server:
+        yield server
+
+
+@pytest.fixture(scope="function")
+def config_creator(tmpdir):
+    """
+    Factory functioon to create a modified config file and return a path to
+    the configuration file
+    """
+    config_dir = tmpdir.mkdir("config")
+
+    def wrapper(config_path, new_config):
+        config = ConfigParser()
+        config.read(config_path)
+
+        for section in new_config.keys():
+            if section not in config:
+                config[section] = {}
+
+            for key, value in new_config[section].items():
+                config[section][key] = str(value)
+
+        config_path = str(config_dir.join("config.ini"))
+        with open(config_path, "w") as file_:
+            config.write(file_)
+
+        return config_path
+
+    return wrapper
+
+
+@pytest.fixture(scope="function")
+def luigi_mock_ssh_config(config_creator, sftp_dir, sftp_server):
+    """
+    Luigi configuration file that connects to a mocked DPS SFTP server
+    instead of a real instance
+    """
+    config_path = config_creator(
+        config_path=TEST_CONFIG_FILE,
+        new_config={
+            "siptools_research": {
+                "dp_host": "127.0.0.1",
+                "dp_port": sftp_server.port,
+                "dp_home": str(sftp_dir),
+                "dp_ssh_key": SSH_KEY_PATH
+            }
+        }
+    )
+
+    return config_path

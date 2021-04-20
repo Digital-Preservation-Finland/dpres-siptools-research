@@ -10,6 +10,13 @@ from siptools_research.exceptions import InvalidSIPError
 from siptools_research.config import Configuration
 
 
+def remove_prefix(string_, prefix):
+    if string_.startswith(prefix):
+        return string_[len(prefix):]
+
+    return string_
+
+
 class ReportPreservationStatus(WorkflowTask):
     """Task that reports preservation status after SIP ingestion.
 
@@ -65,20 +72,30 @@ class ReportPreservationStatus(WorkflowTask):
         """
         # List of all matching paths ValidateSIP found
         ingest_report_paths = self.input()[0].existing_paths()
+        config = Configuration(self.config)
 
         # Only one ingest report should be found
-        assert len(ingest_report_paths) == 1
+        if len(ingest_report_paths) != 1:
+            raise ValueError(
+                "Expected 1 ingest report, found {}".format(
+                    len(ingest_report_paths)
+                )
+            )
 
         # 'accepted' or 'rejected'?
-        directory = ingest_report_paths[0].split('/')[0]
+        directory = ingest_report_paths[0]
+        directory = remove_prefix(directory, config.get('dp_home'))
+        # Remove the leading slash if there's still one
+        directory = remove_prefix(directory, '/')
+        directory = directory.split('/')[0]
+
         if directory == 'accepted':
             # Init metax
-            config_object = Configuration(self.config)
             metax_client = Metax(
-                config_object.get('metax_url'),
-                config_object.get('metax_user'),
-                config_object.get('metax_password'),
-                verify=config_object.getboolean('metax_ssl_verification')
+                config.get('metax_url'),
+                config.get('metax_user'),
+                config.get('metax_password'),
+                verify=config.getboolean('metax_ssl_verification')
             )
             # Set Metax preservation state of this dataset to 6 ("in
             # longterm preservation")

@@ -4,15 +4,14 @@
 import os
 import time
 
-import mock
 import pytest
 from metax_access import Metax
-
-import paramiko
-import tests.conftest
 from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
+
 from tests.metax_data import datasets
+
+METAX_PATH = "tests/requests_mock_data/metax"
 
 
 @pytest.fixture(autouse=True)
@@ -26,8 +25,8 @@ def mock_metax_access(monkeypatch):
     )
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
-def test_reportpreservationstatus(testpath):
+@pytest.mark.usefixtures('testmongoclient')
+def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir):
     """Creates new directory to "accepted" directory in digital preservation
     server, runs ReportPreservationStatus task, and tests that task is complete
     after it has been run. Fake Metax server is used, so it can not be tested
@@ -39,42 +38,31 @@ def test_reportpreservationstatus(testpath):
 
     workspace = testpath
 
-    # Set permissions of ssh-key (required by paramiko)
-    os.chmod('tests/data/pas_ssh_key', 0o600)
-    # Create new directory to digital preservation server
-    with paramiko.SSHClient() as ssh:
-        # Initialize SSH connection to digital preservation server
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(
-            '86.50.168.218',
-            username='cloud-user',
-            key_filename=os.path.expanduser("~") + '/.ssh/pouta-key.pem'
-        )
-        # Create directory with name of the workspace to digital preservation
-        # server over SSH, so that the ReportPreservationStatus thinks that
-        # validation has completed.
-        datedir = time.strftime("%Y-%m-%d")
-        tar_name = os.path.basename(workspace) + '.tar'
-        _remote_cmd(ssh, "sudo mkdir -p /home/tpas/accepted/%s/%s" %
-                    (datedir, tar_name))
-        _remote_cmd(ssh, "sudo chown tpas:access-rest-api "
-                    "/home/tpas/accepted/%s/%s" % (datedir, tar_name),
-                    raise_error=True)
+    # Create directory with name of the workspace to digital preservation
+    # server, so that the ReportPreservationStatus thinks that
+    # validation has completed.
+    datedir = time.strftime("%Y-%m-%d")
+    tar_name = os.path.basename(workspace) + '.tar'
+    path = os.path.join(
+        str(sftp_dir), "accepted", datedir, tar_name
+    )
+    os.makedirs(path)
 
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
         workspace=workspace,
         dataset_id="report_preservation_status_test_dataset_ok",
-        config=tests.conftest.TEST_CONFIG_FILE
+        config=luigi_mock_ssh_config
     )
     assert not task.complete()
     task.run()
     assert task.complete()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient')
 # pylint: disable=invalid-name
-def test_reportpreservationstatus_rejected(testpath):
+def test_reportpreservationstatus_rejected(
+        testpath, luigi_mock_ssh_config, sftp_dir):
     """Creates new directory with a report file to "rejected" directory in
     digital preservation server. Runs ReportPreservationStatus task, which
     should raise an exception and write ingest report HTML to workspace. Fake
@@ -87,38 +75,26 @@ def test_reportpreservationstatus_rejected(testpath):
 
     workspace = testpath
 
-    # Set permissions of ssh-key (required by paramiko)
-    os.chmod('tests/data/pas_ssh_key', 0o600)
+    # Create directory with name of the workspace to digital preservation
+    # server over SSH, so that the ReportPreservationStatus thinks that
+    # validation has been rejected.
+    datedir = time.strftime("%Y-%m-%d")
+    tar_name = os.path.basename(workspace) + '.tar'
+    dir_path = os.path.join(
+        str(sftp_dir), "rejected", datedir, tar_name
+    )
+    report_path = os.path.join(
+        dir_path, "{}.html".format(os.path.basename(workspace))
+    )
+    os.makedirs(dir_path)
+    with open(report_path, "wb") as file_:
+        file_.write(b"Failed.")
 
-    # Create new directory to digital preservation server
-    with paramiko.SSHClient() as ssh:
-        # Initialize SSH connection to digital preservation server
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(
-            '86.50.168.218',
-            username='cloud-user',
-            key_filename=os.path.expanduser("~") + '/.ssh/pouta-key.pem'
-        )
-
-        # Create directory with name of the workspace to digital preservation
-        # server over SSH, so that the ReportPreservationStatus thinks that
-        # validation has been rejected.
-        datedir = time.strftime("%Y-%m-%d")
-        tar_name = os.path.basename(workspace) + '.tar'
-        dir_path = "rejected/%s/%s" % (datedir, tar_name)
-        _remote_cmd(ssh, "sudo mkdir -p /home/tpas/" + dir_path)
-        _remote_cmd(ssh, "sudo chown tpas:access-rest-api /home/tpas/" +
-                    dir_path)
-        _remote_cmd(ssh, "sudo touch /home/tpas/" + dir_path + "/" +
-                    os.path.basename(workspace) + ".html")
-        _remote_cmd(ssh, "sudo chown tpas:access-rest-api /home/tpas/" +
-                    dir_path + "/" + os.path.basename(workspace) + ".html",
-                    raise_error=True)
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
         workspace=workspace,
         dataset_id="report_preservation_status_test_dataset_rejected",
-        config=tests.conftest.TEST_CONFIG_FILE
+        config=luigi_mock_ssh_config
     )
 
     # Running task should raise exception
@@ -130,13 +106,15 @@ def test_reportpreservationstatus_rejected(testpath):
     assert not task.complete()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'testmetax')
+@pytest.mark.usefixtures('testmongoclient')
 # pylint: disable=invalid-name
-def test_reportpreservationstatus_rejected_int_error(testpath):
-    """Creates new directory to "rejected" directory with two report files
-    in digital preservation server, runs ReportPreservationStatus task,
-    and tests that the report file is NOT sent. Metax server is used, so it can
-    not be tested if preservation status really is updated in Metax.
+def test_reportpreservationstatus_rejected_int_error(
+        testpath, luigi_mock_ssh_config, sftp_dir):
+    """Creates new directory to "rejected" and "accepted" directory with two
+    report files each in digital preservation server, runs
+    ReportPreservationStatus task, and tests that the report file is NOT sent.
+    Metax server is used, so it can not be tested if preservation status
+    really is updated in Metax.
 
     :param testpath: Temporary directory fixture
     :returns: ``None``
@@ -144,66 +122,37 @@ def test_reportpreservationstatus_rejected_int_error(testpath):
 
     workspace = testpath
 
-    # Set permissions of ssh-key (required by paramiko)
-    os.chmod('tests/data/pas_ssh_key', 0o600)
+    # Create directory with name of the workspace to digital preservation
+    # server over SSH, so that the ReportPreservationStatus thinks that
+    # validation has been rejected.
+    datedir = time.strftime("%Y-%m-%d")
+    tar_name = os.path.basename(workspace) + '.tar'
 
-    # Create new directory to digital preservation server
-    with paramiko.SSHClient() as ssh:
-        # Initialize SSH connection to digital preservation server
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(
-            '86.50.168.218',
-            username='cloud-user',
-            key_filename=os.path.expanduser("~") + '/.ssh/pouta-key.pem'
-        )
+    accepted_report_path = os.path.join(
+        str(sftp_dir), "accepted", datedir, tar_name,
+        "{}.html".format(os.path.basename(workspace))
+    )
+    rejected_report_path = os.path.join(
+        str(sftp_dir), "rejected", datedir, tar_name,
+        "{}.html".format(os.path.basename(workspace))
+    )
+    os.makedirs(os.path.dirname(accepted_report_path))
+    os.makedirs(os.path.dirname(rejected_report_path))
 
-        # Create directory with name of the workspace to digital preservation
-        # server over SSH, so that the ReportPreservationStatus thinks that
-        # validation has been rejected.
-        datedir = time.strftime("%Y-%m-%d")
-        tar_name = os.path.basename(workspace) + '.tar'
-        dir_path = "rejected/%s/%s" % (datedir, tar_name)
-        _remote_cmd(ssh, 'sudo mkdir -p /home/tpas/' + dir_path)
-        _remote_cmd(ssh, 'sudo chown tpas:access-rest-api /home/'
-                    'tpas/' + dir_path, raise_error=True)
-        _remote_cmd(ssh, "sudo touch /home/tpas/" + dir_path + "/" +
-                    os.path.basename(workspace) + ".html")
-        _remote_cmd(ssh, "sudo chown tpas:access-rest-api /home/tpas/" +
-                    dir_path + "/" + os.path.basename(workspace) + ".html",
-                    raise_error=True)
-        _remote_cmd(ssh, "sudo touch /home/tpas/" + dir_path + "/" +
-                    os.path.basename(workspace) + "_extra.html")
-        _remote_cmd(ssh, "sudo chown tpas:access-rest-api /home/tpas/" +
-                    dir_path + "/" + os.path.basename(workspace) +
-                    "_extra.html", raise_error=True)
+    with open(accepted_report_path, "wb") as file_:
+        file_.write("Accepted.")
+    with open(rejected_report_path, "wb") as file_:
+        file_.write("Rejected.")
 
     # Run task like it would be run from command line
-    exceptionThrown = False
     task = report_preservation_status.ReportPreservationStatus(
         workspace=workspace,
         dataset_id="report_preservation_status_test_dataset_rejected",
-        config=tests.conftest.TEST_CONFIG_FILE
+        config=luigi_mock_ssh_config
     )
     assert not task.complete()
-    try:
+
+    with pytest.raises(ValueError) as exc:
         task.run()
-    except (ValueError, InvalidDatasetError):
-        exception_thrown = True
 
-    assert exception_thrown
-    assert task.complete() is False
-
-
-def _remote_cmd(ssh, command, raise_error=False):
-    """Runs a command on remote host.
-
-    :param ssh: SSHClient used for running the command
-    :param command: Command to be run on remote host
-    :param raise_error: When true raises an Exception if command fails
-    :returns: ``None``
-    """
-    _, stdout, _ = ssh.exec_command(command)
-    if raise_error and stdout.channel.recv_exit_status() != 0:
-        raise Exception('Remote command: ' + command + ' failed')
-
-# TODO: Check which requests were sent to httpretty
+    assert str(exc.value) == "Expected 1 ingest report, found 2"
