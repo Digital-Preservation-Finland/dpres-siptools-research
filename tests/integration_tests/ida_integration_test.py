@@ -13,6 +13,12 @@ def test_ida_download(testpath):
 
     :param testpath: temporary directory fixture
     """
+    # FIXME: The Ida test server is behind a
+    # firewall with a whitelist of IP addresses and this test can only be run
+    # from passipservice-dev, making it almost useless.
+    # Fail the test here to ensure the connection doesn't hang.
+    assert None, "This test is currently broken"
+
     # Read configuration file
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     # Override Ida password in configuration file with real password from

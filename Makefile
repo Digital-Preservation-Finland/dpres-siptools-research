@@ -62,6 +62,7 @@ test:
 	    tests/unit_tests \
 		tests/integration_tests/dependency_tree_test.py \
 		tests/integration_tests/report_preservation_status_test.py \
+		tests/integration_tests/send_sip_test.py \
 		tests/integration_tests/validate_sip_test.py \
 		tests/integration_tests/workflow_test.py -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml
 

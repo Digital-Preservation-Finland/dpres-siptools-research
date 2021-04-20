@@ -140,9 +140,9 @@ def test_reportpreservationstatus_rejected_int_error(
     os.makedirs(os.path.dirname(rejected_report_path))
 
     with open(accepted_report_path, "wb") as file_:
-        file_.write("Accepted.")
+        file_.write(b"Accepted.")
     with open(rejected_report_path, "wb") as file_:
-        file_.write("Rejected.")
+        file_.write(b"Rejected.")
 
     # Run task like it would be run from command line
     task = report_preservation_status.ReportPreservationStatus(
