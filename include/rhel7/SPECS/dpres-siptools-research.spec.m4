@@ -50,6 +50,8 @@ BuildRequires:  python-jsonschema2rst
 BuildRequires:  python2-pytest-catchlog
 BuildRequires:  python-xmltodict
 BuildRequires:  python-mongomock
+BuildRequires:  python2-pytest-catchlog
+BuildRequires:  python2-requests-mock
 
 %description
 Digital Preservation Packaging Service for Research datasets

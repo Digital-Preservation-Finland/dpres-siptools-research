@@ -46,6 +46,8 @@ BuildRequires:  python3-sphinx
 BuildRequires:  python3-jsonschema2rst
 BuildRequires:  python3-xmltodict
 BuildRequires:  python3-mongomock
+BuildRequires:  python3-pytest-catchlog
+BuildRequires:  python3-requests-mock
 
 %description
 Digital Preservation Packaging Service for Research datasets
