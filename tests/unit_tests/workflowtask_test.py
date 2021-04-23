@@ -277,7 +277,7 @@ def test_logging(testpath, requests_mock, caplog):
     assert errors[1].exc_text.startswith('Traceback ')
     exception = errors[1].exc_info[1]
     assert isinstance(exception, requests.HTTPError)
-    assert str(exception) == '403 Client Error: Access denied'
+    assert str(exception).startswith('403 Client Error: Access denied')
 
 
 # TODO: Test for WorkflowWrapperTask
