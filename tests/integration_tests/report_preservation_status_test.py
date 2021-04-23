@@ -100,7 +100,7 @@ def test_reportpreservationstatus_rejected(
     # Running task should raise exception
     with pytest.raises(InvalidDatasetError) as exc_info:
         task.run()
-    assert exc_info.value[0] == "SIP was rejected"
+    assert str(exc_info.value) == "SIP was rejected"
 
     # The task should not be completed
     assert not task.complete()
