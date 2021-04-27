@@ -13,12 +13,6 @@ def test_ida_download(testpath):
 
     :param testpath: temporary directory fixture
     """
-    # FIXME: The Ida test server is behind a
-    # firewall with a whitelist of IP addresses and this test can only be run
-    # from passipservice-dev, making it almost useless.
-    # Fail the test here to ensure the connection doesn't hang.
-    assert None, "This test is currently broken"
-
     # Read configuration file
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     # Override Ida password in configuration file with real password from
@@ -33,9 +27,9 @@ def test_ida_download(testpath):
     download_path = os.path.join(testpath, 'ida_file')
     download_file(
         {
-            'file_path': '/file',
-            'identifier': 'pid:urn:111',
-            'file_storage': {'identifier': 'urn:nbn:fi:att:file-storage-ida'}
+            'file_path': '/test_file.txt',
+            'identifier': '6086bf3bcdf25723400588f379535',
+            'file_storage': {'identifier': 'pid:urn:storageidentifier1'}
         },
         download_path,
         tests.conftest.TEST_CONFIG_FILE
@@ -43,4 +37,4 @@ def test_ida_download(testpath):
 
     # Check contents of downloaded file
     with open(download_path) as open_file:
-        assert open_file.read() == 'foo\n'
+        assert open_file.read() == 'foo'
