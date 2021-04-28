@@ -49,6 +49,7 @@ BuildRequires:  python3-xmltodict
 BuildRequires:  python3-mongomock
 BuildRequires:  python3-pytest-catchlog
 BuildRequires:  python3-requests-mock
+BuildRequires:  python3-mock-ssh-server
 
 %description
 Digital Preservation Packaging Service for Research datasets
