@@ -8,6 +8,35 @@ from siptools_research.config import Configuration
 from siptools_research.utils.download import download_file
 
 
+try:
+    from configparser import ConfigParser
+except ImportError:  # Python 2
+    from ConfigParser import ConfigParser
+
+
+def get_ida_password():
+    """
+    Retrieve the Ida password, trying first to read from an existing
+    configuration file and then using a password prompt
+    """
+    try:
+        config = ConfigParser()
+        config.read("/etc/siptools_research.conf")
+        correct_ida_config = (
+            config["siptools_research"]["ida_url"]
+            == "https://ida.fd-test.csc.fi:4443"
+            and config["siptools_research"]["ida_user"] == "testuser_1"
+        )
+
+        if correct_ida_config:
+            return config["siptools_research"]["ida_password"]
+    except KeyError:
+        # Config file does not exist
+        pass
+
+    return getpass.getpass(prompt="Ida password for user 'testuser_1':")
+
+
 def test_ida_download(testpath):
     """Download a file from Ida
 
@@ -20,7 +49,7 @@ def test_ida_download(testpath):
     # pylint: disable=protected-access
     conf._parser.set(
         'siptools_research', 'ida_password',
-        getpass.getpass(prompt='Ida password for user \'testuser_1\':')
+        get_ida_password()
     )
 
     # Download a file that is should be available
