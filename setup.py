@@ -25,6 +25,7 @@ def main():
             "iso-639",
             "python-dateutil",
             "configparser; python_version=='2.7'",
+            "six",
             "file-scraper@git+https://gitlab.ci.csc.fi/dpres/file-scraper.git",
             "siptools@git+https://gitlab.ci.csc.fi/dpres/dpres-siptools.git"
             "@develop",

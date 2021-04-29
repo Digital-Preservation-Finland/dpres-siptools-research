@@ -4,6 +4,8 @@ import os
 import uuid
 import subprocess
 import luigi
+from six import PY3
+
 from metax_access import Metax, DS_STATE_IN_PACKAGING_SERVICE
 
 from siptools_research.workflowtask import WorkflowWrapperTask
@@ -85,8 +87,9 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
                                  system_description='In packaging service')
 
     # Start luigi workflow. Run in background.
+    command = "luigi-3" if PY3 else "luigi"
     subprocess.Popen([
-        "luigi",
+        command,
         "--module", "siptools_research.__main__", "InitWorkflow",
         "--dataset-id", dataset_id,
         "--workspace", workspace,

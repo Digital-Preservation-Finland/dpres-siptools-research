@@ -38,6 +38,7 @@ Requires:       python3-dateutil
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python3-mock
+Requires:       python3-six
 Requires:       file-scraper-full
 Requires:       upload-rest-api
 BuildRequires:  python3-setuptools

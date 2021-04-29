@@ -35,6 +35,7 @@ Requires:       python-requests
 Requires:       python-scandir
 Requires:       python-iso-639 ImageMagick
 Requires:       python-dateutil
+Requires:       python-six
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python-mock

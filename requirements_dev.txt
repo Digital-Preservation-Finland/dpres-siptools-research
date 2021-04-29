@@ -2,12 +2,13 @@
 pytest
 coverage
 pytest-cov
-requests_mock
+requests_mock<=1.7.0
 mock
 Sphinx
 jsonschema2rst
 mongomock
 xmltodict
+six
 
 # Install requirements
 git+https://gitlab.ci.csc.fi/dpres/file-scraper.git@develop#egg=file-scraper
