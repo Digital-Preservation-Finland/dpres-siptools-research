@@ -2,7 +2,7 @@
 pytest
 coverage
 pytest-cov
-requests_mock<=1.7.0
+requests_mock
 mock
 Sphinx
 jsonschema2rst
