@@ -93,5 +93,9 @@ class GetFiles(WorkflowTask):
                 os.makedirs(os.path.dirname(target_path), exist_ok=True)
 
                 download_file(
-                    dataset_file, target_path, self.config, upload_database
+                    file_metadata=dataset_file,
+                    dataset_id=self.dataset_id,
+                    linkpath=target_path,
+                    config_file=self.config,
+                    upload_database=upload_database
                 )

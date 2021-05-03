@@ -105,7 +105,13 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
         # Download file to tmp directory
         tmpfile = os.path.join(tmpdir, file_id)
         try:
-            download_file(file_metadata, tmpfile, config_file, upload_database)
+            download_file(
+                file_metadata=file_metadata,
+                dataset_id=dataset_id,
+                linkpath=tmpfile,
+                config_file=config_file,
+                upload_database=upload_database
+            )
         except FileNotAvailableError:
             raise MissingFileError("File is not available", [file_id])
 

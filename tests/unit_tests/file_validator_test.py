@@ -6,6 +6,8 @@ from siptools_research.exceptions import InvalidFileError
 from siptools_research.file_validator import validate_files
 from siptools_research.exceptions import MissingFileError
 
+from tests.utils import add_mock_ida_download
+
 import tests.conftest
 
 
@@ -15,13 +17,17 @@ def test_validate_files(requests_mock):
 
     :param requests_mock: Mocker object
     """
-    requests_mock.get(
-        'https://ida.test/files/pid:urn:textfile1/download',
-        content=b'foo'
+    add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="validate_files_valid",
+        filename="/path/to/file1",
+        content=b"foo"
     )
-    requests_mock.get(
-        'https://ida.test/files/pid:urn:textfile2/download',
-        content=b'bar'
+    add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="validate_files_valid",
+        filename="/path/to/file2",
+        content=b"bar"
     )
     assert validate_files(
         "validate_files_valid",
@@ -37,11 +43,11 @@ def test_validate_invalid_files(requests_mock):
 
     :param requests_mock: Mocker object
     """
-    requests_mock.get(
-        'https://ida.test/files/pid:urn:invalid_mimetype_1/download'
-    )
-    requests_mock.get(
-        'https://ida.test/files/pid:urn:invalid_mimetype_2/download'
+    add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="validate_files_invalid",
+        filename="path/to/file",
+        content=b""
     )
 
     with pytest.raises(InvalidFileError) as exception_info:
@@ -61,13 +67,9 @@ def test_validate_files_not_found(requests_mock):
 
     :param requests_mock: Mocker object
     """
-    requests_mock.get(
-        'https://ida.test/files/pid:urn:not_found_1/download',
-        status_code=404
-    )
-    requests_mock.get(
-        'https://ida.test/files/pid:urn:not_found_2/download',
-        status_code=404
+    requests_mock.post(
+        'https://ida.dl-authorize.test/authorize',
+        status_code=400
     )
 
     with pytest.raises(MissingFileError) as exception_info:

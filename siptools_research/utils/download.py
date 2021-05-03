@@ -4,7 +4,6 @@ import time
 
 import requests
 from requests.exceptions import HTTPError
-
 from siptools_research.config import Configuration
 
 
@@ -69,10 +68,11 @@ def _get_local_file(file_metadata, upload_database, conf):
     return cache_path
 
 
-def _get_ida_file(file_metadata, conf):
+def _get_ida_file(file_metadata, dataset_id, conf):
     """Get file from IDA. If file is already cached, just return path to it.
 
     :param file_metadata: Metax file metadata
+    :param dataset_id: Identifier for the dataset containing the file
     :param conf: Configuration object
     :returns: Path to the file
     """
@@ -84,24 +84,78 @@ def _get_ida_file(file_metadata, conf):
         conf.get("packaging_root"), "tmp", "IDA-%s" % identifier
     )
 
+    user = conf.get('ida_user')
+    password = conf.get('ida_password')
+    verify = conf.getboolean('ida_ssl_verification')
+
+    auth_base_url = conf.get('ida_dl_authorize_url')
+    download_base_url = conf.get('ida_dl_url')
+
     # Check that no other process is fetching the file from IDA
     if os.path.exists(tmp_path):
         raise FileLockError("Lock file '%s' exists" % tmp_path)
 
     # If cached file doesn't exists, GET it from IDA
     if not os.path.exists(filepath):
-        # Send the GET request
         try:
-            response = _get_response(identifier, conf, stream=True)
+            # Retrieve a single-use download token
+            response = requests.post(
+                "{}/authorize".format(auth_base_url),
+                auth=(user, password),
+                verify=verify,
+                json={
+                    "dataset": dataset_id,
+                    "file": file_metadata["file_path"]
+                }
+            )
+            response.raise_for_status()
+
+            token = response.json()["token"]
         except HTTPError as error:
-            if error.response.status_code == 404:
+            if error.response.status_code == 400:
                 raise FileNotAvailableError(
                     "File '%s' not found in Ida" % file_metadata["file_path"]
                 )
             if error.response.status_code == 502:
                 raise FileAccessError("Ida service temporarily unavailable. "
                                       "Please, try again later.")
+
+            dataset_not_found = (
+                # Contrary to the API documentation, the `/authorize` responds
+                # with a 500 Internal Server Error if we perform a request
+                # with an existing dataset and a nonexistent file.
+                # According to Swagger docs, 400 should be returned instead.
+                # Handle both scenarios here.
+                # TODO: Remove the 500 check once the ticket CSCFAIRDATA-113
+                # has been fixed.
+                error.response.status_code == 400
+                or
+                (
+                    error.response.status_code == 500
+                    and error.response.json()["error"].startswith(
+                        "No matching project was found for dataset "
+                    )
+                )
+            )
+            if dataset_not_found:
+                raise FileNotAvailableError(
+                    "File '%s' not found in Ida" % file_metadata["file_path"]
+                )
+
             raise
+
+        response = requests.get(
+            "{}/download".format(download_base_url),
+            params={
+                "dataset": dataset_id,
+                "file": file_metadata["file_path"]
+            },
+            headers={
+                "Authorization": "Bearer {}".format(token)
+            },
+            verify=verify,
+            stream=True
+        )
 
         # Write the stream to tmp_path, create a hard link to file_cache
         # and cleanup the tmp_path
@@ -118,6 +172,7 @@ def _get_ida_file(file_metadata, conf):
 
 def download_file(
         file_metadata,
+        dataset_id,
         linkpath="",
         config_file="/etc/siptools_research.conf",
         upload_database=None
@@ -126,6 +181,7 @@ def download_file(
     link to linkpath.
 
     :param file_metadata: File metadata from Metax
+    :param dataset_id: Identifier for the dataset containing the file
     :param linkpath: Path where the hard link is created
     :param config_file: Configuration file
     :param upload_database: upload_rest_api.database.Database object
@@ -138,9 +194,17 @@ def download_file(
     if file_storage == pas_storage_id:
         if upload_database is None:
             raise ValueError("upload_database parameter required")
-        filepath = _get_local_file(file_metadata, upload_database, conf)
+        filepath = _get_local_file(
+            file_metadata=file_metadata,
+            upload_database=upload_database,
+            conf=conf
+        )
     else:
-        filepath = _get_ida_file(file_metadata, conf)
+        filepath = _get_ida_file(
+            file_metadata=file_metadata,
+            dataset_id=dataset_id,
+            conf=conf
+        )
 
     if linkpath:
         os.link(filepath, linkpath)

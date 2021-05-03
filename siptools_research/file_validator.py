@@ -26,7 +26,8 @@ def _download_files(metax_client, dataset_id, config_file, missing_files):
     for dataset_file in dataset_files:
         try:
             download_file(
-                dataset_file,
+                file_metadata=dataset_file,
+                dataset_id=dataset_id,
                 config_file=config_file,
                 upload_database=upload_database
             )

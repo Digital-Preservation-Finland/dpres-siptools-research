@@ -1,11 +1,13 @@
 """Test the :mod:`siptools_research.workflow.get_files` module."""
-import pytest
-import pymongo
+import os
 
+import pymongo
+import pytest
+import tests.conftest
+from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.utils.download import FileNotAvailableError
 from siptools_research.workflow import get_files
-from siptools_research.exceptions import InvalidFileMetadataError
-import tests.utils
+from tests.utils import add_metax_dataset, add_mock_ida_download
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
@@ -19,10 +21,18 @@ def test_getfiles(workspace, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get("https://ida.test/files/pid:urn:1/download",
-                      content=b'foo\n')
-    requests_mock.get("https://ida.test/files/pid:urn:2/download",
-                      content=b'bar\n')
+    add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="get_files_test_dataset",
+        filename="/path/to/file1",
+        content=b"foo\n"
+    )
+    add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="get_files_test_dataset",
+        filename="/path/to/file2",
+        content=b"bar\n"
+    )
 
     # Init task
     task = get_files.GetFiles(
@@ -53,10 +63,19 @@ def test_missing_ida_files(workspace, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get('https://ida.test/files/pid:urn:1/download',
-                      content=b'foo\n')
-    requests_mock.get('https://ida.test/files/pid:urn:does_not_exist/download',
-                      status_code=404)
+    add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="get_files_test_dataset_ida_missing_file",
+        filename="/path/to/file1",
+        content=b"foo\n"
+    )
+
+    requests_mock.post(
+        'https://ida.dl-authorize.test/authorize',
+        status_code=400,
+        additional_matcher=lambda req: req.json()["file"] == "/path/to/file4"
+    )
+
     # Init task
     task = get_files.GetFiles(
         workspace=str(workspace),
@@ -79,7 +98,7 @@ def test_missing_ida_files(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_missing_local_files(testpath, workspace):
+def test_missing_local_files(testpath, workspace, requests_mock):
     """Test task when a local file is not available.
 
     The first file should successfully downloaded, but the second file
@@ -87,6 +106,7 @@ def test_missing_local_files(testpath, workspace):
 
     :param testpath: Temporary directory fixture
     :param workspace: Temporary workspace directory fixture
+    :param requests_mock: requests_mock mocker
     :returns: ``None``
     """
     # Init mocked upload.files collection
@@ -98,6 +118,12 @@ def test_missing_local_files(testpath, workspace):
     for identifier, fpath in mongo_files:
         mongoclient.upload.files.insert_one(
             {"_id": identifier, "file_path": str(fpath)}
+        )
+        add_mock_ida_download(
+            requests_mock=requests_mock,
+            dataset_id="get_files_test_dataset_local_missing_file",
+            filename=fpath,
+            content="foo\n"
         )
 
     # Create only the first file in test directory
@@ -155,7 +181,7 @@ def test_forbidden_relative_path(pkg_root, workspace, requests_mock, path):
             }
         }
     ]
-    tests.utils.add_metax_dataset(requests_mock, files=files)
+    add_metax_dataset(requests_mock, files=files)
 
     # Init task
     task = get_files.GetFiles(
@@ -201,7 +227,13 @@ def test_allowed_relative_paths(workspace, requests_mock, path):
             }
         }
     ]
-    tests.utils.add_metax_dataset(requests_mock, files=files)
+    add_metax_dataset(requests_mock, files=files)
+    add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="dataset_identifier",
+        filename=path,
+        content=b"foo\n"
+    )
 
     # Init task
     task = get_files.GetFiles(

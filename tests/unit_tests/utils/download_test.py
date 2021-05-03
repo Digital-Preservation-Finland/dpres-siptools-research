@@ -3,12 +3,12 @@ import os
 import time
 
 import pytest
+from siptools_research.utils.download import (FileAccessError,
+                                              FileNotAvailableError,
+                                              clean_file_cache, download_file)
 
-from siptools_research.utils.download import (
-    download_file, clean_file_cache,
-    FileNotAvailableError, FileAccessError
-)
 from tests.conftest import UNIT_TEST_CONFIG_FILE, UNIT_TEST_SSL_CONFIG_FILE
+from tests.utils import add_mock_ida_download
 
 
 def _get_file_metadata(identifier):
@@ -20,6 +20,7 @@ def _get_file_metadata(identifier):
     }
 
 
+@pytest.mark.usefixtures("mock_ida_download")
 @pytest.mark.parametrize(('config_file', 'request_verified'),
                          [
                              (UNIT_TEST_CONFIG_FILE, False),
@@ -34,12 +35,19 @@ def test_download_file(pkg_root, requests_mock, config_file, request_verified):
     :param request_verified: should HTTP request to Ida be verified?
     :returns: ``None``
     """
-    requests_mock.get("https://ida.test/files/pid:urn:1/download",
+    add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="dataset_id",
+        filename="/path/to/file",
+        content=b"foo\n"
+    )
+    requests_mock.get("https://ida.dl.test/download",
                       content=b"foo\n")
 
     new_file_path = pkg_root / 'new_file'
     download_file(
         _get_file_metadata('pid:urn:1'),
+        "dataset_id",
         str(new_file_path),
         config_file
     )
@@ -60,13 +68,14 @@ def test_download_file_404(pkg_root, requests_mock):
     :param pkg_root: Temporary packaging root directory fixture
     :returns: ``None``
     """
-    requests_mock.get('https://ida.test/files/pid:urn:does_not_exist/download',
-                      status_code=404)
+    requests_mock.post('https://ida.dl-authorize.test/authorize',
+                      status_code=400)
 
     new_file_path = pkg_root / 'new_file'
     with pytest.raises(FileNotAvailableError):
         download_file(
             _get_file_metadata('pid:urn:does_not_exist'),
+            "fake_dataset",
             str(new_file_path),
             UNIT_TEST_CONFIG_FILE
         )
@@ -78,13 +87,14 @@ def test_download_file_502(pkg_root, requests_mock):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    requests_mock.get('https://ida.test/files/pid:urn:502/download',
+    requests_mock.post('https://ida.dl-authorize.test/authorize',
                       status_code=502)
 
     new_file_path = pkg_root / 'new_file'
     with pytest.raises(FileAccessError) as exc_info:
         download_file(
             _get_file_metadata('pid:urn:502'),
+            "fake_dataset",
             str(new_file_path),
             UNIT_TEST_CONFIG_FILE
         )

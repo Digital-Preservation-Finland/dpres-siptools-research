@@ -120,3 +120,31 @@ def add_metax_dataset(requests_mock,
                                  contract['contract_json']["identifier"]),
         json=contract
     )
+
+
+def add_mock_ida_download(requests_mock, dataset_id, filename, content):
+    """
+    Mock IDA requests for downloading a file from IDA
+    """
+    requests_mock.post(
+        "https://ida.dl-authorize.test/authorize",
+        json={
+            "token": (
+                "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0."
+                "eyJzZWNyZXQiOiJkUXc0dzlXZ1hjUSJ9."
+            )
+        },
+        additional_matcher=lambda req: (
+            req.json()["file"] == filename
+            and req.json()["dataset"] == dataset_id
+        )
+    )
+
+    requests_mock.get(
+        "https://ida.dl.test/download",
+        content=content,
+        additional_matcher=lambda req: (
+            req.qs["file"][0] == filename
+            and req.qs["dataset"][0] == dataset_id
+        )
+    )
