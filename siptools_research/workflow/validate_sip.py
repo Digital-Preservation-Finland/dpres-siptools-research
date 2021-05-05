@@ -60,20 +60,17 @@ class ValidateSIP(WorkflowExternalTask):
             sip_to_dp_date = datetime.utcnow().date()
 
         lim_date = datetime.today().date()
-        sftp_root = conf.get('dp_home')
 
         paths = []
         while sip_to_dp_date <= lim_date:
             paths.append(
                 os.path.join(
-                    sftp_root,
                     'accepted/%s/%s.tar' % (sip_to_dp_date,
                                             self.document_id)
                 )
             )
             paths.append(
                 os.path.join(
-                    sftp_root,
                     'rejected/%s/%s.tar' % (sip_to_dp_date,
                                             self.document_id)
                 )

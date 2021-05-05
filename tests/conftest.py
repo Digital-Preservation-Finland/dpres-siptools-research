@@ -4,11 +4,7 @@ from __future__ import unicode_literals
 import logging
 import os
 import shutil
-import socket
-import subprocess
 import sys
-import time
-from contextlib import closing
 
 import luigi.configuration
 import mongomock
@@ -20,10 +16,10 @@ import upload_rest_api
 import urllib3
 from metax_access import Metax
 
-import mockssh
 import tests.metax_data.contracts
 import tests.metax_data.datasets
 import tests.metax_data.files
+from tests.sftp import HomeDirSFTPServer, HomeDirMockServer
 
 try:
     from configparser import ConfigParser
@@ -181,9 +177,9 @@ def sftp_dir(tmpdir):
     yield sftp_dir_
 
 
+
 @pytest.yield_fixture(scope="function")
-@pytest.mark.usefixtures("sftp_dir")
-def sftp_server():
+def sftp_server(sftp_dir, monkeypatch):
     """
     Return a directory in the filesystem that is served by a test SFTP server
     """
@@ -191,7 +187,9 @@ def sftp_server():
         "tpas": SSH_KEY_PATH
     }
 
-    with mockssh.Server(users) as server:
+    monkeypatch.setattr("mockssh.sftp.SFTPServer", HomeDirSFTPServer)
+
+    with HomeDirMockServer(users, home_dir=str(sftp_dir)) as server:
         yield server
 
 
@@ -235,7 +233,6 @@ def luigi_mock_ssh_config(config_creator, sftp_dir, sftp_server):
             "siptools_research": {
                 "dp_host": "127.0.0.1",
                 "dp_port": sftp_server.port,
-                "dp_home": str(sftp_dir),
                 "dp_ssh_key": SSH_KEY_PATH
             }
         }

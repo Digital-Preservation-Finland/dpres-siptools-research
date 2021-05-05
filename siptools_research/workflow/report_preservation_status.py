@@ -10,13 +10,6 @@ from siptools_research.exceptions import InvalidSIPError
 from siptools_research.config import Configuration
 
 
-def remove_prefix(string_, prefix):
-    if string_.startswith(prefix):
-        return string_[len(prefix):]
-
-    return string_
-
-
 class ReportPreservationStatus(WorkflowTask):
     """Task that reports preservation status after SIP ingestion.
 
@@ -83,11 +76,7 @@ class ReportPreservationStatus(WorkflowTask):
             )
 
         # 'accepted' or 'rejected'?
-        directory = ingest_report_paths[0]
-        directory = remove_prefix(directory, config.get('dp_home'))
-        # Remove the leading slash if there's still one
-        directory = remove_prefix(directory, '/')
-        directory = directory.split('/')[0]
+        directory = ingest_report_paths[0].split('/')[0]
 
         if directory == 'accepted':
             # Init metax
