@@ -9,7 +9,6 @@ import siptools.mdcreator
 import siptools.scripts.import_object
 from luigi import LocalTarget
 from metax_access import Metax
-from mets import NAMESPACES
 from siptools_research.config import Configuration
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.get_files import GetFiles
@@ -198,10 +197,10 @@ class CreateTechnicalMetadata(WorkflowTask):
         )
 
     def create_technical_attributes(self, metadata, filepath, output):
-        """Create technical metadata for a file
+        """Create technical metadata for a file.
 
-        Create METS TechMD files for each metadata type based on previously
-        scraped file characteristics
+        Create METS TechMD files for each metadata type based on
+        previously scraped file characteristics.
 
         :param file_identifier: file identifier
         :param filepath: path of file in SIP
@@ -220,12 +219,12 @@ class CreateTechnicalMetadata(WorkflowTask):
         md_elems = metadata_generator.create()
 
         for md_elem in md_elems:
-            # Retrieve the wrapped MD document
             md_namespace = md_elem.nsmap[md_elem.prefix]
 
             mdtype = TECH_ATTR_TYPES[md_namespace]["mdtype"]
             mdtypeversion = TECH_ATTR_TYPES[md_namespace]["mdtypeversion"]
-            othermdtype = TECH_ATTR_TYPES[md_namespace].get("othermdtype", None)
+            othermdtype = TECH_ATTR_TYPES[md_namespace].get("othermdtype",
+                                                            None)
             ref_file = TECH_ATTR_TYPES[md_namespace]["ref_file"]
 
             # Create METS TechMD file

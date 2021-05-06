@@ -173,8 +173,8 @@ DATASETS = {
 }
 
 
-def get_dataset(self, dataset_id):
-    """Generate and return dataset with identifier dataset_id"""
+def get_dataset(_self, dataset_id):
+    """Generate and return dataset with identifier dataset_id."""
     new_dataset = deepcopy(BASE_DATASET)
     new_dataset["identifier"] = dataset_id
     dataset = DATASETS[dataset_id]

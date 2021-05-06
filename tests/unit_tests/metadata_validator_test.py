@@ -11,7 +11,6 @@ from requests.exceptions import HTTPError
 import siptools_research
 import siptools_research.metadata_validator as metadata_validator
 import tests.utils
-from siptools.xml.mets import NAMESPACES
 from siptools_research import validate_metadata
 from siptools_research.config import Configuration
 from siptools_research.exceptions import (InvalidContractMetadataError,
@@ -21,15 +20,15 @@ from siptools_research.metadata_validator import _validate_dataset_metadata
 from tests.metax_data.contracts import BASE_CONTRACT
 from tests.metax_data.datasets import BASE_DATACITE, BASE_DATASET
 from tests.metax_data.files import (BASE_ADDML_MD, BASE_AUDIO_MD, BASE_FILE,
-                                    BASE_VIDEO_MD, TIFF_FILE, TXT_FILE)
+                                    BASE_VIDEO_MD, TXT_FILE)
 
 
 @contextlib.contextmanager
 def does_not_raise():
     """Yield nothing.
 
-    This is a dummy context manager that complements pytest.raises when no
-    error is expected.
+    This is a dummy context manager that complements pytest.raises when
+    no error is expected.
     """
     yield
 
@@ -82,8 +81,8 @@ def test_validate_metadata(requests_mock):
 def test_validate_metadata_missing_file(requests_mock):
     """Test validate_metadata with an empty dataset.
 
-    Function should raise InvalidDatasetMetadataError for datasets, which do
-    not contain any files.
+    Function should raise InvalidDatasetMetadataError for datasets,
+    which do not contain any files.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -138,7 +137,8 @@ def test_validate_metadata_languages(translations, expectation, requests_mock):
     dataset = copy.deepcopy(BASE_DATASET)
     dataset_file = copy.deepcopy(TXT_FILE)
     dataset['research_dataset']['provenance'][0]['description'] = translations
-    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[dataset_file])
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset,
+                                  files=[dataset_file])
 
     with expectation:
         assert validate_metadata('dataset_identifier',
@@ -149,8 +149,8 @@ def test_validate_metadata_languages(translations, expectation, requests_mock):
 def test_validate_metadata_invalid(requests_mock):
     """Test validate_metadata.
 
-    Function should raise exception with correct error message for invalid
-    dataset.
+    Function should raise exception with correct error message for
+    invalid dataset.
 
     :returns: ``None``
     """
@@ -170,8 +170,8 @@ def test_validate_metadata_invalid(requests_mock):
 def test_validate_preservation_identifier():
     """Test _validate_dataset_metadata.
 
-    Function should raise exception if preservation_identifier is missing from
-    metadata.
+    Function should raise exception if preservation_identifier is
+    missing from metadata.
 
     :returns: ``None``
     """
@@ -202,11 +202,13 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
                                     requests_mock):
     """Test validate_metadata.
 
-    Function should raise exception with correct error message for unsupported
-    file type.
+    Function should raise exception with correct error message for
+    unsupported file type.
 
-    :param file_characteristics: file characteristics dict in file metadata
-    :param version_info: expected version information in exception message
+    :param file_characteristics: file characteristics dict in file
+                                 metadata
+    :param version_info: expected version information in exception
+                         message
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -214,7 +216,8 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
     unsupported_file['file_characteristics'] = file_characteristics
     tests.utils.add_metax_dataset(requests_mock, files=[unsupported_file])
 
-    # Try to validate dataset with a file that has an unsupported file_format
+    # Try to validate dataset with a file that has an unsupported
+    # file_format
     expected_error = (
         "Validation error in file path/to/file: Incorrect file format: "
         "application/unsupported{}".format(version_info)
@@ -228,7 +231,8 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
 def test_validate_metadata_invalid_contract_metadata(requests_mock):
     """Test validate_metadata.
 
-    Function raises exception with correct error message for invalid dataset.
+    Function raises exception with correct error message for invalid
+    dataset.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -321,8 +325,8 @@ def test_validate_metadata_multiple_formats(
 def test_validate_metadata_invalid_datacite(requests_mock):
     """Test validate_metadata.
 
-    Function should raise exception with correct error message for invalid
-    datacite where required attribute identifier is missing.
+    Function should raise exception with correct error message for
+    invalid datacite where required attribute identifier is missing.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -373,9 +377,9 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
 def test_validate_metadata_datacite_bad_request(requests_mock):
     """Test validate_metadata.
 
-    Function should raise exception with correct error message if Metax fails
-    to generate datacite for dataset, for example when `publisher` attribute is
-    missing.
+    Function should raise exception with correct error message if Metax
+    fails to generate datacite for dataset, for example when `publisher`
+    attribute is missing.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -383,8 +387,8 @@ def test_validate_metadata_datacite_bad_request(requests_mock):
     dataset_file = copy.deepcopy(TXT_FILE)
     tests.utils.add_metax_dataset(requests_mock, files=[dataset_file])
 
-    # Mock datacite request response. Mocked response has status code 400, and
-    # response body contains error information.
+    # Mock datacite request response. Mocked response has status code
+    # 400, and response body contains error information.
     requests_mock.get(
         tests.conftest.METAX_URL + '/datasets/dataset_identifier?'
         'dataset_format=datacite',
@@ -499,8 +503,8 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
 def test_validate_datacite(requests_mock):
     """Test _validate_datacite.
 
-    Function should raises exception with readable error message when datacite
-    XML contains multiple errors.
+    Function should raises exception with readable error message when
+    datacite XML contains multiple errors.
 
     :param requests_mock: Mocker object
     :returns: ``None``

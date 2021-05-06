@@ -1,4 +1,4 @@
-"""Sample contract metadata"""
+"""Sample contract metadata."""
 
 BASE_CONTRACT = {
     "contract_json": {

@@ -1,15 +1,10 @@
-"""Module that generates file metadata XML element to be stored into Metax."""
-import datetime
+"""Module that generates file format specific XML metadata XML."""
 import os
-import uuid
 from abc import ABCMeta, abstractmethod
-
-from mets import amdsec, mdwrap, mets, techmd, xmldata
 
 from siptools.scripts import (create_addml, create_audiomd, create_mix,
                               create_videomd)
 from siptools.scripts.create_mix import MixGenerationError
-from siptools.xml.mets import METS_MDTYPES, NAMESPACES
 from siptools_research.exceptions import (InvalidFileError,
                                           InvalidFileMetadataError)
 
@@ -46,17 +41,6 @@ TECH_ATTR_TYPES = {
 }
 
 
-def _kwargs2str(kwargs):
-    """Format dict kwargs into a human readable list."""
-    keys = sorted(kwargs.keys())
-    kwarg_list = " ["
-
-    for i in range(len(keys) - 1):
-        kwarg_list += " %s=%s," % (keys[i], kwargs[keys[i]])
-
-    return kwarg_list + " %s=%s ]" % (keys[-1], kwargs[keys[-1]])
-
-
 class _XMLMetadata:
     """Abstract base class for XML metadata generators."""
 
@@ -83,15 +67,15 @@ class _XMLMetadata:
 
     @property
     def streams(self):
-        """Return streams as an integer-indexed dict
+        """Return streams as an integer-indexed dict.
 
-        The stream dict returned by file-scraper is serialized into JSON and
-        then back into a Python dict. When serialized into JSON, any integer
-        keys are implicitly converted into strings.
+        The stream dict returned by file-scraper is serialized into JSON
+        and then back into a Python dict. When serialized into JSON, any
+        integer keys are implicitly converted into strings.
 
-        Since this means that any integer keys
-        will be converted to strings, we restore the original integer keys
-        in this property if necessary.
+        Since this means that any integer keys will be converted to
+        strings, we restore the original integer keys in this property
+        if necessary.
         """
         orig_streams = \
             self.file_metadata["file_characteristics_extension"]["streams"]
@@ -99,7 +83,6 @@ class _XMLMetadata:
         return {
             int(key): value for key, value in orig_streams.items()
         }
-
 
     @classmethod
     def is_generator_for(cls, file_metadata):
@@ -126,7 +109,8 @@ class _ImageFileXMLMetadata(_XMLMetadata):
             )
             return [mix_elem]
         except MixGenerationError as error:
-            # Clean up file path in original exception message and raise error
+            # Clean up file path in original exception message and raise
+            # error
             error.filename = os.path.split(error.filename)[1]
             raise InvalidFileError(str(error),
                                    [self.file_metadata['identifier']])
@@ -135,8 +119,9 @@ class _ImageFileXMLMetadata(_XMLMetadata):
     def is_generator_for(cls, file_metadata):
         """Check if class is generator for file format.
 
-        :returns: ``Boolean``: True if provided file_characteristics contains
-                  at least one ``image`` stream. Otherwise False.
+        :returns: ``Boolean``: True if provided file_characteristics
+                  contains at least one ``image`` stream. Otherwise
+                  False.
         """
         file_char_ext = file_metadata["file_characteristics_extension"]
         return any(
@@ -185,8 +170,8 @@ class _CSVFileXMLMetadata(_XMLMetadata):
     def is_generator_for(cls, file_metadata):
         """Check if class is generator for file format.
 
-        :returns: ``Boolean``: True if provided file format is ``text/csv``.
-                  Otherwise False.
+        :returns: ``Boolean``: True if provided file format is
+                  ``text/csv``. Otherwise False.
         """
         return file_metadata['file_characteristics']['file_format'] \
             == 'text/csv'

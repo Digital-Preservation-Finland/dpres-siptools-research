@@ -16,7 +16,6 @@ from siptools_research.exceptions import MissingFileError
 from siptools_research.utils.download import (download_file,
                                               FileNotAvailableError)
 from siptools_research.config import Configuration
-from siptools_research.xml_metadata import XMLMetadataGenerator
 
 
 DEFAULT_PROVENANCE = {
@@ -73,8 +72,8 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     dataset = metax_client.get_dataset(dataset_id)
     try:
 
-        # Generate default provenance metada if provenance list is empty or
-        # does not exist at all
+        # Generate default provenance metada if provenance list is empty
+        # or does not exist at all
         research_dataset = dataset['research_dataset']
         if not research_dataset.get('provenance', []):
             metax_client.patch_dataset(
@@ -124,8 +123,8 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
             file_id,
             {
                 'file_characteristics': tech_metadata['file_characteristics'],
-                'file_characteristics_extension': \
-                    tech_metadata['file_characteristics_extension']
+                'file_characteristics_extension':
+                tech_metadata['file_characteristics_extension']
             }
         )
 
@@ -134,8 +133,8 @@ def _generate_file_tech_metadata(filepath, original_file_metadata):
     """Read file and generates technical metadata.
 
     `file_characteristics` object is read from original meta. Generated
-    metadata is appended `file_characteristics` object. If a field already has
-    a value (set by user) it will not be updated.
+    metadata is appended `file_characteristics` object. If a field
+    already has a value (set by user) it will not be updated.
 
     :param filepath: path to file for which the metadata is generated
     :param original_file_metadata: full original metadata dictionary
@@ -175,9 +174,9 @@ def _generate_file_tech_metadata(filepath, original_file_metadata):
     if 'charset' in scraper.streams[0]:
         file_characteristics['encoding'] = scraper.streams[0]['charset']
 
-    # Merge generated file_characteristics with original data from Metax.
-    # If a field was already defined in original data, it will override the
-    # generated value.
+    # Merge generated file_characteristics with original data from
+    # Metax. If a field was already defined in original data, it will
+    # override the generated value.
     file_characteristics.update(original_file_characteristics)
 
     del scraper

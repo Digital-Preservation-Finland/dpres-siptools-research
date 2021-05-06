@@ -2,17 +2,14 @@
 
 import copy
 import os
-from collections import defaultdict
 
 import lxml
 import lxml.isoschematron
 from iso639 import languages
 from metax_access import DataciteGenerationError, Metax
-from mets import METS_NS
 
 import jsonschema
 import siptools_research.schemas
-from siptools.xml.mets import NAMESPACES
 from siptools_research.config import Configuration
 from siptools_research.exceptions import (InvalidContractMetadataError,
                                           InvalidDatasetMetadataError,
@@ -35,13 +32,14 @@ def validate_metadata(
 ):
     """Validate dataset.
 
-    Reads dataset metadata, file metadata, and additional techMD XML from
-    Metax and validates them against schemas. Raises error if dataset is not
-    valid. Raises InvalidDatasetError if dataset is invalid.
+    Reads dataset metadata and file metadata from Metax and validates
+    them against schemas. Raises error if dataset is not valid. Raises
+    InvalidDatasetError if dataset is invalid.
 
     :param dataset_id: dataset identifier
     :param config: configuration file path
-    :param: dummy_doi: 'true' if dummy preservation identifier is to be used
+    :param: dummy_doi: 'true' if dummy preservation identifier is to be
+                       used
     :returns: ``True``, if dataset metadata is valid.
     """
     conf = Configuration(config)
@@ -139,8 +137,8 @@ def _validate_dataset_localization(dataset_metadata):
 def _validate_localization(localization_dict, field):
     """Validate languages.
 
-    Check that the localization dict is not empty and all the keys are valid
-    ISO 639-1 language codes.
+    Check that the localization dict is not empty and all the keys are
+    valid ISO 639-1 language codes.
     """
     if not localization_dict:
         raise InvalidDatasetMetadataError(
@@ -148,8 +146,8 @@ def _validate_localization(localization_dict, field):
         )
 
     for language in localization_dict:
-        # Per MetaX schema, 'und' and 'zxx' are fallbacks for content that
-        # can't be localized
+        # Per MetaX schema, 'und' and 'zxx' are fallbacks for content
+        # that can't be localized
         if language in ("und", "zxx"):
             continue
 
@@ -216,9 +214,10 @@ def _validate_file_metadata(dataset, metax_client, conf):
     :param conf: siptools_research Configuration object
     :returns: ``None``
     """
-    # DatasetConsistency is used to verify file consistency within the dataset
-    # i.e. every file returned by Metax API /datasets/datasetid/files
-    # can be found from dataset.file or dataset.directories properties
+    # DatasetConsistency is used to verify file consistency within the
+    # dataset i.e. every file returned by Metax API
+    # /datasets/datasetid/files can be found from dataset.file or
+    # dataset.directories properties
     consistency = DatasetConsistency(metax_client, dataset)
     directory_validation = DirectoryValidation(metax_client)
 

@@ -85,7 +85,7 @@ HTML_FILE_METADATA = {
             0: {
                 "mimetype": "text/html",
                 "stream_type": "text"
-           }
+            }
         }
     }
 }
@@ -101,7 +101,7 @@ XML_FILE_METADATA = {
             0: {
                 "mimetype": "text/xml",
                 "stream_type": "text"
-           }
+            }
         }
     }
 }
@@ -214,7 +214,7 @@ MKV_FILE.update(MKV_FILE_METADATA)
 FILES = {
     "pid:urn:textfile1": {
         "file_characteristics": TXT_FILE_METADATA["file_characteristics"],
-        "file_characteristics_extension": \
+        "file_characteristics_extension":
             TXT_FILE_METADATA["file_characteristics_extension"],
         "set": [
             ("file_path", "/path/to/file1"),
@@ -226,7 +226,7 @@ FILES = {
     },
     "pid:urn:textfile2": {
         "file_characteristics": TXT_FILE_METADATA["file_characteristics"],
-        "file_characteristics_extension": \
+        "file_characteristics_extension":
             TXT_FILE_METADATA["file_characteristics_extension"],
         "set": [
             ("file_path", "/path/to/file2"),
@@ -267,8 +267,8 @@ FILES = {
 }
 
 
-def get_file(self, file_id):
-    """Generate and return file with identifier file_id"""
+def get_file(_self, file_id):
+    """Generate and return file with identifier file_id."""
     new_file = deepcopy(BASE_FILE)
     new_file["identifier"] = file_id
     _file = FILES[file_id]
