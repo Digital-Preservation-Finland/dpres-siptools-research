@@ -1,100 +1,78 @@
-"""Tests for :mod:`siptools_research.schemas` module"""
+"""Tests for :mod:`siptools_research.schemas` module."""
 import copy
 
 import pytest
 import jsonschema
 import siptools_research.schemas
 
-VALID_DATASET_METADATA = {
-    "preservation_identifier": "doi:test",
-    "contract": {
-        "identifier": "1"
+from tests.metax_data.datasets import BASE_DATASET
+from tests.metax_data.files import TXT_FILE
+from tests.metax_data.contracts import BASE_CONTRACT
+
+SAMPLE_FILES = [
+    {
+        "title": "File 1",
+        "identifier": "pid1",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
+        "use_category": {
+            "pref_label": {
+                "en": "label1"
+            }
+        }
     },
-    "research_dataset": {
-        "provenance": [
-            {
-                "preservation_event": {
-                    "pref_label": {
-                        "en": "ProvenanceText",
-                    }
-                },
-                "description": {
-                    "en": "en_description"
-                },
-                'event_outcome': {
-                    "pref_label": {
-                        "en": "outcome"
-                    }
-                },
-                'outcome_description': {
-                    "en": "outcome_description"
-                }
+    {
+        "title": "File 2",
+        "identifier": "pid2",
+        "file_storage": {
+            "identifier": "urn:nbn:fi:att:file-storage-ida"
+        },
+        "use_category": {
+            "pref_label": {
+                "en": "label1"
             }
-        ],
-        "files": [
-            {
-                "title": "File 1",
-                "identifier": "pid1",
-                "file_storage": {
-                    "identifier": "urn:nbn:fi:att:file-storage-ida"
-                },
-                "use_category": {
-                    "pref_label": {
-                        "en": "label1"
-                    }
-                }
-            },
-            {
-                "title": "File 2",
-                "identifier": "pid2",
-                "file_storage": {
-                    "identifier": "urn:nbn:fi:att:file-storage-ida"
-                },
-                "use_category": {
-                    "pref_label": {
-                        "en": "label1"
-                    }
-                }
-            }
-        ],
-        "directories": [
-            {
-                "identifier": "foo",
-                "use_category": {
-                    "pref_label": {
-                        "en": "foo"
-                    }
-                }
-            }
-        ]
+        }
     }
-}
+]
+SAMPLE_DIRECTORIES = [
+    {
+        "identifier": "foo",
+        "use_category": {
+            "pref_label": {
+                "en": "foo"
+            }
+        }
+    }
+]
 
 
 # pylint: disable=invalid-name
 def test_validate_valid_dataset_metadata():
-    """Test validation of valid dataset metadata with provenance. Defines a
-    sample metadata dictionary that is known to be valid. The dictionary is
-    then validated against ``DATASET_METADATA_SCHEMA``.
+    """Test validation of valid dataset metadata with provenance.
+
+    Defines a sample metadata dictionary that is known to be valid. The
+    dictionary is then validated against ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
-
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
-        VALID_DATASET_METADATA,
+        BASE_DATASET,
         siptools_research.schemas.DATASET_METADATA_SCHEMA
     ) is None
 
 
 def test_validate_dataset_metadata_without_provenance():
-    """Test validation of valid dataset metadata without provenance. Defines a
-    sample metadata dictionary that has empty list of provenaces. The
-    dictionary is then validated against ``DATASET_METADATA_SCHEMA``.
+    """Test validation of valid dataset metadata without provenance.
+
+    Defines a sample metadata dictionary that has empty list of
+    provenaces. The dictionary is then validated against
+    ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
-    invalid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    invalid_dataset_metadata = copy.deepcopy(BASE_DATASET)
     invalid_dataset_metadata['research_dataset']['provenance'] = []
 
     # Validation of valid dataset should raise error
@@ -108,13 +86,15 @@ def test_validate_dataset_metadata_without_provenance():
 
 
 def test_validate_invalid_dataset_metadata():
-    """Test validation of invalid dataset metadata. The validation should raise
-    ``ValidationError``.
+    """Test validation of invalid dataset metadata.
+
+    The validation should raise ``ValidationError``.
 
     :returns: ``None``
     """
-    # Create invalid metadata by deleting required key from valid dataset
-    invalid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    # Create invalid metadata by deleting required key from valid
+    # dataset
+    invalid_dataset_metadata = copy.deepcopy(BASE_DATASET)
     del invalid_dataset_metadata["preservation_identifier"]
 
     # Validation of invalid dataset should raise error
@@ -134,7 +114,9 @@ def test_invalid_directory():
 
     :returns: ``None``
     """
-    metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    metadata = copy.deepcopy(BASE_DATASET)
+    metadata['research_dataset']['directories'] \
+        = copy.deepcopy(SAMPLE_DIRECTORIES)
     metadata['research_dataset']['directories'][0]["identifier"] = 1
 
     # Validation of valid dataset should raise error
@@ -148,62 +130,30 @@ def test_invalid_directory():
 
 
 def test_validate_valid_file_metadata():
-    """Test validation of valid file metadata. Defines a sample metadata
-    dictionary that is known to be valid. The dictionary is then validated
-    against ``FILE_METADATA_SCHEMA``.
+    """Test validation of valid file metadata.
+
+    Defines a sample metadata dictionary that is known to be valid. The
+    dictionary is then validated against ``FILE_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
-    valid_file_metadata = \
-        {
-            "checksum": {
-                "algorithm": "SHA-512",
-                "value": "habeebit"
-            },
-            "file_path": "path/to/file",
-            "file_storage": {
-                "identifier": "urn:nbn:fi:att:file-storage-ida"
-            },
-            "parent_directory": {
-                "identifier": "pid:urn:dir:1",
-            },
-            "file_characteristics": {
-                "file_created": "2014-01-17T08:19:31Z",
-                "file_format": "html/text"
-            }
-        }
-
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
-        valid_file_metadata,
+        TXT_FILE,
         siptools_research.schemas.FILE_METADATA_SCHEMA
     ) is None
 
 
 def test_validate_valid_file_metadata_optional_attribute_missing():
-    """Test validation of valid file metadata. Defines a sample metadata
-    dictionary that is known to be valid. The dictionary is then validated
-    against ``FILE_METADATA_SCHEMA``.
+    """Test validation of valid file metadata.
+
+    Create file metadata that does not have all optional attributes. The
+    metadata is then validated against ``FILE_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
-    valid_file_metadata = \
-        {
-            "checksum": {
-                "algorithm": "SHA-512",
-                "value": "habeebit"
-            },
-            "file_path": "path/to/file",
-            "file_storage": {
-                "identifier": "urn:nbn:fi:att:file-storage-ida"
-            },
-            "parent_directory": {
-                "identifier": "pid:urn:dir:1",
-            },
-            "file_characteristics": {
-                "file_format": "html/text"
-            }
-        }
+    valid_file_metadata = copy.deepcopy(TXT_FILE)
+    del valid_file_metadata['file_characteristics']['file_created']
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
@@ -213,25 +163,15 @@ def test_validate_valid_file_metadata_optional_attribute_missing():
 
 
 def test_validate_invalid_file_metadata():
-    """Test validation of invalid file metadata. The validation should raise
-    ``ValidationError``.
+    """Test validation of invalid file metadata.
 
+    Create file metadata that does not have all required attributes. The
+    validation of the metadata should raise ``ValidationError``.
 
     :returns: ``None``
     """
-    invalid_file_metadata = \
-        {
-            "checksum": {
-                "algorithm": "SHA-512",
-            },
-            "file_format": "html/text",
-            "file_storage": {
-                "identifier": "urn:nbn:fi:att:file-storage-ida"
-            },
-            "file_characteristics": {
-                "file_created": "2014-01-17T08:19:31Z",
-            }
-        }
+    invalid_file_metadata = copy.deepcopy(TXT_FILE)
+    del invalid_file_metadata['file_path']
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError) as excinfo:
@@ -244,31 +184,15 @@ def test_validate_invalid_file_metadata():
 
 
 def test_validate_invalid_file_charset():
-    """Test validation of file metadata that contains invalid file encoding.
-    The validation should raise ``ValidationError``.
+    """Test validation of invalid file encoding.
 
+    Validate file metadata with file encoding that is not supported. The
+    validation should raise ``ValidationError``.
 
     :returns: ``None``
     """
-    invalid_file_metadata = \
-        {
-            "checksum": {
-                "algorithm": "SHA-512",
-                "value": "habeebit"
-            },
-            "file_path": "path/to/file",
-            "file_storage": {
-                "identifier": "urn:nbn:fi:att:file-storage-ida"
-            },
-            "parent_directory": {
-                "identifier": "pid:urn:dir:1",
-            },
-            "file_characteristics": {
-                "file_created": "2014-01-17T08:19:31Z",
-                "file_format": "html/text",
-                "file_encoding": "foo"
-            }
-        }
+    invalid_file_metadata = copy.deepcopy(TXT_FILE)
+    invalid_file_metadata['file_characteristics']['file_encoding'] = "foo"
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError) as excinfo:
@@ -282,40 +206,24 @@ def test_validate_invalid_file_charset():
 
 
 def test_validate_valid_contract():
-    """Test validation of valid contract metadata
-
+    """Test validation of valid contract metadata.
 
     :returns: ``None``
     """
-    valid_contract_metadata = \
-        {
-            "contract_json": {
-                "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
-                "organization": {
-                    "name": "Testiorganisaatio"
-                }
-            }
-        }
-
-    jsonschema.validate(valid_contract_metadata,
+    jsonschema.validate(BASE_CONTRACT,
                         siptools_research.schemas.CONTRACT_METADATA_SCHEMA)
 
 
 def test_validate_invalid_contract():
-    """Test validation of invalid contract metadata (name is not string)
+    """Test validation of invalid contract metadata.
 
+    Validate contract metadata with wrong type of organization name
+    (integer instead of string). Validation should raise error.
 
     :returns: ``None``
     """
-    invalid_contract_metadata = \
-        {
-            "contract_json": {
-                "identifier": "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
-                "organization": {
-                    "name": 1234
-                }
-            }
-        }
+    invalid_contract_metadata = copy.deepcopy(BASE_CONTRACT)
+    invalid_contract_metadata['contract_json']['organization']['name'] = 1234
 
     with pytest.raises(jsonschema.ValidationError) as excinfo:
         jsonschema.validate(invalid_contract_metadata,
@@ -324,15 +232,59 @@ def test_validate_invalid_contract():
     assert excinfo.value.message == "1234 is not of type 'string'"
 
 
-def test_validate_dataset_with_directories():
-    """Test validation of valid dataset metadata that contains only directories
-    and no files. Defines a sample metadata dictionary that is known to be
-    valid. The dictionary is then validated against
+def test_validate_dataset_with_files_and_directories():
+    """Test validation of dataset that has files and directories.
+
+    Defines a valid sample metadata dictionary that contais directories
+    but not files. The dictionary is then validated against
     ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
-    valid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
+    valid_dataset_metadata['research_dataset']['files'] = SAMPLE_FILES
+    valid_dataset_metadata['research_dataset']['directories'] \
+        = SAMPLE_DIRECTORIES
+
+    # Validation of valid dataset should return 'None'
+    assert jsonschema.validate(
+        valid_dataset_metadata,
+        siptools_research.schemas.DATASET_METADATA_SCHEMA
+    ) is None
+
+
+def test_validate_dataset_with_files():
+    """Test validation of dataset that has files but not directories.
+
+    Defines a valid sample metadata dictionary that contais directories
+    but not files. The dictionary is then validated against
+    ``DATASET_METADATA_SCHEMA``.
+
+    :returns: ``None``
+    """
+    valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
+    valid_dataset_metadata['research_dataset']['files'] = SAMPLE_FILES
+    del valid_dataset_metadata['research_dataset']['directories']
+
+    # Validation of valid dataset should return 'None'
+    assert jsonschema.validate(
+        valid_dataset_metadata,
+        siptools_research.schemas.DATASET_METADATA_SCHEMA
+    ) is None
+
+
+def test_validate_dataset_with_directories():
+    """Test validation of dataset that has directories but not files.
+
+    Defines a valid sample metadata dictionary that contais directories
+    but not files. The dictionary is then validated against
+    ``DATASET_METADATA_SCHEMA``.
+
+    :returns: ``None``
+    """
+    valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
+    valid_dataset_metadata['research_dataset']['directories'] \
+        = SAMPLE_DIRECTORIES
     del valid_dataset_metadata['research_dataset']['files']
 
     # Validation of valid dataset should return 'None'
@@ -343,14 +295,15 @@ def test_validate_dataset_with_directories():
 
 
 def test_validate_dataset_no_files_and_directories():
-    """Test validation of dataset metadata without directories nor files
-    attribute present in dataset. Defines a sample metadata dictionary that is
-    known to be valid. The dictionary is then validated against
-    ``DATASET_METADATA_SCHEMA``.
+    """Test validation of dataset without directories nor files.
+
+    Defines a sample metadata dictionary that has no directories or
+    files. The dictionary is then validated against
+    ``DATASET_METADATA_SCHEMA``. Validation shoudl raise error.
 
     :returns: ``None``
     """
-    invalid_dataset_metadata = copy.deepcopy(VALID_DATASET_METADATA)
+    invalid_dataset_metadata = copy.deepcopy(BASE_DATASET)
     del invalid_dataset_metadata['research_dataset']['files']
     del invalid_dataset_metadata['research_dataset']['directories']
 
@@ -364,9 +317,10 @@ def test_validate_dataset_no_files_and_directories():
 
 
 def test_validate_directory_valid_metadata():
-    """Test validation of valid directory metadata. Defines a sample metadata
-    dictionary that is known to be valid. The dictionary is then validated
-    against ``DIRECTORY_METADATA_SCHEMA``.
+    """Test validation of valid directory metadata.
+
+    Defines a sample metadata dictionary that is known to be valid. The
+    dictionary is then validated against ``DIRECTORY_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
@@ -385,9 +339,11 @@ def test_validate_directory_valid_metadata():
 
 
 def test_validate_directory_directory_path_missing():
-    """Test validation of invalid directory metadata. Defines a sample metadata
-    dictionary where ``directory_path`` is missing. The dictionary is then
-    validated against ``DIRECTORY_METADATA_SCHEMA``.
+    """Test validation of invalid directory metadata.
+
+    Defines a sample metadata dictionary where ``directory_path`` is
+    missing. The dictionary is then validated against
+    ``DIRECTORY_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
@@ -408,9 +364,11 @@ def test_validate_directory_directory_path_missing():
 
 
 def test_validate_directory_parent_identifier_missing():
-    """Test validation of invalid directory metadata. Defines a sample metadata
-    dictionary where parent's ``indentifier`` is missing. The dictionary is
-    then validated against ``DIRECTORY_METADATA_SCHEMA``.
+    """Test validation of invalid directory metadata.
+
+    Defines a sample metadata dictionary where parent's ``indentifier``
+    is missing. The dictionary is then validated against
+    ``DIRECTORY_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
