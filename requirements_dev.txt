@@ -18,11 +18,9 @@ git+https://gitlab.ci.csc.fi/dpres/metax-access.git@develop#egg=metax_access
 git+https://gitlab.ci.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
 
 lxml
-# Luigi version 3.0 does not support Python 2.7, so Luigi 2.8 must be used until migration to Python3 is complete.
-luigi<3
+luigi
 pymongo
-requests==2.6 ; python_version == '2.7'
-requests==2.14.2 ; python_version >= '3.6'
+requests==2.14.2
 paramiko
 jsonschema==2.5.1
 iso-639

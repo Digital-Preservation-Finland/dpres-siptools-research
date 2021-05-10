@@ -10,21 +10,17 @@ def main():
         name='siptools-research',
         packages=find_packages(exclude=['tests', 'tests.*']),
         package_data={'siptools_research': ['schemas/*.json']},
+        python_requires='>=3.6',
         version=get_version(),
         install_requires=[
             "lxml",
-            # TODO: Luigi v3 does not support Python2. Version specifier
-            # should be removed when Python2 compatibility is not
-            # required anymore.
-            "luigi<3; python_version=='2.7'",
-            "luigi; python_version>'3'",
+            "luigi",
             "pymongo",
             "requests",
             "paramiko",
             "jsonschema",
             "iso-639",
             "python-dateutil",
-            "configparser; python_version=='2.7'",
             "six",
             "file-scraper@git+https://gitlab.ci.csc.fi/dpres/file-scraper.git",
             "siptools@git+https://gitlab.ci.csc.fi/dpres/dpres-siptools.git"
