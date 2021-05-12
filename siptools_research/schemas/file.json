@@ -54,6 +54,16 @@
                     "description": "File format is used as value of premis:formatName element in technical metadata.",
                     "type": "string"
                 }
+            },
+            "if": {
+                "properties": {
+                    "file_format": {
+                        "enum": ["text/csv"]
+                    }
+                }
+            },
+            "then": {
+                "required": ["csv_delimiter", "csv_has_header", "encoding", "csv_record_separator", "csv_quoting_char"]
             }
         },
         "file_storage": {

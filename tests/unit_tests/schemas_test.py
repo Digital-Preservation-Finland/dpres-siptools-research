@@ -6,7 +6,7 @@ import jsonschema
 import siptools_research.schemas
 
 from tests.metax_data.datasets import BASE_DATASET
-from tests.metax_data.files import TXT_FILE
+from tests.metax_data.files import TXT_FILE, CSV_FILE
 from tests.metax_data.contracts import BASE_CONTRACT
 
 SAMPLE_FILES = [
@@ -129,17 +129,18 @@ def test_invalid_directory():
     assert error.value.message == "1 is not of type 'string'"
 
 
-def test_validate_valid_file_metadata():
+@pytest.mark.parametrize('file_metadata', (TXT_FILE, CSV_FILE))
+def test_validate_valid_file_metadata(file_metadata):
     """Test validation of valid file metadata.
 
-    Defines a sample metadata dictionary that is known to be valid. The
-    dictionary is then validated against ``FILE_METADATA_SCHEMA``.
+    Validate valid file metadata against ``FILE_METADATA_SCHEMA``.
 
+    :param file_metadata: metadata dictionary to be validated
     :returns: ``None``
     """
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
-        TXT_FILE,
+        file_metadata,
         siptools_research.schemas.FILE_METADATA_SCHEMA
     ) is None
 
@@ -203,6 +204,39 @@ def test_validate_invalid_file_charset():
 
     assert excinfo.value.message == \
         "'foo' is not one of ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']"
+
+
+@pytest.mark.parametrize(
+     'attribute',
+     (
+         'csv_delimiter',
+         'csv_has_header',
+         'csv_record_separator',
+         'csv_quoting_char'
+     )
+ )
+def test_validate_invalid_csv(attribute):
+    """Test validation of invalid CSV metadata.
+
+    Create CSV file metadata that does not have all attributes that
+    required for CSV files. The validation should raise
+    ``ValidationError``.
+
+    :param attribute: Attribute missing from metadata
+    :returns: ``None``
+    """
+    invalid_file_metadata = copy.deepcopy(CSV_FILE)
+    del invalid_file_metadata['file_characteristics'][attribute]
+
+    # Validation of invalid dataset raise error
+    with pytest.raises(jsonschema.ValidationError) as excinfo:
+        assert not jsonschema.validate(
+            invalid_file_metadata,
+            siptools_research.schemas.FILE_METADATA_SCHEMA
+        )
+
+    assert excinfo.value.message == \
+        "'{}' is a required property".format(attribute)
 
 
 def test_validate_valid_contract():
@@ -312,7 +346,7 @@ def test_validate_dataset_no_files_and_directories():
                             siptools_research.schemas.DATASET_METADATA_SCHEMA)
 
     assert excinfo.value.message.endswith(
-        "is not valid under any of the given schemas"
+        "'files' is a required property"
     )
 
 

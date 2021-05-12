@@ -5,8 +5,7 @@ from abc import ABCMeta, abstractmethod
 from siptools.scripts import (create_addml, create_audiomd, create_mix,
                               create_videomd)
 from siptools.scripts.create_mix import MixGenerationError
-from siptools_research.exceptions import (InvalidFileError,
-                                          InvalidFileMetadataError)
+from siptools_research.exceptions import InvalidFileError
 
 # XML namespace -> technical metadata dict mapping
 TECH_ATTR_TYPES = {
@@ -138,18 +137,6 @@ class _CSVFileXMLMetadata(_XMLMetadata):
 
         :returns: List containing an ADDML metadata XML element
         """
-        for attribute in ('csv_delimiter',
-                          'csv_has_header',
-                          'encoding',
-                          'csv_record_separator',
-                          'csv_quoting_char'):
-            if attribute not in self.file_metadata['file_characteristics']:
-                raise InvalidFileMetadataError(
-                    'Required attribute "%s" is missing from file '
-                    'characteristics of a CSV file.' % attribute,
-                    [self.file_metadata['identifier']]
-                )
-
         addml_elem = create_addml.create_addml_metadata(
             csv_file=self.file_path,
             delimiter=self.file_metadata['file_characteristics'][

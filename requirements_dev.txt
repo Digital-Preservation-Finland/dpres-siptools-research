@@ -21,7 +21,7 @@ luigi==2.7.5
 pymongo
 requests==2.14.2
 paramiko
-jsonschema==2.5.1
+jsonschema==3.2.0
 iso-639
 python-dateutil
 
