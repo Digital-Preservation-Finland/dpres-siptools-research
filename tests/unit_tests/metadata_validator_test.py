@@ -5,7 +5,6 @@ import copy
 import lxml.etree
 import pytest
 from metax_access import Metax
-from mets import METS_NS
 from requests.exceptions import HTTPError
 
 import siptools_research
@@ -19,8 +18,8 @@ from siptools_research.exceptions import (InvalidContractMetadataError,
 from siptools_research.metadata_validator import _validate_dataset_metadata
 from tests.metax_data.contracts import BASE_CONTRACT
 from tests.metax_data.datasets import BASE_DATACITE, BASE_DATASET
-from tests.metax_data.files import (BASE_ADDML_MD, BASE_AUDIO_MD, BASE_FILE,
-                                    BASE_VIDEO_MD, TXT_FILE)
+from tests.metax_data.files import (BASE_FILE, TXT_FILE, CSV_FILE, MKV_FILE,
+                                    TIFF_FILE)
 
 
 @contextlib.contextmanager
@@ -61,10 +60,26 @@ def get_very_invalid_datacite():
     return lxml.etree.tostring(root, pretty_print=True)
 
 
-def test_validate_metadata(requests_mock):
-    """Test validate_metadata.
+@pytest.mark.parametrize(
+    'file_metadata', (TXT_FILE, CSV_FILE, TIFF_FILE, MKV_FILE)
+)
+def test_validate_metadata(
+        requests_mock, file_metadata
+):
+    """Test validation of dataset metadata that contains one file.
 
-    Function should return ``True`` for a valid dataset.
+    :param requests_mock: Mocker object
+    :param file_metadata: Metadata of file included in dataset
+    :returns: ``None``
+    """
+    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
+
+    assert validate_metadata('dataset_identifier',
+                             tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+
+def test_validate_metadata_multiple_files(requests_mock):
+    """Test validation of dataset metadata that contains multiple files.
 
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -269,56 +284,6 @@ def test_validate_metadata_invalid_file_path(requests_mock):
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
-# pylint: disable=invalid-name
-@pytest.mark.parametrize(
-    ('file_format', 'stream_type', 'xml'),
-    (
-        ('text/csv', 'text', BASE_ADDML_MD),
-        ('audio/mp4', "audio", BASE_AUDIO_MD),
-        ('video/mp4', "video", BASE_VIDEO_MD)
-    )
-)
-def test_validate_metadata_multiple_formats(
-        requests_mock, file_format, stream_type, xml):
-    """Test validate_metadata.
-
-    Function validates different types of technical metadata.
-
-    :param requests_mock: Mocker object
-    :param file_format: file mimetype
-    :param stream_type: stream type contained within the file
-    :param xml: techincal metada as xml object
-    :returns: ``None``
-    """
-    file_metadata = copy.deepcopy(BASE_FILE)
-    file_metadata.update({
-        "file_characteristics": {
-            "file_format": file_format
-        },
-        "file_characteristics_extension": {
-            "streams": {
-                0: {
-                    "mimetype": file_format,
-                    "stream_type": stream_type
-                }
-            }
-        }
-    })
-    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-
-    requests_mock.get("https://metaksi/rest/v1/files/{}/xml"
-                      .format(file_metadata['identifier']),
-                      json=[METS_NS])
-    requests_mock.get(
-        "https://metaksi/rest/v1/files/{}/xml?"
-        "namespace={}".format(file_metadata['identifier'], METS_NS),
-        content=lxml.etree.tostring(xml)
-    )
-
-    assert validate_metadata('dataset_identifier',
-                             tests.conftest.UNIT_TEST_CONFIG_FILE)
 
 
 # pylint: disable=invalid-name
