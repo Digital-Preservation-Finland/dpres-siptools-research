@@ -231,10 +231,17 @@ def _validate_file_metadata(dataset, metax_client, conf):
         file_identifier = file_metadata["identifier"]
         file_path = file_metadata["file_path"]
 
-        # Validate metadata against JSON schema
+        # Validate metadata against JSON schema. The schema contains
+        # properties introduced in JSON schema draft 7. Using
+        # Draft7Validator ensures that older validators that do not
+        # support draft 7 are not used, in which case part of the schema
+        # would be ignored without any warning.
         try:
-            jsonschema.validate(file_metadata,
-                                siptools_research.schemas.FILE_METADATA_SCHEMA)
+            jsonschema.Draft7Validator(
+                siptools_research.schemas.FILE_METADATA_SCHEMA
+            ).validate(
+                file_metadata
+            )
         except jsonschema.ValidationError as exc:
             raise InvalidFileMetadataError(
                 "Validation error in metadata of {file_path}: {error}"
