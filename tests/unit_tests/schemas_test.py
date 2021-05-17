@@ -193,7 +193,7 @@ def test_validate_invalid_file_charset():
     :returns: ``None``
     """
     invalid_file_metadata = copy.deepcopy(TXT_FILE)
-    invalid_file_metadata['file_characteristics']['file_encoding'] = "foo"
+    invalid_file_metadata['file_characteristics']['encoding'] = "foo"
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError) as excinfo:

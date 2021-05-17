@@ -34,7 +34,7 @@
             "type": "object",
             "required": ["file_format"],
             "properties": {
-                "file_encoding": {
+                "encoding": {
                     "title": "File encoding",
                     "description": "Character encoding of file is included in premis:formatName element in technical metadata.",
                     "type": "string",
