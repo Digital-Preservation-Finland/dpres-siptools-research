@@ -1,14 +1,13 @@
 """External task that waits for SIP validation in DPS."""
-from datetime import datetime, timedelta
-
 import os
-import dateutil.parser
+from datetime import datetime, timedelta, timezone
 
+import dateutil.parser
 from siptools_research.config import Configuration
-from siptools_research.workflowtask import WorkflowExternalTask
 from siptools_research.remoteanytarget import RemoteAnyTarget
-from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.utils.database import Database
+from siptools_research.workflow.send_sip import SendSIPToDP
+from siptools_research.workflowtask import WorkflowExternalTask
 
 
 class ValidateSIP(WorkflowExternalTask):
@@ -57,7 +56,7 @@ class ValidateSIP(WorkflowExternalTask):
             )
             sip_to_dp_date = dateutil.parser.parse(send_timestamp).date()
         except (ValueError, KeyError):
-            sip_to_dp_date = datetime.utcnow().date()
+            sip_to_dp_date = datetime.now(timezone.utc).date()
 
         lim_date = datetime.today().date()
 

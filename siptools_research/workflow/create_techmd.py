@@ -110,7 +110,7 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         # Create one timestamp for import_object events to avoid
         # creating new events each time import_object is iterated
-        event_datetime = datetime.datetime.utcnow().isoformat()
+        event_datetime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
         tmp = os.path.join(self.config_object.get('packaging_root'), 'tmp/')
         with TemporaryDirectory(prefix=tmp) as temporary_workspace:

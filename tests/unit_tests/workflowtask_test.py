@@ -1,24 +1,21 @@
 """Tests for :mod:`siptools_research.workflowtask` module."""
 
-import os
 import datetime
+import os
 
-import requests
+import dateutil.parser
 import luigi.cmdline
-import pytest
 import pymongo
-
-from metax_access import (
-    Metax,
-    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
-    DS_STATE_METADATA_VALIDATION_FAILED
-)
-
+import pytest
+import requests
 import tests.conftest
-from siptools_research.workflowtask import WorkflowTask
-from siptools_research.exceptions import InvalidDatasetMetadataError
-from siptools_research.exceptions import InvalidSIPError
+from metax_access import (DS_STATE_METADATA_VALIDATION_FAILED,
+                          DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+                          Metax)
 from siptools_research.config import Configuration
+from siptools_research.exceptions import (InvalidDatasetMetadataError,
+                                          InvalidSIPError)
+from siptools_research.workflowtask import WorkflowTask
 
 
 def run_luigi_task(task_name, workspace):
@@ -156,8 +153,12 @@ def test_run_workflowtask(testpath):
     # Check 'result' field
     assert document['workflow_tasks']['TestTask']['result'] == 'success'
     # Parse the 'timestamp' field to make sure it is correct format
-    datetime.datetime.strptime(document['workflow_tasks']['TestTask']
-                               ['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
+    timestamp = document['workflow_tasks']['TestTask']['timestamp']
+    assert timestamp.endswith("+00:00")
+    datetime.datetime.strptime(
+        timestamp[:-6],  # Remove the UTC offset
+        '%Y-%m-%dT%H:%M:%S.%f'
+    )
 
     # Check that there is no extra documents in mongo collection
     assert collection.count() == 1
@@ -189,8 +190,12 @@ def test_run_failing_task(testpath, ):
     assert document['workflow_tasks']['FailingTestTask']['result'] ==\
         'failure'
     # Parse the 'timestamp' field to make sure it is correct format
-    datetime.datetime.strptime(document['workflow_tasks']['FailingTestTask']
-                               ['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
+    timestamp = document['workflow_tasks']['FailingTestTask']['timestamp']
+    assert timestamp.endswith("+00:00")
+    datetime.datetime.strptime(
+        timestamp[:-6],  # Remove the UTC offset
+        '%Y-%m-%dT%H:%M:%S.%f'
+    )
 
     # Check that there is no extra documents in mongo collection
     assert collection.count() == 1

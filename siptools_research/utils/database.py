@@ -8,9 +8,9 @@ from siptools_research.config import Configuration
 def _timestamp():
     """Return time now.
 
-    :returns: Time stamp string
+    :returns: ISO 8601 string
     """
-    return datetime.datetime.utcnow().isoformat()
+    return datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 
 class Database(object):
