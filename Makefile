@@ -23,32 +23,6 @@ install:
 	mkdir -p "${LIB}/systemd/system"
 
 	# Copy config files
-	cp include/etc/dpres_mimetypes.json ${ETC}/
-	cp include/usr/lib/systemd/system/siptools_research.service ${LIB}/systemd/system/siptools_research.service
-	cp include/usr/lib/systemd/system/siptools_research.timer ${LIB}/systemd/system/siptools_research.timer
-
-	# Use Python setuptools
-	python ./setup.py install -O1 --prefix="${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
-
-	# Remove requires.txt from egg-info because it contains PEP 508 URL requirements
-	# that break siptools-research on systems that use old version of
-	# python setuptools (older than v.20.2)
-	rm ${DESTDIR}${PREFIX}/lib/python2.7/site-packages/*.egg-info/requires.txt
-	sed -i '/\.egg-info\/requires.txt$$/d' INSTALLED_FILES
-
-install3:
-	# Cleanup temporary files
-	rm -f INSTALLED_FILES
-
-	# Create log, share and processing directories
-	mkdir -p "${LOGDIR}"
-	mkdir -p "${PROCESSINGDIR}"
-	mkdir -p "${SHAREDIR}"
-	mkdir -p "${ETC}"
-	mkdir -p "${LIB}"
-	mkdir -p "${LIB}/systemd/system"
-
-	# Copy config files
 	cp include/etc/siptools_research.conf ${ETC}/
 	cp include/etc/dpres_mimetypes.json ${ETC}/
 	cp include/usr/lib/systemd/system/siptools_research-3.service ${LIB}/systemd/system/siptools_research-3.service

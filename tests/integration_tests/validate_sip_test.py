@@ -1,8 +1,6 @@
 """Integration tests for digital preservation service and
 :mod:`siptools_research.workflow.validate_sip` module.
 """
-from __future__ import unicode_literals
-
 import copy
 import os
 import shutil

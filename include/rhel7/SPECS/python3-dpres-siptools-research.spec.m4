@@ -38,7 +38,6 @@ Requires:       python36-dateutil
 Requires:       dpres-xml-schemas
 Requires:       python3-metax-access
 Requires:       python36-mock
-Requires:       python36-six
 Requires:       python3-file-scraper-full
 Requires:       python3-upload-rest-api
 BuildRequires:  python3-setuptools
@@ -76,7 +75,7 @@ usermod -aG %{user_group} %{user_name}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install3 PREFIX="%{_prefix}" DESTDIR="%{buildroot}"
+make install PREFIX="%{_prefix}" DESTDIR="%{buildroot}"
 mkdir -p %{buildroot}/var/spool/siptools-research
 
 # Rename executable to prevent naming collision with Python 2 RPM

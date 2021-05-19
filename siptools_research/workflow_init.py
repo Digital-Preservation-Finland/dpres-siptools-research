@@ -4,7 +4,6 @@ import os
 import uuid
 import subprocess
 import luigi
-from six import PY3
 
 from metax_access import Metax, DS_STATE_IN_PACKAGING_SERVICE
 
@@ -87,9 +86,10 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
                                  system_description='In packaging service')
 
     # Start luigi workflow. Run in background.
-    command = "luigi-3" if PY3 else "luigi"
     subprocess.Popen([
-        command,
+        # TODO: Revert to 'luigi' once we have migrated to RHEL8 where we don't
+        # need to deal with co-existing Python 2 & 3 packages
+        "luigi-3",
         "--module", "siptools_research.__main__", "InitWorkflow",
         "--dataset-id", dataset_id,
         "--workspace", workspace,

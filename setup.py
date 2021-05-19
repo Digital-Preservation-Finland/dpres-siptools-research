@@ -21,7 +21,6 @@ def main():
             "jsonschema",
             "iso-639",
             "python-dateutil",
-            "six",
             "file-scraper@git+https://gitlab.ci.csc.fi/dpres/file-scraper.git",
             "siptools@git+https://gitlab.ci.csc.fi/dpres/dpres-siptools.git"
             "@develop",

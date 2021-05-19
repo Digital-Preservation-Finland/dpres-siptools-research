@@ -1,6 +1,4 @@
 """Tests for :mod:`siptools_research.metadata_generator` module."""
-from __future__ import unicode_literals
-
 import copy
 import os
 from collections import defaultdict

@@ -38,7 +38,6 @@ Requires:       python3-dateutil
 Requires:       dpres-xml-schemas
 Requires:       metax-access
 Requires:       python3-mock
-Requires:       python3-six
 Requires:       file-scraper-full
 Requires:       upload-rest-api
 BuildRequires:  python3-setuptools
@@ -76,7 +75,7 @@ usermod -aG %{user_group} %{user_name}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install3 PREFIX="%{_prefix}" DESTDIR="%{buildroot}"
+make install PREFIX="%{_prefix}" DESTDIR="%{buildroot}"
 mkdir -p %{buildroot}/var/spool/siptools-research
 
 

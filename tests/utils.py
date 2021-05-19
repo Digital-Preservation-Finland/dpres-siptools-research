@@ -2,7 +2,6 @@
 
 import copy
 import os
-import six
 
 import lxml.etree
 
@@ -109,7 +108,7 @@ def add_metax_dataset(requests_mock,
             tests.conftest.METAX_URL,
             dataset['identifier']
         ),
-        content=six.binary_type(lxml.etree.tostring(datacite))
+        content=lxml.etree.tostring(datacite)
     )
     requests_mock.get(
         "{}/datasets/{}/files".format(tests.conftest.METAX_URL,

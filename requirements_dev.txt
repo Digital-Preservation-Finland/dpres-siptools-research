@@ -8,7 +8,6 @@ Sphinx
 jsonschema2rst
 mongomock
 xmltodict
-six
 mock-ssh-server
 
 # Install requirements
@@ -18,7 +17,7 @@ git+https://gitlab.ci.csc.fi/dpres/metax-access.git@develop#egg=metax_access
 git+https://gitlab.ci.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
 
 lxml
-luigi
+luigi==2.7.5
 pymongo
 requests==2.14.2
 paramiko

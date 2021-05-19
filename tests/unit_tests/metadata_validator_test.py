@@ -4,7 +4,6 @@ import copy
 
 import lxml.etree
 import pytest
-import six
 from metax_access import Metax
 from mets import METS_NS
 from requests.exceptions import HTTPError
@@ -311,7 +310,7 @@ def test_validate_metadata_multiple_formats(
     requests_mock.get(
         "https://metaksi/rest/v1/files/{}/xml?"
         "namespace={}".format(file_metadata['identifier'], METS_NS),
-        content=six.binary_type(lxml.etree.tostring(xml))
+        content=lxml.etree.tostring(xml)
     )
 
     assert validate_metadata('dataset_identifier',
