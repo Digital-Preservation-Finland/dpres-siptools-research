@@ -140,7 +140,7 @@ def post_metax_file(metadatafile, conf):
         data = json.load(open_file)
 
     # Post metadata
-    url = "%s/rest/v1/files/" % conf.get("metax_url")
+    url = "%s/rest/v2/files/" % conf.get("metax_url")
     response = requests.post(
         url, json=data,
         auth=(conf.get("metax_user"), conf.get("metax_password"))
@@ -169,7 +169,7 @@ def post_metax_dataset(metadatafile, file_ids, conf):
         fnum += 1
 
     # Post metadata
-    url = "%s/rest/v1/datasets/" % conf.get("metax_url")
+    url = "%s/rest/v2/datasets/" % conf.get("metax_url")
     response = requests.post(
         url, json=data,
         auth=auth
@@ -198,7 +198,7 @@ def delete_metax_file(identifier, conf):
     :param conf: Configuration
     :returns: None
     """
-    url = "%s/rest/v1/files/%s" % (conf.get("metax_url"), identifier)
+    url = "%s/rest/v2/files/%s" % (conf.get("metax_url"), identifier)
     response = requests.delete(
         url,
         auth=(conf.get("metax_user"), conf.get("metax_password"))
@@ -214,7 +214,7 @@ def delete_metax_dataset(identifier, conf):
     :returns: ``None``
     """
 
-    url = "%s/rest/v1/datasets/%s" % (conf.get("metax_url"), identifier)
+    url = "%s/rest/v2/datasets/%s" % (conf.get("metax_url"), identifier)
     response = requests.delete(
         url,
         auth=(conf.get("metax_user"), conf.get("metax_password"))

@@ -68,7 +68,7 @@ def test_preserve_dataset_sets_preservation_state(mock_subproc_popen,
     :returns: ``None``
     """
     requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/dataset_1"
+        "https://metaksi/rest/v2/datasets/dataset_1"
     )
 
     preserve_dataset('dataset_1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -90,7 +90,7 @@ def test_preserve_dataset_only_description(mock_subproc_popen, requests_mock):
     :returns: ``None``
     """
     requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/"
+        "https://metaksi/rest/v2/datasets/"
         "dataset_1_in_packaging_service_with_conflicting_description"
     )
     preserve_dataset(

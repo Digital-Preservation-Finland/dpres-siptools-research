@@ -41,7 +41,7 @@ def test_create_mets_ok(workspace, requests_mock):
     :returns: ``None``
     """
     requests_mock.get(
-        "https://metaksi/rest/v1/contracts/"
+        "https://metaksi/rest/v2/contracts/"
         "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
         json={
             'contract_json':

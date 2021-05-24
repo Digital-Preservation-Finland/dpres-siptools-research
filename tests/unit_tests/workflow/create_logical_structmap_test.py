@@ -103,14 +103,14 @@ def test_get_dirpath_dict(requests_mock):
     :param requests_mock: Mocker object
     """
     requests_mock.get(
-        "https://metaksi/rest/v1/directories/1",
+        "https://metaksi/rest/v2/directories/1",
         json={
             "identifier": "1",
             "directory_path": "/"
         }
     )
     requests_mock.get(
-        "https://metaksi/rest/v1/directories/2",
+        "https://metaksi/rest/v2/directories/2",
         json={
             "identifier": "2",
             "directory_path": "/test"

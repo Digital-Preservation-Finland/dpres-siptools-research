@@ -16,7 +16,7 @@ def test_cleanupworkspace(workspace, requests_mock, metax_status_code):
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     """
-    requests_mock.get("https://metaksi/rest/v1/datasets/identifier/files",
+    requests_mock.get("https://metaksi/rest/v2/datasets/identifier/files",
                       json=[],
                       status_code=metax_status_code)
 

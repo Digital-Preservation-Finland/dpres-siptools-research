@@ -74,7 +74,7 @@ def validate_metadata(
 def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
     """Validate dataset metadata.
 
-    Validates dataset metadata from /rest/v1/datasets/<dataset_id>
+    Validates dataset metadata from /rest/v2/datasets/<dataset_id>
 
     :param dataset_metadata: dataset metadata dictionary
     :returns: ``None``
@@ -162,7 +162,7 @@ def _validate_localization(localization_dict, field):
 
 
 def _validate_contract_metadata(contract_id, metax_client):
-    """Validate contract metadata from /rest/v1/contracts/<contract_id>.
+    """Validate contract metadata from /rest/v2/contracts/<contract_id>.
 
     :param contract_id: contract identifier
     :param metax_clien: metax_access.Metax instance
@@ -205,7 +205,7 @@ def _check_mimetype(file_metadata):
 
 
 def _validate_file_metadata(dataset, metax_client, conf):
-    """Validate file metadata found from /rest/v1/datasets/<dataset_id>/files.
+    """Validate file metadata found from /rest/v2/datasets/<dataset_id>/files.
 
     :param dataset: dataset
     :param metax_client: metax_access.Metax instance

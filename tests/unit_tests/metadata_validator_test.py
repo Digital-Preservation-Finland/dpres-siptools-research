@@ -170,7 +170,7 @@ def test_validate_metadata_invalid(requests_mock):
     """
     dataset = copy.deepcopy(BASE_DATASET)
     del dataset['contract']
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier",
+    requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier",
                       json=dataset)
 
     # Try to validate invalid dataset
@@ -297,7 +297,7 @@ def test_validate_metadata_invalid_datacite(requests_mock):
     """
     dataset_file = copy.deepcopy(TXT_FILE)
     tests.utils.add_metax_dataset(requests_mock, files=[dataset_file])
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
+    requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       content=get_invalid_datacite())
 
@@ -325,7 +325,7 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     """
     dataset_file = copy.deepcopy(TXT_FILE)
     tests.utils.add_metax_dataset(requests_mock, files=[dataset_file])
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
+    requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       text="<resource\n")
 
@@ -482,7 +482,7 @@ def test_validate_datacite(requests_mock):
         verify=configuration.getboolean('metax_ssl_verification')
     )
 
-    requests_mock.get("https://metaksi/rest/v1/datasets/dataset_identifier?"
+    requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       content=get_very_invalid_datacite())
 
@@ -508,7 +508,7 @@ def test_validate_metadata_invalid_directory_metadata(requests_mock):
     """
     file_metadata = copy.deepcopy(TXT_FILE)
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-    requests_mock.get("https://metaksi/rest/v1/directories/pid:urn:dir:wf1",
+    requests_mock.get("https://metaksi/rest/v2/directories/pid:urn:dir:wf1",
                       json={"identifier": "pid:urn:dir:wf1"})
 
     # Try to validate invalid dataset
@@ -530,7 +530,7 @@ def test_validate_metadata_http_error_raised(requests_mock):
     """
     tests.utils.add_metax_dataset(requests_mock)
     requests_mock.get(
-        'https://metaksi/rest/v1/datasets/dataset_identifier/files',
+        'https://metaksi/rest/v2/datasets/dataset_identifier/files',
         status_code=500,
         reason='Something not to be shown to user'
     )

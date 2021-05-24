@@ -20,7 +20,7 @@ def test_validatemetadata(workspace, requests_mock):
     :returns: ``None``
     """
     requests_mock.get(
-        'https://metaksi/rest/v1/contracts/contract_identifier',
+        'https://metaksi/rest/v2/contracts/contract_identifier',
         json={
             "contract_json": {
                 "title": "Testisopimus",
@@ -32,7 +32,7 @@ def test_validatemetadata(workspace, requests_mock):
         }
     )
     requests_mock.get(
-        'https://metaksi/rest/v1/directories/pid:urn:dir:wf1',
+        'https://metaksi/rest/v2/directories/pid:urn:dir:wf1',
         json={
             "identifier": "pid:urn:dir:wf1",
             "directory_path": "/access"
@@ -40,16 +40,16 @@ def test_validatemetadata(workspace, requests_mock):
     )
     # Fake text files don't have technical metadata
     requests_mock.get(
-        'https://metaksi/rest/v1/files/pid:urn:textfile1/xml',
+        'https://metaksi/rest/v2/files/pid:urn:textfile1/xml',
         json=[]
     )
     requests_mock.get(
-        'https://metaksi/rest/v1/files/pid:urn:textfile2/xml',
+        'https://metaksi/rest/v2/files/pid:urn:textfile2/xml',
         json=[]
     )
 
     requests_mock.get(
-        'https://metaksi/rest/v1/datasets/validate_metadata_test_dataset'
+        'https://metaksi/rest/v2/datasets/validate_metadata_test_dataset'
         '?dataset_format=datacite&dummy_doi=false',
         content=Path("./tests/data/datacite_sample.xml").resolve().read_bytes()
     )

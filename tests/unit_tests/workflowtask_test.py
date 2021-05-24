@@ -237,7 +237,7 @@ def test_invalidmetadataerror(testpath, requests_mock):
     :returns: ``None``
     """
     requests_mock.patch(
-        "https://metaksi/rest/v1/datasets/1"
+        "https://metaksi/rest/v2/datasets/1"
     )
 
     # Run task like it would be run from command line
@@ -259,7 +259,7 @@ def test_invalidmetadataerror(testpath, requests_mock):
 def test_logging(testpath, requests_mock, caplog):
     """Test logging failed HTTP responses."""
     # Create mocked response for HTTP request.
-    requests_mock.get('https://metaksi/rest/v1/datasets/1',
+    requests_mock.get('https://metaksi/rest/v2/datasets/1',
                       status_code=403,
                       reason='Access denied',
                       text='No rights to view dataset')
@@ -272,8 +272,9 @@ def test_logging(testpath, requests_mock, caplog):
 
     # First error should contain the the body of response to failed request
     assert errors[0].getMessage() == (
-        'HTTP request to https://metaksi/rest/v1/datasets/1 failed. '
-        'Response from server was: No rights to view dataset'
+        'HTTP request to https://metaksi/rest/v2/datasets/1?'
+        'include_user_metadata=true failed. Response from server was: '
+        'No rights to view dataset'
     )
 
     # Second logged error should be the raised HTTPError

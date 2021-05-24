@@ -85,7 +85,7 @@ def test_generate_metadata(requests_mock,
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.BASE_FILE])
     file_metadata_patch = requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:identifier",
+        "https://metaksi/rest/v2/files/pid:urn:identifier",
         json={}
     )
     with open(path, 'rb') as file_:
@@ -119,7 +119,7 @@ def test_generate_metadata_video_streams(requests_mock):
         requests_mock,
         files=[tests.metax_data.files.BASE_FILE])
     file_metadata_patch = requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:identifier",
+        "https://metaksi/rest/v2/files/pid:urn:identifier",
         json={}
     )
     with open('tests/data/sample_files/video_ffv1.mkv', 'rb') as file_:
@@ -207,7 +207,7 @@ def test_generate_metadata_predefined(requests_mock):
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       content=b'foo')
     patch_request = requests_mock.patch(
-        "https://metaksi/rest/v1/files/pid:urn:identifier",
+        "https://metaksi/rest/v2/files/pid:urn:identifier",
         json={}
     )
 
@@ -318,7 +318,7 @@ def test_generate_metadata_provenance(provenance, requests_mock):
         dataset['research_dataset']['provenance'] = provenance
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
     patch_dataset_metadata = requests_mock.patch(
-        'https://metaksi/rest/v1/datasets/dataset_identifier',
+        'https://metaksi/rest/v2/datasets/dataset_identifier',
         json={}
     )
 
@@ -348,7 +348,7 @@ def test_generate_metadata_dataset_not_found(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get('https://metaksi/rest/v1/datasets/foobar',
+    requests_mock.get('https://metaksi/rest/v2/datasets/foobar',
                       status_code=404)
 
     expected_error = 'Dataset not found'
@@ -388,7 +388,7 @@ def test_generate_metadata_httperror(requests_mock):
     """
     tests.utils.add_metax_dataset(requests_mock)
     requests_mock.get(
-        'https://metaksi/rest/v1/datasets/dataset_identifier/files',
+        'https://metaksi/rest/v2/datasets/dataset_identifier/files',
         status_code=500,
         reason='Fake error'
     )

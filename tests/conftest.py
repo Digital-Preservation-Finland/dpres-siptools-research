@@ -29,7 +29,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Print debug messages to stdout
 logging.basicConfig(level=logging.DEBUG)
 
-METAX_URL = "https://metaksi/rest/v1"
+METAX_URL = "https://metaksi/rest/v2"
 TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
 UNIT_TEST_CONFIG_FILE = \
     "tests/data/configuration_files/siptools_research_unit_test.conf"
