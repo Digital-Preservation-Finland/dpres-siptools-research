@@ -18,7 +18,7 @@ def main():
             "pymongo",
             "requests",
             "paramiko",
-            "jsonschema",
+            "jsonschema>=3",
             "iso-639",
             "python-dateutil",
             "file-scraper@git+https://gitlab.ci.csc.fi/dpres/file-scraper.git",
