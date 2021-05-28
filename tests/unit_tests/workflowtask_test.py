@@ -3,7 +3,6 @@
 import datetime
 import os
 
-import dateutil.parser
 import luigi.cmdline
 import pymongo
 import pytest
@@ -135,11 +134,10 @@ def test_run_workflowtask(testpath):
     :returns: ``None``
     """
     # Run task like it would be run from command line
-    run_luigi_task('TestTask', testpath)
+    run_luigi_task('TestTask', str(testpath))
 
     # Check that output file is created
-    with open(os.path.join(testpath, 'output_file')) as output:
-        assert output.read() == 'Hello world'
+    assert (testpath / "output_file").read_text() == "Hello world"
 
     # Check that new event is added to workflow database
     conf = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -175,7 +173,7 @@ def test_run_failing_task(testpath, ):
     :returns: ``None``
     """
     # Run task like it would be run from command line
-    run_luigi_task('FailingTestTask', testpath)
+    run_luigi_task('FailingTestTask', str(testpath))
 
     # Check that new event is added to workflow database
     conf = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -213,7 +211,7 @@ def test_invaliddataseterror(testpath, requests_mock):
     :returns: ``None``
     """
     # Run task like it would be run from command line
-    run_luigi_task('InvalidSIPTask', testpath)
+    run_luigi_task('InvalidSIPTask', str(testpath))
 
     # Check the body of last HTTP request
     request_body = requests_mock.last_request.json()
@@ -243,7 +241,7 @@ def test_invalidmetadataerror(testpath, requests_mock):
     )
 
     # Run task like it would be run from command line
-    run_luigi_task('InvalidDatasetMetadataTask', testpath)
+    run_luigi_task('InvalidDatasetMetadataTask', str(testpath))
 
     # Check the body of last HTTP request
     request_body = requests_mock.last_request.json()
@@ -267,7 +265,7 @@ def test_logging(testpath, requests_mock, caplog):
                       text='No rights to view dataset')
 
     # Run task that sends HTTP request
-    run_luigi_task('MetaxTask', testpath)
+    run_luigi_task('MetaxTask', str(testpath))
 
     # Check errors in logs
     errors = [r for r in caplog.records if r.levelname == 'ERROR']

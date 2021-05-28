@@ -4,12 +4,11 @@ import copy
 
 import lxml.etree
 import pytest
-from metax_access import Metax
-from requests.exceptions import HTTPError
-
 import siptools_research
 import siptools_research.metadata_validator as metadata_validator
 import tests.utils
+from metax_access import Metax
+from requests.exceptions import HTTPError
 from siptools_research import validate_metadata
 from siptools_research.config import Configuration
 from siptools_research.exceptions import (InvalidContractMetadataError,
@@ -18,8 +17,8 @@ from siptools_research.exceptions import (InvalidContractMetadataError,
 from siptools_research.metadata_validator import _validate_dataset_metadata
 from tests.metax_data.contracts import BASE_CONTRACT
 from tests.metax_data.datasets import BASE_DATACITE, BASE_DATASET
-from tests.metax_data.files import (BASE_FILE, TXT_FILE, CSV_FILE, MKV_FILE,
-                                    TIFF_FILE)
+from tests.metax_data.files import (BASE_FILE, CSV_FILE, MKV_FILE, TIFF_FILE,
+                                    TXT_FILE)
 
 
 @contextlib.contextmanager

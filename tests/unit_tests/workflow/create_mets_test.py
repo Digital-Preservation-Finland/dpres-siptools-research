@@ -1,16 +1,14 @@
 """Tests for module :mod:`siptools_research.workflow.create_mets`."""
-import os
+from pathlib import Path
 
-import pytest
 import lxml
-
-from siptools.scripts.import_description import import_description
-from siptools.scripts.premis_event import premis_event
-from siptools.scripts.compile_structmap import compile_structmap
-from siptools.scripts.import_object import import_object
-
-from siptools_research.workflow.create_mets import CreateMets
+import pytest
 import tests.conftest
+from siptools.scripts.compile_structmap import compile_structmap
+from siptools.scripts.import_description import import_description
+from siptools.scripts.import_object import import_object
+from siptools.scripts.premis_event import premis_event
+from siptools_research.workflow.create_mets import CreateMets
 
 NAMESPACES = {
     'xsi': "http://www.w3.org/2001/XMLSchema-instance",
@@ -35,10 +33,10 @@ METS_ATTRIBUTES = {
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_create_mets_ok(testpath, requests_mock):
+def test_create_mets_ok(workspace, requests_mock):
     """Test the workflow task CreateMets.
 
-    :param testpath: Temporary directory fixture
+    :param pkg_root: Temporary directory fixture
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -54,20 +52,17 @@ def test_create_mets_ok(testpath, requests_mock):
         }
     )
     # Create workspace with contents required by the tested task
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     create_test_data(workspace=workspace)
 
     # Init and run task
-    task = CreateMets(workspace=workspace,
+    task = CreateMets(workspace=str(workspace),
                       dataset_id='create_mets_dataset',
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
 
     # Read created mets.xml
-    tree = lxml.etree.parse(
-        os.path.join(workspace, 'mets.xml')
-    )
+    tree = lxml.etree.parse(str(workspace / 'mets.xml'))
 
     # Check that the root element contains expected attributes.
     assert tree.getroot().attrib == METS_ATTRIBUTES
@@ -101,13 +96,13 @@ def create_test_data(workspace):
     :workspace: Workspace directory in which the data is created.
     """
     # Create directory structure
-    sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    os.makedirs(sipdirectory)
+    sipdirectory = workspace / 'sip-in-progress'
+    sipdirectory.mkdir(parents=True)
 
     # Create dmdsec
     import_description(
         dmdsec_location='tests/data/datacite_sample.xml',
-        workspace=sipdirectory
+        workspace=str(sipdirectory)
     )
 
     # Create provenance
@@ -115,16 +110,16 @@ def create_test_data(workspace):
         event_type='creation', event_datetime='2016-10-13T12:30:55',
         event_detail='Poika, 2.985 kg', event_outcome='success',
         event_outcome_detail='Outcome detail',
-        workspace=sipdirectory
+        workspace=str(sipdirectory)
     )
 
     # Create tech metadata
-    test_data_folder = './tests/data/structured'
+    test_data_folder = Path('./tests/data/structured').resolve()
     import_object(
-        workspace=sipdirectory,
+        workspace=str(sipdirectory),
         skip_wellformed_check=True,
-        filepaths=[test_data_folder]
+        filepaths=[str(test_data_folder)]
     )
 
     # Create structmap
-    compile_structmap(workspace=sipdirectory)
+    compile_structmap(workspace=str(sipdirectory))

@@ -102,8 +102,7 @@ def test_workflow(testpath):
                          text='adsf')
 
             # Run partial workflow for dataset just added to Metax
-            workspace = os.path.join(testpath,
-                                     'workspace_'+os.path.basename(testpath))
+            workspace = str(testpath / f'workspace_{testpath.name}')
             run_luigi_task('siptools_research.workflow.create_mets',
                            'CreateMets',
                            workspace,

@@ -1,6 +1,4 @@
 """Tests for :mod:`siptools_research.xml_metadata` module"""
-import pytest
-
 from siptools_research.xml_metadata import XMLMetadataGenerator
 
 try:

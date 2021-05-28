@@ -1,7 +1,6 @@
 """Integration tests for digital preservation server and
 :mod:`siptools_research.workflow.report_preservation_status` module"""
 
-import os
 import time
 
 import pytest
@@ -42,15 +41,12 @@ def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir):
     # server, so that the ReportPreservationStatus thinks that
     # validation has completed.
     datedir = time.strftime("%Y-%m-%d")
-    tar_name = os.path.basename(workspace) + '.tar'
-    path = os.path.join(
-        str(sftp_dir), "accepted", datedir, tar_name
-    )
-    os.makedirs(path)
+    tar_name = f"{workspace.name}.tar"
+    (sftp_dir / "accepted" / datedir / tar_name).mkdir(parents=True)
 
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="report_preservation_status_test_dataset_ok",
         config=luigi_mock_ssh_config
     )
@@ -79,20 +75,15 @@ def test_reportpreservationstatus_rejected(
     # server over SSH, so that the ReportPreservationStatus thinks that
     # validation has been rejected.
     datedir = time.strftime("%Y-%m-%d")
-    tar_name = os.path.basename(workspace) + '.tar'
-    dir_path = os.path.join(
-        str(sftp_dir), "rejected", datedir, tar_name
-    )
-    report_path = os.path.join(
-        dir_path, "{}.html".format(os.path.basename(workspace))
-    )
-    os.makedirs(dir_path)
-    with open(report_path, "wb") as file_:
-        file_.write(b"Failed.")
+    tar_name = f"{workspace.name}.tar"
+    dir_path = sftp_dir / "rejected" / datedir / tar_name
+    dir_path.mkdir(parents=True)
+
+    (dir_path / f"{workspace.name}.html").write_bytes(b"Failed")
 
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="report_preservation_status_test_dataset_rejected",
         config=luigi_mock_ssh_config
     )
@@ -126,27 +117,22 @@ def test_reportpreservationstatus_rejected_int_error(
     # server over SSH, so that the ReportPreservationStatus thinks that
     # validation has been rejected.
     datedir = time.strftime("%Y-%m-%d")
-    tar_name = os.path.basename(workspace) + '.tar'
+    tar_name = f"{workspace.name}.tar"
 
-    accepted_report_path = os.path.join(
-        str(sftp_dir), "accepted", datedir, tar_name,
-        "{}.html".format(os.path.basename(workspace))
-    )
-    rejected_report_path = os.path.join(
-        str(sftp_dir), "rejected", datedir, tar_name,
-        "{}.html".format(os.path.basename(workspace))
-    )
-    os.makedirs(os.path.dirname(accepted_report_path))
-    os.makedirs(os.path.dirname(rejected_report_path))
+    accepted_report_path = \
+        sftp_dir / "accepted" / datedir / tar_name / f"{workspace.name}.html"
+    rejected_report_path = \
+        sftp_dir / "rejected" / datedir / tar_name / f"{workspace.name}.html"
 
-    with open(accepted_report_path, "wb") as file_:
-        file_.write(b"Accepted.")
-    with open(rejected_report_path, "wb") as file_:
-        file_.write(b"Rejected.")
+    accepted_report_path.parent.mkdir(parents=True)
+    accepted_report_path.write_bytes(b"Accepted")
+
+    rejected_report_path.parent.mkdir(parents=True)
+    rejected_report_path.write_bytes(b"Rejected")
 
     # Run task like it would be run from command line
     task = report_preservation_status.ReportPreservationStatus(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="report_preservation_status_test_dataset_rejected",
         config=luigi_mock_ssh_config
     )

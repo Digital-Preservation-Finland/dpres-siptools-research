@@ -1,7 +1,6 @@
 """Test that download module can download files from Ida test server. The
 password for Ida user 'testuser_1' is prompted during the test."""
 
-import os
 import getpass
 import tests.conftest
 from siptools_research.config import Configuration
@@ -53,7 +52,7 @@ def test_ida_download(testpath):
     )
 
     # Download a file that is should be available
-    download_path = os.path.join(testpath, 'ida_file')
+    download_path = str(testpath / 'ida_file')
     download_file(
         {
             'file_path': '/test_file.txt',

@@ -1,5 +1,4 @@
 """Unit tests for :mod:`siptools_research.workflow.validate_sip`."""
-import os
 from datetime import datetime, timezone
 
 import tests.conftest
@@ -7,13 +6,13 @@ from siptools_research.utils.database import Database
 from siptools_research.workflow.validate_sip import ValidateSIP
 
 
-def test_validatesip_accepted(testpath, monkeypatch):
+def test_validatesip_accepted(workspace, monkeypatch):
     """Initializes validate_sip task and tests that it is not complete.
 
     Luigi code is then monkeypatched to always think that remote target
     exists.  The task should then be completed.
 
-    :param testpath: Temporary directory fixture
+    :param workspace: Temporary directory fixture
     :param monkeypatch: Monkeypatch fixture
     :returns: ``None``
     """
@@ -21,10 +20,9 @@ def test_validatesip_accepted(testpath, monkeypatch):
         Database, 'get_event_timestamp',
         lambda self, workflow, task: datetime.now(timezone.utc).isoformat()
     )
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
 
     # Init task
-    task = ValidateSIP(workspace=workspace, dataset_id="1",
+    task = ValidateSIP(workspace=str(workspace), dataset_id="1",
                        config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Monkeypatch RemoteFileSystem.exists to return False. The task

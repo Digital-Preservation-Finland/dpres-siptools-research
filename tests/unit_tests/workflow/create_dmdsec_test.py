@@ -1,7 +1,6 @@
 # coding=utf-8
 """Tests for :mod:`siptools_research.workflow.create_dmdsec` module."""
 import json
-import os
 
 import pytest
 from lxml import etree
@@ -11,10 +10,10 @@ from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_createdescriptivemetadata(testpath, requests_mock):
+def test_createdescriptivemetadata(workspace, requests_mock):
     """Test `CreateDescriptiveMetadata` task.
 
-    :param testpath: Testpath fixture
+    :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -22,14 +21,12 @@ def test_createdescriptivemetadata(testpath, requests_mock):
     tests.utils.add_metax_dataset(requests_mock)
 
     # Create empty workspace
-    workspace = os.path.join(testpath, 'workspaces/workspace')
-    os.mkdir(workspace)
-    os.mkdir(os.path.join(workspace, 'sip-in-progress'))
+    (workspace / 'sip-in-progress').mkdir()
 
     # Init task
     task = CreateDescriptiveMetadata(
         dataset_id="dataset_identifier",
-        workspace=workspace,
+        workspace=str(workspace),
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -40,8 +37,8 @@ def test_createdescriptivemetadata(testpath, requests_mock):
 
     # Check that XML is created in sip creation directory and it
     # contains correct elements.
-    dmdsecfile = os.path.join(workspace, 'sip-in-progress', 'dmdsec.xml')
-    dmdsec = etree.parse(dmdsecfile)
+    dmdsecfile = workspace / 'sip-in-progress' / 'dmdsec.xml'
+    dmdsec = etree.parse(str(dmdsecfile))
     namespaces = {'mets': "http://www.loc.gov/METS/",
                   'datacite': "http://datacite.org/schema/kernel-4"}
 
@@ -64,42 +61,43 @@ def test_createdescriptivemetadata(testpath, requests_mock):
 
     # Check that descriptive metadata reference file is created in sip
     # creation directory and it contains correct elements
-    import_description_reference_file \
-        = os.path.join(workspace,
-                       'sip-in-progress',
-                       'import-description-md-references.jsonl')
-    with open(import_description_reference_file) as file_:
-        references = json.load(file_)
-        assert references['.']["path_type"] == "directory"
-        assert references['.']["streams"] == {}
-        assert len(references['.']["md_ids"]) == 1
+    import_description_path = (
+        workspace / 'sip-in-progress'
+        / 'import-description-md-references.jsonl'
+    )
+    references = json.loads(import_description_path.read_bytes())
+    assert references['.']["path_type"] == "directory"
+    assert references['.']["streams"] == {}
+    assert len(references['.']["md_ids"]) == 1
 
     # Premis event reference file should be created in workspace
     # directory
-    premis_event_reference_file \
-        = os.path.join(workspace,
-                       'create-descriptive-metadata.jsonl')
-    with open(premis_event_reference_file) as file_:
-        references = json.load(file_)
-        assert len(references['.']["md_ids"]) == 1
-        premis_event_identifier = references['.']["md_ids"][0][1:]
+    premis_event_reference_file = \
+        workspace / 'create-descriptive-metadata.jsonl'
+    references = json.loads(premis_event_reference_file.read_bytes())
+    assert len(references['.']["md_ids"]) == 1
+    premis_event_identifier = references['.']["md_ids"][0][1:]
 
     # SIP creation directory should contain only descriptive metadata
     # XML, descriptive metadata reference file and premis event XML.
-    assert set(os.listdir(os.path.join(workspace, 'sip-in-progress'))) \
-        == set(['dmdsec.xml',
-                'import-description-md-references.jsonl',
-                '{}-PREMIS%3AEVENT-amd.xml'.format(premis_event_identifier)])
+    files = set(
+        path.name for path in (workspace / "sip-in-progress").iterdir()
+    )
+    assert files == set([
+        'dmdsec.xml',
+        'import-description-md-references.jsonl',
+        f'{premis_event_identifier}-PREMIS%3AEVENT-amd.xml'
+    ])
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_createdescriptivemetadata_invalid_datacite(testpath, requests_mock):
+def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
     """Test `CreateDescriptiveMetadata` task failure.
 
     The task fails when datacite metadata is not valid. Nothing should
     be written in `sip-in-progress` directory.
 
-    :param testpath: Testpath fixture
+    :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -108,14 +106,12 @@ def test_createdescriptivemetadata_invalid_datacite(testpath, requests_mock):
     tests.utils.add_metax_dataset(requests_mock, datacite=datacite)
 
     # Create empty workspace
-    workspace = os.path.join(testpath, 'workspaces/workspace')
-    os.mkdir(workspace)
-    os.mkdir(os.path.join(workspace, 'sip-in-progress'))
+    (workspace / "sip-in-progress").mkdir()
 
     # Init task
     task = CreateDescriptiveMetadata(
         dataset_id="dataset_identifier",
-        workspace=workspace,
+        workspace=str(workspace),
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -126,4 +122,4 @@ def test_createdescriptivemetadata_invalid_datacite(testpath, requests_mock):
     assert not task.complete()
 
     # Nothing should be written in `sip-in-progress` directory
-    assert not os.listdir(os.path.join(workspace, 'sip-in-progress'))
+    assert not list((workspace / 'sip-in-progress').iterdir())

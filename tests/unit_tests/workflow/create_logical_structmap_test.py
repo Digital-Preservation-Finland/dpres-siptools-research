@@ -1,6 +1,5 @@
 """Tests for :mod:`siptools_research.workflow.create_logical_structmap`."""  # noqa: W505,E501
 
-import os
 import copy
 import shutil
 
@@ -22,10 +21,10 @@ from siptools_research.workflow.create_logical_structmap import (
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_structmap_ok(testpath, requests_mock):
+def test_create_structmap_ok(workspace, requests_mock):
     """Test the workflow task CreateLogicalStructMap.
 
-    :param testpath: Temporary directory fixture
+    :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -37,15 +36,13 @@ def test_create_structmap_ok(testpath, requests_mock):
     tests.utils.add_metax_dataset(requests_mock, files=files)
 
     # Create workspace that already contains dataset files
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    sip_directory = os.path.join(workspace, "sip-in-progress")
-    os.makedirs(sip_directory)
-    file_directory = os.path.join(workspace, 'dataset_files', 'files')
-    os.makedirs(file_directory)
-    with open(os.path.join(file_directory, 'file1'), 'w') as file_:
-        file_.write('foo')
-    with open(os.path.join(file_directory, 'file2'), 'w') as file_:
-        file_.write('bar')
+    sip_directory = workspace / "sip-in-progress"
+    sip_directory.mkdir(parents=True)
+    file_directory = workspace / 'dataset_files' / 'files'
+    file_directory.mkdir(parents=True)
+
+    (file_directory / "file1").write_text("foo")
+    (file_directory / "file2").write_text("bar")
 
     # Create metadata required metadata to workspace:
     # * digital provenance metadata
@@ -53,7 +50,7 @@ def test_create_structmap_ok(testpath, requests_mock):
     # * technical metadata
     # * physical structure map
     premis_event(
-        workspace=sip_directory,
+        workspace=str(sip_directory),
         event_type='creation',
         event_datetime='2014-12-31T08:19:58Z',
         event_detail='foo',
@@ -61,39 +58,41 @@ def test_create_structmap_ok(testpath, requests_mock):
         event_outcome_detail='bar'
     )
     shutil.copy(
-        os.path.join(sip_directory, 'premis-event-md-references.jsonl'),
-        os.path.join(workspace,
-                     'create-provenance-information.jsonl')
+        sip_directory / 'premis-event-md-references.jsonl',
+        workspace / 'create-provenance-information.jsonl'
     )
     import_description(
         dmdsec_location='tests/data/datacite_sample.xml',
-        workspace=sip_directory
+        workspace=str(sip_directory)
     )
     import_object(
-        workspace=sip_directory,
-        base_path=workspace,
+        workspace=str(sip_directory),
+        base_path=str(workspace),
         skip_wellformed_check=True,
-        filepaths=[file_directory]
+        filepaths=[str(file_directory)]
     )
     compile_structmap(
-        workspace=sip_directory,
+        workspace=str(sip_directory),
         structmap_type='Fairdata-physical'
     )
 
     # Init and run CreateLogicalStructMap task
-    sip_directory_content_before_run = os.listdir(sip_directory)
-    task = CreateLogicalStructMap(workspace=workspace,
+    sip_prerun_files = set(path.name for path in sip_directory.iterdir())
+    task = CreateLogicalStructMap(workspace=str(workspace),
                                   dataset_id='dataset_identifier',
                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
 
-    validate_logical_structmap_file(os.path.join(sip_directory,
-                                                 'logical_structmap.xml'))
+    validate_logical_structmap_file(
+        str(sip_directory / 'logical_structmap.xml')
+    )
+
+    sip_postrun_files = set(path.name for path in sip_directory.iterdir())
 
     # Nothing else should be created SIP directory
-    assert set(os.listdir(sip_directory)) \
-        == set(sip_directory_content_before_run + ['logical_structmap.xml'])
+    assert sip_postrun_files \
+        == sip_prerun_files | set(['logical_structmap.xml'])
 
 
 def test_get_dirpath_dict(requests_mock):

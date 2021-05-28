@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import sys
+from pathlib import Path
 
 import luigi.configuration
 import mongomock
@@ -10,14 +11,13 @@ import pymongo
 import pytest
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
-import upload_rest_api
-import urllib3
-from metax_access import Metax
-
 import tests.metax_data.contracts
 import tests.metax_data.datasets
 import tests.metax_data.files
-from tests.sftp import HomeDirSFTPServer, HomeDirMockServer
+import upload_rest_api
+import urllib3
+from metax_access import Metax
+from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
 try:
     from configparser import ConfigParser
@@ -101,24 +101,38 @@ def testmongoclient(monkeypatch):
     monkeypatch.setattr(pymongo, 'MongoClient', mock_mongoclient)
 
 
+
+@pytest.fixture(scope="function")
+def testpath(tmpdir):
+    """
+    Create a temporary test directory and return a pathlib.Path object
+
+    This is pretty much identical to `tmp_path` fixture found in pytest 3.9.0
+    and up, and can be replaced accordingly once that is available
+    """
+    # TODO: Replace `testpath` with built-in `tmp_path` in pytest 3.9.0 and up
+    return Path(str(tmpdir))
+
+
 @pytest.fixture(scope="function")
 # TODO: Replace tmpdir fixture with tmp_path fixture when pytest>=3.9.1
 # is available on Centos
-def testpath(tmpdir, monkeypatch):
+# pylint: disable=redefined-outer-name
+def pkg_root(testpath, monkeypatch):
     """Create a temporary packaging root directory.
 
     Mocks configuration module to use the temporary directory as
     packaging root directory.
 
-    :param tmpdir: py.path.local object
+    :param testpath: pathlib.Path object
     :param monkeypatch: monkeypatch object
-    :returns: path to temporary directory
+    :returns: pathlib.Path pointing to temporary directory
     """
 
     def _mock_get(self, parameter):
         """Mock get method."""
         if parameter == "packaging_root":
-            return str(tmpdir.join("packaging"))
+            return str(testpath / "packaging")
         # pylint: disable=protected-access
         return self._parser.get(self.config_section, parameter)
 
@@ -126,14 +140,30 @@ def testpath(tmpdir, monkeypatch):
         siptools_research.config.Configuration, "get", _mock_get
     )
 
-    pkg_root = tmpdir.mkdir("packaging")
+    pkg_root_ = testpath / "packaging"
+    pkg_root_.mkdir()
 
     # Create required directory structure in workspace root
-    pkg_root.mkdir("tmp")
-    pkg_root.mkdir("file_cache")
-    pkg_root.mkdir("workspaces")
+    (pkg_root_ / "tmp").mkdir()
+    (pkg_root_ / "file_cache").mkdir()
+    (pkg_root_ / "workspaces").mkdir()
 
-    return str(pkg_root)
+    return pkg_root_
+
+
+@pytest.fixture(scope="function")
+# pylint: disable=redefined-outer-name
+def workspace(pkg_root):
+    """
+    Create a temporary workspace directory.
+    This is a shorthand for `pkg_root / "workspaces / "workspace"`.
+
+    :returns: Path to the workspce directory
+    :rtype: pathlib.Path
+    """
+    workspace_ = pkg_root / "workspaces" / "workspace"
+    workspace_.mkdir()
+    return workspace_
 
 
 @pytest.fixture(scope="function")
@@ -172,7 +202,7 @@ def sftp_dir(tmpdir):
     Local directory that corresponds to the DPS' SFTP server
     """
     sftp_dir_ = tmpdir.mkdir("sftp_server")
-    yield sftp_dir_
+    yield Path(str(sftp_dir_))
 
 
 

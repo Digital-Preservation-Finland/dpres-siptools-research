@@ -1,16 +1,11 @@
 """Integration tests for digital preservation service and
 :mod:`siptools_research.workflow.validate_sip` module.
 """
-import copy
 import os
-import shutil
 import time
 
-import paramiko
 import pytest
 from siptools_research.workflow.validate_sip import ValidateSIP
-
-import tests.conftest
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -25,17 +20,16 @@ def test_validatesip_accepted(testpath, luigi_mock_ssh_config, sftp_dir):
     workspace = testpath
 
     # Init task
-    task = ValidateSIP(workspace=workspace, dataset_id="1",
+    task = ValidateSIP(workspace=str(workspace), dataset_id="1",
                        config=luigi_mock_ssh_config)
     assert not task.complete()
 
     # Create new directory to digital preservation server
     datedir = time.strftime("%Y-%m-%d")
     tar_name = os.path.basename(workspace) + '.tar'
-    path = os.path.join(
-        str(sftp_dir), "accepted/{}/{}".format(datedir, tar_name)
+    (sftp_dir / "accepted" / datedir / tar_name).mkdir(
+        parents=True, exist_ok=True
     )
-    _create_sftp_dir(path)
 
     # Check that task is completed after new directory is created
     assert task.complete()
@@ -53,31 +47,16 @@ def test_validatesip_rejected(testpath, luigi_mock_ssh_config, sftp_dir):
     workspace = testpath
 
     # Init task
-    task = ValidateSIP(workspace=workspace, dataset_id="1",
+    task = ValidateSIP(workspace=str(workspace), dataset_id="1",
                        config=luigi_mock_ssh_config)
     assert not task.complete()
 
     # Create new directory to digital preservation server
     datedir = time.strftime("%Y-%m-%d")
-    tar_name = os.path.basename(workspace) + '.tar'
-    path = os.path.join(
-        str(sftp_dir), "rejected/{}/{}".format(datedir, tar_name)
+    tar_name = f"{workspace.name}.tar"
+    (sftp_dir / "rejected" / datedir / tar_name).mkdir(
+        parents=True, exist_ok=True
     )
-    _create_sftp_dir(path)
 
     # Check that task is completed after new directory is created
     assert task.complete()
-
-
-def _create_sftp_dir(path):
-    """Creates new directory to digital preservation server and sets
-    permissions of the new directory and its parent directory.
-
-    :param path: Path of new directory
-    :returns: ``None``
-    """
-    try:
-        os.makedirs(path)
-    except OSError:
-        # Directory already exists
-        pass

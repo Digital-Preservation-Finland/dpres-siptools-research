@@ -73,7 +73,7 @@ SIG_FILE["file_path"] = "signature.sig"
         )
     ]
 )
-def test_mets_creation(testpath, requests_mock, dataset, files):
+def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
     """Test SIP validity.
 
     Run CompressSIP task (and all tasks it requires) and check that:
@@ -86,6 +86,7 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
         #. all files are found in correct path
 
     :param testpath: temporary directory
+    :param pkg_root: temporary packaging root directory
     :param requests_mock: Mocker object
     :param dataset: dataset metadata
     :param files: list of file metadata objects
@@ -110,9 +111,7 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
                     "file_path": os.path.join(testpath, file_['identifier'])
                 }
             )
-            with open(os.path.join(testpath,
-                                   file_['identifier']), 'w') as file_:
-                file_.write('foo')
+            (testpath / file_["identifier"]).write_text("foo")
         else:
             # Mock Ida
             requests_mock.get(
@@ -120,10 +119,10 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
                 text='foo'
             )
 
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
+    workspace = pkg_root / 'workspaces' / 'workspace'
     luigi.build(
         [CompressSIP(
-            workspace=workspace,
+            workspace=str(workspace),
             dataset_id='dataset_identifier',
             config=tests.conftest.UNIT_TEST_CONFIG_FILE
         )],
@@ -131,11 +130,11 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
     )
 
     # Extract SIP
-    with tarfile.open(os.path.join(workspace, 'workspace.tar')) as tar:
-        tar.extractall(os.path.join(testpath, 'extracted_sip'))
+    with tarfile.open((workspace / 'workspace.tar')) as tar:
+        tar.extractall(testpath / 'extracted_sip')
 
     # Read mets.xml
-    mets = ET.parse(os.path.join(testpath, 'extracted_sip', 'mets.xml'))
+    mets = ET.parse(str(testpath / 'extracted_sip' / 'mets.xml'))
 
     # Validate mets.xml against schema
     schema = ET.XMLSchema(ET.parse(METS_XSD))
@@ -155,8 +154,8 @@ def test_mets_creation(testpath, requests_mock, dataset, files):
 
     # Check that all files are included in SIP
     for file_metadata in files:
-        with open(os.path.join(testpath,
-                               'extracted_sip',
-                               'dataset_files',
-                               file_metadata['file_path'])) as file_:
-            assert file_.read() == 'foo'
+        path = (
+            testpath / "extracted_sip" / "dataset_files"
+            / file_metadata["file_path"]
+        )
+        assert path.read_text() == "foo"

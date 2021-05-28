@@ -1,22 +1,15 @@
 """Tests for :mod:`siptools_research.metadata_generator` module."""
 import copy
-import os
 from collections import defaultdict
 
-import lxml.etree
 import pytest
-from metax_access import DatasetNotAvailableError
-from mets import METS_NS, NAMESPACES
-from requests.exceptions import HTTPError
-from siptools.utils import decode_path
-from siptools_research.exceptions import (InvalidFileError,
-                                          InvalidFileMetadataError,
-                                          MissingFileError)
-from siptools_research.metadata_generator import generate_metadata
-
 import tests.metax_data.datasets
 import tests.metax_data.files
 import tests.utils
+from metax_access import DatasetNotAvailableError
+from requests.exceptions import HTTPError
+from siptools_research.exceptions import InvalidFileError, MissingFileError
+from siptools_research.metadata_generator import generate_metadata
 
 DEFAULT_PROVENANCE = {
     "preservation_event": {
@@ -67,7 +60,7 @@ DEFAULT_PROVENANCE = {
          'videocontainer')
     )
 )
-@pytest.mark.usefixtures('testpath')
+@pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata(requests_mock,
                            path,
                            file_format,
@@ -115,7 +108,7 @@ def test_generate_metadata(requests_mock,
     assert file_char_ext['streams']['0']['stream_type'] == stream_type
 
 
-@pytest.mark.usefixtures('testpath')
+@pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata_video_streams(requests_mock):
     """Test metadata generation for a video file with multiple different
     streams.
@@ -159,7 +152,7 @@ def test_generate_metadata_video_streams(requests_mock):
     assert streams_by_type['video'][0]['mimetype'] == 'video/x-ffv'
 
 
-@pytest.mark.usefixtures('testpath')
+@pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata_unrecognized(requests_mock):
     """Test metadata generation for unrecognized file.
 
@@ -183,7 +176,7 @@ def test_generate_metadata_unrecognized(requests_mock):
     assert exception_info.value.files == ['pid:urn:identifier']
 
 
-@pytest.mark.usefixtures('testpath')
+@pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata_predefined(requests_mock):
     """Test generate_metadata.
 
@@ -242,7 +235,7 @@ def test_generate_metadata_predefined(requests_mock):
     }
 
 
-@pytest.mark.usefixtures('testpath')
+@pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata_csv(requests_mock):
     """Test generate metadata.
 
@@ -273,10 +266,10 @@ def test_generate_metadata_csv(requests_mock):
 
 
 # pylint: disable=invalid-name
-def test_generate_metadata_tempfile_removal(testpath, requests_mock):
+def test_generate_metadata_tempfile_removal(pkg_root, requests_mock):
     """Tests that temporary files downloaded from Ida are removed.
 
-    :param testpath: path to packaging root directory
+    :param pkg_root: path to packaging root directory
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -285,25 +278,28 @@ def test_generate_metadata_tempfile_removal(testpath, requests_mock):
     requests_mock.get("https://ida.test/files/pid:urn:identifier/download",
                       text='foo')
 
-    tmp_path = "{}/tmp".format(testpath)
-    file_cache_path = "{}/file_cache".format(testpath)
+    tmp_path = pkg_root / "tmp"
+    file_cache_path = pkg_root / "file_cache"
 
     # tmp and file_cache should be empty before calling generate_metadata()
-    assert os.listdir(tmp_path) == []
-    assert os.listdir(file_cache_path) == []
+    assert list(tmp_path.iterdir()) == []
+    assert list(file_cache_path.iterdir()) == []
 
     generate_metadata('dataset_identifier',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # There should not be new files or directories in tmp after metadata
     # generation, but the downloaded file should be left in file cache
-    assert os.listdir(tmp_path) == []
-    assert os.listdir(file_cache_path) == ['pid:urn:identifier']
+    assert list(tmp_path.iterdir()) == []
+
+    cache_files = list(file_cache_path.iterdir())
+    assert len(cache_files) == 1
+    assert cache_files[0].name == "pid:urn:identifier"
 
 
 # pylint: disable=invalid-name
 @pytest.mark.parametrize('provenance', (None, [], [{}], [{'foo': 'bar'}]))
-@pytest.mark.usefixtures('testpath')
+@pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata_provenance(provenance, requests_mock):
     """Test generate metadata.
 
@@ -342,7 +338,7 @@ def test_generate_metadata_provenance(provenance, requests_mock):
             == [DEFAULT_PROVENANCE]
 
 
-@pytest.mark.usefixtures('testpath')
+@pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata_dataset_not_found(requests_mock):
     """Test metadatageneration for dataset that does not exist.
 
@@ -361,7 +357,7 @@ def test_generate_metadata_dataset_not_found(requests_mock):
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
 
-@pytest.mark.usefixtures('testpath')
+@pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata_ida_download_error(requests_mock):
     """Test metadatageneration when file is available.
 
@@ -383,7 +379,7 @@ def test_generate_metadata_ida_download_error(requests_mock):
     assert exception_info.value.files == ['pid:urn:identifier']
 
 
-@pytest.mark.usefixtures('testpath')
+@pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata_httperror(requests_mock):
     """Test metadata generation when Metax fails.
 

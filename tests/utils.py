@@ -9,8 +9,6 @@ import tests.metax_data.datasets
 import tests.metax_data.files
 import tests.metax_data.contracts
 
-from mets import METS_NS
-
 
 def add_metax_dataset(requests_mock,
                       dataset=copy.deepcopy(

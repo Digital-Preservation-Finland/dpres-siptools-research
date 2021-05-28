@@ -2,7 +2,6 @@
 
 import copy
 import json
-import os
 
 import pytest
 import lxml
@@ -14,25 +13,24 @@ import tests.utils
 
 @pytest.mark.usefixtures("testmongoclient", 'mock_metax_access')
 # pylint: disable=invalid-name
-def test_createprovenanceinformation(testpath):
+def test_createprovenanceinformation(pkg_root, workspace):
     """Test `CreateProvenanceInformation` task.
 
     - `Task.complete()` is true after `Task.run()`
     - XML files are created
     - Metadata reference file is created
 
-    :param testpath: Testpath fixture
+    :param pkg_root: Testpath fixture
+    :param workspace: Testpath fixture
     :returns: ``None``
     """
     # Create workspace with required directories
-    workspace = os.path.join(testpath, 'workspaces/workspace')
-    os.mkdir(workspace)
-    sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    os.mkdir(sipdirectory)
+    sipdirectory = workspace / 'sip-in-progress'
+    sipdirectory.mkdir()
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="create_digiprov_test_dataset_file_and_logging",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -43,33 +41,37 @@ def test_createprovenanceinformation(testpath):
     assert task.complete()
 
     # Check that XMLs are created in workspace/sip-inprogress/
-    assert set(os.listdir(sipdirectory)) \
-        == set(['6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml',
-                'f1ffc55803b971ab8dd013710766f47e-PREMIS%3AEVENT-amd.xml'])
+    files = set(path.name for path in sipdirectory.iterdir())
+    assert (
+        files == \
+        set(['6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml',
+             'f1ffc55803b971ab8dd013710766f47e-PREMIS%3AEVENT-amd.xml'])
+    )
 
     # Metadata reference file should have references to both premis
     # events
-    with open(os.path.join(
-            workspace, 'create-provenance-information.jsonl'
-    )) as file_:
-        references = json.load(file_)
-        assert set(references['.']['md_ids']) \
-            == set(['_6fc8a863bb6ed3cee2b1e853aa38d2db',
-                    '_f1ffc55803b971ab8dd013710766f47e'])
+    references = json.loads(
+        (workspace / "create-provenance-information.jsonl").read_bytes()
+    )
+    assert set(references['.']['md_ids']) \
+        == set(['_6fc8a863bb6ed3cee2b1e853aa38d2db',
+                '_f1ffc55803b971ab8dd013710766f47e'])
 
     # Temporary directories should be removed
-    assert not os.listdir(os.path.join(testpath, 'tmp'))
+    assert not list((pkg_root / "tmp").iterdir())
 
 
 @pytest.mark.usefixtures("testmongoclient")
 # pylint: disable=invalid-name
-def test_failed_createprovenanceinformation(testpath, requests_mock):
+def test_failed_createprovenanceinformation(
+        workspace, pkg_root, requests_mock):
     """Test `CreateProvenanceInformation` task failure.
 
     One of the provenance events of the dataset is invalid, which should
     cause exception.
 
-    :param testpath: Testpath fixture
+    :param workspace: Test workspace directory fixture
+    :param pkg_root: Test packaging root directory fixture
     :returns: ``None``
     """
     # Mock metax. Create a dataset with invalid provenance metadata.
@@ -80,15 +82,13 @@ def test_failed_createprovenanceinformation(testpath, requests_mock):
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create empty workspace
-    workspace = os.path.join(testpath, 'workspaces/workspace')
-    os.mkdir(workspace)
-    sipdirectory = os.path.join(workspace, 'sip-in-progress')
-    os.mkdir(sipdirectory)
+    sipdirectory = workspace / 'sip-in-progress'
+    sipdirectory.mkdir()
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
         dataset_id="dataset_identifier",
-        workspace=workspace,
+        workspace=str(workspace),
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
@@ -99,33 +99,34 @@ def test_failed_createprovenanceinformation(testpath, requests_mock):
 
     # No files should have been created in workspace directory and
     # temporary directories should cleaned
-    assert set(os.listdir(workspace)) == {'sip-in-progress'}
-    assert not os.listdir(sipdirectory)
-    assert not os.listdir(os.path.join(testpath, 'tmp'))
+    files = set(path.name for path in workspace.iterdir())
+    assert files == {'sip-in-progress'}
+    assert not list(sipdirectory.iterdir())
+    assert not list((pkg_root / 'tmp').iterdir())
 
 
 @pytest.mark.usefixtures('mock_metax_access')
-def test_create_premis_events(testpath):
+def test_create_premis_events(pkg_root):
     """Test `create_premis_event` function.
 
     Output XML file should be produced and it should contain some
     specified elements.
 
-    :param testpath: Testpath fixture
+    :param pkg_root: Test packaging directory fixture
     :returns: ``None``
     """
     # Create provenance info xml-file to tempdir
     # pylint: disable=protected-access
     create_digiprov._create_premis_events(
         'create_digiprov_test_dataset_detailed_check',
-        testpath,
+        str(pkg_root),
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
     # Check that the created xml-file contains correct elements.
     # pylint: disable=no-member
-    tree = lxml.etree.parse(os.path.join(
-        testpath, '24d4d306da97c4fd31c5ff1cc8c28316-PREMIS%3AEVENT-amd.xml'
+    tree = lxml.etree.parse(str(
+        pkg_root / '24d4d306da97c4fd31c5ff1cc8c28316-PREMIS%3AEVENT-amd.xml'
     ))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',

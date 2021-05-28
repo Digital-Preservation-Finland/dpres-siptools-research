@@ -9,7 +9,7 @@ from siptools_research.exceptions import MissingFileError
 import tests.conftest
 
 
-@pytest.mark.usefixtures("mock_metax_access", "testpath")
+@pytest.mark.usefixtures("mock_metax_access", "pkg_root")
 def test_validate_files(requests_mock):
     """Test that validate_metadata function returns ``True`` for valid files.
 
@@ -29,7 +29,7 @@ def test_validate_files(requests_mock):
     )
 
 
-@pytest.mark.usefixtures("mock_metax_access", "testpath")
+@pytest.mark.usefixtures("mock_metax_access", "pkg_root")
 def test_validate_invalid_files(requests_mock):
     """Test validating files with wrong mimetype.
 
@@ -55,7 +55,7 @@ def test_validate_invalid_files(requests_mock):
                                           'pid:urn:invalid_mimetype_2']
 
 
-@pytest.mark.usefixtures("mock_metax_access", "testpath")
+@pytest.mark.usefixtures("mock_metax_access", "pkg_root")
 def test_validate_files_not_found(requests_mock):
     """Test that validating files, which are not found.
 

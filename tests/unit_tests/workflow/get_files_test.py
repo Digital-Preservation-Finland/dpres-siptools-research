@@ -1,6 +1,4 @@
 """Test the :mod:`siptools_research.workflow.get_files` module."""
-import os
-
 import pytest
 import pymongo
 
@@ -11,13 +9,13 @@ import tests.utils
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_getfiles(testpath, requests_mock):
+def test_getfiles(workspace, requests_mock):
     """Tests for ``GetFiles`` task for IDA and local files.
 
     - ``Task.complete()`` is true after ``Task.run()``
     - Files are copied to correct path
 
-    :param testpath: Testpath fixture
+    :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -26,13 +24,9 @@ def test_getfiles(testpath, requests_mock):
     requests_mock.get("https://ida.test/files/pid:urn:2/download",
                       content=b'bar\n')
 
-    # Create required directories to  workspace
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    os.makedirs(workspace)
-
     # Init task
     task = get_files.GetFiles(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="get_files_test_dataset",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -43,23 +37,19 @@ def test_getfiles(testpath, requests_mock):
     assert task.complete()
 
     # Check that correct files are created into correct path
-    with open(os.path.join(workspace,
-                           'dataset_files/path/to/file1')) as open_file:
-        assert open_file.read() == 'foo\n'
-
-    with open(os.path.join(workspace,
-                           'dataset_files/path/to/file2')) as open_file:
-        assert open_file.read() == 'bar\n'
+    dataset_files_dir = workspace / "dataset_files" / "path" / "to"
+    assert (dataset_files_dir / "file1").read_text() == "foo\n"
+    assert (dataset_files_dir / "file2").read_text() == "bar\n"
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_missing_ida_files(testpath, requests_mock):
+def test_missing_ida_files(workspace, requests_mock):
     """Test task when a file can not be found from Ida.
 
     The first file should successfully downloaded, but the second file
     is not found. Task should fail with Exception.
 
-    :param testpath: Temporary directory fixture
+    :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -68,10 +58,8 @@ def test_missing_ida_files(testpath, requests_mock):
     requests_mock.get('https://ida.test/files/pid:urn:does_not_exist/download',
                       status_code=404)
     # Init task
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    os.makedirs(workspace)
     task = get_files.GetFiles(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="get_files_test_dataset_ida_missing_file",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -87,39 +75,37 @@ def test_missing_ida_files(testpath, requests_mock):
     assert not task.complete()
 
     # Nothing should be written to workspace/dataset_files
-    assert not os.path.exists(os.path.join(workspace, 'dataset_files'))
+    assert not (workspace / 'dataset_files').exists()
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_missing_local_files(testpath):
+def test_missing_local_files(testpath, workspace):
     """Test task when a local file is not available.
 
     The first file should successfully downloaded, but the second file
     is not found. Task should fail with Exception.
 
     :param testpath: Temporary directory fixture
+    :param workspace: Temporary workspace directory fixture
     :returns: ``None``
     """
-    workspace = os.path.join(testpath, 'workspace', 'workspace')
-    os.makedirs(workspace)
     # Init mocked upload.files collection
     mongoclient = pymongo.MongoClient()
     mongo_files = [
-        ("pid:urn:get_files_1_local", os.path.join(testpath, "file1")),
-        ("pid:urn:does_not_exist_local", os.path.join(testpath, "file2"))
+        ("pid:urn:get_files_1_local", str(testpath / "file1")),
+        ("pid:urn:does_not_exist_local", str(testpath / "file2"))
     ]
     for identifier, fpath in mongo_files:
         mongoclient.upload.files.insert_one(
-            {"_id": identifier, "file_path": os.path.abspath(fpath)}
+            {"_id": identifier, "file_path": str(fpath)}
         )
 
     # Create only the first file in test directory
-    with open(os.path.join(testpath, "file1"), 'w') as file1:
-        file1.write('foo\n')
+    (testpath / "file1").write_text("foo\n")
 
     # Init task
     task = get_files.GetFiles(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="get_files_test_dataset_local_missing_file",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -137,13 +123,13 @@ def test_missing_local_files(testpath):
     assert not task.complete()
 
     # Nothing should be written to workspace/dataset_files
-    assert not os.path.exists(os.path.join(workspace, 'dataset_files'))
+    assert not (workspace / 'dataset_files').exists()
 
 
 @pytest.mark.parametrize('path', ["../../file1",
                                   "/../../file1",
                                   "//../../file1"])
-def test_forbidden_relative_path(testpath, requests_mock, path):
+def test_forbidden_relative_path(pkg_root, workspace, requests_mock, path):
     """Test that files can not be saved outside the workspace.
 
     Saving files outside the workspace by using relative file paths in
@@ -152,7 +138,8 @@ def test_forbidden_relative_path(testpath, requests_mock, path):
     which equals to `<packaging_root>/workspaces/file1`, if the path was
     not validated.
 
-    :param testpath: Temporary workspace path fixture
+    :param pkg_root: Temporary packaging root fixture
+    :param workspace: Temporary workspace path fixture
     :param requests_mock: Request mocker
     :param path: sample file path
     :returns: ``None``
@@ -170,13 +157,9 @@ def test_forbidden_relative_path(testpath, requests_mock, path):
     ]
     tests.utils.add_metax_dataset(requests_mock, files=files)
 
-    # Create the workspace and required directories
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    os.makedirs(workspace)
-
     # Init task
     task = get_files.GetFiles(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="dataset_identifier",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -185,11 +168,12 @@ def test_forbidden_relative_path(testpath, requests_mock, path):
     with pytest.raises(InvalidFileMetadataError) as exception_info:
         task.run()
     assert str(exception_info.value) == \
-        'The file path of file pid:urn:1 is invalid: %s' % path
+        f'The file path of file pid:urn:1 is invalid: {path}'
 
     # Check that file is not saved in workspace root i.e. workspace root
     # contains only the workspace directory
-    assert set(os.listdir(testpath)) == {'workspaces', 'tmp', 'file_cache'}
+    files = set(path.name for path in pkg_root.iterdir())
+    assert files == {'workspaces', 'tmp', 'file_cache'}
 
 
 @pytest.mark.parametrize('path', ["foo/../file1",
@@ -197,10 +181,10 @@ def test_forbidden_relative_path(testpath, requests_mock, path):
                                   "./file1",
                                   "././file1",
                                   "/./file1"])
-def test_allowed_relative_paths(testpath, requests_mock, path):
+def test_allowed_relative_paths(workspace, requests_mock, path):
     """Test that file is downloaded to correct location.
 
-    :param testpath: Temporary workspace path fixture
+    :param workspace: Temporary workspace path fixture
     :param requests_mock: Request mocker
     :param path: sample file path
     :returns: ``None``
@@ -219,18 +203,14 @@ def test_allowed_relative_paths(testpath, requests_mock, path):
     ]
     tests.utils.add_metax_dataset(requests_mock, files=files)
 
-    # Create the workspace and required directories
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    os.makedirs(workspace)
-
     # Init task
     task = get_files.GetFiles(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="dataset_identifier",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
     # Download file and check that is found in expected location
     task.run()
-    assert os.listdir(os.path.join(workspace,
-                                   'dataset_files')) == ['file1']
+    files = [path.name for path in (workspace / "dataset_files").iterdir()]
+    assert files == ['file1']

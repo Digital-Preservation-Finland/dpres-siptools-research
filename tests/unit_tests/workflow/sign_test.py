@@ -1,32 +1,28 @@
 """Test the :mod:`siptools_research.workflow.sign` module."""
 
-import os
 import shutil
 import tests.conftest
 from siptools_research.workflow import sign
 
 
-def test_signsip(testpath):
+def test_signsip(workspace):
     """Tests for `SignSIP` task.
 
     - `Task.complete()` is true after `Task.run()`
     - Signature file created
     - Log file is created
 
-    :param testpath: Testpath fixture
+    :param workspace: Test workspace directory fixture
     :returns: ``None``
     """
-    # Create empty workspace
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    os.makedirs(workspace)
-
     # Copy sample METS file to workspace
     shutil.copy(
-        'tests/data/sample_mets.xml', os.path.join(workspace, 'mets.xml')
+        'tests/data/sample_mets.xml',
+        workspace / 'mets.xml'
     )
 
     # Init task
-    task = sign.SignSIP(workspace=workspace,
+    task = sign.SignSIP(workspace=str(workspace),
                         dataset_id="1",
                         config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
@@ -36,8 +32,13 @@ def test_signsip(testpath):
     assert task.complete()
 
     # Check that signature.sig is created in workspace
-    with open(os.path.join(workspace, 'signature.sig')) as open_file:
-        assert "This is an S/MIME signed message" in open_file.read()
+    assert (
+        "This is an S/MIME signed message"
+        in (workspace / "signature.sig").read_text()
+    )
+
+
+    names = set(path.name for path in workspace.iterdir())
 
     # SIP directory should contain only METS and signature
-    assert set(os.listdir(workspace)) == set(['signature.sig', 'mets.xml'])
+    assert names == set(['signature.sig', 'mets.xml'])

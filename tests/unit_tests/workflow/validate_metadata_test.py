@@ -1,6 +1,7 @@
 """Tests for :mod:`siptools_research.workflow.validate_metadata`."""
 
-import os
+from pathlib import Path
+
 import pytest
 import tests.conftest
 from siptools_research.exceptions import InvalidDatasetMetadataError
@@ -9,12 +10,12 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_filetype_conf',
                          'mock_metax_access')
-def test_validatemetadata(testpath, requests_mock):
+def test_validatemetadata(workspace, requests_mock):
     """Test ValidateMetadata class.
 
     Run task for dataset that has valid metadata.
 
-    :param testpath: Temporary directory fixture
+    :param workspace: Temporary directory fixture
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -46,16 +47,15 @@ def test_validatemetadata(testpath, requests_mock):
         'https://metaksi/rest/v1/files/pid:urn:textfile2/xml',
         json=[]
     )
-    with open('tests/data/datacite_sample.xml', 'rb') as datacite:
-        requests_mock.get(
-            'https://metaksi/rest/v1/datasets/validate_metadata_test_dataset'
-            '?dataset_format=datacite&dummy_doi=false',
-            content=datacite.read()
-        )
+
+    requests_mock.get(
+        'https://metaksi/rest/v1/datasets/validate_metadata_test_dataset'
+        '?dataset_format=datacite&dummy_doi=false',
+        content=Path("./tests/data/datacite_sample.xml").resolve().read_bytes()
+    )
 
     # Init task
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
-    task = ValidateMetadata(workspace=workspace,
+    task = ValidateMetadata(workspace=str(workspace),
                             dataset_id='validate_metadata_test_dataset',
                             config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
@@ -67,19 +67,18 @@ def test_validatemetadata(testpath, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_invalid_metadata(testpath):
+def test_invalid_metadata(workspace):
     """Test ValidateMetadata class.
 
     Run task for dataset that has invalid metadata. The dataset is
     missing attribute: 'type' for each object in files list.
 
-    :param testpath: Temporary directory fixture
+    :param workspace: Temporary workspace directory fixture
     :returns: ``None``
     """
-    workspace = os.path.join(testpath, 'workspaces', 'workspace')
     # Init task
     task = ValidateMetadata(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id='validate_metadata_test_dataset_invalid_metadata',
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )

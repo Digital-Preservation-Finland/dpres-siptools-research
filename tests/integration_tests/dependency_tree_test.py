@@ -11,7 +11,6 @@ that each task will complete, the output of task is NOT examined.
 
 import datetime
 import importlib
-import os
 
 import pytest
 import luigi
@@ -48,13 +47,13 @@ import tests.utils
 @pytest.mark.usefixtures(
     'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf'
 )
-def test_workflow(testpath, module_name, task, requests_mock):
+def test_workflow(pkg_root, module_name, task, requests_mock):
     """Test workflow dependency tree.
 
     Run a task (and all tasks it requires) and check that report of
     successful task is added to mongodb.
 
-    :param testpath: temporary directory
+    :param pkg_root: temporary packaging root directory
     :param module_name: submodule of siptools_research.workflow that
                         contains Task to be tested
     :param task: Task class name
@@ -72,7 +71,7 @@ def test_workflow(testpath, module_name, task, requests_mock):
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
 
     with mock.patch.object(RemoteAnyTarget, '_exists', _mock_exists):
-        workspace = os.path.join(testpath, 'workspaces', 'workspace')
+        workspace = str(pkg_root / 'workspaces' / 'workspace')
         module = importlib.import_module('siptools_research.workflow.'
                                          + module_name)
         task_class = getattr(module, task)

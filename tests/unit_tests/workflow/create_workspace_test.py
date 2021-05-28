@@ -1,28 +1,27 @@
 """Tests for :mod:`siptools_research.workflow.create_workspace`."""
 
-import os
 import pytest
 import tests.conftest
 from siptools_research.workflow import create_workspace
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_createworkspace(testpath):
+def test_createworkspace(workspace):
     """Tests for `CreateWorkspace` task.
 
     - `Task.complete()` is true after `Task.run()`
     - Directory structure is created in workspace
     - Log entry is created to mongodb
 
-    :param testpath: Testpath fixture
+    :param workspace: Test workspace directory
     :returns: ``None``
     """
-    workspace = os.path.join(testpath, 'test_workspace')
-    assert not os.path.isdir(workspace)
+    workspace.rmdir()
+    assert not workspace.is_dir()
 
     # Init task
     task = create_workspace.CreateWorkspace(
-        workspace=workspace,
+        workspace=str(workspace),
         dataset_id="1",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -33,5 +32,5 @@ def test_createworkspace(testpath):
     assert task.complete()
 
     # Check that directories were created
-    assert os.path.isdir(workspace)
-    assert os.path.isdir(os.path.join(workspace, 'sip-in-progress'))
+    assert workspace.is_dir()
+    assert (workspace / 'sip-in-progress').is_dir()
