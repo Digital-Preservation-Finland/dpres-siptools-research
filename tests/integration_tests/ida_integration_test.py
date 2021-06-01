@@ -85,7 +85,7 @@ def test_ida_download_missing(testpath):
     # pylint: disable=protected-access
     conf._parser.set(
         'siptools_research', 'ida_password',
-        getpass.getpass(prompt='Ida password for user \'testuser_1\':')
+        get_ida_password()
     )
 
     download_path = os.path.join(testpath, 'ida_file')
@@ -102,4 +102,4 @@ def test_ida_download_missing(testpath):
             config_file=tests.conftest.TEST_CONFIG_FILE
         )
 
-    assert exc.value.message == "File '/test_file_nothing.txt' not found in Ida"
+    assert str(exc.value) == "File '/test_file_nothing.txt' not found in Ida"

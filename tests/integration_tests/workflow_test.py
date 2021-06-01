@@ -114,9 +114,11 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
             (testpath / file_["identifier"]).write_text("foo")
         else:
             # Mock Ida
-            requests_mock.get(
-                'https://ida.test/files/pid:urn:identifier/download',
-                text='foo'
+            tests.utils.add_mock_ida_download(
+                requests_mock=requests_mock,
+                dataset_id="dataset_identifier",
+                filename=files[0]["file_path"],
+                content=b"foo"
             )
 
     workspace = pkg_root / 'workspaces' / 'workspace'

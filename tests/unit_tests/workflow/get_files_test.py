@@ -123,7 +123,7 @@ def test_missing_local_files(testpath, workspace, requests_mock):
             requests_mock=requests_mock,
             dataset_id="get_files_test_dataset_local_missing_file",
             filename=fpath,
-            content="foo\n"
+            content=b"foo\n"
         )
 
     # Create only the first file in test directory

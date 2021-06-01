@@ -19,29 +19,6 @@ class FileAccessError(Exception):
     """Raised when file cannot be accessed."""
 
 
-def _get_response(identifier, conf, stream=False):
-    """Send authenticated HTTP request to IDA.
-
-    :param identifier: File identifier
-    :param conf: Configuration object
-    :param stream (bool): Stream the request content
-    :returns: requests Response
-    """
-    user = conf.get('ida_user')
-    password = conf.get('ida_password')
-    verify = conf.getboolean('ida_ssl_verification')
-    baseurl = conf.get('ida_url')
-    url = '%s/files/%s/download' % (baseurl, identifier)
-
-    response = requests.get(url,
-                            auth=(user, password),
-                            verify=verify,
-                            stream=stream)
-
-    response.raise_for_status()
-    return response
-
-
 def _get_local_file(file_metadata, upload_database, conf):
     """Get upload-rest-api file.
 
@@ -58,8 +35,8 @@ def _get_local_file(file_metadata, upload_database, conf):
 
     if (filepath is None) or (not os.path.isfile(filepath)):
         raise FileNotAvailableError(
-            "File '%s' not found in pre-ingest file storage"
-            % file_metadata["file_path"]
+            f"File '{file_metadata['file_path']}' not found in pre-ingest "
+            f"file storage"
         )
 
     if not os.path.exists(cache_path):
@@ -81,7 +58,7 @@ def _get_ida_file(file_metadata, dataset_id, conf):
         conf.get("packaging_root"), "file_cache", identifier
     )
     tmp_path = os.path.join(
-        conf.get("packaging_root"), "tmp", "IDA-%s" % identifier
+        conf.get("packaging_root"), "tmp", f"IDA-{identifier}"
     )
 
     user = conf.get('ida_user')
@@ -93,14 +70,14 @@ def _get_ida_file(file_metadata, dataset_id, conf):
 
     # Check that no other process is fetching the file from IDA
     if os.path.exists(tmp_path):
-        raise FileLockError("Lock file '%s' exists" % tmp_path)
+        raise FileLockError(f"Lock file '{tmp_path}' exists")
 
     # If cached file doesn't exists, GET it from IDA
     if not os.path.exists(filepath):
         try:
             # Retrieve a single-use download token
             response = requests.post(
-                "{}/authorize".format(auth_base_url),
+                f"{auth_base_url}/authorize",
                 auth=(user, password),
                 verify=verify,
                 json={
@@ -114,7 +91,7 @@ def _get_ida_file(file_metadata, dataset_id, conf):
         except HTTPError as error:
             if error.response.status_code == 400:
                 raise FileNotAvailableError(
-                    "File '%s' not found in Ida" % file_metadata["file_path"]
+                    f"File '{file_metadata['file_path']}' not found in Ida"
                 )
             if error.response.status_code == 502:
                 raise FileAccessError("Ida service temporarily unavailable. "
@@ -125,10 +102,13 @@ def _get_ida_file(file_metadata, dataset_id, conf):
                 # with a 500 Internal Server Error if we perform a request
                 # with an existing dataset and a nonexistent file.
                 # According to Swagger docs, 400 should be returned instead.
-                # Handle both scenarios here.
+                # As part of CSCFAIRDATA-113, the status code will also likely
+                # be changed to 404.
+                #
+                # Handle all three scenarios here.
                 # TODO: Remove the 500 check once the ticket CSCFAIRDATA-113
                 # has been fixed.
-                error.response.status_code == 400
+                error.response.status_code in [400, 404]
                 or
                 (
                     error.response.status_code == 500
@@ -139,19 +119,19 @@ def _get_ida_file(file_metadata, dataset_id, conf):
             )
             if dataset_not_found:
                 raise FileNotAvailableError(
-                    "File '%s' not found in Ida" % file_metadata["file_path"]
+                    f"File '{file_metadata['file_path']}' not found in Ida"
                 )
 
             raise
 
         response = requests.get(
-            "{}/download".format(download_base_url),
+            f"{download_base_url}/download",
             params={
                 "dataset": dataset_id,
                 "file": file_metadata["file_path"]
             },
             headers={
-                "Authorization": "Bearer {}".format(token)
+                "Authorization": f"Bearer {token}"
             },
             verify=verify,
             stream=True

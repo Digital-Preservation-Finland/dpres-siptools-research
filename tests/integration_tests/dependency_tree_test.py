@@ -64,8 +64,12 @@ def test_workflow(pkg_root, module_name, task, requests_mock):
     tests.utils.add_metax_dataset(requests_mock,
                                   tests.metax_data.datasets.BASE_DATASET,
                                   files=[tests.metax_data.files.TXT_FILE])
-    requests_mock.get('https://ida.test/files/pid:urn:identifier/download',
-                      text='foo')
+    tests.utils.add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="dataset_identifier",
+        filename="path/to/file",
+        content=b"foo"
+    )
 
     # Init pymongo client
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
