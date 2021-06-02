@@ -2,10 +2,11 @@
 password for Ida user 'testuser_1' is prompted during the test."""
 
 import getpass
+
+import pytest
 import tests.conftest
 from siptools_research.config import Configuration
 from siptools_research.utils.download import download_file
-
 
 try:
     from configparser import ConfigParser
@@ -36,6 +37,7 @@ def get_ida_password():
     return getpass.getpass(prompt="Ida password for user 'testuser_1':")
 
 
+@pytest.mark.usefixtures("pkg_root")
 def test_ida_download(testpath):
     """Download a file from Ida
 

@@ -14,3 +14,5 @@ venv*/
 ssh_key
 sign_key
 build/
+INSTALLED_FILES
+*.egg-info/
