@@ -8,21 +8,24 @@ class InvalidDatasetError(Exception):
 class InvalidSIPError(InvalidDatasetError):
     """Exception raised when the SIP is invalid.
 
-    SIP created from dataset is rejected in digital preservation service.
+    SIP created from dataset is rejected in digital preservation
+    service.
     """
 
 
 class InvalidDatasetMetadataError(InvalidDatasetError):
     """Exception raised when dataset metadata is invalid.
 
-    SIP can not be created for dataset due to missing or invalid metadata.
+    SIP can not be created for dataset due to missing or invalid
+    metadata.
     """
 
 
 class InvalidFileMetadataError(InvalidDatasetError):
     """Exception raised when file metadata is invalid.
 
-    SIP can not be created for dataset due to missing or invalid metadata.
+    SIP can not be created for dataset due to missing or invalid
+    metadata.
     """
 
     def __init__(self, message, files=None):
@@ -31,14 +34,15 @@ class InvalidFileMetadataError(InvalidDatasetError):
         :param message: Error message
         :param files: List of invalid files
         """
-        super(InvalidFileMetadataError, self).__init__(message)
+        super().__init__(message)
         self.files = files
 
 
 class InvalidContractMetadataError(InvalidDatasetError):
     """Exception raised when dataset metadata is invalid.
 
-    SIP can not be created for dataset due to missing or invalid metadata.
+    SIP can not be created for dataset due to missing or invalid
+    metadata.
     """
 
 
@@ -51,7 +55,7 @@ class InvalidFileError(InvalidDatasetError):
         :param message: Error message
         :param files: List of invalid files
         """
-        super(InvalidFileError, self).__init__(message)
+        super().__init__(message)
         self.files = files
 
 
@@ -64,5 +68,5 @@ class MissingFileError(InvalidDatasetError):
         :param message: Error message
         :param files: List of missing files
         """
-        super(MissingFileError, self).__init__(message)
+        super().__init__(message)
         self.files = files

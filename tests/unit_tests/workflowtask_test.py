@@ -20,8 +20,8 @@ from siptools_research.workflowtask import WorkflowTask
 def run_luigi_task(task_name, workspace):
     """Run a luigi task.
 
-    Run a task like it would be run from command line, using some default
-    parameters.
+    Run a task like it would be run from command line, using some
+    default parameters.
 
     :task (str): Name of task to be executed
     :workspace: Workspace directory for task
@@ -127,8 +127,8 @@ class MetaxTask(WorkflowTask):
 def test_run_workflowtask(testpath):
     """Test WorkflowTask execution.
 
-    Executes a TestTask, checks that output file is created, checks that new
-    event field is created to mongo document.
+    Executes a TestTask, checks that output file is created, checks that
+    new event field is created to mongo document.
 
     :param testpath: temporary directory
     :returns: ``None``
@@ -270,7 +270,8 @@ def test_logging(testpath, requests_mock, caplog):
     # Check errors in logs
     errors = [r for r in caplog.records if r.levelname == 'ERROR']
 
-    # First error should contain the the body of response to failed request
+    # First error should contain the the body of response to failed
+    # request
     assert errors[0].getMessage() == (
         'HTTP request to https://metaksi/rest/v2/datasets/1?'
         'include_user_metadata=true failed. Response from server was: '

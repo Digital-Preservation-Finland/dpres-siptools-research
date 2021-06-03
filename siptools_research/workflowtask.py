@@ -12,24 +12,27 @@ from siptools_research.utils.database import Database
 class WorkflowTask(luigi.Task):
     """Common base class for all workflow tasks.
 
-    In addition to functionality of normal luigi Task, every workflow task has
-    some luigi parameters:
+    In addition to functionality of normal luigi Task, every workflow
+    task has some luigi parameters:
 
-    :workspace: Full path to unique self.workspace directory for the task.
+    :workspace: Full path to unique self.workspace directory for the
+                task.
     :dataset_id: Metax dataset id.
     :config: Path to configuration file
 
-    WorkflowTask also has some extra instance variables that can be used to
-    identify the task and current workflow, for example when storing workflow
-    status information to database:
+    WorkflowTask also has some extra instance variables that can be used
+    to identify the task and current workflow, for example when storing
+    workflow status information to database:
 
-    :document_id: A unique string that is used for identifying workflows (one
-       mongodb document per workflow) in workflow database. The ``document_id``
-       is the name (not path) of workspace directory.
+    :document_id: A unique string that is used for identifying workflows
+                  (one mongodb document per workflow) in workflow
+                  database. The ``document_id`` is the name (not path)
+                  of workspace directory.
     :task_name: Automatically generated name for the task.
     :document_id: Identifier of the workflow. Generated from the name of
-       workspace, which should be unique
-    :sip_creation_path: A path in the workspace in which the SIP is created
+                  workspace, which should be unique
+    :sip_creation_path: A path in the workspace in which the SIP is
+                        created
     """
 
     workspace = luigi.Parameter()
@@ -39,9 +42,10 @@ class WorkflowTask(luigi.Task):
     def __init__(self, *args, **kwargs):
         """Initialize workflow task.
 
-        Calls luigi.Task's __init__ and sets additional instance variables.
+        Calls luigi.Task's __init__ and sets additional instance
+        variables.
         """
-        super(WorkflowTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.document_id = os.path.basename(self.workspace)
         self.task_name = self.__class__.__name__
         self.sip_creation_path = os.path.join(self.workspace,
@@ -51,26 +55,29 @@ class WorkflowTask(luigi.Task):
 class WorkflowExternalTask(luigi.ExternalTask):
     """Common base class for external workflow tasks.
 
-    External tasks are executed externally from this process and task does not
-    implement the run() method, only output() and requires() methods. In
-    addition to functionality of normal luigi ExternalTask, every task has some
-    luigi parameters:
+    External tasks are executed externally from this process and task
+    does not implement the run() method, only output() and requires()
+    methods. In addition to functionality of normal luigi ExternalTask,
+    every task has some luigi parameters:
 
-    :workspace: Full path to unique self.workspace directory for the task.
+    :workspace: Full path to unique self.workspace directory for the
+                task.
     :dataset_id: Metax dataset id.
     :config: Path to configuration file
 
-    WorkflowExternalTask also has some extra instance variables that can be
-    used to identify the task and current workflow, forexample when storing
-    workflow status information to database:
+    WorkflowExternalTask also has some extra instance variables that can
+    be used to identify the task and current workflow, forexample when
+    storing workflow status information to database:
 
-    :document_id: A unique string that is used for identifying workflows (one
-       mongodb document per workflow) in workflow database. The ``document_id``
-       is the name (not path) of workspace directory.
+    :document_id: A unique string that is used for identifying workflows
+                  (one mongodb document per workflow) in workflow
+                  database. The ``document_id`` is the name (not path)
+                  of workspace directory.
     :task_name: Automatically generated name for the task.
     :document_id: Identifier of the workflow. Generated from the name of
-       workspace, which should be unique
-    :sip_creation_path: A path in the workspace in which the SIP is created
+                  workspace, which should be unique
+    :sip_creation_path: A path in the workspace in which the SIP is
+                        created
     """
 
     workspace = luigi.Parameter()
@@ -80,9 +87,10 @@ class WorkflowExternalTask(luigi.ExternalTask):
     def __init__(self, *args, **kwargs):
         """Initialize external workflow task.
 
-        Calls luigi.Task's __init__ and sets additional instance variables.
+        Calls luigi.Task's __init__ and sets additional instance
+        variables.
         """
-        super(WorkflowExternalTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.document_id = os.path.basename(self.workspace)
         self.task_name = self.__class__.__name__
         self.sip_creation_path = os.path.join(self.workspace,
@@ -92,11 +100,12 @@ class WorkflowExternalTask(luigi.ExternalTask):
 class WorkflowWrapperTask(luigi.WrapperTask):
     """Common base class for all workflow wrapper tasks.
 
-    Wrapper tasks execute other tasks, but does not have implementation itself.
-    In addition to functionality of normal luigi WrapperTask, every task has
-    three parameters:
+    Wrapper tasks execute other tasks, but does not have implementation
+    itself. In addition to functionality of normal luigi WrapperTask,
+    every task has three parameters:
 
-    :workspace: Full path to unique self.workspace directory for the task.
+    :workspace: Full path to unique self.workspace directory for the
+                task.
     :dataset_id: Metax dataset id.
     :config: Path to configuration file
     """
@@ -130,8 +139,8 @@ def report_task_failure(task, exception):
     This function is triggered when a WorkflowTask fails. Adds report of
     failed event to workflow database.
 
-    If task failed because dataset is invalid, the preservation status of
-    dataset is updated in Metax, and the workflow is disabled.
+    If task failed because dataset is invalid, the preservation status
+    of dataset is updated in Metax, and the workflow is disabled.
 
     :param task: WorkflowTask object
     :param exception: Exception that caused failure
