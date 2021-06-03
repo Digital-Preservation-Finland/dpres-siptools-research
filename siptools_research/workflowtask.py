@@ -176,7 +176,7 @@ def report_task_failure(task, exception):
         # Set preservation status for dataset in Metax
         metax_client.set_preservation_state(
             task.dataset_id,
-            state=metax_access.DS_STATE_METADATA_VALIDATION_FAILED,
+            state=metax_access.DS_STATE_INVALID_METADATA,
             system_description=_get_description(task, exception)
         )
 

@@ -8,7 +8,7 @@ import pymongo
 import pytest
 import requests
 import tests.conftest
-from metax_access import (DS_STATE_METADATA_VALIDATION_FAILED,
+from metax_access import (DS_STATE_INVALID_METADATA,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
                           Metax)
 from siptools_research.config import Configuration
@@ -201,7 +201,7 @@ def test_run_failing_task(testpath, ):
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_invaliddataseterror(testpath, requests_mock):
-    """Test that event handler of WorkflowTask.
+    """Test event handler of WorkflowTask.
 
     Event handler should report preservation state to Metax if
     InvalidSIPError raises in a task.
@@ -227,7 +227,7 @@ def test_invaliddataseterror(testpath, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
 def test_invalidmetadataerror(testpath, requests_mock):
-    """Test that event handler of WorkflowTask.
+    """Test event handler of WorkflowTask.
 
     Event handler should report preservation state to Metax if
     InvalidDatasetMetadataError raises in a task.
@@ -245,8 +245,7 @@ def test_invalidmetadataerror(testpath, requests_mock):
 
     # Check the body of last HTTP request
     request_body = requests_mock.last_request.json()
-    assert request_body['preservation_state'] ==\
-        DS_STATE_METADATA_VALIDATION_FAILED
+    assert request_body['preservation_state'] == DS_STATE_INVALID_METADATA
     assert request_body['preservation_description'] \
         == ('An error occurred while running a test task: '
             'InvalidDatasetMetadataError: Missing some important metadata')
