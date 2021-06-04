@@ -18,5 +18,5 @@ def test_text_csv_is_supported(mimetype, version, expected):
     :returns: ``None``
     """
     assert siptools_research.utils.mimetypes.is_supported(
-        mimetype, version, "include/etc/dpres_mimetypes.json"
+        mimetype, version
     ) is expected

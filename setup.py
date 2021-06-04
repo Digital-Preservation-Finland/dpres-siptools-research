@@ -11,6 +11,7 @@ def main():
         packages=find_packages(exclude=['tests', 'tests.*']),
         package_data={'siptools_research': ['schemas/*.json']},
         python_requires='>=3.6',
+        include_package_data=True,
         version=get_version(),
         install_requires=[
             "lxml",

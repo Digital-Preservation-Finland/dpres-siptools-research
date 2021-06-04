@@ -24,7 +24,6 @@ install:
 
 	# Copy config files
 	cp include/etc/siptools_research.conf ${ETC}/
-	cp include/etc/dpres_mimetypes.json ${ETC}/
 	cp include/usr/lib/systemd/system/siptools_research-3.service ${LIB}/systemd/system/siptools_research-3.service
 	cp include/usr/lib/systemd/system/siptools_research.timer ${LIB}/systemd/system/siptools_research-3.timer
 

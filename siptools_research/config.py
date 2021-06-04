@@ -23,7 +23,6 @@ DEFAULTS = {
     'dp_ssh_key': '~/.ssh/id_rsa_tpas_pouta',
     'sip_sign_key': '~/sip_sign_pas.pem',
     'pas_storage_id': 'urn:nbn:fi:att:file-storage-pas',
-    'mimetypes_conf': '/etc/dpres_mimetypes.json'
 }
 
 

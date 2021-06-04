@@ -176,11 +176,10 @@ def _validate_contract_metadata(contract_id, metax_client):
         raise InvalidContractMetadataError(str(exc))
 
 
-def _check_mimetype(file_metadata, conf):
+def _check_mimetype(file_metadata):
     """Check that file format is supported.
 
     :param file_metadata: file metadata dictionary
-    :param conf: siptools_research Configuration object
     :returns: ``None``
     """
     file_format = file_metadata["file_characteristics"]["file_format"]
@@ -190,8 +189,7 @@ def _check_mimetype(file_metadata, conf):
     except KeyError:
         format_version = ""
 
-    mimetypes_conf = conf.get("mimetypes_conf")
-    if not mimetypes.is_supported(file_format, format_version, mimetypes_conf):
+    if not mimetypes.is_supported(file_format, format_version):
         message = (
             "Validation error in file {file_path}: Incorrect file "
             "format: {file_format}"
@@ -251,7 +249,7 @@ def _validate_file_metadata(dataset, metax_client, conf):
         directory_validation.is_valid_for_file(file_metadata)
 
         # Check that mimetype is supported
-        _check_mimetype(file_metadata, conf)
+        _check_mimetype(file_metadata)
 
         # Check that file path does not point outside SIP
         normalised_path = os.path.normpath(file_path.strip('/'))

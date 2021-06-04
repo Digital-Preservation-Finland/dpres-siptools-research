@@ -24,6 +24,7 @@ Source0:        %{file_prefix}-v%{file_version}%{?file_release_tag}-%{file_build
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 Requires:       python3
+Requires:       python3-setuptools
 Requires:       python3-luigi
 Requires:       python36-pymongo
 Requires:       python3-dpres-siptools
@@ -95,7 +96,6 @@ rm -rf $RPM_BUILD_ROOT
 %files -f INSTALLED_FILES
 %defattr(-,root,root,-)
 %config(noreplace) /etc/siptools_research.conf
-%config /etc/dpres_mimetypes.json
 %attr(-,siptools_research,siptools_research) /var/log/siptools_research
 %attr(-,siptools_research,siptools_research) /var/spool/siptools_research
 /usr/lib/systemd/system/siptools_research-3.service
