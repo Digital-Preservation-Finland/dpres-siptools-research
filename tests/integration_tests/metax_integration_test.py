@@ -48,7 +48,11 @@ def get_metax_password():
     try:
         config = ConfigParser()
         config.read(os.path.expanduser("~/.metax.cfg"))
-        if config["metax"]["user"] == "tpas":
+        correct_metax_config = (
+            config["metax"]["user"] == "tpas"
+            and config["metax"]["host"] == "https://metax.fd-test.csc.fi"
+        )
+        if correct_metax_config:
             return config["metax"]["password"]
     except KeyError:
         # Config file does not exist
