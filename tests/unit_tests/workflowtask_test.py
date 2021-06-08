@@ -199,56 +199,47 @@ def test_run_failing_task(testpath, ):
     assert collection.count() == 1
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_invaliddataseterror(testpath, requests_mock):
-    """Test event handler of WorkflowTask.
-
-    Event handler should report preservation state to Metax if
-    InvalidSIPError raises in a task.
-
-    :param testpath: temporary directory
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    # Run task like it would be run from command line
-    run_luigi_task('InvalidSIPTask', str(testpath))
-
-    # Check the body of last HTTP request
-    request_body = requests_mock.last_request.json()
-    assert request_body['preservation_state'] ==\
-        DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
-    assert request_body['preservation_description'] == 'An error '\
-        'occurred while running a test task: InvalidSIPError: '\
-        'File validation failed'
-
-    # Check the method of last HTTP request
-    assert requests_mock.last_request.method == 'PATCH'
-
-
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_invalidmetadataerror(testpath, requests_mock):
-    """Test event handler of WorkflowTask.
-
-    Event handler should report preservation state to Metax if
-    InvalidDatasetMetadataError raises in a task.
-
-    :param testpath: temporary directory
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    requests_mock.patch(
-        "https://metaksi/rest/v2/datasets/1"
+@pytest.mark.parametrize(
+    ('task', 'expected_state', 'expected_description'),
+    (
+        [
+            'InvalidSIPTask',
+            DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+            'An error occurred while running a test task: '
+            'InvalidSIPError: File validation failed'
+        ],
+        [
+            'InvalidDatasetMetadataTask',
+            DS_STATE_INVALID_METADATA,
+            'An error occurred while running a test task: '
+            'InvalidDatasetMetadataError: Missing some important metadata'
+        ],
     )
+)
+@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+def test_invalid_dataset_error(testpath, requests_mock, task, expected_state,
+                               expected_description):
+    """Test event handler of WorkflowTask.
 
+    Event handler should report preservation state to Metax if
+    InvalidDatasetError raises in a task.
+
+    :param testpath: temporary directory
+    :param requests_mock: Mocker object
+    :param task: Test task to be run
+    :param expected_state: Preservation state that should be reported to
+                           Metax
+    :param expected_description: Preservation description that should
+                                 be reported to Metax
+    :returns: ``None``
+    """
     # Run task like it would be run from command line
-    run_luigi_task('InvalidDatasetMetadataTask', str(testpath))
+    run_luigi_task(task, str(testpath))
 
     # Check the body of last HTTP request
     request_body = requests_mock.last_request.json()
-    assert request_body['preservation_state'] == DS_STATE_INVALID_METADATA
-    assert request_body['preservation_description'] \
-        == ('An error occurred while running a test task: '
-            'InvalidDatasetMetadataError: Missing some important metadata')
+    assert request_body['preservation_state'] == expected_state
+    assert request_body['preservation_description'] == expected_description
 
     # Check the method of last HTTP request
     assert requests_mock.last_request.method == 'PATCH'
