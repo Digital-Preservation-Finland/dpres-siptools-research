@@ -1,7 +1,7 @@
 from siptools_research.exceptions import InvalidDatasetMetadataError
 
 
-class DatasetConsistency(object):
+class DatasetConsistency():
     """Motivation for this class is to speed up the process of checking if
     the files returned by Metax API datasets/datasetid/files are contained
     by Metax dataset files or directories attributes"""

@@ -25,45 +25,45 @@ class HomeDirSFTPServerInterface(mockssh.sftp.SFTPServerInterface):
 
     def open(self, path, flags, attr):
         path = self.path_to_abs(path)
-        return super(HomeDirSFTPServerInterface, self).open(path, flags, attr)
+        return super().open(path, flags, attr)
 
     def stat(self, path):
         path = self.path_to_abs(path)
-        return super(HomeDirSFTPServerInterface, self).stat(path)
+        return super().stat(path)
 
     def lstat(self, path):
         path = self.path_to_abs(path)
-        return super(HomeDirSFTPServerInterface, self).lstat(path)
+        return super().lstat(path)
 
     def symlink(self, src, dest):
         src = self.path_to_abs(src)
         dest = self.path_to_abs(dest)
-        return super(HomeDirSFTPServerInterface, self).symlink(src, dest)
+        return super().symlink(src, dest)
 
     def remove(self, path):
         path = self.path_to_abs(path)
-        return super(HomeDirSFTPServerInterface, self).remove(path)
+        return super().remove(path)
 
     def mkdir(self, path, attrs):
         path = self.path_to_abs(path)
-        return super(HomeDirSFTPServerInterface, self).mkdir(path, attrs)
+        return super().mkdir(path, attrs)
 
     def rmdir(self, path):
         path = self.path_to_abs(path)
-        return super(HomeDirSFTPServerInterface, self).rmdir(path)
+        return super().rmdir(path)
 
     def chattr(self, path, attrs):
         path = self.path_to_abs(path)
-        return super(HomeDirSFTPServerInterface, self).chattr(path, attrs)
+        return super().chattr(path, attrs)
 
     def rename(self, src, dest):
         src = self.path_to_abs(src)
         dest = self.path_to_abs(dest)
-        return super(HomeDirSFTPServerInterface, self).rename(src, dest)
+        return super().rename(src, dest)
 
     def list_folder(self, path):
         path = self.path_to_abs(path)
-        return super(HomeDirSFTPServerInterface, self).list_folder(path)
+        return super().list_folder(path)
 
 
 class HomeDirSFTPServer(paramiko.SFTPServer):
@@ -73,7 +73,7 @@ class HomeDirSFTPServer(paramiko.SFTPServer):
     """
     def __init__(self, *args, **kwargs):
         kwargs["sftp_si"] = HomeDirSFTPServerInterface
-        super(HomeDirSFTPServer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class HomeDirMockServer(mockssh.server.Server):
@@ -84,5 +84,4 @@ class HomeDirMockServer(mockssh.server.Server):
     def __init__(self, *args, **kwargs):
         self.home_dir = kwargs.pop("home_dir")
 
-        super(HomeDirMockServer, self).__init__(*args, **kwargs)
-
+        super().__init__(*args, **kwargs)

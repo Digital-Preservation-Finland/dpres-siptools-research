@@ -5,6 +5,8 @@ import datetime
 import os
 import shutil
 
+from tempfile import TemporaryDirectory
+
 import siptools.mdcreator
 import siptools.scripts.import_object
 from luigi import LocalTarget
@@ -16,12 +18,6 @@ from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.xml_metadata import (TECH_ATTR_TYPES,
                                             XMLMetadataGenerator)
-
-try:
-    from tempfile import TemporaryDirectory
-except ImportError:
-    # TODO: Remove this when Python 2 support can be dropped
-    from siptools_research.temporarydirectory import TemporaryDirectory
 
 
 class CreateTechnicalMetadata(WorkflowTask):
@@ -58,7 +54,7 @@ class CreateTechnicalMetadata(WorkflowTask):
 
     def __init__(self, *args, **kwargs):
         """Initialize Task."""
-        super(CreateTechnicalMetadata, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.config_object = Configuration(self.config)
         self.metax_client = Metax(
             self.config_object.get('metax_url'),

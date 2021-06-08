@@ -1,11 +1,8 @@
 """Luigi task that creates descriptive metadata."""
 import os
 import shutil
-try:
-    from tempfile import TemporaryDirectory
-except ImportError:
-    # TODO: Remove this when Python 2 support can be dropped
-    from siptools_research.temporarydirectory import TemporaryDirectory
+
+from tempfile import TemporaryDirectory
 
 import luigi
 
@@ -102,4 +99,3 @@ class CreateDescriptiveMetadata(WorkflowTask):
                 for file_ in os.listdir(temporary_workspace):
                     shutil.move(os.path.join(temporary_workspace, file_),
                                 self.sip_creation_path)
-

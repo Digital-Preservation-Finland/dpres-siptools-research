@@ -89,12 +89,8 @@ class GetFiles(WorkflowTask):
                         )
                     )
 
-                # Create the download directory for file if it does not
-                # exist already
-                if not os.path.isdir(os.path.dirname(target_path)):
-                    # TODO: Use exist_ok -parameter when moving to
-                    # python3
-                    os.makedirs(os.path.dirname(target_path))
+                # Create the download directory for file if it does not exist
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
 
                 download_file(
                     dataset_file, target_path, self.config, upload_database

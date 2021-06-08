@@ -230,7 +230,7 @@ class _VideoFileXMLMetadata(_XMLMetadata):
         )
 
 
-class XMLMetadataGenerator(object):
+class XMLMetadataGenerator():
     """Class for generating a file type specific XML metadata."""
 
     METADATA_GENERATORS = [_ImageFileXMLMetadata, _CSVFileXMLMetadata,

@@ -26,7 +26,7 @@ DEFAULTS = {
 }
 
 
-class Configuration(object):
+class Configuration():
     """Reads and stores configuration from configuration file."""
 
     config_section = 'siptools_research'
@@ -49,7 +49,7 @@ class Configuration(object):
         be format fotmat that can be read by ConfigParser. Options under
         section "[siptools_research]" are read.
 
-        https://docs.python.org/2/library/configparser.html
+        https://docs.python.org/3/library/configparser.html
 
         :param config_file: path to configuration file
         :returns: ``None``
