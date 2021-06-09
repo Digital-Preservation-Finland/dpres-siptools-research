@@ -1,7 +1,8 @@
 """Tests for :mod:`siptools_research.__main__` module"""
 import sys
 
-import mock
+from unittest import mock
+
 import pytest
 
 import siptools_research.__main__

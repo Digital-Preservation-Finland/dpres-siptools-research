@@ -3,7 +3,6 @@ pytest
 coverage
 pytest-cov
 requests_mock
-mock
 Sphinx
 jsonschema2rst
 mongomock

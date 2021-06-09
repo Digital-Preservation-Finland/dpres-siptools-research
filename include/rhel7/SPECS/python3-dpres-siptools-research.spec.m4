@@ -38,7 +38,6 @@ Requires:       ImageMagick
 Requires:       python36-dateutil
 Requires:       dpres-xml-schemas
 Requires:       python3-metax-access
-Requires:       python36-mock
 Requires:       python3-file-scraper-full
 Requires:       python3-upload-rest-api
 BuildRequires:  python3-setuptools

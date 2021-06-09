@@ -1,10 +1,12 @@
 """Tests for :mod:`siptools_research.workflow_init` module"""
-import pytest
-import mock
+from unittest import mock
 
-import siptools_research
-from siptools_research.workflow_init import preserve_dataset
+import pytest
+
 import tests.conftest
+import siptools_research
+
+from siptools_research.workflow_init import preserve_dataset
 
 
 def test_initworkflow():
@@ -50,9 +52,10 @@ def test_initworkflows():
     required_tasks = list(task.requires())
 
     # Only workflows 1 and 3 should be incomplete
-    assert set([required_task.workspace for required_task in required_tasks])\
-        == set(['./test_packaging_root/workspaces/workflow1',
-                './test_packaging_root/workspaces/workflow3'])
+    assert {required_task.workspace for required_task in required_tasks} == {
+        './test_packaging_root/workspaces/workflow1',
+        './test_packaging_root/workspaces/workflow3'
+    }
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')

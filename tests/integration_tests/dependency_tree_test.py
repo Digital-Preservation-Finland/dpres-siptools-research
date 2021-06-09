@@ -12,10 +12,11 @@ that each task will complete, the output of task is NOT examined.
 import datetime
 import importlib
 
+from unittest import mock
+
 import pytest
 import luigi
 import pymongo
-import mock
 
 from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.config import Configuration

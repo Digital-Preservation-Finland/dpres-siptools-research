@@ -1,10 +1,7 @@
 """Tests for :mod:`siptools_research.xml_metadata` module"""
-from siptools_research.xml_metadata import XMLMetadataGenerator
+from unittest import mock
 
-try:
-    import mock
-except ImportError:
-    from unittest import mock
+from siptools_research.xml_metadata import XMLMetadataGenerator
 
 
 def test_generate_xml_metadata_for_image_file():
