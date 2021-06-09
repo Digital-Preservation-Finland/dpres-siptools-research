@@ -26,7 +26,7 @@ DEFAULTS = {
 }
 
 
-class Configuration():
+class Configuration:
     """Reads and stores configuration from configuration file."""
 
     config_section = 'siptools_research'

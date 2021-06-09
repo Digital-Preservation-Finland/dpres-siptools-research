@@ -4,7 +4,7 @@ from siptools_research.exceptions import InvalidDatasetMetadataError
 import siptools_research.schemas
 
 
-class DirectoryValidation():
+class DirectoryValidation:
     """Motivation for this class is to speed up the process of directory tree
     validation fro dataset files
     """

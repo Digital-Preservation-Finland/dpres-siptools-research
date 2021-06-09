@@ -13,7 +13,7 @@ def _timestamp():
     return datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 
-class Database():
+class Database:
     """Workflow status database"""
 
     _collection = None
