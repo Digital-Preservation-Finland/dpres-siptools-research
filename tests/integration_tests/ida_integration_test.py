@@ -76,8 +76,6 @@ def test_ida_download(testpath):
 def test_ida_download_missing(testpath):
     """Try downloading a nonexistent file from Ida.
     """
-    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-
     # Read configuration file
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     # Override Ida password in configuration file with real password from

@@ -367,7 +367,7 @@ def test_generate_metadata_ida_download_error(requests_mock):
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.BASE_FILE])
     requests_mock.post(
-        'https://ida.dl-authorize.test/authorize', status_code=400
+        'https://ida.dl-authorize.test/authorize', status_code=404
     )
 
     with pytest.raises(MissingFileError) as exception_info:

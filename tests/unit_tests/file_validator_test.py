@@ -69,7 +69,7 @@ def test_validate_files_not_found(requests_mock):
     """
     requests_mock.post(
         'https://ida.dl-authorize.test/authorize',
-        status_code=400
+        status_code=404
     )
 
     with pytest.raises(MissingFileError) as exception_info:

@@ -89,38 +89,13 @@ def _get_ida_file(file_metadata, dataset_id, conf):
 
             token = response.json()["token"]
         except HTTPError as error:
-            if error.response.status_code == 400:
+            if error.response.status_code == 404:
                 raise FileNotAvailableError(
                     f"File '{file_metadata['file_path']}' not found in Ida"
                 )
-            if error.response.status_code == 502:
+            elif error.response.status_code == 502:
                 raise FileAccessError("Ida service temporarily unavailable. "
                                       "Please, try again later.")
-
-            dataset_not_found = (
-                # Contrary to the API documentation, the `/authorize` responds
-                # with a 500 Internal Server Error if we perform a request
-                # with an existing dataset and a nonexistent file.
-                # According to Swagger docs, 400 should be returned instead.
-                # As part of CSCFAIRDATA-113, the status code will also likely
-                # be changed to 404.
-                #
-                # Handle all three scenarios here.
-                # TODO: Remove the 500 check once the ticket CSCFAIRDATA-113
-                # has been fixed.
-                error.response.status_code in [400, 404]
-                or
-                (
-                    error.response.status_code == 500
-                    and error.response.json()["error"].startswith(
-                        "No matching project was found for dataset "
-                    )
-                )
-            )
-            if dataset_not_found:
-                raise FileNotAvailableError(
-                    f"File '{file_metadata['file_path']}' not found in Ida"
-                )
 
             raise
 

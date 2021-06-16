@@ -72,7 +72,7 @@ def test_missing_ida_files(workspace, requests_mock):
 
     requests_mock.post(
         'https://ida.dl-authorize.test/authorize',
-        status_code=400,
+        status_code=404,
         additional_matcher=lambda req: req.json()["file"] == "/path/to/file4"
     )
 
