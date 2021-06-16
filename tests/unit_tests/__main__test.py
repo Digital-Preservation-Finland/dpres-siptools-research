@@ -5,15 +5,28 @@ from unittest import mock
 
 import pytest
 
+from metax_access.metax import (
+    DS_STATE_TECHNICAL_METADATA_GENERATED,
+    DS_STATE_VALID_METADATA
+)
+
 import siptools_research.__main__
 from siptools_research.utils.database import Database
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
+@pytest.mark.parametrize('set_preservation_state', [True, False])
+@mock.patch('siptools_research.__main__.Metax.set_preservation_state')
 @mock.patch('siptools_research.__main__.preserve_dataset')
 @mock.patch('siptools_research.__main__.validate_metadata')
 @mock.patch('siptools_research.__main__.generate_metadata')
-def test_main_generate(mock_generate, mock_validate, mock_preserve):
+def test_main_generate(
+    mock_generate,
+    mock_validate,
+    mock_preserve,
+    mock_metax,
+    set_preservation_state
+):
     """Test that correct function is called from main function when "generate"
     command is used.
 
@@ -23,20 +36,44 @@ def test_main_generate(mock_generate, mock_validate, mock_preserve):
     :returns: ``None``
     """
     # Run main function with "generate" as command
-    with mock.patch.object(sys, 'argv',
-                           ['siptools-research', 'generate', '1']):
+    args = [
+        'siptools-research',
+        '--config',
+        UNIT_TEST_CONFIG_FILE,
+        'generate',
+        '1'
+    ]
+    if set_preservation_state:
+        args.append('--set-preservation-state')
+
+    with mock.patch.object(sys, 'argv', args):
         siptools_research.__main__.main()
 
     # The generate_metadata function should be called.
-    mock_generate.assert_called_with('1', '/etc/siptools_research.conf')
+    mock_generate.assert_called_with('1', UNIT_TEST_CONFIG_FILE)
     mock_validate.assert_not_called()
     mock_preserve.assert_not_called()
 
+    if set_preservation_state:
+        mock_metax.assert_called_with(
+            '1', state=DS_STATE_TECHNICAL_METADATA_GENERATED
+        )
+    else:
+        mock_metax.assert_not_called()
 
+
+@pytest.mark.parametrize('set_preservation_state', [True, False])
+@mock.patch('siptools_research.__main__.Metax.set_preservation_state')
 @mock.patch('siptools_research.__main__.preserve_dataset')
 @mock.patch('siptools_research.__main__.validate_metadata')
 @mock.patch('siptools_research.__main__.generate_metadata')
-def test_main_validate(mock_generate, mock_validate, mock_preserve):
+def test_main_validate(
+    mock_generate,
+    mock_validate,
+    mock_preserve,
+    mock_metax,
+    set_preservation_state
+):
     """Test that correct function is called from main function when "validate"
     command is used.
 
@@ -46,14 +83,28 @@ def test_main_validate(mock_generate, mock_validate, mock_preserve):
     :returns: ``None``
     """
     # Run main function with "validate" as command
-    with mock.patch.object(sys, 'argv',
-                           ['siptools-research', 'validate', '2']):
+    args = [
+        'siptools-research',
+        '--config',
+        UNIT_TEST_CONFIG_FILE,
+        'validate',
+        '2'
+    ]
+    if set_preservation_state:
+        args.append('--set-preservation-state')
+
+    with mock.patch.object(sys, 'argv', args):
         siptools_research.__main__.main()
 
     # The validate_metadata function should be called.
-    mock_validate.assert_called_with('2', '/etc/siptools_research.conf')
+    mock_validate.assert_called_with('2', UNIT_TEST_CONFIG_FILE)
     mock_generate.assert_not_called()
     mock_preserve.assert_not_called()
+
+    if set_preservation_state:
+        mock_metax.assert_called_with('2', state=DS_STATE_VALID_METADATA)
+    else:
+        mock_metax.assert_not_called()
 
 
 @mock.patch('siptools_research.__main__.preserve_dataset')

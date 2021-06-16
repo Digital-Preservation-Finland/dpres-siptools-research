@@ -25,6 +25,16 @@ and::
 import argparse
 import json
 
+from metax_access import Metax
+from metax_access import (
+    DS_STATE_TECHNICAL_METADATA_GENERATED,
+    DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
+    DS_STATE_VALIDATING_METADATA,
+    DS_STATE_METADATA_VALIDATION_FAILED,
+    DS_STATE_VALID_METADATA
+)
+
+from siptools_research.config import Configuration
 from siptools_research.metadata_generator import generate_metadata
 from siptools_research.workflow_init import preserve_dataset
 from siptools_research.metadata_validator import validate_metadata
@@ -84,6 +94,11 @@ def _setup_generate_args(subparsers):
     )
     generate_parser.set_defaults(func=_generate)
     generate_parser.add_argument('dataset_id', help="Dataset identifier")
+    generate_parser.add_argument(
+        '--set-preservation-state',
+        action="store_true", default=False,
+        help="Set preservation state based on metadata generation results"
+    )
 
 
 def _setup_validate_args(subparsers):
@@ -93,6 +108,11 @@ def _setup_validate_args(subparsers):
     )
     validate_parser.set_defaults(func=_validate)
     validate_parser.add_argument('dataset_id', help="Dataset identifier")
+    validate_parser.add_argument(
+        '--set-preservation-state',
+        action="store_true", default=False,
+        help="Set preservation state based on metadata validation results"
+    )
 
 
 def _setup_preserve_args(subparsers):
@@ -231,12 +251,61 @@ def _setup_clean_cache_args(subparsers):
 
 def _generate(args):
     """Generate technical metadata for the dataset"""
-    generate_metadata(args.dataset_id, args.config)
+    conf = Configuration(args.config)
+    metax_client = Metax(
+        conf.get('metax_url'),
+        conf.get('metax_user'),
+        conf.get('metax_password'),
+        verify=conf.getboolean('metax_ssl_verification')
+    )
+
+    try:
+        generate_metadata(args.dataset_id, args.config)
+    except Exception:
+        if args.set_preservation_state:
+            metax_client.set_preservation_state(
+                args.dataset_id,
+                state=DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED
+            )
+        raise
+
+    if args.set_preservation_state:
+        metax_client.set_preservation_state(
+            args.dataset_id,
+            state=DS_STATE_TECHNICAL_METADATA_GENERATED
+        )
 
 
 def _validate(args):
     """Validate dataset metadata"""
-    validate_metadata(args.dataset_id, args.config)
+    conf = Configuration(args.config)
+    metax_client = Metax(
+        conf.get('metax_url'),
+        conf.get('metax_user'),
+        conf.get('metax_password'),
+        verify=conf.getboolean('metax_ssl_verification')
+    )
+    if args.set_preservation_state:
+        metax_client.set_preservation_state(
+            args.dataset_id,
+            state=DS_STATE_VALIDATING_METADATA
+        )
+
+    try:
+        validate_metadata(args.dataset_id, args.config)
+    except Exception:
+        if args.set_preservation_state:
+            metax_client.set_preservation_state(
+                args.dataset_id,
+                state=DS_STATE_METADATA_VALIDATION_FAILED
+            )
+        raise
+
+    if args.set_preservation_state:
+        metax_client.set_preservation_state(
+            args.dataset_id,
+            state=DS_STATE_VALID_METADATA
+        )
 
 
 def _preserve(args):
