@@ -6,7 +6,6 @@ import os
 import json
 import getpass
 import pytest
-import tests.conftest
 import luigi.cmdline
 import pymongo
 import requests
@@ -14,6 +13,7 @@ import requests_mock
 
 from siptools_research.config import Configuration
 
+import tests.conftest
 
 try:
     from configparser import ConfigParser
@@ -101,10 +101,19 @@ def test_workflow(testpath):
 
         with requests_mock.Mocker(real_http=True) as ida_mock:
             # Mock Ida
-            ida_mock.get(conf.get('ida_url') + "/files/%s/download" % file1_id,
-                         text='adsf')
-            ida_mock.get(conf.get('ida_url') + "/files/%s/download" % file2_id,
-                         text='adsf')
+            ida_mock.post(
+                f"{conf.get('ida_dl_authorize_url')}/authorize/",
+            )
+            ida_mock.get(
+                f"{conf.get('ida_dl_url')}/download?"
+                f"dataset={dataset_id}&file=/path/to/file1",
+                text='adsf',
+            )
+            ida_mock.get(
+                f"{conf.get('ida_dl_url')}/download?"
+                f"dataset={dataset_id}&file=/path/to/file2",
+                text='adsf',
+            )
 
             # Run partial workflow for dataset just added to Metax
             workspace = str(testpath / f'workspace_{testpath.name}')
