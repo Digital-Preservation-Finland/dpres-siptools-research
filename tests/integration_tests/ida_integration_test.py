@@ -1,8 +1,10 @@
-"""Test that download module can download files from Ida test server. The
-password for Ida user 'testuser_1' is prompted during the test."""
+"""Test that download module can download files from Ida test server. The IDA
+token is prompted during the test."""
 
 import getpass
 import os
+
+from configparser import ConfigParser
 
 import pytest
 import tests.conftest
@@ -10,16 +12,12 @@ from siptools_research.config import Configuration
 from siptools_research.utils.download import (FileNotAvailableError,
                                               download_file)
 
-try:
-    from configparser import ConfigParser
-except ImportError:  # Python 2
-    from ConfigParser import ConfigParser
 
 
-def get_ida_password():
+def get_ida_token():
     """
-    Retrieve the Ida password, trying first to read from an existing
-    configuration file and then using a password prompt
+    Retrieve the IDA token, trying first to read from an existing
+    configuration file and then using a token prompt
     """
     try:
         config = ConfigParser()
@@ -27,16 +25,16 @@ def get_ida_password():
         correct_ida_config = (
             config["siptools_research"]["ida_url"]
             == "https://ida.fd-test.csc.fi:4443"
-            and config["siptools_research"]["ida_user"] == "testuser_1"
+            and config["siptools_research"]["ida_token"]
         )
 
         if correct_ida_config:
-            return config["siptools_research"]["ida_password"]
+            return config["siptools_research"]["ida_token"]
     except KeyError:
         # Config file does not exist
         pass
 
-    return getpass.getpass(prompt="Ida password for user 'testuser_1':")
+    return getpass.getpass(prompt="Ida token:")
 
 
 @pytest.mark.usefixtures("pkg_root")
@@ -47,12 +45,12 @@ def test_ida_download(testpath):
     """
     # Read configuration file
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-    # Override Ida password in configuration file with real password from
+    # Override IDA token in configuration file with real token from
     # the user
     # pylint: disable=protected-access
     conf._parser.set(
-        'siptools_research', 'ida_password',
-        get_ida_password()
+        'siptools_research', 'ida_token',
+        get_ida_token()
     )
 
     # Download a file that is should be available
@@ -78,12 +76,12 @@ def test_ida_download_missing(testpath):
     """
     # Read configuration file
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-    # Override Ida password in configuration file with real password from
+    # Override IDA token in configuration file with real token from
     # the user
     # pylint: disable=protected-access
     conf._parser.set(
-        'siptools_research', 'ida_password',
-        get_ida_password()
+        'siptools_research', 'ida_token',
+        get_ida_token()
     )
 
     download_path = os.path.join(testpath, 'ida_file')

@@ -61,8 +61,7 @@ def _get_ida_file(file_metadata, dataset_id, conf):
         conf.get("packaging_root"), "tmp", f"IDA-{identifier}"
     )
 
-    user = conf.get('ida_user')
-    password = conf.get('ida_password')
+    ida_token = conf.get('ida_token')
     verify = conf.getboolean('ida_ssl_verification')
 
     auth_base_url = conf.get('ida_dl_authorize_url')
@@ -78,7 +77,9 @@ def _get_ida_file(file_metadata, dataset_id, conf):
             # Retrieve a single-use download token
             response = requests.post(
                 f"{auth_base_url}/authorize",
-                auth=(user, password),
+                headers={
+                    "Authorization": f"Bearer {ida_token}"
+                },
                 verify=verify,
                 json={
                     "dataset": dataset_id,

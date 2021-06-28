@@ -18,10 +18,8 @@ metax_password
     Metax password. Default: ``""``
 ida_url
     Ida url. Default: ``"https://86.50.169.61:4433"``
-ida_user
-    Ida username. Default: ``"testuser_1"``
-ida_password
-    Ida password. Default: ``""``
+ida_token
+    Ida token. Default: ``""``
 dp_host
     Digital preservation service host. Default: ``"86.50.168.218"``
 dp_user
