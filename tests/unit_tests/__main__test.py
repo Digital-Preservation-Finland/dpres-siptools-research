@@ -62,6 +62,7 @@ def test_main_generate(
         mock_metax.assert_not_called()
 
 
+@pytest.mark.parametrize('dummy_doi', [True, False])
 @pytest.mark.parametrize('set_preservation_state', [True, False])
 @mock.patch('siptools_research.__main__.Metax.set_preservation_state')
 @mock.patch('siptools_research.__main__.preserve_dataset')
@@ -72,7 +73,8 @@ def test_main_validate(
     mock_validate,
     mock_preserve,
     mock_metax,
-    set_preservation_state
+    set_preservation_state,
+    dummy_doi
 ):
     """Test that correct function is called from main function when "validate"
     command is used.
@@ -93,11 +95,18 @@ def test_main_validate(
     if set_preservation_state:
         args.append('--set-preservation-state')
 
+    if dummy_doi:
+        args.append('--dummy-doi')
+
     with mock.patch.object(sys, 'argv', args):
         siptools_research.__main__.main()
 
     # The validate_metadata function should be called.
-    mock_validate.assert_called_with('2', UNIT_TEST_CONFIG_FILE)
+    dummy_doi_value = "true" if dummy_doi else "false"
+    mock_validate.assert_called_with(
+        '2', UNIT_TEST_CONFIG_FILE, dummy_doi=dummy_doi_value
+    )
+
     mock_generate.assert_not_called()
     mock_preserve.assert_not_called()
 

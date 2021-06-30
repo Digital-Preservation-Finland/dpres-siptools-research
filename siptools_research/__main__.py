@@ -113,6 +113,11 @@ def _setup_validate_args(subparsers):
         action="store_true", default=False,
         help="Set preservation state based on metadata validation results"
     )
+    validate_parser.add_argument(
+        '--dummy-doi',
+        action="store_true", default=False,
+        help="Use dummy doi for metadata validation"
+    )
 
 
 def _setup_preserve_args(subparsers):
@@ -285,6 +290,7 @@ def _validate(args):
         conf.get('metax_password'),
         verify=conf.getboolean('metax_ssl_verification')
     )
+    dummy_doi = "true" if args.dummy_doi else "false"
     if args.set_preservation_state:
         metax_client.set_preservation_state(
             args.dataset_id,
@@ -292,7 +298,7 @@ def _validate(args):
         )
 
     try:
-        validate_metadata(args.dataset_id, args.config)
+        validate_metadata(args.dataset_id, args.config, dummy_doi=dummy_doi)
     except Exception:
         if args.set_preservation_state:
             metax_client.set_preservation_state(
