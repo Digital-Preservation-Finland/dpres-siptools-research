@@ -58,8 +58,8 @@ def mock_os_link(monkeypatch):
 def mock_upload_conf(monkeypatch):
     """Patch upload_rest_api configuration parsing."""
     monkeypatch.setattr(
-        upload_rest_api.database, "parse_conf",
-        lambda conf: {"MONGO_HOST": "localhost", "MONGO_PORT": 27017}
+        upload_rest_api.config, "CONFIG",
+        {"MONGO_HOST": "localhost", "MONGO_PORT": 27017}
     )
 
 
