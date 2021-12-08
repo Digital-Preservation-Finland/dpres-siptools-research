@@ -57,11 +57,6 @@ clean-rpm:
 	rm -rf rpmbuild
 	rm -rf doc/build doc/modules
 
-rpm: clean
-	create-archive.sh
-	preprocess-spec-m4-macros.sh include/rhel7
-	build-rpm.sh
-
 .PHONY: doc
 doc:
 	PYTHONPATH="../" make -C doc html
