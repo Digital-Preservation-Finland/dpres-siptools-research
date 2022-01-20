@@ -9,14 +9,14 @@ from pathlib import Path
 
 import lxml.etree
 import pytest
-import tests.metax_data
-import tests.utils
 from siptools.utils import read_md_references
 from siptools.xml.mets import NAMESPACES
+import xmltodict
+
+import tests.metax_data
+import tests.utils
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       algorithm_name)
-
-import xmltodict
 
 
 def xml2simpledict(element):
@@ -140,7 +140,7 @@ def test_create_techmd_ok(workspace, requests_mock):
     # Compare MIX metadata in techMD file to original MIX metadata in
     # Metax
     mets = lxml.etree.parse(
-        str(sipdirectory /'dd0f489d6e47cc2dca598beb608cc78d-NISOIMG-amd.xml')
+        str(sipdirectory / 'dd0f489d6e47cc2dca598beb608cc78d-NISOIMG-amd.xml')
     )
     mdwrap = mets.xpath('/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap',
                         namespaces=NAMESPACES)[0]
@@ -245,8 +245,8 @@ def test_create_techmd_incomplete_file_characteristics(
     characteristics
     """
     tiff_file_incomplete = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
-    del tiff_file_incomplete["file_characteristics_extension"]["streams"] \
-                            [0]["bps_value"]
+    del (tiff_file_incomplete["file_characteristics_extension"]["streams"]
+         [0]["bps_value"])
     # Mock metax
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tiff_file_incomplete])

@@ -37,7 +37,6 @@ def test_signsip(workspace):
         in (workspace / "signature.sig").read_text()
     )
 
-
     names = set(path.name for path in workspace.iterdir())
 
     # SIP directory should contain only METS and signature

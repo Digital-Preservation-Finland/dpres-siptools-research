@@ -43,9 +43,10 @@ def test_createprovenanceinformation(pkg_root, workspace):
     # Check that XMLs are created in workspace/sip-inprogress/
     files = set(path.name for path in sipdirectory.iterdir())
     assert (
-        files == \
-        set(['6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml',
-             'f1ffc55803b971ab8dd013710766f47e-PREMIS%3AEVENT-amd.xml'])
+        files == set(
+            ['6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml',
+             'f1ffc55803b971ab8dd013710766f47e-PREMIS%3AEVENT-amd.xml']
+        )
     )
 
     # Metadata reference file should have references to both premis

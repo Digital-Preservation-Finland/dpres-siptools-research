@@ -101,14 +101,14 @@ def testmongoclient(monkeypatch):
     monkeypatch.setattr(pymongo, 'MongoClient', mock_mongoclient)
 
 
-
 @pytest.fixture(scope="function")
 def testpath(tmpdir):
     """
-    Create a temporary test directory and return a pathlib.Path object
+    Create a temporary test directory and return a pathlib.Path object.
 
-    This is pretty much identical to `tmp_path` fixture found in pytest 3.9.0
-    and up, and can be replaced accordingly once that is available
+    This is pretty much identical to `tmp_path` fixture found in pytest
+    3.9.0 and up, and can be replaced accordingly once that is
+    available.
     """
     # TODO: Replace `testpath` with built-in `tmp_path` in pytest 3.9.0 and up
     return Path(str(tmpdir))
@@ -156,6 +156,7 @@ def pkg_root(testpath, monkeypatch):
 def workspace(pkg_root):
     """
     Create a temporary workspace directory.
+
     This is a shorthand for `pkg_root / "workspaces / "workspace"`.
 
     :returns: Path to the workspce directory
@@ -198,19 +199,14 @@ def mock_filetype_conf(monkeypatch):
 
 @pytest.yield_fixture(scope="function")
 def sftp_dir(tmpdir):
-    """
-    Local directory that corresponds to the DPS' SFTP server
-    """
+    """Local directory that corresponds to the DPS' SFTP server."""
     sftp_dir_ = tmpdir.mkdir("sftp_server")
     yield Path(str(sftp_dir_))
 
 
-
 @pytest.yield_fixture(scope="function")
 def sftp_server(sftp_dir, monkeypatch):
-    """
-    Return a directory in the filesystem that is served by a test SFTP server
-    """
+    """Return a directory in the test SFTP filesystem."""
     users = {
         "tpas": SSH_KEY_PATH
     }
@@ -271,8 +267,7 @@ def luigi_mock_ssh_config(config_creator, sftp_dir, sftp_server):
 
 @pytest.fixture(scope="function")
 def mock_ida_download(requests_mock):
-    """Mock the IDA download authorization endpoint
-    """
+    """Mock the IDA download authorization endpoint."""
     requests_mock.post(
         "https://ida.dl-authorize.test/authorize",
         json={

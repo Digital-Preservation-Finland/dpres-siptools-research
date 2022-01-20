@@ -3,11 +3,12 @@ import copy
 from collections import defaultdict
 
 import pytest
+from metax_access import DatasetNotAvailableError
+from requests.exceptions import HTTPError
+
 import tests.metax_data.datasets
 import tests.metax_data.files
 import tests.utils
-from metax_access import DatasetNotAvailableError
-from requests.exceptions import HTTPError
 from siptools_research.exceptions import InvalidFileError, MissingFileError
 from siptools_research.metadata_generator import generate_metadata
 
@@ -102,18 +103,18 @@ def test_generate_metadata(requests_mock,
     assert file_characteristics.get('file_format') == file_format
     assert file_characteristics.get('encoding') == encoding
 
-    file_char_ext = \
-        file_metadata_patch.last_request.json()['file_characteristics_extension']
+    file_char_ext = file_metadata_patch.last_request.json()[
+        'file_characteristics_extension'
+    ]
     assert file_char_ext['streams']['0']['mimetype'] == file_format
     assert file_char_ext['streams']['0']['stream_type'] == stream_type
 
 
 @pytest.mark.usefixtures('pkg_root', 'mock_ida_download')
 def test_generate_metadata_video_streams(requests_mock):
-    """Test metadata generation for a video file with multiple different
-    streams.
+    """Test metadata generation for a video file.
 
-    Generates file characteristics for a file with multiple streams.
+    Generates file characteristics for a video file with multiple streams.
     """
     tests.utils.add_metax_dataset(
         requests_mock,
@@ -132,8 +133,9 @@ def test_generate_metadata_video_streams(requests_mock):
         'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    file_char_ext = \
-        file_metadata_patch.last_request.json()['file_characteristics_extension']
+    file_char_ext = file_metadata_patch.last_request.json()[
+        'file_characteristics_extension'
+    ]
 
     # Four different streams found
     assert set(['0', '1', '2', '3']) == set(file_char_ext['streams'].keys())
@@ -217,9 +219,12 @@ def test_generate_metadata_predefined(requests_mock):
     # verify the file characteristics that were sent to Metax
     assert patch_request.last_request.json() == {
         'file_characteristics': {
-            'file_format': 'text/plain',  # missing keys are added
-            'encoding': 'user_defined',  # user defined value is not overwritten
-            'dummy_key': 'dummy_value',  # additional keys are copied
+            # missing keys are added
+            'file_format': 'text/plain',
+            # user defined value is not overwritten
+            'encoding': 'user_defined',
+            # additional keys are copied
+            'dummy_key': 'dummy_value',
         },
         'file_characteristics_extension': {
             'streams': {

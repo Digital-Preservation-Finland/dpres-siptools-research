@@ -69,7 +69,7 @@ def test_download_file_404(pkg_root, requests_mock):
     :returns: ``None``
     """
     requests_mock.post('https://ida.dl-authorize.test/authorize',
-                      status_code=404)
+                       status_code=404)
 
     new_file_path = pkg_root / 'new_file'
     with pytest.raises(FileNotAvailableError):
@@ -88,7 +88,7 @@ def test_download_file_502(pkg_root, requests_mock):
     :returns: ``None``
     """
     requests_mock.post('https://ida.dl-authorize.test/authorize',
-                      status_code=502)
+                       status_code=502)
 
     new_file_path = pkg_root / 'new_file'
     with pytest.raises(FileAccessError) as exc_info:

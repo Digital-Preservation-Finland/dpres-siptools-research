@@ -112,8 +112,9 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
                 config_file=config_file,
                 upload_database=upload_database
             )
-        except FileNotAvailableError:
-            raise MissingFileError("File is not available", [file_id])
+        except FileNotAvailableError as error:
+            raise MissingFileError("File is not available",
+                                   [file_id]) from error
 
         # Generate and update file_characteristics
         tech_metadata = _generate_file_tech_metadata(

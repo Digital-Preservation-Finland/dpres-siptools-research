@@ -1,6 +1,4 @@
 """Test the :mod:`siptools_research.workflow.get_files` module."""
-import os
-
 import pymongo
 import pytest
 import tests.conftest

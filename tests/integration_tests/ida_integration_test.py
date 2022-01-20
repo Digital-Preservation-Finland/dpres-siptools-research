@@ -1,5 +1,7 @@
-"""Test that download module can download files from Ida test server. The IDA
-token is prompted during the test."""
+"""Test that download module can download files from Ida test server.
+
+The IDA token is prompted during the test.
+"""
 
 import getpass
 import os
@@ -13,11 +15,11 @@ from siptools_research.utils.download import (FileNotAvailableError,
                                               download_file)
 
 
-
 def get_ida_token():
-    """
-    Retrieve the IDA token, trying first to read from an existing
-    configuration file and then using a token prompt
+    """Retrieve the IDA token.
+
+    Tries first to read from an existing configuration file and then
+    prompts user.
     """
     try:
         config = ConfigParser()
@@ -39,7 +41,7 @@ def get_ida_token():
 
 @pytest.mark.usefixtures("pkg_root")
 def test_ida_download(testpath):
-    """Download a file from Ida
+    """Download a file from Ida.
 
     :param testpath: temporary directory fixture
     """
@@ -72,8 +74,7 @@ def test_ida_download(testpath):
 
 
 def test_ida_download_missing(testpath):
-    """Try downloading a nonexistent file from Ida.
-    """
+    """Try downloading a nonexistent file from Ida."""
     # Read configuration file
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
     # Override IDA token in configuration file with real token from
