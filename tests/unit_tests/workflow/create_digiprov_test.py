@@ -11,9 +11,8 @@ import tests.metax_data
 import tests.utils
 
 
-@pytest.mark.usefixtures("testmongoclient", 'mock_metax_access')
-# pylint: disable=invalid-name
-def test_createprovenanceinformation(pkg_root, workspace):
+@pytest.mark.usefixtures("testmongoclient")
+def test_createprovenanceinformation(pkg_root, workspace, requests_mock):
     """Test `CreateProvenanceInformation` task.
 
     - `Task.complete()` is true after `Task.run()`
@@ -24,6 +23,14 @@ def test_createprovenanceinformation(pkg_root, workspace):
     :param workspace: Testpath fixture
     :returns: ``None``
     """
+    # Mock metax. Create a dataset with two provenance events
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
+    provenance["preservation_event"]["pref_label"]["en"] \
+        = "metadata modification"
+    dataset['research_dataset']['provenance'].append(provenance)
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
+
     # Create workspace with required directories
     sipdirectory = workspace / 'sip-in-progress'
     sipdirectory.mkdir()
@@ -31,7 +38,7 @@ def test_createprovenanceinformation(pkg_root, workspace):
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
         workspace=str(workspace),
-        dataset_id="create_digiprov_test_dataset_file_and_logging",
+        dataset_id="dataset_identifier",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -63,7 +70,6 @@ def test_createprovenanceinformation(pkg_root, workspace):
 
 
 @pytest.mark.usefixtures("testmongoclient")
-# pylint: disable=invalid-name
 def test_failed_createprovenanceinformation(
         workspace, pkg_root, requests_mock):
     """Test `CreateProvenanceInformation` task failure.

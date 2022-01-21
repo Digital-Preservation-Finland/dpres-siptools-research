@@ -53,9 +53,6 @@ DATASETS = {
     "validate_metadata_test_dataset_invalid_metadata": {
         "remove": ["contract"]
     },
-    "create_digiprov_test_dataset_file_and_logging": {
-        "provenance": ["creation", "metadata modification"]
-    },
     "validate_files_valid": {
         "files": ["pid:urn:textfile1", "pid:urn:textfile2"]
     },
@@ -98,20 +95,6 @@ DATASETS = {
                         }
                     }
                 ]
-            }
-        )]
-    },
-    "create_digiprov_test_dataset_provenance_data_missing": {
-        "set": [(
-            "research_dataset", {
-                "files": [{
-                    "identifier": "pid:urn:892",
-                    "use_category": {
-                        "pref_label": {
-                            "en": "label5"
-                        }
-                    }
-                }]
             }
         )]
     },

@@ -18,30 +18,6 @@ from siptools_research.utils.download import (download_file,
 from siptools_research.config import Configuration
 
 
-DEFAULT_PROVENANCE = {
-    "preservation_event": {
-        "identifier":
-        "http://uri.suomi.fi/codelist/fairdata/preservation_event/code/cre",
-        "pref_label": {
-            "en": "creation"
-        }
-    },
-    "description": {
-        "en": "Value unavailable, possibly unknown"
-    },
-    "event_outcome": {
-        "identifier":
-        "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/unknown",
-        "pref_label": {
-            "en": "(:unav)"
-        }
-    },
-    "outcome_description": {
-        "en": "Value unavailable, possibly unknown"
-    }
-}
-
-
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Generate dataset metadata.
 
@@ -69,18 +45,7 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
         dir=os.path.join(config_object.get('packaging_root'), 'tmp')
     )
 
-    dataset = metax_client.get_dataset(dataset_id)
     try:
-
-        # Generate default provenance metada if provenance list is empty
-        # or does not exist at all
-        research_dataset = dataset['research_dataset']
-        if not research_dataset.get('provenance', []):
-            metax_client.patch_dataset(
-                dataset_id,
-                {'research_dataset': {'provenance': [DEFAULT_PROVENANCE]}}
-            )
-
         _generate_file_metadata(metax_client, dataset_id, tmpdir, config)
     finally:
         shutil.rmtree(tmpdir)

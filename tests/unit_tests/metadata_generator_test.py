@@ -12,29 +12,6 @@ import tests.utils
 from siptools_research.exceptions import InvalidFileError, MissingFileError
 from siptools_research.metadata_generator import generate_metadata
 
-DEFAULT_PROVENANCE = {
-    "preservation_event": {
-        "identifier":
-        "http://uri.suomi.fi/codelist/fairdata/preservation_event/code/cre",
-        "pref_label": {
-            "en": "creation"
-        }
-    },
-    "description": {
-        "en": "Value unavailable, possibly unknown"
-    },
-    "event_outcome": {
-        "identifier":
-        "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/unknown",
-        "pref_label": {
-            "en": "(:unav)"
-        }
-    },
-    "outcome_description": {
-        "en": "Value unavailable, possibly unknown"
-    }
-}
-
 
 @pytest.mark.parametrize(
     ('path', 'file_format', 'encoding', 'stream_type'),
@@ -300,47 +277,6 @@ def test_generate_metadata_tempfile_removal(pkg_root, requests_mock):
     assert cache_files[0].name == "pid:urn:identifier"
 
 
-# pylint: disable=invalid-name
-@pytest.mark.parametrize('provenance', (None, [], [{}], [{'foo': 'bar'}]))
-@pytest.mark.usefixtures('pkg_root')
-def test_generate_metadata_provenance(provenance, requests_mock):
-    """Test generate metadata.
-
-    Tests that provenance data is generated and added to Metax if it is
-    missing from dataset metadata. If provenance exists already, it should not
-    be overwritten.
-
-    :param provenance: Provenance metadata dictionary
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
-    if provenance is None:
-        del dataset['research_dataset']['provenance']
-    else:
-        dataset['research_dataset']['provenance'] = provenance
-    tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
-    patch_dataset_metadata = requests_mock.patch(
-        'https://metaksi/rest/v2/datasets/dataset_identifier',
-        json={}
-    )
-
-    generate_metadata('dataset_identifier',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    if provenance:
-        # Some provenance existed already, so the metadata should not be
-        # patched.
-        assert not patch_dataset_metadata.request_history
-    else:
-        # Provenance list did not exist in metadata (or it was empty).
-        # Default provenance should be added to Metax.
-        assert len(patch_dataset_metadata.request_history) == 1
-        provenance_patch = patch_dataset_metadata.last_request.json()
-        assert provenance_patch['research_dataset']['provenance'] \
-            == [DEFAULT_PROVENANCE]
-
-
 @pytest.mark.usefixtures('pkg_root')
 def test_generate_metadata_dataset_not_found(requests_mock):
     """Test metadatageneration for dataset that does not exist.
@@ -351,7 +287,7 @@ def test_generate_metadata_dataset_not_found(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get('https://metaksi/rest/v2/datasets/foobar',
+    requests_mock.get('https://metaksi/rest/v2/datasets/foobar/files',
                       status_code=404)
 
     expected_error = 'Dataset not found'
