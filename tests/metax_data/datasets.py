@@ -68,36 +68,6 @@ DATASETS = {
             "pid:urn:not_found_2"
         ]
     },
-    "create_digiprov_test_dataset_detailed_check": {
-        "set": [(
-            "research_dataset", {
-                "provenance": [
-                    {
-                        "preservation_event": {
-                            "pref_label": {
-                                "en": "creation"
-                            }
-                        },
-                        "temporal": {
-                            "end_date": "2014-12-31T08:19:58Z",
-                            "start_date": "2014-01-01T08:19:58Z"
-                        },
-                        "description": {
-                            "en": "Description of provenance"
-                        },
-                        "event_outcome": {
-                            "pref_label": {
-                                "en": "success"
-                            }
-                        },
-                        "outcome_description": {
-                            "en": "This is a detail of an successful event"
-                        }
-                    }
-                ]
-            }
-        )]
-    },
     "datacite_test_1": {},
     "get_files_test_dataset": {
         "files": ["pid:urn:get_files_1", "pid:urn:get_files_2"]
@@ -136,12 +106,6 @@ DATASETS = {
                 }
             }
         )]
-    },
-    "missing_provenance": {
-        "set": [("research_dataset", {"files": []})]
-    },
-    "empty_provenance": {
-        "set": [("research_dataset", {"files": [], "provenance":[]})]
     },
     "dataset_1": {
     },
@@ -204,15 +168,6 @@ def get_dataset(_self, dataset_id):
     # Set contract identifier
     if "contract" in dataset:
         new_dataset["contract"]["identifier"] = dataset["contract"]
-
-    if "provenance" in dataset:
-        base_provenance = new_dataset["research_dataset"].pop("provenance")[0]
-        new_dataset["research_dataset"]["provenance"] = []
-
-        for event in dataset["provenance"]:
-            provenance = deepcopy(base_provenance)
-            provenance["preservation_event"]["pref_label"]["en"] = event
-            new_dataset["research_dataset"]["provenance"].append(provenance)
 
     # Set arbitrary field
     if "set" in dataset:

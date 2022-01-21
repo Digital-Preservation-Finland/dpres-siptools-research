@@ -112,8 +112,7 @@ def test_failed_createprovenanceinformation(
     assert not list((pkg_root / 'tmp').iterdir())
 
 
-@pytest.mark.usefixtures('mock_metax_access')
-def test_create_premis_events(pkg_root):
+def test_create_premis_events(pkg_root, requests_mock):
     """Test `create_premis_event` function.
 
     Output XML file should be produced and it should contain some
@@ -122,10 +121,13 @@ def test_create_premis_events(pkg_root):
     :param pkg_root: Test packaging directory fixture
     :returns: ``None``
     """
+    # Mock metax. Create a dataset with two provenance events
+    tests.utils.add_metax_dataset(requests_mock)
+
     # Create provenance info xml-file to tempdir
     # pylint: disable=protected-access
     create_digiprov._create_premis_events(
-        'create_digiprov_test_dataset_detailed_check',
+        'dataset_identifier',
         str(pkg_root),
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
@@ -133,7 +135,7 @@ def test_create_premis_events(pkg_root):
     # Check that the created xml-file contains correct elements.
     # pylint: disable=no-member
     tree = lxml.etree.parse(str(
-        pkg_root / '24d4d306da97c4fd31c5ff1cc8c28316-PREMIS%3AEVENT-amd.xml'
+        pkg_root / '6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml'
     ))
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
@@ -173,7 +175,7 @@ def test_create_premis_events(pkg_root):
                           '/premis:eventOutcome',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"})
-    assert elements[0].text == "success"
+    assert elements[0].text == "outcome"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event'
@@ -182,4 +184,4 @@ def test_create_premis_events(pkg_root):
                           '/premis:eventOutcomeDetailNote',
                           namespaces={'mets': "http://www.loc.gov/METS/",
                                       'premis': "info:lc/xmlns/premis-v2"})
-    assert elements[0].text == "This is a detail of an successful event"
+    assert elements[0].text == "outcome_description"
