@@ -12,7 +12,30 @@ import tests.utils
 
 
 @pytest.mark.usefixtures("testmongoclient")
-def test_createprovenanceinformation(pkg_root, workspace, requests_mock):
+@pytest.mark.parametrize(
+    ["events", "expected_ids"],
+    [
+        # 0 events
+        (
+            [], []
+        ),
+        # 1 event
+        (
+            ["creation"], ['6fc8a863bb6ed3cee2b1e853aa38d2db']
+        ),
+        # multiple events
+        (
+            ["creation", "metadata modification"],
+            ['6fc8a863bb6ed3cee2b1e853aa38d2db',
+             'f1ffc55803b971ab8dd013710766f47e']
+        )
+    ]
+)
+def test_createprovenanceinformation(pkg_root,
+                                     workspace,
+                                     requests_mock,
+                                     events,
+                                     expected_ids):
     """Test `CreateProvenanceInformation` task.
 
     - `Task.complete()` is true after `Task.run()`
@@ -21,14 +44,18 @@ def test_createprovenanceinformation(pkg_root, workspace, requests_mock):
 
     :param pkg_root: Testpath fixture
     :param workspace: Testpath fixture
+    :param requests_mock: HTTP request mocker
+    :param events: list of preservation events in dataset metadata
+    :param expected_ids: expected identifiers of PREMIS events that are created
     :returns: ``None``
     """
-    # Mock metax. Create a dataset with two provenance events
+    # Mock metax. Create a dataset with provenance events.
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
-    provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
-    provenance["preservation_event"]["pref_label"]["en"] \
-        = "metadata modification"
-    dataset['research_dataset']['provenance'].append(provenance)
+    dataset['research_dataset']['provenance'] = []
+    for event in events:
+        provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
+        provenance["preservation_event"]["pref_label"]["en"] = event
+        dataset['research_dataset']['provenance'].append(provenance)
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create workspace with required directories
@@ -47,23 +74,17 @@ def test_createprovenanceinformation(pkg_root, workspace, requests_mock):
     task.run()
     assert task.complete()
 
-    # Check that XMLs are created in workspace/sip-inprogress/
-    files = set(path.name for path in sipdirectory.iterdir())
-    assert (
-        files == set(
-            ['6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml',
-             'f1ffc55803b971ab8dd013710766f47e-PREMIS%3AEVENT-amd.xml']
-        )
-    )
+    # PREMIS event XML should be created for each event
+    created_files = {path.name for path in sipdirectory.iterdir()}
+    expected_files = {f'{id}-PREMIS%3AEVENT-amd.xml' for id in expected_ids}
+    assert created_files == expected_files
 
-    # Metadata reference file should have references to both premis
-    # events
+    # Metadata reference file should have references to all created
+    # premis events
     references = json.loads(
         (workspace / "create-provenance-information.jsonl").read_bytes()
     )
-    assert set(references['.']['md_ids']) \
-        == set(['_6fc8a863bb6ed3cee2b1e853aa38d2db',
-                '_f1ffc55803b971ab8dd013710766f47e'])
+    assert set(references['.']['md_ids']) == {f'_{id}' for id in expected_ids}
 
     # Temporary directories should be removed
     assert not list((pkg_root / "tmp").iterdir())

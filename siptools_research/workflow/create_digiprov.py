@@ -120,7 +120,7 @@ def _create_premis_events(dataset_id, workspace, config):
 
     dataset_languages = get_dataset_languages(metadata)
 
-    provenances = metadata["research_dataset"]["provenance"]
+    provenances = metadata["research_dataset"].get("provenance", list())
 
     for provenance in provenances:
 
@@ -155,3 +155,12 @@ def _create_premis_events(dataset_id, workspace, config):
             event_outcome=event_outcome,
             event_outcome_detail=event_outcome_detail
         )
+
+    # Create a premis-event-md-references.jsonl file with empty list of
+    # identifiers if dataset did not contain any provenance
+    # metadata
+    if not provenances:
+        refence_file_path = os.path.join(workspace,
+                                         'premis-event-md-references.jsonl')
+        with open(refence_file_path, 'w') as reference_file:
+            reference_file.write('{".": {"md_ids": []}}')
