@@ -20,20 +20,42 @@ from siptools_research.workflow.create_logical_structmap import (
 )
 
 
+@pytest.mark.parametrize(
+    ("events", "admids"),
+    [
+        ([], []),
+        (['creation'], ['_2005686d72f58850765d1c8147d05cb2']),
+        (['creation', 'foobar'], ['_2005686d72f58850765d1c8147d05cb2',
+                                  '_f8384d1f8b9cbcafcba9370d1b506a26'])
+    ]
+)
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_structmap_ok(workspace, requests_mock):
+def test_create_structmap_ok(workspace, requests_mock, events, admids):
     """Test the workflow task CreateLogicalStructMap.
 
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
+    :param events: List of provenance events in dataset
+    :param admids: List of identifiers of administrative metadata to
+                   which the logical structuremap should refer.
     :returns: ``None``
     """
-    # Create a dataset that contains two files
+    # Create a dataset
+    # Dataset contains two files
     files = [copy.deepcopy(tests.metax_data.files.BASE_FILE),
              copy.deepcopy(tests.metax_data.files.BASE_FILE)]
     files[0]['file_path'] = 'files/file1'
     files[1]['file_path'] = 'files/file2'
-    tests.utils.add_metax_dataset(requests_mock, files=files)
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    # Dataset contans zero or more events
+    dataset["research_dataset"]["provenance"] = []
+    for event in events:
+        provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
+        provenance["preservation_event"]["pref_label"]["en"] = event
+        dataset["research_dataset"]["provenance"].append(provenance)
+    if not dataset["research_dataset"]["provenance"]:
+        del dataset["research_dataset"]["provenance"]
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Create workspace that already contains dataset files
     sip_directory = workspace / "sip-in-progress"
@@ -44,23 +66,25 @@ def test_create_structmap_ok(workspace, requests_mock):
     (file_directory / "file1").write_text("foo")
     (file_directory / "file2").write_text("bar")
 
-    # Create metadata required metadata to workspace:
+    # Create required metadata to workspace:
     # * digital provenance metadata
     # * descriptive metadata
     # * technical metadata
     # * physical structure map
-    premis_event(
-        workspace=str(sip_directory),
-        event_type='creation',
-        event_datetime='2014-12-31T08:19:58Z',
-        event_detail='foo',
-        event_outcome='success',
-        event_outcome_detail='bar'
-    )
-    shutil.copy(
-        sip_directory / 'premis-event-md-references.jsonl',
-        workspace / 'create-provenance-information.jsonl'
-    )
+    for event in events:
+        premis_event(
+            workspace=str(sip_directory),
+            event_type=event,
+            event_datetime='2014-12-31T08:19:58Z',
+            event_detail='foo',
+            event_outcome='success',
+            event_outcome_detail='bar'
+        )
+    if events:
+        shutil.copy(
+            sip_directory / 'premis-event-md-references.jsonl',
+            workspace / 'create-provenance-information.jsonl'
+        )
     import_description(
         dmdsec_location='tests/data/datacite_sample.xml',
         workspace=str(sip_directory)
@@ -85,7 +109,7 @@ def test_create_structmap_ok(workspace, requests_mock):
     assert task.complete()
 
     validate_logical_structmap_file(
-        str(sip_directory / 'logical_structmap.xml')
+        str(sip_directory / 'logical_structmap.xml'), admids
     )
 
     sip_postrun_files = set(path.name for path in sip_directory.iterdir())
@@ -184,19 +208,28 @@ def test_find_dir_use_category():
     ) == "root"
 
 
-def validate_logical_structmap_file(logical_structmap_file):
+def validate_logical_structmap_file(logical_structmap_file, admids):
     """Validate logical structuremap XML-file.
 
     Checks that XML-file has the correct elements. Raises exception if
     XML is not valid.
 
     :param logical_structmap_file: XML file to be validated
+    :param admids: List of identifiers of administrative metadata to
+                   which the logical structuremap should refer.
     :returns: ``None``
     """
     tree = lxml.etree.parse(logical_structmap_file)
     assert tree.xpath('/mets:mets/mets:structMap',
                       namespaces=NAMESPACES)[0].attrib['TYPE'] \
         == "Fairdata-logical"
+    assert tree.xpath('/mets:mets/mets:structMap/mets:div',
+                      namespaces=NAMESPACES)[0].attrib['TYPE'] \
+        == "logical"
+    for admid in admids:
+        assert admid in \
+            tree.xpath('/mets:mets/mets:structMap/mets:div',
+                       namespaces=NAMESPACES)[0].attrib['ADMID'].split()
 
     directories = tree.xpath(
         '/mets:mets/mets:structMap/mets:div/mets:div/@TYPE',

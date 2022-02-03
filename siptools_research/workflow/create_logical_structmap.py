@@ -131,6 +131,8 @@ class CreateLogicalStructMap(WorkflowTask):
                 self.input()['create_provenance_information'].path
             )
         ))
+        if not event_ids:
+            event_ids = []
 
         event_type_ids = {}
         for event_id in event_ids:
@@ -145,7 +147,8 @@ class CreateLogicalStructMap(WorkflowTask):
             event_type_ids[event_type] = event_id
 
         provenance_ids = []
-        for provenance in metadata["research_dataset"]["provenance"]:
+        provenances = metadata["research_dataset"].get("provenance", [])
+        for provenance in provenances:
             event_type = get_localized_value(
                 provenance["preservation_event"]["pref_label"],
                 languages=languages
