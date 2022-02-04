@@ -1,13 +1,12 @@
 """Tests for :mod:`siptools_research.workflow.create_structmap`."""
 
+import json
 import shutil
 
 import pytest
 from siptools.scripts.create_mix import create_mix
 from siptools.scripts.import_object import import_object
-from siptools.scripts.import_description import import_description
 from siptools.utils import read_md_references
-from siptools.scripts.premis_event import premis_event
 from siptools.xml.mets import NAMESPACES
 import lxml.etree
 
@@ -15,7 +14,7 @@ import tests.conftest
 from siptools_research.workflow.create_structmap import CreateStructMap
 
 
-def _create_metadata(workspace, files):
+def _create_metadata(workspace, files, provenance_ids=None):
     """Create all metadata that is required for structure map creation.
 
     :param workspace: workflow task workspace directory
@@ -25,25 +24,15 @@ def _create_metadata(workspace, files):
     sip_creation_path = workspace / 'sip-in-progress'
 
     # Create dmdsec
-    import_description(dmdsec_location='tests/data/datacite_sample.xml',
-                       workspace=str(sip_creation_path))
-    shutil.move(
-        sip_creation_path / 'premis-event-md-references.jsonl',
-        workspace / 'create-descriptive-metadata.jsonl'
+    (workspace / 'create-descriptive-metadata.jsonl').write_text(
+        '{".": {"md_ids": ["descriptive_metadata_id"]}}'
     )
 
     # Create digiprov
-    premis_event(
-        event_type='creation',
-        event_datetime='2014-12-31T08:19:58Z',
-        event_detail='foo',
-        event_outcome='success',
-        event_outcome_detail="bar",
-        workspace=str(sip_creation_path)
-    )
-    shutil.move(
-        sip_creation_path / 'premis-event-md-references.jsonl',
-        workspace / 'create-provenance-information.jsonl'
+    if not provenance_ids:
+        provenance_ids = []
+    (workspace / 'create-provenance-information.jsonl').write_text(
+        json.dumps({".": {"md_ids": provenance_ids}})
     )
 
     # Create tech metadata
@@ -60,11 +49,22 @@ def _create_metadata(workspace, files):
     )
 
 
+@pytest.mark.parametrize(
+    'provenance_ids',
+    (
+        # No provenance events
+        [],
+        # One provenance events
+        ['procenance_id1'],
+        # Multiple provenance events
+        ['provenacne_id1', 'provenacne_id2'])
+)
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_structmap_ok(workspace):
+def test_create_structmap_ok(workspace, provenance_ids):
     """Test the workflow task CreateStructMap.
 
     :param workspace: Temporary workspace fixture
+    :param provenance_ids: Provenance metadata identifiers
     :returns: ``None``
     """
     # Create clean workspace directory for dataset that contains many
@@ -79,7 +79,7 @@ def test_create_structmap_ok(workspace):
     (subdirectory_path / "file3").write_text("baz")
 
     # Create required metadata in workspace directory
-    _create_metadata(workspace, 'data')
+    _create_metadata(workspace, 'data', provenance_ids)
 
     # Init and run CreateStructMap task
     sip_content_before_run = [
@@ -140,6 +140,13 @@ def test_create_structmap_ok(workspace):
         "/mets:mets/mets:structMap/mets:div/@ADMID",
         namespaces=NAMESPACES
     )[0]
+
+    # Structure map should be linked to all provenance events
+    for provenance_id in provenance_ids:
+        assert provenance_id in structmap_xml.xpath(
+            "/mets:mets/mets:structMap/mets:div/@ADMID",
+            namespaces=NAMESPACES
+        )[0]
 
     # Only premis-event-md-references.jsonl, filesec.xml and
     # structmap.xml be created into SIP directory
