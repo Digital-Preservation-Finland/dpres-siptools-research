@@ -98,7 +98,7 @@ def _validate_dataset_localization(dataset_metadata):
     639-1 language codes.
     """
     research_dataset = dataset_metadata["research_dataset"]
-    provenance_list = research_dataset["provenance"]
+    provenance_list = research_dataset.get("provenance", [])
 
     # Provenance translations
     for provenance in provenance_list:
