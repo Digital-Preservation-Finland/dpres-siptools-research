@@ -25,7 +25,6 @@
             "title": "Research dataset",
             "description": "Administrative metadata and files included in dataset",
             "type": "object",
-            "required": ["provenance"],
             "anyOf": [
                 {"required": ["files"]},
                 {"required": ["directories"]}
@@ -35,7 +34,7 @@
                     "title": "Provenance",
                     "description": "Digital provenance metadata. Packaging service can create dummy provenance metadata if it is not provided.",
                     "type": "array",
-                    "minItems": 1,
+                    "minItems": 0,
                     "items": {
                         "type": "object",
                         "required": [

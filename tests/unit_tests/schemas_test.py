@@ -5,7 +5,7 @@ import pytest
 import jsonschema
 import siptools_research.schemas
 
-from tests.metax_data.datasets import BASE_DATASET
+from tests.metax_data.datasets import BASE_DATASET, BASE_PROVENANCE
 from tests.metax_data.files import TXT_FILE, CSV_FILE
 from tests.metax_data.contracts import BASE_CONTRACT
 
@@ -47,42 +47,35 @@ SAMPLE_DIRECTORIES = [
 ]
 
 
-# pylint: disable=invalid-name
-def test_validate_valid_dataset_metadata():
-    """Test validation of valid dataset metadata with provenance.
+@pytest.mark.parametrize(
+    "provenance",
+    [
+        # One provenance events
+        [BASE_PROVENANCE],
+        # Multiple provenance events
+        [BASE_PROVENANCE, BASE_PROVENANCE],
+        # Empty list of provenance events
+        [],
+        # No provenance key in metadata
+        None
+    ])
+def test_validate_dataset_metadata_with_provenance(provenance):
+    """Test validation of valid dataset with or without provenance.
 
-    Defines a sample metadata dictionary that is known to be valid. The
-    dictionary is then validated against ``DATASET_METADATA_SCHEMA``.
-
+    :param provenance: Value of "provenance" key in metadata. ``None``
+                       means that provenance key does not exist.
     :returns: ``None``
     """
+    dataset_metadata = copy.deepcopy(BASE_DATASET)
+    del dataset_metadata['research_dataset']['provenance']
+    if provenance is not None:
+        dataset_metadata['research_dataset']['provenance'] = provenance
+
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
-        BASE_DATASET,
+        dataset_metadata,
         siptools_research.schemas.DATASET_METADATA_SCHEMA
     ) is None
-
-
-def test_validate_dataset_metadata_without_provenance():
-    """Test validation of valid dataset metadata without provenance.
-
-    Defines a sample metadata dictionary that has empty list of
-    provenaces. The dictionary is then validated against
-    ``DATASET_METADATA_SCHEMA``.
-
-    :returns: ``None``
-    """
-    invalid_dataset_metadata = copy.deepcopy(BASE_DATASET)
-    invalid_dataset_metadata['research_dataset']['provenance'] = []
-
-    # Validation of valid dataset should raise error
-    with pytest.raises(jsonschema.ValidationError) as error:
-        assert not jsonschema.validate(
-            invalid_dataset_metadata,
-            siptools_research.schemas.DATASET_METADATA_SCHEMA
-        )
-
-    assert error.value.message == '[] is too short'
 
 
 def test_validate_invalid_dataset_metadata():
