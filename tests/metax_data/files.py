@@ -284,12 +284,6 @@ def get_file(_self, file_id):
             value = params[1]
             new_file[key] = value
 
-    # Remove field that exist in the BASE_FILE
-    if "remove" in _file:
-        for key in _file["remove"]:
-            if key in new_file:
-                new_file.pop(key)
-
     # Change file_storage identifier for the upload-rest-api test cases
     if file_id.endswith("_local"):
         new_file["file_storage"]["identifier"] = PAS_STORAGE_ID

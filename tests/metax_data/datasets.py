@@ -139,32 +139,6 @@ def get_dataset(_self, dataset_id):
                 }
             })
 
-    # Add files with specified labels to dataset
-    if "files_with_labels" in dataset:
-        for _file, label in dataset["files_with_labels"]:
-            files = new_dataset["research_dataset"]["files"]
-            files.append({
-                "identifier": _file,
-                "use_category": {
-                    "pref_label": {
-                        "en": label
-                    }
-                }
-            })
-
-    # Set directories to dataset
-    if "directories" in dataset:
-        for directory, label in dataset["directories"]:
-            directories = new_dataset["research_dataset"]["directories"]
-            directories.append({
-                "identifier": directory,
-                "use_category": {
-                    "pref_label": {
-                        "en": label
-                    }
-                }
-            })
-
     # Set contract identifier
     if "contract" in dataset:
         new_dataset["contract"]["identifier"] = dataset["contract"]
