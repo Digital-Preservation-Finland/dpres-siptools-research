@@ -55,21 +55,16 @@ SAMPLE_DIRECTORIES = [
         # Multiple provenance events
         [BASE_PROVENANCE, BASE_PROVENANCE],
         # Empty list of provenance events
-        [],
-        # No provenance key in metadata
-        None
+        []
     ])
 def test_validate_dataset_metadata_with_provenance(provenance):
-    """Test validation of valid dataset with or without provenance.
+    """Test validation of valid dataset with provenance metadata.
 
-    :param provenance: Value of "provenance" key in metadata. ``None``
-                       means that provenance key does not exist.
+    :param provenance: Value of "provenance" key in metadata.
     :returns: ``None``
     """
     dataset_metadata = copy.deepcopy(BASE_DATASET)
-    del dataset_metadata['research_dataset']['provenance']
-    if provenance is not None:
-        dataset_metadata['research_dataset']['provenance'] = provenance
+    dataset_metadata['research_dataset']['provenance'] = provenance
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(

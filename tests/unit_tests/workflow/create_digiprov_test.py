@@ -106,7 +106,7 @@ def test_failed_createprovenanceinformation(
     provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
     del provenance["preservation_event"]
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
-    dataset['research_dataset']['provenance'].append(provenance)
+    dataset['research_dataset']['provenance'] = [provenance]
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create empty workspace
@@ -142,8 +142,11 @@ def test_create_premis_events(pkg_root, requests_mock):
     :param pkg_root: Test packaging directory fixture
     :returns: ``None``
     """
-    # Mock metax. Create a dataset with two provenance events
-    tests.utils.add_metax_dataset(requests_mock)
+    # Mock metax. Create a dataset with one provenance event
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset["research_dataset"]["provenance"] \
+        = [tests.metax_data.datasets.BASE_PROVENANCE]
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create provenance info xml-file to tempdir
     # pylint: disable=protected-access

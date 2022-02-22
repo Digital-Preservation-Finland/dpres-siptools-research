@@ -61,38 +61,9 @@ def get_very_invalid_datacite():
 
 
 @pytest.mark.parametrize(
-    'provenance',
-    (
-        None,
-        [],
-        [BASE_PROVENANCE],
-        [BASE_PROVENANCE, BASE_PROVENANCE]
-    )
-)
-def test_validate_metadata(requests_mock, provenance):
-    """Test validation of dataset metadata with or without provenance events.
-
-    :param requests_mock: Mocker object
-    :param provenance: List of provenance events in dataset metadata
-    :returns: ``None``
-    """
-    dataset = copy.deepcopy(BASE_DATASET)
-    del dataset["research_dataset"]["provenance"]
-    if provenance is not None:
-        dataset["research_dataset"]["provenance"] = provenance
-
-    tests.utils.add_metax_dataset(requests_mock,
-                                  dataset=dataset,
-                                  files=[TXT_FILE])
-
-    assert validate_metadata('dataset_identifier',
-                             tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
-@pytest.mark.parametrize(
     'file_metadata', (TXT_FILE, CSV_FILE, TIFF_FILE, MKV_FILE)
 )
-def test_validate_metadata_one_file(requests_mock, file_metadata):
+def test_validate_metadata(requests_mock, file_metadata):
     """Test validation of dataset metadata that contains one file.
 
     :param requests_mock: Mocker object
@@ -100,6 +71,32 @@ def test_validate_metadata_one_file(requests_mock, file_metadata):
     :returns: ``None``
     """
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
+
+    assert validate_metadata('dataset_identifier',
+                             tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+
+@pytest.mark.parametrize(
+    'provenance',
+    (
+        [],
+        [BASE_PROVENANCE],
+        [BASE_PROVENANCE, BASE_PROVENANCE]
+    )
+)
+def test_validate_metadata_with_provenance(requests_mock, provenance):
+    """Test validation of dataset metadata with provenance events.
+
+    :param requests_mock: Mocker object
+    :param provenance: List of provenance events in dataset metadata
+    :returns: ``None``
+    """
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["research_dataset"]["provenance"] = provenance
+
+    tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
+                                  files=[TXT_FILE])
 
     assert validate_metadata('dataset_identifier',
                              tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -167,7 +164,6 @@ def test_validate_metadata_missing_file(requests_mock):
         )
     )
 )
-# pylint: disable=invalid-name
 def test_validate_metadata_languages(translations, expectation, requests_mock):
     """Test validate_metadata.
 
@@ -178,6 +174,8 @@ def test_validate_metadata_languages(translations, expectation, requests_mock):
     """
     dataset = copy.deepcopy(BASE_DATASET)
     dataset_file = copy.deepcopy(TXT_FILE)
+    dataset['research_dataset']['provenance'] \
+        = [copy.deepcopy(BASE_PROVENANCE)]
     dataset['research_dataset']['provenance'][0]['description'] = translations
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset,
                                   files=[dataset_file])

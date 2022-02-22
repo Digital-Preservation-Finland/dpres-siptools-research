@@ -38,7 +38,6 @@ BASE_DATASET = {
         "identifier": "contract_identifier"
     },
     "research_dataset": {
-        "provenance": [BASE_PROVENANCE],
         "files": [],
         "directories": []
     },
