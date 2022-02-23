@@ -6,6 +6,7 @@ import tarfile
 
 import pymongo
 import pytest
+from siptools.xml.mets import NAMESPACES
 import luigi
 import lxml.etree as ET
 from lxml.isoschematron import Schematron
@@ -47,6 +48,10 @@ XML_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
 XML_FILE["file_path"] = "mets.xml"
 SIG_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
 SIG_FILE["file_path"] = "signature.sig"
+DATASET_WITH_PROVENANCE \
+    = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
+    = [tests.metax_data.datasets.BASE_PROVENANCE]
 
 
 @pytest.mark.usefixtures(
@@ -70,6 +75,10 @@ SIG_FILE["file_path"] = "signature.sig"
         (
             tests.metax_data.datasets.BASE_DATASET,
             [SIG_FILE]
+        ),
+        (
+            DATASET_WITH_PROVENANCE,
+            [tests.metax_data.files.TXT_FILE]
         )
     ]
 )
@@ -84,6 +93,7 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
         #. digital objects of the SIP are valid
         #. mets.xml root element is valid (CONTRACTID, SPECIFICATION)
         #. all files are found in correct path
+        #. all provenance events are found in mets.xml
 
     :param testpath: temporary directory
     :param pkg_root: temporary packaging root directory
@@ -161,3 +171,15 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
             / file_metadata["file_path"]
         )
         assert path.read_text() == "foo"
+
+    # Check that premis event is created for each provenance event of
+    # dataset
+    event_descriptions = [event['description']['en']
+                          for event
+                          in dataset["research_dataset"].get('provenance', [])]
+    premis_event_details = [event_detail.text
+                            for event_detail
+                            in mets_xml_root.xpath('//premis:eventDetail',
+                                                   namespaces=NAMESPACES)]
+    for event_description in event_descriptions:
+        assert event_description in premis_event_details
