@@ -97,5 +97,6 @@
     {"id": "file_format_version_application_postscript_3.0", "input_file_format": "application/postscript", "output_format_version": "3.0", "uri": "http://purl.org/att/es/reference_data/file_format_version/file_format_version_application_postscript_3.0"},
     {"id": "file_format_version_image_gif_1987a", "input_file_format": "image/gif", "output_format_version": "1987a", "uri": "http://purl.org/att/es/reference_data/file_format_version/file_format_version_image_gif_1987a"},
     {"id": "file_format_version_image_gif_1989a", "input_file_format": "image/gif", "output_format_version": "1989a", "uri": "http://purl.org/att/es/reference_data/file_format_version/file_format_version_image_gif_1989a"},
+    {"id": "file_format_version_video_avi", "input_file_format": "video/avi", "output_format_version": "", "uri": "http://purl.org/att/es/reference_data/file_format_version/file_format_version_video_avi"},
     {"input_file_format": "video/x-matroska", "output_format_version": "4"}
 ]
