@@ -213,9 +213,12 @@ class CreateTechnicalMetadata(WorkflowTask):
             file_metadata=metadata
         )
 
-        md_elems = metadata_generator.create()
+        metadata_entries = metadata_generator.create()
 
-        for md_elem in md_elems:
+        for md_entry in metadata_entries:
+            md_elem = md_entry.md_elem
+            stream_index = md_entry.stream_index
+
             md_namespace = md_elem.nsmap[md_elem.prefix]
 
             mdtype = TECH_ATTR_TYPES[md_namespace]["mdtype"]
@@ -233,7 +236,7 @@ class CreateTechnicalMetadata(WorkflowTask):
             )
 
             # Add reference from fileSec to TechMD
-            creator.add_reference(techmd_id, filepath)
+            creator.add_reference(techmd_id, filepath, stream=stream_index)
             creator.write(ref_file=ref_file)
 
 

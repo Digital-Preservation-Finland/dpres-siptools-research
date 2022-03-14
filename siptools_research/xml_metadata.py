@@ -2,6 +2,8 @@
 import os
 from abc import ABCMeta, abstractmethod
 
+from collections import namedtuple
+
 from siptools.scripts import (create_addml, create_audiomd, create_mix,
                               create_videomd)
 from siptools.scripts.create_mix import MixGenerationError
@@ -40,6 +42,9 @@ TECH_ATTR_TYPES = {
 }
 
 
+XMLMetadataEntry = namedtuple("XMLMetadataEntry", ["stream_index", "md_elem"])
+
+
 class _XMLMetadata:
     """Abstract base class for XML metadata generators."""
 
@@ -61,7 +66,7 @@ class _XMLMetadata:
 
         Creates a file type specific XML metadata.
 
-        :returns: metadata XML element
+        :returns: XMLMetadataEntry
         """
 
     @property
@@ -99,14 +104,15 @@ class _ImageFileXMLMetadata(_XMLMetadata):
     def create(self):
         """Create a MIX metadata XML element for an image file.
 
-        :returns: List containing a MIX XML element
+        :returns: List of one XMLMetadataEntry object containing
+                  a MIX XML element
         """
         try:
             mix_elem = create_mix.create_mix_metadata(
                 self.file_path,
                 streams=self.streams
             )
-            return [mix_elem]
+            return [XMLMetadataEntry(stream_index=None, md_elem=mix_elem)]
         except MixGenerationError as error:
             # Clean up file path in original exception message and raise
             # error
@@ -135,7 +141,8 @@ class _CSVFileXMLMetadata(_XMLMetadata):
     def create(self):
         """Create ADDML metadata XML elementfor a CSV file.
 
-        :returns: List containing an ADDML metadata XML element
+        :returns: List of one XMLMetadataEntry object containing
+                  an ADDML metadata XML element
         """
         addml_elem = create_addml.create_addml_metadata(
             csv_file=self.file_path,
@@ -151,7 +158,7 @@ class _CSVFileXMLMetadata(_XMLMetadata):
             flatfile_name=self.file_metadata['file_path']
         )
 
-        return [addml_elem]
+        return [XMLMetadataEntry(stream_index=None, md_elem=addml_elem)]
 
     @classmethod
     def is_generator_for(cls, file_metadata):
@@ -170,7 +177,8 @@ class _AudioFileXMLMetadata(_XMLMetadata):
     def create(self):
         """Create the root audioMD XML element.
 
-        :returns: List of audioMD XML elements
+        :returns: List of XMLMetadataEntry objects containing
+                  audioMD XML elements
         """
         audiomd = create_audiomd.create_audiomd_metadata(
             self.file_path,
@@ -180,7 +188,10 @@ class _AudioFileXMLMetadata(_XMLMetadata):
             raise InvalidFileError("Audio file has no audio streams.",
                                    [self.file_metadata['identifier']])
 
-        return list(audiomd.values())
+        return [
+            XMLMetadataEntry(stream_index=stream_index, md_elem=md_elem)
+            for stream_index, md_elem in audiomd.items()
+        ]
 
     @classmethod
     def is_generator_for(cls, file_metadata):
@@ -203,7 +214,8 @@ class _VideoFileXMLMetadata(_XMLMetadata):
     def create(self):
         """Create the root audioMD XML element.
 
-        :returns: List of videoMD XML elements
+        :returns: List of XMLMetadataEntry objects containing videoMD XML
+                  elements
         """
         videomd = create_videomd.create_videomd_metadata(
             self.file_path,
@@ -212,8 +224,10 @@ class _VideoFileXMLMetadata(_XMLMetadata):
         if not videomd:
             raise InvalidFileError("Video file has no video streams.",
                                    [self.file_metadata['identifier']])
-
-        return list(videomd.values())
+        return [
+            XMLMetadataEntry(stream_index=stream_index, md_elem=md_elem)
+            for stream_index, md_elem in videomd.items()
+        ]
 
     @classmethod
     def is_generator_for(cls, file_metadata):
