@@ -32,7 +32,7 @@
             "properties": {
                 "provenance": {
                     "title": "Provenance",
-                    "description": "Digital provenance metadata. Packaging service can create dummy provenance metadata if it is not provided.",
+                    "description": "Digital provenance metadata.",
                     "type": "array",
                     "minItems": 0,
                     "items": {
