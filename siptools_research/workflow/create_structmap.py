@@ -2,15 +2,15 @@
 """Luigi task that creates fileSec and physical structure map."""
 
 import json
-import os
+from pathlib import Path
+import shutil
+from tempfile import TemporaryDirectory
 
-import luigi.format
 from luigi import LocalTarget
 from siptools.scripts import compile_structmap
 from siptools.utils import read_md_references
-from siptools.utils import get_reference_lists, iter_supplementary
-from xml_helpers.utils import serialize
 
+from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_digiprov import \
     CreateProvenanceInformation
@@ -58,20 +58,9 @@ class CreateStructMap(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: `sip-in-progress/filesec.xml` and
-                  `sip-in-progress/structmap.xml`
-        :rtype: list of local targets
+        :returns: Local target `sip-in-progress/filesec.xml`
         """
-        return [
-            LocalTarget(
-                os.path.join(self.sip_creation_path, 'filesec.xml'),
-                format=luigi.format.Nop
-            ),
-            LocalTarget(
-                os.path.join(self.sip_creation_path, 'structmap.xml'),
-                format=luigi.format.Nop
-            )
-        ]
+        return LocalTarget(str(Path(self.sip_creation_path) / 'filesec.xml'))
 
     def run(self):
         """Create structural map.
@@ -83,60 +72,54 @@ class CreateStructMap(WorkflowTask):
 
         :returns: ``None``
         """
-        # Merge premis event reference files
-        md_ids = []
-        for input_target in ('create_provenance_information',
-                             'create_descriptive_metadata',
-                             'create_technical_metadata'):
-            md_ids += (
-                read_md_references(
-                    self.workspace,
-                    self.input()[input_target].path
-                )['.']['md_ids']
-            )
-        with open(os.path.join(self.sip_creation_path,
-                               'premis-event-md-references.jsonl'), 'w') \
-                as references:
-            references.write(json.dumps({".": {"path_type": "directory",
-                                               "streams": {},
-                                               "md_ids": md_ids}}))
-
-        # Setup required reference list and supplementary files information.
-        (all_amd_refs,
-         all_dmd_refs,
-         object_refs,
-         filelist,
-         file_properties) = get_reference_lists(
-             workspace=self.sip_creation_path)
-        (supplementary_files,
-         supplementary_types) = iter_supplementary(
-             file_properties=file_properties)
-
-        # Create fileSec
-        (filesec, file_ids) = compile_structmap.create_filesec(
-            all_amd_refs=all_amd_refs,
-            object_refs=object_refs,
-            file_properties=file_properties,
-            supplementary_files=supplementary_files,
-            supplementary_types=supplementary_types)
-        with self.output()[0].open('wb') as filesecxml:
-            filesecxml.write(serialize(filesec))
-
-        # Create physical structmap
-        structmap = compile_structmap.create_structmap(
-            filesec=filesec,
-            structmap_type='Fairdata-physical',
-            file_ids=file_ids,
-            all_amd_refs=all_amd_refs,
-            all_dmd_refs=all_dmd_refs,
-            filelist=filelist,
-            supplementary_files=supplementary_files,
-            supplementary_types=supplementary_types,
-            file_properties=file_properties,
-            workspace=self.sip_creation_path
+        tmp = str(
+            Path(Configuration(self.config).get('packaging_root')) / 'tmp'
         )
-        with self.output()[1].open('wb') as structmapxml:
-            structmap.write(structmapxml,
-                            pretty_print=True,
-                            xml_declaration=True,
-                            encoding='UTF-8')
+        with TemporaryDirectory(prefix=tmp) as temporary_directory:
+            permanent_workspace = Path(self.sip_creation_path)
+            temporary_workspace = Path(temporary_directory)
+
+            # Copy reference files to temporary workspace
+            for file in ("import-object-md-references.jsonl",
+                         "import-description-md-references.jsonl",
+                         "create-addml-md-references.jsonl",
+                         "create-audiomd-md-references.jsonl",
+                         "create-mix-md-references.jsonl",
+                         "create-videomd-md-references.jsonl"):
+
+                source = permanent_workspace / file
+                if source.is_file():
+                    shutil.copy(source, temporary_workspace / file)
+
+            # Merge premis event reference files into one file that is
+            # written to temporary directory
+            md_ids = []
+            for input_target in ('create_provenance_information',
+                                 'create_descriptive_metadata',
+                                 'create_technical_metadata'):
+                md_ids += (
+                    read_md_references(
+                        self.workspace,
+                        self.input()[input_target].path
+                    )['.']['md_ids']
+                )
+            with (temporary_workspace / 'premis-event-md-references.jsonl') \
+                    .open('w') as references:
+                references.write(json.dumps({".": {"path_type": "directory",
+                                                   "streams": {},
+                                                   "md_ids": md_ids}}))
+
+            # Compile fileSec and structure map in temporary workspace
+            compile_structmap.compile_structmap(
+                workspace=str(temporary_workspace),
+                structmap_type='Fairdata-physical',
+                stdout=False
+            )
+
+            # After successful compilation, move all files to permanent
+            # workspace. The output file (filesec.xml) is moved after
+            # any other files.
+            with self.output().temporary_path() as temporary_path:
+                (temporary_workspace / 'filesec.xml').replace(temporary_path)
+                for file in temporary_workspace.iterdir():
+                    file.replace(permanent_workspace / file.name)

@@ -48,7 +48,7 @@ class CreateLogicalStructMap(WorkflowTask):
                 dataset_id=self.dataset_id,
                 config=self.config
             ),
-            'create_struct_map': CreateStructMap(
+            'create_structmap': CreateStructMap(
                 workspace=self.workspace,
                 dataset_id=self.dataset_id,
                 config=self.config
@@ -221,8 +221,7 @@ class CreateLogicalStructMap(WorkflowTask):
         :returns: file identifier
         """
         # pylint: disable=no-member
-        filesec_xml = ET.parse(os.path.join(self.sip_creation_path,
-                                            'filesec.xml'))
+        filesec_xml = ET.parse(self.input()['create_structmap'].path)
 
         root = filesec_xml.getroot()
 

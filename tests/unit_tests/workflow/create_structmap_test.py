@@ -148,14 +148,16 @@ def test_create_structmap_ok(workspace, provenance_ids):
             namespaces=NAMESPACES
         )[0]
 
-    # Only premis-event-md-references.jsonl, filesec.xml and
-    # structmap.xml be created into SIP directory
+    # Filesec.xml, structmap.xml,
+    # compile-structmap-agents-AGENTS-amd.json,
+    # premis-event-md-references.jsonl, premis event and premis agent
+    # should be created into SIP directory.
     files = set(path.name for path in sip_creation_path.iterdir())
-    assert files == set(
-        sip_content_before_run + [
-            'filesec.xml', 'structmap.xml', 'premis-event-md-references.jsonl'
-        ]
-    )
+    assert len(files) - len(set(sip_content_before_run)) == 6
+    assert {'filesec.xml',
+            'structmap.xml',
+            'compile-structmap-agents-AGENTS-amd.json',
+            'premis-event-md-references.jsonl'}.issubset(files)
 
 
 @pytest.mark.usefixtures('testmongoclient')
