@@ -67,22 +67,23 @@ class GetFiles(WorkflowTask):
         )
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
 
-        # Download files to temporary directory which will be moved to
-        # output target path when all files have been downloaded
-        with self.output().temporary_path() as temporary_directory:
-            os.mkdir(temporary_directory)
+        # Download files to temporary target directory which will be
+        # moved to output target path when all files have been
+        # downloaded
+        with self.output().temporary_path() as target_path:
+            os.mkdir(target_path)
 
             for dataset_file in dataset_files:
                 identifier = dataset_file["identifier"]
 
                 # Full path to file
-                target_path = os.path.normpath(
+                full_path = os.path.normpath(
                     os.path.join(
-                        temporary_directory,
+                        target_path,
                         dataset_file["file_path"].strip('/')
                     )
                 )
-                if not target_path.startswith(temporary_directory):
+                if not full_path.startswith(target_path):
                     raise InvalidFileMetadataError(
                         'The file path of file %s is invalid: %s' % (
                             identifier, dataset_file["file_path"]
@@ -90,12 +91,12 @@ class GetFiles(WorkflowTask):
                     )
 
                 # Create the download directory for file if it does not exist
-                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
                 download_file(
                     file_metadata=dataset_file,
                     dataset_id=self.dataset_id,
-                    linkpath=target_path,
+                    linkpath=full_path,
                     config_file=self.config,
                     upload_database=upload_database
                 )

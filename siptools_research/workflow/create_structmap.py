@@ -119,7 +119,7 @@ class CreateStructMap(WorkflowTask):
             # After successful compilation, move all files to permanent
             # workspace. The output file (filesec.xml) is moved after
             # any other files.
-            with self.output().temporary_path() as temporary_path:
-                (temporary_workspace / 'filesec.xml').replace(temporary_path)
+            with self.output().temporary_path() as target_path:
+                (temporary_workspace / 'filesec.xml').replace(target_path)
                 for file in temporary_workspace.iterdir():
                     file.replace(permanent_workspace / file.name)

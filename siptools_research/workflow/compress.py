@@ -59,8 +59,8 @@ class CompressSIP(WorkflowTask):
         """
         # To be atomic tar file is written into temp file.
         # On exit luigi moves the temp file to targeted file
-        with self.output().temporary_path() as temp_output_path:
-            with tarfile.open(temp_output_path, 'w') as tar:
+        with self.output().temporary_path() as target_path:
+            with tarfile.open(target_path, 'w') as tar:
                 tar.add(self.input()['files'].path, arcname='dataset_files')
                 tar.add(self.input()['mets'].path, arcname='mets.xml')
                 tar.add(self.input()['signature'].path,
