@@ -7,10 +7,11 @@ import luigi.cmdline
 import pymongo
 import pytest
 import requests
-import tests.conftest
 from metax_access import (DS_STATE_INVALID_METADATA,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
                           Metax)
+
+import tests.conftest
 from siptools_research.config import Configuration
 from siptools_research.exceptions import (InvalidDatasetMetadataError,
                                           InvalidSIPError)

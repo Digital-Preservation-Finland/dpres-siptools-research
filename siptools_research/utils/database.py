@@ -1,4 +1,4 @@
-"""Workflow database interface"""
+"""Workflow database interface."""
 
 import datetime
 import pymongo
@@ -14,18 +14,16 @@ def _timestamp():
 
 
 class Database:
-    """Workflow status database"""
+    """Workflow status database."""
 
     _collection = None
     _client = None
 
     def __init__(self, config_file):
-        """Initialize new pymongo client if it does not exist already
-        (singleton design pattern)
+        """Initialize new pymongo client.
 
         :param config_file: path to configurtion file
         """
-
         if self._collection is None:
             conf = Configuration(config_file)
             self._client = pymongo.MongoClient(host=conf.get("mongodb_host"),
@@ -45,7 +43,6 @@ class Database:
         :param messages: Information of the event
         :returns: ``None``
         """
-
         self._collection.update_one(
             {
                 '_id': workflow_id
@@ -69,7 +66,6 @@ class Database:
         :param status: Status string
         :returns: ``None``
         """
-
         self._collection.update_one(
             {
                 '_id': workflow_id
@@ -88,7 +84,6 @@ class Database:
         :param workflow_id: Workflow identifier
         :returns: ``None``
         """
-
         self._collection.update_one(
             {
                 '_id': workflow_id
@@ -107,7 +102,6 @@ class Database:
         :param workflow_id: Workflow identifier
         :returns: ``None``
         """
-
         self._collection.update_one(
             {
                 '_id': workflow_id
@@ -126,7 +120,6 @@ class Database:
         :param workflow_id: Workflow identifier
         :returns: ``None``
         """
-
         self._collection.update_one(
             {
                 '_id': workflow_id
@@ -140,15 +133,16 @@ class Database:
         )
 
     def add_workflow(self, workflow_id, dataset_id):
-        """Add new workflow. The workflow identity will be the primary key
-        ('_id') of the document.
+        """Add new workflow.
+
+        The workflow identity will be the primary key ('_id') of the
+        document.
 
         :param workflow_id: Workflow identifier, i.e. the name of workspace
             directory
         :param dataset_id: Dataset identifier
         :returns: ``None``
         """
-
         self._collection.update_one(
             {
                 '_id': workflow_id
@@ -173,7 +167,7 @@ class Database:
         return self._collection.find(search)
 
     def get_workflows(self, dataset_id):
-        """Get workflow documents by dataset_id
+        """Get workflow documents by dataset_id.
 
         :param dataset_id: Dataset identifier
         :returns: Workflow document
@@ -181,7 +175,7 @@ class Database:
         return self._collection.find({"dataset": dataset_id})
 
     def get_one_workflow(self, workflow_id):
-        """Get a workflow document by _id
+        """Get a workflow document by _id.
 
         :param workflow_id: Workflow identifier _id
         :return: Workflow document
@@ -212,7 +206,7 @@ class Database:
         return document['workflow_tasks'][taskname]['timestamp']
 
     def get_incomplete_workflows(self):
-        """Find all incomplete workflows that are not disabled
+        """Find all incomplete workflows that are not disabled.
 
         :returns: List of incomplete workflows
         """

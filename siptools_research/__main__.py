@@ -255,7 +255,7 @@ def _setup_clean_cache_args(subparsers):
 
 
 def _generate(args):
-    """Generate technical metadata for the dataset"""
+    """Generate technical metadata for the dataset."""
     conf = Configuration(args.config)
     metax_client = Metax(
         conf.get('metax_url'),
@@ -282,7 +282,7 @@ def _generate(args):
 
 
 def _validate(args):
-    """Validate dataset metadata"""
+    """Validate dataset metadata."""
     conf = Configuration(args.config)
     metax_client = Metax(
         conf.get('metax_url'),
@@ -315,34 +315,30 @@ def _validate(args):
 
 
 def _preserve(args):
-    """Start preservation workflow"""
+    """Start preservation workflow."""
     preserve_dataset(args.dataset_id, args.config)
 
 
 def _get_workflow_document(args):
-    """Get a workflow document dict using workflow identifier.
-    """
+    """Get a workflow document dict using workflow identifier."""
     workflow_id = args.workflow_id
     database = Database(args.config)
 
     document = database.get_one_workflow(workflow_id)
     if not document:
         print(
-            FAILC +
-            "Could not find document "
-            "with workflow identifier: %s" % workflow_id +
-            ENDC
+            f"{FAILC}Could not find document with workflow identifier:"
+            f" {workflow_id}{ENDC}"
         )
 
     return document
 
 
 def _get_workflow_documents(args):
-    """Get a workflow documents with filters.
-    """
+    """Get a workflow documents with filters."""
     if args.disabled and args.enabled:
         raise ValueError("Use either disabled or enabled")
-    elif args.incomplete and args.completed:
+    if args.incomplete and args.completed:
         raise ValueError("Use either incomplete or completed")
 
     search = {}
@@ -366,14 +362,14 @@ def _get_workflow_documents(args):
 
 
 def _workflow(args):
-    """Get a workflow document"""
+    """Get a workflow document."""
     document = _get_workflow_document(args)
     if document:
         print(json.dumps(document, indent=4))
 
 
 def _workflows(args):
-    """Get a workflow documents"""
+    """Get a workflow documents."""
     documents = _get_workflow_documents(args)
     if documents.count() > 0:
         for document in documents:
@@ -384,10 +380,10 @@ def _workflows(args):
 
 
 def _status(args):
-    """Get workflow status"""
+    """Get workflow status."""
     document = _get_workflow_document(args)
     if document:
-        print("Status: %s" % document["status"])
+        print(f"Status: {document['status']}")
         print("Workflow is ", end="")
         print("completed" if document["completed"] else "incomplete", end="")
         print(" and ", end="")
@@ -395,7 +391,7 @@ def _status(args):
 
 
 def _tasks(args):
-    """Get workflow task results"""
+    """Get workflow task results."""
     document = _get_workflow_document(args)
     if document:
         success = []
@@ -408,7 +404,7 @@ def _tasks(args):
                 else:
                     fail.append([task, document["workflow_tasks"][task]])
         else:
-            print("Workflow %s has no workflow_tasks" % document["_id"])
+            print(f"Workflow {document['_id']} has no workflow_tasks")
 
         # Sort and print tasks that were completed successfully
         if success:
@@ -436,7 +432,7 @@ def _tasks(args):
 
 
 def _dataset(args):
-    """Get all workflow identifiers with the correct dataset identifier"""
+    """Get all workflow identifiers with the correct dataset identifier."""
     dataset_id = args.dataset_id
     documents = Database(args.config).get_workflows(dataset_id)
 
@@ -448,27 +444,27 @@ def _dataset(args):
 
 
 def _disable(args):
-    """Disable workflow"""
+    """Disable workflow."""
     document = _get_workflow_document(args)
     if document:
         database = Database(args.config)
         _id = document["_id"]
         database.set_disabled(_id)
-        print("Workflow %s disabled" % _id)
+        print(f"Workflow {_id} disabled")
 
 
 def _enable(args):
-    """Enable workflow"""
+    """Enable workflow."""
     document = _get_workflow_document(args)
     if document:
         database = Database(args.config)
         _id = document["_id"]
         database.set_enabled(_id)
-        print("Workflow %s enabled" % _id)
+        print(f"Workflow {_id} enabled")
 
 
 def _clean_cache(args):
-    """Clean files from Ida file cache"""
+    """Clean files from Ida file cache."""
     clean_file_cache(args.config)
 
 

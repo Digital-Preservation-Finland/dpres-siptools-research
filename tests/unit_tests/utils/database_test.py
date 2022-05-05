@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.utils.database` module"""
+"""Tests for :mod:`siptools_research.utils.database` module."""
 import uuid
 import pytest
 import pymongo
@@ -8,12 +8,13 @@ import tests.conftest
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_add_event():
-    """Test add_event function. Adds sample event to empty database and checks
-    that new document is created.
+    """Test add_event function.
+
+    Adds sample event to empty database and checks that new document is
+    created.
 
     :returns: ``None``
     """
-
     # Init database client
     database = siptools_research.utils.database.Database(
         tests.conftest.UNIT_TEST_CONFIG_FILE
@@ -42,12 +43,13 @@ def test_add_event():
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_set_status():
-    """Change workflow status twice using ``set_status`` function and check that
-    status is updated.
+    """Test setting workflow status.
+
+    Change workflow status twice using ``set_status`` function and check
+    that status is updated.
 
     :returns: ``None``
     """
-
     # Init database client
     database = siptools_research.utils.database.Database(
         tests.conftest.UNIT_TEST_CONFIG_FILE
@@ -71,8 +73,10 @@ def test_set_status():
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_add_workflow():
-    """Add new workflow to database using ``add_workflow`` function and check
-    that new document contains correct information.
+    """Test adding new workflow.
+
+    Add new workflow to database using ``add_workflow`` function and
+    check that new document contains correct information.
 
     :returns: ``None``
     """
@@ -94,9 +98,11 @@ def test_add_workflow():
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_get_incomplete_datasets():
-    """Populates database with few completed, incomplete and disabled datasets
-    and checks that ``get_incomplete_workflows`` function returns list of
-    incomplete workflows.
+    """Test listing incomplete datasets.
+
+    Populates database with few completed, incomplete and disabled
+    datasets and checks that ``get_incomplete_workflows`` function
+    returns list of incomplete workflows.
 
     :returns: ``None``
     """
