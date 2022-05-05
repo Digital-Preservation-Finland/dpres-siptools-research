@@ -37,7 +37,7 @@ test:
 		tests/integration_tests/report_preservation_status_test.py \
 		tests/integration_tests/send_sip_test.py \
 		tests/integration_tests/validate_sip_test.py \
-		tests/integration_tests/workflow_test.py -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml
+		tests/integration_tests/workflow_test.py -svvvv -o junit_family=xunit1 --junitprefix=dpres-siptools-research --junitxml=junit.xml
 
 coverage:
 	${PYTHON} -m pytest tests \
