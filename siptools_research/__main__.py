@@ -355,7 +355,7 @@ def _get_workflow_documents(args):
 
     database = Database(args.config)
     documents = database.get(search)
-    if documents.count() == 0:
+    if not documents:
         print(FAILC + "Could not find any workflows" + ENDC)
 
     return documents
@@ -371,12 +371,11 @@ def _workflow(args):
 def _workflows(args):
     """Get a workflow documents."""
     documents = _get_workflow_documents(args)
-    if documents.count() > 0:
-        for document in documents:
-            if not args.full:
-                print(document["_id"])
-            else:
-                print(json.dumps(document, indent=4))
+    for document in documents:
+        if not args.full:
+            print(document["_id"])
+        else:
+            print(json.dumps(document, indent=4))
 
 
 def _status(args):
@@ -436,7 +435,7 @@ def _dataset(args):
     dataset_id = args.dataset_id
     documents = Database(args.config).get_workflows(dataset_id)
 
-    if documents.count() == 0:
+    if not documents:
         print(FAILC + "No workflows found" + ENDC)
     else:
         for doc in documents:

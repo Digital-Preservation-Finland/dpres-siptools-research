@@ -164,15 +164,15 @@ class Database:
         :param search: Filter dictionary
         :returns: Workflow documents
         """
-        return self._collection.find(search)
+        return list(self._collection.find(search))
 
     def get_workflows(self, dataset_id):
         """Get workflow documents by dataset_id.
 
         :param dataset_id: Dataset identifier
-        :returns: Workflow document
+        :returns: Workflow documents
         """
-        return self._collection.find({"dataset": dataset_id})
+        return list(self._collection.find({"dataset": dataset_id}))
 
     def get_one_workflow(self, workflow_id):
         """Get a workflow document by _id.

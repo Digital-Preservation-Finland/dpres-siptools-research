@@ -160,7 +160,7 @@ def test_run_workflowtask(testpath):
     )
 
     # Check that there is no extra documents in mongo collection
-    assert collection.count() == 1
+    assert collection.count_documents({}) == 1
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -197,7 +197,7 @@ def test_run_failing_task(testpath, ):
     )
 
     # Check that there is no extra documents in mongo collection
-    assert collection.count() == 1
+    assert collection.count_documents({}) == 1
 
 
 @pytest.mark.parametrize(

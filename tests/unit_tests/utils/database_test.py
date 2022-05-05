@@ -38,7 +38,7 @@ def test_add_event():
     assert document['workflow_tasks']['TestTask']['result'] == 'success'
 
     # Check that there is no extra documents in database
-    assert mongoclient['siptools-research'].workflow.count() == 1
+    assert mongoclient['siptools-research'].workflow.count_documents({}) == 1
 
 
 @pytest.mark.usefixtures('testmongoclient')
