@@ -5,6 +5,12 @@ pytest-cov
 requests_mock
 Sphinx
 jsonschema2rst
+# jsonschema2rst version 0.1.4 does not work with recent PyYAML versions,
+# because it uses deprecated pyaml.load() function. Therefore, PyYAML version
+# 5 is used until the issue is resolved. See
+# https://github.com/inspirehep/jsonschema2rst/issues/13
+# for more information
+PyYAML<6.0
 mongomock
 xmltodict
 mock-ssh-server
