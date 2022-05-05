@@ -40,10 +40,19 @@ def run_luigi_task(task_name, workspace):
         )
 
 
-class TestTask(WorkflowTask):
+# pylint: disable=too-few-public-methods
+class FalseTarget(luigi.Target):
+    """Dummy target that never exists."""
+
+    def exists(self):
+        """Return False."""
+        return False
+
+
+class DummyTask(WorkflowTask):
     """Test class that only writes an output file."""
 
-    success_message = 'Test task was successfull'
+    success_message = 'Test task was successful'
 
     def output(self):
         """Create output file.
@@ -61,17 +70,14 @@ class TestTask(WorkflowTask):
             outputfile.write('Hello world')
 
 
-class FailingTestTask(WorkflowTask):
+class FailingTask(WorkflowTask):
     """Test class that always fails."""
 
     failure_message = 'An error occurred while running a test task'
 
     def output(self):
-        """Create output file.
-
-        :returns: local target: `<workspace>/output_file`
-        """
-        return luigi.LocalTarget(os.path.join(self.workspace, 'output_file'))
+        """Output never exists."""
+        return FalseTarget()
 
     def run(self):
         """Raise exception.
@@ -81,7 +87,7 @@ class FailingTestTask(WorkflowTask):
         raise Exception('Shit hit the fan')
 
 
-class InvalidSIPTask(FailingTestTask):
+class InvalidSIPTask(FailingTask):
     """Test class that raises InvalidSIPError."""
 
     def run(self):
@@ -92,7 +98,7 @@ class InvalidSIPTask(FailingTestTask):
         raise InvalidSIPError('File validation failed')
 
 
-class InvalidDatasetMetadataTask(FailingTestTask):
+class InvalidDatasetMetadataTask(FailingTask):
     """Test class that raises InvalidDatasetMetadataError."""
 
     def run(self):
@@ -107,6 +113,10 @@ class MetaxTask(WorkflowTask):
     """Test class that retrieves dataset from Metax."""
 
     failure_message = 'Failed retrieving dataste from Metax'
+
+    def output(self):
+        """Output never exists."""
+        return FalseTarget()
 
     def run(self):
         """Get dataset 1 from Metax.
@@ -128,14 +138,14 @@ class MetaxTask(WorkflowTask):
 def test_run_workflowtask(testpath):
     """Test WorkflowTask execution.
 
-    Executes a TestTask, checks that output file is created, checks that
-    new event field is created to mongo document.
+    Executes a DummyTask, checks that output file is created, checks
+    that new event field is created to mongo document.
 
     :param testpath: temporary directory
     :returns: ``None``
     """
     # Run task like it would be run from command line
-    run_luigi_task('TestTask', str(testpath))
+    run_luigi_task('DummyTask', str(testpath))
 
     # Check that output file is created
     assert (testpath / "output_file").read_text() == "Hello world"
@@ -147,12 +157,12 @@ def test_run_workflowtask(testpath):
                   [conf.get('mongodb_collection')])
     document = collection.find_one()
     # Check 'messages' field
-    assert document['workflow_tasks']['TestTask']['messages'] ==\
-        'Test task was successfull'
+    assert document['workflow_tasks']['DummyTask']['messages'] \
+        == 'Test task was successful'
     # Check 'result' field
-    assert document['workflow_tasks']['TestTask']['result'] == 'success'
+    assert document['workflow_tasks']['DummyTask']['result'] == 'success'
     # Parse the 'timestamp' field to make sure it is correct format
-    timestamp = document['workflow_tasks']['TestTask']['timestamp']
+    timestamp = document['workflow_tasks']['DummyTask']['timestamp']
     assert timestamp.endswith("+00:00")
     datetime.datetime.strptime(
         timestamp[:-6],  # Remove the UTC offset
@@ -167,14 +177,14 @@ def test_run_workflowtask(testpath):
 def test_run_failing_task(testpath, ):
     """Test running task that fails.
 
-    Executes FailingTestTask and checks that report of failed event is
-    added to mongo document.
+    Executes FailingTask and checks that report of failed event is added
+    to mongo document.
 
     :param testpath: temporary directory
     :returns: ``None``
     """
     # Run task like it would be run from command line
-    run_luigi_task('FailingTestTask', str(testpath))
+    run_luigi_task('FailingTask', str(testpath))
 
     # Check that new event is added to workflow database
     conf = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -183,13 +193,13 @@ def test_run_failing_task(testpath, ):
                   [conf.get('mongodb_collection')])
     document = collection.find_one()
     # Check 'messages' field
-    assert document['workflow_tasks']['FailingTestTask']['messages'] ==\
-        'An error occurred while running a test task: Shit hit the fan'
+    assert document['workflow_tasks']['FailingTask']['messages'] \
+        == 'An error occurred while running a test task: Shit hit the fan'
     # Check 'result' field
-    assert document['workflow_tasks']['FailingTestTask']['result'] ==\
-        'failure'
+    assert document['workflow_tasks']['FailingTask']['result'] \
+        == 'failure'
     # Parse the 'timestamp' field to make sure it is correct format
-    timestamp = document['workflow_tasks']['FailingTestTask']['timestamp']
+    timestamp = document['workflow_tasks']['FailingTask']['timestamp']
     assert timestamp.endswith("+00:00")
     datetime.datetime.strptime(
         timestamp[:-6],  # Remove the UTC offset
