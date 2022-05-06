@@ -4,7 +4,6 @@ import datetime
 import os
 
 import luigi.cmdline
-import pymongo
 import pytest
 import requests
 from metax_access import (DS_STATE_INVALID_METADATA,
@@ -13,6 +12,7 @@ from metax_access import (DS_STATE_INVALID_METADATA,
 
 import tests.conftest
 from siptools_research.config import Configuration
+from siptools_research.utils.database import Database
 from siptools_research.exceptions import (InvalidDatasetMetadataError,
                                           InvalidSIPError)
 from siptools_research.workflowtask import WorkflowTask
@@ -151,26 +151,23 @@ def test_run_workflowtask(testpath):
     assert (testpath / "output_file").read_text() == "Hello world"
 
     # Check that new event is added to workflow database
-    conf = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-    collection = (mongoclient[conf.get('mongodb_database')]
-                  [conf.get('mongodb_collection')])
-    document = collection.find_one()
+    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    workflow = database.get_one_workflow(testpath.name)
     # Check 'messages' field
-    assert document['workflow_tasks']['DummyTask']['messages'] \
+    assert workflow['workflow_tasks']['DummyTask']['messages'] \
         == 'Test task was successful'
     # Check 'result' field
-    assert document['workflow_tasks']['DummyTask']['result'] == 'success'
+    assert workflow['workflow_tasks']['DummyTask']['result'] == 'success'
     # Parse the 'timestamp' field to make sure it is correct format
-    timestamp = document['workflow_tasks']['DummyTask']['timestamp']
+    timestamp = workflow['workflow_tasks']['DummyTask']['timestamp']
     assert timestamp.endswith("+00:00")
-    datetime.datetime.strptime(
+    assert datetime.datetime.strptime(
         timestamp[:-6],  # Remove the UTC offset
         '%Y-%m-%dT%H:%M:%S.%f'
     )
 
-    # Check that there is no extra documents in mongo collection
-    assert collection.count_documents({}) == 1
+    # Check that there is no extra workflows in database
+    assert len(database.get(None)) == 1
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -187,27 +184,24 @@ def test_run_failing_task(testpath, ):
     run_luigi_task('FailingTask', str(testpath))
 
     # Check that new event is added to workflow database
-    conf = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-    collection = (mongoclient[conf.get('mongodb_database')]
-                  [conf.get('mongodb_collection')])
-    document = collection.find_one()
+    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    workflow = database.get_one_workflow(testpath.name)
     # Check 'messages' field
-    assert document['workflow_tasks']['FailingTask']['messages'] \
+    assert workflow['workflow_tasks']['FailingTask']['messages'] \
         == 'An error occurred while running a test task: Shit hit the fan'
     # Check 'result' field
-    assert document['workflow_tasks']['FailingTask']['result'] \
+    assert workflow['workflow_tasks']['FailingTask']['result'] \
         == 'failure'
     # Parse the 'timestamp' field to make sure it is correct format
-    timestamp = document['workflow_tasks']['FailingTask']['timestamp']
+    timestamp = workflow['workflow_tasks']['FailingTask']['timestamp']
     assert timestamp.endswith("+00:00")
     datetime.datetime.strptime(
         timestamp[:-6],  # Remove the UTC offset
         '%Y-%m-%dT%H:%M:%S.%f'
     )
 
-    # Check that there is no extra documents in mongo collection
-    assert collection.count_documents({}) == 1
+    # Check that there is no extra workflows in database
+    assert len(database.get(None)) == 1
 
 
 @pytest.mark.parametrize(

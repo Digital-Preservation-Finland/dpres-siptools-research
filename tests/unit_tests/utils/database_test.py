@@ -1,7 +1,5 @@
 """Tests for :mod:`siptools_research.utils.database` module."""
-import uuid
 import pytest
-import pymongo
 import siptools_research.utils.database
 import tests.conftest
 
@@ -20,25 +18,18 @@ def test_add_event():
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    # Add event for random document
-    document_id = uuid.uuid4()
-    database.add_event(document_id, 'TestTask', 'success',
+    # Add event for a workflow
+    database.add_event('foo', 'TestTask', 'success',
                        'Everything went better than expected')
 
-    # Connect to mongodb
-    mongoclient = pymongo.MongoClient()
-    # Find the document that was modified
-    document = mongoclient['siptools-research'].workflow.find_one(
-        {'_id': document_id}
-    )
-
-    # Check document
-    assert document['workflow_tasks']['TestTask']['messages'] == \
+    # Check that event was added to workflow
+    workflow = database.get_one_workflow('foo')
+    assert workflow['workflow_tasks']['TestTask']['messages'] == \
         'Everything went better than expected'
-    assert document['workflow_tasks']['TestTask']['result'] == 'success'
+    assert workflow['workflow_tasks']['TestTask']['result'] == 'success'
 
-    # Check that there is no extra documents in database
-    assert mongoclient['siptools-research'].workflow.count_documents({}) == 1
+    # Check that there is no extra workflows in database
+    assert len(database.get_workflows(None)) == 1
 
 
 @pytest.mark.usefixtures('testmongoclient')
