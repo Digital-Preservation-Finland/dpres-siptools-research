@@ -167,7 +167,7 @@ def test_run_workflowtask(testpath):
     )
 
     # Check that there is no extra workflows in database
-    assert len(database.get(None)) == 1
+    assert len(database.find(None)) == 1
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -201,7 +201,7 @@ def test_run_failing_task(testpath, ):
     )
 
     # Check that there is no extra workflows in database
-    assert len(database.get(None)) == 1
+    assert len(database.find(None)) == 1
 
 
 @pytest.mark.parametrize(

@@ -41,7 +41,7 @@ def test_cleanupworkspace(workspace, requests_mock, metax_status_code):
 
     # The task should be incomplete when ReportPreservationStatus task
     # has failed
-    database.add_event(
+    database.add_task(
         workspace.name, 'ReportPreservationStatus',
         'failure',
         'Preservation state could not be reported.'
@@ -50,7 +50,7 @@ def test_cleanupworkspace(workspace, requests_mock, metax_status_code):
 
     # Task should be complete when ReportPreservationStatus task has run
     # succesfully
-    database.add_event(workspace.name, 'ReportPreservationStatus',
-                       'success',
-                       'Lets pretend that all other wf-tasks are completed')
+    database.add_task(workspace.name, 'ReportPreservationStatus',
+                      'success',
+                      'Lets pretend that all other wf-tasks are completed')
     assert task.complete()

@@ -354,7 +354,7 @@ def _get_workflow_documents(args):
         search["completed"] = True
 
     database = Database(args.config)
-    documents = database.get(search)
+    documents = database.find(search)
     if not documents:
         print(FAILC + "Could not find any workflows" + ENDC)
 

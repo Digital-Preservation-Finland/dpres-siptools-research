@@ -120,16 +120,16 @@ def report_task_success(task):
     """Report task success.
 
     This function is triggered after each WorkflowTask is executed
-    succesfully. Adds report of successfull event to workflow database.
+    succesfully. Adds report of successful task to workflow database.
 
     :param task: WorkflowTask object
     :returns: ``None``
     """
     database = Database(task.config)
-    database.add_event(task.document_id,
-                       task.task_name,
-                       'success',
-                       task.success_message)
+    database.add_task(task.document_id,
+                      task.task_name,
+                      'success',
+                      task.success_message)
 
 
 @WorkflowTask.event_handler(luigi.Event.FAILURE)
@@ -137,7 +137,7 @@ def report_task_failure(task, exception):
     """Report task failure.
 
     This function is triggered when a WorkflowTask fails. Adds report of
-    failed event to workflow database.
+    failed task to workflow database.
 
     If task failed because dataset is invalid, the preservation status
     of dataset is updated in Metax, and the workflow is disabled.
@@ -147,10 +147,10 @@ def report_task_failure(task, exception):
     :returns: ``None``
     """
     database = Database(task.config)
-    database.add_event(task.document_id,
-                       task.task_name,
-                       'failure',
-                       "%s: %s" % (task.failure_message, str(exception)))
+    database.add_task(task.document_id,
+                      task.task_name,
+                      'failure',
+                      "%s: %s" % (task.failure_message, str(exception)))
     config_object = Configuration(task.config)
     metax_client = metax_access.Metax(
         config_object.get('metax_url'),

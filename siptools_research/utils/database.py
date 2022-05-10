@@ -33,14 +33,14 @@ class Database:
                 [conf.get("mongodb_collection")]
             )
 
-    def add_event(self, workflow_id, taskname, result, messages):
-        """Add information of workflow task to mongodb.
+    def add_task(self, workflow_id, taskname, result, messages):
+        """Add information of workflow task to database.
 
         :param workflow_id: Workflow identifier i.e. the name of workspace
                             directory
         :param taskname: Name of the task
         :param result: Result string ('failure' or 'success')
-        :param messages: Information of the event
+        :param messages: Information about the task
         :returns: ``None``
         """
         self._collection.update_one(
@@ -135,11 +135,11 @@ class Database:
     def add_workflow(self, workflow_id, dataset_id):
         """Add new workflow.
 
-        The workflow identity will be the primary key ('_id') of the
+        The workflow identifier will be the primary key ('_id') of the
         document.
 
         :param workflow_id: Workflow identifier, i.e. the name of workspace
-            directory
+                            directory
         :param dataset_id: Dataset identifier
         :returns: ``None``
         """
@@ -158,46 +158,46 @@ class Database:
             upsert=True
         )
 
-    def get(self, search):
-        """Get workflow documents with arbitrary filter.
+    def find(self, search):
+        """Search workflows with arbitrary filter.
 
         :param search: Filter dictionary
-        :returns: Workflow documents
+        :returns: List of workflows
         """
         return list(self._collection.find(search))
 
     def get_workflows(self, dataset_id):
-        """Get workflow documents by dataset_id.
+        """Get workflows by dataset identifier.
 
         :param dataset_id: Dataset identifier
-        :returns: Workflow documents
+        :returns: List of workflows
         """
         return list(self._collection.find({"dataset": dataset_id}))
 
     def get_one_workflow(self, workflow_id):
-        """Get a workflow document by _id.
+        """Get a workflow document by workflow identifier.
 
-        :param workflow_id: Workflow identifier _id
-        :return: Workflow document
+        :param workflow_id: Workflow identifier
+        :returns: Workflow
         """
         return self._collection.find_one({"_id": workflow_id})
 
-    def get_event_result(self, workflow_id, taskname):
-        """Read event result for a workflow.
+    def get_task_result(self, workflow_id, taskname):
+        """Read task result for a workflow.
 
-        :param workflow_id: Mongo workflow id
+        :param workflow_id: Workflow identifier
         :param taskname: Name of task
-        :returns: Event result
+        :returns: Task result
         """
         document = self._collection.find_one({'_id': workflow_id})
         return document['workflow_tasks'][taskname]['result']
 
-    def get_event_timestamp(self, workflow_id, taskname):
-        """Read event timestamp for a workflow.
+    def get_task_timestamp(self, workflow_id, taskname):
+        """Read task timestamp for a workflow.
 
-        :param workflow_id: Mongo workflow id
+        :param workflow_id: Workflow identifier
         :param taskname: Name of task
-        :returns: Event timestamp
+        :returns: Task timestamp
         """
         document = self._collection.find_one({'_id': workflow_id})
         if not document:

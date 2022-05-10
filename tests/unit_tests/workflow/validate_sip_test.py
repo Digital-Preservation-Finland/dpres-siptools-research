@@ -17,7 +17,7 @@ def test_validatesip_accepted(workspace, monkeypatch):
     :returns: ``None``
     """
     monkeypatch.setattr(
-        Database, 'get_event_timestamp',
+        Database, 'get_task_timestamp',
         lambda self, workflow, task: datetime.now(timezone.utc).isoformat()
     )
 

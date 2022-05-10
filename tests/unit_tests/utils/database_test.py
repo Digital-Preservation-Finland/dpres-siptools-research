@@ -5,10 +5,10 @@ import tests.conftest
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_add_event():
-    """Test add_event function.
+def test_add_task():
+    """Test add_task method.
 
-    Adds sample event to empty database and checks that new document is
+    Adds sample task to empty database and checks that new document is
     created.
 
     :returns: ``None``
@@ -18,11 +18,11 @@ def test_add_event():
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    # Add event for a workflow
-    database.add_event('foo', 'TestTask', 'success',
-                       'Everything went better than expected')
+    # Add task for a workflow
+    database.add_task('foo', 'TestTask', 'success',
+                      'Everything went better than expected')
 
-    # Check that event was added to workflow
+    # Check that task was added to workflow
     workflow = database.get_one_workflow('foo')
     assert workflow['workflow_tasks']['TestTask']['messages'] == \
         'Everything went better than expected'

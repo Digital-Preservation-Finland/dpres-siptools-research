@@ -99,8 +99,8 @@ class CleanupWorkspace(WorkflowTask):
         # Check if ReportPreservationStatus has finished
         database = Database(self.config)
         try:
-            result = database.get_event_result(self.document_id,
-                                               'ReportPreservationStatus')
+            result = database.get_task_result(self.document_id,
+                                              'ReportPreservationStatus')
 
         # TODO: Maybe these exceptions should be handled by Database
         # module?

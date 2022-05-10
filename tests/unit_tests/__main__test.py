@@ -271,19 +271,19 @@ def test_main_tasks(capsys, monkeypatch):
     # Add a single workflow documents and couple workflow_tasks to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
     database.add_workflow("aineisto_1", "1")
-    database.add_event(
+    database.add_task(
         "aineisto_1",
         "CreateWorkspace",
         "success",
         "Workspace directory created"
     )
-    database.add_event(
+    database.add_task(
         "aineisto_1",
         "ValidateMetadata",
         "success",
         "Metax metadata in valid"
     )
-    database.add_event(
+    database.add_task(
         "aineisto_1",
         "CreateProvenanceInformation",
         "failure",

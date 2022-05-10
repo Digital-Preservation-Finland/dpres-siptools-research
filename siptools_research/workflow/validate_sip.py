@@ -51,7 +51,7 @@ class ValidateSIP(WorkflowExternalTask):
         # Dependencies are ran only if ValidateSip task is not
         # completed.
         try:
-            send_timestamp = database.get_event_timestamp(
+            send_timestamp = database.get_task_timestamp(
                 self.document_id, "SendSIPToDP"
             )
             sip_to_dp_date = dateutil.parser.parse(send_timestamp).date()
