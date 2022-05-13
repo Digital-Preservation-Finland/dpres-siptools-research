@@ -197,12 +197,16 @@ TXT_FILE.update(TXT_FILE_METADATA)
 
 TIFF_FILE = deepcopy(BASE_FILE)
 TIFF_FILE.update(TIFF_FILE_METADATA)
+TIFF_FILE["identifier"] += "_tiff"
+TIFF_FILE["file_path"] += ".tiff"
 
 CSV_FILE = deepcopy(BASE_FILE)
 CSV_FILE.update(CSV_FILE_METADATA)
 
 MKV_FILE = deepcopy(BASE_FILE)
 MKV_FILE.update(MKV_FILE_METADATA)
+MKV_FILE["identifier"] += "_mkv"
+MKV_FILE["file_path"] += ".mkv"
 
 
 FILES = {

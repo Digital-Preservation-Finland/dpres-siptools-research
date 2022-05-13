@@ -13,7 +13,7 @@ from siptools.utils import read_md_references
 from siptools.xml.mets import NAMESPACES
 import xmltodict
 
-import tests.metax_data
+from tests.metax_data.files import TIFF_FILE, MKV_FILE, TXT_FILE
 import tests.utils
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
                                                       algorithm_name)
@@ -46,19 +46,17 @@ def test_create_techmd_ok(workspace, requests_mock):
     :returns: ``None``
     """
     # Mock metax
-    tests.utils.add_metax_dataset(requests_mock,
-                                  files=[tests.metax_data.files.TIFF_FILE])
+    tests.utils.add_metax_dataset(requests_mock, files=[TIFF_FILE])
 
     # Create workspace that already contains the dataset files
     sipdirectory = workspace / 'sip-in-progress'
     sipdirectory.mkdir()
-    dataset_files = workspace / 'dataset_files'
-    tiff_path = dataset_files / "path" / "to" / "file"
-    tiff_path.parent.mkdir(parents=True)
+    tiff_path = Path('dataset_files') / TIFF_FILE['file_path']
+    (workspace / tiff_path).parent.mkdir(parents=True)
 
     shutil.copy(
         'tests/data/sample_files/valid_tiff.tiff',
-        tiff_path
+        workspace / tiff_path
     )
 
     # Init task
@@ -75,14 +73,11 @@ def test_create_techmd_ok(workspace, requests_mock):
     premis_object_references \
         = read_md_references(sipdirectory, 'import-object-md-references.jsonl')
     assert len(premis_object_references) == 1
-    assert len(
-        premis_object_references['dataset_files/path/to/file']['md_ids']
-    ) == 1
+    assert len(premis_object_references[str(tiff_path)]['md_ids']) == 1
 
     # Check that the PREMIS object file has desired properties
     premis_object_identifier \
-        = (premis_object_references['dataset_files/path/to/file']
-           ['md_ids'][0][1:])
+        = (premis_object_references[str(tiff_path)]['md_ids'][0][1:])
     premis_object_file = f'{premis_object_identifier}-PREMIS%3AOBJECT-amd.xml'
     premis_object_xml = lxml.etree.parse(
         str(sipdirectory / premis_object_file)
@@ -133,8 +128,8 @@ def test_create_techmd_ok(workspace, requests_mock):
         str(sipdirectory), 'create-mix-md-references.jsonl'
     )
     assert len(mix_references) == 1
-    assert len(mix_references['dataset_files/path/to/file']["md_ids"]) == 1
-    assert mix_references['dataset_files/path/to/file']["md_ids"][0] \
+    assert len(mix_references[str(tiff_path)]["md_ids"]) == 1
+    assert mix_references[str(tiff_path)]["md_ids"][0] \
         == '_dd0f489d6e47cc2dca598beb608cc78d'
 
     # Compare MIX metadata in techMD file to original MIX metadata in
@@ -176,21 +171,15 @@ def test_create_techmd_multiple_metadata_documents(
 
     Multiple technical metadata documents should be created.
     """
-    tests.utils.add_metax_dataset(
-        requests_mock,
-        files=[tests.metax_data.files.MKV_FILE]
-    )
+    tests.utils.add_metax_dataset(requests_mock, files=[MKV_FILE])
 
     # Create workspace that already contains the dataset files
     sipdirectory = workspace / 'sip-in-progress'
     sipdirectory.mkdir()
     dataset_files = workspace / 'dataset_files'
-    mkv_path = dataset_files / "path" / "to" / "file"
+    mkv_path = dataset_files / MKV_FILE['file_path']
     mkv_path.parent.mkdir(parents=True)
-    shutil.copy(
-        'tests/data/sample_files/video_ffv1.mkv',
-        mkv_path
-    )
+    shutil.copy('tests/data/sample_files/video_ffv1.mkv', mkv_path)
 
     # Init task
     task = CreateTechnicalMetadata(workspace=str(workspace),
@@ -242,9 +231,9 @@ def test_create_techmd_multiple_metadata_documents(
 def test_create_techmd_incomplete_file_characteristics(
         workspace, requests_mock):
     """Test techmd creation for a file without all the necessary file
-    characteristics
+    characteristics.
     """
-    tiff_file_incomplete = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
+    tiff_file_incomplete = copy.deepcopy(TIFF_FILE)
     del (tiff_file_incomplete["file_characteristics_extension"]["streams"]
          [0]["bps_value"])
     # Mock metax
@@ -254,14 +243,9 @@ def test_create_techmd_incomplete_file_characteristics(
     # Create workspace that already contains the dataset files
     sipdirectory = workspace / "sip-in-progress"
     sipdirectory.mkdir()
-
-    dataset_files = workspace / "dataset_files"
-    tiff_path = dataset_files / "path" / "to" / "file"
+    tiff_path = workspace / "dataset_files" / TIFF_FILE["file_path"]
     tiff_path.parent.mkdir(parents=True)
-    shutil.copy(
-        'tests/data/sample_files/valid_tiff.tiff',
-        tiff_path
-    )
+    shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
 
     # Init task
     task = CreateTechnicalMetadata(workspace=str(workspace),
@@ -283,7 +267,7 @@ def test_create_techmd_without_charset(workspace, requests_mock):
     :param workspace: Test workspace directory
     :returns: ``None``
     """
-    text_file = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+    text_file = copy.deepcopy(TXT_FILE)
     del text_file['file_characteristics']['encoding']
     tests.utils.add_metax_dataset(requests_mock, files=[text_file])
 

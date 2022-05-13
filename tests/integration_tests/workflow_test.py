@@ -1,7 +1,9 @@
 """Test that packaging workflow produces valid SIPs."""
 
 import copy
+import filecmp
 import os
+import shutil
 import tarfile
 
 import pymongo
@@ -48,6 +50,8 @@ XML_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
 XML_FILE["file_path"] = "mets.xml"
 SIG_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
 SIG_FILE["file_path"] = "signature.sig"
+TIFF_FILE = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
+MKV_FILE = copy.deepcopy(tests.metax_data.files.MKV_FILE)
 DATASET_WITH_PROVENANCE \
     = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
 DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
@@ -60,25 +64,73 @@ DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
 @pytest.mark.parametrize(
     ['dataset', 'files'],
     [
+        # Dataset with one text file
         (
             tests.metax_data.datasets.BASE_DATASET,
-            [tests.metax_data.files.TXT_FILE]
+            [
+                {
+                    'metadata': tests.metax_data.files.TXT_FILE,
+                    'path': 'tests/data/sample_files/text_plain_UTF-8'
+                }
+            ]
         ),
+        # Dataset with a file in upload-rest-api
         (
             tests.metax_data.datasets.BASE_DATASET,
-            [PAS_STORAGE_TXT_FILE]
+            [
+                {
+                    'metadata': PAS_STORAGE_TXT_FILE,
+                    'path': 'tests/data/sample_files/text_plain_UTF-8'
+                }
+            ]
         ),
+        # Dataset with a file named "mets.xml"
         (
             tests.metax_data.datasets.BASE_DATASET,
-            [XML_FILE]
+            [
+                {
+                    'metadata': XML_FILE,
+                    'path': 'tests/data/sample_files/text_plain_UTF-8'
+                }
+            ]
         ),
+        # Dataset with a file named "signature.sig"
         (
             tests.metax_data.datasets.BASE_DATASET,
-            [SIG_FILE]
+            [
+                {
+                    'metadata': SIG_FILE,
+                    'path': 'tests/data/sample_files/text_plain_UTF-8'
+                }
+            ]
         ),
+        # Dataset with provenance information that user created
         (
             DATASET_WITH_PROVENANCE,
-            [tests.metax_data.files.TXT_FILE]
+            [
+                {
+                    'metadata': tests.metax_data.files.TXT_FILE,
+                    'path': 'tests/data/sample_files/text_plain_UTF-8'
+                }
+            ]
+        ),
+        # Dataset with multiple files
+        (
+            tests.metax_data.datasets.BASE_DATASET,
+            [
+                {
+                    'metadata': tests.metax_data.files.TXT_FILE,
+                    'path': 'tests/data/sample_files/text_plain_UTF-8'
+                },
+                {
+                    'metadata': MKV_FILE,
+                    'path': 'tests/data/sample_files/video_ffv1.mkv'
+                },
+                {
+                    'metadata': TIFF_FILE,
+                    'path': 'tests/data/sample_files/valid_tiff.tiff'
+                }
+            ]
         )
     ]
 )
@@ -105,11 +157,11 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
     # Mock Metax
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset,
-                                  files=files)
+                                  files=[file['metadata'] for file in files])
 
     # Mock file download sources
-    for file_ in files:
-        if file_['file_storage']['identifier'] == PAS_STORAGE_ID:
+    for file in files:
+        if file['metadata']['file_storage']['identifier'] == PAS_STORAGE_ID:
             # Mock upload-rest-api
             conf = siptools_research.config.Configuration(
                 tests.conftest.TEST_CONFIG_FILE
@@ -117,19 +169,22 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
             mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
             mongoclient.upload.files.insert_one(
                 {
-                    "_id": file_['identifier'],
-                    "file_path": os.path.join(testpath, file_['identifier'])
+                    "_id": file['metadata']['identifier'],
+                    "file_path": os.path.join(testpath,
+                                              file['metadata']['identifier'])
                 }
             )
-            (testpath / file_["identifier"]).write_text("foo")
+            shutil.copy(file['path'],
+                        testpath / file['metadata']["identifier"])
         else:
             # Mock Ida
-            tests.utils.add_mock_ida_download(
-                requests_mock=requests_mock,
-                dataset_id="dataset_identifier",
-                filename=files[0]["file_path"],
-                content=b"foo"
-            )
+            with open(file['path'], 'rb') as open_file:
+                tests.utils.add_mock_ida_download(
+                    requests_mock=requests_mock,
+                    dataset_id="dataset_identifier",
+                    filename=file['metadata']["file_path"],
+                    content=open_file.read()
+                )
 
     workspace = pkg_root / 'workspaces' / 'workspace'
     luigi.build(
@@ -165,12 +220,12 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
         == '1.7'
 
     # Check that all files are included in SIP
-    for file_metadata in files:
-        path = (
+    for file in files:
+        file_in_sip = (
             testpath / "extracted_sip" / "dataset_files"
-            / file_metadata["file_path"]
+            / file["metadata"]["file_path"]
         )
-        assert path.read_text() == "foo"
+        assert filecmp.cmp(file_in_sip, file['path'])
 
     # Check that premis event is created for each provenance event of
     # dataset
