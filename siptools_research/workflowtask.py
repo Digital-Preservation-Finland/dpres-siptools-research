@@ -150,7 +150,7 @@ def report_task_failure(task, exception):
     database.add_task(task.document_id,
                       task.task_name,
                       'failure',
-                      "{}: {}".format(task.failure_message, str(exception)))
+                      f"{task.failure_message}: {str(exception)}")
     config_object = Configuration(task.config)
     metax_client = metax_access.Metax(
         config_object.get('metax_url'),
@@ -187,9 +187,8 @@ def _get_description(task, exception):
     Max length of the preservation_description attribute in Metax
      is 200 chars.
     """
-    system_description = "{}: {}: {}".format(task.failure_message,
-                                         type(exception).__name__,
-                                         str(exception))
+    system_description = (f"{task.failure_message}: "
+                          f"{type(exception).__name__}: {str(exception)}")
     if len(system_description) > 200:
         system_description = system_description[:199]
     return system_description

@@ -100,8 +100,8 @@ def test_create_structmap_ok(workspace, provenance_ids):
     )
     assert len(files) == 3
     assert set(files) == {'file://data/file1',
-                              'file://data/file2',
-                              'file://data/subdirectory/file3'}
+                          'file://data/file2',
+                          'file://data/subdirectory/file3'}
 
     # Validate directory structure in structmap XML-file.
     structmap_xml = lxml.etree.parse(str(sip_creation_path / 'structmap.xml'))

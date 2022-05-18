@@ -64,14 +64,12 @@ class ValidateSIP(WorkflowExternalTask):
         while sip_to_dp_date <= lim_date:
             paths.append(
                 os.path.join(
-                    'accepted/{}/{}.tar'.format(sip_to_dp_date,
-                                            self.document_id)
+                    f'accepted/{sip_to_dp_date}/{self.document_id}.tar'
                 )
             )
             paths.append(
                 os.path.join(
-                    'rejected/{}/{}.tar'.format(sip_to_dp_date,
-                                            self.document_id)
+                    f'rejected/{sip_to_dp_date}/{self.document_id}.tar'
                 )
             )
             sip_to_dp_date += timedelta(days=1)

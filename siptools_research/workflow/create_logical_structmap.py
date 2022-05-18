@@ -233,9 +233,8 @@ class CreateLogicalStructMap(WorkflowTask):
                     return file_.get('ID')
 
         raise ValueError(
-            "File ID for file {} not found from fileSec: {}".format(
-                filepath, filesec_xml
-            )
+            f"File ID for file {filepath} not found from fileSec: "
+            f"{filesec_xml}"
         )
 
 

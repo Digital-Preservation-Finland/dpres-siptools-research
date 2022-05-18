@@ -63,7 +63,7 @@ def validate_metadata(
                                 metax_client)
 
     # Validate file metadata for each file in dataset files
-    _validate_file_metadata(dataset_metadata, metax_client, conf)
+    _validate_file_metadata(dataset_metadata, metax_client)
 
     # Validate datacite provided by Metax
     _validate_datacite(dataset_id, metax_client, dummy_doi=dummy_doi)
@@ -88,7 +88,7 @@ def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
     try:
         jsonschema.validate(dataset_metadata, schema)
     except jsonschema.ValidationError as exc:
-        raise InvalidDatasetMetadataError(str(exc))
+        raise InvalidDatasetMetadataError(str(exc)) from exc
 
 
 def _validate_dataset_localization(dataset_metadata):
@@ -142,7 +142,7 @@ def _validate_localization(localization_dict, field):
     """
     if not localization_dict:
         raise InvalidDatasetMetadataError(
-            "No localization provided in field: 'research_dataset/%s'" % field
+            f"No localization provided in field: 'research_dataset/{field}'"
         )
 
     for language in localization_dict:
@@ -153,12 +153,11 @@ def _validate_localization(localization_dict, field):
 
         try:
             languages.get(part1=language)
-        except KeyError:
-            message = (
-                "Invalid language code: '%s' in field: 'research_dataset/%s'"
-            ) % (language, field)
-
-            raise InvalidDatasetMetadataError(message)
+        except KeyError as exception:
+            raise InvalidDatasetMetadataError(
+                f"Invalid language code: '{language}' in field: "
+                f"'research_dataset/{field}'"
+            ) from exception
 
 
 def _validate_contract_metadata(contract_id, metax_client):
@@ -173,7 +172,7 @@ def _validate_contract_metadata(contract_id, metax_client):
         jsonschema.validate(contract_metadata,
                             siptools_research.schemas.CONTRACT_METADATA_SCHEMA)
     except jsonschema.ValidationError as exc:
-        raise InvalidContractMetadataError(str(exc))
+        raise InvalidContractMetadataError(str(exc)) from exc
 
 
 def _check_mimetype(file_metadata):
@@ -191,20 +190,17 @@ def _check_mimetype(file_metadata):
 
     if not mimetypes.is_supported(file_format, format_version):
         message = (
-            "Validation error in file {file_path}: Incorrect file "
-            "format: {file_format}"
-        ).format(
-            file_path=file_metadata["file_path"],
-            file_format=file_format,
+            f"Validation error in file {file_metadata['file_path']}: "
+            f"Incorrect file format: {file_format}"
         )
 
         if format_version:
-            message += ", version %s" % format_version
+            message += f", version {format_version}"
 
         raise InvalidFileMetadataError(message)
 
 
-def _validate_file_metadata(dataset, metax_client, conf):
+def _validate_file_metadata(dataset, metax_client):
     """Validate file metadata found from /rest/v2/datasets/<dataset_id>/files.
 
     :param dataset: dataset
@@ -242,9 +238,8 @@ def _validate_file_metadata(dataset, metax_client, conf):
             )
         except jsonschema.ValidationError as exc:
             raise InvalidFileMetadataError(
-                "Validation error in metadata of {file_path}: {error}"
-                .format(file_path=file_path, error=str(exc))
-            )
+                f"Validation error in metadata of {file_path}: {str(exc)}"
+            ) from exc
 
         directory_validation.is_valid_for_file(file_metadata)
 
@@ -255,8 +250,8 @@ def _validate_file_metadata(dataset, metax_client, conf):
         normalised_path = os.path.normpath(file_path.strip('/'))
         if normalised_path.startswith('..'):
             raise InvalidFileMetadataError(
-                'The file path of file {} is invalid: {}'.format(file_identifier,
-                                                             file_path)
+                f'The file path of file {file_identifier} is invalid:'
+                f' {file_path}'
             )
         consistency.is_consistent_for_file(file_metadata)
 
@@ -271,7 +266,7 @@ def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):
     try:
         datacite = metax_client.get_datacite(dataset_id, dummy_doi=dummy_doi)
     except DataciteGenerationError as exception:
-        raise InvalidDatasetMetadataError(str(exception))
+        raise InvalidDatasetMetadataError(str(exception)) from exception
 
     schema = lxml.etree.XMLSchema(lxml.etree.parse(DATACITE_SCHEMA))
     if schema.validate(datacite) is False:
@@ -293,7 +288,7 @@ def _format_error_list(errors):
     elif len(errors) > 1:
         message = 'The following errors were detected:\n'
         for error in enumerate(errors, 1):
-            message += '\n%s. %s' % (error)
+            message += f'\n{error[0]}. {error[1]}'
     else:
         raise TypeError("Can not format empty list")
 

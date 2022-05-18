@@ -23,15 +23,14 @@ class InitWorkflow(WorkflowWrapperTask):
 
         :returns: CleanupWorkspace task
         """
-
         return CleanupWorkspace(workspace=self.workspace,
                                 dataset_id=self.dataset_id,
                                 config=self.config)
 
 
 class InitWorkflows(luigi.WrapperTask):
-    """A wrapper task that starts/restarts all incomplete workflows.
-    """
+    """A wrapper task that starts/restarts all incomplete workflows."""
+
     config = luigi.Parameter()
 
     def requires(self):
@@ -39,7 +38,6 @@ class InitWorkflows(luigi.WrapperTask):
 
         :returns: List of CleanupWorkspace tasks
         """
-
         packaging_root = Configuration(self.config).get('packaging_root')
         workspace_root = os.path.join(packaging_root, "workspaces")
         database = siptools_research.utils.database.Database(self.config)
@@ -53,7 +51,8 @@ class InitWorkflows(luigi.WrapperTask):
 
 
 def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
-    """Generates unique id for the workspace and initates packaging workflow.
+    """Generate unique id for the workspace and initates packaging workflow.
+
     Workspace name is used as document id in MongoDB. This function can be
     imported to other python modules.
 
@@ -66,8 +65,7 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     packaging_root = conf.get('packaging_root')
 
     # Set workspace name and path
-    workspace_name = "aineisto_{}-{}".format(dataset_id,
-                                         str(uuid.uuid4()))
+    workspace_name = f"aineisto_{dataset_id}-{str(uuid.uuid4())}"
     workspace = os.path.join(packaging_root, "workspaces", workspace_name)
 
     # Add information to mongodb

@@ -444,10 +444,8 @@ def test_validate_file_metadata(requests_mock):
     )
 
     # pylint: disable=protected-access
-    siptools_research.metadata_validator._validate_file_metadata(
-        dataset,
-        client, configuration
-    )
+    siptools_research.metadata_validator._validate_file_metadata(dataset,
+                                                                 client)
 
     assert files_adapter.call_count == 1
 
@@ -486,7 +484,7 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
             {
                 'identifier': 'dataset_identifier'
             },
-            client, configuration
+            client,
         )
 
 
