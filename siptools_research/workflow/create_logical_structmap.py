@@ -203,7 +203,7 @@ class CreateLogicalStructMap(WorkflowTask):
             # directory, raise error
             if filecategory is None:
                 raise InvalidDatasetMetadataError(
-                    "File category for file {} was not found".format(file_id)
+                    f"File category for file {file_id} was not found"
                 )
 
             # Append path to logical_struct[filecategory] list. Create
@@ -233,7 +233,7 @@ class CreateLogicalStructMap(WorkflowTask):
                     return file_.get('ID')
 
         raise ValueError(
-            "File ID for file %s not found from fileSec: %s" % (
+            "File ID for file {} not found from fileSec: {}".format(
                 filepath, filesec_xml
             )
         )

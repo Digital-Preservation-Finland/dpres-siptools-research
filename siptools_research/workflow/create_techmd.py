@@ -1,5 +1,4 @@
 """Luigi task that creates technical metadata."""
-# encoding=utf8
 
 import datetime
 import os

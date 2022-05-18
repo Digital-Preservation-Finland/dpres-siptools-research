@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # siptools_research documentation build configuration file, created by
 # sphinx-quickstart on Mon Oct 30 13:59:40 2017.
@@ -40,8 +39,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'siptools_research'
-copyright = u'2017, CSC - IT Center for Science'
+project = 'siptools_research'
+copyright = '2017, CSC - IT Center for Science'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -183,8 +182,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'siptools_research.tex', u'siptools\\_research Documentation',
-   u'CSC - IT Center for Science', 'manual'),
+  ('index', 'siptools_research.tex', 'siptools\\_research Documentation',
+   'CSC - IT Center for Science', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -213,8 +212,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'siptools_research', u'siptools_research Documentation',
-     [u'CSC - IT Center for Science'], 1)
+    ('index', 'siptools_research', 'siptools_research Documentation',
+     ['CSC - IT Center for Science'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -227,8 +226,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'siptools_research', u'siptools_research Documentation',
-   u'CSC - IT Center for Science', 'siptools_research', 'One line description of project.',
+  ('index', 'siptools_research', 'siptools_research Documentation',
+   'CSC - IT Center for Science', 'siptools_research', 'One line description of project.',
    'Miscellaneous'),
 ]
 

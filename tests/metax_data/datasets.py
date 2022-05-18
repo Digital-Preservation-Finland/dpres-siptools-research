@@ -1,4 +1,3 @@
-# coding=utf-8
 """Module for generating test datasets at runtime."""
 from copy import deepcopy
 

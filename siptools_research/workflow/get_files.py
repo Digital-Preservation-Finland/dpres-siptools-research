@@ -85,7 +85,7 @@ class GetFiles(WorkflowTask):
                 )
                 if not full_path.startswith(target_path):
                     raise InvalidFileMetadataError(
-                        'The file path of file %s is invalid: %s' % (
+                        'The file path of file {} is invalid: {}'.format(
                             identifier, dataset_file["file_path"]
                         )
                     )

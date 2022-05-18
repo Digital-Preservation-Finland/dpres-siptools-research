@@ -45,7 +45,7 @@ class RemoteAnyTarget(luigi.Target):
                 try:
                     sftp.stat(path)
                     exists = True
-                except IOError as ex:
+                except OSError as ex:
                     if 'No such file' not in str(ex):
                         raise
         return exists

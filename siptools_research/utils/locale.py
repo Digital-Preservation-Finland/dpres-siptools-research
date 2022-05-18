@@ -54,4 +54,4 @@ def get_localized_value(dictionary, languages=None):
         if lang in dictionary.keys():
             return dictionary[lang]
 
-    raise KeyError("Localized value not found in {}".format(dictionary))
+    raise KeyError(f"Localized value not found in {dictionary}")

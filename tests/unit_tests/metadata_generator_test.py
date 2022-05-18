@@ -115,7 +115,7 @@ def test_generate_metadata_video_streams(requests_mock):
     ]
 
     # Four different streams found
-    assert set(['0', '1', '2', '3']) == set(file_char_ext['streams'].keys())
+    assert {'0', '1', '2', '3'} == set(file_char_ext['streams'].keys())
 
     streams_by_type = defaultdict(list)
     for stream in file_char_ext['streams'].values():

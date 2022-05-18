@@ -99,9 +99,9 @@ def test_create_structmap_ok(workspace, provenance_ids):
         namespaces=NAMESPACES
     )
     assert len(files) == 3
-    assert set(files) == set(['file://data/file1',
+    assert set(files) == {'file://data/file1',
                               'file://data/file2',
-                              'file://data/subdirectory/file3'])
+                              'file://data/subdirectory/file3'}
 
     # Validate directory structure in structmap XML-file.
     structmap_xml = lxml.etree.parse(str(sip_creation_path / 'structmap.xml'))
@@ -152,7 +152,7 @@ def test_create_structmap_ok(workspace, provenance_ids):
     # compile-structmap-agents-AGENTS-amd.json,
     # premis-event-md-references.jsonl, premis event and premis agent
     # should be created into SIP directory.
-    files = set(path.name for path in sip_creation_path.iterdir())
+    files = {path.name for path in sip_creation_path.iterdir()}
     assert len(files) - len(set(sip_content_before_run)) == 6
     assert {'filesec.xml',
             'structmap.xml',

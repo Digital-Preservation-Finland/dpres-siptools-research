@@ -127,7 +127,7 @@ def test_failed_createprovenanceinformation(
 
     # No files should have been created in workspace directory and
     # temporary directories should cleaned
-    files = set(path.name for path in workspace.iterdir())
+    files = {path.name for path in workspace.iterdir()}
     assert files == {'sip-in-progress'}
     assert not list(sipdirectory.iterdir())
     assert not list((pkg_root / 'tmp').iterdir())

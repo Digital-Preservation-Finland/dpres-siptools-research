@@ -62,14 +62,14 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
     )
     if missing_files:
         raise MissingFileError(
-            "{} files are missing".format(len(missing_files)), missing_files
+            f"{len(missing_files)} files are missing", missing_files
         )
 
     for dataset_file in dataset_files:
         _validate_file(dataset_file, cache_path, invalid_files)
     if invalid_files:
         raise InvalidFileError(
-            "{} files are not well-formed".format(len(invalid_files)),
+            f"{len(invalid_files)} files are not well-formed",
             invalid_files
         )
 

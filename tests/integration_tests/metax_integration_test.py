@@ -207,7 +207,7 @@ def delete_metax_file(identifier, conf):
     :param conf: Configuration
     :returns: None
     """
-    url = "%s/rest/v2/files/%s" % (conf.get("metax_url"), identifier)
+    url = "{}/rest/v2/files/{}".format(conf.get("metax_url"), identifier)
     response = requests.delete(
         url,
         auth=(conf.get("metax_user"), conf.get("metax_password"))
@@ -223,7 +223,7 @@ def delete_metax_dataset(identifier, conf):
     :returns: ``None``
     """
 
-    url = "%s/rest/v2/datasets/%s" % (conf.get("metax_url"), identifier)
+    url = "{}/rest/v2/datasets/{}".format(conf.get("metax_url"), identifier)
     response = requests.delete(
         url,
         auth=(conf.get("metax_user"), conf.get("metax_password"))

@@ -1,4 +1,3 @@
-# coding=utf-8
 """Tests for :mod:`siptools_research.workflow.create_dmdsec` module."""
 import json
 
@@ -80,14 +79,14 @@ def test_createdescriptivemetadata(workspace, requests_mock):
 
     # SIP creation directory should contain only descriptive metadata
     # XML, descriptive metadata reference file and premis event XML.
-    files = set(
+    files = {
         path.name for path in (workspace / "sip-in-progress").iterdir()
-    )
-    assert files == set([
+    }
+    assert files == {
         'dmdsec.xml',
         'import-description-md-references.jsonl',
         f'{premis_event_identifier}-PREMIS%3AEVENT-amd.xml'
-    ])
+    }
 
 
 @pytest.mark.usefixtures('testmongoclient')

@@ -197,7 +197,7 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
     )
 
     # Extract SIP
-    with tarfile.open((workspace / 'workspace.tar')) as tar:
+    with tarfile.open(workspace / 'workspace.tar') as tar:
         tar.extractall(testpath / 'extracted_sip')
 
     # Read mets.xml

@@ -255,7 +255,7 @@ def _validate_file_metadata(dataset, metax_client, conf):
         normalised_path = os.path.normpath(file_path.strip('/'))
         if normalised_path.startswith('..'):
             raise InvalidFileMetadataError(
-                'The file path of file %s is invalid: %s' % (file_identifier,
+                'The file path of file {} is invalid: {}'.format(file_identifier,
                                                              file_path)
             )
         consistency.is_consistent_for_file(file_metadata)

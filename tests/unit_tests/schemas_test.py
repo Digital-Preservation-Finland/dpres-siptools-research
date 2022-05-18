@@ -224,7 +224,7 @@ def test_validate_invalid_csv(attribute):
         )
 
     assert excinfo.value.message == \
-        "'{}' is a required property".format(attribute)
+        f"'{attribute}' is a required property"
 
 
 def test_validate_valid_contract():

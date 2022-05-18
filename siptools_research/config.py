@@ -59,13 +59,13 @@ class Configuration:
         if os.path.isfile(config_file) and os.access(config_file, os.R_OK):
             self._parser.read(config_file)
         elif not os.path.exists(config_file):
-            raise IOError("Configuration file: %s not found." %
+            raise OSError("Configuration file: %s not found." %
                           config_file)
         elif not os.path.isfile(config_file):
-            raise IOError("Configuration file: %s is not file." %
+            raise OSError("Configuration file: %s is not file." %
                           config_file)
         else:
-            raise IOError("Configuration file: %s is not readable." %
+            raise OSError("Configuration file: %s is not readable." %
                           config_file)
 
         # Get list of options for validation

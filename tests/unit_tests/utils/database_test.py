@@ -113,5 +113,5 @@ def test_get_incomplete_datasets():
     # The workflows found by ``get_incomplete_workflows`` function should be
     # "test1" and "test4"
     workflows = database.get_incomplete_workflows()
-    assert set(workflow['_id'] for workflow in workflows) \
-        == set(['test1', 'test4'])
+    assert {workflow['_id'] for workflow in workflows} \
+        == {'test1', 'test4'}

@@ -39,7 +39,7 @@ def test_compresssip(workspace, pkg_root):
     with tarfile.open(workspace / f"{workspace.name}.tar") as tar:
         tar.extractall(pkg_root / 'extracted_tar')
 
-    found_files = set(
+    found_files = {
         path.name for path in (pkg_root / "extracted_tar").iterdir()
-    )
-    assert found_files == set(['signature.sig', 'mets.xml', 'dataset_files'])
+    }
+    assert found_files == {'signature.sig', 'mets.xml', 'dataset_files'}

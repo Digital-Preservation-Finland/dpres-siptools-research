@@ -196,7 +196,7 @@ def test_forbidden_relative_path(pkg_root, workspace, requests_mock, path):
 
     # Check that file is not saved in workspace root i.e. workspace root
     # contains only the workspace directory
-    files = set(path.name for path in pkg_root.iterdir())
+    files = {path.name for path in pkg_root.iterdir()}
     assert files == {'workspaces', 'tmp', 'file_cache'}
 
 

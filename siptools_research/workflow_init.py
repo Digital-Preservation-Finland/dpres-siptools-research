@@ -66,7 +66,7 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     packaging_root = conf.get('packaging_root')
 
     # Set workspace name and path
-    workspace_name = "aineisto_%s-%s" % (dataset_id,
+    workspace_name = "aineisto_{}-{}".format(dataset_id,
                                          str(uuid.uuid4()))
     workspace = os.path.join(packaging_root, "workspaces", workspace_name)
 

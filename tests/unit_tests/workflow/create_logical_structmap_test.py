@@ -101,7 +101,7 @@ def test_create_structmap_ok(workspace, requests_mock, events, admids):
     )
 
     # Init and run CreateLogicalStructMap task
-    sip_prerun_files = set(path.name for path in sip_directory.iterdir())
+    sip_prerun_files = {path.name for path in sip_directory.iterdir()}
     task = CreateLogicalStructMap(workspace=str(workspace),
                                   dataset_id='dataset_identifier',
                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -112,11 +112,11 @@ def test_create_structmap_ok(workspace, requests_mock, events, admids):
         str(sip_directory / 'logical_structmap.xml'), admids
     )
 
-    sip_postrun_files = set(path.name for path in sip_directory.iterdir())
+    sip_postrun_files = {path.name for path in sip_directory.iterdir()}
 
     # Nothing else should be created SIP directory
     assert sip_postrun_files \
-        == sip_prerun_files | set(['logical_structmap.xml'])
+        == sip_prerun_files | {'logical_structmap.xml'}
 
 
 def test_get_dirpath_dict(requests_mock):

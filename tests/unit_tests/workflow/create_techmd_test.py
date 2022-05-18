@@ -152,7 +152,7 @@ def test_create_techmd_ok(workspace, requests_mock):
 
     # SIP directory should contain all technical metadata and related
     # files
-    files = set(path.name for path in sipdirectory.iterdir())
+    files = {path.name for path in sipdirectory.iterdir()}
     assert files \
         == set(['import-object-md-references.jsonl',
                 premis_object_file,

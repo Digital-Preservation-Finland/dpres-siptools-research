@@ -1,4 +1,3 @@
-# encoding=utf8
 """Luigi task that creates fileSec and physical structure map."""
 
 import json
