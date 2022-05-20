@@ -2,6 +2,7 @@
 requires writing dataset and file metadata to Metax. Therefore the password for
 Metax user 'tpas' is prompted during the test."""
 
+from configparser import ConfigParser
 import os
 import json
 import getpass
@@ -14,11 +15,6 @@ import requests_mock
 from siptools_research.config import Configuration
 
 import tests.conftest
-
-try:
-    from configparser import ConfigParser
-except ImportError:  # Python 2
-    from ConfigParser import ConfigParser
 
 
 def run_luigi_task(module, task, workspace, dataset_id):

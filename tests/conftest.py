@@ -1,4 +1,5 @@
 """Configure py.test default values and functionality."""
+from configparser import ConfigParser
 import logging
 import os
 import shutil
@@ -6,23 +7,20 @@ import sys
 from pathlib import Path
 
 import luigi.configuration
+from metax_access import Metax
 import mongomock
 import pymongo
 import pytest
+import upload_rest_api
+import urllib3
+
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
 import tests.metax_data.contracts
 import tests.metax_data.datasets
 import tests.metax_data.files
-import upload_rest_api
-import urllib3
-from metax_access import Metax
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
-try:
-    from configparser import ConfigParser
-except ImportError:  # Python 2
-    from ConfigParser import ConfigParser
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

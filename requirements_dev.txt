@@ -30,9 +30,6 @@ jsonschema==3.2.0
 iso-639
 python-dateutil
 
-# python2 requirements
-configparser
-
 
 # TODO: docutils is required by python-daemon. Can be removed when this issue:
 # https://pagure.io/python-daemon/issue/18 is solved
