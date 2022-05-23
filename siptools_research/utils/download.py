@@ -112,6 +112,7 @@ def _get_ida_file(file_metadata, dataset_id, conf):
             verify=verify,
             stream=True
         )
+        response.raise_for_status()
 
         # Write the stream to tmp_path, create a hard link to file_cache
         # and cleanup the tmp_path
