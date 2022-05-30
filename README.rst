@@ -6,9 +6,25 @@ SIP creation workflow is implemented using `Luigi <https://luigi.readthedocs.io>
 
 Installation
 ------------
-Clone this repository and install with pip::
 
-   pip install --use-pep517 ./dpres-siptools-research/
+Installation and usage requires 3.6 or newer.
+The software is tested with Python 3.6 on Centos 7.x release.
+
+Create a virtual environment::
+
+   python3 -m venv venv
+
+Run the following to activate the virtual environment::
+
+   source venv/bin/activate
+
+Install the required software with commands::
+
+   pip install --upgrade pip
+   pip install -r requirements_dev.txt
+   pip install --use-pep517 .
+
+To deactivate the virtual environment, run ``deactivate``. To reactivate it, run the ``source`` command above.
 
 Packaging service requires MongoDB daemon running on default port (27017) and Luigi scheduler runnig on default port (8082).
 Enable systemd timer that starts/restarts all incomplete and enabled workflows found in database::
@@ -69,19 +85,6 @@ Install required RPM packages
 
    rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
    yum install gcc openssl-devel swig ImageMagick file-5.30 ffmpeg dpres-xml-schemas libmediainfo jhove file-scraper-full
-
-Create and activate virtualenv::
-
-   virtualenv venv
-   source venv/bin/activate
-
-Luigi will not install with old versions of pip, so upgrade pip::
-
-   pip install --upgrade pip
-
-Install required python packages for testing::
-
-   pip install -r requirements_dev.txt
 
 Run unit tests::
 
