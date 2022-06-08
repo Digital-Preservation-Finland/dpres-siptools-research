@@ -7,7 +7,7 @@ SIP creation workflow is implemented using `Luigi <https://luigi.readthedocs.io>
 Installation
 ------------
 
-Installation and usage requires 3.6 or newer.
+Installation and usage requires Python 3.6 or newer.
 The software is tested with Python 3.6 on Centos 7.x release.
 
 Create a virtual environment::
