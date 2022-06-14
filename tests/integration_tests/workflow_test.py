@@ -169,9 +169,9 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
             mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
             mongoclient.upload.files.insert_one(
                 {
-                    "_id": file['metadata']['identifier'],
-                    "file_path": os.path.join(testpath,
-                                              file['metadata']['identifier'])
+                    "identifier": file['metadata']['identifier'],
+                    "_id": os.path.join(testpath,
+                                        file['metadata']['identifier'])
                 }
             )
             shutil.copy(file['path'],
@@ -187,7 +187,7 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
                 )
 
     workspace = pkg_root / 'workspaces' / 'workspace'
-    luigi.build(
+    assert luigi.build(
         [CompressSIP(
             workspace=str(workspace),
             dataset_id='dataset_identifier',

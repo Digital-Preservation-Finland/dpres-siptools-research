@@ -115,7 +115,7 @@ def test_missing_local_files(testpath, workspace, requests_mock):
     ]
     for identifier, fpath in mongo_files:
         mongoclient.upload.files.insert_one(
-            {"_id": identifier, "file_path": str(fpath)}
+            {"identifier": identifier, "_id": str(fpath)}
         )
         add_mock_ida_download(
             requests_mock=requests_mock,
