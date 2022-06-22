@@ -41,6 +41,7 @@ Requires:       metax-access
 Requires:       file-scraper-full
 Requires:       upload-rest-api
 BuildRequires:  python3-setuptools
+BuildRequires:  python3-setuptools_scm
 BuildRequires:  python3-pytest
 BuildRequires:  python3-sphinx
 BuildRequires:  python3-jsonschema2rst
@@ -75,7 +76,7 @@ usermod -aG %{user_group} %{user_name}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install PREFIX="%{_prefix}" DESTDIR="%{buildroot}"
+make install PREFIX="%{_prefix}" DESTDIR="%{buildroot}" SETUPTOOLS_SCM_PRETEND_VERSION=%{file_version}
 mkdir -p %{buildroot}/var/spool/siptools-research
 
 
