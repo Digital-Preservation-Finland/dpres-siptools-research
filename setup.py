@@ -1,8 +1,6 @@
 """Install siptools-research package."""
 from setuptools import setup, find_packages
 
-from version import get_version
-
 
 def main():
     """Install siptools-research."""
@@ -12,7 +10,8 @@ def main():
         package_data={'siptools_research': ['schemas/*.json']},
         python_requires='>=3.6',
         include_package_data=True,
-        version=get_version(),
+        setup_requires=['setuptools_scm'],
+        use_scm_version=True,
         install_requires=[
             "lxml",
             "luigi",

@@ -41,6 +41,7 @@ Requires:       python3-metax-access
 Requires:       python3-file-scraper-full
 Requires:       python3-upload-rest-api
 BuildRequires:  python3-setuptools
+BuildRequires:  python36-setuptools_scm
 BuildRequires:  python36-pytest
 BuildRequires:  python3-sphinx
 BuildRequires:  python3-jsonschema2rst
@@ -75,7 +76,7 @@ usermod -aG %{user_group} %{user_name}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install PREFIX="%{_prefix}" DESTDIR="%{buildroot}"
+make install PREFIX="%{_prefix}" DESTDIR="%{buildroot}" SETUPTOOLS_SCM_PRETEND_VERSION=%{file_version}
 mkdir -p %{buildroot}/var/spool/siptools-research
 
 # Rename executable to prevent naming collision with Python 2 RPM
