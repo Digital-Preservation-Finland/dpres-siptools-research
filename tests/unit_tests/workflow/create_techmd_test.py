@@ -158,8 +158,7 @@ def test_create_techmd_ok(workspace, requests_mock):
                 premis_object_file,
                 file_properties_file,
                 'create-mix-md-references.jsonl',
-                'dd0f489d6e47cc2dca598beb608cc78d-NISOIMG-amd.xml',
-                'import-object-extraction-AGENTS-amd.json']
+                'dd0f489d6e47cc2dca598beb608cc78d-NISOIMG-amd.xml']
                + premis_agent_files
                + premis_event_files)
 
