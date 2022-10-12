@@ -1,45 +1,36 @@
-"""Integration tests for digital preservation server and
-:mod:`siptools_research.workflow.report_preservation_status` module"""
+"""Unit tests for ReportPreservationStatus task."""
 
 import time
 
 import pytest
-from metax_access import Metax
 from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
 
-from tests.metax_data import datasets
-
-METAX_PATH = "tests/requests_mock_data/metax"
-
-
-@pytest.fixture(autouse=True)
-def mock_metax_access(monkeypatch):
-    """Mock metax_access GET requests to files or datasets to return
-    mock functions from metax_data.datasets and metax_data.files modules.
-    """
-    monkeypatch.setattr(
-        Metax, "set_preservation_state",
-        lambda self, dataset_id, **kwargs: datasets.get_dataset("", dataset_id)
-    )
-
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir):
-    """Creates new directory to "accepted" directory in digital preservation
-    server, runs ReportPreservationStatus task, and tests that task is complete
-    after it has been run. Fake Metax server is used, so it can not be tested
-    if preservation status really is updated in Metax.
+def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir,
+                                  requests_mock):
+    """Test reporting status of accepted SIP.
+
+    Creates new directory to "accepted" directory in digital
+    preservation server, runs ReportPreservationStatus task, and tests
+    that task is complete after it has been run.
 
     :param testpath: Temporary directory fixture
+    :param luigi_mock_ssh_config: Luigi configuration file path
+    :param sftp_dir: Directory that acts as DPS sftp home directory
+    :param requests_mock: HTTP request mocker
     :returns: ``None``
     """
+    # Mock Metax
+    requests_mock.get('/rest/v2/datasets/foobar', json={})
+    requests_mock.patch('/rest/v2/datasets/foobar')
 
     workspace = testpath
 
-    # Create directory with name of the workspace to digital preservation
-    # server, so that the ReportPreservationStatus thinks that
-    # validation has completed.
+    # Create directory with name of the workspace to digital
+    # preservation server, so that the ReportPreservationStatus thinks
+    # that validation has completed.
     datedir = time.strftime("%Y-%m-%d")
     tar_name = f"{workspace.name}.tar"
     (sftp_dir / "accepted" / datedir / tar_name).mkdir(parents=True)
@@ -47,7 +38,7 @@ def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir):
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
         workspace=str(workspace),
-        dataset_id="report_preservation_status_test_dataset_ok",
+        dataset_id="foobar",
         config=luigi_mock_ssh_config
     )
     assert not task.complete()
@@ -56,24 +47,25 @@ def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-# pylint: disable=invalid-name
 def test_reportpreservationstatus_rejected(
         testpath, luigi_mock_ssh_config, sftp_dir):
-    """Creates new directory with a report file to "rejected" directory in
-    digital preservation server. Runs ReportPreservationStatus task, which
-    should raise an exception and write ingest report HTML to workspace. Fake
-    Metax server is used, so it can not be tested if preservation status really
-    is updated in Metax.
+    """Test reporting status of rejected SIP.
+
+    Creates new directory with a report file to "rejected" directory in
+    digital preservation server. Runs ReportPreservationStatus task,
+    which should raise an exception and write ingest report HTML to
+    workspace.
 
     :param testpath: Temporary directory fixture
+    :param luigi_mock_ssh_config: Luigi configuration file path
+    :param sftp_dir: Directory that acts as DPS sftp home directory
     :returns: ``None``
     """
-
     workspace = testpath
 
-    # Create directory with name of the workspace to digital preservation
-    # server over SSH, so that the ReportPreservationStatus thinks that
-    # validation has been rejected.
+    # Create directory with name of the workspace to digital
+    # preservation server over SSH, so that the ReportPreservationStatus
+    # thinks that validation has been rejected.
     datedir = time.strftime("%Y-%m-%d")
     tar_name = f"{workspace.name}.tar"
     dir_path = sftp_dir / "rejected" / datedir / tar_name
@@ -84,7 +76,7 @@ def test_reportpreservationstatus_rejected(
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
         workspace=str(workspace),
-        dataset_id="report_preservation_status_test_dataset_rejected",
+        dataset_id="foobar",
         config=luigi_mock_ssh_config
     )
 
@@ -101,21 +93,22 @@ def test_reportpreservationstatus_rejected(
 # pylint: disable=invalid-name
 def test_reportpreservationstatus_rejected_int_error(
         testpath, luigi_mock_ssh_config, sftp_dir):
-    """Creates new directory to "rejected" and "accepted" directory with two
-    report files each in digital preservation server, runs
-    ReportPreservationStatus task, and tests that the report file is NOT sent.
-    Metax server is used, so it can not be tested if preservation status
-    really is updated in Metax.
+    """Test handling conflicting ingest reports.
+
+    Creates ingest report files to "rejected" and "accepted" directories
+    in digital preservation server. Runs ReportPreservationStatus task,
+    and tests that the report file is NOT sent.
 
     :param testpath: Temporary directory fixture
+    :param luigi_mock_ssh_config: Luigi configuration file path
+    :param sftp_dir: Directory that acts as DPS sftp home directory
     :returns: ``None``
     """
-
     workspace = testpath
 
-    # Create directory with name of the workspace to digital preservation
-    # server over SSH, so that the ReportPreservationStatus thinks that
-    # validation has been rejected.
+    # Create directory with name of the workspace to digital
+    # preservation server over SSH, so that the ReportPreservationStatus
+    # thinks that validation has been rejected.
     datedir = time.strftime("%Y-%m-%d")
     tar_name = f"{workspace.name}.tar"
 
@@ -133,11 +126,12 @@ def test_reportpreservationstatus_rejected_int_error(
     # Run task like it would be run from command line
     task = report_preservation_status.ReportPreservationStatus(
         workspace=str(workspace),
-        dataset_id="report_preservation_status_test_dataset_rejected",
+        dataset_id="foobar",
         config=luigi_mock_ssh_config
     )
     assert not task.complete()
 
+    # Running task should raise exception
     with pytest.raises(ValueError) as exc:
         task.run()
 

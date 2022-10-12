@@ -80,31 +80,6 @@ DATASETS = {
         "contract": "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
         "remove": ["research_dataset"]
     },
-    "report_preservation_status_test_dataset_ok": {},
-    "report_preservation_status_test_dataset_rejected": {
-        "set": [(
-            "research_dataset", {
-                "rights_holder": {
-                    "name": {
-                        "und": "Helsingin yliopisto"
-                    },
-                    "@type": "Organization",
-                    "email": "right.holder@company.com",
-                    "telephone": ["+358501231235"],
-                    "identifier": "http://purl.org/att/es/organization_data/"
-                                  "organization/organization_1901",
-                    "is_part_of": {
-                        "name": {
-                            "und": "Aalto yliopisto"
-                        },
-                        "@type": "Organization",
-                        "identifier": "http://purl.org/att/es/organization"
-                                      "_data/organization/organization_10076"
-                    }
-                }
-            }
-        )]
-    },
     "dataset_1": {
     },
     "dataset_1_in_packaging_service_with_conflicting_description": {

@@ -87,7 +87,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
         )
 
         if '(:unav)' in tech_metadata['file_characteristics'].values():
-            raise InvalidFileError("File format was not recognized.",
+            raise InvalidFileError("File format was not recognized",
                                    [file_id])
 
         metax_client.patch_file(

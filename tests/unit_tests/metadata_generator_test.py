@@ -151,7 +151,7 @@ def test_generate_metadata_unrecognized(requests_mock):
         generate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    assert str(exception_info.value) == 'File format was not recognized.'
+    assert str(exception_info.value) == 'File format was not recognized'
     assert exception_info.value.files == ['pid:urn:identifier']
 
 

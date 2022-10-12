@@ -80,8 +80,8 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
         verify=conf.getboolean('metax_ssl_verification')
     )
     metax.set_preservation_state(dataset_id,
-                                 state=DS_STATE_IN_PACKAGING_SERVICE,
-                                 system_description='In packaging service')
+                                 DS_STATE_IN_PACKAGING_SERVICE,
+                                 'In packaging service')
 
     # Start luigi workflow. Run in background.
     subprocess.Popen([

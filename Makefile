@@ -34,7 +34,6 @@ test:
 	${PYTHON} -m pytest \
 	    tests/unit_tests \
 		tests/integration_tests/dependency_tree_test.py \
-		tests/integration_tests/report_preservation_status_test.py \
 		tests/integration_tests/send_sip_test.py \
 		tests/integration_tests/validate_sip_test.py \
 		tests/integration_tests/workflow_test.py -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml
@@ -42,8 +41,7 @@ test:
 coverage:
 	${PYTHON} -m pytest tests \
 	    --cov=siptools_research --cov-report=html \
-	    --ignore tests/integration_tests/ \
-	    --ignore tests/workflow/report_preservation_status_test.py
+	    --ignore tests/integration_tests/
 	coverage report -m
 	coverage html
 	coverage xml

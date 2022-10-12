@@ -167,17 +167,16 @@ def report_task_failure(task, exception):
         # Set preservation status for dataset in Metax
         metax_client.set_preservation_state(
             task.dataset_id,
-            state=(metax_access.
-                   DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE),
-            system_description=_get_description(task, exception)
+            metax_access.DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+            _get_description(task, exception)
         )
     elif isinstance(exception,
                     siptools_research.exceptions.InvalidDatasetMetadataError):
         # Set preservation status for dataset in Metax
         metax_client.set_preservation_state(
             task.dataset_id,
-            state=metax_access.DS_STATE_INVALID_METADATA,
-            system_description=_get_description(task, exception)
+            metax_access.DS_STATE_INVALID_METADATA,
+            _get_description(task, exception)
         )
 
 

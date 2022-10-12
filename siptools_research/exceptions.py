@@ -5,6 +5,19 @@ class InvalidDatasetError(Exception):
     """Exception raised when dataset is invalid."""
 
 
+class InvalidDatasetFileError(Exception):
+    """Exception raised when dataset is invalid."""
+
+    def __init__(self, message, files=None):
+        """Initialize exception.
+
+        :param message: Error message
+        :param files: List of invalid files
+        """
+        super().__init__(message)
+        self.files = files
+
+
 class InvalidSIPError(InvalidDatasetError):
     """Exception raised when the SIP is invalid.
 
@@ -21,21 +34,12 @@ class InvalidDatasetMetadataError(InvalidDatasetError):
     """
 
 
-class InvalidFileMetadataError(InvalidDatasetError):
+class InvalidFileMetadataError(InvalidDatasetFileError):
     """Exception raised when file metadata is invalid.
 
     SIP can not be created for dataset due to missing or invalid
-    metadata.
+    file metadata.
     """
-
-    def __init__(self, message, files=None):
-        """Initialize exception.
-
-        :param message: Error message
-        :param files: List of invalid files
-        """
-        super().__init__(message)
-        self.files = files
 
 
 class InvalidContractMetadataError(InvalidDatasetError):
@@ -46,27 +50,9 @@ class InvalidContractMetadataError(InvalidDatasetError):
     """
 
 
-class InvalidFileError(InvalidDatasetError):
+class InvalidFileError(InvalidDatasetFileError):
     """Exception raised when some files in dataset are invalid."""
 
-    def __init__(self, message, files=None):
-        """Initialize exception.
 
-        :param message: Error message
-        :param files: List of invalid files
-        """
-        super().__init__(message)
-        self.files = files
-
-
-class MissingFileError(InvalidDatasetError):
+class MissingFileError(InvalidDatasetFileError):
     """Exception raised when some files are not available."""
-
-    def __init__(self, message, files=None):
-        """Initialize exception.
-
-        :param message: Error message
-        :param files: List of missing files
-        """
-        super().__init__(message)
-        self.files = files
