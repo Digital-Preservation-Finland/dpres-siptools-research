@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 
 import luigi.configuration
-from metax_access import Metax
 import mongomock
 import pymongo
 import pytest
@@ -16,9 +15,6 @@ import urllib3
 
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
-import tests.metax_data.contracts
-import tests.metax_data.datasets
-import tests.metax_data.files
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
 
@@ -59,24 +55,6 @@ def mock_upload_conf(monkeypatch):
         upload_rest_api.config, "CONFIG",
         {"MONGO_HOST": "localhost", "MONGO_PORT": 27017}
     )
-
-
-@pytest.fixture(autouse=False)
-def mock_metax_access(monkeypatch):
-    """Mock metax_access GET requests.
-
-    Replaces get-methods of Metax object with mock functions from
-    metax_data package.
-    """
-    monkeypatch.setattr(Metax,
-                        "get_dataset",
-                        tests.metax_data.datasets.get_dataset)
-    monkeypatch.setattr(Metax,
-                        "get_dataset_files",
-                        tests.metax_data.datasets.get_dataset_files)
-    monkeypatch.setattr(Metax,
-                        "get_file",
-                        tests.metax_data.files.get_file)
 
 
 @pytest.fixture(scope="function")

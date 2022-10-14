@@ -3,11 +3,12 @@ from pathlib import Path
 
 import lxml
 import pytest
-import tests.conftest
 from siptools.scripts.compile_structmap import compile_structmap
 from siptools.scripts.import_description import import_description
 from siptools.scripts.import_object import import_object
 from siptools.scripts.premis_event import premis_event
+
+import tests.utils
 from siptools_research.workflow.create_mets import CreateMets
 
 NAMESPACES = {
@@ -21,18 +22,18 @@ NAMESPACES = {
 
 METS_ATTRIBUTES = {
     'PROFILE': 'http://digitalpreservation.fi/mets-profiles/research-data',
-    '{%s}CONTRACTID' % NAMESPACES['fi']:
-    "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
-    '{%s}schemaLocation' % NAMESPACES['xsi']: 'http://www.loc.gov/METS/ '
+    f"{{{NAMESPACES['fi']}}}CONTRACTID": "urn:uuid:abcd1234-abcd-1234-5678"
+                                         "-abcd1234abcd",
+    f"{{{NAMESPACES['xsi']}}}schemaLocation": 'http://www.loc.gov/METS/ '
                                               'http://digitalpreservation.fi/'
                                               'schemas/mets/mets.xsd',
-    '{%s}SPECIFICATION' % NAMESPACES['fi']: '1.7.4',
+    f"{{{NAMESPACES['fi']}}}SPECIFICATION": '1.7.4',
     'OBJID': 'doi:test',
-    '{%s}CATALOG' % NAMESPACES['fi']: '1.7.4',
+    f"{{{NAMESPACES['fi']}}}CATALOG": '1.7.4',
 }
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient')
 def test_create_mets_ok(workspace, requests_mock):
     """Test the workflow task CreateMets.
 
@@ -40,23 +41,15 @@ def test_create_mets_ok(workspace, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get(
-        "https://metaksi/rest/v2/contracts/"
-        "urn:uuid:99ddffff-2f73-46b0-92d1-614409d83001",
-        json={
-            'contract_json':
-            {
-                'identifier': '99ddffff-2f73-46b0-92d1-614409d83001',
-                'organization': {'name': 'Helsingin Yliopisto'}
-            }
-        }
-    )
+    # Mock metax
+    tests.utils.add_metax_dataset(requests_mock)
+
     # Create workspace with contents required by the tested task
     create_test_data(workspace=workspace)
 
     # Init and run task
     task = CreateMets(workspace=str(workspace),
-                      dataset_id='create_mets_dataset',
+                      dataset_id='dataset_identifier',
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
@@ -80,7 +73,7 @@ def test_create_mets_ok(workspace, requests_mock):
                               namespaces=NAMESPACES)[0]
     assert archivist.attrib['TYPE'] == 'ORGANIZATION'
     assert archivist.xpath("mets:name", namespaces=NAMESPACES)[0].text \
-        == "Helsingin Yliopisto"
+        == "Testiorganisaatio"
     creator = metshdr.xpath("mets:agent[@ROLE='CREATOR']",
                             namespaces=NAMESPACES)[0]
     assert creator.attrib['ROLE'] == 'CREATOR'

@@ -66,7 +66,7 @@ def test_preserve_dataset_sets_preservation_state(mocker, requests_mock):
     :returns: ``None``
     """
     mock_subproc_popen = mocker.patch('subprocess.Popen')
-    requests_mock.patch("https://metaksi/rest/v2/datasets/dataset_1")
+    requests_mock.patch("/rest/v2/datasets/dataset_1")
 
     preserve_dataset('dataset_1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert mock_subproc_popen.called

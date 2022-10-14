@@ -171,7 +171,7 @@ def test_run_workflowtask(testpath):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_run_failing_task(testpath, ):
+def test_run_failing_task(testpath):
     """Test running task that fails.
 
     Executes FailingTask and checks that report of failed event is added
@@ -221,7 +221,7 @@ def test_run_failing_task(testpath, ):
         ],
     )
 )
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient')
 def test_invalid_dataset_error(testpath, requests_mock, task, expected_state,
                                expected_description):
     """Test event handler of WorkflowTask.
@@ -238,6 +238,9 @@ def test_invalid_dataset_error(testpath, requests_mock, task, expected_state,
                                  be reported to Metax
     :returns: ``None``
     """
+    # Mock metax
+    requests_mock.get('/rest/v2/datasets/1', json={})
+
     # Run task like it would be run from command line
     run_luigi_task(task, str(testpath))
 

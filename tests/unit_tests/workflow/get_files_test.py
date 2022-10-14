@@ -1,14 +1,19 @@
 """Test the :mod:`siptools_research.workflow.get_files` module."""
+import copy
+
 import pymongo
 import pytest
-import tests.conftest
+
 from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.utils.download import FileNotAvailableError
 from siptools_research.workflow import get_files
+
+import tests.conftest
 from tests.utils import add_metax_dataset, add_mock_ida_download
+from tests.metax_data.files import TXT_FILE, PAS_STORAGE_ID
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient')
 def test_getfiles(workspace, requests_mock):
     """Tests for ``GetFiles`` task for IDA and local files.
 
@@ -19,15 +24,24 @@ def test_getfiles(workspace, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
+    # Mock metax. Create a dataset that contains two text files.
+    files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
+    files[0]['identifier'] = 'pid:urn:1'
+    files[0]['file_path'] = '/path/to/file1'
+    files[1]['identifier'] = 'pid:urn:2'
+    files[1]['file_path'] = '/path/to/file2'
+    add_metax_dataset(requests_mock, files=files)
+
+    # Mock Ida. Add the two text files to Ida.
     add_mock_ida_download(
         requests_mock=requests_mock,
-        dataset_id="get_files_test_dataset",
+        dataset_id="dataset_identifier",
         filename="/path/to/file1",
         content=b"foo\n"
     )
     add_mock_ida_download(
         requests_mock=requests_mock,
-        dataset_id="get_files_test_dataset",
+        dataset_id="dataset_identifier",
         filename="/path/to/file2",
         content=b"bar\n"
     )
@@ -35,7 +49,7 @@ def test_getfiles(workspace, requests_mock):
     # Init task
     task = get_files.GetFiles(
         workspace=str(workspace),
-        dataset_id="get_files_test_dataset",
+        dataset_id="dataset_identifier",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -50,7 +64,7 @@ def test_getfiles(workspace, requests_mock):
     assert (dataset_files_dir / "file2").read_text() == "bar\n"
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient')
 def test_missing_ida_files(workspace, requests_mock):
     """Test task when a file can not be found from Ida.
 
@@ -61,23 +75,31 @@ def test_missing_ida_files(workspace, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
+    # Mock metax. Create a dataset that contains two text files.
+    files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
+    files[0]['file_path'] = '/path/to/file1'
+    files[1]['identifier'] = 'pid:urn:not-found-in-ida'
+    files[1]['file_path'] = '/path/to/file2'
+    add_metax_dataset(requests_mock, files=files)
+
+    # Mock Ida. First file can be downloaded, but requesting the second
+    # file will cause 404 "Not found" error.
     add_mock_ida_download(
         requests_mock=requests_mock,
-        dataset_id="get_files_test_dataset_ida_missing_file",
+        dataset_id="dataset_identifier",
         filename="/path/to/file1",
         content=b"foo\n"
     )
-
     requests_mock.post(
         'https://ida.dl-authorize.test/authorize',
         status_code=404,
-        additional_matcher=lambda req: req.json()["file"] == "/path/to/file4"
+        additional_matcher=lambda req: req.json()["file"] == "/path/to/file2"
     )
 
     # Init task
     task = get_files.GetFiles(
         workspace=str(workspace),
-        dataset_id="get_files_test_dataset_ida_missing_file",
+        dataset_id="dataset_identifier",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -86,7 +108,7 @@ def test_missing_ida_files(workspace, requests_mock):
     with pytest.raises(FileNotAvailableError) as excinfo:
         task.run()
 
-    assert str(excinfo.value) == "File '/path/to/file4' not found in Ida"
+    assert str(excinfo.value) == "File '/path/to/file2' not found in Ida"
 
     # Task should not be completed
     assert not task.complete()
@@ -95,7 +117,7 @@ def test_missing_ida_files(workspace, requests_mock):
     assert not (workspace / 'dataset_files').exists()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient')
 def test_missing_local_files(testpath, workspace, requests_mock):
     """Test task when a local file is not available.
 
@@ -107,30 +129,35 @@ def test_missing_local_files(testpath, workspace, requests_mock):
     :param requests_mock: requests_mock mocker
     :returns: ``None``
     """
+    # Mock metax
+    files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
+    files[0]['identifier'] = 'pid:urn:get_files_1_local'
+    files[0]['file_storage']['identifier'] = PAS_STORAGE_ID
+    files[0]['file_path'] = '/path/to/file1'
+    files[1]['identifier'] = 'pid:urn:does_not_exist_local'
+    files[1]['file_storage']['identifier'] = PAS_STORAGE_ID
+    files[1]['file_path'] = '/path/to/file4'
+    add_metax_dataset(requests_mock, files=files)
+
     # Init mocked upload.files collection
     mongoclient = pymongo.MongoClient()
     mongo_files = [
-        ("pid:urn:get_files_1_local", str(testpath / "file1")),
-        ("pid:urn:does_not_exist_local", str(testpath / "file2"))
+        ("pid:urn:get_files_1_local", str(testpath / "path/to/file1")),
+        ("pid:urn:does_not_exist_local", str(testpath / "path/to/file4"))
     ]
     for identifier, fpath in mongo_files:
         mongoclient.upload.files.insert_one(
             {"identifier": identifier, "_id": str(fpath)}
         )
-        add_mock_ida_download(
-            requests_mock=requests_mock,
-            dataset_id="get_files_test_dataset_local_missing_file",
-            filename=fpath,
-            content=b"foo\n"
-        )
 
     # Create only the first file in test directory
-    (testpath / "file1").write_text("foo\n")
+    (testpath / "path/to/file1").parent.mkdir(parents=True)
+    (testpath / "path/to/file1").write_text("foo\n")
 
     # Init task
     task = get_files.GetFiles(
         workspace=str(workspace),
-        dataset_id="get_files_test_dataset_local_missing_file",
+        dataset_id="dataset_identifier",
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()

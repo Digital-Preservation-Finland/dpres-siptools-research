@@ -140,7 +140,7 @@ def add_mock_ida_download(requests_mock, dataset_id, filename, content):
         )
     )
 
-    requests_mock.get(
+    return requests_mock.get(
         "https://ida.dl.test/download",
         content=content,
         additional_matcher=lambda req: (

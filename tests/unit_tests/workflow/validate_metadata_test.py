@@ -1,15 +1,18 @@
 """Tests for :mod:`siptools_research.workflow.validate_metadata`."""
 
-from pathlib import Path
+import copy
 
 import pytest
-import tests.conftest
+
 from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
+import tests.conftest
+from tests.utils import add_metax_dataset
+from tests.metax_data.datasets import BASE_DATASET
+from tests.metax_data.files import TXT_FILE
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_filetype_conf',
-                         'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient', 'mock_filetype_conf')
 def test_validatemetadata(workspace, requests_mock):
     """Test ValidateMetadata class.
 
@@ -19,44 +22,18 @@ def test_validatemetadata(workspace, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.get(
-        'https://metaksi/rest/v2/contracts/contract_identifier',
-        json={
-            "contract_json": {
-                "title": "Testisopimus",
-                "identifier": "contract_identifier",
-                "organization": {
-                    "name": "Testiorganisaatio"
-                }
-            }
-        }
-    )
-    requests_mock.get(
-        'https://metaksi/rest/v2/directories/pid:urn:dir:wf1',
-        json={
-            "identifier": "pid:urn:dir:wf1",
-            "directory_path": "/access"
-        }
-    )
-    # Fake text files don't have technical metadata
-    requests_mock.get(
-        'https://metaksi/rest/v2/files/pid:urn:textfile1/xml',
-        json=[]
-    )
-    requests_mock.get(
-        'https://metaksi/rest/v2/files/pid:urn:textfile2/xml',
-        json=[]
-    )
-
-    requests_mock.get(
-        'https://metaksi/rest/v2/datasets/validate_metadata_test_dataset'
-        '?dataset_format=datacite&dummy_doi=false',
-        content=Path("./tests/data/datacite_sample.xml").resolve().read_bytes()
-    )
+    # Mock metax. Create a valid dataset that contains two text files.
+    file1 = copy.deepcopy(TXT_FILE)
+    file1['identifier'] = 'identifier1'
+    file1['file_path'] = '/path1'
+    file2 = copy.deepcopy(TXT_FILE)
+    file2['identifier'] = 'identifier2'
+    file2['file_path'] = '/'
+    add_metax_dataset(requests_mock=requests_mock, files=[file1, file2])
 
     # Init task
     task = ValidateMetadata(workspace=str(workspace),
-                            dataset_id='validate_metadata_test_dataset',
+                            dataset_id='dataset_identifier',
                             config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
@@ -66,8 +43,8 @@ def test_validatemetadata(workspace, requests_mock):
     assert task.complete()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-def test_invalid_metadata(workspace):
+@pytest.mark.usefixtures('testmongoclient')
+def test_invalid_metadata(workspace, requests_mock):
     """Test ValidateMetadata class.
 
     Run task for dataset that has invalid metadata. The dataset is
@@ -76,10 +53,16 @@ def test_invalid_metadata(workspace):
     :param workspace: Temporary workspace directory fixture
     :returns: ``None``
     """
+    # Mock Metax. Remove "contract" from dataset metadata to create an
+    # invalid dataset.
+    dataset = copy.deepcopy(BASE_DATASET)
+    del dataset['contract']
+    requests_mock.get('/rest/v2/datasets/dataset_identifier', json=dataset)
+
     # Init task
     task = ValidateMetadata(
         workspace=str(workspace),
-        dataset_id='validate_metadata_test_dataset_invalid_metadata',
+        dataset_id='dataset_identifier',
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
