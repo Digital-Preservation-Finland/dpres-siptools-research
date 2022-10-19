@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.workflow_init` module"""
+"""Tests for :mod:`siptools_research.workflow_init` module."""
 from unittest import mock
 
 import pytest
@@ -58,68 +58,21 @@ def test_initworkflows():
     }
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
+@pytest.mark.usefixtures('testmongoclient')
 @mock.patch('subprocess.Popen')
-# pylint: disable=invalid-name
 def test_preserve_dataset_sets_preservation_state(mock_subproc_popen,
                                                   requests_mock):
     """Tests that dataset's preservation_state and preservation_description
-    attributes are set correctly..
+    attributes are set correctly.
 
     :param mock_subproc_popen: Mocked subprocess.Popen
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    requests_mock.patch(
-        "https://metaksi/rest/v2/datasets/dataset_1"
-    )
+    requests_mock.patch("https://metaksi/rest/v2/datasets/dataset_1")
 
     preserve_dataset('dataset_1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert mock_subproc_popen.called
     json_message = requests_mock.last_request.json()
     assert json_message['preservation_state'] == 90
     assert json_message['preservation_description'] == 'In packaging service'
-
-
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-@mock.patch('subprocess.Popen')
-# pylint: disable=invalid-name
-def test_preserve_dataset_only_description(mock_subproc_popen, requests_mock):
-    """Verifies that only preservation_description attribute is set if not
-    already correct.
-
-    :param mock_subproc_popen: Mocked subprocess.Popen
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    requests_mock.patch(
-        "https://metaksi/rest/v2/datasets/"
-        "dataset_1_in_packaging_service_with_conflicting_description"
-    )
-    preserve_dataset(
-        'dataset_1_in_packaging_service_with_conflicting_description',
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-    assert mock_subproc_popen.called
-    json_message = requests_mock.last_request.json()
-    assert 'preservation_state' not in json_message
-    assert json_message['preservation_description'] == 'In packaging service'
-
-
-@pytest.mark.usefixtures('testmongoclient', 'mock_metax_access')
-@mock.patch('subprocess.Popen')
-# pylint: disable=invalid-name
-def test_preserve_dataset_no_changes(mock_subproc_popen, requests_mock):
-    """Verifies that metax is not called to set preservation_state or
-    preservation_description attributes when they already have correct values
-
-    :param mock_subproc_popen: Mocked subprocess.Popen
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    preserve_dataset('dataset_1_in_packaging_service',
-                     config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    assert mock_subproc_popen.called
-
-    # Check that metax set_preservation_state is not called
-    assert not requests_mock.request_history

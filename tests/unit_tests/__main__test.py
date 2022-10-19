@@ -43,7 +43,6 @@ def test_main_generate(
     :returns: ``None``
     """
     # Mock Metax
-    requests_mock.get('/rest/v2/datasets/1', json={})
     requests_mock.patch('/rest/v2/datasets/1')
 
     # Run main function with "generate" as command
@@ -132,7 +131,6 @@ def test_main_validate(
     :returns: ``None``
     """
     # Mock Metax
-    requests_mock.get('/rest/v2/datasets/2', json={})
     requests_mock.patch('/rest/v2/datasets/2')
 
     # Run main function with "validate" as command
