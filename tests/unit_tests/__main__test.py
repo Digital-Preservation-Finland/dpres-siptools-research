@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.__main__` module"""
+"""Tests for :mod:`siptools_research.__main__` module."""
 import sys
 
 from unittest import mock
@@ -21,27 +21,22 @@ from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
 @pytest.mark.parametrize('set_preservation_state', [True, False])
-@mock.patch('siptools_research.__main__.preserve_dataset')
-@mock.patch('siptools_research.__main__.validate_metadata')
-@mock.patch('siptools_research.__main__.generate_metadata')
-def test_main_generate(
-    mock_generate,
-    mock_validate,
-    mock_preserve,
-    set_preservation_state,
-    requests_mock
-):
+def test_main_generate(mocker, set_preservation_state, requests_mock):
     """Test that correct function is called from main function when "generate"
     command is used.
 
-    :param mock_generate: Mock object for `generate_metadata` function
-    :param mock_validate: Mock object for `validate_metadata` function
-    :param mock_preserve: Mock object for `preserve_dataset` function
+    :param mocker: Pytest-mock mocker
     :param bool set_preservation_state: Use --set-preservation-state
                                         flag
     :param requests_mock: HTTP request mocker
     :returns: ``None``
     """
+    mock_generate \
+        = mocker.patch('siptools_research.__main__.generate_metadata')
+    mock_validate \
+        = mocker.patch('siptools_research.__main__.validate_metadata')
+    mock_preserve = mocker.patch('siptools_research.__main__.preserve_dataset')
+
     # Mock Metax
     requests_mock.patch('/rest/v2/datasets/1')
 
@@ -73,15 +68,17 @@ def test_main_generate(
         assert not requests_mock.called
 
 
-@mock.patch('siptools_research.__main__.generate_metadata',
-            side_effect=InvalidDatasetFileError("Invalid file", ['foobar']))
-def test_metadata_generation_error(mock_generate, requests_mock):
+def test_metadata_generation_error(mocker, requests_mock):
     """Test that preservation state is set if metadata generation fails.
 
-    :param mock_generate: Mock object for `generate_metadata` function
+    :param mocker: Pytest-mock mocker
     :param requests_mock: HTTP request mocker
     :returns: ``None``
     """
+    mocker.patch(
+        'siptools_research.__main__.generate_metadata',
+        side_effect=InvalidDatasetFileError("Invalid file", ['foobar'])
+    )
     # Mock Metax
     requests_mock.get('/rest/v2/datasets/1', json={})
     requests_mock.patch('/rest/v2/datasets/1')
@@ -107,29 +104,26 @@ def test_metadata_generation_error(mock_generate, requests_mock):
 
 @pytest.mark.parametrize('dummy_doi', [True, False])
 @pytest.mark.parametrize('set_preservation_state', [True, False])
-@mock.patch('siptools_research.__main__.preserve_dataset')
-@mock.patch('siptools_research.__main__.validate_metadata')
-@mock.patch('siptools_research.__main__.generate_metadata')
-def test_main_validate(
-    mock_generate,
-    mock_validate,
-    mock_preserve,
-    set_preservation_state,
-    dummy_doi,
-    requests_mock
-):
+def test_main_validate(mocker,
+                       set_preservation_state,
+                       dummy_doi,
+                       requests_mock):
     """Test that correct function is called from main function when "validate"
     command is used.
 
-    :param mock_generate: Mock object for `generate_metadata` function
-    :param mock_validate: Mock object for `validate_metadata` function
-    :param mock_preserve: Mock object for `preserve_dataset` function
+    :param mocker: Pytest-mock mocker
     :param bool set_preservation_state: Use --set-preservation-state
                                         flag
     :param bool dummy_doi: Use --dummy-doi flag
     :param requests_mock: HTTP request mocker
     :returns: ``None``
     """
+    mock_preserve = mocker.patch('siptools_research.__main__.preserve_dataset')
+    mock_validate \
+        = mocker.patch('siptools_research.__main__.validate_metadata')
+    mock_generate \
+        = mocker.patch('siptools_research.__main__.generate_metadata')
+
     # Mock Metax
     requests_mock.patch('/rest/v2/datasets/2')
 
@@ -178,9 +172,8 @@ def test_main_validate(
          'Metadata is invalid: Missing metadata'),
     ]
 )
-@mock.patch('siptools_research.__main__.validate_metadata')
 def test_validation_failure(
-    mock_validate,
+    mocker,
     exception,
     expected_state,
     expected_description,
@@ -188,19 +181,19 @@ def test_validation_failure(
 ):
     """Test that preservation state is set if validation fails.
 
-    :param mock_validate: Mock object for `validate_metadata` function
+    :param mocker: Pytest-mock mocker
     :param exception: Exception that will cause the failure
     :param expected_state: Expected preservation state after failure
     :param expected_description: Description for preservation state
     :param requests_mock: HTTP request mocker
     :returns: ``None``
     """
+    mocker.patch('siptools_research.__main__.validate_metadata',
+                 side_effect=exception)
+
     # Mock Metax
     requests_mock.get('/rest/v2/datasets/2', json={})
     requests_mock.patch('/rest/v2/datasets/2')
-
-    # Mock validation function
-    mock_validate.side_effect = exception
 
     # Run main function with "validate" as command
     args = [
@@ -220,18 +213,19 @@ def test_validation_failure(
             'preservation_description': expected_description}
 
 
-@mock.patch('siptools_research.__main__.preserve_dataset')
-@mock.patch('siptools_research.__main__.validate_metadata')
-@mock.patch('siptools_research.__main__.generate_metadata')
-def test_main_preserve(mock_generate, mock_validate, mock_preserve):
+def test_main_preserve(mocker):
     """Test that correct function is called from main function when "preserve"
     command is used.
 
-    :param mock_generate: Mock object for `generate_metadata` function
-    :param mock_validate: Mock object for `validate_metadata` function
-    :param mock_preserve: Mock object for `preserve_dataset` function
+    :param mocker: Pytest-mock mocker
     :returns: ``None``
     """
+    mock_preserve = mocker.patch('siptools_research.__main__.preserve_dataset')
+    mock_validate \
+        = mocker.patch('siptools_research.__main__.validate_metadata')
+    mock_generate \
+        = mocker.patch('siptools_research.__main__.generate_metadata')
+
     # Run main function with "preserve" as command
     with mock.patch.object(sys, 'argv',
                            ['siptools-research', 'preserve', '3']):
@@ -486,11 +480,16 @@ def test_main_disabled(capsys, monkeypatch):
     assert "Workflow aineisto_1 disabled" in out
 
 
-@mock.patch('siptools_research.__main__.clean_file_cache')
-def test_main_clean_cache(mocked_clean_cache, monkeypatch):
+def test_main_clean_cache(mocker, monkeypatch):
     """Test that clean_cache function is called when clean-cache subcommand is
     used.
+
+    :param mocker: Pytest-mock mocker
+    :param monkeypatch: monkeypatch object
     """
+    mocked_clean_cache \
+        = mocker.patch('siptools_research.__main__.clean_file_cache')
+
     # Run siptools-research clean-cache
     monkeypatch.setattr(
         sys, "argv", [

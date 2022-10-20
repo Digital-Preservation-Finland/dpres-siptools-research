@@ -24,9 +24,6 @@ import tests.metax_data.contracts
 import tests.utils
 
 
-# Run every task as it would be run from commandline
-@mock.patch('siptools_research.workflow.send_sip.paramiko.SSHClient',
-            new=mock.MagicMock)
 @pytest.mark.parametrize(
     "module_name,task", [
         ('create_workspace', 'CreateWorkspace'),
@@ -48,7 +45,7 @@ import tests.utils
 @pytest.mark.usefixtures(
     'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf'
 )
-def test_workflow(pkg_root, module_name, task, requests_mock):
+def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
     """Test workflow dependency tree.
 
     Run a task (and all tasks it requires) and check that report of
@@ -58,9 +55,13 @@ def test_workflow(pkg_root, module_name, task, requests_mock):
     :param module_name: submodule of siptools_research.workflow that
                         contains Task to be tested
     :param task: Task class name
-    :param requests_mock: Mocker object
+    :param requests_mock: HTTP request mocker
+    :param mocker: Pytest-mock mocker
     :returns: ``None``
     """
+    mocker.patch('siptools_research.workflow.send_sip.paramiko.SSHClient',
+                 new=mock.MagicMock)
+
     tests.utils.add_metax_dataset(requests_mock,
                                   tests.metax_data.datasets.BASE_DATASET,
                                   files=[tests.metax_data.files.TXT_FILE])

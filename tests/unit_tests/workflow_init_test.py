@@ -1,6 +1,4 @@
 """Tests for :mod:`siptools_research.workflow_init` module."""
-from unittest import mock
-
 import pytest
 
 import tests.conftest
@@ -59,16 +57,15 @@ def test_initworkflows():
 
 
 @pytest.mark.usefixtures('testmongoclient')
-@mock.patch('subprocess.Popen')
-def test_preserve_dataset_sets_preservation_state(mock_subproc_popen,
-                                                  requests_mock):
+def test_preserve_dataset_sets_preservation_state(mocker, requests_mock):
     """Tests that dataset's preservation_state and preservation_description
     attributes are set correctly.
 
-    :param mock_subproc_popen: Mocked subprocess.Popen
-    :param requests_mock: Mocker object
+    :param mocker: Pytest-mock mocker
+    :param requests_mock: HTTP request mocker
     :returns: ``None``
     """
+    mock_subproc_popen = mocker.patch('subprocess.Popen')
     requests_mock.patch("https://metaksi/rest/v2/datasets/dataset_1")
 
     preserve_dataset('dataset_1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)

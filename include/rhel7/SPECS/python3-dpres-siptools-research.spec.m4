@@ -50,6 +50,7 @@ BuildRequires:  python3-mongomock
 BuildRequires:  python36-pytest-catchlog
 BuildRequires:  python3-requests-mock
 BuildRequires:  python3-mock-ssh-server
+BuildRequires:  python3-pytest-mock
 
 %description
 Digital Preservation Packaging Service for Research datasets
