@@ -7,13 +7,19 @@ import luigi.cmdline
 import pytest
 import requests
 from metax_access import (DS_STATE_INVALID_METADATA,
+                          DS_STATE_PACKAGING_FAILED,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
                           Metax)
 
 import tests.conftest
 from siptools_research.config import Configuration
 from siptools_research.utils.database import Database
-from siptools_research.exceptions import (InvalidDatasetMetadataError,
+from siptools_research.exceptions import (InvalidDatasetError,
+                                          InvalidDatasetMetadataError,
+                                          InvalidFileMetadataError,
+                                          InvalidContractMetadataError,
+                                          InvalidFileError,
+                                          MissingFileError,
                                           InvalidSIPError)
 from siptools_research.workflowtask import WorkflowTask
 
@@ -87,15 +93,15 @@ class FailingTask(WorkflowTask):
         raise Exception('Shit hit the fan')
 
 
-class InvalidSIPTask(FailingTask):
-    """Test class that raises InvalidSIPError."""
+class InvalidDatasetTask(FailingTask):
+    """Test class that raises InvalidDatasetError."""
 
     def run(self):
-        """Raise InvalidSIPError.
+        """Raise InvalidDatasetError.
 
         :returns:  ``None``
         """
-        raise InvalidSIPError('File validation failed')
+        raise InvalidDatasetError('Dataset is invalid')
 
 
 class InvalidDatasetMetadataTask(FailingTask):
@@ -107,6 +113,61 @@ class InvalidDatasetMetadataTask(FailingTask):
         :returns:  ``None``
         """
         raise InvalidDatasetMetadataError('Missing some important metadata')
+
+
+class InvalidFileMetadataTask(FailingTask):
+    """Test class that raises InvalidFileMetadataError."""
+
+    def run(self):
+        """Raise InvalidFileMetadataError.
+
+        :returns:  ``None``
+        """
+        raise InvalidFileMetadataError('Invalid file encoding')
+
+
+class InvalidContractMetadataTask(FailingTask):
+    """Test class that raises InvalidContractMetadataError."""
+
+    def run(self):
+        """Raise InvalidContractMetadataError.
+
+        :returns: ``None``
+        """
+        raise InvalidContractMetadataError('Missing organization identifier')
+
+
+class MissingFileTask(FailingTask):
+    """Test class that raises MissingFileError."""
+
+    def run(self):
+        """Raise MissingFileError.
+
+        :returns:  ``None``
+        """
+        raise MissingFileError('A file was not found in Ida')
+
+
+class InvalidFileTask(FailingTask):
+    """Test class that raises InvalidFileError."""
+
+    def run(self):
+        """Raise InvalidFileError.
+
+        :returns:  ``None``
+        """
+        raise InvalidFileError('A file is not well-formed')
+
+
+class InvalidSIPTask(FailingTask):
+    """Test class that raises InvalidSIPError."""
+
+    def run(self):
+        """Raise InvalidSIPError.
+
+        :returns:  ``None``
+        """
+        raise InvalidSIPError('SIP was rejected in DPS')
 
 
 class MetaxTask(WorkflowTask):
@@ -133,7 +194,6 @@ class MetaxTask(WorkflowTask):
         metax_client.get_dataset('1')
 
 
-# pylint: disable=unused-argument
 @pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
 def test_run_workflowtask(testpath):
     """Test WorkflowTask execution.
@@ -207,17 +267,48 @@ def test_run_failing_task(testpath):
 @pytest.mark.parametrize(
     ('task', 'expected_state', 'expected_description'),
     (
+
         [
-            'InvalidSIPTask',
-            DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+            'InvalidDatasetTask',
+            DS_STATE_PACKAGING_FAILED,
             'An error occurred while running a test task: '
-            'InvalidSIPError: File validation failed'
+            'InvalidDatasetError: Dataset is invalid'
         ],
         [
             'InvalidDatasetMetadataTask',
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidDatasetMetadataError: Missing some important metadata'
+        ],
+        [
+            'InvalidFileMetadataTask',
+            DS_STATE_INVALID_METADATA,
+            'An error occurred while running a test task: '
+            'InvalidFileMetadataError: Invalid file encoding'
+        ],
+        [
+            'InvalidContractMetadataTask',
+            DS_STATE_INVALID_METADATA,
+            'An error occurred while running a test task: '
+            'InvalidContractMetadataError: Missing organization identifier'
+        ],
+        [
+            'InvalidFileTask',
+            DS_STATE_PACKAGING_FAILED,
+            'An error occurred while running a test task: '
+            'InvalidFileError: A file is not well-formed'
+        ],
+        [
+            'MissingFileTask',
+            DS_STATE_PACKAGING_FAILED,
+            'An error occurred while running a test task: '
+            'MissingFileError: A file was not found in Ida'
+        ],
+        [
+            'InvalidSIPTask',
+            DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+            'An error occurred while running a test task: '
+            'InvalidSIPError: SIP was rejected in DPS'
         ],
     )
 )

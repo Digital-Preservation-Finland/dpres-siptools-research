@@ -2,11 +2,18 @@
 import os
 
 import luigi
-import metax_access
+from metax_access import (Metax,
+                          DS_STATE_INVALID_METADATA,
+                          DS_STATE_PACKAGING_FAILED,
+                          DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE)
 
 from siptools_research.config import Configuration
-import siptools_research.exceptions
 from siptools_research.utils.database import Database
+from siptools_research.exceptions import (InvalidContractMetadataError,
+                                          InvalidDatasetMetadataError,
+                                          InvalidFileMetadataError,
+                                          InvalidSIPError,
+                                          InvalidDatasetError)
 
 
 class WorkflowTask(luigi.Task):
@@ -152,30 +159,30 @@ def report_task_failure(task, exception):
                       'failure',
                       f"{task.failure_message}: {str(exception)}")
     config_object = Configuration(task.config)
-    metax_client = metax_access.Metax(
+    metax_client = Metax(
         config_object.get('metax_url'),
         config_object.get('metax_user'),
         config_object.get('metax_password'),
         verify=config_object.getboolean('metax_ssl_verification')
     )
 
-    if isinstance(exception, siptools_research.exceptions.InvalidDatasetError):
+    if isinstance(exception, InvalidDatasetError):
         # Disable workflow
         database.set_disabled(task.document_id)
 
-    if isinstance(exception, siptools_research.exceptions.InvalidSIPError):
         # Set preservation status for dataset in Metax
+        if isinstance(exception, InvalidSIPError):
+            preservation_state \
+                = DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
+        elif isinstance(exception, (InvalidDatasetMetadataError,
+                                    InvalidFileMetadataError,
+                                    InvalidContractMetadataError)):
+            preservation_state = DS_STATE_INVALID_METADATA
+        else:
+            preservation_state = DS_STATE_PACKAGING_FAILED
         metax_client.set_preservation_state(
             task.dataset_id,
-            metax_access.DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
-            _get_description(task, exception)
-        )
-    elif isinstance(exception,
-                    siptools_research.exceptions.InvalidDatasetMetadataError):
-        # Set preservation status for dataset in Metax
-        metax_client.set_preservation_state(
-            task.dataset_id,
-            metax_access.DS_STATE_INVALID_METADATA,
+            preservation_state,
             _get_description(task, exception)
         )
 

@@ -5,8 +5,8 @@ class InvalidDatasetError(Exception):
     """Exception raised when dataset is invalid."""
 
 
-class InvalidDatasetFileError(Exception):
-    """Exception raised when dataset is invalid."""
+class InvalidDatasetFileError(InvalidDatasetError):
+    """Exception raised when dataset contains invalid files."""
 
     def __init__(self, message, files=None):
         """Initialize exception.
