@@ -3,7 +3,6 @@ import os
 
 import luigi
 from metax_access import Metax
-import upload_rest_api.database
 
 from siptools_research.utils.download import download_file
 from siptools_research.workflowtask import WorkflowTask
@@ -55,8 +54,6 @@ class GetFiles(WorkflowTask):
 
         :returns: ``None``
         """
-        upload_database = upload_rest_api.database.Database()
-
         # Find file identifiers from Metax dataset metadata.
         config_object = Configuration(self.config)
         metax_client = Metax(
@@ -97,6 +94,5 @@ class GetFiles(WorkflowTask):
                     file_metadata=dataset_file,
                     dataset_id=self.dataset_id,
                     linkpath=full_path,
-                    config_file=self.config,
-                    upload_database=upload_database
+                    config_file=self.config
                 )

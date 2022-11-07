@@ -3,14 +3,14 @@ import copy
 
 import pymongo
 import pytest
+from upload_rest_api.models import FileEntry
 
+import tests.conftest
 from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.utils.download import FileNotAvailableError
 from siptools_research.workflow import get_files
-
-import tests.conftest
+from tests.metax_data.files import PAS_STORAGE_ID, TXT_FILE
 from tests.utils import add_metax_dataset, add_mock_ida_download
-from tests.metax_data.files import TXT_FILE, PAS_STORAGE_ID
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -146,9 +146,11 @@ def test_missing_local_files(testpath, workspace, requests_mock):
         ("pid:urn:does_not_exist_local", str(testpath / "path/to/file4"))
     ]
     for identifier, fpath in mongo_files:
-        mongoclient.upload.files.insert_one(
-            {"identifier": identifier, "_id": str(fpath)}
-        )
+        FileEntry(
+            path=str(fpath),
+            identifier=identifier,
+            checksum="2eeecd72c567401e6988624b179d0b14"
+        ).save()
 
     # Create only the first file in test directory
     (testpath / "path/to/file1").parent.mkdir(parents=True)

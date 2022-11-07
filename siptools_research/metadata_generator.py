@@ -3,19 +3,15 @@ import os
 import shutil
 import tempfile
 
-
-import upload_rest_api.database
 from file_scraper.scraper import Scraper
 from metax_access import Metax
-from siptools.scripts.import_object import (DEFAULT_VERSIONS,
-                                            UNKNOWN_VERSION,
-                                            NO_VERSION)
+from siptools.scripts.import_object import (DEFAULT_VERSIONS, NO_VERSION,
+                                            UNKNOWN_VERSION)
 
-from siptools_research.exceptions import InvalidFileError
-from siptools_research.exceptions import MissingFileError
-from siptools_research.utils.download import (download_file,
-                                              FileNotAvailableError)
 from siptools_research.config import Configuration
+from siptools_research.exceptions import InvalidFileError, MissingFileError
+from siptools_research.utils.download import (FileNotAvailableError,
+                                              download_file)
 
 
 def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
@@ -60,8 +56,6 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
     :param config_file: path to configuration file
     :returns: ``None``
     """
-    upload_database = upload_rest_api.database.Database()
-
     for file_ in metax_client.get_dataset_files(dataset_id):
         # Get file info
         file_id = file_['identifier']
@@ -74,8 +68,7 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
                 file_metadata=file_metadata,
                 dataset_id=dataset_id,
                 linkpath=tmpfile,
-                config_file=config_file,
-                upload_database=upload_database
+                config_file=config_file
             )
         except FileNotAvailableError as error:
             raise MissingFileError("File is not available",

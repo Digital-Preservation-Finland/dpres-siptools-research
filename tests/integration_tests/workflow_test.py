@@ -6,19 +6,19 @@ import os
 import shutil
 import tarfile
 
-import pymongo
-import pytest
-from siptools.xml.mets import NAMESPACES
 import luigi
 import lxml.etree as ET
+import pymongo
+import pytest
 from lxml.isoschematron import Schematron
+from siptools.xml.mets import NAMESPACES
+from upload_rest_api.models import FileEntry
 
-from siptools_research.workflow.compress import CompressSIP
 import siptools_research.config
 import tests.metax_data.contracts
-from tests.metax_data.files import PAS_STORAGE_ID
 import tests.utils
-
+from siptools_research.workflow.compress import CompressSIP
+from tests.metax_data.files import PAS_STORAGE_ID
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
 SCHEMATRONS = [
@@ -163,17 +163,11 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
     for file in files:
         if file['metadata']['file_storage']['identifier'] == PAS_STORAGE_ID:
             # Mock upload-rest-api
-            conf = siptools_research.config.Configuration(
-                tests.conftest.TEST_CONFIG_FILE
-            )
-            mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-            mongoclient.upload.files.insert_one(
-                {
-                    "identifier": file['metadata']['identifier'],
-                    "_id": os.path.join(testpath,
-                                        file['metadata']['identifier'])
-                }
-            )
+            FileEntry(
+                id=os.path.join(testpath, file["metadata"]["identifier"]),
+                checksum="2eeecd72c567401e6988624b179d0b14",
+                identifier=file["metadata"]["identifier"]
+            ).save()
             shutil.copy(file['path'],
                         testpath / file['metadata']["identifier"])
         else:

@@ -4,8 +4,6 @@ import os
 from file_scraper.scraper import Scraper
 from metax_access.metax import Metax
 
-import upload_rest_api.database
-
 from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.exceptions import MissingFileError
@@ -21,15 +19,13 @@ def _download_files(metax_client, dataset_id, config_file, missing_files):
     :param config_file: configuration file path
     :returns: A list of the metadata of all downloaded files
     """
-    upload_database = upload_rest_api.database.Database()
     dataset_files = metax_client.get_dataset_files(dataset_id)
     for dataset_file in dataset_files:
         try:
             download_file(
                 file_metadata=dataset_file,
                 dataset_id=dataset_id,
-                config_file=config_file,
-                upload_database=upload_database
+                config_file=config_file
             )
         except FileNotAvailableError:
             missing_files.append(dataset_file['identifier'])

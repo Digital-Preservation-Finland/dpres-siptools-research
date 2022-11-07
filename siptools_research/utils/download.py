@@ -6,6 +6,8 @@ import requests
 from requests.exceptions import HTTPError
 from siptools_research.config import Configuration
 
+from upload_rest_api.models import FileEntry
+
 
 class FileNotAvailableError(Exception):
     """Exception raised when file is not available."""
@@ -19,16 +21,18 @@ class FileAccessError(Exception):
     """Raised when file cannot be accessed."""
 
 
-def _get_local_file(file_metadata, upload_database, conf):
+def _get_local_file(file_metadata, conf):
     """Get upload-rest-api file.
 
     :param file_metadata: Metax file metadata
-    :param upload_database: upload_rest_api.database.Database object
     :param conf: Configuration object
     :returns: Path to the file
     """
     identifier = file_metadata["identifier"]
-    filepath = upload_database.files.get_path(identifier)
+    try:
+        filepath = FileEntry.objects.get(identifier=identifier).path
+    except FileEntry.DoesNotExist:
+        filepath = None
     cache_path = os.path.join(
         conf.get("packaging_root"), "file_cache", identifier
     )
@@ -132,7 +136,6 @@ def download_file(
         dataset_id,
         linkpath="",
         config_file="/etc/siptools_research.conf",
-        upload_database=None
 ):
     """Get file from IDA or upload-rest-api and create a hard
     link to linkpath.
@@ -141,7 +144,6 @@ def download_file(
     :param dataset_id: Identifier for the dataset containing the file
     :param linkpath: Path where the hard link is created
     :param config_file: Configuration file
-    :param upload_database: upload_rest_api.database.Database object
     :returns: ``None``
     """
     conf = Configuration(config_file)
@@ -149,11 +151,8 @@ def download_file(
     file_storage = file_metadata["file_storage"]["identifier"]
 
     if file_storage == pas_storage_id:
-        if upload_database is None:
-            raise ValueError("upload_database parameter required")
         filepath = _get_local_file(
             file_metadata=file_metadata,
-            upload_database=upload_database,
             conf=conf
         )
     else:

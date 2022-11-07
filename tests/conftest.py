@@ -10,8 +10,9 @@ import luigi.configuration
 import mongomock
 import pymongo
 import pytest
-import upload_rest_api
 import urllib3
+
+import mongoengine
 
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
@@ -50,11 +51,8 @@ def mock_os_link(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def mock_upload_conf(monkeypatch):
-    """Patch upload_rest_api configuration parsing."""
-    monkeypatch.setattr(
-        upload_rest_api.config, "CONFIG",
-        {"MONGO_HOST": "localhost", "MONGO_PORT": 27017}
-    )
+    mongoengine.disconnect()
+    mongoengine.connect(host="mongomock://localhost/upload", tz_aware=True)
 
 
 @pytest.fixture(scope="function")
