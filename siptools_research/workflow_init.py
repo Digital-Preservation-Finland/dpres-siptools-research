@@ -14,7 +14,9 @@ from siptools_research.workflow.cleanup import CleanupWorkspace
 
 
 class InitWorkflow(WorkflowWrapperTask):
-    """A wrapper task that starts workflow by requiring the last task of
+    """Init workflow wrapper task.
+
+    This task starts workflow by requiring the last task of
     workflow.
     """
 
@@ -51,10 +53,11 @@ class InitWorkflows(luigi.WrapperTask):
 
 
 def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
-    """Generate unique id for the workspace and initates packaging workflow.
+    """Preserve dataset.
 
-    Workspace name is used as document id in MongoDB. This function can be
-    imported to other python modules.
+    Generates unique id for the workspace and initates packaging
+    workflow. Workspace name is used as document id in MongoDB. This
+    function can be imported to other python modules.
 
     :param dataset_id: identifier of dataset
     :param config: path to configuration file

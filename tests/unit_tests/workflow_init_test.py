@@ -8,7 +8,9 @@ from siptools_research.workflow_init import preserve_dataset
 
 
 def test_initworkflow():
-    """Test that ``InitWorkflow.requires`` function returns task with correct
+    """Test InitWorkflow task.
+
+    ``InitWorkflow.requires`` function returns task with correct
     parameters.
 
     :returns: ``None``
@@ -28,9 +30,11 @@ def test_initworkflow():
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_initworkflows():
-    """Add few sample workflows to database and test that
-    ``InitWorkflows.requires`` function produces CleanupWorkflow tasks for each
-    incomplete workflow in database.
+    """Test InitWorkflows task.
+
+    Add few sample workflows to database and test that
+    ``InitWorkflows.requires`` function produces CleanupWorkflow tasks
+    for each incomplete workflow in database.
 
     :returns: ``None``
     """

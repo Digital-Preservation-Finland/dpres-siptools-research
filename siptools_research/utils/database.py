@@ -36,8 +36,8 @@ class Database:
     def add_task(self, workflow_id, taskname, result, messages):
         """Add information of workflow task to database.
 
-        :param workflow_id: Workflow identifier i.e. the name of workspace
-                            directory
+        :param workflow_id: Workflow identifier i.e. the name of
+                            workspace directory
         :param taskname: Name of the task
         :param result: Result string ('failure' or 'success')
         :param messages: Information about the task
