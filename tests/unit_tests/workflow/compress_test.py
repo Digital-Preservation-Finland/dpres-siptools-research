@@ -5,7 +5,7 @@ import tests.conftest
 from siptools_research.workflow.compress import CompressSIP
 
 
-def test_compresssip(workspace, pkg_root):
+def test_compresssip(workspace, pkg_root, requests_mock):
     """Test CompresSIP task.
 
     Run function should create a tar-file and complete function should

@@ -36,7 +36,7 @@ def test_cleanupworkspace(workspace, requests_mock, metax_status_code):
 
     # The task should be incomplete when ReportPreservationStatus task
     # has not yet run
-    database.add_workflow(workspace.name, 'test_id')
+    database.add_workflow(workspace.name, 'FooTask', 'test_id')
     assert not task.complete()
 
     # The task should be incomplete when ReportPreservationStatus task

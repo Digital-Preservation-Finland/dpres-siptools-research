@@ -35,7 +35,6 @@ class WorkflowTask(luigi.Task):
                   (one mongodb document per workflow) in workflow
                   database. The ``document_id`` is the name (not path)
                   of workspace directory.
-    :task_name: Automatically generated name for the task.
     :document_id: Identifier of the workflow. Generated from the name of
                   workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is
@@ -54,7 +53,6 @@ class WorkflowTask(luigi.Task):
         """
         super().__init__(*args, **kwargs)
         self.document_id = os.path.basename(self.workspace)
-        self.task_name = self.__class__.__name__
         self.sip_creation_path = os.path.join(self.workspace,
                                               'sip-in-progress')
 
@@ -80,7 +78,6 @@ class WorkflowExternalTask(luigi.ExternalTask):
                   (one mongodb document per workflow) in workflow
                   database. The ``document_id`` is the name (not path)
                   of workspace directory.
-    :task_name: Automatically generated name for the task.
     :document_id: Identifier of the workflow. Generated from the name of
                   workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is
@@ -99,27 +96,8 @@ class WorkflowExternalTask(luigi.ExternalTask):
         """
         super().__init__(*args, **kwargs)
         self.document_id = os.path.basename(self.workspace)
-        self.task_name = self.__class__.__name__
         self.sip_creation_path = os.path.join(self.workspace,
                                               'sip-in-progress')
-
-
-class WorkflowWrapperTask(luigi.WrapperTask):
-    """Common base class for all workflow wrapper tasks.
-
-    Wrapper tasks execute other tasks, but does not have implementation
-    itself. In addition to functionality of normal luigi WrapperTask,
-    every task has three parameters:
-
-    :workspace: Full path to unique self.workspace directory for the
-                task.
-    :dataset_id: Metax dataset id.
-    :config: Path to configuration file
-    """
-
-    workspace = luigi.Parameter()
-    dataset_id = luigi.Parameter()
-    config = luigi.Parameter()
 
 
 @WorkflowTask.event_handler(luigi.Event.SUCCESS)
@@ -134,7 +112,7 @@ def report_task_success(task):
     """
     database = Database(task.config)
     database.add_task(task.document_id,
-                      task.task_name,
+                      task.__class__.__name__,
                       'success',
                       task.success_message)
 
@@ -155,7 +133,7 @@ def report_task_failure(task, exception):
     """
     database = Database(task.config)
     database.add_task(task.document_id,
-                      task.task_name,
+                      task.__class__.__name__,
                       'failure',
                       f"{task.failure_message}: {str(exception)}")
     config_object = Configuration(task.config)

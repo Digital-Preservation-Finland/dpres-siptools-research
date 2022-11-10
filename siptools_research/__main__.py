@@ -32,7 +32,8 @@ from metax_access import (
     DS_STATE_VALIDATING_METADATA,
     DS_STATE_METADATA_VALIDATION_FAILED,
     DS_STATE_VALID_METADATA,
-    DS_STATE_INVALID_METADATA
+    DS_STATE_INVALID_METADATA,
+    DS_STATE_IN_PACKAGING_SERVICE
 )
 
 from siptools_research.config import Configuration
@@ -332,6 +333,18 @@ def _validate(args):
 
 def _preserve(args):
     """Start preservation workflow."""
+    # Report preservation state to Metax
+    conf = Configuration(args.config)
+    metax_client = Metax(
+        conf.get('metax_url'),
+        conf.get('metax_user'),
+        conf.get('metax_password'),
+        verify=conf.getboolean('metax_ssl_verification')
+    )
+    metax_client.set_preservation_state(args.dataset_id,
+                                        DS_STATE_IN_PACKAGING_SERVICE,
+                                        'In packaging service')
+
     preserve_dataset(args.dataset_id, args.config)
 
 

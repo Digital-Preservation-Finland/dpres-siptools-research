@@ -213,13 +213,17 @@ def test_validation_failure(
             'preservation_description': expected_description}
 
 
-def test_main_preserve(mocker):
+def test_main_preserve(mocker, requests_mock):
     """Test that correct function is called from main function when "preserve"
     command is used.
 
     :param mocker: Pytest-mock mocker
+    :parma requests_mock: HTTP request mocker
     :returns: ``None``
     """
+    # Mock Metax
+    requests_mock.patch("/rest/v2/datasets/3")
+
     mock_preserve = mocker.patch('siptools_research.__main__.preserve_dataset')
     mock_validate \
         = mocker.patch('siptools_research.__main__.validate_metadata')
@@ -227,14 +231,21 @@ def test_main_preserve(mocker):
         = mocker.patch('siptools_research.__main__.generate_metadata')
 
     # Run main function with "preserve" as command
-    with mock.patch.object(sys, 'argv',
-                           ['siptools-research', 'preserve', '3']):
+    args = ['siptools-research',
+            '--config', UNIT_TEST_CONFIG_FILE,
+            'preserve', '3']
+    with mock.patch.object(sys, 'argv', args):
         siptools_research.__main__.main()
 
     # The preserve_dataset function should be called.
-    mock_preserve.assert_called_with('3', '/etc/siptools_research.conf')
+    mock_preserve.assert_called_with('3', UNIT_TEST_CONFIG_FILE)
     mock_generate.assert_not_called()
     mock_validate.assert_not_called()
+
+    # Check that preservation state of dataset was changed
+    json_message = requests_mock.last_request.json()
+    assert json_message['preservation_state'] == 90
+    assert json_message['preservation_description'] == 'In packaging service'
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -245,7 +256,7 @@ def test_main_workflow_match(capsys, monkeypatch):
     """
     # Add a single workflow documents to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "1")
+    database.add_workflow("aineisto_1", "FooTask", "1")
 
     # Run siptools-research workflow 1
     monkeypatch.setattr(
@@ -269,7 +280,7 @@ def test_main_workflow_no_matches(capsys, monkeypatch):
     """
     # Add a single workflow document to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "1")
+    database.add_workflow("aineisto_1", "FooTask", "1")
 
     # Run siptools-research worklow 2
     monkeypatch.setattr(
@@ -294,7 +305,7 @@ def test_main_workflows_match(capsys, monkeypatch):
     """
     # Add a single workflow document to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "1")
+    database.add_workflow("aineisto_1", "FooTask", "1")
 
     # Run siptools-research workflows --enabled
     monkeypatch.setattr(
@@ -318,7 +329,7 @@ def test_main_workflows_no_matches(capsys, monkeypatch):
     """
     # Add a single workflow document to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "1")
+    database.add_workflow("aineisto_1", "FooTask", "1")
 
     # Run siptools-research worklow 2
     monkeypatch.setattr(
@@ -343,7 +354,7 @@ def test_main_status(capsys, monkeypatch):
     """
     # Add a single workflow document to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "1")
+    database.add_workflow("aineisto_1", "FooTask", "1")
 
     # Run siptools-research status 1
     monkeypatch.setattr(
@@ -368,7 +379,7 @@ def test_main_tasks(capsys, monkeypatch):
     """
     # Add a single workflow documents and couple workflow_tasks to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "1")
+    database.add_workflow("aineisto_1", "FooTask", "1")
     database.add_task(
         "aineisto_1",
         "CreateWorkspace",
@@ -412,8 +423,8 @@ def test_main_dataset(capsys, monkeypatch):
     """
     # Add two workflow documents to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "1")
-    database.add_workflow("aineisto_2", "1")
+    database.add_workflow("aineisto_1", "FooTask", "1")
+    database.add_workflow("aineisto_2", "FooTask", "1")
 
     # Run siptools-research dataset 1
     monkeypatch.setattr(
@@ -451,7 +462,7 @@ def test_main_disabled(capsys, monkeypatch):
     """
     # Add a single workflow documents to the db
     database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "1")
+    database.add_workflow("aineisto_1", "FooTask", "1")
 
     # Run siptools-research enable 1
     monkeypatch.setattr(

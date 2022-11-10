@@ -4,17 +4,18 @@ import copy
 
 import lxml.etree
 import pytest
-import siptools_research
-import siptools_research.metadata_validator as metadata_validator
-import tests.utils
 from metax_access import Metax
 from requests.exceptions import HTTPError
-from siptools_research import validate_metadata
+
+import siptools_research
+from siptools_research import metadata_validator
+from siptools_research.metadata_validator import validate_metadata
 from siptools_research.config import Configuration
 from siptools_research.exceptions import (InvalidContractMetadataError,
                                           InvalidDatasetMetadataError,
                                           InvalidFileMetadataError)
 from siptools_research.metadata_validator import _validate_dataset_metadata
+import tests.utils
 from tests.metax_data.contracts import BASE_CONTRACT
 from tests.metax_data.datasets import (BASE_DATACITE, BASE_DATASET,
                                        BASE_PROVENANCE, QVAIN_PROVENANCE)

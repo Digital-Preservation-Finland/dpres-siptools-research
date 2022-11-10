@@ -59,6 +59,44 @@ class Database:
             upsert=True
         )
 
+    def set_dataset(self, workflow_id, dataset):
+        """Set the dataset of the workflow.
+
+        :param workflow_id: Workflow identifier
+        :param dataset: The identifier of new dataset
+        :returns: ``None``
+        """
+        self._collection.update_one(
+            {
+                '_id': workflow_id
+            },
+            {
+                '$set': {
+                    'dataset': dataset
+                }
+            },
+            upsert=True
+        )
+
+    def set_target_task(self, workflow_id, target_task):
+        """Set the target Task of the workflow.
+
+        :param workflow_id: Workflow identifier
+        :param task: The new target Task for workflow
+        :returns: ``None``
+        """
+        self._collection.update_one(
+            {
+                '_id': workflow_id
+            },
+            {
+                '$set': {
+                    'target_task': target_task
+                }
+            },
+            upsert=True
+        )
+
     def set_status(self, workflow_id, status):
         """Set the status string for a workflow.
 
@@ -132,14 +170,15 @@ class Database:
             upsert=True
         )
 
-    def add_workflow(self, workflow_id, dataset_id):
+    def add_workflow(self, workflow_id, target_task, dataset_id):
         """Add new workflow.
 
         The workflow identifier will be the primary key ('_id') of the
         document.
 
-        :param workflow_id: Workflow identifier, i.e. the name of workspace
-                            directory
+        :param workflow_id: Workflow identifier, i.e. the name of
+                            workspace directory
+        :param target_task: The target Task of the workflow
         :param dataset_id: Dataset identifier
         :returns: ``None``
         """
@@ -149,6 +188,7 @@ class Database:
             },
             {
                 '$set': {
+                    'target_task': target_task,
                     'status': 'Request received',
                     'dataset': dataset_id,
                     'completed': False,

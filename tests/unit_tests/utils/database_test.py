@@ -77,7 +77,7 @@ def test_add_workflow():
     )
 
     # add new workflow
-    database.add_workflow('test_workflow', 'test_dataset')
+    database.add_workflow('test_workflow', "FooTask", 'test_dataset')
 
     # Check result
     # pylint: disable=protected-access
@@ -103,12 +103,12 @@ def test_get_incomplete_datasets():
     )
 
     # Populate database
-    database.add_workflow('test1', '1')
-    database.add_workflow('test2', '2')
+    database.add_workflow('test1', "FooTask", '1')
+    database.add_workflow('test2', "FooTask", '2')
     database.set_completed('test2')
-    database.add_workflow('test3', '3')
+    database.add_workflow('test3', "FooTask", '3')
     database.set_disabled('test3')
-    database.add_workflow('test4', '4')
+    database.add_workflow('test4', "FooTask", '4')
 
     # The workflows found by ``get_incomplete_workflows`` function should be
     # "test1" and "test4"
