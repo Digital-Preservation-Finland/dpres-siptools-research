@@ -144,10 +144,12 @@ def _create_premis_events(dataset_id, workspace, config):
             languages=dataset_languages
         )
 
-        event_outcome_detail = get_localized_value(
-            provenance["outcome_description"],
-            languages=dataset_languages
-        )
+        event_outcome_detail = provenance.get("outcome_description", None)
+        if event_outcome_detail is not None:
+            event_outcome_detail = get_localized_value(
+                provenance["outcome_description"],
+                languages=dataset_languages
+            )
 
         premis_event.premis_event(
             workspace=workspace, event_type=event_type,

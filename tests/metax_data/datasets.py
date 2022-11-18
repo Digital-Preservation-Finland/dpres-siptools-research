@@ -26,6 +26,33 @@ BASE_PROVENANCE = {
     }
 }
 
+QVAIN_PROVENANCE = {
+    "title": {
+        "en": "creation"
+    },
+    # TODO: in Qvain preservation_event is lifecycle_event
+    "preservation_event": {
+        "pref_label": {
+            "en": "creation"
+        }
+    },
+    # TODO: Qvain provenance might not have temporal
+    "temporal": {
+        "end_date": "2014-12-31T08:19:58Z",
+        "start_date": "2014-01-01T08:19:58Z"
+    },
+    # TODO: Qvain provenance might not have description
+    "description": {
+        "en": "Description of provenance"
+    },
+    # TODO: Qvain provenance might not have event_outcome
+    'event_outcome': {
+        "pref_label": {
+            "en": "outcome"
+        }
+    }
+}
+
 BASE_DATASET = {
     "identifier": "dataset_identifier",
     "preservation_identifier": "doi:test",

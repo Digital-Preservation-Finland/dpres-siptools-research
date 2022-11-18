@@ -5,7 +5,9 @@ import pytest
 import jsonschema
 import siptools_research.schemas
 
-from tests.metax_data.datasets import BASE_DATASET, BASE_PROVENANCE
+from tests.metax_data.datasets import (
+    BASE_DATASET, BASE_PROVENANCE, QVAIN_PROVENANCE
+)
 from tests.metax_data.files import TXT_FILE, CSV_FILE
 from tests.metax_data.contracts import BASE_CONTRACT
 
@@ -55,7 +57,9 @@ SAMPLE_DIRECTORIES = [
         # Multiple provenance events
         [BASE_PROVENANCE, BASE_PROVENANCE],
         # Empty list of provenance events
-        []
+        [],
+        # Provenance made in Qvain
+        [QVAIN_PROVENANCE]
     ])
 def test_validate_dataset_metadata_with_provenance(provenance):
     """Test validation of valid dataset with provenance metadata.

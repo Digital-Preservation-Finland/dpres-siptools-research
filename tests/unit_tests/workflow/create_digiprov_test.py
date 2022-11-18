@@ -13,21 +13,30 @@ import tests.utils
 
 @pytest.mark.usefixtures("testmongoclient")
 @pytest.mark.parametrize(
-    ["events", "expected_ids"],
+    ["events", "expected_ids", "provenance_data"],
     [
         # 0 events
         (
-            [], []
+            [], [], None
         ),
         # 1 event
         (
-            ["creation"], ['6fc8a863bb6ed3cee2b1e853aa38d2db']
+            ["creation"],
+            ['6fc8a863bb6ed3cee2b1e853aa38d2db'],
+            tests.metax_data.datasets.BASE_PROVENANCE
         ),
         # multiple events
         (
             ["creation", "metadata modification"],
             ['6fc8a863bb6ed3cee2b1e853aa38d2db',
-             'f1ffc55803b971ab8dd013710766f47e']
+             'f1ffc55803b971ab8dd013710766f47e'],
+            tests.metax_data.datasets.BASE_PROVENANCE
+        ),
+        # provenance event made in Qvain
+        (
+            ['creation'],
+            ['39207a33db4d704db0cc177a4b31b915'],
+            tests.metax_data.datasets.QVAIN_PROVENANCE
         )
     ]
 )
@@ -35,7 +44,8 @@ def test_createprovenanceinformation(pkg_root,
                                      workspace,
                                      requests_mock,
                                      events,
-                                     expected_ids):
+                                     expected_ids,
+                                     provenance_data):
     """Test `CreateProvenanceInformation` task.
 
     - `Task.complete()` is true after `Task.run()`
@@ -47,13 +57,14 @@ def test_createprovenanceinformation(pkg_root,
     :param requests_mock: HTTP request mocker
     :param events: list of preservation events in dataset metadata
     :param expected_ids: expected identifiers of PREMIS events that are created
+    :param provenance_data: The data used for creating provenance events.
     :returns: ``None``
     """
     # Mock metax. Create a dataset with provenance events.
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset['research_dataset']['provenance'] = []
     for event in events:
-        provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
+        provenance = copy.deepcopy(provenance_data)
         provenance["preservation_event"]["pref_label"]["en"] = event
         dataset['research_dataset']['provenance'].append(provenance)
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
@@ -133,19 +144,36 @@ def test_failed_createprovenanceinformation(
     assert not list((pkg_root / 'tmp').iterdir())
 
 
-def test_create_premis_events(pkg_root, requests_mock):
+@pytest.mark.parametrize(
+    ['provenance_data', 'premis_id'],
+    [
+        [
+            tests.metax_data.datasets.BASE_PROVENANCE,
+            '6fc8a863bb6ed3cee2b1e853aa38d2db'
+        ],
+        [
+            tests.metax_data.datasets.QVAIN_PROVENANCE,
+            '39207a33db4d704db0cc177a4b31b915'
+        ]
+    ]
+)
+def test_create_premis_events(
+    pkg_root, requests_mock, provenance_data, premis_id
+):
     """Test `create_premis_event` function.
 
     Output XML file should be produced and it should contain some
     specified elements.
 
     :param pkg_root: Test packaging directory fixture
+    :param requests_mock: HTTP request mocker
+    :param provenance_data: The data used for creating provenance events
+    :param premis_id: The id created for the PREMIS event
     :returns: ``None``
     """
     # Mock metax. Create a dataset with one provenance event
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
-    dataset["research_dataset"]["provenance"] \
-        = [tests.metax_data.datasets.BASE_PROVENANCE]
+    dataset["research_dataset"]["provenance"] = [provenance_data]
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create provenance info xml-file to tempdir
@@ -159,53 +187,54 @@ def test_create_premis_events(pkg_root, requests_mock):
     # Check that the created xml-file contains correct elements.
     # pylint: disable=no-member
     tree = lxml.etree.parse(str(
-        pkg_root / '6fc8a863bb6ed3cee2b1e853aa38d2db-PREMIS%3AEVENT-amd.xml'
+        pkg_root / f'{premis_id}-PREMIS%3AEVENT-amd.xml'
     ))
 
+    namespaces = {
+        'mets': "http://www.loc.gov/METS/",
+        'premis': "info:lc/xmlns/premis-v2"
+    }
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
-                          namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"})
+                          namespaces=namespaces)
     assert elements[0].attrib["MDTYPE"] == "PREMIS:EVENT"
     assert elements[0].attrib["MDTYPEVERSION"] == "2.3"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventIdentifier'
                           '/premis:eventIdentifierType',
-                          namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"})
+                          namespaces=namespaces)
     assert elements[0].text == "UUID"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventType',
-                          namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"})
+                          namespaces=namespaces)
     assert elements[0].text == "creation"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventDateTime',
-                          namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"})
+                          namespaces=namespaces)
     assert elements[0].text == "2014-01-01T08:19:58Z"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventDetail',
-                          namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"})
+                          namespaces=namespaces)
     assert elements[0].text == "Description of provenance"
 
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event'
                           '/premis:eventOutcomeInformation'
                           '/premis:eventOutcome',
-                          namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"})
+                          namespaces=namespaces)
     assert elements[0].text == "outcome"
 
+    # Outcome description is optional
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event'
                           '/premis:eventOutcomeInformation'
                           '/premis:eventOutcomeDetail'
                           '/premis:eventOutcomeDetailNote',
-                          namespaces={'mets': "http://www.loc.gov/METS/",
-                                      'premis': "info:lc/xmlns/premis-v2"})
-    assert elements[0].text == "outcome_description"
+                          namespaces=namespaces)
+    if "outcome_description" in provenance_data:
+        assert elements[0].text == "outcome_description"
+    else:
+        assert elements == []

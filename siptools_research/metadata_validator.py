@@ -113,9 +113,12 @@ def _validate_dataset_localization(dataset_metadata):
             provenance["event_outcome"]["pref_label"],
             "provenance/event_outcome/pref_label"
         )
-        _validate_localization(
-            provenance["outcome_description"], "provenance/outcome_description"
-        )
+
+        if "outcome_description" in provenance:
+            _validate_localization(
+                provenance["outcome_description"],
+                "provenance/outcome_description"
+            )
 
     # Files translations
     if "files" in research_dataset:
