@@ -39,8 +39,7 @@
                         "type": "object",
                         "required": [
                             "preservation_event",
-                            "description",
-                            "event_outcome"
+                            "description"
                         ],
                         "properties": {
                             "temporal": {

@@ -35,7 +35,7 @@ import tests.utils
         # provenance event made in Qvain
         (
             ['creation'],
-            ['39207a33db4d704db0cc177a4b31b915'],
+            ['6f96d0a7548d7ec87e9862636bb2442e'],
             tests.metax_data.datasets.QVAIN_PROVENANCE
         )
     ]
@@ -153,7 +153,7 @@ def test_failed_createprovenanceinformation(
         ],
         [
             tests.metax_data.datasets.QVAIN_PROVENANCE,
-            '39207a33db4d704db0cc177a4b31b915'
+            '6f96d0a7548d7ec87e9862636bb2442e'
         ]
     ]
 )
@@ -220,12 +220,16 @@ def test_create_premis_events(
                           namespaces=namespaces)
     assert elements[0].text == "Description of provenance"
 
+    # Outcome should be "unknown" if missing
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event'
                           '/premis:eventOutcomeInformation'
                           '/premis:eventOutcome',
                           namespaces=namespaces)
-    assert elements[0].text == "outcome"
+    if "event_outcome" in provenance_data:
+        assert elements[0].text == "outcome"
+    else:
+        assert elements[0].text == "UNKNOWN"
 
     # Outcome description is optional
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'

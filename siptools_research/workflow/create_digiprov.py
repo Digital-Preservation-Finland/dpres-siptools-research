@@ -139,10 +139,13 @@ def _create_premis_events(dataset_id, workspace, config):
             languages=dataset_languages
         )
 
-        event_outcome = get_localized_value(
-            provenance["event_outcome"]["pref_label"],
-            languages=dataset_languages
-        )
+        if "event_outcome" in provenance:
+            event_outcome = get_localized_value(
+                provenance["event_outcome"]["pref_label"],
+                languages=dataset_languages
+            )
+        else:
+            event_outcome = "UNKNOWN"
 
         event_outcome_detail = provenance.get("outcome_description", None)
         if event_outcome_detail is not None:

@@ -44,12 +44,6 @@ QVAIN_PROVENANCE = {
     # TODO: Qvain provenance might not have description
     "description": {
         "en": "Description of provenance"
-    },
-    # TODO: Qvain provenance might not have event_outcome
-    'event_outcome': {
-        "pref_label": {
-            "en": "outcome"
-        }
     }
 }
 
