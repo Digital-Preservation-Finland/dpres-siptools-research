@@ -177,6 +177,33 @@ MKV_FILE_METADATA = {
     }
 }
 
+AUDIO_FILE_METADATA = {
+    "file_characteristics": {
+        "file_format": "audio/x-wav"
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            "0": {
+                'audio_data_encoding': 'PCM',
+                'bits_per_sample': '16',
+                'codec_creator_app': 'Lavf56.40.101',
+                'codec_creator_app_version': '56.40.101',
+                'codec_name': 'PCM',
+                'codec_quality': 'lossless',
+                'data_rate': '768',
+                'data_rate_mode': 'Fixed',
+                'duration': 'PT0.77S',
+                'index': 0,
+                'mimetype': 'audio/x-wav',
+                'num_channels': '1',
+                'sampling_frequency': '48',
+                'stream_type': 'audio',
+                'version': '(:unap)'
+            }
+        }
+    }
+}
+
 BASE_FILE = {
     "identifier": "pid:urn:identifier",
     "file_path": "path/to/file",
@@ -207,3 +234,8 @@ MKV_FILE = deepcopy(BASE_FILE)
 MKV_FILE.update(MKV_FILE_METADATA)
 MKV_FILE["identifier"] += "_mkv"
 MKV_FILE["file_path"] += ".mkv"
+
+AUDIO_FILE = deepcopy(BASE_FILE)
+AUDIO_FILE.update(AUDIO_FILE_METADATA)
+AUDIO_FILE["identifier"] += "_wav"
+AUDIO_FILE["file_path"] += ".wav"
