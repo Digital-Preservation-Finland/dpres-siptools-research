@@ -198,12 +198,12 @@ class CreateTechnicalMetadata(WorkflowTask):
         Create METS TechMD files for each metadata type based on
         previously scraped file characteristics.
 
-        :param file_identifier: file identifier
+        :param metadata: Metax metadata of the file
         :param filepath: path of file in SIP
         :param output: Path to the temporary workspace
         :returns: ``None``
         """
-        creator = siptools.mdcreator.MetsSectionCreator(output)
+        mdcreator = siptools.mdcreator.MetsSectionCreator(output)
         metadata_generator = XMLMetadataGenerator(
             file_path=os.path.join(
                 self.input()['files'].path,
@@ -213,30 +213,25 @@ class CreateTechnicalMetadata(WorkflowTask):
         )
 
         metadata_entries = metadata_generator.create()
-
         for md_entry in metadata_entries:
+
             md_elem = md_entry.md_elem
-            stream_index = md_entry.stream_index
-
             md_namespace = md_elem.nsmap[md_elem.prefix]
-
-            mdtype = TECH_ATTR_TYPES[md_namespace]["mdtype"]
-            mdtypeversion = TECH_ATTR_TYPES[md_namespace]["mdtypeversion"]
-            othermdtype = TECH_ATTR_TYPES[md_namespace].get("othermdtype",
-                                                            None)
-            ref_file = TECH_ATTR_TYPES[md_namespace]["ref_file"]
+            md_attributes = TECH_ATTR_TYPES[md_namespace]
 
             # Create METS TechMD file
-            techmd_id, _ = creator.write_md(
+            techmd_id, _ = mdcreator.write_md(
                 metadata=md_elem,
-                mdtype=mdtype,
-                mdtypeversion=mdtypeversion,
-                othermdtype=othermdtype
+                mdtype=md_attributes["mdtype"],
+                mdtypeversion=md_attributes["mdtypeversion"],
+                othermdtype=md_attributes.get("othermdtype", None)
             )
 
             # Add reference from fileSec to TechMD
-            creator.add_reference(techmd_id, filepath, stream=stream_index)
-            creator.write(ref_file=ref_file)
+            mdcreator.add_reference(
+                techmd_id, filepath, stream=md_entry.stream_index
+            )
+            mdcreator.write(ref_file=md_attributes["ref_file"])
 
 
 def algorithm_name(algorithm, value):
