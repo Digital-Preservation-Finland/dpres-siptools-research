@@ -188,6 +188,14 @@ class _AudioFileXMLMetadata(_XMLMetadata):
             raise InvalidFileError("Audio file has no audio streams.",
                                    [self.file_metadata['identifier']])
 
+        # If the only contained "stream" has the key '0', then the audio
+        # file metadata corresponds to the file itself and not a stream
+        # inside it.
+        if "0" in audiomd and len(audiomd) == 1:
+            return [
+                XMLMetadataEntry(stream_index=None, md_elem=audiomd["0"])
+            ]
+
         return [
             XMLMetadataEntry(stream_index=stream_index, md_elem=md_elem)
             for stream_index, md_elem in audiomd.items()
@@ -224,6 +232,15 @@ class _VideoFileXMLMetadata(_XMLMetadata):
         if not videomd:
             raise InvalidFileError("Video file has no video streams.",
                                    [self.file_metadata['identifier']])
+
+        # If the only contained "stream" has the key '0', then the video
+        # file metadata corresponds to the file itself and not a stream
+        # inside it.
+        if "0" in videomd and len(videomd) == 1:
+            return [
+                XMLMetadataEntry(stream_index=None, md_elem=videomd["0"])
+            ]
+
         return [
             XMLMetadataEntry(stream_index=stream_index, md_elem=md_elem)
             for stream_index, md_elem in videomd.items()
