@@ -134,10 +134,23 @@ def _create_premis_events(dataset_id, workspace, config):
         except KeyError:
             event_datetime = 'OPEN'
 
-        event_detail = get_localized_value(
-            provenance["description"],
-            languages=dataset_languages
+        # Add provenance title and description to eventDetail element text, if
+        # present. If both are present, format as "title: description"
+        event_detail_items = []
+        if "title" in provenance:
+            event_detail_items.append(
+                get_localized_value(
+                    provenance["title"],
+                    languages=dataset_languages
+                )
+            )
+        event_detail_items.append(
+            get_localized_value(
+                provenance["description"],
+                languages=dataset_languages
+            )
         )
+        event_detail = ": ".join(event_detail_items)
 
         if "event_outcome" in provenance:
             event_outcome = get_localized_value(

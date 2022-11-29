@@ -122,6 +122,12 @@ def _validate_dataset_localization(dataset_metadata):
                 "provenance/outcome_description"
             )
 
+        if "title" in provenance:
+            _validate_localization(
+                provenance["title"],
+                "provenance/title"
+            )
+
     # Files translations
     if "files" in research_dataset:
         for _file in research_dataset["files"]:

@@ -28,7 +28,7 @@ BASE_PROVENANCE = {
 
 QVAIN_PROVENANCE = {
     "title": {
-        "en": "creation"
+        "en": "Title"
     },
     # TODO: in Qvain preservation_event is lifecycle_event
     "preservation_event": {

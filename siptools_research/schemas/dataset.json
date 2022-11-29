@@ -57,7 +57,7 @@
                             },
                             "description": {
                                 "title": "Description",
-                                "description": "The description of digital provenance event in multiple languages. The description in the default language of the dataset is used as value of premis:eventDetail element.",
+                                "description": "The description of digital provenance event in multiple languages. The description in the default language of the dataset is used in the value of premis:eventDetail element.",
                                 "type": "object"
                             },
                             "preservation_event": {
@@ -89,6 +89,11 @@
                             "outcome_description": {
                                 "title": "Outcome description",
                                 "description": "The outcome detail note of digital provenance event in multiple languages. The outcome detail note in the default language of the dataset is used as value of premis:eventOutcomeDetailNote element",
+                                "type": "object"
+                            },
+                            "title": {
+                                "title": "Provenance title",
+                                "description": "The title of digital provenance event in multiple languages. The title in the default language of the dataset is used in the value of premis:eventDetail element.",
                                 "type": "object"
                             }
                         }
