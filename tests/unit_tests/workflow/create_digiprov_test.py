@@ -36,7 +36,7 @@ import tests.utils
         # provenance event made in Qvain
         (
             ['creation'],
-            ['7c727916e1f530bba180d3040b40e5c7'],
+            ['527d3b593921f7f5b719836e55777083'],
             tests.metax_data.datasets.QVAIN_PROVENANCE
         )
     ]
@@ -160,7 +160,7 @@ def test_failed_createprovenanceinformation(
         ],
         [
             tests.metax_data.datasets.QVAIN_PROVENANCE,
-            '7c727916e1f530bba180d3040b40e5c7'
+            '527d3b593921f7f5b719836e55777083'
         ]
     ]
 )
@@ -220,7 +220,10 @@ def test_create_premis_events(
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventDateTime',
                           namespaces=namespaces)
-    assert elements[0].text == "2014-01-01T08:19:58Z"
+    if "temporal" in provenance_data:
+        assert elements[0].text == "2014-01-01T08:19:58Z"
+    else:
+        assert elements[0].text == "OPEN"
 
     # Title and description should be formatted together as "title:
     # description" or just as is if the other one does not exist
