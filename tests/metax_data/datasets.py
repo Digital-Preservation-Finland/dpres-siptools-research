@@ -40,10 +40,6 @@ QVAIN_PROVENANCE = {
     "temporal": {
         "end_date": "2014-12-31T08:19:58Z",
         "start_date": "2014-01-01T08:19:58Z"
-    },
-    # TODO: Qvain provenance might not have description
-    "description": {
-        "en": "Description of provenance"
     }
 }
 

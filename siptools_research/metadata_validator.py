@@ -102,9 +102,11 @@ def _validate_dataset_localization(dataset_metadata):
 
     # Provenance translations
     for provenance in provenance_list:
-        _validate_localization(
-            provenance["description"], "provenance/description"
-        )
+        if "description" in provenance:
+            _validate_localization(
+                provenance["description"], "provenance/description"
+            )
+
         _validate_localization(
             provenance["preservation_event"]["pref_label"],
             "provenance/preservation_event/pref_label"

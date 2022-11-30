@@ -37,9 +37,9 @@
                     "minItems": 0,
                     "items": {
                         "type": "object",
-                        "required": [
-                            "preservation_event",
-                            "description"
+                        "anyOf": [
+                            {"required": ["preservation_event", "description"]},
+                            {"required": ["preservation_event", "title"]}
                         ],
                         "properties": {
                             "temporal": {

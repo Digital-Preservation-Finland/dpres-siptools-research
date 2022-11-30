@@ -135,7 +135,8 @@ def _create_premis_events(dataset_id, workspace, config):
             event_datetime = 'OPEN'
 
         # Add provenance title and description to eventDetail element text, if
-        # present. If both are present, format as "title: description"
+        # present. If both are present, format as "title: description". Our
+        # JSON schema validates that at least one is present.
         event_detail_items = []
         if "title" in provenance:
             event_detail_items.append(
@@ -144,12 +145,13 @@ def _create_premis_events(dataset_id, workspace, config):
                     languages=dataset_languages
                 )
             )
-        event_detail_items.append(
-            get_localized_value(
-                provenance["description"],
-                languages=dataset_languages
+        if "description" in provenance:
+            event_detail_items.append(
+                get_localized_value(
+                    provenance["description"],
+                    languages=dataset_languages
+                )
             )
-        )
         event_detail = ": ".join(event_detail_items)
 
         if "event_outcome" in provenance:

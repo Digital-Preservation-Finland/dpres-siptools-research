@@ -35,7 +35,7 @@ import tests.utils
         # provenance event made in Qvain
         (
             ['creation'],
-            ['4c338f160213077558bc1d727db630a0'],
+            ['7c727916e1f530bba180d3040b40e5c7'],
             tests.metax_data.datasets.QVAIN_PROVENANCE
         )
     ]
@@ -153,7 +153,7 @@ def test_failed_createprovenanceinformation(
         ],
         [
             tests.metax_data.datasets.QVAIN_PROVENANCE,
-            '4c338f160213077558bc1d727db630a0'
+            '7c727916e1f530bba180d3040b40e5c7'
         ]
     ]
 )
@@ -215,13 +215,20 @@ def test_create_premis_events(
                           namespaces=namespaces)
     assert elements[0].text == "2014-01-01T08:19:58Z"
 
+    # Title and description should be formatted together as "title:
+    # description" or just as is if the other one does not exist
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
                           '/mets:xmlData/premis:event/premis:eventDetail',
                           namespaces=namespaces)
-    if "title" in provenance_data:
+    if "title" in provenance_data and "description" in provenance_data:
         assert elements[0].text == "Title: Description of provenance"
-    else:
+    elif "title" in provenance_data:
+        assert elements[0].text == "Title"
+    elif "description" in provenance_data:
         assert elements[0].text == "Description of provenance"
+    else:
+        # Invalid provenance, there is no title or description
+        assert False
 
     # Outcome should be "unknown" if missing
     elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
