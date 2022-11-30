@@ -16,6 +16,7 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
+from siptools_research.exceptions import InvalidDatasetMetadataError
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -124,10 +125,24 @@ def _create_premis_events(dataset_id, workspace, config):
 
     for provenance in provenances:
 
-        event_type = get_localized_value(
-            provenance["preservation_event"]["pref_label"],
-            languages=dataset_languages
-        )
+        # Although it shouldn't happen, theoretically both 'preservation_event'
+        # and 'lifecycle_event' could exist in the same provenance metadata.
+        # 'preservation_event' is used as the overriding value if both exist.
+        if "preservation_event" in provenance:
+            event_type = get_localized_value(
+                provenance["preservation_event"]["pref_label"],
+                languages=dataset_languages
+            )
+        elif "lifecycle_event" in provenance:
+            event_type = get_localized_value(
+                provenance["lifecycle_event"]["pref_label"],
+                languages=dataset_languages
+            )
+        else:
+            raise InvalidDatasetMetadataError(
+                "Provenance metadata does not have key 'preservation_event' "
+                f"or 'lifecycle_event'. Invalid provenance: {provenance}"
+            )
 
         try:
             event_datetime = provenance["temporal"]["start_date"]

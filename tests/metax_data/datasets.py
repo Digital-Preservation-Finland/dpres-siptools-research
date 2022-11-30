@@ -30,8 +30,7 @@ QVAIN_PROVENANCE = {
     "title": {
         "en": "Title"
     },
-    # TODO: in Qvain preservation_event is lifecycle_event
-    "preservation_event": {
+    "lifecycle_event": {
         "pref_label": {
             "en": "creation"
         }

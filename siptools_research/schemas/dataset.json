@@ -39,7 +39,7 @@
                         "type": "object",
                         "anyOf": [
                             {"required": ["preservation_event", "description"]},
-                            {"required": ["preservation_event", "title"]}
+                            {"required": ["lifecycle_event", "title"]}
                         ],
                         "properties": {
                             "temporal": {
@@ -69,6 +69,19 @@
                                     "pref_label": {
                                         "title": "Preferred label",
                                         "description": "The type of digital provenance event in multiple languages. The type in the default language of the dataset is used as value of premis:eventType element.",
+                                        "type": "object"
+                                    }
+                                }
+                            },
+                            "lifecycle_event": {
+                                "title": "Lifecycle event",
+                                "description": "Digital lifecycle event",
+                                "type": "object",
+                                "required": ["pref_label"],
+                                "properties": {
+                                    "pref_label": {
+                                        "title": "Preferred label",
+                                        "description": "The type of digital provenance lifecycle event in multiple languages. The type in the default language of the dataset is used as value of premis:eventType element.",
                                         "type": "object"
                                     }
                                 }

@@ -7,6 +7,7 @@ import pytest
 import lxml
 
 from siptools_research.workflow import create_digiprov
+from siptools_research.exceptions import InvalidDatasetMetadataError
 import tests.metax_data
 import tests.utils
 
@@ -65,7 +66,10 @@ def test_createprovenanceinformation(pkg_root,
     dataset['research_dataset']['provenance'] = []
     for event in events:
         provenance = copy.deepcopy(provenance_data)
-        provenance["preservation_event"]["pref_label"]["en"] = event
+        if "preservation_event" in provenance:
+            provenance["preservation_event"]["pref_label"]["en"] = event
+        else:
+            provenance["lifecycle_event"]["pref_label"]["en"] = event
         dataset['research_dataset']['provenance'].append(provenance)
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
@@ -132,7 +136,10 @@ def test_failed_createprovenanceinformation(
     )
 
     # Run task.
-    with pytest.raises(KeyError, match='preservation_event'):
+    with pytest.raises(
+        InvalidDatasetMetadataError,
+        match="Provenance metadata does not have key 'preservation_event'"
+    ):
         task.run()
     assert not task.complete()
 
