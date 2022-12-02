@@ -175,7 +175,7 @@ def _create_premis_events(dataset_id, workspace, config):
                 languages=dataset_languages
             )
         else:
-            event_outcome = "UNKNOWN"
+            event_outcome = "unknown"
 
         event_outcome_detail = provenance.get("outcome_description", None)
         if event_outcome_detail is not None:
