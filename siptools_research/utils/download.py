@@ -107,11 +107,7 @@ def _get_ida_file(file_metadata, dataset_id, conf):
         response = requests.get(
             f"{download_base_url}/download",
             params={
-                "dataset": dataset_id,
-                "file": file_metadata["file_path"]
-            },
-            headers={
-                "Authorization": f"Bearer {token}"
+                "token": token
             },
             verify=verify,
             stream=True

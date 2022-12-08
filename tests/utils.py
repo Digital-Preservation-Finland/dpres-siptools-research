@@ -2,6 +2,7 @@
 
 import copy
 import os
+import uuid
 
 import lxml.etree
 
@@ -126,13 +127,14 @@ def add_mock_ida_download(requests_mock, dataset_id, filename, content):
     """
     Mock IDA requests for downloading a file from IDA
     """
+    # In reality the returned token would have the dataset id and file path
+    # encoded in it. For mocking purposes any random string that can be used to
+    # connect the authorize and download requests together is good enough.
+    token = str(uuid.uuid4())
     requests_mock.post(
         "https://ida.dl-authorize.test/authorize",
         json={
-            "token": (
-                "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0."
-                "eyJzZWNyZXQiOiJkUXc0dzlXZ1hjUSJ9."
-            )
+            "token": token
         },
         additional_matcher=lambda req: (
             req.json()["file"] == filename
@@ -141,10 +143,6 @@ def add_mock_ida_download(requests_mock, dataset_id, filename, content):
     )
 
     return requests_mock.get(
-        "https://ida.dl.test/download",
-        content=content,
-        additional_matcher=lambda req: (
-            req.qs["file"][0] == filename
-            and req.qs["dataset"][0] == dataset_id
-        )
+        f"https://ida.dl.test/download?token={token}",
+        content=content
     )
