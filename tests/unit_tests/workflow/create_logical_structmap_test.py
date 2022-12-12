@@ -21,16 +21,29 @@ from siptools_research.workflow.create_logical_structmap import (
 
 
 @pytest.mark.parametrize(
-    ("events", "admids"),
+    ("events", "admids", "provenance_is_from_qvain"),
     [
-        ([], []),
-        (['creation'], ['_2005686d72f58850765d1c8147d05cb2']),
-        (['creation', 'foobar'], ['_2005686d72f58850765d1c8147d05cb2',
-                                  '_f8384d1f8b9cbcafcba9370d1b506a26'])
+        (
+            [], [], False
+        ),
+        (
+            ['creation'], ['_2005686d72f58850765d1c8147d05cb2'], False
+        ),
+        (
+            ['creation', 'foobar'],
+            ['_2005686d72f58850765d1c8147d05cb2',
+             '_f8384d1f8b9cbcafcba9370d1b506a26'],
+            False
+        ),
+        (
+            ['creation'], ['_2005686d72f58850765d1c8147d05cb2'], True
+        ),
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_structmap_ok(workspace, requests_mock, events, admids):
+def test_create_structmap_ok(
+    workspace, requests_mock, events, admids, provenance_is_from_qvain
+):
     """Test the workflow task CreateLogicalStructMap.
 
     :param workspace: Temporary workspace directory fixture
@@ -50,8 +63,18 @@ def test_create_structmap_ok(workspace, requests_mock, events, admids):
     # Dataset contans zero or more events
     dataset["research_dataset"]["provenance"] = []
     for event in events:
-        provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
-        provenance["preservation_event"]["pref_label"]["en"] = event
+        # Provenances made in Qvain have 'lifecycle_event' instead of
+        # 'provenance_event'
+        if provenance_is_from_qvain:
+            provenance = copy.deepcopy(
+                tests.metax_data.datasets.QVAIN_PROVENANCE
+            )
+            provenance["lifecycle_event"]["pref_label"]["en"] = event
+        else:
+            provenance = copy.deepcopy(
+                tests.metax_data.datasets.BASE_PROVENANCE
+            )
+            provenance["preservation_event"]["pref_label"]["en"] = event
         dataset["research_dataset"]["provenance"].append(provenance)
     if not dataset["research_dataset"]["provenance"]:
         del dataset["research_dataset"]["provenance"]

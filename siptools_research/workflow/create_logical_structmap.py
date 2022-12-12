@@ -149,10 +149,26 @@ class CreateLogicalStructMap(WorkflowTask):
         provenance_ids = []
         provenances = metadata["research_dataset"].get("provenance", [])
         for provenance in provenances:
-            event_type = get_localized_value(
-                provenance["preservation_event"]["pref_label"],
-                languages=languages
-            )
+            # Although it shouldn't happen, theoretically both
+            # 'preservation_event' and 'lifecycle_event' could exist in the
+            # same provenance metadata.  'preservation_event' is used as the
+            # overriding value if both exist.
+            if "preservation_event" in provenance:
+                event_type = get_localized_value(
+                    provenance["preservation_event"]["pref_label"],
+                    languages=languages
+                )
+            elif "lifecycle_event" in provenance:
+                event_type = get_localized_value(
+                    provenance["lifecycle_event"]["pref_label"],
+                    languages=languages
+                )
+            else:
+                raise InvalidDatasetMetadataError(
+                    "Provenance metadata does not have key "
+                    "'preservation_event' or 'lifecycle_event'. Invalid "
+                    f"provenance: {provenance}"
+                )
             provenance_ids += [event_type_ids[event_type]]
 
         return provenance_ids
