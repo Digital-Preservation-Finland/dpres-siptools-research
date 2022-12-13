@@ -19,7 +19,7 @@ from tests.metax_data.contracts import BASE_CONTRACT
 from tests.metax_data.datasets import (BASE_DATACITE, BASE_DATASET,
                                        BASE_PROVENANCE, QVAIN_PROVENANCE)
 from tests.metax_data.files import (BASE_FILE, CSV_FILE, MKV_FILE, TIFF_FILE,
-                                    TXT_FILE, PDF_FILE)
+                                    TXT_FILE, PDF_FILE, AUDIO_FILE)
 
 
 @contextlib.contextmanager
@@ -61,7 +61,8 @@ def get_very_invalid_datacite():
 
 
 @pytest.mark.parametrize(
-    'file_metadata', (TXT_FILE, CSV_FILE, TIFF_FILE, MKV_FILE, PDF_FILE)
+    'file_metadata',
+    (TXT_FILE, CSV_FILE, TIFF_FILE, MKV_FILE, PDF_FILE, AUDIO_FILE)
 )
 def test_validate_metadata(requests_mock, file_metadata):
     """Test validation of dataset metadata that contains one file.
