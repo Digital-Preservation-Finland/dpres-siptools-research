@@ -8,7 +8,7 @@ import siptools_research.schemas
 from tests.metax_data.datasets import (
     BASE_DATASET, BASE_PROVENANCE, QVAIN_PROVENANCE
 )
-from tests.metax_data.files import TXT_FILE, CSV_FILE, PDF_FILE
+from tests.metax_data.files import TXT_FILE, CSV_FILE, PDF_FILE, TIFF_FILE
 from tests.metax_data.contracts import BASE_CONTRACT
 
 SAMPLE_FILES = [
@@ -121,7 +121,10 @@ def test_invalid_directory():
     assert error.value.message == "1 is not of type 'string'"
 
 
-@pytest.mark.parametrize('file_metadata', (TXT_FILE, CSV_FILE, PDF_FILE))
+@pytest.mark.parametrize(
+    'file_metadata',
+    (TXT_FILE, CSV_FILE, PDF_FILE, TIFF_FILE)
+)
 def test_validate_valid_file_metadata(file_metadata):
     """Test validation of valid file metadata.
 
