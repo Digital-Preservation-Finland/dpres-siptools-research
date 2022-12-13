@@ -141,6 +141,16 @@ DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
                     'path': 'tests/data/sample_files/audio_x-wav.wav'
                 }
             ]
+        ),
+        # Dataset with pdf file
+        (
+            tests.metax_data.datasets.BASE_DATASET,
+            [
+                {
+                    'metadata': tests.metax_data.files.PDF_FILE,
+                    'path': 'tests/data/sample_files/application_pdf.pdf'
+                }
+            ]
         )
     ]
 )

@@ -204,6 +204,24 @@ AUDIO_FILE_METADATA = {
     }
 }
 
+PDF_FILE_METADATA = {
+    "file_characteristics": {
+        "file_format": "application/pdf",
+        "format_version": "A-3b"
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            "0": {
+                "index": 0,
+                "version": "A-3b",
+                "mimetype": "application/pdf",
+                "stream_type": "binary"
+            }
+        }
+    }
+}
+
+
 BASE_FILE = {
     "identifier": "pid:urn:identifier",
     "file_path": "path/to/file",
@@ -239,3 +257,8 @@ AUDIO_FILE = deepcopy(BASE_FILE)
 AUDIO_FILE.update(AUDIO_FILE_METADATA)
 AUDIO_FILE["identifier"] += "_wav"
 AUDIO_FILE["file_path"] += ".wav"
+
+PDF_FILE = deepcopy(BASE_FILE)
+PDF_FILE.update(PDF_FILE_METADATA)
+PDF_FILE["identifier"] += "_pdf"
+PDF_FILE["file_path"] += ".pdf"
