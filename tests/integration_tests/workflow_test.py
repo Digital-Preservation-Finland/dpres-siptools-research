@@ -151,6 +151,16 @@ DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
                     'path': 'tests/data/sample_files/application_pdf.pdf'
                 }
             ]
+        ),
+        # Dataset with csv file
+        (
+            tests.metax_data.datasets.BASE_DATASET,
+            [
+                {
+                    'metadata': tests.metax_data.files.CSV_FILE,
+                    'path': 'tests/data/sample_files/text_csv.csv'
+                }
+            ]
         )
     ]
 )
