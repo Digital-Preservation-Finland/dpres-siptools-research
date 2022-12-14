@@ -221,6 +221,38 @@ PDF_FILE_METADATA = {
     }
 }
 
+VIDEO_FILE_METADATA = {
+    "file_characteristics": {
+        "file_format": "video/dv"
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            "0": {
+                "dar": "1.778",
+                "par": "1.422",
+                "color": "Color",
+                "index": 0,
+                "sound": "No",
+                "width": "720",
+                "height": "576",
+                "version": "(:unap)",
+                "duration": "PT0.08S",
+                "mimetype": "video/dv",
+                "sampling": "4:2:0",
+                "data_rate": "24.4416",
+                "codec_name": "DV",
+                "frame_rate": "25",
+                "stream_type": "video",
+                "codec_quality": "lossy",
+                "signal_format": "PAL",
+                "data_rate_mode": "Fixed",
+                "bits_per_sample": "8",
+                "codec_creator_app": "(:unav)",
+                "codec_creator_app_version": "(:unav)"
+            }
+        }
+    }
+}
 
 BASE_FILE = {
     "identifier": "pid:urn:identifier",
@@ -262,3 +294,8 @@ PDF_FILE = deepcopy(BASE_FILE)
 PDF_FILE.update(PDF_FILE_METADATA)
 PDF_FILE["identifier"] += "_pdf"
 PDF_FILE["file_path"] += ".pdf"
+
+VIDEO_FILE = deepcopy(BASE_FILE)
+VIDEO_FILE.update(VIDEO_FILE_METADATA)
+VIDEO_FILE["identifier"] += "_dv"
+VIDEO_FILE["file_path"] += ".dv"

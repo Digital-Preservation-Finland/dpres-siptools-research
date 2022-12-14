@@ -161,6 +161,16 @@ DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
                     'path': 'tests/data/sample_files/text_csv.csv'
                 }
             ]
+        ),
+        # Datset with video file (no audio)
+        (
+            tests.metax_data.datasets.BASE_DATASET,
+            [
+                {
+                    'metadata': tests.metax_data.files.VIDEO_FILE,
+                    'path': 'tests/data/sample_files/video_dv.dv'
+                }
+            ]
         )
     ]
 )
