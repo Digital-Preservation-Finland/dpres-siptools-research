@@ -114,61 +114,44 @@ DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
                 }
             ]
         ),
-        # Dataset with multiple files
+        # Dataset with different file formats producing different metadata
         (
             tests.metax_data.datasets.BASE_DATASET,
             [
+                # text (charset metadata)
                 {
                     'metadata': tests.metax_data.files.TXT_FILE,
                     'path': 'tests/data/sample_files/text_plain_UTF-8'
                 },
+                # CSV (ADDML)
+                {
+                    'metadata': tests.metax_data.files.CSV_FILE,
+                    'path': 'tests/data/sample_files/text_csv.csv'
+                },
+                # image (MIX)
+                {
+                    'metadata': TIFF_FILE,
+                    'path': 'tests/data/sample_files/valid_tiff.tiff'
+                },
+                # audio (AudioMD)
+                {
+                    'metadata': tests.metax_data.files.AUDIO_FILE,
+                    'path': 'tests/data/sample_files/audio_x-wav.wav'
+                },
+                # video (VideoMD)
+                {
+                    'metadata': tests.metax_data.files.VIDEO_FILE,
+                    'path': 'tests/data/sample_files/video_dv.dv'
+                },
+                # video container with video and audio (VideoMD and AudioMD)
                 {
                     'metadata': MKV_FILE,
                     'path': 'tests/data/sample_files/video_ffv1.mkv'
                 },
-                {
-                    'metadata': TIFF_FILE,
-                    'path': 'tests/data/sample_files/valid_tiff.tiff'
-                }
-            ]
-        ),
-        # Dataset with audio file
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
-                {
-                    'metadata': tests.metax_data.files.AUDIO_FILE,
-                    'path': 'tests/data/sample_files/audio_x-wav.wav'
-                }
-            ]
-        ),
-        # Dataset with pdf file
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
+                # other (no extra metadata)
                 {
                     'metadata': tests.metax_data.files.PDF_FILE,
                     'path': 'tests/data/sample_files/application_pdf.pdf'
-                }
-            ]
-        ),
-        # Dataset with csv file
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
-                {
-                    'metadata': tests.metax_data.files.CSV_FILE,
-                    'path': 'tests/data/sample_files/text_csv.csv'
-                }
-            ]
-        ),
-        # Datset with video file (no audio)
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
-                {
-                    'metadata': tests.metax_data.files.VIDEO_FILE,
-                    'path': 'tests/data/sample_files/video_dv.dv'
                 }
             ]
         )

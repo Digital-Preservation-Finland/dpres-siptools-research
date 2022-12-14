@@ -279,6 +279,8 @@ TIFF_FILE["file_path"] += ".tiff"
 
 CSV_FILE = deepcopy(BASE_FILE)
 CSV_FILE.update(CSV_FILE_METADATA)
+CSV_FILE["identifier"] += "_csv"
+CSV_FILE["file_path"] += ".csv"
 
 MKV_FILE = deepcopy(BASE_FILE)
 MKV_FILE.update(MKV_FILE_METADATA)
