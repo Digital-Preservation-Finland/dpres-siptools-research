@@ -14,6 +14,7 @@
     {"input_file_format": "text/html", "output_format_version": "4.01"},
     {"input_file_format": "text/html", "output_format_version": "5.0"},
     {"input_file_format": "text/html", "output_format_version": "5.1"},
+    {"input_file_format": "text/html", "output_format_version": "5.2"},
     {"input_file_format": "application/vnd.oasis.opendocument.text", "output_format_version": "1.0"},
     {"input_file_format": "application/vnd.oasis.opendocument.text", "output_format_version": "1.1"},
     {"input_file_format": "application/vnd.oasis.opendocument.text", "output_format_version": "1.2"},
