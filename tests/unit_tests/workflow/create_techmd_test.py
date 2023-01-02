@@ -119,7 +119,7 @@ def test_create_techmd_ok(workspace, requests_mock):
     premis_agent_files = [f'{id_[1:]}-PREMIS%3AAGENT-amd.xml'
                           for id_ in premis_references['.']['md_ids']
                           if id_[1:] != premis_event_id]
-    assert len(premis_agent_files) == 9
+    assert len(premis_agent_files) == 10
     for file_ in premis_agent_files:
         assert (sipdirectory / file_).is_file()
 
