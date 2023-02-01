@@ -1,9 +1,8 @@
 """Test the :mod:`siptools_research.workflow.get_files` module."""
 import copy
 
-import pymongo
 import pytest
-from upload_rest_api.models import FileEntry
+from upload_rest_api.models.file_entry import FileEntry
 
 import tests.conftest
 from siptools_research.exceptions import InvalidFileMetadataError
@@ -118,7 +117,8 @@ def test_missing_ida_files(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_missing_local_files(testpath, workspace, requests_mock):
+def test_missing_local_files(testpath, workspace, requests_mock,
+                             upload_projects_path):
     """Test task when a local file is not available.
 
     The first file should successfully downloaded, but the second file
@@ -140,10 +140,11 @@ def test_missing_local_files(testpath, workspace, requests_mock):
     add_metax_dataset(requests_mock, files=files)
 
     # Init mocked upload.files collection
-    mongoclient = pymongo.MongoClient()
     mongo_files = [
-        ("pid:urn:get_files_1_local", str(testpath / "path/to/file1")),
-        ("pid:urn:does_not_exist_local", str(testpath / "path/to/file4"))
+        ("pid:urn:get_files_1_local",
+         str(upload_projects_path / "path/to/file1")),
+        ("pid:urn:does_not_exist_local",
+         str(upload_projects_path / "path/to/file4"))
     ]
     for identifier, fpath in mongo_files:
         FileEntry(
@@ -153,8 +154,8 @@ def test_missing_local_files(testpath, workspace, requests_mock):
         ).save()
 
     # Create only the first file in test directory
-    (testpath / "path/to/file1").parent.mkdir(parents=True)
-    (testpath / "path/to/file1").write_text("foo\n")
+    (upload_projects_path / "path/to/file1").parent.mkdir(parents=True)
+    (upload_projects_path / "path/to/file1").write_text("foo\n")
 
     # Init task
     task = get_files.GetFiles(

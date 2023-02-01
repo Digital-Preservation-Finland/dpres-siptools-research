@@ -6,7 +6,7 @@ import requests
 from requests.exceptions import HTTPError
 from siptools_research.config import Configuration
 
-from upload_rest_api.models import FileEntry
+from upload_rest_api.models.file_entry import FileEntry
 
 
 class FileNotAvailableError(Exception):

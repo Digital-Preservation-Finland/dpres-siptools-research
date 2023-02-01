@@ -126,6 +126,18 @@ def pkg_root(testpath, monkeypatch):
 
 
 @pytest.fixture(scope="function")
+# TODO: This hack can be removed when TPASPKT-516 is resolved
+def upload_projects_path(testpath, monkeypatch):
+    """Configure UPLOAD_PROJECTS_PATH for upload-rest-api."""
+    # Mock upload-rest-api configuration
+    path = testpath / "upload_projects"
+    path.mkdir()
+    from upload_rest_api.config import CONFIG
+    monkeypatch.setitem(CONFIG, 'UPLOAD_PROJECTS_PATH', path)
+    return path
+
+
+@pytest.fixture(scope="function")
 # pylint: disable=redefined-outer-name
 def workspace(pkg_root):
     """

@@ -8,13 +8,11 @@ import tarfile
 
 import luigi
 import lxml.etree as ET
-import pymongo
 import pytest
 from lxml.isoschematron import Schematron
 from siptools.xml.mets import NAMESPACES
-from upload_rest_api.models import FileEntry
+from upload_rest_api.models.file_entry import FileEntry
 
-import siptools_research.config
 import tests.metax_data.contracts
 import tests.utils
 from siptools_research.workflow.compress import CompressSIP
@@ -157,7 +155,7 @@ DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
         )
     ]
 )
-def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
+def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files, upload_projects_path):
     """Test SIP validity.
 
     Run CompressSIP task (and all tasks it requires) and check that:
@@ -186,13 +184,15 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files):
     for file in files:
         if file['metadata']['file_storage']['identifier'] == PAS_STORAGE_ID:
             # Mock upload-rest-api
+            file_storage_path = (upload_projects_path / "project_id"
+                                 / file["metadata"]["identifier"])
             FileEntry(
-                id=os.path.join(testpath, file["metadata"]["identifier"]),
+                id=str(file_storage_path),
                 checksum="2eeecd72c567401e6988624b179d0b14",
                 identifier=file["metadata"]["identifier"]
             ).save()
-            shutil.copy(file['path'],
-                        testpath / file['metadata']["identifier"])
+            file_storage_path.parent.mkdir()
+            shutil.copy(file['path'], file_storage_path)
         else:
             # Mock Ida
             with open(file['path'], 'rb') as open_file:
