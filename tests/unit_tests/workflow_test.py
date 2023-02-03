@@ -24,7 +24,21 @@ import tests.utils
 
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
-SCHEMATRONS = [
+PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+PAS_STORAGE_TXT_FILE["file_storage"]["identifier"] = PAS_STORAGE_ID
+XML_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+XML_FILE["file_path"] = "mets.xml"
+SIG_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+SIG_FILE["file_path"] = "signature.sig"
+TIFF_FILE = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
+MKV_FILE = copy.deepcopy(tests.metax_data.files.MKV_FILE)
+DATASET_WITH_PROVENANCE \
+    = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
+    = [tests.metax_data.datasets.BASE_PROVENANCE]
+
+SCHEMATRONS = []
+SCHEMATRON_FILES = [
     '/usr/share/dpres-xml-schemas/schematron/mets_addml.sch',
     '/usr/share/dpres-xml-schemas/schematron/mets_amdsec.sch',
     '/usr/share/dpres-xml-schemas/schematron/mets_audiomd.sch',
@@ -47,18 +61,20 @@ SCHEMATRONS = [
     '/usr/share/dpres-xml-schemas/schematron/mets_techmd.sch',
     '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'
 ]
-PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
-PAS_STORAGE_TXT_FILE["file_storage"]["identifier"] = PAS_STORAGE_ID
-XML_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
-XML_FILE["file_path"] = "mets.xml"
-SIG_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
-SIG_FILE["file_path"] = "signature.sig"
-TIFF_FILE = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
-MKV_FILE = copy.deepcopy(tests.metax_data.files.MKV_FILE)
-DATASET_WITH_PROVENANCE \
-    = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
-DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
-    = [tests.metax_data.datasets.BASE_PROVENANCE]
+
+
+def _get_schematrons():
+    """Get cached Schematrons.
+
+    Parsing Schematron files is slow, so they are parsed only when this
+    function is called first time.
+    """
+    if not SCHEMATRONS:
+        for schematron_file in SCHEMATRON_FILES:
+            schematron = Schematron(ET.parse(schematron_file))
+            SCHEMATRONS.append(schematron)
+
+    return SCHEMATRONS
 
 
 def _mock_exists(_, path):
@@ -318,8 +334,8 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files,
     assert schema.validate(mets)
 
     # Validate mets.xml against Schematrons
-    for schematron in SCHEMATRONS:
-        Schematron(ET.parse(schematron)).assertValid(mets)
+    for schematron in _get_schematrons():
+        schematron.assertValid(mets)
 
     # Check mets root element contract identifier and spec version
     mets_xml_root = mets.getroot()
