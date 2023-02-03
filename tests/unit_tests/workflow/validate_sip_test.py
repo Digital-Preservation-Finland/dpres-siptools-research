@@ -1,42 +1,61 @@
 """Unit tests for :mod:`siptools_research.workflow.validate_sip`."""
-from datetime import datetime, timezone
+import os
+import time
 
-import tests.conftest
-from siptools_research.utils.database import Database
+import pytest
+
 from siptools_research.workflow.validate_sip import ValidateSIP
 
 
-def test_validatesip_accepted(workspace, monkeypatch):
-    """Initializes validate_sip task and tests that it is not complete.
+@pytest.mark.usefixtures('testmongoclient')
+def test_validatesip_accepted(testpath, luigi_mock_ssh_config, sftp_dir):
+    """Initializes validate_sip task and tests that it is not complete. Then
+    creates new directory to "accepted" directory in digital preservation
+    server and tests that task is complete.
 
-    Luigi code is then monkeypatched to always think that remote target
-    exists.  The task should then be completed.
-
-    :param workspace: Temporary directory fixture
-    :param monkeypatch: Monkeypatch fixture
+    :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    monkeypatch.setattr(
-        Database, 'get_task_timestamp',
-        lambda self, workflow, task: datetime.now(timezone.utc).isoformat()
-    )
+    workspace = testpath
 
     # Init task
     task = ValidateSIP(workspace=str(workspace), dataset_id="1",
-                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # Monkeypatch RemoteFileSystem.exists to return False. The task
-    # should not be completed.
-    monkeypatch.setattr(
-        'siptools_research.remoteanytarget.RemoteAnyTarget._exists',
-        lambda *args, **kwargs: False
-    )
+                       config=luigi_mock_ssh_config)
     assert not task.complete()
 
-    # Monkeypatch RemoteFileSystem.exists to return True. The task
-    # should now be completed.
-    monkeypatch.setattr(
-        'siptools_research.remoteanytarget.RemoteAnyTarget._exists',
-        lambda *args, **kwargs: True
+    # Create new directory to digital preservation server
+    datedir = time.strftime("%Y-%m-%d")
+    tar_name = os.path.basename(workspace) + '.tar'
+    (sftp_dir / "accepted" / datedir / tar_name).mkdir(
+        parents=True, exist_ok=True
     )
+
+    # Check that task is completed after new directory is created
+    assert task.complete()
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_validatesip_rejected(testpath, luigi_mock_ssh_config, sftp_dir):
+    """Initializes validate-sip task and tests that it is not complete. Then
+    creates new directory to "rejected" directory in digital preservation
+    server and tests that task is complete.
+
+    :param testpath: Temporary directory fixture
+    :returns: ``None``
+    """
+    workspace = testpath
+
+    # Init task
+    task = ValidateSIP(workspace=str(workspace), dataset_id="1",
+                       config=luigi_mock_ssh_config)
+    assert not task.complete()
+
+    # Create new directory to digital preservation server
+    datedir = time.strftime("%Y-%m-%d")
+    tar_name = f"{workspace.name}.tar"
+    (sftp_dir / "rejected" / datedir / tar_name).mkdir(
+        parents=True, exist_ok=True
+    )
+
+    # Check that task is completed after new directory is created
     assert task.complete()

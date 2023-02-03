@@ -1,22 +1,27 @@
-"""Test that packaging workflow produces valid SIPs."""
-
+"""Unit tests for :mod:`siptools_research.workflow` package."""
+from unittest import mock
 import copy
+import datetime
 import filecmp
-import os
+import importlib
 import shutil
 import tarfile
 
-import luigi
-import lxml.etree as ET
-import pytest
 from lxml.isoschematron import Schematron
 from siptools.xml.mets import NAMESPACES
 from upload_rest_api.models.file_entry import FileEntry
+import luigi
+import lxml.etree as ET
+import pymongo
+import pytest
 
-import tests.metax_data.contracts
-import tests.utils
+from siptools_research.config import Configuration
+from siptools_research.remoteanytarget import RemoteAnyTarget
 from siptools_research.workflow.compress import CompressSIP
 from tests.metax_data.files import PAS_STORAGE_ID
+import tests.metax_data.contracts
+import tests.utils
+
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
 SCHEMATRONS = [
@@ -54,6 +59,91 @@ DATASET_WITH_PROVENANCE \
     = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
 DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
     = [tests.metax_data.datasets.BASE_PROVENANCE]
+
+
+def _mock_exists(_, path):
+    return f'accepted/{datetime.date.today().strftime("%Y-%m-%d")}/' in path
+
+
+@pytest.mark.parametrize(
+    "module_name,task", [
+        ('create_workspace', 'CreateWorkspace'),
+        ('validate_metadata', 'ValidateMetadata'),
+        ('create_digiprov', 'CreateProvenanceInformation'),
+        ('create_dmdsec', 'CreateDescriptiveMetadata'),
+        ('get_files', 'GetFiles'),
+        ('create_techmd', 'CreateTechnicalMetadata'),
+        ('create_structmap', 'CreateStructMap'),
+        ('create_logical_structmap', 'CreateLogicalStructMap'),
+        ('create_mets', 'CreateMets'),
+        ('sign', 'SignSIP'),
+        ('compress', 'CompressSIP'),
+        ('send_sip', 'SendSIPToDP'),
+        ('report_preservation_status', 'ReportPreservationStatus'),
+        ('cleanup', 'CleanupWorkspace'),
+    ]
+)
+@pytest.mark.usefixtures(
+    'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf'
+)
+def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
+    """Test workflow dependency tree.
+
+    Each workflow task should be able complete if it is directly called
+    by luigi i.e. each task should know which other tasks are required
+    to complete before it itself can be run. This test runs a task (and
+    all tasks it requires) and checks that report of successful task is
+    added to mongodb. The output of task is NOT examined. Metax, Ida,
+    mongodb, paramiko.SSHClient and RemoteAnyTarget are mocked.
+
+    :param pkg_root: temporary packaging root directory
+    :param module_name: submodule of siptools_research.workflow that
+                        contains Task to be tested
+    :param task: Task class name
+    :param requests_mock: HTTP request mocker
+    :param mocker: Pytest-mock mocker
+    :returns: ``None``
+    """
+    mocker.patch('siptools_research.workflow.send_sip.paramiko.SSHClient',
+                 new=mock.MagicMock)
+
+    tests.utils.add_metax_dataset(requests_mock,
+                                  tests.metax_data.datasets.BASE_DATASET,
+                                  files=[tests.metax_data.files.TXT_FILE])
+    tests.utils.add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="dataset_identifier",
+        filename="path/to/file",
+        content=b"foo"
+    )
+
+    # Init pymongo client
+    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
+    mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
+
+    with mock.patch.object(RemoteAnyTarget, '_exists', _mock_exists):
+        workspace = str(pkg_root / 'workspaces' / 'workspace')
+        module = importlib.import_module('siptools_research.workflow.'
+                                         + module_name)
+        task_class = getattr(module, task)
+        luigi.build(
+            [task_class(
+                workspace=workspace,
+                dataset_id='dataset_identifier',
+                config=tests.conftest.UNIT_TEST_CONFIG_FILE
+            )],
+            local_scheduler=True
+        )
+
+    collection = (mongoclient[conf.get('mongodb_database')]
+                  [conf.get('mongodb_collection')])
+    document = collection.find_one()
+
+    # Check 'result' field
+    assert document['workflow_tasks'][task]['result'] == 'success'
+
+    if module_name == "cleanup":
+        assert document["completed"]
 
 
 @pytest.mark.usefixtures(
@@ -112,7 +202,8 @@ DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
                 }
             ]
         ),
-        # Dataset with different file formats producing different metadata
+        # Dataset with different file formats producing different
+        # metadata
         (
             tests.metax_data.datasets.BASE_DATASET,
             [
@@ -141,7 +232,8 @@ DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
                     'metadata': tests.metax_data.files.VIDEO_FILE,
                     'path': 'tests/data/sample_files/video_dv.dv'
                 },
-                # video container with video and audio (VideoMD and AudioMD)
+                # video container with video and audio (VideoMD and
+                # AudioMD)
                 {
                     'metadata': MKV_FILE,
                     'path': 'tests/data/sample_files/video_ffv1.mkv'
@@ -155,7 +247,8 @@ DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
         )
     ]
 )
-def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files, upload_projects_path):
+def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files,
+                       upload_projects_path):
     """Test SIP validity.
 
     Run CompressSIP task (and all tasks it requires) and check that:

@@ -1,4 +1,4 @@
-"""Integration test for :mod:`siptools_research.workflow.send_sip` module."""  # noqa: W505,E501
+"""Unit tests for :mod:`siptools_research.workflow.send_sip` module."""
 
 import logging
 import shutil
