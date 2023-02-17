@@ -27,9 +27,9 @@ METS_ATTRIBUTES = {
     f"{{{NAMESPACES['xsi']}}}schemaLocation": 'http://www.loc.gov/METS/ '
                                               'http://digitalpreservation.fi/'
                                               'schemas/mets/mets.xsd',
-    f"{{{NAMESPACES['fi']}}}SPECIFICATION": '1.7.4',
+    f"{{{NAMESPACES['fi']}}}SPECIFICATION": '1.7.5',
     'OBJID': 'doi:test',
-    f"{{{NAMESPACES['fi']}}}CATALOG": '1.7.4',
+    f"{{{NAMESPACES['fi']}}}CATALOG": '1.7.5',
 }
 
 
