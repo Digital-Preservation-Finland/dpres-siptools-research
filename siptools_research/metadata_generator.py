@@ -18,7 +18,6 @@ def generate_metadata(dataset_id, config="/etc/siptools_research.conf"):
     """Generate dataset metadata.
 
     Generates metadata required for creating SIP:
-    - provenance metadata if it does not exist already
     - techincal metadata for all dataset files
     - file format specific metadata for files
 

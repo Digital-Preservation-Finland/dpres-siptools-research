@@ -1,44 +1,44 @@
-"""Task that reports preservation status after SIP creation."""
+"""Task that reports preservation status after metadata validation."""
 
 import os
 from luigi import LocalTarget
 from metax_access import Metax, DS_STATE_VALID_METADATA
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.compress import CompressSIP
+from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
 
 
-class ReportPackagingStatus(WorkflowTask):
-    """Task that sets preservation status when SIP has been created.
+class ReportMetadataValidationResult(WorkflowTask):
+    """Task that sets preservation status when metadata is validated.
 
-    A false target `report-packaging-status.finished` is created into
+    A false target `report-metadata-validation-result.finished` is created into
     workspace directory to notify luigi (and dependent tasks) that this
     task has finished.
 
-    The task requires SIP to be created.
+    The task requires metadata to be validated.
     """
 
-    success_message = "Preservation status reported to Metax"
+    success_message = "Metadata validation result reported to Metax"
     failure_message = "Preservation status could not be set"
 
     def requires(self):
         """List the Tasks that this Task depends on.
 
-        :returns: CompressSIP task
+        :returns: ValidateMetadata task
         """
-        return CompressSIP(workspace=self.workspace,
-                           dataset_id=self.dataset_id,
-                           config=self.config)
+        return ValidateMetadata(workspace=self.workspace,
+                                dataset_id=self.dataset_id,
+                                config=self.config)
 
     def output(self):
         """Return the output targets of this Task.
 
-        :returns: `<workspace>/report-packaging-status.finished`
+        :returns: `<workspace>/report-metadata-validation-result.finished`
         :rtype: LocalTarget
         """
         return LocalTarget(
             os.path.join(
-                self.workspace, 'report-packaging-status.finished'
+                self.workspace, 'report-metadata-validation-result.finished'
             )
         )
 
@@ -55,14 +55,10 @@ class ReportPackagingStatus(WorkflowTask):
             config.get('metax_password'),
             verify=config.getboolean('metax_ssl_verification')
         )
-        # TODO: There is no preservation state that would indicate
-        # that SIP has been created, and currently there is no other
-        # way to communicate with admin-rest-api. Therefore, the
-        # preservation state is set to DS_STATE_VALID_METADATA.
         metax_client.set_preservation_state(
             self.dataset_id,
             DS_STATE_VALID_METADATA,
-            'SIP created'
+            'Metadata validated'
         )
         with self.output().open('w') as output:
             output.write('Dataset id=' + self.dataset_id)

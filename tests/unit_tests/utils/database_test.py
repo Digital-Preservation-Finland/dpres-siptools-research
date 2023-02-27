@@ -88,12 +88,12 @@ def test_add_workflow():
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_get_incomplete_datasets():
+def test_get_all_active_workflows():
     """Test listing incomplete datasets.
 
     Populates database with few completed, incomplete and disabled
-    datasets and checks that ``get_incomplete_workflows`` function
-    returns list of incomplete workflows.
+    datasets and checks that ``get_active_workflows`` function
+    returns list of active workflows.
 
     :returns: ``None``
     """
@@ -103,14 +103,14 @@ def test_get_incomplete_datasets():
     )
 
     # Populate database
-    database.add_workflow('test1', "FooTask", '1')
-    database.add_workflow('test2', "FooTask", '2')
+    database.add_workflow('test1', "FooTask", 'dataset1')
+    database.add_workflow('test2', "FooTask", 'dataset1')
     database.set_completed('test2')
-    database.add_workflow('test3', "FooTask", '3')
+    database.add_workflow('test3', "FooTask", 'dataset1')
     database.set_disabled('test3')
-    database.add_workflow('test4', "FooTask", '4')
+    database.add_workflow('test4', "FooTask", 'dataset1')
 
-    # The workflows found by ``get_incomplete_workflows`` function should be
+    # The workflows found by ``get_active_workflows`` function should be
     # "test1" and "test4"
-    workflows = database.get_incomplete_workflows()
+    workflows = database.get_all_active_workflows()
     assert {workflow['_id'] for workflow in workflows} == {'test1', 'test4'}

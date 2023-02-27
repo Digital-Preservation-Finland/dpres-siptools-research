@@ -1,5 +1,6 @@
 """Base task classes for the workflow tasks."""
 import os
+import shutil
 
 import luigi
 from metax_access import (Metax,
@@ -105,7 +106,9 @@ def report_task_success(task):
     """Report task success.
 
     This function is triggered after each WorkflowTask is executed
-    succesfully. Adds report of successful task to workflow database.
+    succesfully. Adds report of successful task to workflow database. if
+    the Task was the target Task, the workflow is marked completed and
+    the workspace is removed.
 
     :param task: WorkflowTask object
     :returns: ``None``
@@ -115,6 +118,11 @@ def report_task_success(task):
                       task.__class__.__name__,
                       'success',
                       task.success_message)
+
+    if task.__class__.__name__ \
+            == database.get_one_workflow(task.document_id)['target_task']:
+        database.set_completed(task.document_id)
+        shutil.rmtree(task.workspace)
 
 
 @WorkflowTask.event_handler(luigi.Event.FAILURE)

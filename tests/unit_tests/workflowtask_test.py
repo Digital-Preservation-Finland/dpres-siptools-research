@@ -204,14 +204,17 @@ def test_run_workflowtask(testpath):
     :param testpath: temporary directory
     :returns: ``None``
     """
-    # Run task like it would be run from command line
+    # Add workflow to database
+    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    database.add_workflow(testpath.name, 'SomeTargetTask', 'dataset1')
+
+    # Run DummyTask task like it would be run from command line
     run_luigi_task('DummyTask', str(testpath))
 
     # Check that output file is created
     assert (testpath / "output_file").read_text() == "Hello world"
 
     # Check that new event is added to workflow database
-    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
     workflow = database.get_one_workflow(testpath.name)
     # Check 'messages' field
     assert workflow['workflow_tasks']['DummyTask']['messages'] \
@@ -226,8 +229,37 @@ def test_run_workflowtask(testpath):
         '%Y-%m-%dT%H:%M:%S.%f'
     )
 
+    # Workflow should not be completed
+    assert not workflow['completed']
+
     # Check that there is no extra workflows in database
     assert len(database.find(None)) == 1
+
+
+@pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
+def test_run_workflow_target_task(testpath):
+    """Test running target task of the workflow.
+
+    Create a workflow with DummyTask as target Task. Check that wofklow
+    is completed after executing the task, and the workspace is removed.
+
+    :param testpath: temporary directory
+    :returns: ``None``
+    """
+    # Add workflow to database
+    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    database.add_workflow(testpath.name, 'DummyTask', 'dataset1')
+
+    # Run DummyTask task like it would be run from command line
+    run_luigi_task('DummyTask', str(testpath))
+
+    # Check that new event is added to workflow database
+    workflow = database.get_one_workflow(testpath.name)
+    assert workflow['workflow_tasks']['DummyTask']['result'] == 'success'
+
+    # Workflow should be completed and the workspace should be removed
+    assert workflow['completed']
+    assert not testpath.exists()
 
 
 @pytest.mark.usefixtures('testmongoclient')

@@ -95,8 +95,8 @@ def _mock_exists(_, path):
         ('sign', 'SignSIP'),
         ('compress', 'CompressSIP'),
         ('send_sip', 'SendSIPToDP'),
+        ('cleanup', 'CleanupFileCache'),
         ('report_preservation_status', 'ReportPreservationStatus'),
-        ('cleanup', 'CleanupWorkspace'),
     ]
 )
 @pytest.mark.usefixtures(
@@ -157,9 +157,6 @@ def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
 
     # Check 'result' field
     assert document['workflow_tasks'][task]['result'] == 'success'
-
-    if module_name == "cleanup":
-        assert document["completed"]
 
 
 @pytest.mark.usefixtures(

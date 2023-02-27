@@ -6,6 +6,7 @@ from metax_access import Metax, DS_STATE_IN_DIGITAL_PRESERVATION
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_sip import ValidateSIP
 from siptools_research.workflow.send_sip import SendSIPToDP
+from siptools_research.workflow.cleanup import CleanupFileCache
 from siptools_research.exceptions import InvalidSIPError
 from siptools_research.config import Configuration
 
@@ -38,7 +39,10 @@ class ReportPreservationStatus(WorkflowTask):
                             config=self.config),
                 SendSIPToDP(workspace=self.workspace,
                             dataset_id=self.dataset_id,
-                            config=self.config)]
+                            config=self.config),
+                CleanupFileCache(workspace=self.workspace,
+                                 dataset_id=self.dataset_id,
+                                 config=self.config)]
 
     def output(self):
         """Return the output targets of this Task.

@@ -1,52 +1,50 @@
-"""Luigi task that removes workspaces of finished workflows."""
+"""Luigi task that removes files from file cache."""
 import os
-import shutil
+from luigi import LocalTarget
 
-import luigi
 from metax_access import Metax
-from metax_access.metax import DatasetNotAvailableError
 
-from siptools_research.utils.database import Database
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.report_preservation_status import (
-    ReportPreservationStatus
-)
+from siptools_research.workflow.validate_sip import ValidateSIP
+from siptools_research.workflow.send_sip import SendSIPToDP
 
 
-class CleanupWorkspace(WorkflowTask):
-    """Removes the workspace when it is ready for cleanup.
+class CleanupFileCache(WorkflowTask):
+    """Removes dataset files from file cache.
 
-    Task requires that preservation status has been reported.
+    Task requires SIP to be sent to digital preservation service and the
+    validation to be finished.
     """
 
     success_message = 'Workspace was cleaned'
     failure_message = 'Cleaning workspace failed'
 
-    def file_cache_cleaned(self):
-        """Check if all the files are removed from file cache.
+    def requires(self):
+        """List the Tasks that this Task depends on.
 
-        :returns: Boolean
+        :returns: list of required tasks
         """
-        identifiers, cache_path = self.get_identifiers()
+        return [ValidateSIP(workspace=self.workspace,
+                            dataset_id=self.dataset_id,
+                            config=self.config),
+                SendSIPToDP(workspace=self.workspace,
+                            dataset_id=self.dataset_id,
+                            config=self.config)]
 
-        for identifier in identifiers:
-            filepath = os.path.join(cache_path, identifier)
-            if os.path.isfile(filepath):
-                return False
+    def output(self):
+        """Return the output targets of this Task.
 
-        return True
+        :returns: `<workspace>/cleanup-file-cache.finished`
+        :rtype: LocalTarget
+        """
+        return LocalTarget(
+            os.path.join(
+                self.workspace, 'cleanup-file-cache.finished'
+            )
+        )
 
-    def clean_file_cache(self):
-        """Remove cached files."""
-        identifiers, cache_path = self.get_identifiers()
-
-        for identifier in identifiers:
-            filepath = os.path.join(cache_path, identifier)
-            if os.path.isfile(filepath):
-                os.remove(filepath)
-
-    def get_identifiers(self):
+    def _get_identifiers(self):
         """Get file identifiers.
 
         Return a list of all the file identifiers and the path to the
@@ -64,67 +62,17 @@ class CleanupWorkspace(WorkflowTask):
             config_object.get('metax_password'),
             verify=config_object.getboolean('metax_ssl_verification')
         )
-        try:
-            dataset_files = metax_client.get_dataset_files(self.dataset_id)
-            return [_file["identifier"] for _file in dataset_files], cache_path
-        except DatasetNotAvailableError:
-            return [], cache_path
-
-    def requires(self):
-        """List the Tasks that this Task depends on.
-
-        :returns: ReportPreservationStatus task
-        """
-        return ReportPreservationStatus(workspace=self.workspace,
-                                        dataset_id=self.dataset_id,
-                                        config=self.config)
+        dataset_files = metax_client.get_dataset_files(self.dataset_id)
+        return [_file["identifier"] for _file in dataset_files], cache_path
 
     def run(self):
-        """Remove a finished workspace.
+        """Remove cached files."""
+        identifiers, cache_path = self._get_identifiers()
 
-        :returns: None
-        """
-        shutil.rmtree(self.workspace)
-        self.clean_file_cache()
+        for identifier in identifiers:
+            filepath = os.path.join(cache_path, identifier)
+            if os.path.isfile(filepath):
+                os.remove(filepath)
 
-    def complete(self):
-        """Check if task is complete.
-
-        Task is complete when workspace does not exist, but
-        ReportPreservationStatus has finished according to workflow
-        database.
-
-        :returns: ``True`` or ``False``
-        """
-        # Check if ReportPreservationStatus has finished
-        database = Database(self.config)
-        try:
-            result = database.get_task_result(self.document_id,
-                                              'ReportPreservationStatus')
-
-        # TODO: Maybe these exceptions should be handled by Database
-        # module?
-        except KeyError:
-            # ReportPreservationStatus has not run yet
-            return False
-
-        except TypeError:
-            # Workflow is not found in database
-            return False
-
-        if result != 'success':
-            return False
-
-        # Check are the cached files cleaned and if workspace exists
-        return self.file_cache_cleaned() and not os.path.exists(self.workspace)
-
-
-@CleanupWorkspace.event_handler(luigi.Event.SUCCESS)
-def report_workflow_completion(task):
-    """Report completion of workflow to workflow database.
-
-    :param task: CleanupWorkspace object
-    :returns: ``None``
-    """
-    database = Database(task.config)
-    database.set_completed(task.document_id)
+        with self.output().open('w') as output:
+            output.write('Dataset id=' + self.dataset_id)

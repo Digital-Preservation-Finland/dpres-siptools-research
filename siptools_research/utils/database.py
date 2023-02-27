@@ -59,44 +59,6 @@ class Database:
             upsert=True
         )
 
-    def set_dataset(self, workflow_id, dataset):
-        """Set the dataset of the workflow.
-
-        :param workflow_id: Workflow identifier
-        :param dataset: The identifier of new dataset
-        :returns: ``None``
-        """
-        self._collection.update_one(
-            {
-                '_id': workflow_id
-            },
-            {
-                '$set': {
-                    'dataset': dataset
-                }
-            },
-            upsert=True
-        )
-
-    def set_target_task(self, workflow_id, target_task):
-        """Set the target Task of the workflow.
-
-        :param workflow_id: Workflow identifier
-        :param task: The new target Task for workflow
-        :returns: ``None``
-        """
-        self._collection.update_one(
-            {
-                '_id': workflow_id
-            },
-            {
-                '$set': {
-                    'target_task': target_task
-                }
-            },
-            upsert=True
-        )
-
     def set_status(self, workflow_id, status):
         """Set the status string for a workflow.
 
@@ -214,6 +176,24 @@ class Database:
         """
         return list(self._collection.find({"dataset": dataset_id}))
 
+    def get_active_workflows(self, dataset_id):
+        """Get all active workflows of dataset.
+
+        :param dataset_id: Dataset identifier
+        :returns: List of incomplete workflows
+        """
+        return list(self._collection.find({'dataset': dataset_id,
+                                           'completed': False,
+                                           'disabled': False}))
+
+    def get_all_active_workflows(self):
+        """Get all active workflows.
+
+        :returns: List of incomplete workflows
+        """
+        return list(self._collection.find({'completed': False,
+                                           'disabled': False}))
+
     def get_one_workflow(self, workflow_id):
         """Get a workflow document by workflow identifier.
 
@@ -244,11 +224,3 @@ class Database:
             raise ValueError
 
         return document['workflow_tasks'][taskname]['timestamp']
-
-    def get_incomplete_workflows(self):
-        """Find all incomplete workflows that are not disabled.
-
-        :returns: List of incomplete workflows
-        """
-        return list(self._collection.find({'completed': False,
-                                           'disabled': False}))

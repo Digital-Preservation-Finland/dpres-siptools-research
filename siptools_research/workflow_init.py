@@ -4,17 +4,23 @@ import os
 import uuid
 import luigi
 
-from metax_access import Metax, DS_STATE_VALIDATING_METADATA
-
+from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.config import Configuration
 import siptools_research.utils.database
-from siptools_research.workflow.cleanup import CleanupWorkspace
-from siptools_research.workflow.report_packaging_status \
-    import ReportPackagingStatus
+from siptools_research.workflow.report_preservation_status\
+    import ReportPreservationStatus
+from siptools_research.workflow.report_metadata_validation_result\
+    import ReportMetadataValidationResult
+from siptools_research.workflow.report_metadata_generation_result\
+    import ReportMetadataGenerationResult
+from siptools_research.workflow.report_dataset_validation_result\
+    import ReportDatasetValidationResult
 
 TARGET_TASKS = {
-    CleanupWorkspace.__name__: CleanupWorkspace,
-    ReportPackagingStatus.__name__: ReportPackagingStatus
+    ReportPreservationStatus.__name__: ReportPreservationStatus,
+    ReportMetadataValidationResult.__name__: ReportMetadataValidationResult,
+    ReportMetadataGenerationResult.__name__: ReportMetadataGenerationResult,
+    ReportDatasetValidationResult.__name__: ReportDatasetValidationResult
 }
 
 
@@ -26,13 +32,13 @@ class InitWorkflows(luigi.WrapperTask):
     def requires(self):
         """Only returns last task of the workflow.
 
-        :returns: List of CleanupWorkspace tasks
+        :returns: List of Tasks
         """
         packaging_root = Configuration(self.config).get('packaging_root')
         workspace_root = os.path.join(packaging_root, "workspaces")
         database = siptools_research.utils.database.Database(self.config)
 
-        for workflow in database.get_incomplete_workflows():
+        for workflow in database.get_all_active_workflows():
             workspace = os.path.join(workspace_root, workflow['_id'])
 
             yield TARGET_TASKS[workflow['target_task']](
@@ -42,15 +48,37 @@ class InitWorkflows(luigi.WrapperTask):
             )
 
 
-def package_dataset(dataset_id, config='/etc/siptools_research.conf'):
-    """Package dataset.
+def generate_metadata(dataset_id, config='/etc/siptools_research.conf'):
+    """Generate dataset metadata.
 
     :param dataset_id: identifier of dataset
     :param config: path to configuration file
     :returns: ``None``
     """
     schedule_workflow(dataset_id,
-                      ReportPackagingStatus.__name__, config=config)
+                      ReportMetadataGenerationResult.__name__, config=config)
+
+
+def validate_metadata(dataset_id, config='/etc/siptools_research.conf'):
+    """Validate dataset metadata.
+
+    :param dataset_id: identifier of dataset
+    :param config: path to configuration file
+    :returns: ``None``
+    """
+    schedule_workflow(dataset_id,
+                      ReportMetadataValidationResult.__name__, config=config)
+
+
+def validate_dataset(dataset_id, config='/etc/siptools_research.conf'):
+    """Validate metadata and files of dataset.
+
+    :param dataset_id: identifier of dataset
+    :param config: path to configuration file
+    :returns: ``None``
+    """
+    schedule_workflow(dataset_id,
+                      ReportDatasetValidationResult.__name__, config=config)
 
 
 def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
@@ -60,7 +88,8 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     :param config: path to configuration file
     :returns: ``None``
     """
-    schedule_workflow(dataset_id, CleanupWorkspace.__name__, config=config)
+    schedule_workflow(dataset_id, ReportPreservationStatus.__name__,
+                      config=config)
 
 
 def schedule_workflow(dataset_id,
@@ -76,48 +105,14 @@ def schedule_workflow(dataset_id,
     :param config: path to configuration file
     :returns: ``None``
     """
-    conf = Configuration(config)
-    metax = Metax(
-        conf.get('metax_url'),
-        conf.get('metax_user'),
-        conf.get('metax_password'),
-        verify=conf.getboolean('metax_ssl_verification')
-    )
     database = siptools_research.utils.database.Database(config)
 
-    # Get correct version of dataset
-    dataset = metax.get_dataset(dataset_id)
-    if 'preservation_dataset_version' in dataset:
-        # The original dataset has been copied to PAS data catalog.
-        # Use the version from PAS data catalog.
-        dataset = metax.get_dataset(dataset['preservation_dataset_version']
-                                    ['identifier'])
-
-    # Update the dataset identifiers of workflows of original dataset.
-    if 'preservation_dataset_origin_version' in dataset:
-        original_dataset_identifier \
-            = dataset['preservation_dataset_origin_version']['identifier']
-        for workflow in database.get_workflows(original_dataset_identifier):
-            database.set_dataset(workflow['_id'], dataset['identifier'])
-
     # Check if enabled workflow already exists
-    previous_workflow = None
-    # TDDO: implement this in database module?
-    for workflow in database.get_workflows(dataset['identifier']):
-        if workflow['disabled'] is False:
-            if dataset['preservation_state'] < DS_STATE_VALIDATING_METADATA:
-                # dataset has been changed, disable previous workflow
-                database.set_disabled(workflow['_id'])
-            else:
-                # found previous enabled workflow
-                previous_workflow = workflow
-            break
+    if database.get_active_workflows(dataset_id):
+        raise WorkflowExistsError(
+            'Active workflow already exists for this dataset.'
+        )
 
-    if previous_workflow:
-        # Continue previous workflow
-        database.set_target_task(previous_workflow["_id"],
-                                 target_task)
-    else:
-        # Add new workflow to database
-        workflow_id = f"aineisto_{dataset_id}-{str(uuid.uuid4())}"
-        database.add_workflow(workflow_id, target_task, dataset_id)
+    # Add new workflow to database
+    workflow_id = f"aineisto_{dataset_id}-{str(uuid.uuid4())}"
+    database.add_workflow(workflow_id, target_task, dataset_id)

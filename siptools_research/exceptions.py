@@ -56,3 +56,7 @@ class InvalidFileError(InvalidDatasetFileError):
 
 class MissingFileError(InvalidDatasetFileError):
     """Exception raised when some files are not available."""
+
+
+class WorkflowExistsError(Exception):
+    """Exception raised when conflicting workflow exists."""

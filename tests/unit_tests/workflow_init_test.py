@@ -1,14 +1,12 @@
 """Tests for :mod:`siptools_research.workflow_init` module."""
 import pytest
 
-from metax_access import (DS_STATE_INITIALIZED,
-                          DS_STATE_VALIDATED_METADATA_UPDATED,
-                          DS_STATE_VALIDATING_METADATA,
-                          DS_STATE_VALID_METADATA)
-
 import tests.conftest
 import siptools_research
-from siptools_research.workflow_init import (package_dataset,
+from siptools_research.exceptions import WorkflowExistsError
+from siptools_research.workflow_init import (generate_metadata,
+                                             validate_metadata,
+                                             validate_dataset,
                                              preserve_dataset,
                                              InitWorkflows)
 
@@ -18,7 +16,7 @@ def test_initworkflows():
     """Test InitWorkflows task.
 
     Add few sample workflows to database and test that
-    ``InitWorkflows.requires`` function produces CleanupWorkspace tasks
+    ``InitWorkflows.requires`` function produces Tasks
     for each incomplete workflow in database.
 
     :returns: ``None``
@@ -27,10 +25,10 @@ def test_initworkflows():
     database = siptools_research.utils.database.Database(
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    database.add_workflow('workflow1', 'CleanupWorkspace', 'dataset1')
-    database.add_workflow('workflow2', 'CleanupWorkspace', 'dataset2')
+    database.add_workflow('workflow1', 'ReportPreservationStatus', 'dataset1')
+    database.add_workflow('workflow2', 'ReportPreservationStatus', 'dataset2')
     database.set_completed('workflow2')
-    database.add_workflow('workflow3', 'CleanupWorkspace', 'dataset3')
+    database.add_workflow('workflow3', 'ReportPreservationStatus', 'dataset3')
 
     # Get list of tasks required by InitWorkflows task
     task = InitWorkflows(
@@ -46,154 +44,115 @@ def test_initworkflows():
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_package_dataset(requests_mock):
-    """Test package_dataset function.
+def test_generate_metadata():
+    """Test generate_metadata function.
 
-    Tests that `package_dataset` schedules correct task.
+    Tests that `generate_metadata` schedules correct task.
 
     :returns: ``None``
     """
-    # Mock metax
-    requests_mock.get('/rest/v2/datasets/dataset1',
-                      json={'identifier': 'dataset1'})
-
-    # Package dataset
-    package_dataset('dataset1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    generate_metadata('dataset1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Check that workflow was added to database.
     database = siptools_research.utils.database.Database(
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    assert len(database.get_incomplete_workflows()) == 1
-    workflow = database.get_incomplete_workflows()[0]
+    assert len(database.get_all_active_workflows()) == 1
+    workflow = database.get_all_active_workflows()[0]
     assert workflow['dataset'] == 'dataset1'
-    assert workflow['target_task'] == 'ReportPackagingStatus'
+    assert workflow['target_task'] == 'ReportMetadataGenerationResult'
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_preserve_dataset(requests_mock):
+def test_validate_dataset():
+    """Test validate_dataset function.
+
+    Tests that `validate_dataset` schedules correct task.
+
+    :returns: ``None``
+    """
+    validate_dataset('dataset1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check that workflow was added to database.
+    database = siptools_research.utils.database.Database(
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+    assert len(database.get_all_active_workflows()) == 1
+    workflow = database.get_all_active_workflows()[0]
+    assert workflow['dataset'] == 'dataset1'
+    assert workflow['target_task'] == 'ReportDatasetValidationResult'
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_validate_metadata():
+    """Test validate_metadata function.
+
+    Tests that `validate_metadata` schedules correct task.
+
+    :returns: ``None``
+    """
+    validate_metadata('dataset1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check that workflow was added to database.
+    database = siptools_research.utils.database.Database(
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+    assert len(database.get_all_active_workflows()) == 1
+    workflow = database.get_all_active_workflows()[0]
+    assert workflow['dataset'] == 'dataset1'
+    assert workflow['target_task'] == 'ReportMetadataValidationResult'
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_preserve_dataset():
     """Test preserve_dataset function.
 
     Tests that `preserve_dataset` schedules correct task.
 
     :returns: ``None``
     """
-    # Mock metax
-    requests_mock.get('/rest/v2/datasets/dataset1',
-                      json={'identifier': 'dataset1'})
-
-    # Preserve dataset
     preserve_dataset('dataset1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Check that workflow was added to database.
     database = siptools_research.utils.database.Database(
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    assert len(database.get_incomplete_workflows()) == 1
-    workflow = database.get_incomplete_workflows()[0]
+    assert len(database.get_all_active_workflows()) == 1
+    workflow = database.get_all_active_workflows()[0]
     assert workflow['dataset'] == 'dataset1'
-    assert workflow['target_task'] == 'CleanupWorkspace'
+    assert workflow['target_task'] == 'ReportPreservationStatus'
 
 
-@pytest.mark.parametrize(
-    (
-        'preservation_state',
-        'previous_workflow_disabled',
-        'previous_target_task'),
-    [
-        (DS_STATE_VALIDATED_METADATA_UPDATED, True, 'ReportPackagingStatus'),
-        (DS_STATE_VALID_METADATA, False, 'CleanupWorkspace'),
-        (DS_STATE_VALIDATING_METADATA, False, 'CleanupWorkspace')
-    ]
-)
 @pytest.mark.usefixtures('testmongoclient')
-def test_continue_existing_workflow(requests_mock, preservation_state,
-                                    previous_workflow_disabled,
-                                    previous_target_task):
-    """Test continuing existing workflow.
+def test_workflow_conflict():
+    """Test starting another workflow for dataset.
 
-    Tests that `preserve_dataset` continues previous packaging workflow
-    if dataset metadata has not been changed.
+    Tests that that new workflows can not be started when dataset
+    already has an active workflow.
 
-    :param preservation_state: Preservation state of dataset
-    :param previous_workflow_disabled: Should the previous workflow be
-                                       disabled aftger preservation
-                                       workflow is initialized?
-    :param previous_target_task: The target task of previous workflow
-                                 after after preservation workflow has
-                                 been initialized.
     :returns: ``None``
     """
     # Add a sample workflow to database
     database = siptools_research.utils.database.Database(
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    database.add_workflow('workflow1', 'ReportPackagingStatus', 'dataset1')
+    database.add_workflow('workflow1', 'ReportMetadataValidationResult',
+                          'dataset1')
 
-    # Mock Metax.
-    requests_mock.get('/rest/v2/datasets/dataset1',
-                      json={'identifier': 'dataset1',
-                            'preservation_state': preservation_state})
+    # Try to start another workflow
+    with pytest.raises(WorkflowExistsError):
+        preserve_dataset('dataset1',
+                         config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Preserve dataset
+    # New workflows should not be created and the existing workflow
+    # should not be changed
+    workflows = database.get_all_active_workflows()
+    assert len(workflows) == 1
+    assert not workflows[0]['disabled']
+    assert workflows[0]['target_task'] == 'ReportMetadataValidationResult'
+    assert workflows[0]['dataset'] == 'dataset1'
+
+    # New workflow can be started when the previous workflow is
+    # completed
+    database.set_completed('workflow1')
     preserve_dataset('dataset1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # The previous should have expected attributes
-    previous_workflow = database.get_one_workflow('workflow1')
-    assert previous_workflow['disabled'] == previous_workflow_disabled
-    assert previous_workflow['target_task'] == previous_target_task
-
-    # The previous workflow should be disabled if it can not be
-    # continued, so there should always be only one enabled workflow.
-    assert len(database.get_incomplete_workflows()) == 1
-    workflow = database.get_incomplete_workflows()[0]
-    assert workflow['dataset'] == 'dataset1'
-    assert workflow['target_task'] == 'CleanupWorkspace'
-
-
-@pytest.mark.usefixtures('testmongoclient')
-@pytest.mark.parametrize('dataset_to_preserve', ['dataset1', 'dataset2'])
-def test_preserve_pas_catalog_version(requests_mock, dataset_to_preserve):
-    """Test that workflow is started for PAS data catalog version.
-
-    If there is many versions of the dataset, the version in PAS data
-    catalog should be packaged and preserved.
-
-    :param rquests_mock: HTTP request mocker
-    :param dataset_to_preserve: the identifier of dataset to be
-                                preserved
-    :returns: ``None``
-    """
-    # Mock Metax.
-    requests_mock.get(
-        '/rest/v2/datasets/dataset1',
-        json={
-            'identifier': 'dataset1',
-            'preservation_state': DS_STATE_INITIALIZED,
-            'preservation_dataset_version': {'identifier': 'dataset2'}
-        }
-    )
-    requests_mock.get(
-        '/rest/v2/datasets/dataset2',
-        json={
-            'identifier': 'dataset2',
-            'preservation_state': DS_STATE_VALID_METADATA,
-            'preservation_dataset_origin_version': {'identifier': 'dataset1'}
-            }
-    )
-
-    # Add a sample workflow to database
-    database = siptools_research.utils.database.Database(
-        tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-    database.add_workflow('workflow1', 'ReportPackagingStatus', 'dataset1')
-
-    # Preserve dataset
-    preserve_dataset(dataset_to_preserve,
-                     config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # The existing workflow should be updated
-    workflow = database.get_one_workflow('workflow1')
-    assert not workflow['disabled']
-    assert workflow['dataset'] == 'dataset2'
-    assert workflow['target_task'] == 'CleanupWorkspace'
