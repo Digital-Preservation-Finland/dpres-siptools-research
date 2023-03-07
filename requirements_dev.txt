@@ -23,7 +23,7 @@ git+https://gitlab.ci.csc.fi/dpres/metax-access.git@develop#egg=metax_access
 git+https://gitlab.ci.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
 
 lxml
-luigi==2.7.5
+luigi==2.8.0
 pymongo==3.6.1 # version available on centos7
 requests==2.14.2
 paramiko
