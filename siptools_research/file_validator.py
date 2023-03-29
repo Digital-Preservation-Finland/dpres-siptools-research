@@ -2,6 +2,10 @@
 import os
 
 from file_scraper.scraper import Scraper
+from file_scraper.defaults import (
+    BIT_LEVEL_WITH_RECOMMENDED,
+    BIT_LEVEL
+)
 from metax_access.metax import Metax
 
 from siptools_research.config import Configuration
@@ -93,7 +97,9 @@ def _validate_file(file_, cache_path, errors):
         filepath, mimetype=mimetype, charset=encoding, version=version
     )
     scraper.scrape(check_wellformed=True)
-    if not scraper.well_formed:
+    if scraper.well_formed is False or (
+            scraper.well_formed is None and
+            scraper.grade not in [BIT_LEVEL_WITH_RECOMMENDED, BIT_LEVEL]):
         errors.append(identifier)
 
     del scraper
