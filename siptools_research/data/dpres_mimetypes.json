@@ -121,5 +121,8 @@
     {"input_file_format": "video/quicktime", "output_format_version": ""},
     {"input_file_format": "video/x-ms-asf", "output_format_version": ""},
     {"input_file_format": "video/MP1S", "output_format_version": ""},
-    {"input_file_format": "video/MP2P", "output_format_version": ""}
+    {"input_file_format": "video/MP2P", "output_format_version": ""},
+    {"input_file_format": "application/x.fi-dpres.segy", "output_format_version": "(:unkn)"},
+    {"input_file_format": "application/x.fi-dpres.segy", "output_format_version": "1.0"},
+    {"input_file_format": "application/x.fi-dpres.segy", "output_format_version": "2.0"}
 ]
