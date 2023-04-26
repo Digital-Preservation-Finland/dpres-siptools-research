@@ -33,12 +33,12 @@ class Database:
                 [conf.get("mongodb_collection")]
             )
 
-    def add_task(self, workflow_id, taskname, result, messages):
+    def add_task(self, workflow_id, task_name, result, messages):
         """Add information of workflow task to database.
 
         :param workflow_id: Workflow identifier i.e. the name of
                             workspace directory
-        :param taskname: Name of the task
+        :param task_name: Name of the task
         :param result: Result string ('failure' or 'success')
         :param messages: Information about the task
         :returns: ``None``
@@ -49,7 +49,7 @@ class Database:
             },
             {
                 '$set': {
-                    'workflow_tasks.' + taskname: {
+                    'workflow_tasks.' + task_name: {
                         'timestamp': _timestamp(),
                         'messages': messages,
                         'result': result
@@ -132,7 +132,7 @@ class Database:
             upsert=True
         )
 
-    def add_workflow(self, workflow_id, target_task, dataset_id):
+    def add_workflow(self, workflow_id, target_task_name, dataset_id):
         """Add new workflow.
 
         The workflow identifier will be the primary key ('_id') of the
@@ -140,7 +140,7 @@ class Database:
 
         :param workflow_id: Workflow identifier, i.e. the name of
                             workspace directory
-        :param target_task: The target Task of the workflow
+        :param target_task_name: Name of the target Task of the workflow
         :param dataset_id: Dataset identifier
         :returns: ``None``
         """
@@ -150,7 +150,7 @@ class Database:
             },
             {
                 '$set': {
-                    'target_task': target_task,
+                    'target_task': target_task_name,
                     'status': 'Request received',
                     'dataset': dataset_id,
                     'completed': False,
@@ -202,25 +202,25 @@ class Database:
         """
         return self._collection.find_one({"_id": workflow_id})
 
-    def get_task_result(self, workflow_id, taskname):
+    def get_task_result(self, workflow_id, task_name):
         """Read task result for a workflow.
 
         :param workflow_id: Workflow identifier
-        :param taskname: Name of task
+        :param task_name: Name of task
         :returns: Task result
         """
         document = self._collection.find_one({'_id': workflow_id})
-        return document['workflow_tasks'][taskname]['result']
+        return document['workflow_tasks'][task_name]['result']
 
-    def get_task_timestamp(self, workflow_id, taskname):
+    def get_task_timestamp(self, workflow_id, task_name):
         """Read task timestamp for a workflow.
 
         :param workflow_id: Workflow identifier
-        :param taskname: Name of task
+        :param task_name: Name of task
         :returns: Task timestamp
         """
         document = self._collection.find_one({'_id': workflow_id})
         if not document:
             raise ValueError
 
-        return document['workflow_tasks'][taskname]['timestamp']
+        return document['workflow_tasks'][task_name]['timestamp']
