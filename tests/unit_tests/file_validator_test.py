@@ -110,7 +110,7 @@ def test_validate_bitlevel_file(requests_mock):
     )
 
     # Mock Ida. Create a empty file.
-    add_mock_ida_download(
+    ida_mock = add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id="dataset_identifier",
         filename="path/to/file.sgy",
@@ -120,12 +120,13 @@ def test_validate_bitlevel_file(requests_mock):
         )
     )
 
-    validate_files(
+    assert validate_files(
         "dataset_identifier",
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    assert None
+    # File should have been downloaded
+    assert ida_mock.called
 
 
 @pytest.mark.usefixtures("pkg_root")
