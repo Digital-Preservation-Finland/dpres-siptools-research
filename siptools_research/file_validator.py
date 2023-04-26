@@ -97,6 +97,7 @@ def _validate_file(file_, cache_path, errors):
         filepath, mimetype=mimetype, charset=encoding, version=version
     )
     scraper.scrape(check_wellformed=True)
+    assert None
     if scraper.well_formed is False or (
             scraper.well_formed is None and
             scraper.grade not in [BIT_LEVEL_WITH_RECOMMENDED, BIT_LEVEL]):

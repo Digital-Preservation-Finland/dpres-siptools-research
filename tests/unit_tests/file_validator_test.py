@@ -1,17 +1,16 @@
 """Tests for :mod:`siptools_research.file_validator` module."""
 
 import copy
+from pathlib import Path
+
 import pytest
 
-from siptools_research.exceptions import InvalidFileError
-from siptools_research.file_validator import validate_files
-from siptools_research.exceptions import MissingFileError
-
-from tests.metax_data.datasets import BASE_DATASET
-from tests.metax_data.files import TXT_FILE, TIFF_FILE
-from tests.utils import add_mock_ida_download, add_metax_dataset
-
 import tests.conftest
+from siptools_research.exceptions import InvalidFileError, MissingFileError
+from siptools_research.file_validator import validate_files
+from tests.metax_data.datasets import BASE_DATASET
+from tests.metax_data.files import SEG_Y_FILE, TIFF_FILE, TXT_FILE
+from tests.utils import add_metax_dataset, add_mock_ida_download
 
 
 @pytest.mark.usefixtures("pkg_root")
@@ -92,6 +91,41 @@ def test_validate_invalid_files(requests_mock):
 
     assert str(exception_info.value) == "1 files are not well-formed"
     assert exception_info.value.files == ['pid:urn:identifier']
+
+
+@pytest.mark.usefixtures("pkg_root")
+def test_validate_bitlevel_file(requests_mock):
+    """Test validating a file only accepted for bit-level preservation.
+
+    File validator should ignore the validation result in this case.
+
+    :param requests_mock: Mocker object
+    """
+    # Mock metax. Create a dataset that contains one file. The mimetype
+    # of the file is text/plain.
+    add_metax_dataset(
+        requests_mock=requests_mock,
+        dataset=copy.deepcopy(BASE_DATASET),
+        files=[copy.deepcopy(SEG_Y_FILE)]
+    )
+
+    # Mock Ida. Create a empty file.
+    add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id="dataset_identifier",
+        filename="path/to/file.sgy",
+        content=(
+            Path("tests/data/sample_files/invalid_1.0_ascii_header.sgy")
+            .read_bytes()
+        )
+    )
+
+    validate_files(
+        "dataset_identifier",
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+
+    assert None
 
 
 @pytest.mark.usefixtures("pkg_root")

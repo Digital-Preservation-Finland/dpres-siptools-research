@@ -254,6 +254,13 @@ VIDEO_FILE_METADATA = {
     }
 }
 
+SEG_Y_FILE_METADATA = {
+    "file_characteristics": {
+        "file_format": "application/x.fi-dpres.segy",
+        "format_version": "1.0"
+    }
+}
+
 BASE_FILE = {
     "identifier": "pid:urn:identifier",
     "file_path": "path/to/file",
@@ -301,3 +308,8 @@ VIDEO_FILE = deepcopy(BASE_FILE)
 VIDEO_FILE.update(VIDEO_FILE_METADATA)
 VIDEO_FILE["identifier"] += "_dv"
 VIDEO_FILE["file_path"] += ".dv"
+
+SEG_Y_FILE = deepcopy(BASE_FILE)
+SEG_Y_FILE.update(SEG_Y_FILE_METADATA)
+SEG_Y_FILE["identifier"] += ".sgy"
+SEG_Y_FILE["file_path"] += ".sgy"
