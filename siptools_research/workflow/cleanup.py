@@ -71,8 +71,10 @@ class CleanupFileCache(WorkflowTask):
 
         for identifier in identifiers:
             filepath = os.path.join(cache_path, identifier)
-            if os.path.isfile(filepath):
+            try:
                 os.remove(filepath)
+            except FileNotFoundError:
+                pass
 
         with self.output().open('w') as output:
             output.write('Dataset id=' + self.dataset_id)
