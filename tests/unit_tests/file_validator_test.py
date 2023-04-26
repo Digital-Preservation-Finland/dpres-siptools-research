@@ -102,14 +102,14 @@ def test_validate_bitlevel_file(requests_mock):
     :param requests_mock: Mocker object
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
-    # of the file is text/plain.
+    # of the file is application/x.fi-dpres.segy.
     add_metax_dataset(
         requests_mock=requests_mock,
         dataset=copy.deepcopy(BASE_DATASET),
         files=[copy.deepcopy(SEG_Y_FILE)]
     )
 
-    # Mock Ida. Create a empty file.
+    # Mock Ida. Create a SEG-Y file.
     ida_mock = add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id="dataset_identifier",
