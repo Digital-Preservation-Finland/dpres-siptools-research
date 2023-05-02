@@ -2,6 +2,8 @@
 
 import os
 from luigi import LocalTarget
+from metax_access import DS_STATE_TECHNICAL_METADATA_GENERATED
+
 from siptools_research.metadata_generator import generate_metadata
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflowtask import WorkflowTask
@@ -44,6 +46,12 @@ class GenerateMetadata(WorkflowTask):
         :returns: ``None``
         """
         generate_metadata(self.dataset_id, self.config)
+
+        self.get_metax_client().set_preservation_state(
+            self.dataset_id,
+            DS_STATE_TECHNICAL_METADATA_GENERATED,
+            'Metadata generated'
+        )
 
         with self.output().open('w') as log:
             log.write('Dataset id=' + self.dataset_id)

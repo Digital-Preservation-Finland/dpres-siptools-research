@@ -25,10 +25,10 @@ def test_initworkflows():
     database = siptools_research.utils.database.Database(
         tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    database.add_workflow('workflow1', 'ReportPreservationStatus', 'dataset1')
-    database.add_workflow('workflow2', 'ReportPreservationStatus', 'dataset2')
+    database.add_workflow('workflow1', 'CleanupFileCache', 'dataset1')
+    database.add_workflow('workflow2', 'CleanupFileCache', 'dataset2')
     database.set_completed('workflow2')
-    database.add_workflow('workflow3', 'ReportPreservationStatus', 'dataset3')
+    database.add_workflow('workflow3', 'CleanupFileCache', 'dataset3')
 
     # Get list of tasks required by InitWorkflows task
     task = InitWorkflows(
@@ -60,7 +60,7 @@ def test_generate_metadata():
     assert len(database.get_all_active_workflows()) == 1
     workflow = database.get_all_active_workflows()[0]
     assert workflow['dataset'] == 'dataset1'
-    assert workflow['target_task'] == 'ReportMetadataGenerationResult'
+    assert workflow['target_task'] == 'GenerateMetadata'
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -120,7 +120,7 @@ def test_preserve_dataset():
     assert len(database.get_all_active_workflows()) == 1
     workflow = database.get_all_active_workflows()[0]
     assert workflow['dataset'] == 'dataset1'
-    assert workflow['target_task'] == 'ReportPreservationStatus'
+    assert workflow['target_task'] == 'CleanupFileCache'
 
 
 @pytest.mark.usefixtures('testmongoclient')

@@ -7,19 +7,19 @@ import luigi
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.config import Configuration
 import siptools_research.utils.database
-from siptools_research.workflow.report_preservation_status\
-    import ReportPreservationStatus
+from siptools_research.workflow.cleanup\
+    import CleanupFileCache
 from siptools_research.workflow.report_metadata_validation_result\
     import ReportMetadataValidationResult
-from siptools_research.workflow.report_metadata_generation_result\
-    import ReportMetadataGenerationResult
+from siptools_research.workflow.generate_metadata \
+    import GenerateMetadata
 from siptools_research.workflow.report_dataset_validation_result\
     import ReportDatasetValidationResult
 
 TARGET_TASKS = {
-    ReportPreservationStatus.__name__: ReportPreservationStatus,
+    CleanupFileCache.__name__: CleanupFileCache,
     ReportMetadataValidationResult.__name__: ReportMetadataValidationResult,
-    ReportMetadataGenerationResult.__name__: ReportMetadataGenerationResult,
+    GenerateMetadata.__name__: GenerateMetadata,
     ReportDatasetValidationResult.__name__: ReportDatasetValidationResult
 }
 
@@ -55,8 +55,7 @@ def generate_metadata(dataset_id, config='/etc/siptools_research.conf'):
     :param config: path to configuration file
     :returns: ``None``
     """
-    schedule_workflow(dataset_id,
-                      ReportMetadataGenerationResult.__name__, config=config)
+    schedule_workflow(dataset_id, GenerateMetadata.__name__, config=config)
 
 
 def validate_metadata(dataset_id, config='/etc/siptools_research.conf'):
@@ -88,8 +87,7 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     :param config: path to configuration file
     :returns: ``None``
     """
-    schedule_workflow(dataset_id, ReportPreservationStatus.__name__,
-                      config=config)
+    schedule_workflow(dataset_id, CleanupFileCache.__name__, config=config)
 
 
 def schedule_workflow(dataset_id,

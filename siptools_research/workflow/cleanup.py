@@ -4,15 +4,14 @@ from luigi import LocalTarget
 
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.validate_sip import ValidateSIP
-from siptools_research.workflow.send_sip import SendSIPToDP
+from siptools_research.workflow.report_preservation_status \
+    import ReportPreservationStatus
 
 
 class CleanupFileCache(WorkflowTask):
     """Removes dataset files from file cache.
 
-    Task requires SIP to be sent to digital preservation service and the
-    validation to be finished.
+    Task requires that preservation status has been reported.
     """
 
     success_message = 'Workspace was cleaned'
@@ -23,12 +22,9 @@ class CleanupFileCache(WorkflowTask):
 
         :returns: list of required tasks
         """
-        return [ValidateSIP(workspace=self.workspace,
-                            dataset_id=self.dataset_id,
-                            config=self.config),
-                SendSIPToDP(workspace=self.workspace,
-                            dataset_id=self.dataset_id,
-                            config=self.config)]
+        return ReportPreservationStatus(workspace=self.workspace,
+                                        dataset_id=self.dataset_id,
+                                        config=self.config)
 
     def output(self):
         """Return the output targets of this Task.
