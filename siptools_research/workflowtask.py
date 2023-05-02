@@ -57,6 +57,16 @@ class WorkflowTask(luigi.Task):
         self.sip_creation_path = os.path.join(self.workspace,
                                               'sip-in-progress')
 
+    def get_metax_client(self):
+        """Initialize Metax client."""
+        config_object = Configuration(self.config)
+        return Metax(
+            config_object.get('metax_url'),
+            config_object.get('metax_user'),
+            config_object.get('metax_password'),
+            verify=config_object.getboolean('metax_ssl_verification')
+        )
+
 
 class WorkflowExternalTask(luigi.ExternalTask):
     """Common base class for external workflow tasks.
@@ -75,10 +85,6 @@ class WorkflowExternalTask(luigi.ExternalTask):
     be used to identify the task and current workflow, forexample when
     storing workflow status information to database:
 
-    :document_id: A unique string that is used for identifying workflows
-                  (one mongodb document per workflow) in workflow
-                  database. The ``document_id`` is the name (not path)
-                  of workspace directory.
     :document_id: Identifier of the workflow. Generated from the name of
                   workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is
@@ -144,13 +150,6 @@ def report_task_failure(task, exception):
                       task.__class__.__name__,
                       'failure',
                       f"{task.failure_message}: {str(exception)}")
-    config_object = Configuration(task.config)
-    metax_client = Metax(
-        config_object.get('metax_url'),
-        config_object.get('metax_user'),
-        config_object.get('metax_password'),
-        verify=config_object.getboolean('metax_ssl_verification')
-    )
 
     if isinstance(exception, InvalidDatasetError):
         # Disable workflow
@@ -166,7 +165,7 @@ def report_task_failure(task, exception):
             preservation_state = DS_STATE_INVALID_METADATA
         else:
             preservation_state = DS_STATE_PACKAGING_FAILED
-        metax_client.set_preservation_state(
+        task.get_metax_client().set_preservation_state(
             task.dataset_id,
             preservation_state,
             _get_description(task, exception)

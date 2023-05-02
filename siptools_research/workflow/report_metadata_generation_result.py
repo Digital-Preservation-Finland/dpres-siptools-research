@@ -2,10 +2,9 @@
 
 import os
 from luigi import LocalTarget
-from metax_access import Metax, DS_STATE_TECHNICAL_METADATA_GENERATED
+from metax_access import DS_STATE_TECHNICAL_METADATA_GENERATED
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.generate_metadata import GenerateMetadata
-from siptools_research.config import Configuration
 
 
 class ReportMetadataGenerationResult(WorkflowTask):
@@ -47,15 +46,7 @@ class ReportMetadataGenerationResult(WorkflowTask):
 
         :returns: ``None``
         """
-        # Init metax
-        config = Configuration(self.config)
-        metax_client = Metax(
-            config.get('metax_url'),
-            config.get('metax_user'),
-            config.get('metax_password'),
-            verify=config.getboolean('metax_ssl_verification')
-        )
-        metax_client.set_preservation_state(
+        self.get_metax_client().set_preservation_state(
             self.dataset_id,
             DS_STATE_TECHNICAL_METADATA_GENERATED,
             'Metadata generated'

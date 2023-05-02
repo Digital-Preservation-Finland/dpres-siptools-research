@@ -2,8 +2,6 @@
 import os
 from luigi import LocalTarget
 
-from metax_access import Metax
-
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_sip import ValidateSIP
@@ -56,14 +54,8 @@ class CleanupFileCache(WorkflowTask):
         packaging_root = config_object.get("packaging_root")
         cache_path = os.path.join(packaging_root, "file_cache")
 
-        metax_client = Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
-        )
-        dataset_files = metax_client.get_dataset_files(self.dataset_id)
-        return [_file["identifier"] for _file in dataset_files], cache_path
+        files = self.get_metax_client().get_dataset_files(self.dataset_id)
+        return [_file["identifier"] for _file in files], cache_path
 
     def run(self):
         """Remove cached files."""

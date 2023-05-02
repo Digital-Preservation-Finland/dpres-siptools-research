@@ -6,7 +6,6 @@ from tempfile import TemporaryDirectory
 
 import luigi
 
-from metax_access import Metax
 from siptools.scripts import import_description
 
 from siptools_research.config import Configuration
@@ -66,12 +65,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
         """
         # Get datacite.xml from Metax
         config_object = Configuration(self.config)
-        metax_client = Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
-        )
+        metax_client = self.get_metax_client()
         dataset = metax_client.get_dataset(self.dataset_id)
         datacite = metax_client.get_datacite(dataset['identifier'])
 

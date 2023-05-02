@@ -9,7 +9,6 @@ from tempfile import TemporaryDirectory
 import siptools.mdcreator
 import siptools.scripts.import_object
 from luigi import LocalTarget
-from metax_access import Metax
 from siptools_research.config import Configuration
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.get_files import GetFiles
@@ -51,17 +50,6 @@ class CreateTechnicalMetadata(WorkflowTask):
     success_message = 'Technical metadata for objects created'
     failure_message = 'Technical metadata for objects could not be created'
 
-    def __init__(self, *args, **kwargs):
-        """Initialize Task."""
-        super().__init__(*args, **kwargs)
-        self.config_object = Configuration(self.config)
-        self.metax_client = Metax(
-            self.config_object.get('metax_url'),
-            self.config_object.get('metax_user'),
-            self.config_object.get('metax_password'),
-            verify=self.config_object.getboolean('metax_ssl_verification')
-        )
-
     def requires(self):
         """List the Tasks that this Task depends on.
 
@@ -100,14 +88,15 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         :returns: ``None``
         """
-        files = self.metax_client.get_dataset_files(self.dataset_id)
+        files = self.get_metax_client().get_dataset_files(self.dataset_id)
 
         # Create one timestamp for import_object events to avoid
         # creating new events each time import_object is iterated
         event_datetime \
             = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-        tmp = os.path.join(self.config_object.get('packaging_root'), 'tmp/')
+        config_object = Configuration(self.config)
+        tmp = os.path.join(config_object.get('packaging_root'), 'tmp/')
         with TemporaryDirectory(prefix=tmp) as temporary_workspace:
             for file_ in files:
 

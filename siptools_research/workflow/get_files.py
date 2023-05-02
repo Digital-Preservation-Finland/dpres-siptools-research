@@ -2,14 +2,12 @@
 import os
 
 import luigi
-from metax_access import Metax
 
 from siptools_research.utils.download import download_file
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
-from siptools_research.config import Configuration
 
 
 class GetFiles(WorkflowTask):
@@ -55,14 +53,7 @@ class GetFiles(WorkflowTask):
         :returns: ``None``
         """
         # Find file identifiers from Metax dataset metadata.
-        config_object = Configuration(self.config)
-        metax_client = Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
-        )
-        dataset_files = metax_client.get_dataset_files(self.dataset_id)
+        files = self.get_metax_client().get_dataset_files(self.dataset_id)
 
         # Download files to temporary target directory which will be
         # moved to output target path when all files have been
@@ -70,7 +61,7 @@ class GetFiles(WorkflowTask):
         with self.output().temporary_path() as target_path:
             os.mkdir(target_path)
 
-            for dataset_file in dataset_files:
+            for dataset_file in files:
                 identifier = dataset_file["identifier"]
 
                 # Full path to file
@@ -82,12 +73,12 @@ class GetFiles(WorkflowTask):
                 )
                 if not full_path.startswith(target_path):
                     raise InvalidFileMetadataError(
-                        'The file path of file {} is invalid: {}'.format(
-                            identifier, dataset_file["file_path"]
-                        )
+                        f'The file path of file {identifier} is invalid:'
+                        f' {dataset_file["file_path"]}'
                     )
 
-                # Create the download directory for file if it does not exist
+                # Create the download directory for file if it does not
+                # exist
                 os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
                 download_file(

@@ -2,18 +2,17 @@
 
 import os
 from luigi import LocalTarget
-from metax_access import Metax, DS_STATE_VALID_METADATA
+from metax_access import DS_STATE_VALID_METADATA
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_metadata import ValidateMetadata
-from siptools_research.config import Configuration
 
 
 class ReportMetadataValidationResult(WorkflowTask):
     """Task that sets preservation status when metadata is validated.
 
-    A false target `report-metadata-validation-result.finished` is created into
-    workspace directory to notify luigi (and dependent tasks) that this
-    task has finished.
+    A false target `report-metadata-validation-result.finished` is
+    created into workspace directory to notify luigi (and dependent
+    tasks) that this task has finished.
 
     The task requires metadata to be validated.
     """
@@ -47,15 +46,7 @@ class ReportMetadataValidationResult(WorkflowTask):
 
         :returns: ``None``
         """
-        # Init metax
-        config = Configuration(self.config)
-        metax_client = Metax(
-            config.get('metax_url'),
-            config.get('metax_user'),
-            config.get('metax_password'),
-            verify=config.getboolean('metax_ssl_verification')
-        )
-        metax_client.set_preservation_state(
+        self.get_metax_client().set_preservation_state(
             self.dataset_id,
             DS_STATE_VALID_METADATA,
             'Metadata validated'

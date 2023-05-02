@@ -184,12 +184,12 @@ def test_create_premis_events(
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create provenance info xml-file to tempdir
-    # pylint: disable=protected-access
-    create_digiprov._create_premis_events(
-        'dataset_identifier',
-        str(pkg_root),
-        tests.conftest.UNIT_TEST_CONFIG_FILE
+    task = create_digiprov.CreateProvenanceInformation(
+        dataset_id="dataset_identifier",
+        workspace=str(pkg_root),
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
+    task._create_premis_events(str(pkg_root))
 
     # Check that the created xml-file contains correct elements.
     # pylint: disable=no-member

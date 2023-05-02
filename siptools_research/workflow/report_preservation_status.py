@@ -2,13 +2,12 @@
 
 import os
 from luigi import LocalTarget
-from metax_access import Metax, DS_STATE_IN_DIGITAL_PRESERVATION
+from metax_access import DS_STATE_IN_DIGITAL_PRESERVATION
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_sip import ValidateSIP
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.workflow.cleanup import CleanupFileCache
 from siptools_research.exceptions import InvalidSIPError
-from siptools_research.config import Configuration
 
 
 class ReportPreservationStatus(WorkflowTask):
@@ -69,30 +68,20 @@ class ReportPreservationStatus(WorkflowTask):
         """
         # List of all matching paths ValidateSIP found
         ingest_report_paths = self.input()[0].existing_paths()
-        config = Configuration(self.config)
 
         # Only one ingest report should be found
         if len(ingest_report_paths) != 1:
             raise ValueError(
-                "Expected 1 ingest report, found {}".format(
-                    len(ingest_report_paths)
-                )
+                f"Expected 1 ingest report, found {len(ingest_report_paths)}"
             )
 
         # 'accepted' or 'rejected'?
         directory = ingest_report_paths[0].split('/')[0]
 
         if directory == 'accepted':
-            # Init metax
-            metax_client = Metax(
-                config.get('metax_url'),
-                config.get('metax_user'),
-                config.get('metax_password'),
-                verify=config.getboolean('metax_ssl_verification')
-            )
             # Set Metax preservation state of this dataset to 6 ("in
             # longterm preservation")
-            metax_client.set_preservation_state(
+            self.get_metax_client().set_preservation_state(
                 self.dataset_id,
                 DS_STATE_IN_DIGITAL_PRESERVATION,
                 'Accepted to preservation'
@@ -104,5 +93,6 @@ class ReportPreservationStatus(WorkflowTask):
             # did not pass validation
             raise InvalidSIPError("SIP was rejected")
         else:
-            raise ValueError('Report was found in incorrect '
-                             'path: %s' % ingest_report_paths[0])
+            raise ValueError(
+                f'Report was found in incorrect path: {ingest_report_paths[0]}'
+            )

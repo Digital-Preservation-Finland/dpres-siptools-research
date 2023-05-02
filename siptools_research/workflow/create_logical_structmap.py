@@ -7,12 +7,10 @@ from luigi import LocalTarget
 import lxml.etree as ET
 
 import mets
-from metax_access import Metax
 import xml_helpers.utils as h
 from siptools.utils import encode_path, read_md_references, get_md_references
 from siptools.xml.mets import NAMESPACES
 
-from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
@@ -113,14 +111,7 @@ class CreateLogicalStructMap(WorkflowTask):
 
         :returns: list of provenance IDs
         """
-        config_object = Configuration(self.config)
-        metax_client = Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
-        )
-        metadata = metax_client.get_dataset(self.dataset_id)
+        metadata = self.get_metax_client().get_dataset(self.dataset_id)
         languages = get_dataset_languages(metadata)
 
         # Get the reference file path from Luigi task input
@@ -150,9 +141,9 @@ class CreateLogicalStructMap(WorkflowTask):
         provenances = metadata["research_dataset"].get("provenance", [])
         for provenance in provenances:
             # Although it shouldn't happen, theoretically both
-            # 'preservation_event' and 'lifecycle_event' could exist in the
-            # same provenance metadata.  'preservation_event' is used as the
-            # overriding value if both exist.
+            # 'preservation_event' and 'lifecycle_event' could exist in
+            # the same provenance metadata.  'preservation_event' is
+            # used as the overriding value if both exist.
             if "preservation_event" in provenance:
                 event_type = get_localized_value(
                     provenance["preservation_event"]["pref_label"],
@@ -181,18 +172,12 @@ class CreateLogicalStructMap(WorkflowTask):
 
         :returns: logical structure map dictionary
         """
-        config_object = Configuration(self.config)
-        metax_client = Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
-        )
+        metax_client = self.get_metax_client()
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
         dataset_metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(dataset_metadata)
         dirpath2usecategory = get_dirpath_dict(metax_client, dataset_metadata)
-        logical_struct = dict()
+        logical_struct = {}
 
         for dataset_file in dataset_files:
 

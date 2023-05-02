@@ -4,10 +4,8 @@ import os
 import luigi.format
 from luigi import LocalTarget
 
-from metax_access import Metax
 from siptools.scripts import compile_mets
 
-from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_logical_structmap \
     import CreateLogicalStructMap
@@ -51,13 +49,7 @@ class CreateMets(WorkflowTask):
 
         :returns: ``None``
         """
-        config_object = Configuration(self.config)
-        metax_client = Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
-        )
+        metax_client = self.get_metax_client()
         metadata = metax_client.get_dataset(self.dataset_id)
 
         # Get preservation_identifier from Metax
