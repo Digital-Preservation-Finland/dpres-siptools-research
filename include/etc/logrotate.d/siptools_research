@@ -1,0 +1,15 @@
+# Preserve 31 days worth of logs.
+# Rotate and compress logs daily *or*
+# if the size of the uncompressed log file exceeds 2 GB.
+#
+# Note that the logrotate cron job only runs daily by default, so the `size 2G`
+# option is useless unless the logrotate is configured to run more often.
+/var/log/siptools_research/workflow.log {
+    maxage 31
+    daily
+    maxsize 2G
+    dateformat -%Y%m%d%H
+    compress
+    notifempty
+    missingok
+}

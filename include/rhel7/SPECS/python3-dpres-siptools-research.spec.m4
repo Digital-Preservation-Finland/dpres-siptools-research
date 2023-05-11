@@ -40,6 +40,7 @@ Requires:       dpres-xml-schemas
 Requires:       python3-metax-access
 Requires:       python3-file-scraper-full
 Requires:       python3-upload-rest-api
+Requires:       logrotate
 BuildRequires:  python3-setuptools
 BuildRequires:  python36-setuptools_scm
 BuildRequires:  python36-pytest
@@ -98,6 +99,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/siptools_research.conf
 %config %{_sysconfdir}/luigi/research_logging.cfg
+%config(noreplace) %{_sysconfdir}/logrotate.d/siptools_research
 %attr(-,siptools_research,siptools_research) /var/log/siptools_research
 %attr(-,siptools_research,siptools_research) /var/spool/siptools_research
 /usr/lib/systemd/system/siptools_research-3.service
