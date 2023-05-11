@@ -24,6 +24,7 @@ install:
 
 	# Copy config files
 	cp include/etc/siptools_research.conf ${ETC}/
+	install -D -m 0644 include/etc/luigi/research_logging.cfg ${ETC}/luigi/research_logging.cfg
 	cp include/usr/lib/systemd/system/siptools_research-3.service ${LIB}/systemd/system/siptools_research-3.service
 	cp include/usr/lib/systemd/system/siptools_research.timer ${LIB}/systemd/system/siptools_research-3.timer
 
