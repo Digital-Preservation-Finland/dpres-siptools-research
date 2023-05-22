@@ -1,7 +1,7 @@
 ---
 
 variables:
-  CI_PYTHON_3: "yes"
+  CI_EL9: "yes"
   CI_UPLOAD_DOCUMENTATION: "yes"
 
 include:
