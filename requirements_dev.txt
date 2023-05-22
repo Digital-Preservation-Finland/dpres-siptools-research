@@ -25,7 +25,7 @@ git+https://gitlab.ci.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_a
 lxml
 luigi==2.7.5
 pymongo==3.6.1 # version available on centos7
-requests==2.14.2
+requests==2.31.0
 paramiko
 jsonschema==3.2.0
 iso-639
