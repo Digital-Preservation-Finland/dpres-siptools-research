@@ -24,13 +24,7 @@ def get_ida_token():
     try:
         config = ConfigParser()
         config.read("/etc/siptools_research.conf")
-        correct_ida_config = (
-            config["siptools_research"]["ida_url"]
-            == "https://ida.fd-test.csc.fi:4443"
-            and config["siptools_research"]["ida_token"]
-        )
-
-        if correct_ida_config:
+        if config["siptools_research"]["ida_token"]:
             return config["siptools_research"]["ida_token"]
     except KeyError:
         # Config file does not exist

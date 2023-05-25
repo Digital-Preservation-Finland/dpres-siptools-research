@@ -16,8 +16,6 @@ metax_user
     Metax username. Default: ``"tpas"``
 metax_password
     Metax password. Default: ``""``
-ida_url
-    Ida url. Default: ``"https://86.50.169.61:4433"``
 ida_token
     Ida token. Default: ``""``
 dp_host

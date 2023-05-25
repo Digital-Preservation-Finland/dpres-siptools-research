@@ -13,7 +13,6 @@ DEFAULTS = {
     'metax_user': 'tpas',
     'metax_password': '',
     'metax_ssl_verification': 'True',
-    'ida_url': 'https://86.50.169.61:4433',
     'ida_dl_authorize_url': 'https://ida.fd-test.csc.fi:4431',
     'ida_dl_url': 'https://ida.fd-test.csc.fi:4430',
     'ida_token': '',
