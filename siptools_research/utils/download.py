@@ -65,11 +65,11 @@ def _get_ida_file(file_metadata, dataset_id, conf):
         conf.get("packaging_root"), "tmp", f"IDA-{identifier}"
     )
 
-    ida_token = conf.get('ida_token')
-    verify = conf.getboolean('ida_ssl_verification')
+    fd_download_service_token = conf.get('fd_download_service_token')
+    verify = conf.getboolean('fd_download_service_ssl_verification')
 
-    auth_base_url = conf.get('ida_dl_authorize_url')
-    download_base_url = conf.get('ida_dl_url')
+    auth_base_url = conf.get('fd_download_service_authorize_url')
+    download_base_url = conf.get('fd_download_service_url')
 
     # Check that no other process is fetching the file from IDA
     if os.path.exists(tmp_path):
@@ -82,7 +82,7 @@ def _get_ida_file(file_metadata, dataset_id, conf):
             response = requests.post(
                 f"{auth_base_url}/authorize",
                 headers={
-                    "Authorization": f"Bearer {ida_token}"
+                    "Authorization": f"Bearer {fd_download_service_token}"
                 },
                 verify=verify,
                 json={

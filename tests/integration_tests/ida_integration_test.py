@@ -15,8 +15,8 @@ from siptools_research.utils.download import (FileNotAvailableError,
                                               download_file)
 
 
-def get_ida_token():
-    """Retrieve the IDA token.
+def get_fd_download_service_token():
+    """Retrieve the Fairdata download service token.
 
     Tries first to read from an existing configuration file and then
     prompts user.
@@ -24,8 +24,8 @@ def get_ida_token():
     try:
         config = ConfigParser()
         config.read("/etc/siptools_research.conf")
-        if config["siptools_research"]["ida_token"]:
-            return config["siptools_research"]["ida_token"]
+        if config["siptools_research"]["fd_download_service_token"]:
+            return config["siptools_research"]["fd_download_service_token"]
     except KeyError:
         # Config file does not exist
         pass
@@ -41,12 +41,12 @@ def test_ida_download(testpath):
     """
     # Read configuration file
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-    # Override IDA token in configuration file with real token from
-    # the user
+    # Override Fairdata download service token in configuration file with real
+    # token from the user
     # pylint: disable=protected-access
     conf._parser.set(
-        'siptools_research', 'ida_token',
-        get_ida_token()
+        'siptools_research', 'fd_download_service_token',
+        get_fd_download_service_token()
     )
 
     # Download a file that is should be available
@@ -71,12 +71,12 @@ def test_ida_download_missing(testpath):
     """Try downloading a nonexistent file from Ida."""
     # Read configuration file
     conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
-    # Override IDA token in configuration file with real token from
-    # the user
+    # Override Fairdata download service token in configuration file with real
+    # token from the user
     # pylint: disable=protected-access
     conf._parser.set(
-        'siptools_research', 'ida_token',
-        get_ida_token()
+        'siptools_research', 'fd_download_service_token',
+        get_fd_download_service_token()
     )
 
     download_path = os.path.join(testpath, 'ida_file')

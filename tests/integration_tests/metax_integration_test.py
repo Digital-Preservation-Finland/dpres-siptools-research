@@ -98,15 +98,15 @@ def test_workflow(testpath):
         with requests_mock.Mocker(real_http=True) as ida_mock:
             # Mock Ida
             ida_mock.post(
-                f"{conf.get('ida_dl_authorize_url')}/authorize/",
+                f"{conf.get('fd_download_service_authorize_url')}/authorize/",
             )
             ida_mock.get(
-                f"{conf.get('ida_dl_url')}/download?"
+                f"{conf.get('fd_download_service_url')}/download?"
                 f"dataset={dataset_id}&file=/path/to/file1",
                 text='adsf',
             )
             ida_mock.get(
-                f"{conf.get('ida_dl_url')}/download?"
+                f"{conf.get('fd_download_service_url')}/download?"
                 f"dataset={dataset_id}&file=/path/to/file2",
                 text='adsf',
             )

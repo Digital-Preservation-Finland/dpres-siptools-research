@@ -16,8 +16,8 @@ metax_user
     Metax username. Default: ``"tpas"``
 metax_password
     Metax password. Default: ``""``
-ida_token
-    Ida token. Default: ``""``
+fd_download_service_token
+    Fairdata download service token. Default: ``""``
 dp_host
     Digital preservation service host. Default: ``"86.50.168.218"``
 dp_user
