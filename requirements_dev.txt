@@ -22,6 +22,11 @@ git+https://gitlab.ci.csc.fi/dpres/dpres-siptools.git@develop#egg=siptools
 git+https://gitlab.ci.csc.fi/dpres/metax-access.git@develop#egg=metax_access
 git+https://gitlab.ci.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
 
+# Temporary patch for ffmpeg-python / jpeg2000 lossless detection
+git+https://gitlab.ci.csc.fi/dpres/ffmpeg-python.git#egg=ffmpeg_python
+# Get our newest format string changes not yet present in official Fido repository
+git+https://gitlab.ci.csc.fi/dpres/fido.git@develop#egg=opf_fido
+
 lxml
 luigi==2.7.5
 pymongo==3.6.1 # version available on centos7
