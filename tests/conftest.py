@@ -255,7 +255,7 @@ def luigi_mock_ssh_config(config_creator, sftp_dir, sftp_server):
 def mock_ida_download(requests_mock):
     """Mock the IDA download authorization endpoint."""
     requests_mock.post(
-        "https://ida.dl-authorize.test/authorize",
+        "https://download.dl-authorize.test/authorize",
         json={
             "token": (
                 "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0."

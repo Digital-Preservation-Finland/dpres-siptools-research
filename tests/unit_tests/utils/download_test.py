@@ -41,7 +41,7 @@ def test_download_file(pkg_root, requests_mock, config_file, request_verified):
         filename="/path/to/file",
         content=b"foo\n"
     )
-    requests_mock.get("https://ida.dl.test/download",
+    requests_mock.get("https://download.dl.test/download",
                       content=b"foo\n")
 
     new_file_path = pkg_root / 'new_file'
@@ -68,7 +68,7 @@ def test_download_file_404(pkg_root, requests_mock):
     :param pkg_root: Temporary packaging root directory fixture
     :returns: ``None``
     """
-    requests_mock.post('https://ida.dl-authorize.test/authorize',
+    requests_mock.post('https://download.dl-authorize.test/authorize',
                        status_code=404)
 
     new_file_path = pkg_root / 'new_file'
@@ -87,7 +87,7 @@ def test_download_file_502(pkg_root, requests_mock):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    requests_mock.post('https://ida.dl-authorize.test/authorize',
+    requests_mock.post('https://download.dl-authorize.test/authorize',
                        status_code=502)
 
     new_file_path = pkg_root / 'new_file'

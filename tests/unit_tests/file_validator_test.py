@@ -179,7 +179,7 @@ def test_validate_files_not_found(requests_mock):
 
     # Mock Ida. Do not add any files to Ida.
     requests_mock.post(
-        'https://ida.dl-authorize.test/authorize',
+        'https://download.dl-authorize.test/authorize',
         status_code=404
     )
 

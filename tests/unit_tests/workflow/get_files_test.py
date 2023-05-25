@@ -90,7 +90,7 @@ def test_missing_ida_files(workspace, requests_mock):
         content=b"foo\n"
     )
     requests_mock.post(
-        'https://ida.dl-authorize.test/authorize',
+        'https://download.dl-authorize.test/authorize',
         status_code=404,
         additional_matcher=lambda req: req.json()["file"] == "/path/to/file2"
     )

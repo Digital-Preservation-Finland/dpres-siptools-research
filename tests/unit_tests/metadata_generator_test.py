@@ -67,7 +67,7 @@ def test_generate_metadata(requests_mock,
         json={}
     )
     with open(path, 'rb') as file_:
-        requests_mock.get("https://ida.dl.test/download",
+        requests_mock.get("https://download.dl.test/download",
                           content=file_.read())
 
     # generate metadata for dataset
@@ -102,7 +102,7 @@ def test_generate_metadata_video_streams(requests_mock):
     )
     with open('tests/data/sample_files/video_ffv1.mkv', 'rb') as file_:
         requests_mock.get(
-            "https://ida.dl.test/download",
+            "https://download.dl.test/download",
             content=file_.read()
         )
 
@@ -144,7 +144,7 @@ def test_generate_metadata_unrecognized(requests_mock):
     # create mocked dataset in Metax and Ida
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.BASE_FILE])
-    requests_mock.get("https://ida.dl.test/download",
+    requests_mock.get("https://download.dl.test/download",
                       text="")
 
     with pytest.raises(InvalidFileError) as exception_info:
@@ -183,7 +183,7 @@ def test_generate_metadata_predefined(requests_mock):
         }
     }
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-    requests_mock.get("https://ida.dl.test/download",
+    requests_mock.get("https://download.dl.test/download",
                       content=b'foo')
     patch_request = requests_mock.patch(
         "https://metaksi/rest/v2/files/pid:urn:identifier",
@@ -230,7 +230,7 @@ def test_generate_metadata_csv(requests_mock):
     """
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.CSV_FILE])
-    requests_mock.get("https://ida.dl.test/download", content=b'foo')
+    requests_mock.get("https://download.dl.test/download", content=b'foo')
 
     generate_metadata('dataset_identifier',
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -256,7 +256,7 @@ def test_generate_metadata_tempfile_removal(pkg_root, requests_mock):
     """
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.BASE_FILE])
-    requests_mock.get("https://ida.dl.test/download", text='foo')
+    requests_mock.get("https://download.dl.test/download", text='foo')
 
     tmp_path = pkg_root / "tmp"
     file_cache_path = pkg_root / "file_cache"
@@ -308,7 +308,7 @@ def test_generate_metadata_ida_download_error(requests_mock):
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.BASE_FILE])
     requests_mock.post(
-        'https://ida.dl-authorize.test/authorize', status_code=404
+        'https://download.dl-authorize.test/authorize', status_code=404
     )
 
     with pytest.raises(MissingFileError) as exception_info:
