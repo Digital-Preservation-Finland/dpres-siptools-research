@@ -23,11 +23,17 @@ URL:            https://www.digitalpreservation.fi
 Source0:        %{file_prefix}-v%{file_version}%{?file_release_tag}-%{file_build_number}-g%{file_commit_ref}.%{file_ext}
 BuildArch:      noarch
 
+Requires: %{py3_dist file-scraper}
+Requires: %{py3_dist siptools}
+Requires: %{py3_dist metax_access}
+Requires: %{py3_dist upload_rest_api}
+
 BuildRequires:  python3-devel
 BuildRequires:  pyproject-rpm-macros
 BuildRequires:  %{py3_dist jsonschema2rst}
 BuildRequires:  %{py3_dist mock-ssh-server}
 BuildRequires:  %{py3_dist mongobox}
+BuildRequires:  %{py3_dist mongoengine}
 BuildRequires:  %{py3_dist mongomock}
 BuildRequires:  %{py3_dist pip}
 BuildRequires:  %{py3_dist pytest}
@@ -44,7 +50,7 @@ Digital Preservation Packaging Service for Research datasets
 %description %_description
 
 %package -n python3-dpres-siptools-research
-Summary: %{summary}
+Summary:  %{summary}
 
 %description -n python3-dpres-siptools-research %_description
 
