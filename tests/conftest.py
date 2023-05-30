@@ -52,7 +52,8 @@ def mock_os_link(monkeypatch):
 @pytest.fixture(autouse=True)
 def mock_upload_conf(monkeypatch):
     mongoengine.disconnect()
-    mongoengine.connect(host="mongomock://localhost/upload", tz_aware=True)
+    mongoengine.connect("upload", host="mongodb://localhost", tz_aware=True,
+                        mongo_client_class=mongomock.MongoClient)
 
 
 @pytest.fixture(scope="function")
