@@ -23,10 +23,11 @@ URL:            https://www.digitalpreservation.fi
 Source0:        %{file_prefix}-v%{file_version}%{?file_release_tag}-%{file_build_number}-g%{file_commit_ref}.%{file_ext}
 BuildArch:      noarch
 
-Requires: %{py3_dist file-scraper}
-Requires: %{py3_dist siptools}
-Requires: %{py3_dist metax-access}
-Requires: %{py3_dist upload_rest_api}
+Requires:       %{py3_dist file-scraper}
+Requires:       %{py3_dist siptools}
+Requires:       %{py3_dist metax-access}
+Requires:       %{py3_dist upload_rest_api}
+Requires:       dpres-xml-schemas
 
 BuildRequires:  python3-devel
 BuildRequires:  pyproject-rpm-macros
