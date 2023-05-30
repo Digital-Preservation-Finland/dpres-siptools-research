@@ -21,13 +21,6 @@ def main():
             "jsonschema>=3",
             "iso-639",
             "python-dateutil",
-            "file-scraper@git+https://gitlab.ci.csc.fi/dpres/file-scraper.git",
-            "siptools@git+https://gitlab.ci.csc.fi/dpres/dpres-siptools.git"
-            "@develop",
-            "metax_access@git+https://gitlab.ci.csc.fi/dpres/metax-access.git"
-            "@develop",
-            "upload_rest_api@git+https://gitlab.ci.csc.fi/dpres/"
-            "upload-rest-api.git@develop"
         ],
         entry_points={
             'console_scripts': [
