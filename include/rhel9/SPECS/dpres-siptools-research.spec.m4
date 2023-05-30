@@ -25,12 +25,13 @@ BuildArch:      noarch
 
 Requires: %{py3_dist file-scraper}
 Requires: %{py3_dist siptools}
-Requires: %{py3_dist metax_access}
+Requires: %{py3_dist metax-access}
 Requires: %{py3_dist upload_rest_api}
 
 BuildRequires:  python3-devel
 BuildRequires:  pyproject-rpm-macros
 BuildRequires:  %{py3_dist jsonschema2rst}
+BuildRequires:  %{py3_dist metax-access}
 BuildRequires:  %{py3_dist mock-ssh-server}
 BuildRequires:  %{py3_dist mongobox}
 BuildRequires:  %{py3_dist mongoengine}
