@@ -28,11 +28,15 @@ git+https://gitlab.ci.csc.fi/dpres/ffmpeg-python.git#egg=ffmpeg_python
 git+https://gitlab.ci.csc.fi/dpres/fido.git@develop#egg=opf_fido
 
 lxml
-luigi==2.7.5
-pymongo==3.6.1 # version available on centos7
-requests==2.14.2
+luigi==2.7.5 ; python_version == '3.6'
+luigi ; python_version == '3.9'
+pymongo==3.6.1 ; python_version == '3.6' # version available on centos7
+pymongo ; python_version == '3.9'
+requests==2.14.2 ; python_version == '3.6'
+requests ; python_version == '3.9'
 paramiko
-jsonschema==3.2.0
+jsonschema==3.2.0 ; python_version == '3.6'
+jsonschema ; python_version == '3.9'
 iso-639
 python-dateutil
 
