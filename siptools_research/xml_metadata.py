@@ -108,11 +108,27 @@ class _ImageFileXMLMetadata(_XMLMetadata):
                   a MIX XML element
         """
         try:
-            mix_elem = create_mix.create_mix_metadata(
+            mix = create_mix.create_mix_metadata(
                 self.file_path,
                 streams=self.streams
             )
-            return [XMLMetadataEntry(stream_index=None, md_elem=mix_elem)]
+            if not mix:
+                raise InvalidFileError("Image file has no image streams.",
+                                       [self.file_metadata['identifier']])
+
+            # If the only contained "stream" has the key '0', then the image
+            # file metadata corresponds to the file itself and not a stream
+            # inside it.
+            if "0" in mix and len(mix) == 1:
+                return [
+                    XMLMetadataEntry(stream_index=None, md_elem=mix["0"])
+                ]
+
+            return [
+                XMLMetadataEntry(stream_index=stream_index, md_elem=md_elem)
+                for stream_index, md_elem in mix.items()
+            ]
+
         except MixGenerationError as error:
             # Clean up file path in original exception message and raise
             # error
