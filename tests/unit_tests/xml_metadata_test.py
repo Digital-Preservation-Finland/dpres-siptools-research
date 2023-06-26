@@ -33,6 +33,42 @@ def test_generate_xml_metadata_for_image_file():
         mock_create_mix.assert_called_once_with(file_path, streams=streams)
 
 
+def test_generate_xml_metadata_for_multi_image_file():
+    """Tests metadata XML generation for file with multiple images.
+    """
+    streams = {
+        0: {
+            'mimetype': 'image/tiff',
+            'stream_type': 'image',
+        },
+        1: {
+            'mimetype': 'image/tiff',
+            'stream_type': 'image',
+        },
+        2: {
+            'mimetype': 'image/tiff',
+            'stream_type': 'image'
+        }
+    }
+
+    with mock.patch(
+        'siptools.scripts.create_mix.create_mix_metadata'
+    ) as mock_create_mix:
+        file_path = '/foo/bar'
+        file_metadata = {
+            'file_characteristics': {
+                'file_format': 'image/tiff',
+            },
+            'file_characteristics_extension': {
+                'streams': streams
+            }
+        }
+        generator = XMLMetadataGenerator(file_path,
+                                         file_metadata)
+        generator.create()
+        mock_create_mix.assert_called_once_with(file_path, streams=streams)
+
+
 def test_generate_xml_metadata_for_csv_file():
     """Tests metadata XML generation for CSV file.
     :returns: ``None``
