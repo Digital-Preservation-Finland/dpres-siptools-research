@@ -79,6 +79,7 @@ usermod -aG %{user_group} %{user_name}
 
 # Copy config file to /etc/siptools_research.conf with correct permissions
 install -D -m 0644 include/etc/siptools_research.conf %{buildroot}%{_sysconfdir}/siptools_research.conf
+install -D -m 0644 include/etc/logrotate.d/siptools_research %{buildroot}%{_sysconfdir}/logrotate.d/siptools_research
 
 # TODO: executables with "-3" suffix are added to maintain compatibility with our systems.
 # executables with "-3" suffix should be deprecated.
@@ -92,6 +93,8 @@ chmod 770 /var/lib/%{user_name}
 %{_bindir}/siptools-research
 %{_bindir}/siptools-research-3
 %config(noreplace) %{_sysconfdir}/siptools_research.conf
+%config(noreplace) %{_sysconfdir}/logrotate.d/siptools_research
+%config %{_sysconfdir}/luigi/research_logging.cfg
 
 # TODO: For now changelog must be last, because it is generated automatically
 # from git log command. Appending should be fixed to happen only after %changelog macro
