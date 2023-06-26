@@ -18,7 +18,7 @@ def main():
             "pymongo",
             "requests",
             "paramiko",
-            "jsonschema>=3",
+            "jsonschema",
             "iso-639",
             "python-dateutil",
         ],
