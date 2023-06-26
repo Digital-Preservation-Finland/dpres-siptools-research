@@ -77,9 +77,10 @@ usermod -aG %{user_group} %{user_name}
 %pyproject_install
 %pyproject_save_files siptools_research
 
-# Copy config file to /etc/siptools_research.conf with correct permissions
+# Copy files to /etc with correct permissions
 install -D -m 0644 include/etc/siptools_research.conf %{buildroot}%{_sysconfdir}/siptools_research.conf
 install -D -m 0644 include/etc/logrotate.d/siptools_research %{buildroot}%{_sysconfdir}/logrotate.d/siptools_research
+install -D -m 0644 include/etc/luigi/research_logging.cfg %{buildroot}%{_sysconfdir}/luigi/research_logging.cfg
 
 # TODO: executables with "-3" suffix are added to maintain compatibility with our systems.
 # executables with "-3" suffix should be deprecated.
