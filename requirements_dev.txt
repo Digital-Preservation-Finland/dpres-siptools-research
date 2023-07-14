@@ -17,7 +17,7 @@ xmltodict
 mock-ssh-server
 
 # Install requirements
-git+https://gitlab.ci.csc.fi/dpres/file-scraper.git@develop#egg=file-scraper
+git+https://gitlab.ci.csc.fi/dpres/file-scraper.git@develop#egg=file_scraper
 git+https://gitlab.ci.csc.fi/dpres/dpres-siptools.git@develop#egg=siptools
 git+https://gitlab.ci.csc.fi/dpres/metax-access.git@develop#egg=metax_access
 git+https://gitlab.ci.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
