@@ -30,6 +30,7 @@ BuildRequires:  %{py3_dist mock-ssh-server}
 BuildRequires:  %{py3_dist mongobox}
 BuildRequires:  %{py3_dist mongoengine}
 BuildRequires:  %{py3_dist mongomock}
+BuildRequires:  %{py3_dist sphinx}
 BuildRequires:  %{py3_dist pip}
 BuildRequires:  %{py3_dist pytest}
 BuildRequires:  %{py3_dist pytest-mock}
