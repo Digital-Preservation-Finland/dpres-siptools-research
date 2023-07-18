@@ -37,6 +37,7 @@ BuildRequires:  %{py3_dist requests_mock}
 BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist setuptools_scm}
 BuildRequires:  %{py3_dist wheel}
+BuildRequires:  %{py3_dist xmltodict}
 
 %global _description %{expand:
 Digital Preservation Packaging Service for Research datasets
