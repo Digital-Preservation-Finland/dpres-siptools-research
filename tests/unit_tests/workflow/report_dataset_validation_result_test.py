@@ -1,7 +1,7 @@
 """Unit tests for ReportDatasetValidationResult task."""
 
 import pytest
-from metax_access.metax import DS_STATE_VALID_METADATA
+from metax_access.metax import DS_STATE_METADATA_CONFIRMED
 
 import tests
 from siptools_research.workflow import report_dataset_validation_result
@@ -32,6 +32,6 @@ def test_reportdatasetvalidationresult(testpath, requests_mock):
     # The dataset preservation state should be updated
     assert patch_dataset.called_once
     assert patch_dataset.last_request.json() \
-        == {'preservation_state': DS_STATE_VALID_METADATA,
+        == {'preservation_state': DS_STATE_METADATA_CONFIRMED,
             'preservation_description':
             'Metadata and files validated'}
