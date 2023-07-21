@@ -16,6 +16,15 @@ mongomock
 xmltodict
 mock-ssh-server
 
+git+https://gitlab.ci.csc.fi/dpres/mets.git@develop#egg=mets
+git+https://gitlab.ci.csc.fi/dpres/xml-helpers.git@develop#egg=xml_helpers
+git+https://gitlab.ci.csc.fi/dpres/premis.git@develop#egg=premis
+git+https://gitlab.ci.csc.fi/dpres/addml.git@develop#egg=addml
+git+https://gitlab.ci.csc.fi/dpres/audiomd.git@develop#egg=audiomd
+git+https://gitlab.ci.csc.fi/dpres/nisomix.git@develop#egg=nisomix
+git+https://gitlab.ci.csc.fi/dpres/videomd.git@develop#egg=videomd
+git+https://gitlab.ci.csc.fi/dpres/dpres-signature.git@develop#egg=dpres_signature
+
 # Install requirements
 git+https://gitlab.ci.csc.fi/dpres/file-scraper.git@develop#egg=file_scraper
 git+https://gitlab.ci.csc.fi/dpres/dpres-siptools.git@develop#egg=siptools
