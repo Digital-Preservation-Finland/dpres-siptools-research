@@ -34,9 +34,9 @@ BuildRequires:  %{py3_dist sphinx}
 BuildRequires:  %{py3_dist pip}
 BuildRequires:  %{py3_dist pytest}
 BuildRequires:  %{py3_dist pytest-mock}
-BuildRequires:  %{py3_dist requests_mock}
+BuildRequires:  %{py3_dist requests-mock}
 BuildRequires:  %{py3_dist setuptools}
-BuildRequires:  %{py3_dist setuptools_scm}
+BuildRequires:  %{py3_dist setuptools-scm}
 BuildRequires:  %{py3_dist wheel}
 BuildRequires:  %{py3_dist xmltodict}
 
@@ -51,7 +51,7 @@ Summary:  %{summary}
 Requires: %{py3_dist file-scraper}
 Requires: %{py3_dist siptools}
 Requires: %{py3_dist metax-access}
-Requires: %{py3_dist upload_rest_api}
+Requires: %{py3_dist upload-rest-api}
 Requires: dpres-xml-schemas
 
 %description -n python3-dpres-siptools-research %_description
