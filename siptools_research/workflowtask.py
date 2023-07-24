@@ -7,14 +7,11 @@ from metax_access import (Metax,
                           DS_STATE_INVALID_METADATA,
                           DS_STATE_PACKAGING_FAILED,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE)
+from requests import HTTPError
 
 from siptools_research.config import Configuration
 from siptools_research.utils.database import Database
-from siptools_research.exceptions import (InvalidContractMetadataError,
-                                          InvalidDatasetMetadataError,
-                                          InvalidFileMetadataError,
-                                          InvalidSIPError,
-                                          InvalidDatasetError)
+from siptools_research.exceptions import InvalidSIPError, InvalidDatasetError
 
 
 class WorkflowTask(luigi.Task):
@@ -148,24 +145,37 @@ def report_task_failure(task, exception):
                       f"{task.failure_message}: {str(exception)}")
 
     if isinstance(exception, InvalidDatasetError):
-        # Disable workflow
-        database.set_disabled(task.workflow_id)
-
         # Set preservation status for dataset in Metax
         if isinstance(exception, InvalidSIPError):
             preservation_state \
                 = DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
-        elif isinstance(exception, (InvalidDatasetMetadataError,
-                                    InvalidFileMetadataError,
-                                    InvalidContractMetadataError)):
-            preservation_state = DS_STATE_INVALID_METADATA
         else:
-            preservation_state = DS_STATE_PACKAGING_FAILED
-        task.get_metax_client().set_preservation_state(
-            task.dataset_id,
-            preservation_state,
-            _get_description(task, exception)
-        )
+            # Also invalid or missing files could be reason for failure,
+            # but there is no separate preservation state for that
+            # situation.
+            preservation_state = DS_STATE_INVALID_METADATA
+        try:
+            task.get_metax_client().set_preservation_state(
+                task.dataset_id,
+                preservation_state,
+                _get_description(task, exception)
+            )
+        except HTTPError:
+            # TODO: DS_STATE_INVALID_METADATA can not be used if current
+            # preservation state is higher than
+            # DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION, i.e. when
+            # packaging has been started. Therefore,
+            # DS_STATE_PACKAGING_FAILED is used even if the failure was
+            # caused by invalid metadata. This can be removed if Metax
+            # allows DS_STATE_INVALID_METADATA!
+            task.get_metax_client().set_preservation_state(
+                task.dataset_id,
+                DS_STATE_PACKAGING_FAILED,
+                _get_description(task, exception)
+            )
+
+        # Disable workflow
+        database.set_disabled(task.workflow_id)
 
 
 def _get_description(task, exception):

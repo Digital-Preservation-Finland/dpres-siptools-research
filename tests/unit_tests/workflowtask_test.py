@@ -302,7 +302,7 @@ def test_run_failing_task(testpath):
 
         [
             'InvalidDatasetTask',
-            DS_STATE_PACKAGING_FAILED,
+            DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidDatasetError: Dataset is invalid'
         ],
@@ -326,13 +326,13 @@ def test_run_failing_task(testpath):
         ],
         [
             'InvalidFileTask',
-            DS_STATE_PACKAGING_FAILED,
+            DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidFileError: A file is not well-formed'
         ],
         [
             'MissingFileTask',
-            DS_STATE_PACKAGING_FAILED,
+            DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'MissingFileError: A file was not found in Ida'
         ],
@@ -371,6 +371,56 @@ def test_invalid_dataset_error(testpath, requests_mock, task, expected_state,
     request_body = requests_mock.last_request.json()
     assert request_body['preservation_state'] == expected_state
     assert request_body['preservation_description'] == expected_description
+
+    # Check the method of last HTTP request
+    assert requests_mock.last_request.method == 'PATCH'
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_packaging_failed(testpath, requests_mock):
+    """Test failure during packaging.
+
+    If packaging fails because dataset is invalid, preservation state
+    should be set to DS_STATE_PACKAGING_FAILED.
+
+    :param testpath: temporary directory
+    :param requests_mock: Mocker object
+    :returns: ``None``
+    """
+    # Mock metax
+    requests_mock.get('/rest/v2/datasets/1', json={})
+
+    # Setting preservation state to "Invalid metadata" is not allowed
+    def _match_state_invalid_metadata(request):
+        return request.json()["preservation_state"] \
+            == DS_STATE_INVALID_METADATA
+    requests_mock.patch(
+        '/rest/v2/datasets/1',
+        additional_matcher=_match_state_invalid_metadata,
+        status_code=400,
+        json={}
+    )
+
+    # Setting preservation state to "Packaging failed" is allowed
+    def _match_state_packaging_failed(request):
+        return request.json()["preservation_state"] \
+            == DS_STATE_PACKAGING_FAILED
+    requests_mock.patch(
+        '/rest/v2/datasets/1',
+        additional_matcher=_match_state_packaging_failed,
+        status_code=200,
+        json={}
+    )
+
+    # Run task like it would be run from command line
+    run_luigi_task('InvalidDatasetTask', str(testpath))
+
+    # Check the body of last HTTP request
+    request_body = requests_mock.last_request.json()
+    assert request_body['preservation_state'] == DS_STATE_PACKAGING_FAILED
+    assert request_body['preservation_description'] \
+        == ('An error occurred while running a test task: '
+            'InvalidDatasetError: Dataset is invalid')
 
     # Check the method of last HTTP request
     assert requests_mock.last_request.method == 'PATCH'
