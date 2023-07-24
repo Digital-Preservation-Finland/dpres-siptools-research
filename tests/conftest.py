@@ -56,7 +56,8 @@ def mock_upload_conf(monkeypatch):
     if mongoengine.__version__ <= "0.24.2":
         mongoengine.connect(host="mongomock://localhost/upload", tz_aware=True)
     else:
-        mongoengine.connect("upload", host="mongodb://localhost", tz_aware=True,
+        mongoengine.connect("upload", host="mongodb://localhost",
+                            tz_aware=True,
                             mongo_client_class=mongomock.MongoClient)
 
 
