@@ -342,9 +342,9 @@ def test_validate_dataset_no_files_and_directories():
         jsonschema.validate(invalid_dataset_metadata,
                             siptools_research.schemas.DATASET_METADATA_SCHEMA)
 
-    assert excinfo.value.message.endswith(
+    assert str(excinfo.value.message.endswith(
         "'files' is a required property"
-    )
+    ))
 
 
 def test_validate_directory_valid_metadata():
