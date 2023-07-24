@@ -48,7 +48,9 @@ Digital Preservation Packaging Service for Research datasets
 
 %package -n python3-dpres-siptools-research
 Summary:  %{summary}
-Requires: %{py3_dist file-scraper}
+# Require the full version of file-scraper manually just in case dnf would
+# install the minimal version automatically.
+Requires: python3-file-scraper-full
 Requires: %{py3_dist siptools}
 Requires: %{py3_dist metax_access}
 Requires: %{py3_dist upload_rest_api}
