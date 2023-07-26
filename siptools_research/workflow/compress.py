@@ -12,7 +12,7 @@ from siptools_research.workflow.sign import SignSIP
 class CompressSIP(WorkflowTask):
     """Creates tar-archive from SIP directory.
 
-    Outputs `<document_id>.tar` to workspace.
+    Outputs `<workflow_id>.tar` to workspace.
 
     Task requires that SIP has been signed, METS document has been
     created, and dataset files have been downloaded.
@@ -41,11 +41,11 @@ class CompressSIP(WorkflowTask):
     def output(self):
         """Return the output target of the Task.
 
-        :returns: `<workspace>/<document_id>.tar`
+        :returns: `<workspace>/<workflow_id>.tar`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
-            os.path.join(self.workspace, self.document_id) + '.tar',
+            os.path.join(self.workspace, self.workflow_id) + '.tar',
             format=luigi.format.Nop
         )
 

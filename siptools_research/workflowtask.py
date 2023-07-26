@@ -32,11 +32,7 @@ class WorkflowTask(luigi.Task):
     to identify the task and current workflow, for example when storing
     workflow status information to database:
 
-    :document_id: A unique string that is used for identifying workflows
-                  (one mongodb document per workflow) in workflow
-                  database. The ``document_id`` is the name (not path)
-                  of workspace directory.
-    :document_id: Identifier of the workflow. Generated from the name of
+    :workflow_id: Identifier of the workflow. Generated from the name of
                   workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is
                         created
@@ -53,7 +49,7 @@ class WorkflowTask(luigi.Task):
         variables.
         """
         super().__init__(*args, **kwargs)
-        self.document_id = os.path.basename(self.workspace)
+        self.workflow_id = os.path.basename(self.workspace)
         self.sip_creation_path = os.path.join(self.workspace,
                                               'sip-in-progress')
 
@@ -85,7 +81,7 @@ class WorkflowExternalTask(luigi.ExternalTask):
     be used to identify the task and current workflow, forexample when
     storing workflow status information to database:
 
-    :document_id: Identifier of the workflow. Generated from the name of
+    :workflow_id: Identifier of the workflow. Generated from the name of
                   workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is
                         created
@@ -102,7 +98,7 @@ class WorkflowExternalTask(luigi.ExternalTask):
         variables.
         """
         super().__init__(*args, **kwargs)
-        self.document_id = os.path.basename(self.workspace)
+        self.workflow_id = os.path.basename(self.workspace)
         self.sip_creation_path = os.path.join(self.workspace,
                                               'sip-in-progress')
 
@@ -120,14 +116,14 @@ def report_task_success(task):
     :returns: ``None``
     """
     database = Database(task.config)
-    database.add_task(task.document_id,
+    database.add_task(task.workflow_id,
                       task.__class__.__name__,
                       'success',
                       task.success_message)
 
     if task.__class__.__name__ \
-            == database.get_one_workflow(task.document_id)['target_task']:
-        database.set_completed(task.document_id)
+            == database.get_one_workflow(task.workflow_id)['target_task']:
+        database.set_completed(task.workflow_id)
         shutil.rmtree(task.workspace)
 
 
@@ -146,14 +142,14 @@ def report_task_failure(task, exception):
     :returns: ``None``
     """
     database = Database(task.config)
-    database.add_task(task.document_id,
+    database.add_task(task.workflow_id,
                       task.__class__.__name__,
                       'failure',
                       f"{task.failure_message}: {str(exception)}")
 
     if isinstance(exception, InvalidDatasetError):
         # Disable workflow
-        database.set_disabled(task.document_id)
+        database.set_disabled(task.workflow_id)
 
         # Set preservation status for dataset in Metax
         if isinstance(exception, InvalidSIPError):

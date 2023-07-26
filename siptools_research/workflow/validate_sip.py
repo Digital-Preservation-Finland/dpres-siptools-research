@@ -34,8 +34,8 @@ class ValidateSIP(WorkflowExternalTask):
         :returns: remote target that may exist on digital preservation
                   server in any path formatted::
 
-                      ~/accepted/<datepath>/<document_id>.tar/
-                      ~/rejected/<datepath>/<document_id>.tar/
+                      ~/accepted/<datepath>/<workflow_id>.tar/
+                      ~/rejected/<datepath>/<workflow_id>.tar/
 
                   where datepath is any date between the date the SIP
                   was sent to the server and the current date.
@@ -52,7 +52,7 @@ class ValidateSIP(WorkflowExternalTask):
         # completed.
         try:
             send_timestamp = database.get_task_timestamp(
-                self.document_id, "SendSIPToDP"
+                self.workflow_id, "SendSIPToDP"
             )
             sip_to_dp_date = dateutil.parser.parse(send_timestamp).date()
         except (ValueError, KeyError):
@@ -64,12 +64,12 @@ class ValidateSIP(WorkflowExternalTask):
         while sip_to_dp_date <= lim_date:
             paths.append(
                 os.path.join(
-                    f'accepted/{sip_to_dp_date}/{self.document_id}.tar'
+                    f'accepted/{sip_to_dp_date}/{self.workflow_id}.tar'
                 )
             )
             paths.append(
                 os.path.join(
-                    f'rejected/{sip_to_dp_date}/{self.document_id}.tar'
+                    f'rejected/{sip_to_dp_date}/{self.workflow_id}.tar'
                 )
             )
             sip_to_dp_date += timedelta(days=1)
