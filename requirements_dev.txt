@@ -36,7 +36,7 @@ git+https://gitlab.ci.csc.fi/dpres/ffmpeg-python.git#egg=ffmpeg_python
 # Get our newest format string changes not yet present in official Fido repository
 git+https://gitlab.ci.csc.fi/dpres/fido.git@develop#egg=opf_fido
 
-lxml<4.9.3
+lxml!=4.9.3
 luigi==2.7.5 ; python_version == '3.6'
 luigi ; python_version > '3.6'
 pymongo==3.6.1 ; python_version == '3.6' # version available on centos7
