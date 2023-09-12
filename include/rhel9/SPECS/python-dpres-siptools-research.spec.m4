@@ -65,7 +65,7 @@ Requires: dpres-xml-schemas
 export SETUPTOOLS_SCM_PRETEND_VERSION=%{file_version}
 %pyproject_wheel
 
-%pre
+%pre -n python3-dpres-siptools-research
 getent group %{user_group} >/dev/null || groupadd -f -g %{user_gid} -r %{user_group}
 if ! getent passwd %{user_name} >/dev/null ; then
     if ! getent passwd %{user_uid} >/dev/null ; then
@@ -90,7 +90,7 @@ install -D -m 0644 include/etc/luigi/research_logging.cfg %{buildroot}%{_sysconf
 # executables with "-3" suffix should be deprecated.
 cp %{buildroot}%{_bindir}/siptools-research %{buildroot}%{_bindir}/siptools-research-3
 
-%post
+%post -n python3-dpres-siptools-research
 chown %{user_name}:%{user_group} /var/lib/%{user_name}
 chmod 770 /var/lib/%{user_name}
 
