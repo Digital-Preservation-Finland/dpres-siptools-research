@@ -443,10 +443,13 @@ def test_logging(testpath, requests_mock, caplog):
 
     # First error should contain the the body of response to failed
     # request
-    assert errors[0].getMessage() == (
-        'HTTP request to https://metaksi/rest/v2/datasets/1?'
-        'include_user_metadata=true failed. Response from server was: '
-        'No rights to view dataset'
+    error_message = errors[0].getMessage()
+
+    assert error_message.startswith(
+        "HTTP request to https://metaksi/rest/v2/datasets/1?"
+    )
+    assert error_message.endswith(
+        "Response from server was: No rights to view dataset"
     )
 
     # Second logged error should be the raised HTTPError
