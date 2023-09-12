@@ -20,6 +20,8 @@ Summary:        Digital Preservation Packaging Service for Research datasets
 License:        LGPLv3+
 URL:            https://www.digitalpreservation.fi
 Source0:        %{file_prefix}-v%{file_version}%{?file_release_tag}-%{file_build_number}-g%{file_commit_ref}.%{file_ext}
+Source1:        siptools-research.service
+Source2:        siptools-research.timer
 BuildArch:      noarch
 
 BuildRequires:  python3-devel
@@ -86,6 +88,9 @@ install -D -m 0644 include/etc/siptools_research.conf %{buildroot}%{_sysconfdir}
 install -D -m 0644 include/etc/logrotate.d/siptools_research %{buildroot}%{_sysconfdir}/logrotate.d/siptools_research
 install -D -m 0644 include/etc/luigi/research_logging.cfg %{buildroot}%{_sysconfdir}/luigi/research_logging.cfg
 
+install -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/siptools-research.service
+install -D -m 0644 %{SOURCE2} %{buildroot}%{_unitdir}/siptools-research.timer
+
 # TODO: executables with "-3" suffix are added to maintain compatibility with our systems.
 # executables with "-3" suffix should be deprecated.
 cp %{buildroot}%{_bindir}/siptools-research %{buildroot}%{_bindir}/siptools-research-3
@@ -100,6 +105,8 @@ chmod 770 /var/lib/%{user_name}
 %config(noreplace) %{_sysconfdir}/siptools_research.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/siptools_research
 %config %{_sysconfdir}/luigi/research_logging.cfg
+%{_unitdir}/siptools-research.service
+%{_unitdir}/siptools-research.timer
 
 # TODO: For now changelog must be last, because it is generated automatically
 # from git log command. Appending should be fixed to happen only after %changelog macro

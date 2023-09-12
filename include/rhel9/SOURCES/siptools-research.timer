@@ -1,0 +1,6 @@
+[Timer]
+OnActiveSec=0s
+OnUnitActiveSec=60s
+
+[Install]
+WantedBy=timers.target

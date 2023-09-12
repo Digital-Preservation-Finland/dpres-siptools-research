@@ -1,0 +1,15 @@
+[Unit]
+Description=Start/restart siptools_research workflows
+# TODO: Rename to `luigid.service`. The `-3` suffix is not necessary starting
+# with RHEL9 and was only used to allow installation of Python 2 & 3 packages
+# simultaneously.
+Requires=luigid-3.service mongod.service
+After=luigid-3.service mongod.service
+
+[Service]
+User=siptools_research
+Type=oneshot
+ExecStart=/usr/bin/luigi --module siptools_research.workflow_init InitWorkflows --config /etc/siptools_research.conf --logging-conf-file /etc/luigi/research_logging.cfg
+
+[Install]
+WantedBy=multi-user.target
