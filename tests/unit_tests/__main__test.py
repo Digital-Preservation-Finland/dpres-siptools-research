@@ -8,7 +8,7 @@ import pytest
 from metax_access.metax import (
     DS_STATE_TECHNICAL_METADATA_GENERATED,
     DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
-    DS_STATE_VALID_METADATA,
+    DS_STATE_METADATA_CONFIRMED,
     DS_STATE_INVALID_METADATA,
     DS_STATE_METADATA_VALIDATION_FAILED
 )
@@ -155,7 +155,7 @@ def test_main_validate(mocker,
 
     if set_preservation_state:
         assert requests_mock.last_request.json() \
-            == {'preservation_state': DS_STATE_VALID_METADATA,
+            == {'preservation_state': DS_STATE_METADATA_CONFIRMED,
                 'preservation_description': 'Metadata is valid'}
     else:
         assert not requests_mock.called
