@@ -13,6 +13,7 @@ from siptools_research.utils.locale import (
 )
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_workspace import CreateWorkspace
+from siptools_research.workflow.validate_files import ValidateFiles
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidDatasetMetadataError
@@ -48,6 +49,11 @@ class CreateProvenanceInformation(WorkflowTask):
                 config=self.config
             ),
             ValidateMetadata(
+                workspace=self.workspace,
+                dataset_id=self.dataset_id,
+                config=self.config
+            ),
+            ValidateFiles(
                 workspace=self.workspace,
                 dataset_id=self.dataset_id,
                 config=self.config
