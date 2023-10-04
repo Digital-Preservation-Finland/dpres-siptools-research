@@ -59,25 +59,6 @@ class Database:
             upsert=True
         )
 
-    def set_status(self, workflow_id, status):
-        """Set the status string for a workflow.
-
-        :param workflow_id: Workflow identifier
-        :param status: Status string
-        :returns: ``None``
-        """
-        self._collection.update_one(
-            {
-                '_id': workflow_id
-            },
-            {
-                '$set': {
-                    'status': status
-                }
-            },
-            upsert=True
-        )
-
     def set_completed(self, workflow_id):
         """Mark workflow completed.
 
@@ -151,7 +132,6 @@ class Database:
             {
                 '$set': {
                     'target_task': target_task_name,
-                    'status': 'Request received',
                     'dataset': dataset_id,
                     'completed': False,
                     'disabled': False
@@ -201,16 +181,6 @@ class Database:
         :returns: Workflow
         """
         return self._collection.find_one({"_id": workflow_id})
-
-    def get_task_result(self, workflow_id, task_name):
-        """Read task result for a workflow.
-
-        :param workflow_id: Workflow identifier
-        :param task_name: Name of task
-        :returns: Task result
-        """
-        document = self._collection.find_one({'_id': workflow_id})
-        return document['workflow_tasks'][task_name]['result']
 
     def get_task_timestamp(self, workflow_id, task_name):
         """Read task timestamp for a workflow.

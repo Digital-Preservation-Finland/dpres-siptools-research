@@ -31,37 +31,6 @@ def test_add_task():
     # Check that there is no extra workflows in database
     assert len(database.get_workflows(None)) == 1
 
-
-@pytest.mark.usefixtures('testmongoclient')
-def test_set_status():
-    """Test setting workflow status.
-
-    Change workflow status twice using ``set_status`` function and check
-    that status is updated.
-
-    :returns: ``None``
-    """
-    # Init database client
-    database = siptools_research.utils.database.Database(
-        tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-
-    # Set status
-    database.set_status('test_workflow', 'Original status')
-
-    # Check status
-    # pylint: disable=protected-access
-    assert database._collection.find_one({'_id': 'test_workflow'})['status'] \
-        == 'Original status'
-
-    # Change status
-    database.set_status('test_workflow', 'New status')
-
-    # Check that status has changed
-    assert database._collection.find_one({'_id': 'test_workflow'})['status'] \
-        == 'New status'
-
-
 @pytest.mark.usefixtures('testmongoclient')
 def test_add_workflow():
     """Test adding new workflow.

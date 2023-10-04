@@ -5,7 +5,6 @@ import tests.conftest
 import siptools_research
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.workflow_init import (generate_metadata,
-                                             validate_metadata,
                                              validate_dataset,
                                              preserve_dataset,
                                              InitWorkflows)
@@ -81,26 +80,6 @@ def test_validate_dataset():
     workflow = database.get_all_active_workflows()[0]
     assert workflow['dataset'] == 'dataset1'
     assert workflow['target_task'] == 'ReportDatasetValidationResult'
-
-
-@pytest.mark.usefixtures('testmongoclient')
-def test_validate_metadata():
-    """Test validate_metadata function.
-
-    Tests that `validate_metadata` schedules correct task.
-
-    :returns: ``None``
-    """
-    validate_metadata('dataset1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # Check that workflow was added to database.
-    database = siptools_research.utils.database.Database(
-        tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-    assert len(database.get_all_active_workflows()) == 1
-    workflow = database.get_all_active_workflows()[0]
-    assert workflow['dataset'] == 'dataset1'
-    assert workflow['target_task'] == 'ReportMetadataValidationResult'
 
 
 @pytest.mark.usefixtures('testmongoclient')

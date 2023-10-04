@@ -366,7 +366,7 @@ def test_main_status(capsys, monkeypatch):
     )
     siptools_research.__main__.main()
     out, _ = capsys.readouterr()
-    message = "Status: Request received\nWorkflow is incomplete and enabled\n"
+    message = "Workflow is incomplete and enabled\n"
     assert out == message
 
 

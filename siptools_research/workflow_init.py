@@ -9,8 +9,6 @@ from siptools_research.config import Configuration
 import siptools_research.utils.database
 from siptools_research.workflow.cleanup\
     import CleanupFileCache
-from siptools_research.workflow.report_metadata_validation_result\
-    import ReportMetadataValidationResult
 from siptools_research.workflow.generate_metadata \
     import GenerateMetadata
 from siptools_research.workflow.report_dataset_validation_result\
@@ -18,7 +16,6 @@ from siptools_research.workflow.report_dataset_validation_result\
 
 TARGET_TASKS = {
     CleanupFileCache.__name__: CleanupFileCache,
-    ReportMetadataValidationResult.__name__: ReportMetadataValidationResult,
     GenerateMetadata.__name__: GenerateMetadata,
     ReportDatasetValidationResult.__name__: ReportDatasetValidationResult
 }
@@ -56,17 +53,6 @@ def generate_metadata(dataset_id, config='/etc/siptools_research.conf'):
     :returns: ``None``
     """
     schedule_workflow(dataset_id, GenerateMetadata.__name__, config=config)
-
-
-def validate_metadata(dataset_id, config='/etc/siptools_research.conf'):
-    """Validate dataset metadata.
-
-    :param dataset_id: identifier of dataset
-    :param config: path to configuration file
-    :returns: ``None``
-    """
-    schedule_workflow(dataset_id,
-                      ReportMetadataValidationResult.__name__, config=config)
 
 
 def validate_dataset(dataset_id, config='/etc/siptools_research.conf'):

@@ -411,7 +411,6 @@ def _status(args):
     """Get workflow status."""
     document = _get_workflow_document(args)
     if document:
-        print(f"Status: {document['status']}")
         print("Workflow is ", end="")
         print("completed" if document["completed"] else "incomplete", end="")
         print(" and ", end="")
