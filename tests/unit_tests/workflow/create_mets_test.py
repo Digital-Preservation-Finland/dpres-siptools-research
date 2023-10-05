@@ -1,4 +1,5 @@
 """Tests for module :mod:`siptools_research.workflow.create_mets`."""
+import copy
 from pathlib import Path
 
 import lxml
@@ -9,6 +10,7 @@ from siptools.scripts.import_object import import_object
 from siptools.scripts.premis_event import premis_event
 
 import tests.utils
+from tests.metax_data.datasets import BASE_DATASET
 from siptools_research.workflow.create_mets import CreateMets
 
 NAMESPACES = {
@@ -20,29 +22,29 @@ NAMESPACES = {
 }
 
 
-METS_ATTRIBUTES = {
-    'PROFILE': 'http://digitalpreservation.fi/mets-profiles/research-data',
-    f"{{{NAMESPACES['fi']}}}CONTRACTID": "urn:uuid:abcd1234-abcd-1234-5678"
-                                         "-abcd1234abcd",
-    f"{{{NAMESPACES['xsi']}}}schemaLocation": 'http://www.loc.gov/METS/ '
-                                              'http://digitalpreservation.fi/'
-                                              'schemas/mets/mets.xsd',
-    f"{{{NAMESPACES['fi']}}}SPECIFICATION": '1.7.5',
-    'OBJID': 'doi:test',
-    f"{{{NAMESPACES['fi']}}}CATALOG": '1.7.5',
-}
-
-
+@pytest.mark.parametrize(
+    'data_catalog,objid',
+    [
+        ('urn:nbn:fi:att:data-catalog-ida', 'doi:pas-version-id'),
+        ('urn:nbn:fi:att:data-catalog-pas', 'doi:test')
+    ]
+)
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_mets_ok(workspace, requests_mock):
+def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
     """Test the workflow task CreateMets.
 
     :param pkg_root: Temporary directory fixture
     :param requests_mock: Mocker object
+    :param data_catalog: Data catalog identifier of dataset
+    :param objid: Identifier expected to be used as OBJID
     :returns: ``None``
     """
     # Mock metax
-    tests.utils.add_metax_dataset(requests_mock)
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['data_catalog']['identifier'] = data_catalog
+    dataset['preservation_dataset_version'] \
+        = {'preferred_identifier': 'doi:pas-version-id'}
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create workspace with contents required by the tested task
     create_test_data(workspace=workspace)
@@ -58,7 +60,18 @@ def test_create_mets_ok(workspace, requests_mock):
     tree = lxml.etree.parse(str(workspace / 'mets.xml'))
 
     # Check that the root element contains expected attributes.
-    assert tree.getroot().attrib == METS_ATTRIBUTES
+    mets_attributes = {
+        'PROFILE': 'http://digitalpreservation.fi/mets-profiles/research-data',
+        f"{{{NAMESPACES['fi']}}}CONTRACTID":
+        "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
+        f"{{{NAMESPACES['xsi']}}}schemaLocation":
+        'http://www.loc.gov/METS/ http://digitalpreservation.fi/'
+        'schemas/mets/mets.xsd',
+        f"{{{NAMESPACES['fi']}}}SPECIFICATION": '1.7.5',
+        'OBJID': objid,
+        f"{{{NAMESPACES['fi']}}}CATALOG": '1.7.5',
+    }
+    assert tree.getroot().attrib == mets_attributes
 
     # Check that XML documents contains expected namespaces
     assert tree.getroot().nsmap == NAMESPACES

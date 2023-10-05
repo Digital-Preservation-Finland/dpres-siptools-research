@@ -102,6 +102,11 @@ def add_metax_dataset(requests_mock,
                                 dataset['identifier']),
         json=dataset
     )
+    requests_mock.patch(
+        "{}/datasets/{}".format(tests.conftest.METAX_URL,
+                                dataset['preservation_identifier']),
+        json=dataset
+    )
     requests_mock.get(
         "{}/datasets/{}?dataset_format=datacite".format(
             tests.conftest.METAX_URL,

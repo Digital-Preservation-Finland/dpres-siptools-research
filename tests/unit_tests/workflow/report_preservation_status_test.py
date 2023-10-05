@@ -7,24 +7,46 @@ from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
 
 
+@pytest.mark.parametrize(
+    'data_catalog_id,dataset_id',
+    [
+        ("urn:nbn:fi:att:data-catalog-ida", "pas-version-id"),
+        ("urn:nbn:fi:att:data-catalog-pas", "original-version-id")
+    ]
+)
 @pytest.mark.usefixtures('testmongoclient')
 def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir,
-                                  requests_mock):
+                                  requests_mock, data_catalog_id, dataset_id):
     """Test reporting status of accepted SIP.
 
     Creates new directory to "accepted" directory in digital
-    preservation server, runs ReportPreservationStatus task, and tests
-    that task is complete after it has been run.
+    preservation server, runs ReportPreservationStatus task. Tests
+    that task is complete after it has been run and that the
+    preservation status of correct dataset is updated.
 
     :param testpath: Temporary directory fixture
     :param luigi_mock_ssh_config: Luigi configuration file path
     :param sftp_dir: Directory that acts as DPS sftp home directory
     :param requests_mock: HTTP request mocker
+    :param data_catalog_id: Data catalog identifier of preserved dataset
+    :param dataset_id: Dataset Identifier that should be used when
+                       preservation state is update.
     :returns: ``None``
     """
     # Mock Metax
-    requests_mock.get('/rest/v2/datasets/foobar', json={})
-    requests_mock.patch('/rest/v2/datasets/foobar')
+    requests_mock.get(
+        '/rest/v2/datasets/foobar',
+        json={
+            'data_catalog': {
+                'identifier': data_catalog_id
+            },
+            'identifier': 'original-version-id',
+            'preservation_dataset_version': {
+                'identifier': 'pas-version-id'
+            }
+        }
+    )
+    metax_mock = requests_mock.patch(f'/rest/v2/datasets/{dataset_id}')
 
     workspace = testpath
 
@@ -45,10 +67,13 @@ def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir,
     task.run()
     assert task.complete()
 
+    assert metax_mock.called_once
+
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_reportpreservationstatus_rejected(
-        testpath, luigi_mock_ssh_config, sftp_dir):
+        testpath, luigi_mock_ssh_config, sftp_dir, requests_mock
+):
     """Test reporting status of rejected SIP.
 
     Creates new directory with a report file to "rejected" directory in
@@ -62,6 +87,15 @@ def test_reportpreservationstatus_rejected(
     :returns: ``None``
     """
     workspace = testpath
+
+    # Mock metax
+    requests_mock.get(
+        '/rest/v2/datasets/foobar',
+        json={
+            'data_catalog': {'identifier': 'urn:nbn:fi:att:data-catalog-pas'},
+            'identifier': 'foobar'
+        }
+    )
 
     # Create directory with name of the workspace to digital
     # preservation server over SSH, so that the ReportPreservationStatus

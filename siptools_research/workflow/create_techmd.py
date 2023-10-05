@@ -11,6 +11,7 @@ import siptools.scripts.import_object
 from luigi import LocalTarget
 from siptools_research.config import Configuration
 from siptools_research.workflow.create_workspace import CreateWorkspace
+from siptools_research.workflow.generate_metadata import GenerateMetadata
 from siptools_research.workflow.get_files import GetFiles
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflowtask import WorkflowTask
@@ -64,7 +65,10 @@ class CreateTechnicalMetadata(WorkflowTask):
                                            config=self.config),
             'files': GetFiles(workspace=self.workspace,
                               dataset_id=self.dataset_id,
-                              config=self.config)
+                              config=self.config),
+            'metadata_generation': GenerateMetadata(workspace=self.workspace,
+                                                    dataset_id=self.dataset_id,
+                                                    config=self.config)
         }
 
     def output(self):

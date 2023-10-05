@@ -9,6 +9,8 @@ from siptools.scripts import compile_mets
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_logical_structmap \
     import CreateLogicalStructMap
+from siptools_research.workflow.copy_dataset_to_pas_data_catalog\
+    import CopyToPasDataCatalog
 
 
 class CreateMets(WorkflowTask):
@@ -18,7 +20,9 @@ class CreateMets(WorkflowTask):
     one METS document. The METS document is written to
     <workspace>/mets.xml.
 
-    Task requires logical structural map to be created.
+    Task requires logical structural map to be created. Task requires
+    dataset to be copied to PAS data catalog to ensure that dataset has
+    "preservation_dataset_version".
     """
 
     success_message = "METS document compiled"
@@ -29,9 +33,12 @@ class CreateMets(WorkflowTask):
 
         :returns: Required task
         """
-        return CreateLogicalStructMap(workspace=self.workspace,
-                                      dataset_id=self.dataset_id,
-                                      config=self.config)
+        return [CreateLogicalStructMap(workspace=self.workspace,
+                                       dataset_id=self.dataset_id,
+                                       config=self.config),
+                CopyToPasDataCatalog(workspace=self.workspace,
+                                     dataset_id=self.dataset_id,
+                                     config=self.config)]
 
     def output(self):
         """Return the output target of this Task.
@@ -53,7 +60,14 @@ class CreateMets(WorkflowTask):
         metadata = metax_client.get_dataset(self.dataset_id)
 
         # Get preservation_identifier from Metax
-        preservation_id = metadata["preservation_identifier"]
+        catalog_id = metadata['data_catalog']['identifier']
+        if catalog_id == "urn:nbn:fi:att:data-catalog-ida":
+            objid = (metadata['preservation_dataset_version']
+                     ['preferred_identifier'])
+        elif catalog_id == "urn:nbn:fi:att:data-catalog-pas":
+            objid = metadata["preservation_identifier"]
+        else:
+            raise ValueError(f'Unknown data catalog identifier: {catalog_id}')
 
         # Get contract data from Metax
         contract_id = metadata["contract"]["identifier"]
@@ -67,7 +81,7 @@ class CreateMets(WorkflowTask):
             workspace=self.sip_creation_path,
             mets_profile='tpas',
             contractid=contract_identifier,
-            objid=preservation_id,
+            objid=objid,
             organization_name=contract_org_name,
             packagingservice='Packaging Service'
         )

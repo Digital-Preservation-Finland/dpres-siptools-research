@@ -77,6 +77,24 @@ class Database:
             upsert=True
         )
 
+    def set_incomplete(self, workflow_id):
+        """Mark workflow incomplete.
+
+        :param workflow_id: Workflow identifier
+        :returns: ``None``
+        """
+        self._collection.update_one(
+            {
+                '_id': workflow_id
+            },
+            {
+                '$set': {
+                    'completed': False
+                }
+            },
+            upsert=True
+        )
+
     def set_disabled(self, workflow_id):
         """Mark workflow disabled.
 
@@ -140,6 +158,25 @@ class Database:
             upsert=True
         )
 
+    def set_target_task(self, workflow_id, target_task):
+        """Set the target Task of the workflow.
+
+        :param workflow_id: Workflow identifier
+        :param task: The new target Task for workflow
+        :returns: ``None``
+        """
+        self._collection.update_one(
+            {
+                '_id': workflow_id
+            },
+            {
+                '$set': {
+                    'target_task': target_task
+                }
+            },
+            upsert=True
+        )
+
     def find(self, search):
         """Search workflows with arbitrary filter.
 
@@ -156,15 +193,25 @@ class Database:
         """
         return list(self._collection.find({"dataset": dataset_id}))
 
-    def get_active_workflows(self, dataset_id):
-        """Get all active workflows of dataset.
+    def get_current_workflow(self, dataset_id):
+        """Get the current workflow of dataset.
 
         :param dataset_id: Dataset identifier
-        :returns: List of incomplete workflows
+        :returns: Current workflow or `None`
         """
-        return list(self._collection.find({'dataset': dataset_id,
-                                           'completed': False,
-                                           'disabled': False}))
+        workflows = list(self._collection.find({'dataset': dataset_id,
+                                                'disabled': False}))
+        if len(workflows) == 0:
+            # Workflows have not been created for this dataset, or they
+            # are all disabled.
+            return None
+
+        if len(workflows) == 1:
+            return workflows[0]
+
+        raise ValueError(
+            "Multiple workflows exist for dataset {dataset_id}"
+        )
 
     def get_all_active_workflows(self):
         """Get all active workflows.

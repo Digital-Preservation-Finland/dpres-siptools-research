@@ -1,5 +1,6 @@
 """Tests for :mod:`siptools_research.workflow_init` module."""
 import pytest
+from metax_access import DS_STATE_METADATA_CONFIRMED
 
 import tests.conftest
 import siptools_research
@@ -103,7 +104,7 @@ def test_preserve_dataset():
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_workflow_conflict():
+def test_workflow_conflict(requests_mock):
     """Test starting another workflow for dataset.
 
     Tests that that new workflows can not be started when dataset
@@ -134,4 +135,47 @@ def test_workflow_conflict():
     # New workflow can be started when the previous workflow is
     # completed
     database.set_completed('workflow1')
+    requests_mock.get('/rest/v2/datasets/dataset1',
+                      json={'preservation_state': DS_STATE_METADATA_CONFIRMED})
     preserve_dataset('dataset1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Only the target_task of the workflow should be updated
+    workflows = database.get_all_active_workflows()
+    assert len(workflows) == 1
+    assert not workflows[0]['disabled']
+    assert workflows[0]['target_task'] == 'CleanupFileCache'
+    assert workflows[0]['dataset'] == 'dataset1'
+
+
+@pytest.mark.parametrize('previous_workflow_is_completed', [True, False])
+@pytest.mark.usefixtures('testmongoclient')
+def test_continuing_disabled_workflow(previous_workflow_is_completed):
+    """Test that previous disabled workflow is not continued.
+
+    New workflow should always be created, if previous worklow of the
+    dataset is disabled. It does not matter if the previous workflow is
+    complete or not.
+
+    :param previous_workflow_is_completed: `True`, if previous workflow
+                                           is enabled
+    :returns: ``None``
+    """
+    # Add a disabled incomplete workflow to database
+    database = siptools_research.utils.database.Database(
+        tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+    database.add_workflow('workflow1', 'PreviousTarget',
+                          'dataset1')
+    database.set_disabled('workflow1')
+    if previous_workflow_is_completed:
+        database.set_completed('workflow1')
+
+    # Preserve the dataset that has previous disabled task
+    preserve_dataset('dataset1', config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # The previous workflow should not be changed
+    previous_workflow = database.get_one_workflow('workflow1')
+    assert previous_workflow['target_task'] == 'PreviousTarget'
+    assert previous_workflow['disabled'] is True
+    assert previous_workflow['completed'] is previous_workflow_is_completed
+    assert len(database.get_workflows('dataset1')) == 2

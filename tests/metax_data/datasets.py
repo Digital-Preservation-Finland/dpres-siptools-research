@@ -39,6 +39,9 @@ QVAIN_PROVENANCE = {
 
 BASE_DATASET = {
     "identifier": "dataset_identifier",
+    "data_catalog": {
+        "identifier": "urn:nbn:fi:att:data-catalog-pas"
+    },
     "preservation_identifier": "doi:test",
     "contract": {
         "identifier": "contract_identifier"

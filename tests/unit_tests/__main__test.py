@@ -10,7 +10,8 @@ from metax_access.metax import (
     DS_STATE_TECHNICAL_METADATA_GENERATION_FAILED,
     DS_STATE_METADATA_CONFIRMED,
     DS_STATE_INVALID_METADATA,
-    DS_STATE_METADATA_VALIDATION_FAILED
+    DS_STATE_METADATA_VALIDATION_FAILED,
+    DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
 )
 
 import siptools_research.__main__
@@ -244,7 +245,8 @@ def test_main_preserve(mocker, requests_mock):
 
     # Check that preservation state of dataset was changed
     json_message = requests_mock.last_request.json()
-    assert json_message['preservation_state'] == 90
+    assert json_message['preservation_state'] \
+        == DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
     assert json_message['preservation_description'] == 'In packaging service'
 
 

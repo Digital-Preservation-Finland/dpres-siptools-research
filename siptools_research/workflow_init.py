@@ -3,6 +3,9 @@
 import os
 import uuid
 import luigi
+from metax_access import (Metax,
+                          DS_STATE_VALIDATED_METADATA_UPDATED,
+                          DS_STATE_INITIALIZED)
 
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.config import Configuration
@@ -90,13 +93,44 @@ def schedule_workflow(dataset_id,
     :returns: ``None``
     """
     database = siptools_research.utils.database.Database(config)
+    previous_workflow = database.get_current_workflow(dataset_id)
 
-    # Check if enabled workflow already exists
-    if database.get_active_workflows(dataset_id):
-        raise WorkflowExistsError(
-            'Active workflow already exists for this dataset.'
+    if previous_workflow:
+        # Check if previous workflow can be continued
+        if not previous_workflow['completed']:
+            # NOTE: Changing the target task of the workflow while it is
+            # still running probably would be OK. But currently  we
+            # don't need that kind of functionality, so it is safer to
+            # prevent it.
+            raise WorkflowExistsError(
+                'Active workflow already exists for this dataset.'
+            )
+        conf = Configuration(config)
+        metax = Metax(
+            conf.get('metax_url'),
+            conf.get('metax_user'),
+            conf.get('metax_password'),
+            verify=conf.getboolean('metax_ssl_verification')
         )
+        dataset = metax.get_dataset(dataset_id)
+        if dataset['preservation_state'] in (
+            DS_STATE_VALIDATED_METADATA_UPDATED,
+            DS_STATE_INITIALIZED
+        ):
+            # DS_STATE_VALIDATED_METADATA_UPDATED means that dataset
+            # metadata has been changed. DS_STATE_INITIALIZED means that
+            # user has reset the dataset. User might have edited the
+            # dataset when it is in "initialized" state. We don't know
+            # what exactly has changed so we have to restart the whole
+            # workflow.
+            database.set_disabled(previous_workflow['_id'])
+            previous_workflow = None
 
-    # Add new workflow to database
-    workflow_id = f"aineisto_{dataset_id}-{str(uuid.uuid4())}"
-    database.add_workflow(workflow_id, target_task, dataset_id)
+    if previous_workflow:
+        # Continue previous workflow
+        database.set_target_task(previous_workflow["_id"], target_task)
+        database.set_incomplete(previous_workflow["_id"])
+    else:
+        # Add new workflow to database
+        workflow_id = f"aineisto_{dataset_id}-{str(uuid.uuid4())}"
+        database.add_workflow(workflow_id, target_task, dataset_id)
