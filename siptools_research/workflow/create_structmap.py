@@ -57,7 +57,7 @@ class CreateStructMap(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: Local target `sip-in-progress/filesec.xml`
+        :returns: Local target `<sip_creation_path>/filesec.xml`
         """
         return LocalTarget(str(Path(self.sip_creation_path) / 'filesec.xml'))
 

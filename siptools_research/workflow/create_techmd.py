@@ -74,12 +74,12 @@ class CreateTechnicalMetadata(WorkflowTask):
     def output(self):
         """Return output target of this Task.
 
-        :returns: `<workspace>/create-technical-metadata.jsonl`
+        :returns: `<workspace>/preservation/create-technical-metadata.jsonl`
         :rtype: LocalTarget
         """
         return LocalTarget(
             os.path.join(
-                self.workspace,
+                self.preservation_workspace,
                 'create-technical-metadata.jsonl'
             )
         )
@@ -171,7 +171,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         # Create PREMIS file metadata XML
         siptools.scripts.import_object.import_object(
             filepaths=[filepath],
-            base_path=self.workspace,
+            base_path=self.preservation_workspace,
             workspace=output,
             skip_wellformed_check=True,
             file_format=(

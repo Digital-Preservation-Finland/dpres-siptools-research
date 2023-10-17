@@ -41,12 +41,14 @@ class CompressSIP(WorkflowTask):
     def output(self):
         """Return the output target of the Task.
 
-        :returns: `<workspace>/<workflow_id>.tar`
+        :returns: `<workspace>/preservation/<workflow_id>.tar`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
-            os.path.join(self.workspace, self.workflow_id) + '.tar',
-            format=luigi.format.Nop
+            os.path.join(
+                self.preservation_workspace,
+                self.workflow_id
+            ) + '.tar', format=luigi.format.Nop
         )
 
     def run(self):

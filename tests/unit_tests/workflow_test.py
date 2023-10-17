@@ -6,6 +6,7 @@ import filecmp
 import importlib
 import shutil
 import tarfile
+from pathlib import Path
 
 from lxml.isoschematron import Schematron
 from siptools.xml.mets import NAMESPACES
@@ -158,6 +159,13 @@ def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
 
     # Check 'result' field
     assert document['workflow_tasks'][task]['result'] == 'success'
+
+    # The workspace root directory should contain only metadata
+    # generation, validation and preservation workspaces
+    workspace_content = {path.name for path in Path(workspace).iterdir()}
+    assert workspace_content == {'metadata_generation',
+                                 'validation',
+                                 'preservation'}
 
 
 @pytest.mark.usefixtures(
@@ -333,7 +341,7 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files,
     )
 
     # Extract SIP
-    with tarfile.open(workspace / 'workspace.tar') as tar:
+    with tarfile.open(workspace / 'preservation' / 'workspace.tar') as tar:
         tar.extractall(testpath / 'extracted_sip')
 
     # Read mets.xml

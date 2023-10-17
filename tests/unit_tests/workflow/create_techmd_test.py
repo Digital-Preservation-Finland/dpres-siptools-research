@@ -49,14 +49,12 @@ def test_create_techmd_ok(workspace, requests_mock):
     tests.utils.add_metax_dataset(requests_mock, files=[TIFF_FILE])
 
     # Create workspace that already contains the dataset files
-    sipdirectory = workspace / 'sip-in-progress'
-    sipdirectory.mkdir()
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
     tiff_path = Path('dataset_files') / TIFF_FILE['file_path']
-    (workspace / tiff_path).parent.mkdir(parents=True)
-
+    (workspace / 'preservation' / tiff_path).parent.mkdir(parents=True)
     shutil.copy(
         'tests/data/sample_files/valid_tiff.tiff',
-        workspace / tiff_path
+        workspace / 'preservation' / tiff_path
     )
 
     # Init task
@@ -114,7 +112,8 @@ def test_create_techmd_ok(workspace, requests_mock):
 
     # Some premis agent files should be created
     premis_references = read_md_references(
-        str(workspace), 'create-technical-metadata.jsonl'
+        str(workspace / 'preservation'),
+        'create-technical-metadata.jsonl'
     )
     premis_agent_files = [f'{id_[1:]}-PREMIS%3AAGENT-amd.xml'
                           for id_ in premis_references['.']['md_ids']
@@ -173,9 +172,8 @@ def test_create_techmd_multiple_metadata_documents(
     tests.utils.add_metax_dataset(requests_mock, files=[MKV_FILE])
 
     # Create workspace that already contains the dataset files
-    sipdirectory = workspace / 'sip-in-progress'
-    sipdirectory.mkdir()
-    dataset_files = workspace / 'dataset_files'
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
+    dataset_files = workspace / 'preservation' / 'dataset_files'
     mkv_path = dataset_files / MKV_FILE['file_path']
     mkv_path.parent.mkdir(parents=True)
     shutil.copy('tests/data/sample_files/video_ffv1.mkv', mkv_path)
@@ -242,7 +240,8 @@ def test_create_techmd_incomplete_file_characteristics(
     # Create workspace that already contains the dataset files
     sipdirectory = workspace / "sip-in-progress"
     sipdirectory.mkdir()
-    tiff_path = workspace / "dataset_files" / TIFF_FILE["file_path"]
+    tiff_path \
+        = workspace / "preservation" / "dataset_files" / TIFF_FILE["file_path"]
     tiff_path.parent.mkdir(parents=True)
     shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
 
@@ -271,9 +270,8 @@ def test_create_techmd_without_charset(workspace, requests_mock):
     tests.utils.add_metax_dataset(requests_mock, files=[text_file])
 
     # Create workspace that contains a textfile
-    sipdirectory = workspace / 'sip-in-progress'
-    sipdirectory.mkdir(parents=True)
-    dataset_files = workspace / "dataset_files"
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
+    dataset_files = workspace / "preservation" / "dataset_files"
     text_file_path = dataset_files / "path" / "to" / "file"
     text_file_path.parent.mkdir(parents=True)
 

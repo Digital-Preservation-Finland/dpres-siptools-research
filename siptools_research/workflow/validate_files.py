@@ -31,11 +31,11 @@ class ValidateFiles(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: `<workspace>/validate-files.finished`
+        :returns: `<workspace>/validation/validate-files.finished`
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.workspace, 'validate-files.finished'),
+            os.path.join(self.validation_workspace, 'validate-files.finished'),
         )
 
     def run(self):

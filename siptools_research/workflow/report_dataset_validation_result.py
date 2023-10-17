@@ -36,12 +36,14 @@ class ReportDatasetValidationResult(WorkflowTask):
     def output(self):
         """Return the output targets of this Task.
 
-        :returns: `<workspace>/report-dataset-validation-result.finished`
+        :returns: `<workspace>/validation`
+                  `/report-dataset-validation-result.finished`
         :rtype: LocalTarget
         """
         return LocalTarget(
             os.path.join(
-                self.workspace, 'report-dataset-validation-result.finished'
+                self.validation_workspace,
+                'report-dataset-validation-result.finished'
             )
         )
 

@@ -1,5 +1,6 @@
 """Base task classes for the workflow tasks."""
 import os
+from pathlib import Path
 import shutil
 
 import luigi
@@ -35,6 +36,7 @@ class WorkflowTask(luigi.Task):
                         created
     """
 
+    # TODO: maybe workspace parameter could be removed?
     workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
     config = luigi.Parameter()
@@ -47,8 +49,12 @@ class WorkflowTask(luigi.Task):
         """
         super().__init__(*args, **kwargs)
         self.workflow_id = os.path.basename(self.workspace)
-        self.sip_creation_path = os.path.join(self.workspace,
-                                              'sip-in-progress')
+        _workspace = Path(self.workspace)
+        self.metadata_generation_workspace = _workspace / "metadata_generation"
+        self.validation_workspace = _workspace / "validation"
+        self.preservation_workspace = _workspace / "preservation"
+        self.sip_creation_path \
+            = self.preservation_workspace / "sip-in-progress"
 
     def get_metax_client(self):
         """Initialize Metax client."""

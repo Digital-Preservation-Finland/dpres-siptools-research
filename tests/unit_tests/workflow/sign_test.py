@@ -18,7 +18,7 @@ def test_signsip(workspace):
     # Copy sample METS file to workspace
     shutil.copy(
         'tests/data/sample_mets.xml',
-        workspace / 'mets.xml'
+        workspace / 'preservation' / 'mets.xml'
     )
 
     # Init task
@@ -34,10 +34,11 @@ def test_signsip(workspace):
     # Check that signature.sig is created in workspace
     assert (
         "This is an S/MIME signed message"
-        in (workspace / "signature.sig").read_text()
+        in (workspace / "preservation" / "signature.sig").read_text()
     )
 
-    names = {path.name for path in workspace.iterdir()}
+    names = {path.name for path in (workspace / "preservation").iterdir()}
 
-    # SIP directory should contain only METS and signature
-    assert names == {'signature.sig', 'mets.xml'}
+    # Preservation workspace should contain only METS, signature, and
+    # sip-in-progress directory.
+    assert names == {'signature.sig', 'mets.xml', 'sip-in-progress'}

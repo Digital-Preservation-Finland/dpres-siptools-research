@@ -58,7 +58,8 @@ def test_getfiles(workspace, requests_mock):
     assert task.complete()
 
     # Check that correct files are created into correct path
-    dataset_files_dir = workspace / "dataset_files" / "path" / "to"
+    dataset_files_dir \
+        = workspace / "preservation" / "dataset_files" / "path" / "to"
     assert (dataset_files_dir / "file1").read_text() == "foo\n"
     assert (dataset_files_dir / "file2").read_text() == "bar\n"
 
@@ -272,5 +273,6 @@ def test_allowed_relative_paths(workspace, requests_mock, path):
 
     # Download file and check that is found in expected location
     task.run()
-    files = [path.name for path in (workspace / "dataset_files").iterdir()]
+    files = [path.name for path
+             in (workspace / "preservation" / "dataset_files").iterdir()]
     assert files == ['file1']

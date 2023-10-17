@@ -29,12 +29,12 @@ class CleanupFileCache(WorkflowTask):
     def output(self):
         """Return the output targets of this Task.
 
-        :returns: `<workspace>/cleanup-file-cache.finished`
+        :returns: `<workspace>/preservation/cleanup-file-cache.finished`
         :rtype: LocalTarget
         """
         return LocalTarget(
             os.path.join(
-                self.workspace, 'cleanup-file-cache.finished'
+                self.preservation_workspace, 'cleanup-file-cache.finished'
             )
         )
 

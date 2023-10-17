@@ -56,7 +56,7 @@ class CreateLogicalStructMap(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: `<workspace>/sip-in-progress/logical_structmap.xml`
+        :returns: `<sip-creation-path>/logical_structmap.xml`
         :rtype: LocalTarget
         """
         return LocalTarget(
@@ -117,7 +117,7 @@ class CreateLogicalStructMap(WorkflowTask):
         # Get the reference file path from Luigi task input
         # It already contains the workspace path.
         event_ids = get_md_references(read_md_references(
-            self.workspace,
+            self.preservation_workspace,
             os.path.basename(
                 self.input()['create_provenance_information'].path
             )

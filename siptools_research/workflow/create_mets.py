@@ -43,11 +43,11 @@ class CreateMets(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: `<workspace>/mets.xml`
+        :returns: `<workspace>/preservation/mets.xml`
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.workspace, 'mets.xml'),
+            os.path.join(self.preservation_workspace, 'mets.xml'),
             format=luigi.format.Nop
         )
 
@@ -78,7 +78,7 @@ class CreateMets(WorkflowTask):
 
         # Compile METS
         mets = compile_mets.create_mets(
-            workspace=self.sip_creation_path,
+            workspace=str(self.sip_creation_path),
             mets_profile='tpas',
             contractid=contract_identifier,
             objid=objid,

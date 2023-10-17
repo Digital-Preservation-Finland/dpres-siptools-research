@@ -6,18 +6,17 @@ from siptools_research.workflow import create_workspace
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_createworkspace(workspace):
+def test_createworkspace(pkg_root):
     """Tests for `CreateWorkspace` task.
 
     - `Task.complete()` is true after `Task.run()`
     - Directory structure is created in workspace
     - Log entry is created to mongodb
 
-    :param workspace: Test workspace directory
+    :param pkg_root: Packaging root directory
     :returns: ``None``
     """
-    workspace.rmdir()
-    assert not workspace.is_dir()
+    workspace = pkg_root / 'workspaces' / 'new-workspace'
 
     # Init task
     task = create_workspace.CreateWorkspace(
@@ -33,4 +32,4 @@ def test_createworkspace(workspace):
 
     # Check that directories were created
     assert workspace.is_dir()
-    assert (workspace / 'sip-in-progress').is_dir()
+    assert (workspace / 'preservation' / 'sip-in-progress').is_dir()

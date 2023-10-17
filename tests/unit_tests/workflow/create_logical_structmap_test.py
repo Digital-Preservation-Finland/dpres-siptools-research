@@ -81,8 +81,7 @@ def test_create_structmap_ok(
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Create workspace that already contains dataset files
-    sip_directory = workspace / "sip-in-progress"
-    sip_directory.mkdir(parents=True)
+    sip_directory = workspace / "preservation" / "sip-in-progress"
     file_directory = workspace / 'dataset_files' / 'files'
     file_directory.mkdir(parents=True)
 
@@ -106,7 +105,7 @@ def test_create_structmap_ok(
     if events:
         shutil.copy(
             sip_directory / 'premis-event-md-references.jsonl',
-            workspace / 'create-provenance-information.jsonl'
+            workspace / 'preservation' / 'create-provenance-information.jsonl'
         )
     import_description(
         dmdsec_location='tests/data/datacite_sample.xml',

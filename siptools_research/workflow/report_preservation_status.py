@@ -42,12 +42,14 @@ class ReportPreservationStatus(WorkflowTask):
     def output(self):
         """Return the output targets of this Task.
 
-        :returns: `<workspace>/report-preservation-status.finished`
+        :returns: `<workspace>/preservation/`
+                  `report-preservation-status.finished`
         :rtype: LocalTarget
         """
         return LocalTarget(
             os.path.join(
-                self.workspace, 'report-preservation-status.finished'
+                self.preservation_workspace,
+                'report-preservation-status.finished'
             )
         )
 

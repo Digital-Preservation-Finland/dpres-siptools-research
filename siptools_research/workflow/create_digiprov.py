@@ -63,11 +63,13 @@ class CreateProvenanceInformation(WorkflowTask):
     def output(self):
         """List the output targets of the task.
 
-        :returns: `<workspace>/create-provenance-information.jsonl`
+        :returns: `<workspace>/preservation/`
+                  `create-provenance-information.jsonl`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
-            os.path.join(self.workspace, 'create-provenance-information.jsonl')
+            os.path.join(self.preservation_workspace,
+                         'create-provenance-information.jsonl')
         )
 
     def run(self):

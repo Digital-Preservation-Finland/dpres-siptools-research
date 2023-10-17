@@ -57,7 +57,7 @@ def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
     assert task.complete()
 
     # Read created mets.xml
-    tree = lxml.etree.parse(str(workspace / 'mets.xml'))
+    tree = lxml.etree.parse(str(workspace / 'preservation' / 'mets.xml'))
 
     # Check that the root element contains expected attributes.
     mets_attributes = {
@@ -101,9 +101,7 @@ def create_test_data(workspace):
 
     :workspace: Workspace directory in which the data is created.
     """
-    # Create directory structure
-    sipdirectory = workspace / 'sip-in-progress'
-    sipdirectory.mkdir(parents=True)
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
 
     # Create dmdsec
     import_description(

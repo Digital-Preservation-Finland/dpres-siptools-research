@@ -21,21 +21,24 @@ def _create_metadata(workspace, files, provenance_ids=None):
     :param files: path to file or directory that contains dataset files
     :returns: ``None``
     """
-    sip_creation_path = workspace / 'sip-in-progress'
-
     # Create dmdsec
-    (workspace / 'create-descriptive-metadata.jsonl').write_text(
+    (
+        workspace / 'preservation' / 'create-descriptive-metadata.jsonl'
+    ).write_text(
         '{".": {"md_ids": ["descriptive_metadata_id"]}}'
     )
 
     # Create digiprov
     if not provenance_ids:
         provenance_ids = []
-    (workspace / 'create-provenance-information.jsonl').write_text(
+    (
+        workspace / 'preservation' / 'create-provenance-information.jsonl'
+    ).write_text(
         json.dumps({".": {"md_ids": provenance_ids}})
     )
 
     # Create tech metadata
+    sip_creation_path = workspace / 'preservation' / 'sip-in-progress'
     import_object(
         workspace=str(sip_creation_path),
         base_path=str(sip_creation_path),
@@ -45,7 +48,7 @@ def _create_metadata(workspace, files, provenance_ids=None):
     )
     shutil.move(
         sip_creation_path / "premis-event-md-references.jsonl",
-        workspace / "create-technical-metadata.jsonl"
+        workspace / "preservation" / "create-technical-metadata.jsonl"
     )
 
 
@@ -69,7 +72,7 @@ def test_create_structmap_ok(workspace, provenance_ids):
     """
     # Create clean workspace directory for dataset that contains many
     # files in directories and subdirectories in sip creation directory
-    sip_creation_path = workspace / "sip-in-progress"
+    sip_creation_path = workspace / "preservation" / "sip-in-progress"
     data_directory_path = sip_creation_path / 'data'
     subdirectory_path = data_directory_path / 'subdirectory'
     subdirectory_path.mkdir(parents=True)
@@ -133,7 +136,7 @@ def test_create_structmap_ok(workspace, provenance_ids):
     # event
     descriptive_metadata_creation_event_id \
         = read_md_references(
-            str(workspace),
+            str(workspace / 'preservation'),
             'create-descriptive-metadata.jsonl'
         )['.']['md_ids'][0]
     assert descriptive_metadata_creation_event_id in structmap_xml.xpath(
@@ -169,9 +172,7 @@ def test_create_structmap_without_directories(workspace):
     """
     # Create clean workspace directory for dataset that contains only
     # one file
-    sip_creation_path = workspace / "sip-in-progress"
-    sip_creation_path.mkdir(parents=True)
-
+    sip_creation_path = workspace / "preservation" / "sip-in-progress"
     (sip_creation_path / "file1").write_text("foo")
 
     # Create required metadata in workspace directory
@@ -203,8 +204,7 @@ def test_filesec_othermd(workspace):
     """
     # Create clean workspace directory for dataset that contains only
     # one image file
-    sip_creation_path = workspace / "sip-in-progress"
-    sip_creation_path.mkdir(parents=True)
+    sip_creation_path = workspace / "preservation" / "sip-in-progress"
     shutil.copy(
         'tests/data/sample_files/image_png.png',
         sip_creation_path / 'file1.png'

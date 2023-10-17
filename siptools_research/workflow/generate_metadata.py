@@ -33,11 +33,15 @@ class GenerateMetadata(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: `<workspace>/generate-metadata.finished`
+        :returns: `<metadata_generation_workspace>/`
+                  `generate-metadata.finished`
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.workspace, 'generate-metadata.finished'),
+            os.path.join(
+                self.metadata_generation_workspace,
+                'generate-metadata.finished'
+            ),
         )
 
     def run(self):

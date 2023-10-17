@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_send_sip(testpath, luigi_mock_ssh_config, sftp_dir):
+def test_send_sip(workspace, luigi_mock_ssh_config, sftp_dir):
     """Test the SendSipToDP task.
 
     Run task and check that .tar is copied to digital preservation
@@ -20,14 +20,10 @@ def test_send_sip(testpath, luigi_mock_ssh_config, sftp_dir):
     :param testpath: Temporary directory fixture
     :returns: ``None``
     """
-    # Create workspace with directories and files required by the task
-    workspace = testpath
-
-    (workspace / "sip-in-progress").mkdir()
     tar_file_name = f"{workspace.name}.tar"
     shutil.copy(
         'tests/data/testsips/simple_sip.tar',
-        workspace / tar_file_name
+        workspace / "preservation" / tar_file_name
     )
 
     transfer_dir = sftp_dir / "transfer"

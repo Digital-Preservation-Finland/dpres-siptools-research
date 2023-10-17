@@ -48,11 +48,11 @@ class CreateDescriptiveMetadata(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: `<workspace>/create-descriptive-metadata.jsonl`
+        :returns: `<workspace>/preservation/create-descriptive-metadata.jsonl`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(os.path.join(
-            self.workspace, 'create-descriptive-metadata.jsonl'
+            self.preservation_workspace, 'create-descriptive-metadata.jsonl'
         ))
 
     def run(self):
@@ -70,7 +70,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
         datacite = metax_client.get_datacite(dataset['identifier'])
 
         # Write datacite.xml to file
-        datacite_path = os.path.join(self.workspace,
+        datacite_path = os.path.join(self.preservation_workspace,
                                      'datacite.xml')
         datacite.write(datacite_path)
 

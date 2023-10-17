@@ -156,6 +156,8 @@ def workspace(pkg_root):
     """
     workspace_ = pkg_root / "workspaces" / "workspace"
     workspace_.mkdir()
+    (workspace_ / "preservation").mkdir()
+    (workspace_ / "preservation" / "sip-in-progress").mkdir()
     return workspace_
 
 

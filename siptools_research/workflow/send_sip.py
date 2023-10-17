@@ -36,11 +36,12 @@ class SendSIPToDP(WorkflowTask):
     def output(self):
         """Return output target of this Task.
 
-        :returns: `<workspace>/task-send-sip-to-dp.finished`
+        :returns: `<workspace>/preservation/task-send-sip-to-dp.finished`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
-            os.path.join(self.workspace, 'task-send-sip-to-dp.finished'),
+            os.path.join(self.preservation_workspace,
+                         'task-send-sip-to-dp.finished'),
         )
 
     def run(self):
@@ -63,15 +64,16 @@ class SendSIPToDP(WorkflowTask):
                 # Copy tar to remote host. Validation workflow starts
                 # when ".incomplete" suffix is removed from target file
                 # path.
-                tar_file = os.path.basename(self.workspace) + '.tar'
-                sftp.put(os.path.join(self.workspace, tar_file),
-                         os.path.join('transfer', tar_file + '.incomplete'),
-                         confirm=False)
+                source_tar_path = self.input().path
+                tar_basename = os.path.basename(source_tar_path)
+                sftp.put(
+                    source_tar_path,
+                    os.path.join('transfer', tar_basename + '.incomplete'),
+                    confirm=False
+                )
                 sftp.rename(
-                    os.path.join(
-                        'transfer', tar_file + '.incomplete'
-                    ),
-                    os.path.join('transfer', tar_file)
+                    os.path.join('transfer', tar_basename + '.incomplete'),
+                    os.path.join('transfer', tar_basename)
                 )
 
             with self.output().open('w') as log:

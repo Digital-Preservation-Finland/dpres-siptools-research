@@ -31,11 +31,12 @@ class ValidateMetadata(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: `<workspace>/validate-metadata.finished`
+        :returns: `<workspace>/validation/validate-metadata.finished`
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.workspace, 'validate-metadata.finished'),
+            os.path.join(self.validation_workspace,
+                         'validate-metadata.finished'),
         )
 
     def run(self):

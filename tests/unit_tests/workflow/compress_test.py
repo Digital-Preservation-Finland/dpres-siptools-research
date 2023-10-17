@@ -14,13 +14,13 @@ def test_compresssip(workspace, pkg_root, requests_mock):
     :param workspace: Temporary workspace directory fixture
     :param pkg_root: Temporary packaging root directory fixture
     """
-    (workspace / 'dataset_files').mkdir(parents=True)
+    (workspace / 'preservation' / 'dataset_files').mkdir(parents=True)
 
     # Create required contents to workspace
     shutil.copy('tests/data/testsips/simple_sip/mets.xml',
-                workspace / 'mets.xml')
+                workspace / 'preservation' / 'mets.xml')
     shutil.copy('tests/data/testsips/simple_sip/signature.sig',
-                workspace / 'signature.sig')
+                workspace / 'preservation' / 'signature.sig')
     shutil.copytree('tests/data/testsips/simple_sip/tests',
                     workspace / 'dataset_files' / 'tests')
 
@@ -36,7 +36,9 @@ def test_compresssip(workspace, pkg_root, requests_mock):
 
     # Extract tar file created by task and that it contains same
     # files/dirs as the original sip-in-progress directory
-    with tarfile.open(workspace / f"{workspace.name}.tar") as tar:
+    with tarfile.open(
+        workspace / "preservation" / f"{workspace.name}.tar"
+    ) as tar:
         tar.extractall(pkg_root / 'extracted_tar')
 
     found_files = {

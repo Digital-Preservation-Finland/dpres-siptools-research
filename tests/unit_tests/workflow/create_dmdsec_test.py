@@ -19,9 +19,6 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     # Mock Metax
     tests.utils.add_metax_dataset(requests_mock)
 
-    # Create empty workspace
-    (workspace / 'sip-in-progress').mkdir()
-
     # Init task
     task = CreateDescriptiveMetadata(
         dataset_id="dataset_identifier",
@@ -36,7 +33,7 @@ def test_createdescriptivemetadata(workspace, requests_mock):
 
     # Check that XML is created in sip creation directory and it
     # contains correct elements.
-    dmdsecfile = workspace / 'sip-in-progress' / 'dmdsec.xml'
+    dmdsecfile = workspace / 'preservation' / 'sip-in-progress' / 'dmdsec.xml'
     dmdsec = etree.parse(str(dmdsecfile))
     namespaces = {'mets': "http://www.loc.gov/METS/",
                   'datacite': "http://datacite.org/schema/kernel-4"}
@@ -61,7 +58,7 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     # Check that descriptive metadata reference file is created in sip
     # creation directory and it contains correct elements
     import_description_path = (
-        workspace / 'sip-in-progress'
+        workspace / 'preservation' / 'sip-in-progress'
         / 'import-description-md-references.jsonl'
     )
     references = json.loads(import_description_path.read_bytes())
@@ -72,16 +69,15 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     # Premis event reference file should be created in workspace
     # directory
     premis_event_reference_file = \
-        workspace / 'create-descriptive-metadata.jsonl'
+        workspace / "preservation" / 'create-descriptive-metadata.jsonl'
     references = json.loads(premis_event_reference_file.read_bytes())
     assert len(references['.']["md_ids"]) == 1
     premis_event_identifier = references['.']["md_ids"][0][1:]
 
     # SIP creation directory should contain only descriptive metadata
     # XML, descriptive metadata reference file and premis event XML.
-    files = {
-        path.name for path in (workspace / "sip-in-progress").iterdir()
-    }
+    files = {path.name for path
+             in (workspace / "preservation" / "sip-in-progress").iterdir()}
     assert files == {
         'dmdsec.xml',
         'import-description-md-references.jsonl',
@@ -104,9 +100,6 @@ def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
     datacite = etree.Element("{foo}bar")
     tests.utils.add_metax_dataset(requests_mock, datacite=datacite)
 
-    # Create empty workspace
-    (workspace / "sip-in-progress").mkdir()
-
     # Init task
     task = CreateDescriptiveMetadata(
         dataset_id="dataset_identifier",
@@ -121,4 +114,4 @@ def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
     assert not task.complete()
 
     # Nothing should be written in `sip-in-progress` directory
-    assert not list((workspace / 'sip-in-progress').iterdir())
+    assert not list((workspace / 'preservation' / 'sip-in-progress').iterdir())

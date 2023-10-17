@@ -1,6 +1,6 @@
 """Luigi task that creates workspace directory."""
 
-import os
+from pathlib import Path
 import luigi
 from siptools_research.workflowtask import WorkflowTask
 
@@ -14,18 +14,39 @@ class CreateWorkspace(WorkflowTask):
     def output(self):
         """List the output targets of this Task.
 
-        :returns: `<workspace>` and `<workspace>/sip-in-progress`
+        :returns: `<workspace>`
         :rtype: list of local targets
         """
-        return [luigi.LocalTarget(self.workspace),
-                luigi.LocalTarget(self.sip_creation_path)]
+        return luigi.LocalTarget(self.workspace)
 
     def run(self):
         """Create workspace directory.
 
         :returns: ``None``
         """
-        if not os.path.exists(self.workspace):
-            os.makedirs(self.workspace)
+        tmp_workspace = Path(self.output().path)
+        tmp_workspace.mkdir()
 
-        os.makedirs(self.sip_creation_path)
+        tmp_metadata_generation_workspace = (
+            tmp_workspace
+            / self.metadata_generation_workspace.relative_to(self.workspace)
+        )
+        tmp_metadata_generation_workspace.mkdir()
+
+        tmp_validation_workspace = (
+            tmp_workspace
+            / self.validation_workspace.relative_to(self.workspace)
+        )
+        tmp_validation_workspace.mkdir()
+
+        tmp_preservation_workspace = (
+            tmp_workspace
+            / self.preservation_workspace.relative_to(self.workspace)
+        )
+        tmp_preservation_workspace.mkdir()
+
+        tmp_sip_creation_path = (
+            tmp_workspace
+            / self.sip_creation_path.relative_to(self.workspace)
+        )
+        tmp_sip_creation_path.mkdir()

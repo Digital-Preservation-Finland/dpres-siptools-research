@@ -73,10 +73,6 @@ def test_createprovenanceinformation(pkg_root,
         dataset['research_dataset']['provenance'].append(provenance)
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
-    # Create workspace with required directories
-    sipdirectory = workspace / 'sip-in-progress'
-    sipdirectory.mkdir()
-
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
         workspace=str(workspace),
@@ -90,6 +86,7 @@ def test_createprovenanceinformation(pkg_root,
     assert task.complete()
 
     # PREMIS event XML should be created for each event
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
     created_files = {path.name for path in sipdirectory.iterdir()}
     expected_files = {f'{id}-PREMIS%3AEVENT-amd.xml' for id in expected_ids}
     assert created_files == expected_files
@@ -97,7 +94,9 @@ def test_createprovenanceinformation(pkg_root,
     # Metadata reference file should have references to all created
     # premis events
     references = json.loads(
-        (workspace / "create-provenance-information.jsonl").read_bytes()
+        (workspace
+         / "preservation"
+         / "create-provenance-information.jsonl").read_bytes()
     )
     assert set(references['.']['md_ids']) == {f'_{id}' for id in expected_ids}
 
@@ -124,10 +123,6 @@ def test_failed_createprovenanceinformation(
     dataset['research_dataset']['provenance'] = [provenance]
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
-    # Create empty workspace
-    sipdirectory = workspace / 'sip-in-progress'
-    sipdirectory.mkdir()
-
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
         dataset_id="dataset_identifier",
@@ -145,9 +140,10 @@ def test_failed_createprovenanceinformation(
 
     # No files should have been created in workspace directory and
     # temporary directories should cleaned
-    files = {path.name for path in workspace.iterdir()}
-    assert files == {'sip-in-progress'}
-    assert not list(sipdirectory.iterdir())
+    assert {path.name for path in workspace.iterdir()} == {'preservation'}
+    assert {path.name for path in (workspace / 'preservation').iterdir()} \
+        == {'sip-in-progress'}
+    assert not list((workspace / 'preservation' / 'sip-in-progress').iterdir())
     assert not list((pkg_root / 'tmp').iterdir())
 
 
