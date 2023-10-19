@@ -1,6 +1,5 @@
 """Task that copies dataset metadata to PAS data catalog."""
 
-import os
 from luigi import LocalTarget
 from metax_access import DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
 from siptools_research.workflowtask import WorkflowTask
@@ -33,26 +32,20 @@ class CopyToPasDataCatalog(WorkflowTask):
 
         :returns: ValidateMetadata task
         """
-        return [ValidateMetadata(workspace=self.workspace,
-                                 dataset_id=self.dataset_id,
+        return [ValidateMetadata(dataset_id=self.dataset_id,
                                  config=self.config),
-                ValidateFiles(workspace=self.workspace,
-                              dataset_id=self.dataset_id,
+                ValidateFiles(dataset_id=self.dataset_id,
                               config=self.config)]
 
     def output(self):
         """Return the output targets of this Task.
 
         :returns: `<workspace>/preservation/`
-                  `report-dataset-validation-result.finished`
+                  `copy-dataset-to-pas-data-catalog.finished`
         :rtype: LocalTarget
         """
-        return LocalTarget(
-            os.path.join(
-                self.preservation_workspace,
-                'copy-dataset-to-pas-data-catalog.finished'
-            )
-        )
+        return LocalTarget(str(self.dataset.preservation_workspace
+                               / 'copy-dataset-to-pas-data-catalog.finished'))
 
     def run(self):
         """Copy dataset metadata to PAS data catalog.

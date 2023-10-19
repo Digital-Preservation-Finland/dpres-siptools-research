@@ -38,17 +38,14 @@ class CreateStructMap(WorkflowTask):
         """
         return {
             'create_provenance_information': CreateProvenanceInformation(
-                workspace=self.workspace,
                 dataset_id=self.dataset_id,
                 config=self.config
             ),
             'create_descriptive_metadata': CreateDescriptiveMetadata(
-                workspace=self.workspace,
                 dataset_id=self.dataset_id,
                 config=self.config
             ),
             'create_technical_metadata': CreateTechnicalMetadata(
-                workspace=self.workspace,
                 dataset_id=self.dataset_id,
                 config=self.config
             )
@@ -59,7 +56,9 @@ class CreateStructMap(WorkflowTask):
 
         :returns: Local target `<sip_creation_path>/filesec.xml`
         """
-        return LocalTarget(str(Path(self.sip_creation_path) / 'filesec.xml'))
+        return LocalTarget(
+            str(Path(self.dataset.sip_creation_path) / 'filesec.xml')
+        )
 
     def run(self):
         """Create structural map.
@@ -75,7 +74,7 @@ class CreateStructMap(WorkflowTask):
             Path(Configuration(self.config).get('packaging_root')) / 'tmp'
         )
         with TemporaryDirectory(prefix=tmp) as temporary_directory:
-            permanent_workspace = Path(self.sip_creation_path)
+            permanent_workspace = self.dataset.sip_creation_path
             temporary_workspace = Path(temporary_directory)
 
             # Copy reference files to temporary workspace
@@ -102,7 +101,7 @@ class CreateStructMap(WorkflowTask):
                                  'create_technical_metadata'):
                 md_ids += (
                     read_md_references(
-                        self.workspace,
+                        self.dataset.preservation_workspace,
                         self.input()[input_target].path
                     )['.']['md_ids']
                 )

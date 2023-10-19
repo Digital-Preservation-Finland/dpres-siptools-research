@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import sys
+import uuid
 from pathlib import Path
 
 import luigi.configuration
@@ -146,15 +147,16 @@ def upload_projects_path(testpath, monkeypatch):
 @pytest.fixture(scope="function")
 # pylint: disable=redefined-outer-name
 def workspace(pkg_root):
-    """
-    Create a temporary workspace directory.
+    """Create a temporary workspace directory.
 
-    This is a shorthand for `pkg_root / "workspaces / "workspace"`.
+    Creates directory `pkg_root / "workspaces / <identifier>"`
+    that contains directory structure of a new workspace.
 
     :returns: Path to the workspce directory
     :rtype: pathlib.Path
     """
-    workspace_ = pkg_root / "workspaces" / "workspace"
+    identifier = str(uuid.uuid4())
+    workspace_ = pkg_root / "workspaces" / identifier
     workspace_.mkdir()
     (workspace_ / "preservation").mkdir()
     (workspace_ / "preservation" / "sip-in-progress").mkdir()

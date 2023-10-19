@@ -13,6 +13,7 @@ from siptools.utils import read_md_references
 from siptools.xml.mets import NAMESPACES
 import xmltodict
 
+from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import TIFF_FILE, MKV_FILE, TXT_FILE
 import tests.utils
 from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
@@ -46,7 +47,11 @@ def test_create_techmd_ok(workspace, requests_mock):
     :returns: ``None``
     """
     # Mock metax
-    tests.utils.add_metax_dataset(requests_mock, files=[TIFF_FILE])
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
+                                  files=[TIFF_FILE])
 
     # Create workspace that already contains the dataset files
     sipdirectory = workspace / 'preservation' / 'sip-in-progress'
@@ -58,8 +63,7 @@ def test_create_techmd_ok(workspace, requests_mock):
     )
 
     # Init task
-    task = CreateTechnicalMetadata(workspace=str(workspace),
-                                   dataset_id='dataset_identifier',
+    task = CreateTechnicalMetadata(dataset_id=workspace.name,
                                    config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
@@ -163,13 +167,16 @@ def test_create_techmd_ok(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_techmd_multiple_metadata_documents(
-        workspace, requests_mock):
+def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
     """Test techmd creation for a file with multiple streams.
 
     Multiple technical metadata documents should be created.
     """
-    tests.utils.add_metax_dataset(requests_mock, files=[MKV_FILE])
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
+                                  files=[MKV_FILE])
 
     # Create workspace that already contains the dataset files
     sipdirectory = workspace / 'preservation' / 'sip-in-progress'
@@ -179,8 +186,7 @@ def test_create_techmd_multiple_metadata_documents(
     shutil.copy('tests/data/sample_files/video_ffv1.mkv', mkv_path)
 
     # Init task
-    task = CreateTechnicalMetadata(workspace=str(workspace),
-                                   dataset_id='dataset_identifier',
+    task = CreateTechnicalMetadata(dataset_id=workspace.name,
                                    config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
@@ -225,8 +231,8 @@ def test_create_techmd_multiple_metadata_documents(
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_techmd_incomplete_file_characteristics(
-        workspace, requests_mock):
+def test_create_techmd_incomplete_file_characteristics(workspace,
+                                                       requests_mock):
     """Test techmd creation for a file without all the necessary file
     characteristics.
     """
@@ -234,20 +240,20 @@ def test_create_techmd_incomplete_file_characteristics(
     del (tiff_file_incomplete["file_characteristics_extension"]["streams"]
          [0]["bps_value"])
     # Mock metax
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
     tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
                                   files=[tiff_file_incomplete])
 
     # Create workspace that already contains the dataset files
-    sipdirectory = workspace / "sip-in-progress"
-    sipdirectory.mkdir()
     tiff_path \
         = workspace / "preservation" / "dataset_files" / TIFF_FILE["file_path"]
     tiff_path.parent.mkdir(parents=True)
     shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
 
     # Init task
-    task = CreateTechnicalMetadata(workspace=str(workspace),
-                                   dataset_id='dataset_identifier',
+    task = CreateTechnicalMetadata(dataset_id=workspace.name,
                                    config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Run task
@@ -267,20 +273,22 @@ def test_create_techmd_without_charset(workspace, requests_mock):
     """
     text_file = copy.deepcopy(TXT_FILE)
     del text_file['file_characteristics']['encoding']
-    tests.utils.add_metax_dataset(requests_mock, files=[text_file])
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
+                                  files=[text_file])
 
     # Create workspace that contains a textfile
     sipdirectory = workspace / 'preservation' / 'sip-in-progress'
     dataset_files = workspace / "preservation" / "dataset_files"
     text_file_path = dataset_files / "path" / "to" / "file"
     text_file_path.parent.mkdir(parents=True)
-
     text_file_path.write_text("foo")
 
     # Init and run task
     task = CreateTechnicalMetadata(
-        workspace=str(workspace),
-        dataset_id='dataset_identifier',
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     task.run()

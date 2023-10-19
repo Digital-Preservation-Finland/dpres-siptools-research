@@ -15,7 +15,7 @@ from metax_access.metax import (
 )
 
 import siptools_research.__main__
-from siptools_research.utils.database import Database
+from siptools_research.dataset import Dataset
 from siptools_research.exceptions import (InvalidDatasetFileError,
                                           InvalidDatasetError)
 from tests.conftest import UNIT_TEST_CONFIG_FILE
@@ -250,17 +250,16 @@ def test_main_preserve(mocker, requests_mock):
     assert json_message['preservation_description'] == 'In packaging service'
 
 
-@pytest.mark.usefixtures('testmongoclient')
+@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_main_workflow_match(capsys, monkeypatch):
     """Test that workflow command returns the correct workflow.
 
     :returns: ``None``
     """
-    # Add a single workflow documents to the db
-    database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "FooTask", "1")
+    # Start preservation workflow for a dataset
+    Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).preserve()
 
-    # Run siptools-research workflow 1
+    # Search for the dataset
     monkeypatch.setattr(
         sys, "argv", [
             "siptools-research",
@@ -271,20 +270,21 @@ def test_main_workflow_match(capsys, monkeypatch):
     siptools_research.__main__.main()
 
     out, _ = capsys.readouterr()
-    assert '"_id": "aineisto_1"' in out
+    assert out == ('Dataset identifier: aineisto_1\n'
+                   'Target: preservation\n')
 
 
-@pytest.mark.usefixtures('testmongoclient')
+@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_main_workflow_no_matches(capsys, monkeypatch):
     """Test that worklow command prints the correct error message.
 
     :returns: ``None``
     """
-    # Add a single workflow document to the db
-    database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "FooTask", "1")
+    # Start preservation workflow for a dataset
+    Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).preserve()
 
-    # Run siptools-research worklow 2
+    # Search for a dataset that does not yet have a preservation
+    # workflow
     monkeypatch.setattr(
         sys, "argv", [
             "siptools-research",
@@ -299,15 +299,14 @@ def test_main_workflow_no_matches(capsys, monkeypatch):
     assert error in out
 
 
-@pytest.mark.usefixtures('testmongoclient')
+@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_main_workflows_match(capsys, monkeypatch):
     """Test that workflows command returns the correct workflow.
 
     :returns: ``None``
     """
     # Add a single workflow document to the db
-    database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "FooTask", "1")
+    Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).preserve()
 
     # Run siptools-research workflows --enabled
     monkeypatch.setattr(
@@ -323,15 +322,14 @@ def test_main_workflows_match(capsys, monkeypatch):
     assert out == "aineisto_1\n"
 
 
-@pytest.mark.usefixtures('testmongoclient')
+@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_main_workflows_no_matches(capsys, monkeypatch):
     """Test that worklows command prints correct error message.
 
     :returns: ``None``
     """
     # Add a single workflow document to the db
-    database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "FooTask", "1")
+    Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).preserve()
 
     # Run siptools-research worklow 2
     monkeypatch.setattr(
@@ -348,15 +346,14 @@ def test_main_workflows_no_matches(capsys, monkeypatch):
     assert error in out
 
 
-@pytest.mark.usefixtures('testmongoclient')
+@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_main_status(capsys, monkeypatch):
     """Test that status command prints the correct workflow status.
 
     :returns: ``None``
     """
     # Add a single workflow document to the db
-    database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "FooTask", "1")
+    Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).preserve()
 
     # Run siptools-research status 1
     monkeypatch.setattr(
@@ -368,34 +365,32 @@ def test_main_status(capsys, monkeypatch):
     )
     siptools_research.__main__.main()
     out, _ = capsys.readouterr()
-    message = "Workflow is incomplete and enabled\n"
+    message = "Workflow is enabled\n"
     assert out == message
 
 
-@pytest.mark.usefixtures('testmongoclient')
+@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_main_tasks(capsys, monkeypatch):
     """Test that tasks command collects and groups all workflow tasks
     correctly.
 
     :returns: ``None``
     """
-    # Add a single workflow documents and couple workflow_tasks to the db
-    database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "FooTask", "1")
-    database.add_task(
-        "aineisto_1",
+    # Add a single workflow document and a couple of workflow tasks to
+    # the db
+    dataset = Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE)
+    dataset.preserve()
+    dataset.log_task(
         "CreateWorkspace",
         "success",
         "Workspace directory created"
     )
-    database.add_task(
-        "aineisto_1",
+    dataset.log_task(
         "ValidateMetadata",
         "success",
         "Metax metadata in valid"
     )
-    database.add_task(
-        "aineisto_1",
+    dataset.log_task(
         "CreateProvenanceInformation",
         "failure",
         "Fail message"
@@ -416,70 +411,17 @@ def test_main_tasks(capsys, monkeypatch):
     assert '"messages": "Fail message"' in out
 
 
-@pytest.mark.usefixtures('testmongoclient')
-def test_main_dataset(capsys, monkeypatch):
-    """Test that dataset command prints all matching workflows or a proper
-    error message.
-
-    :returns: ``None``
-    """
-    # Add two workflow documents to the db
-    database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "FooTask", "1")
-    database.add_workflow("aineisto_2", "FooTask", "1")
-
-    # Run siptools-research dataset 1
-    monkeypatch.setattr(
-        sys, "argv", [
-            "siptools-research",
-            "--config", UNIT_TEST_CONFIG_FILE,
-            "dataset", "1"
-        ]
-    )
-    siptools_research.__main__.main()
-
-    out, _ = capsys.readouterr()
-    assert out == "aineisto_1\naineisto_2\n"
-
-    # Run siptools-research dataset 2
-    monkeypatch.setattr(
-        sys, "argv", [
-            "siptools-research",
-            "--config", UNIT_TEST_CONFIG_FILE,
-            "dataset", "2"
-        ]
-    )
-    siptools_research.__main__.main()
-
-    out, _ = capsys.readouterr()
-    assert "No workflows found" in out
-
-
-@pytest.mark.usefixtures('testmongoclient')
+@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_main_disabled(capsys, monkeypatch):
     """Test that the disable and enable commands set the correct dataset as
     disabled and enabled respectively.
 
     :returns: ``None``
     """
-    # Add a single workflow documents to the db
-    database = Database(UNIT_TEST_CONFIG_FILE)
-    database.add_workflow("aineisto_1", "FooTask", "1")
+    # Add a single workflow document to the db
+    Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).preserve()
 
-    # Run siptools-research enable 1
-    monkeypatch.setattr(
-        sys, "argv", [
-            "siptools-research",
-            "--config", UNIT_TEST_CONFIG_FILE,
-            "enable", "aineisto_1"
-        ]
-    )
-    siptools_research.__main__.main()
-    assert not database._collection.find_one({"_id": "aineisto_1"})["disabled"]
-    out, _ = capsys.readouterr()
-    assert "Workflow aineisto_1 enabled" in out
-
-    # Run siptools-research enable 1
+    # Disable the dataset using CLI
     monkeypatch.setattr(
         sys, "argv", [
             "siptools-research",
@@ -488,9 +430,22 @@ def test_main_disabled(capsys, monkeypatch):
         ]
     )
     siptools_research.__main__.main()
-    assert database._collection.find_one({"_id": "aineisto_1"})["disabled"]
+    assert not Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).enabled
     out, _ = capsys.readouterr()
-    assert "Workflow aineisto_1 disabled" in out
+    assert "Workflow aineisto_1 disable" in out
+
+    # Enable the dataset using CLI
+    monkeypatch.setattr(
+        sys, "argv", [
+            "siptools-research",
+            "--config", UNIT_TEST_CONFIG_FILE,
+            "enable", "aineisto_1"
+        ]
+    )
+    siptools_research.__main__.main()
+    assert Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).enabled
+    out, _ = capsys.readouterr()
+    assert "Workflow aineisto_1 enabled" in out
 
 
 def test_main_clean_cache(mocker, monkeypatch):

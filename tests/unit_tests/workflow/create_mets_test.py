@@ -33,7 +33,7 @@ NAMESPACES = {
 def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
     """Test the workflow task CreateMets.
 
-    :param pkg_root: Temporary directory fixture
+    :param workspace: Temporary directory fixture
     :param requests_mock: Mocker object
     :param data_catalog: Data catalog identifier of dataset
     :param objid: Identifier expected to be used as OBJID
@@ -41,6 +41,7 @@ def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
     """
     # Mock metax
     dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
     dataset['data_catalog']['identifier'] = data_catalog
     dataset['preservation_dataset_version'] \
         = {'preferred_identifier': 'doi:pas-version-id'}
@@ -50,8 +51,7 @@ def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
     create_test_data(workspace=workspace)
 
     # Init and run task
-    task = CreateMets(workspace=str(workspace),
-                      dataset_id='dataset_identifier',
+    task = CreateMets(dataset_id=workspace.name,
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()

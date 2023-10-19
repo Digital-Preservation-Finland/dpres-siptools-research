@@ -1,6 +1,5 @@
 """Task that reports preservation status after dataset validation."""
 
-import os
 from luigi import LocalTarget
 from metax_access import DS_STATE_METADATA_CONFIRMED
 from siptools_research.workflowtask import WorkflowTask
@@ -26,11 +25,9 @@ class ReportDatasetValidationResult(WorkflowTask):
 
         :returns: ValidateMetadata task
         """
-        return [ValidateMetadata(workspace=self.workspace,
-                                 dataset_id=self.dataset_id,
+        return [ValidateMetadata(dataset_id=self.dataset_id,
                                  config=self.config),
-                ValidateFiles(workspace=self.workspace,
-                              dataset_id=self.dataset_id,
+                ValidateFiles(dataset_id=self.dataset_id,
                               config=self.config)]
 
     def output(self):
@@ -41,10 +38,8 @@ class ReportDatasetValidationResult(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(
-                self.validation_workspace,
-                'report-dataset-validation-result.finished'
-            )
+            str(self.dataset.validation_workspace
+                / 'report-dataset-validation-result.finished')
         )
 
     def run(self):

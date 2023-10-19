@@ -8,7 +8,7 @@ from siptools_research.workflow import report_dataset_validation_result
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_reportdatasetvalidationresult(testpath, requests_mock):
+def test_reportdatasetvalidationresult(workspace, requests_mock):
     """Test reporting dataset validation result.
 
     :param testpath: Temporary directory
@@ -16,13 +16,12 @@ def test_reportdatasetvalidationresult(testpath, requests_mock):
     :returns: ``None``
     """
     # Mock Metax
-    requests_mock.get('/rest/v2/datasets/foobar', json={})
-    patch_dataset = requests_mock.patch('/rest/v2/datasets/foobar')
+    requests_mock.get(f'/rest/v2/datasets/{workspace.name}', json={})
+    patch_dataset = requests_mock.patch(f'/rest/v2/datasets/{workspace.name}')
 
     # Init and run task
     task = report_dataset_validation_result.ReportDatasetValidationResult(
-        workspace=str(testpath),
-        dataset_id="foobar",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()

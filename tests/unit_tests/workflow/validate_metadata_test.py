@@ -29,11 +29,14 @@ def test_validatemetadata(workspace, requests_mock):
     file2 = copy.deepcopy(TXT_FILE)
     file2['identifier'] = 'identifier2'
     file2['file_path'] = '/'
-    add_metax_dataset(requests_mock=requests_mock, files=[file1, file2])
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    add_metax_dataset(requests_mock=requests_mock,
+                      dataset=dataset,
+                      files=[file1, file2])
 
     # Init task
-    task = ValidateMetadata(workspace=str(workspace),
-                            dataset_id='dataset_identifier',
+    task = ValidateMetadata(dataset_id=workspace.name,
                             config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
@@ -56,13 +59,13 @@ def test_invalid_metadata(workspace, requests_mock):
     # Mock Metax. Remove "contract" from dataset metadata to create an
     # invalid dataset.
     dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
     del dataset['contract']
-    requests_mock.get('/rest/v2/datasets/dataset_identifier', json=dataset)
+    requests_mock.get(f'/rest/v2/datasets/{workspace.name}', json=dataset)
 
     # Init task
     task = ValidateMetadata(
-        workspace=str(workspace),
-        dataset_id='dataset_identifier',
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()

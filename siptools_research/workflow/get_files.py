@@ -6,7 +6,6 @@ import luigi
 from siptools_research.utils.download import download_file
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.exceptions import InvalidFileMetadataError
-from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
@@ -16,8 +15,7 @@ class GetFiles(WorkflowTask):
     Task requires that workspace directory exists and metadata is
     validated.
 
-    Task requires that workspace directory is created and dataset
-    metadata is validated.
+    Task requires that  dataset metadata is validated.
     """
 
     success_message = 'Files were downloaded'
@@ -28,12 +26,7 @@ class GetFiles(WorkflowTask):
 
         :returns: list of required tasks
         """
-        return [CreateWorkspace(workspace=self.workspace,
-                                dataset_id=self.dataset_id,
-                                config=self.config),
-                ValidateMetadata(workspace=self.workspace,
-                                 dataset_id=self.dataset_id,
-                                 config=self.config)]
+        return ValidateMetadata(dataset_id=self.dataset_id, config=self.config)
 
     def output(self):
         """Return the output target of this Task.
@@ -42,7 +35,7 @@ class GetFiles(WorkflowTask):
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
-            os.path.join(self.preservation_workspace, "dataset_files")
+            str(self.dataset.preservation_workspace / "dataset_files")
         )
 
     def run(self):

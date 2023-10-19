@@ -5,7 +5,7 @@ import tests.conftest
 from siptools_research.workflow.compress import CompressSIP
 
 
-def test_compresssip(workspace, pkg_root, requests_mock):
+def test_compresssip(workspace, testpath):
     """Test CompresSIP task.
 
     Run function should create a tar-file and complete function should
@@ -25,8 +25,7 @@ def test_compresssip(workspace, pkg_root, requests_mock):
                     workspace / 'dataset_files' / 'tests')
 
     # Init task
-    task = CompressSIP(workspace=str(workspace),
-                       dataset_id="1",
+    task = CompressSIP(dataset_id=workspace.name,
                        config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 
@@ -39,9 +38,9 @@ def test_compresssip(workspace, pkg_root, requests_mock):
     with tarfile.open(
         workspace / "preservation" / f"{workspace.name}.tar"
     ) as tar:
-        tar.extractall(pkg_root / 'extracted_tar')
+        tar.extractall(testpath / 'extracted_tar')
 
     found_files = {
-        path.name for path in (pkg_root / "extracted_tar").iterdir()
+        path.name for path in (testpath / "extracted_tar").iterdir()
     }
     assert found_files == {'signature.sig', 'mets.xml', 'dataset_files'}

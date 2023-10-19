@@ -1,10 +1,12 @@
 """Tests for :mod:`siptools_research.workflow.create_dmdsec` module."""
 import json
+import copy
 
 import pytest
 from lxml import etree
 
 import tests.utils
+from tests.metax_data.datasets import BASE_DATASET
 from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
 
 
@@ -17,12 +19,13 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     :returns: ``None``
     """
     # Mock Metax
-    tests.utils.add_metax_dataset(requests_mock)
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Init task
     task = CreateDescriptiveMetadata(
-        dataset_id="dataset_identifier",
-        workspace=str(workspace),
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -98,12 +101,15 @@ def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
     """
     # Create dataset that contains invalid datacite metadata
     datacite = etree.Element("{foo}bar")
-    tests.utils.add_metax_dataset(requests_mock, datacite=datacite)
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
+                                  datacite=datacite)
 
     # Init task
     task = CreateDescriptiveMetadata(
-        dataset_id="dataset_identifier",
-        workspace=str(workspace),
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()

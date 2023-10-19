@@ -10,7 +10,6 @@ from siptools.scripts import import_description
 
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
 
@@ -26,8 +25,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
     Premis event reference is written to
     `<workspace>/create-descriptive-metadata.jsonl`.
 
-    Task requires that workspace is created and dataset metadata is
-    validated.
+    Task requires that dataset metadata is validated.
     """
 
     success_message = "Descriptive metadata created"
@@ -38,12 +36,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
 
         :returns: list of required tasks
         """
-        return [CreateWorkspace(workspace=self.workspace,
-                                dataset_id=self.dataset_id,
-                                config=self.config),
-                ValidateMetadata(workspace=self.workspace,
-                                 dataset_id=self.dataset_id,
-                                 config=self.config)]
+        return ValidateMetadata(dataset_id=self.dataset_id, config=self.config)
 
     def output(self):
         """List the output targets of this Task.
@@ -51,9 +44,8 @@ class CreateDescriptiveMetadata(WorkflowTask):
         :returns: `<workspace>/preservation/create-descriptive-metadata.jsonl`
         :rtype: LocalTarget
         """
-        return luigi.LocalTarget(os.path.join(
-            self.preservation_workspace, 'create-descriptive-metadata.jsonl'
-        ))
+        return luigi.LocalTarget(str(self.dataset.preservation_workspace
+                                     / 'create-descriptive-metadata.jsonl'))
 
     def run(self):
         """Copy datacite.xml metadatafile from Metax.
@@ -70,8 +62,8 @@ class CreateDescriptiveMetadata(WorkflowTask):
         datacite = metax_client.get_datacite(dataset['identifier'])
 
         # Write datacite.xml to file
-        datacite_path = os.path.join(self.preservation_workspace,
-                                     'datacite.xml')
+        datacite_path \
+            = str(self.dataset.preservation_workspace / 'datacite.xml')
         datacite.write(datacite_path)
 
         tmp = os.path.join(config_object.get('packaging_root'), 'tmp/')
@@ -92,4 +84,4 @@ class CreateDescriptiveMetadata(WorkflowTask):
                             target_path)
                 for file_ in os.listdir(temporary_workspace):
                     shutil.move(os.path.join(temporary_workspace, file_),
-                                self.sip_creation_path)
+                                self.dataset.sip_creation_path)

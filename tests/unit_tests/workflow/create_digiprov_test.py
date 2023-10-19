@@ -63,6 +63,7 @@ def test_createprovenanceinformation(pkg_root,
     """
     # Mock metax. Create a dataset with provenance events.
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset['identifier'] = workspace.name
     dataset['research_dataset']['provenance'] = []
     for event in events:
         provenance = copy.deepcopy(provenance_data)
@@ -75,8 +76,7 @@ def test_createprovenanceinformation(pkg_root,
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
-        workspace=str(workspace),
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -121,12 +121,12 @@ def test_failed_createprovenanceinformation(
     del provenance["preservation_event"]
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset['research_dataset']['provenance'] = [provenance]
+    dataset['identifier'] = workspace.name
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Init task
     task = create_digiprov.CreateProvenanceInformation(
-        dataset_id="dataset_identifier",
-        workspace=str(workspace),
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
@@ -161,14 +161,14 @@ def test_failed_createprovenanceinformation(
     ]
 )
 def test_create_premis_events(
-    pkg_root, requests_mock, provenance_data, premis_id
+    testpath, requests_mock, provenance_data, premis_id
 ):
     """Test `create_premis_event` function.
 
     Output XML file should be produced and it should contain some
     specified elements.
 
-    :param pkg_root: Test packaging directory fixture
+    :param testpath: Temporary directory
     :param requests_mock: HTTP request mocker
     :param provenance_data: The data used for creating provenance events
     :param premis_id: The id created for the PREMIS event
@@ -182,15 +182,14 @@ def test_create_premis_events(
     # Create provenance info xml-file to tempdir
     task = create_digiprov.CreateProvenanceInformation(
         dataset_id="dataset_identifier",
-        workspace=str(pkg_root),
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    task._create_premis_events(str(pkg_root))
+    task._create_premis_events(str(testpath))
 
     # Check that the created xml-file contains correct elements.
     # pylint: disable=no-member
     tree = lxml.etree.parse(str(
-        pkg_root / f'{premis_id}-PREMIS%3AEVENT-amd.xml'
+        testpath / f'{premis_id}-PREMIS%3AEVENT-amd.xml'
     ))
 
     namespaces = {

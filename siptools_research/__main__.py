@@ -37,12 +37,12 @@ from metax_access import (
 )
 
 from siptools_research.config import Configuration
+from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import (InvalidDatasetFileError,
                                           InvalidDatasetError)
 from siptools_research.metadata_generator import generate_metadata
-from siptools_research.workflow_init import preserve_dataset
+from siptools_research import preserve_dataset
 from siptools_research.metadata_validator import validate_metadata
-from siptools_research.utils.database import Database
 from siptools_research.utils.download import clean_file_cache
 
 
@@ -74,7 +74,6 @@ def _parse_args():
     _setup_workflows_args(subparsers)
     _setup_status_args(subparsers)
     _setup_tasks_args(subparsers)
-    _setup_dataset_args(subparsers)
     _setup_disable_args(subparsers)
     _setup_enable_args(subparsers)
     _setup_clean_cache_args(subparsers)
@@ -141,7 +140,7 @@ def _setup_workflow_args(subparsers):
     )
     get_parser.set_defaults(func=_workflow)
     get_parser.add_argument(
-        'workflow_id',
+        'dataset_id',
         help="Workflow identifier"
     )
 
@@ -154,10 +153,6 @@ def _setup_workflows_args(subparsers):
     )
     parser.set_defaults(func=_workflows)
     parser.add_argument(
-        '--dataset',
-        help="Dataset identifier"
-    )
-    parser.add_argument(
         '--disabled',
         action="store_true", default=False,
         help="Filter by disabled == True"
@@ -166,16 +161,6 @@ def _setup_workflows_args(subparsers):
         '--enabled',
         action="store_true", default=False,
         help="Filter by disabled == False"
-    )
-    parser.add_argument(
-        '--incomplete',
-        action="store_true", default=False,
-        help="Filter by completed == False"
-    )
-    parser.add_argument(
-        '--completed',
-        action="store_true", default=False,
-        help="Filter by completed == True"
     )
     parser.add_argument(
         '--full',
@@ -192,8 +177,8 @@ def _setup_status_args(subparsers):
     )
     status_parser.set_defaults(func=_status)
     status_parser.add_argument(
-        'workflow_id',
-        help="Workflow identifier"
+        'dataset_id',
+        help="Dataset identifier"
     )
 
 
@@ -205,21 +190,8 @@ def _setup_tasks_args(subparsers):
     )
     status_parser.set_defaults(func=_tasks)
     status_parser.add_argument(
-        'workflow_id',
-        help="Workflow identifier"
-    )
-
-
-def _setup_dataset_args(subparsers):
-    """Define tasks subparser and its arguments."""
-    status_parser = subparsers.add_parser(
-        'dataset',
-        help='Get all workflows of a dataset'
-    )
-    status_parser.set_defaults(func=_dataset)
-    status_parser.add_argument(
         'dataset_id',
-        help="Dataset identifier"
+        help="Workflow identifier"
     )
 
 
@@ -231,8 +203,8 @@ def _setup_disable_args(subparsers):
     )
     disable_parser.set_defaults(func=_disable)
     disable_parser.add_argument(
-        'workflow_id',
-        help="Workflow identifier"
+        'dataset_id',
+        help="Dataset identifier"
     )
 
 
@@ -244,8 +216,8 @@ def _setup_enable_args(subparsers):
     )
     enable_parser.set_defaults(func=_enable)
     enable_parser.add_argument(
-        'workflow_id',
-        help="Workflow identifier"
+        'dataset_id',
+        help="Dataset identifier"
     )
 
 
@@ -350,90 +322,80 @@ def _preserve(args):
     preserve_dataset(args.dataset_id, args.config)
 
 
-def _get_workflow_document(args):
-    """Get a workflow document dict using workflow identifier."""
-    workflow_id = args.workflow_id
-    database = Database(args.config)
-
-    document = database.get_one_workflow(workflow_id)
-    if not document:
+def _get_dataset(args):
+    """Get a dataset by identifier."""
+    dataset = Dataset(args.dataset_id, config=args.config)
+    if not dataset.target:
         print(
             f"{FAILC}Could not find document with workflow identifier:"
-            f" {workflow_id}{ENDC}"
+            f" {args.dataset_id}{ENDC}"
         )
 
-    return document
+    return dataset
 
 
-def _get_workflow_documents(args):
+def _get_datasets(args):
     """Get a workflow documents with filters."""
     if args.disabled and args.enabled:
         raise ValueError("Use either disabled or enabled")
-    if args.incomplete and args.completed:
-        raise ValueError("Use either incomplete or completed")
 
-    search = {}
-    if args.dataset:
-        search["dataset"] = args.dataset
     if args.disabled:
-        search["disabled"] = True
-    if args.enabled:
-        search["disabled"] = False
-    if args.incomplete:
-        search["completed"] = False
-    if args.completed:
-        search["completed"] = True
+        enabled = False
+    elif args.enabled:
+        enabled = True
+    else:
+        enabled = None
 
-    database = Database(args.config)
-    documents = database.find(search)
-    if not documents:
+    datasets = find_datasets(enabled=enabled, config=args.config)
+    if not datasets:
         print(FAILC + "Could not find any workflows" + ENDC)
 
-    return documents
+    return datasets
 
 
 def _workflow(args):
     """Get a workflow document."""
-    document = _get_workflow_document(args)
-    if document:
-        print(json.dumps(document, indent=4))
+    dataset = _get_dataset(args)
+    if dataset.target:
+        print(f'Dataset identifier: {dataset.identifier}\n'
+              f'Target: {dataset.target}')
 
 
 def _workflows(args):
     """Get a workflow documents."""
-    documents = _get_workflow_documents(args)
-    for document in documents:
+    datasets = _get_datasets(args)
+    for dataset in datasets:
         if not args.full:
-            print(document["_id"])
+            print(dataset.identifier)
         else:
-            print(json.dumps(document, indent=4))
+            print(f'Dataset identifier: {dataset.identifier}\n'
+                  f'Target: {dataset.target}')
 
 
 def _status(args):
     """Get workflow status."""
-    document = _get_workflow_document(args)
-    if document:
-        print("Workflow is ", end="")
-        print("completed" if document["completed"] else "incomplete", end="")
-        print(" and ", end="")
-        print("disabled" if document["disabled"] else "enabled")
+    dataset = _get_dataset(args)
+    if dataset:
+        status = "enabled" if dataset.enabled else "disabled"
+        print(f"Workflow is {status}")
 
 
 def _tasks(args):
     """Get workflow task results."""
-    document = _get_workflow_document(args)
-    if document:
+    dataset = _get_dataset(args)
+    if dataset:
         success = []
         fail = []
 
-        if "workflow_tasks" in document:
-            for task in document["workflow_tasks"]:
-                if document["workflow_tasks"][task]["result"] == "success":
-                    success.append([task, document["workflow_tasks"][task]])
+        tasks = dataset.get_tasks()
+        if tasks:
+            for task in tasks:
+                if tasks[task]["result"] == "success":
+                    success.append([task, tasks[task]])
                 else:
-                    fail.append([task, document["workflow_tasks"][task]])
+                    fail.append([task, tasks[task]])
         else:
-            print(f"Workflow {document['_id']} has no workflow_tasks")
+            print(f"Workflow {dataset.identifier} has no workflow_tasks")
 
         # Sort and print tasks that were completed successfully
         if success:
@@ -460,36 +422,20 @@ def _tasks(args):
             print(ENDC, end="")
 
 
-def _dataset(args):
-    """Get all workflow identifiers with the correct dataset identifier."""
-    dataset_id = args.dataset_id
-    documents = Database(args.config).get_workflows(dataset_id)
-
-    if not documents:
-        print(FAILC + "No workflows found" + ENDC)
-    else:
-        for doc in documents:
-            print(doc["_id"])
-
-
 def _disable(args):
     """Disable workflow."""
-    document = _get_workflow_document(args)
-    if document:
-        database = Database(args.config)
-        _id = document["_id"]
-        database.set_disabled(_id)
-        print(f"Workflow {_id} disabled")
+    dataset = _get_dataset(args)
+    if dataset:
+        dataset.disable()
+        print(f"Workflow {dataset.identifier} disabled")
 
 
 def _enable(args):
     """Enable workflow."""
-    document = _get_workflow_document(args)
-    if document:
-        database = Database(args.config)
-        _id = document["_id"]
-        database.set_enabled(_id)
-        print(f"Workflow {_id} enabled")
+    dataset = _get_dataset(args)
+    if dataset:
+        dataset.enable()
+        print(f"Workflow {dataset.identifier} enabled")
 
 
 def _clean_cache(args):

@@ -10,7 +10,6 @@ import siptools.mdcreator
 import siptools.scripts.import_object
 from luigi import LocalTarget
 from siptools_research.config import Configuration
-from siptools_research.workflow.create_workspace import CreateWorkspace
 from siptools_research.workflow.generate_metadata import GenerateMetadata
 from siptools_research.workflow.get_files import GetFiles
 from siptools_research.workflow.validate_metadata import ValidateMetadata
@@ -44,8 +43,8 @@ class CreateTechnicalMetadata(WorkflowTask):
     List of PREMIS event references is written to
     `<workspace>/create-technical-metadata.jsonl`
 
-    The task requires workspace to be created, dataset metadata to be
-    validated and dataset files to be downloaded.
+    The task requires dataset metadata to be validated, dataset files to
+    be downloaded and file metadata to be generated.
     """
 
     success_message = 'Technical metadata for objects created'
@@ -57,17 +56,11 @@ class CreateTechnicalMetadata(WorkflowTask):
         :returns: dictionary of required tasks
         """
         return {
-            'workspace': CreateWorkspace(workspace=self.workspace,
-                                         dataset_id=self.dataset_id,
-                                         config=self.config),
-            'validation': ValidateMetadata(workspace=self.workspace,
-                                           dataset_id=self.dataset_id,
+            'validation': ValidateMetadata(dataset_id=self.dataset_id,
                                            config=self.config),
-            'files': GetFiles(workspace=self.workspace,
-                              dataset_id=self.dataset_id,
+            'files': GetFiles(dataset_id=self.dataset_id,
                               config=self.config),
-            'metadata_generation': GenerateMetadata(workspace=self.workspace,
-                                                    dataset_id=self.dataset_id,
+            'metadata_generation': GenerateMetadata(dataset_id=self.dataset_id,
                                                     config=self.config)
         }
 
@@ -78,10 +71,8 @@ class CreateTechnicalMetadata(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(
-                self.preservation_workspace,
-                'create-technical-metadata.jsonl'
-            )
+            str(self.dataset.preservation_workspace
+                / 'create-technical-metadata.jsonl')
         )
 
     def run(self):
@@ -127,7 +118,7 @@ class CreateTechnicalMetadata(WorkflowTask):
                 )
                 for file_ in os.listdir(temporary_workspace):
                     shutil.move(os.path.join(temporary_workspace, file_),
-                                self.sip_creation_path)
+                                self.dataset.sip_creation_path)
 
     def create_objects(self, metadata, filepath, event_datetime, output):
         """Create PREMIS metadata for file.
@@ -171,7 +162,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         # Create PREMIS file metadata XML
         siptools.scripts.import_object.import_object(
             filepaths=[filepath],
-            base_path=self.preservation_workspace,
+            base_path=self.dataset.preservation_workspace,
             workspace=output,
             skip_wellformed_check=True,
             file_format=(

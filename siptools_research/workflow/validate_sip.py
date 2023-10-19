@@ -5,7 +5,6 @@ from datetime import datetime, timedelta, timezone
 import dateutil.parser
 from siptools_research.config import Configuration
 from siptools_research.remoteanytarget import RemoteAnyTarget
-from siptools_research.utils.database import Database
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.workflowtask import WorkflowExternalTask
 
@@ -24,8 +23,7 @@ class ValidateSIP(WorkflowExternalTask):
 
         :returns: SendSIPToDP task
         """
-        return SendSIPToDP(workspace=self.workspace,
-                           dataset_id=self.dataset_id,
+        return SendSIPToDP(dataset_id=self.dataset_id,
                            config=self.config)
 
     def output(self):
@@ -34,8 +32,8 @@ class ValidateSIP(WorkflowExternalTask):
         :returns: remote target that may exist on digital preservation
                   server in any path formatted::
 
-                      ~/accepted/<datepath>/<workflow_id>.tar/
-                      ~/rejected/<datepath>/<workflow_id>.tar/
+                      ~/accepted/<datepath>/<dataset_id>.tar/
+                      ~/rejected/<datepath>/<dataset_id>.tar/
 
                   where datepath is any date between the date the SIP
                   was sent to the server and the current date.
@@ -43,7 +41,6 @@ class ValidateSIP(WorkflowExternalTask):
         :rtype: RemoteAnyTarget
         """
         conf = Configuration(self.config)
-        database = Database(self.config)
 
         # Get SendSIPToDP completion datetime or use the current UTC
         # time. This is necessary since ValidateSip output is checked
@@ -51,9 +48,7 @@ class ValidateSIP(WorkflowExternalTask):
         # Dependencies are ran only if ValidateSip task is not
         # completed.
         try:
-            send_timestamp = database.get_task_timestamp(
-                self.workflow_id, "SendSIPToDP"
-            )
+            send_timestamp = self.dataset.get_task_timestamp("SendSIPToDP")
             sip_to_dp_date = dateutil.parser.parse(send_timestamp).date()
         except (ValueError, KeyError):
             sip_to_dp_date = datetime.now(timezone.utc).date()
@@ -64,12 +59,12 @@ class ValidateSIP(WorkflowExternalTask):
         while sip_to_dp_date <= lim_date:
             paths.append(
                 os.path.join(
-                    f'accepted/{sip_to_dp_date}/{self.workflow_id}.tar'
+                    f'accepted/{sip_to_dp_date}/{self.dataset_id}.tar'
                 )
             )
             paths.append(
                 os.path.join(
-                    f'rejected/{sip_to_dp_date}/{self.workflow_id}.tar'
+                    f'rejected/{sip_to_dp_date}/{self.dataset_id}.tar'
                 )
             )
             sip_to_dp_date += timedelta(days=1)

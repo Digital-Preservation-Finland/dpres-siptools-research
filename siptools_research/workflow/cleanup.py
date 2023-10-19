@@ -1,6 +1,6 @@
 """Luigi task that removes files from file cache."""
 import os
-from luigi import LocalTarget
+import shutil
 
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
@@ -8,8 +8,8 @@ from siptools_research.workflow.report_preservation_status \
     import ReportPreservationStatus
 
 
-class CleanupFileCache(WorkflowTask):
-    """Removes dataset files from file cache.
+class Cleanup(WorkflowTask):
+    """Removes workspace and dataset files from file cache.
 
     Task requires that preservation status has been reported.
     """
@@ -22,21 +22,17 @@ class CleanupFileCache(WorkflowTask):
 
         :returns: list of required tasks
         """
-        return ReportPreservationStatus(workspace=self.workspace,
-                                        dataset_id=self.dataset_id,
+        return ReportPreservationStatus(dataset_id=self.dataset_id,
                                         config=self.config)
 
-    def output(self):
-        """Return the output targets of this Task.
+    def complete(self):
+        """Check if Task is complete.
 
-        :returns: `<workspace>/preservation/cleanup-file-cache.finished`
+        Cleanup is done when workspace directory does not exist.
+
         :rtype: LocalTarget
         """
-        return LocalTarget(
-            os.path.join(
-                self.preservation_workspace, 'cleanup-file-cache.finished'
-            )
-        )
+        return not self.dataset.workspace_root.exists()
 
     def _get_identifiers(self):
         """Get file identifiers.
@@ -54,7 +50,7 @@ class CleanupFileCache(WorkflowTask):
         return [_file["identifier"] for _file in files], cache_path
 
     def run(self):
-        """Remove cached files."""
+        """Remove cached files and workspace."""
         identifiers, cache_path = self._get_identifiers()
 
         for identifier in identifiers:
@@ -64,5 +60,4 @@ class CleanupFileCache(WorkflowTask):
             except FileNotFoundError:
                 pass
 
-        with self.output().open('w') as output:
-            output.write('Dataset id=' + self.dataset_id)
+        shutil.rmtree(self.dataset.workspace_root)

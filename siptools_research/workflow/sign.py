@@ -1,7 +1,5 @@
 """Luigi task that signs METS document."""
 
-import os
-
 import luigi.format
 from luigi import LocalTarget
 import dpres_signature.signature
@@ -27,8 +25,7 @@ class SignSIP(WorkflowTask):
 
         :returns: CreateMets task
         """
-        return CreateMets(workspace=self.workspace,
-                          dataset_id=self.dataset_id,
+        return CreateMets(dataset_id=self.dataset_id,
                           config=self.config)
 
     def output(self):
@@ -38,7 +35,7 @@ class SignSIP(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.preservation_workspace, "signature.sig"),
+            str(self.dataset.preservation_workspace / "signature.sig"),
             format=luigi.format.Nop
         )
 
@@ -48,7 +45,7 @@ class SignSIP(WorkflowTask):
         :returns: ``None``
         """
         signature = dpres_signature.signature.create_signature(
-            self.preservation_workspace,
+            self.dataset.preservation_workspace,
             Configuration(self.config).get("sip_sign_key"),
             ['mets.xml']
         )

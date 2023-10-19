@@ -20,16 +20,19 @@ def test_validatefiles(workspace, requests_mock):
     # Create a dataset that contains one valid text file which is
     # available in Ida
     textfile = copy.deepcopy(tests.metax_data.files.TXT_FILE)
-    tests.utils.add_metax_dataset(requests_mock, files=[textfile])
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset["identifier"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
+                                  files=[textfile])
     tests.utils.add_mock_ida_download(requests_mock,
-                                      dataset_id='dataset_identifier',
+                                      dataset_id=workspace.name,
                                       filename='path/to/file',
                                       content=b'foo')
 
     # Init and run task
     task = validate_files.ValidateFiles(
-        workspace=str(workspace),
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -50,16 +53,19 @@ def test_validatefiles_invalid(workspace, requests_mock):
     # Create a dataset that contains one file which has metadata of
     # image file but content of a text file.
     tifffile = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
-    tests.utils.add_metax_dataset(requests_mock, files=[tifffile])
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset["identifier"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
+                                  files=[tifffile])
     tests.utils.add_mock_ida_download(requests_mock,
-                                      dataset_id='dataset_identifier',
+                                      dataset_id=workspace.name,
                                       filename='path/to/file.tiff',
                                       content=b'foo')
 
     # Init and run task. Running task should raise an exception.
     task = validate_files.ValidateFiles(
-        workspace=str(workspace),
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     with pytest.raises(InvalidFileError, match='1 files are not well-formed'):

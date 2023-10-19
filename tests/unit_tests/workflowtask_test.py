@@ -1,9 +1,8 @@
 """Tests for :mod:`siptools_research.workflowtask` module."""
 
 import datetime
-import os
 
-import luigi.cmdline
+import luigi
 import pytest
 import requests
 from metax_access import (DS_STATE_INVALID_METADATA,
@@ -11,9 +10,9 @@ from metax_access import (DS_STATE_INVALID_METADATA,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
                           Metax)
 
-import tests.conftest
+from tests.conftest import UNIT_TEST_CONFIG_FILE
 from siptools_research.config import Configuration
-from siptools_research.utils.database import Database
+from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import (InvalidDatasetError,
                                           InvalidDatasetMetadataError,
                                           InvalidFileMetadataError,
@@ -22,28 +21,6 @@ from siptools_research.exceptions import (InvalidDatasetError,
                                           MissingFileError,
                                           InvalidSIPError)
 from siptools_research.workflowtask import WorkflowTask
-
-
-def run_luigi_task(task_name, workspace):
-    """Run a luigi task.
-
-    Run a task like it would be run from command line, using some
-    default parameters.
-
-    :task (str): Name of task to be executed
-    :workspace: Workspace directory for task
-    :returns: ``None``
-    """
-    with pytest.raises(SystemExit):
-        luigi.cmdline.luigi_run(
-            ('--module', 'tests.unit_tests.workflowtask_test',
-             task_name,
-             '--workspace', workspace,
-             '--dataset-id', '1',
-             '--config', tests.conftest.UNIT_TEST_CONFIG_FILE,
-             '--local-scheduler',
-             '--no-lock')
-        )
 
 
 # pylint: disable=too-few-public-methods
@@ -63,9 +40,11 @@ class DummyTask(WorkflowTask):
     def output(self):
         """Create output file.
 
-        :returns: local target: `<workspace>/output_file`
+        :returns: local target: `<workspace>/presrvation/output_file`
         """
-        return luigi.LocalTarget(os.path.join(self.workspace, 'output_file'))
+        return luigi.LocalTarget(
+            str(self.dataset.preservation_workspace / 'output_file')
+        )
 
     def run(self):
         """Write something to output file.
@@ -195,105 +174,97 @@ class MetaxTask(WorkflowTask):
 
 
 @pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
-def test_run_workflowtask(testpath):
+def test_run_workflowtask(workspace):
     """Test WorkflowTask execution.
 
     Executes a DummyTask, checks that output file is created, checks
-    that new event field is created to mongo document.
+    that new task is added to task log.
 
     :param testpath: temporary directory
     :returns: ``None``
     """
-    # Add workflow to database
-    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    database.add_workflow(testpath.name, 'SomeTargetTask', 'dataset1')
+    # Add a workflow to database
+    dataset = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE)
+    dataset.preserve()
 
-    # Run DummyTask task like it would be run from command line
-    run_luigi_task('DummyTask', str(testpath))
-
-    # Check that output file is created
-    assert (testpath / "output_file").read_text() == "Hello world"
-
-    # Check that new event is added to workflow database
-    workflow = database.get_one_workflow(testpath.name)
-    # Check 'messages' field
-    assert workflow['workflow_tasks']['DummyTask']['messages'] \
-        == 'Test task was successful'
-    # Check 'result' field
-    assert workflow['workflow_tasks']['DummyTask']['result'] == 'success'
-    # Parse the 'timestamp' field to make sure it is correct format
-    timestamp = workflow['workflow_tasks']['DummyTask']['timestamp']
-    assert timestamp.endswith("+00:00")
-    assert datetime.datetime.strptime(
-        timestamp[:-6],  # Remove the UTC offset
-        '%Y-%m-%dT%H:%M:%S.%f'
+    # Run DummyTask
+    luigi.build(
+        [DummyTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+        local_scheduler=True
     )
 
-    # Workflow should not be completed
-    assert not workflow['completed']
+    # Check that output file is created
+    assert (workspace / "preservation" / "output_file").read_text() \
+        == "Hello world"
+
+    dataset = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE)
+    tasks = dataset.get_tasks()
+    # Check 'messages' field
+    assert tasks['DummyTask']['messages'] == 'Test task was successful'
+    # Check 'result' field
+    assert tasks['DummyTask']['result'] == 'success'
+
+    # Workflow should not be disabled
+    assert dataset.enabled
 
     # Check that there is no extra workflows in database
-    assert len(database.find(None)) == 1
+    assert len(find_datasets(config=UNIT_TEST_CONFIG_FILE)) == 1
 
 
 @pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
-def test_run_workflow_target_task(testpath):
+def test_run_workflow_target_task(workspace):
     """Test running target task of the workflow.
 
-    Create a workflow with DummyTask as target Task. Check that wofklow
-    is completed after executing the task, and the workspace is removed.
+    Create a workflow with DummyTask as target Task. Check that workflow
+    is disabled after executing the task.
 
     :param testpath: temporary directory
     :returns: ``None``
     """
     # Add workflow to database
-    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    database.add_workflow(testpath.name, 'DummyTask', 'dataset1')
+    Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE).preserve()
 
-    # Run DummyTask task like it would be run from command line
-    run_luigi_task('DummyTask', str(testpath))
+    # Run DummyTask
+    luigi.build(
+        [DummyTask(workspace.name,
+                   config=UNIT_TEST_CONFIG_FILE,
+                   is_target_task=True)],
+        local_scheduler=True
+    )
 
-    # Check that new event is added to workflow database
-    workflow = database.get_one_workflow(testpath.name)
-    assert workflow['workflow_tasks']['DummyTask']['result'] == 'success'
+    # Check that new task is added to task log
+    dataset = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE)
+    tasks = dataset.get_tasks()
+    assert tasks['DummyTask']['result'] == 'success'
 
-    # Workflow should be completed and the workspace should be removed
-    assert workflow['completed']
-    assert not testpath.exists()
+    # Workflow should be disabled
+    assert not dataset.enabled
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_run_failing_task(testpath):
+def test_run_failing_task(workspace):
     """Test running task that fails.
 
-    Executes FailingTask and checks that report of failed event is added
-    to mongo document.
+    Executes FailingTask and checks that report of failed task is added
+    to task log.
 
     :param testpath: temporary directory
     :returns: ``None``
     """
-    # Run task like it would be run from command line
-    run_luigi_task('FailingTask', str(testpath))
-
-    # Check that new event is added to workflow database
-    database = Database(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    workflow = database.get_one_workflow(testpath.name)
-    # Check 'messages' field
-    assert workflow['workflow_tasks']['FailingTask']['messages'] \
-        == 'An error occurred while running a test task: Shit hit the fan'
-    # Check 'result' field
-    assert workflow['workflow_tasks']['FailingTask']['result'] \
-        == 'failure'
-    # Parse the 'timestamp' field to make sure it is correct format
-    timestamp = workflow['workflow_tasks']['FailingTask']['timestamp']
-    assert timestamp.endswith("+00:00")
-    datetime.datetime.strptime(
-        timestamp[:-6],  # Remove the UTC offset
-        '%Y-%m-%dT%H:%M:%S.%f'
+    # Run FailingTask
+    luigi.build(
+        [FailingTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+        local_scheduler=True
     )
 
-    # Check that there is no extra workflows in database
-    assert len(database.find(None)) == 1
+    # Check that new task is added to task log
+    tasks = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE).get_tasks()
+    # Check 'messages' field
+    assert tasks['FailingTask']['messages'] \
+        == 'An error occurred while running a test task: Shit hit the fan'
+    # Check 'result' field
+    assert tasks['FailingTask']['result'] \
+        == 'failure'
 
 
 @pytest.mark.parametrize(
@@ -301,43 +272,43 @@ def test_run_failing_task(testpath):
     (
 
         [
-            'InvalidDatasetTask',
+            InvalidDatasetTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidDatasetError: Dataset is invalid'
         ],
         [
-            'InvalidDatasetMetadataTask',
+            InvalidDatasetMetadataTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidDatasetMetadataError: Missing some important metadata'
         ],
         [
-            'InvalidFileMetadataTask',
+            InvalidFileMetadataTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidFileMetadataError: Invalid file encoding'
         ],
         [
-            'InvalidContractMetadataTask',
+            InvalidContractMetadataTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidContractMetadataError: Missing organization identifier'
         ],
         [
-            'InvalidFileTask',
+            InvalidFileTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidFileError: A file is not well-formed'
         ],
         [
-            'MissingFileTask',
+            MissingFileTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'MissingFileError: A file was not found in Ida'
         ],
         [
-            'InvalidSIPTask',
+            InvalidSIPTask,
             DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
             'An error occurred while running a test task: '
             'InvalidSIPError: SIP was rejected in DPS'
@@ -364,8 +335,11 @@ def test_invalid_dataset_error(testpath, requests_mock, task, expected_state,
     # Mock metax
     requests_mock.get('/rest/v2/datasets/1', json={})
 
-    # Run task like it would be run from command line
-    run_luigi_task(task, str(testpath))
+    # Run the task
+    luigi.build(
+        [task(str(testpath), config=UNIT_TEST_CONFIG_FILE)],
+        local_scheduler=True
+    )
 
     # Check the body of last HTTP request
     request_body = requests_mock.last_request.json()
@@ -377,7 +351,7 @@ def test_invalid_dataset_error(testpath, requests_mock, task, expected_state,
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_packaging_failed(testpath, requests_mock):
+def test_packaging_failed(workspace, requests_mock):
     """Test failure during packaging.
 
     If packaging fails because dataset is invalid, preservation state
@@ -395,7 +369,7 @@ def test_packaging_failed(testpath, requests_mock):
         return request.json()["preservation_state"] \
             == DS_STATE_INVALID_METADATA
     requests_mock.patch(
-        '/rest/v2/datasets/1',
+        f'/rest/v2/datasets/{workspace.name}',
         additional_matcher=_match_state_invalid_metadata,
         status_code=400,
         json={}
@@ -412,8 +386,11 @@ def test_packaging_failed(testpath, requests_mock):
         json={}
     )
 
-    # Run task like it would be run from command line
-    run_luigi_task('InvalidDatasetTask', str(testpath))
+    # Run InvalidDatasetTask
+    luigi.build(
+        [InvalidDatasetTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+        local_scheduler=True
+    )
 
     # Check the body of last HTTP request
     request_body = requests_mock.last_request.json()
@@ -436,7 +413,8 @@ def test_logging(testpath, requests_mock, caplog):
                       text='No rights to view dataset')
 
     # Run task that sends HTTP request
-    run_luigi_task('MetaxTask', str(testpath))
+    luigi.build([MetaxTask(str(testpath), config=UNIT_TEST_CONFIG_FILE)],
+                local_scheduler=True)
 
     # Check errors in logs
     errors = [r for r in caplog.records if r.levelname == 'ERROR']

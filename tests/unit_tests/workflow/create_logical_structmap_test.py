@@ -60,6 +60,7 @@ def test_create_structmap_ok(
     files[0]['file_path'] = 'files/file1'
     files[1]['file_path'] = 'files/file2'
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset['identifier'] = workspace.name
     # Dataset contans zero or more events
     dataset["research_dataset"]["provenance"] = []
     for event in events:
@@ -124,8 +125,7 @@ def test_create_structmap_ok(
 
     # Init and run CreateLogicalStructMap task
     sip_prerun_files = {path.name for path in sip_directory.iterdir()}
-    task = CreateLogicalStructMap(workspace=str(workspace),
-                                  dataset_id='dataset_identifier',
+    task = CreateLogicalStructMap(dataset_id=workspace.name,
                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()

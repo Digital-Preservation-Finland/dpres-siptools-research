@@ -42,12 +42,10 @@ class CreateLogicalStructMap(WorkflowTask):
         """
         return {
             'create_provenance_information': CreateProvenanceInformation(
-                workspace=self.workspace,
                 dataset_id=self.dataset_id,
                 config=self.config
             ),
             'create_structmap': CreateStructMap(
-                workspace=self.workspace,
                 dataset_id=self.dataset_id,
                 config=self.config
             )
@@ -60,7 +58,7 @@ class CreateLogicalStructMap(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.sip_creation_path, 'logical_structmap.xml'),
+            str(self.dataset.sip_creation_path / 'logical_structmap.xml'),
             format=luigi.format.Nop
         )
 
@@ -73,8 +71,11 @@ class CreateLogicalStructMap(WorkflowTask):
         :returns: ``None``
         """
         # Read the generated physical structmap from file
-        physical_structmap = ET.parse(os.path.join(self.sip_creation_path,
-                                                   'structmap.xml'))
+        # TODO: The path is converted to string because old versions of
+        # lxml do not support pathlib Paths. The conversion can
+        # probably be removed when Centos7 support is not required..
+        physical_structmap \
+            = ET.parse(str(self.dataset.sip_creation_path / 'structmap.xml'))
 
         # Get dmdsec id from physical_structmap
         dmdsec_id = physical_structmap.getroot()[0][0].attrib['DMDID']
@@ -117,7 +118,7 @@ class CreateLogicalStructMap(WorkflowTask):
         # Get the reference file path from Luigi task input
         # It already contains the workspace path.
         event_ids = get_md_references(read_md_references(
-            self.preservation_workspace,
+            self.dataset.preservation_workspace,
             os.path.basename(
                 self.input()['create_provenance_information'].path
             )
@@ -128,11 +129,10 @@ class CreateLogicalStructMap(WorkflowTask):
         event_type_ids = {}
         for event_id in event_ids:
             event_file = event_id[1:] + "-PREMIS%3AEVENT-amd.xml"
-            event_file_path = os.path.join(
-                self.sip_creation_path, event_file)
+            event_file_path = self.dataset.sip_creation_path / event_file
             if not os.path.exists(event_file_path):
                 continue
-            root = ET.parse(encode_path(event_file_path)).getroot()
+            root = ET.parse(encode_path(str(event_file_path))).getroot()
             event_type = root.xpath("//premis:eventType",
                                     namespaces=NAMESPACES)[0].text
             event_type_ids[event_type] = event_id

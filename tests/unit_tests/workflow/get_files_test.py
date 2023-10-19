@@ -9,6 +9,7 @@ from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.utils.download import FileNotAvailableError
 from siptools_research.workflow import get_files
 from tests.metax_data.files import PAS_STORAGE_ID, TXT_FILE
+from tests.metax_data.datasets import BASE_DATASET
 from tests.utils import add_metax_dataset, add_mock_ida_download
 
 
@@ -29,26 +30,27 @@ def test_getfiles(workspace, requests_mock):
     files[0]['file_path'] = '/path/to/file1'
     files[1]['identifier'] = 'pid:urn:2'
     files[1]['file_path'] = '/path/to/file2'
-    add_metax_dataset(requests_mock, files=files)
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Mock Ida. Add the two text files to Ida.
     add_mock_ida_download(
         requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         filename="/path/to/file1",
         content=b"foo\n"
     )
     add_mock_ida_download(
         requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         filename="/path/to/file2",
         content=b"bar\n"
     )
 
     # Init task
     task = get_files.GetFiles(
-        workspace=str(workspace),
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -80,13 +82,15 @@ def test_missing_ida_files(workspace, requests_mock):
     files[0]['file_path'] = '/path/to/file1'
     files[1]['identifier'] = 'pid:urn:not-found-in-ida'
     files[1]['file_path'] = '/path/to/file2'
-    add_metax_dataset(requests_mock, files=files)
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Mock Ida. First file can be downloaded, but requesting the second
     # file will cause 404 "Not found" error.
     add_mock_ida_download(
         requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         filename="/path/to/file1",
         content=b"foo\n"
     )
@@ -98,8 +102,7 @@ def test_missing_ida_files(workspace, requests_mock):
 
     # Init task
     task = get_files.GetFiles(
-        workspace=str(workspace),
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -118,14 +121,12 @@ def test_missing_ida_files(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_missing_local_files(testpath, workspace, requests_mock,
-                             upload_projects_path):
+def test_missing_local_files(workspace, requests_mock, upload_projects_path):
     """Test task when a local file is not available.
 
     The first file should successfully downloaded, but the second file
     is not found. Task should fail with Exception.
 
-    :param testpath: Temporary directory fixture
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: requests_mock mocker
     :returns: ``None``
@@ -138,7 +139,9 @@ def test_missing_local_files(testpath, workspace, requests_mock,
     files[1]['identifier'] = 'pid:urn:does_not_exist_local'
     files[1]['file_storage']['identifier'] = PAS_STORAGE_ID
     files[1]['file_path'] = '/path/to/file4'
-    add_metax_dataset(requests_mock, files=files)
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Init mocked upload.files collection
     mongo_files = [
@@ -160,8 +163,7 @@ def test_missing_local_files(testpath, workspace, requests_mock,
 
     # Init task
     task = get_files.GetFiles(
-        workspace=str(workspace),
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
@@ -184,7 +186,7 @@ def test_missing_local_files(testpath, workspace, requests_mock,
 @pytest.mark.parametrize('path', ["../../file1",
                                   "/../../file1",
                                   "//../../file1"])
-def test_forbidden_relative_path(pkg_root, workspace, requests_mock, path):
+def test_forbidden_relative_path(workspace, requests_mock, path):
     """Test that files can not be saved outside the workspace.
 
     Saving files outside the workspace by using relative file paths in
@@ -193,8 +195,7 @@ def test_forbidden_relative_path(pkg_root, workspace, requests_mock, path):
     which equals to `<packaging_root>/workspaces/file1`, if the path was
     not validated.
 
-    :param pkg_root: Temporary packaging root fixture
-    :param workspace: Temporary workspace path fixture
+    :param workspace: Temporary workspace fixture
     :param requests_mock: Request mocker
     :param path: sample file path
     :returns: ``None``
@@ -210,12 +211,13 @@ def test_forbidden_relative_path(pkg_root, workspace, requests_mock, path):
             }
         }
     ]
-    add_metax_dataset(requests_mock, files=files)
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Init task
     task = get_files.GetFiles(
-        workspace=str(workspace),
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
@@ -227,8 +229,8 @@ def test_forbidden_relative_path(pkg_root, workspace, requests_mock, path):
 
     # Check that file is not saved in workspace root i.e. workspace root
     # contains only the workspace directory
-    files = {path.name for path in pkg_root.iterdir()}
-    assert files == {'workspaces', 'tmp', 'file_cache'}
+    files = {path.name for path in workspace.parent.iterdir()}
+    assert files == {workspace.name}
 
 
 @pytest.mark.parametrize('path', ["foo/../file1",
@@ -256,18 +258,19 @@ def test_allowed_relative_paths(workspace, requests_mock, path):
             }
         }
     ]
-    add_metax_dataset(requests_mock, files=files)
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=files)
     add_mock_ida_download(
         requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         filename=path,
         content=b"foo\n"
     )
 
     # Init task
     task = get_files.GetFiles(
-        workspace=str(workspace),
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 

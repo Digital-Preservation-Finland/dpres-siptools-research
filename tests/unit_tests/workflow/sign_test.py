@@ -22,8 +22,7 @@ def test_signsip(workspace):
     )
 
     # Init task
-    task = sign.SignSIP(workspace=str(workspace),
-                        dataset_id="1",
+    task = sign.SignSIP(dataset_id=workspace.name,
                         config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     assert not task.complete()
 

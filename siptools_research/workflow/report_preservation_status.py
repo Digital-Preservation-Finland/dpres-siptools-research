@@ -1,6 +1,5 @@
 """Task that reports preservation status after SIP ingestion."""
 
-import os
 from luigi import LocalTarget
 from metax_access import DS_STATE_IN_DIGITAL_PRESERVATION
 from siptools_research.workflowtask import WorkflowTask
@@ -32,11 +31,9 @@ class ReportPreservationStatus(WorkflowTask):
 
         :returns: list of required tasks
         """
-        return [ValidateSIP(workspace=self.workspace,
-                            dataset_id=self.dataset_id,
+        return [ValidateSIP(dataset_id=self.dataset_id,
                             config=self.config),
-                SendSIPToDP(workspace=self.workspace,
-                            dataset_id=self.dataset_id,
+                SendSIPToDP(dataset_id=self.dataset_id,
                             config=self.config)]
 
     def output(self):
@@ -47,10 +44,8 @@ class ReportPreservationStatus(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(
-                self.preservation_workspace,
-                'report-preservation-status.finished'
-            )
+            str(self.dataset.preservation_workspace
+                / 'report-preservation-status.finished')
         )
 
     def run(self):

@@ -14,8 +14,8 @@ from siptools_research.workflow import report_preservation_status
         ("urn:nbn:fi:att:data-catalog-pas", "original-version-id")
     ]
 )
-@pytest.mark.usefixtures('testmongoclient')
-def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir,
+@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
+def test_reportpreservationstatus(luigi_mock_ssh_config, sftp_dir,
                                   requests_mock, data_catalog_id, dataset_id):
     """Test reporting status of accepted SIP.
 
@@ -35,7 +35,7 @@ def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir,
     """
     # Mock Metax
     requests_mock.get(
-        '/rest/v2/datasets/foobar',
+        f'/rest/v2/datasets/{dataset_id}',
         json={
             'data_catalog': {
                 'identifier': data_catalog_id
@@ -48,19 +48,16 @@ def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir,
     )
     metax_mock = requests_mock.patch(f'/rest/v2/datasets/{dataset_id}')
 
-    workspace = testpath
-
     # Create directory with name of the workspace to digital
     # preservation server, so that the ReportPreservationStatus thinks
     # that validation has completed.
     datedir = time.strftime("%Y-%m-%d")
-    tar_name = f"{workspace.name}.tar"
+    tar_name = f"{dataset_id}.tar"
     (sftp_dir / "accepted" / datedir / tar_name).mkdir(parents=True)
 
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
-        workspace=str(workspace),
-        dataset_id="foobar",
+        dataset_id=dataset_id,
         config=luigi_mock_ssh_config
     )
     assert not task.complete()
@@ -72,7 +69,7 @@ def test_reportpreservationstatus(testpath, luigi_mock_ssh_config, sftp_dir,
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_reportpreservationstatus_rejected(
-        testpath, luigi_mock_ssh_config, sftp_dir, requests_mock
+        workspace, luigi_mock_ssh_config, sftp_dir, requests_mock
 ):
     """Test reporting status of rejected SIP.
 
@@ -86,11 +83,9 @@ def test_reportpreservationstatus_rejected(
     :param sftp_dir: Directory that acts as DPS sftp home directory
     :returns: ``None``
     """
-    workspace = testpath
-
     # Mock metax
     requests_mock.get(
-        '/rest/v2/datasets/foobar',
+        f'/rest/v2/datasets/{workspace.name}',
         json={
             'data_catalog': {'identifier': 'urn:nbn:fi:att:data-catalog-pas'},
             'identifier': 'foobar'
@@ -109,8 +104,7 @@ def test_reportpreservationstatus_rejected(
 
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
-        workspace=str(workspace),
-        dataset_id="foobar",
+        dataset_id=workspace.name,
         config=luigi_mock_ssh_config
     )
 
@@ -126,7 +120,8 @@ def test_reportpreservationstatus_rejected(
 @pytest.mark.usefixtures('testmongoclient')
 # pylint: disable=invalid-name
 def test_reportpreservationstatus_rejected_int_error(
-        testpath, luigi_mock_ssh_config, sftp_dir):
+        workspace, luigi_mock_ssh_config, sftp_dir
+):
     """Test handling conflicting ingest reports.
 
     Creates ingest report files to "rejected" and "accepted" directories
@@ -138,8 +133,6 @@ def test_reportpreservationstatus_rejected_int_error(
     :param sftp_dir: Directory that acts as DPS sftp home directory
     :returns: ``None``
     """
-    workspace = testpath
-
     # Create directory with name of the workspace to digital
     # preservation server over SSH, so that the ReportPreservationStatus
     # thinks that validation has been rejected.
@@ -159,8 +152,7 @@ def test_reportpreservationstatus_rejected_int_error(
 
     # Run task like it would be run from command line
     task = report_preservation_status.ReportPreservationStatus(
-        workspace=str(workspace),
-        dataset_id="foobar",
+        dataset_id=workspace.name,
         config=luigi_mock_ssh_config
     )
     assert not task.complete()

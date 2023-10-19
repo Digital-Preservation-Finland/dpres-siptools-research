@@ -1,9 +1,6 @@
 """Luigi task that creates METS document."""
-import os
-
 import luigi.format
 from luigi import LocalTarget
-
 from siptools.scripts import compile_mets
 
 from siptools_research.workflowtask import WorkflowTask
@@ -33,11 +30,9 @@ class CreateMets(WorkflowTask):
 
         :returns: Required task
         """
-        return [CreateLogicalStructMap(workspace=self.workspace,
-                                       dataset_id=self.dataset_id,
+        return [CreateLogicalStructMap(dataset_id=self.dataset_id,
                                        config=self.config),
-                CopyToPasDataCatalog(workspace=self.workspace,
-                                     dataset_id=self.dataset_id,
+                CopyToPasDataCatalog(dataset_id=self.dataset_id,
                                      config=self.config)]
 
     def output(self):
@@ -47,7 +42,7 @@ class CreateMets(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            os.path.join(self.preservation_workspace, 'mets.xml'),
+            str(self.dataset.preservation_workspace / 'mets.xml'),
             format=luigi.format.Nop
         )
 
@@ -78,7 +73,7 @@ class CreateMets(WorkflowTask):
 
         # Compile METS
         mets = compile_mets.create_mets(
-            workspace=str(self.sip_creation_path),
+            workspace=str(self.dataset.sip_creation_path),
             mets_profile='tpas',
             contractid=contract_identifier,
             objid=objid,

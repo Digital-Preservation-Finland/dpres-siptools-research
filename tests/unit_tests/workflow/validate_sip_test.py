@@ -8,19 +8,16 @@ from siptools_research.workflow.validate_sip import ValidateSIP
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_validatesip_accepted(testpath, luigi_mock_ssh_config, sftp_dir):
+def test_validatesip_accepted(workspace, luigi_mock_ssh_config, sftp_dir):
     """Initializes validate_sip task and tests that it is not complete. Then
     creates new directory to "accepted" directory in digital preservation
     server and tests that task is complete.
 
-    :param testpath: Temporary directory fixture
+    :param workspace: Temporary directory fixture
     :returns: ``None``
     """
-    workspace = testpath
-
     # Init task
-    task = ValidateSIP(workspace=str(workspace), dataset_id="1",
-                       config=luigi_mock_ssh_config)
+    task = ValidateSIP(dataset_id=workspace.name, config=luigi_mock_ssh_config)
     assert not task.complete()
 
     # Create new directory to digital preservation server
@@ -35,19 +32,16 @@ def test_validatesip_accepted(testpath, luigi_mock_ssh_config, sftp_dir):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_validatesip_rejected(testpath, luigi_mock_ssh_config, sftp_dir):
+def test_validatesip_rejected(workspace, luigi_mock_ssh_config, sftp_dir):
     """Initializes validate-sip task and tests that it is not complete. Then
     creates new directory to "rejected" directory in digital preservation
     server and tests that task is complete.
 
-    :param testpath: Temporary directory fixture
+    :param workspace: Temporary directory fixture
     :returns: ``None``
     """
-    workspace = testpath
-
     # Init task
-    task = ValidateSIP(workspace=str(workspace), dataset_id="1",
-                       config=luigi_mock_ssh_config)
+    task = ValidateSIP(dataset_id=workspace.name, config=luigi_mock_ssh_config)
     assert not task.complete()
 
     # Create new directory to digital preservation server

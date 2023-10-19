@@ -6,7 +6,6 @@ import filecmp
 import importlib
 import shutil
 import tarfile
-from pathlib import Path
 
 from lxml.isoschematron import Schematron
 from siptools.xml.mets import NAMESPACES
@@ -85,7 +84,6 @@ def _mock_exists(_, path):
 
 @pytest.mark.parametrize(
     "module_name,task", [
-        ('create_workspace', 'CreateWorkspace'),
         ('validate_metadata', 'ValidateMetadata'),
         ('create_digiprov', 'CreateProvenanceInformation'),
         ('create_dmdsec', 'CreateDescriptiveMetadata'),
@@ -97,14 +95,13 @@ def _mock_exists(_, path):
         ('sign', 'SignSIP'),
         ('compress', 'CompressSIP'),
         ('send_sip', 'SendSIPToDP'),
-        ('cleanup', 'CleanupFileCache'),
         ('report_preservation_status', 'ReportPreservationStatus'),
     ]
 )
 @pytest.mark.usefixtures(
     'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf'
 )
-def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
+def test_workflow(workspace, module_name, task, requests_mock, mocker):
     """Test workflow dependency tree.
 
     Each workflow task should be able complete if it is directly called
@@ -114,7 +111,7 @@ def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
     added to mongodb. The output of task is NOT examined. Metax, Ida,
     mongodb, paramiko.SSHClient and RemoteAnyTarget are mocked.
 
-    :param pkg_root: temporary packaging root directory
+    :param workspace: temporary workspace directory
     :param module_name: submodule of siptools_research.workflow that
                         contains Task to be tested
     :param task: Task class name
@@ -125,12 +122,15 @@ def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
     mocker.patch('siptools_research.workflow.send_sip.paramiko.SSHClient',
                  new=mock.MagicMock)
 
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset["identifier"] = workspace.name
+
     tests.utils.add_metax_dataset(requests_mock,
-                                  tests.metax_data.datasets.BASE_DATASET,
+                                  dataset=dataset,
                                   files=[tests.metax_data.files.TXT_FILE])
     tests.utils.add_mock_ida_download(
         requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         filename="path/to/file",
         content=b"foo"
     )
@@ -140,14 +140,12 @@ def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
 
     with mock.patch.object(RemoteAnyTarget, '_exists', _mock_exists):
-        workspace = str(pkg_root / 'workspaces' / 'workspace')
         module = importlib.import_module('siptools_research.workflow.'
                                          + module_name)
         task_class = getattr(module, task)
         luigi.build(
             [task_class(
-                workspace=workspace,
-                dataset_id='dataset_identifier',
+                dataset_id=workspace.name,
                 config=tests.conftest.UNIT_TEST_CONFIG_FILE
             )],
             local_scheduler=True
@@ -162,10 +160,13 @@ def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
 
     # The workspace root directory should contain only metadata
     # generation, validation and preservation workspaces
-    workspace_content = {path.name for path in Path(workspace).iterdir()}
-    assert workspace_content == {'metadata_generation',
-                                 'validation',
-                                 'preservation'}
+    if workspace.exists():
+        workspace_content = {path.name
+                             for path
+                             in workspace.iterdir()}
+        assert workspace_content.issubset({'metadata_generation',
+                                           'validation',
+                                           'preservation'})
 
 
 @pytest.mark.usefixtures(
@@ -281,7 +282,7 @@ def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
         )
     ]
 )
-def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files,
+def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
                        upload_projects_path):
     """Test SIP validity.
 
@@ -296,13 +297,15 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files,
         #. all provenance events are found in mets.xml
 
     :param testpath: temporary directory
-    :param pkg_root: temporary packaging root directory
+    :param workspace: temporary workspace directory
     :param requests_mock: Mocker object
     :param dataset: dataset metadata
     :param files: list of file metadata objects
     :returns: ``None``
     """
     # Mock Metax
+    dataset = copy.deepcopy(dataset)
+    dataset['identifier'] = workspace.name
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset,
                                   files=[file['metadata'] for file in files])
@@ -325,23 +328,23 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files,
             with open(file['path'], 'rb') as open_file:
                 tests.utils.add_mock_ida_download(
                     requests_mock=requests_mock,
-                    dataset_id="dataset_identifier",
+                    dataset_id=workspace.name,
                     filename=file['metadata']["file_path"],
                     content=open_file.read()
                 )
 
-    workspace = pkg_root / 'workspaces' / 'workspace'
     assert luigi.build(
         [CompressSIP(
-            workspace=str(workspace),
-            dataset_id='dataset_identifier',
+            dataset_id=workspace.name,
             config=tests.conftest.UNIT_TEST_CONFIG_FILE
         )],
         local_scheduler=True
     )
 
     # Extract SIP
-    with tarfile.open(workspace / 'preservation' / 'workspace.tar') as tar:
+    with tarfile.open(workspace
+                      / 'preservation'
+                      / f'{workspace.name}.tar') as tar:
         tar.extractall(testpath / 'extracted_sip')
 
     # Read mets.xml

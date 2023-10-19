@@ -29,8 +29,7 @@ class SendSIPToDP(WorkflowTask):
 
         :returns: CompressSIP task
         """
-        return CompressSIP(workspace=self.workspace,
-                           dataset_id=self.dataset_id,
+        return CompressSIP(dataset_id=self.dataset_id,
                            config=self.config)
 
     def output(self):
@@ -39,10 +38,8 @@ class SendSIPToDP(WorkflowTask):
         :returns: `<workspace>/preservation/task-send-sip-to-dp.finished`
         :rtype: LocalTarget
         """
-        return luigi.LocalTarget(
-            os.path.join(self.preservation_workspace,
-                         'task-send-sip-to-dp.finished'),
-        )
+        return luigi.LocalTarget(str(self.dataset.preservation_workspace
+                                     / 'task-send-sip-to-dp.finished'))
 
     def run(self):
         """Send SIP file to DP service using sftp.

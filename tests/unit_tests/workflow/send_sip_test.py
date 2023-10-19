@@ -30,8 +30,7 @@ def test_send_sip(workspace, luigi_mock_ssh_config, sftp_dir):
     transfer_dir.mkdir()
 
     # Init and run task
-    task = SendSIPToDP(workspace=str(workspace),
-                       dataset_id='1',
+    task = SendSIPToDP(dataset_id=workspace.name,
                        config=luigi_mock_ssh_config)
     task.run()
     assert task.complete()

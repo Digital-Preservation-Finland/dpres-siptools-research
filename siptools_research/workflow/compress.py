@@ -1,6 +1,5 @@
 """Luigi task that creates tar-archive from SIP directory."""
 
-import os
 import tarfile
 import luigi
 from siptools_research.workflowtask import WorkflowTask
@@ -12,7 +11,7 @@ from siptools_research.workflow.sign import SignSIP
 class CompressSIP(WorkflowTask):
     """Creates tar-archive from SIP directory.
 
-    Outputs `<workflow_id>.tar` to workspace.
+    Outputs `<dataset_id>.tar` to workspace.
 
     Task requires that SIP has been signed, METS document has been
     created, and dataset files have been downloaded.
@@ -27,28 +26,24 @@ class CompressSIP(WorkflowTask):
         :returns: dictionary of required tasks
         """
         return {
-            'signature': SignSIP(workspace=self.workspace,
-                                 dataset_id=self.dataset_id,
+            'signature': SignSIP(dataset_id=self.dataset_id,
                                  config=self.config),
-            'mets': CreateMets(workspace=self.workspace,
-                               dataset_id=self.dataset_id,
+            'mets': CreateMets(dataset_id=self.dataset_id,
                                config=self.config),
-            'files': GetFiles(workspace=self.workspace,
-                              dataset_id=self.dataset_id,
+            'files': GetFiles(dataset_id=self.dataset_id,
                               config=self.config),
         }
 
     def output(self):
         """Return the output target of the Task.
 
-        :returns: `<workspace>/preservation/<workflow_id>.tar`
+        :returns: `<workspace>/preservation/<dataset_id>.tar`
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
-            os.path.join(
-                self.preservation_workspace,
-                self.workflow_id
-            ) + '.tar', format=luigi.format.Nop
+            str(self.dataset.preservation_workspace
+                / self.dataset_id) + '.tar',
+            format=luigi.format.Nop
         )
 
     def run(self):

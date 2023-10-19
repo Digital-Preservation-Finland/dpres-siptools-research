@@ -1,16 +1,7 @@
 """Workflow database interface."""
 
-import datetime
 import pymongo
 from siptools_research.config import Configuration
-
-
-def _timestamp():
-    """Return time now.
-
-    :returns: ISO 8601 string
-    """
-    return datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 
 class Database:
@@ -33,211 +24,38 @@ class Database:
                 [conf.get("mongodb_collection")]
             )
 
-    def add_task(self, workflow_id, task_name, result, messages):
-        """Add information of workflow task to database.
+    def update_document(self, identifier, document):
+        """Update workflow document.
 
-        :param workflow_id: Workflow identifier i.e. the name of
-                            workspace directory
-        :param task_name: Name of the task
-        :param result: Result string ('failure' or 'success')
-        :param messages: Information about the task
-        :returns: ``None``
+        :param identifier: Document identifier
+        :param document: Dictionary of fields to be updated
+        :returns: Updated document
         """
-        self._collection.update_one(
+        result = self._collection.find_one_and_update(
             {
-                '_id': workflow_id
+                '_id': identifier
             },
             {
-                '$set': {
-                    'workflow_tasks.' + task_name: {
-                        'timestamp': _timestamp(),
-                        'messages': messages,
-                        'result': result
-                    }
-                }
+                '$set': document
             },
-            upsert=True
+            upsert=True,
+            return_document=pymongo.ReturnDocument.AFTER
         )
 
-    def set_completed(self, workflow_id):
-        """Mark workflow completed.
-
-        :param workflow_id: Workflow identifier
-        :returns: ``None``
-        """
-        self._collection.update_one(
-            {
-                '_id': workflow_id
-            },
-            {
-                '$set': {
-                    'completed': True
-                }
-            },
-            upsert=True
-        )
-
-    def set_incomplete(self, workflow_id):
-        """Mark workflow incomplete.
-
-        :param workflow_id: Workflow identifier
-        :returns: ``None``
-        """
-        self._collection.update_one(
-            {
-                '_id': workflow_id
-            },
-            {
-                '$set': {
-                    'completed': False
-                }
-            },
-            upsert=True
-        )
-
-    def set_disabled(self, workflow_id):
-        """Mark workflow disabled.
-
-        :param workflow_id: Workflow identifier
-        :returns: ``None``
-        """
-        self._collection.update_one(
-            {
-                '_id': workflow_id
-            },
-            {
-                '$set': {
-                    'disabled': True
-                }
-            },
-            upsert=True
-        )
-
-    def set_enabled(self, workflow_id):
-        """Mark workflow enabled.
-
-        :param workflow_id: Workflow identifier
-        :returns: ``None``
-        """
-        self._collection.update_one(
-            {
-                '_id': workflow_id
-            },
-            {
-                '$set': {
-                    'disabled': False
-                }
-            },
-            upsert=True
-        )
-
-    def add_workflow(self, workflow_id, target_task_name, dataset_id):
-        """Add new workflow.
-
-        The workflow identifier will be the primary key ('_id') of the
-        document.
-
-        :param workflow_id: Workflow identifier, i.e. the name of
-                            workspace directory
-        :param target_task_name: Name of the target Task of the workflow
-        :param dataset_id: Dataset identifier
-        :returns: ``None``
-        """
-        self._collection.update_one(
-            {
-                '_id': workflow_id
-            },
-            {
-                '$set': {
-                    'target_task': target_task_name,
-                    'dataset': dataset_id,
-                    'completed': False,
-                    'disabled': False
-                }
-            },
-            upsert=True
-        )
-
-    def set_target_task(self, workflow_id, target_task):
-        """Set the target Task of the workflow.
-
-        :param workflow_id: Workflow identifier
-        :param task: The new target Task for workflow
-        :returns: ``None``
-        """
-        self._collection.update_one(
-            {
-                '_id': workflow_id
-            },
-            {
-                '$set': {
-                    'target_task': target_task
-                }
-            },
-            upsert=True
-        )
+        return result
 
     def find(self, search):
-        """Search workflows with arbitrary filter.
+        """Search workflow documents with arbitrary filter.
 
         :param search: Filter dictionary
-        :returns: List of workflows
+        :returns: List of workflow documents
         """
         return list(self._collection.find(search))
 
-    def get_workflows(self, dataset_id):
-        """Get workflows by dataset identifier.
+    def get_document(self, identifier):
+        """Get a workflow document by dataset identifier.
 
         :param dataset_id: Dataset identifier
-        :returns: List of workflows
+        :returns: Workflow document
         """
-        return list(self._collection.find({"dataset": dataset_id}))
-
-    def get_current_workflow(self, dataset_id):
-        """Get the current workflow of dataset.
-
-        :param dataset_id: Dataset identifier
-        :returns: Current workflow or `None`
-        """
-        workflows = list(self._collection.find({'dataset': dataset_id,
-                                                'disabled': False}))
-        if len(workflows) == 0:
-            # Workflows have not been created for this dataset, or they
-            # are all disabled.
-            return None
-
-        if len(workflows) == 1:
-            return workflows[0]
-
-        raise ValueError(
-            "Multiple workflows exist for dataset {dataset_id}"
-        )
-
-    def get_all_active_workflows(self):
-        """Get all active workflows.
-
-        :returns: List of incomplete workflows
-        """
-        return list(self._collection.find({'completed': False,
-                                           'disabled': False}))
-
-    def get_one_workflow(self, workflow_id):
-        """Get a workflow document by workflow identifier.
-
-        :param workflow_id: Workflow identifier
-        :returns: Workflow
-        """
-        return self._collection.find_one({"_id": workflow_id})
-
-    def get_task_timestamp(self, workflow_id, task_name):
-        """Read task timestamp for a workflow.
-
-        :param workflow_id: Workflow identifier
-        :param task_name: Name of task
-        :returns: Task timestamp
-        """
-        document = self._collection.find_one({'_id': workflow_id})
-        if not document:
-            raise ValueError
-
-        return document['workflow_tasks'][task_name]['timestamp']
+        return self._collection.find_one({"_id": identifier})

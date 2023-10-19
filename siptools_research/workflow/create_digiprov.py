@@ -12,8 +12,6 @@ from siptools_research.utils.locale import (
     get_dataset_languages, get_localized_value
 )
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.create_workspace import CreateWorkspace
-from siptools_research.workflow.validate_files import ValidateFiles
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidDatasetMetadataError
@@ -30,8 +28,7 @@ class CreateProvenanceInformation(WorkflowTask):
     references to PREMIS events is written to
     `<workspace>/create-provenance-information.jsonl`.
 
-    The Task requires that workspace directory is created and dataset
-    metadata is validated.
+    The Task requires that dataset metadata is validated.
     """
 
     success_message = "Provenance metadata created."
@@ -42,23 +39,7 @@ class CreateProvenanceInformation(WorkflowTask):
 
         :returns: list of required tasks
         """
-        return [
-            CreateWorkspace(
-                workspace=self.workspace,
-                dataset_id=self.dataset_id,
-                config=self.config
-            ),
-            ValidateMetadata(
-                workspace=self.workspace,
-                dataset_id=self.dataset_id,
-                config=self.config
-            ),
-            ValidateFiles(
-                workspace=self.workspace,
-                dataset_id=self.dataset_id,
-                config=self.config
-            )
-        ]
+        return ValidateMetadata(dataset_id=self.dataset_id, config=self.config)
 
     def output(self):
         """List the output targets of the task.
@@ -67,10 +48,8 @@ class CreateProvenanceInformation(WorkflowTask):
                   `create-provenance-information.jsonl`
         :rtype: LocalTarget
         """
-        return luigi.LocalTarget(
-            os.path.join(self.preservation_workspace,
-                         'create-provenance-information.jsonl')
-        )
+        return luigi.LocalTarget(str(self.dataset.preservation_workspace
+                                     / 'create-provenance-information.jsonl'))
 
     def run(self):
         """Create premis events.
@@ -100,7 +79,7 @@ class CreateProvenanceInformation(WorkflowTask):
 
                 for file_ in os.listdir(temporary_workspace):
                     shutil.move(os.path.join(temporary_workspace, file_),
-                                self.sip_creation_path)
+                                self.dataset.sip_creation_path)
 
     def _create_premis_events(self, workspace):
         """Create premis events from provenance metadata.

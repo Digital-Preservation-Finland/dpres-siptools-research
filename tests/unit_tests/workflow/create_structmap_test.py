@@ -88,8 +88,7 @@ def test_create_structmap_ok(workspace, provenance_ids):
     sip_content_before_run = [
         path.name for path in sip_creation_path.iterdir()
     ]
-    task = CreateStructMap(workspace=str(workspace),
-                           dataset_id='create_structmap_test_dataset',
+    task = CreateStructMap(dataset_id=workspace.name,
                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
@@ -179,8 +178,7 @@ def test_create_structmap_without_directories(workspace):
     _create_metadata(workspace, 'file1')
 
     # Init and run CreateStructMap task
-    task = CreateStructMap(workspace=str(workspace),
-                           dataset_id='create_structmap_test_dataset',
+    task = CreateStructMap(dataset_id=workspace.name,
                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     task.run()
@@ -219,8 +217,7 @@ def test_filesec_othermd(workspace):
                base_path=str(sip_creation_path))
 
     # Init and run CreateStructMap task
-    task = CreateStructMap(workspace=str(workspace),
-                           dataset_id='create_structmap_test_dataset',
+    task = CreateStructMap(dataset_id=workspace.name,
                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     task.run()

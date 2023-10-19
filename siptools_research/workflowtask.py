@@ -1,8 +1,4 @@
 """Base task classes for the workflow tasks."""
-import os
-from pathlib import Path
-import shutil
-
 import luigi
 from metax_access import (Metax,
                           DS_STATE_INVALID_METADATA,
@@ -11,7 +7,7 @@ from metax_access import (Metax,
 from requests import HTTPError
 
 from siptools_research.config import Configuration
-from siptools_research.utils.database import Database
+from siptools_research.dataset import Dataset
 from siptools_research.exceptions import InvalidSIPError, InvalidDatasetError
 
 
@@ -21,24 +17,17 @@ class WorkflowTask(luigi.Task):
     In addition to functionality of normal luigi Task, every workflow
     task has some luigi parameters:
 
-    :workspace: Full path to unique self.workspace directory for the
-                task.
-    :dataset_id: Metax dataset id.
+    :dataset_id: Dataset identifier.
+    :is_target_task: If the task is "target task" the workflow will be
+                     disabled when the task has run.
     :config: Path to configuration file
 
-    WorkflowTask also has some extra instance variables that can be used
-    to identify the task and current workflow, for example when storing
-    workflow status information to database:
-
-    :workflow_id: Identifier of the workflow. Generated from the name of
-                  workspace, which should be unique
-    :sip_creation_path: A path in the workspace in which the SIP is
-                        created
+    A WorkflowTask instance also has `Dataset` object that can be
+    accessed via `dataset` attribute.
     """
 
-    # TODO: maybe workspace parameter could be removed?
-    workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
+    is_target_task = luigi.BoolParameter(default=False)
     config = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
@@ -48,13 +37,7 @@ class WorkflowTask(luigi.Task):
         variables.
         """
         super().__init__(*args, **kwargs)
-        self.workflow_id = os.path.basename(self.workspace)
-        _workspace = Path(self.workspace)
-        self.metadata_generation_workspace = _workspace / "metadata_generation"
-        self.validation_workspace = _workspace / "validation"
-        self.preservation_workspace = _workspace / "preservation"
-        self.sip_creation_path \
-            = self.preservation_workspace / "sip-in-progress"
+        self.dataset = Dataset(self.dataset_id, config=self.config)
 
     def get_metax_client(self):
         """Initialize Metax client."""
@@ -75,22 +58,17 @@ class WorkflowExternalTask(luigi.ExternalTask):
     methods. In addition to functionality of normal luigi ExternalTask,
     every task has some luigi parameters:
 
-    :workspace: Full path to unique self.workspace directory for the
-                task.
-    :dataset_id: Metax dataset id.
+    :dataset_id: Dataset identifier.
     :config: Path to configuration file
 
     WorkflowExternalTask also has some extra instance variables that can
     be used to identify the task and current workflow, forexample when
     storing workflow status information to database:
 
-    :workflow_id: Identifier of the workflow. Generated from the name of
-                  workspace, which should be unique
     :sip_creation_path: A path in the workspace in which the SIP is
                         created
     """
 
-    workspace = luigi.Parameter()
     dataset_id = luigi.Parameter()
     config = luigi.Parameter()
 
@@ -101,9 +79,7 @@ class WorkflowExternalTask(luigi.ExternalTask):
         variables.
         """
         super().__init__(*args, **kwargs)
-        self.workflow_id = os.path.basename(self.workspace)
-        self.sip_creation_path = os.path.join(self.workspace,
-                                              'sip-in-progress')
+        self.dataset = Dataset(self.dataset_id, config=self.config)
 
 
 @WorkflowTask.event_handler(luigi.Event.SUCCESS)
@@ -112,22 +88,17 @@ def report_task_success(task):
 
     This function is triggered after each WorkflowTask is executed
     succesfully. Adds report of successful task to workflow database. if
-    the Task was the target Task, the workflow is marked completed and
-    the workspace is removed.
+    the Task was the "target task", the workflow is disabled.
 
     :param task: WorkflowTask object
     :returns: ``None``
     """
-    database = Database(task.config)
-    database.add_task(task.workflow_id,
-                      task.__class__.__name__,
-                      'success',
-                      task.success_message)
+    task.dataset.log_task(task.__class__.__name__,
+                          'success',
+                          task.success_message)
 
-    if task.__class__.__name__ \
-            == database.get_one_workflow(task.workflow_id)['target_task']:
-        database.set_completed(task.workflow_id)
-        shutil.rmtree(task.workspace)
+    if task.is_target_task:
+        task.dataset.disable()
 
 
 @WorkflowTask.event_handler(luigi.Event.FAILURE)
@@ -144,11 +115,9 @@ def report_task_failure(task, exception):
     :param exception: Exception that caused failure
     :returns: ``None``
     """
-    database = Database(task.config)
-    database.add_task(task.workflow_id,
-                      task.__class__.__name__,
-                      'failure',
-                      f"{task.failure_message}: {str(exception)}")
+    task.dataset.log_task(task.__class__.__name__,
+                          'failure',
+                          f"{task.failure_message}: {str(exception)}")
 
     if isinstance(exception, InvalidDatasetError):
         # Set preservation status for dataset in Metax
@@ -181,7 +150,7 @@ def report_task_failure(task, exception):
             )
 
         # Disable workflow
-        database.set_disabled(task.workflow_id)
+        task.dataset.disable()
 
 
 def _get_description(task, exception):
