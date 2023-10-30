@@ -258,6 +258,16 @@ SEG_Y_FILE_METADATA = {
     "file_characteristics": {
         "file_format": "application/x.fi-dpres.segy",
         "format_version": "1.0"
+    },
+    "file_characteristics_extension": {
+        "streams": {
+            "0": {
+                "index": 0,
+                "version": "1.0",
+                "mimetype": "application/x.fi-dpres.segy",
+                "stream_type": "binary"
+            }
+        }
     }
 }
 

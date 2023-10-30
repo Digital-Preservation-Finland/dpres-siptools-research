@@ -90,6 +90,10 @@ class CreateStructMap(WorkflowTask):
                 if source.is_file():
                     shutil.copy(source, temporary_workspace / file)
 
+            # Copy scrape cache files to temporary workspace
+            for file in permanent_workspace.rglob("*-scraper.json"):
+                shutil.copy(file, temporary_workspace / file.name)
+
             # Merge premis event reference files into one file that is
             # written to temporary directory
             md_ids = []

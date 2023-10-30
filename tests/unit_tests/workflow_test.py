@@ -32,6 +32,7 @@ SIG_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
 SIG_FILE["file_path"] = "signature.sig"
 TIFF_FILE = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
 MKV_FILE = copy.deepcopy(tests.metax_data.files.MKV_FILE)
+SEG_Y_FILE = copy.deepcopy(tests.metax_data.files.SEG_Y_FILE)
 DATASET_WITH_PROVENANCE \
     = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
 DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
@@ -257,6 +258,18 @@ def test_workflow(pkg_root, module_name, task, requests_mock, mocker):
                     'path': 'tests/data/sample_files/application_pdf.pdf'
                 }
             ]
+        ),
+        # Dataset with a file that goes to bit-level preservation
+        (
+            tests.metax_data.datasets.BASE_DATASET,
+            [
+                {
+                    'metadata': SEG_Y_FILE,
+                    'path': (
+                        'tests/data/sample_files/invalid_1.0_ascii_header.sgy'
+                    )
+                }
+            ]
         )
     ]
 )
@@ -341,6 +354,14 @@ def test_mets_creation(testpath, pkg_root, requests_mock, dataset, files,
     assert mets_xml_root.xpath('@*[local-name() = "CATALOG"] | '
                                '@*[local-name() = "SPECIFICATION"]')[0][:3] \
         == '1.7'
+
+    # Check that files going to bit-level preservation have the correct USE
+    # attribute in METS fileSec
+    if files[0]['metadata'] == SEG_Y_FILE:
+        assert mets_xml_root.xpath(
+            '//mets:file/@USE',
+            namespaces=NAMESPACES
+        )[0] == 'fi-dpres-file-format-identification'
 
     # Check that all files are included in SIP
     for file in files:
