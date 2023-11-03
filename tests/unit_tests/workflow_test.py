@@ -84,18 +84,25 @@ def _mock_exists(_, path):
 
 @pytest.mark.parametrize(
     "module_name,task", [
-        ('validate_metadata', 'ValidateMetadata'),
-        ('create_digiprov', 'CreateProvenanceInformation'),
-        ('create_dmdsec', 'CreateDescriptiveMetadata'),
-        ('get_files', 'GetFiles'),
-        ('create_techmd', 'CreateTechnicalMetadata'),
-        ('create_structmap', 'CreateStructMap'),
-        ('create_logical_structmap', 'CreateLogicalStructMap'),
-        ('create_mets', 'CreateMets'),
-        ('sign', 'SignSIP'),
-        ('compress', 'CompressSIP'),
-        ('send_sip', 'SendSIPToDP'),
-        ('report_preservation_status', 'ReportPreservationStatus'),
+        ("cleanup", "Cleanup"),
+        ("compress", "CompressSIP"),
+        ("copy_dataset_to_pas_data_catalog", "CopyToPasDataCatalog"),
+        ("create_digiprov", "CreateProvenanceInformation"),
+        ("create_dmdsec", "CreateDescriptiveMetadata"),
+        ("create_logical_structmap", "CreateLogicalStructMap"),
+        ("create_mets", "CreateMets"),
+        ("create_structmap", "CreateStructMap"),
+        ("create_techmd", "CreateTechnicalMetadata"),
+        ("generate_metadata", "GenerateMetadata"),
+        ("get_files", "GetFiles"),
+        ("report_dataset_validation_result", "ReportDatasetValidationResult"),
+        ("report_preservation_status", "ReportPreservationStatus"),
+        ("send_sip", "SendSIPToDP"),
+        ("sign", "SignSIP"),
+        ("validate_files", "ValidateFiles"),
+        ("validate_metadata", "ValidateMetadata"),
+        # TODO: ValidateSIP is not tested because of TPASPKT-435
+        # ("validate_sip", "ValidateSIP"),
     ]
 )
 @pytest.mark.usefixtures(
