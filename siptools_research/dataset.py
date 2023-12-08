@@ -70,20 +70,20 @@ class Dataset:
     @property
     def enabled(self):
         """Check if dataset has active workflow."""
-        return not self._document.get('disabled', True)
+        return self._document.get('enabled', False)
 
     def disable(self):
         """Disable workflow."""
         self._cached_document = self.database.update_document(
             self.identifier,
-            {'disabled': True}
+            {'enabled': False}
         )
 
     def enable(self):
         """Enable workflow."""
         self._cached_document = self.database.update_document(
             self.identifier,
-            {'disabled': False}
+            {'enabled': True}
         )
 
     # TODO: These task logs are not required anymore for anything else
@@ -129,7 +129,7 @@ class Dataset:
             self.identifier,
             {
                 'target': target,
-                'disabled': False
+                'enabled': True
             }
         )
 
@@ -215,7 +215,7 @@ def find_datasets(enabled=None,
     """
     search = {}
     if enabled is not None:
-        search['disabled'] = not enabled
+        search['enabled'] = enabled
     if target is not None:
         search['target'] = target
     if identifier is not None:
