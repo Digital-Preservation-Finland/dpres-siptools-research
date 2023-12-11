@@ -41,7 +41,7 @@ class CreateTechnicalMetadata(WorkflowTask):
     are written to `<sip_creation_path>/create-mix-md-references`.
 
     List of PREMIS event references is written to
-    `<workspace>/create-technical-metadata.jsonl`
+    `<workspace>/preservation/create-technical-metadata.jsonl`
 
     The task requires dataset metadata to be validated, dataset files to
     be downloaded and file metadata to be generated.

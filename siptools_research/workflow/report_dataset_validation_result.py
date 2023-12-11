@@ -11,8 +11,8 @@ class ReportDatasetValidationResult(WorkflowTask):
     """Task that sets preservation status when dataset is validated.
 
     A false target `report-dataset-validation-result.finished` is
-    created into workspace directory to notify luigi (and dependent
-    tasks) that this task has finished.
+    created into validation workspace directory to notify luigi that
+    this task has finished.
 
     The task requires metadata and files to be validated.
     """
@@ -25,10 +25,10 @@ class ReportDatasetValidationResult(WorkflowTask):
 
         :returns: ValidateMetadata task
         """
-        return [ValidateMetadata(dataset_id=self.dataset_id,
-                                 config=self.config),
-                ValidateFiles(dataset_id=self.dataset_id,
-                              config=self.config)]
+        return [
+            ValidateMetadata(dataset_id=self.dataset_id, config=self.config),
+            ValidateFiles(dataset_id=self.dataset_id, config=self.config)
+        ]
 
     def output(self):
         """Return the output targets of this Task.

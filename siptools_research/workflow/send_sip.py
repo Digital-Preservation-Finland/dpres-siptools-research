@@ -13,10 +13,10 @@ class SendSIPToDP(WorkflowTask):
 
     As the SIP file is moved from the transfer directory by preservation
     system the existence of the SIP file cannot be verified reliably
-    there. A false target file in workspace:
-    `task-send-sip-to-dp.finished` is used as an output to notify
-    luigi(and dependent tasks) that this task has finished and SIP file
-    has been transferred to preservation system.
+    there. A false target file in preservation workspace:
+    `task-send-sip-to-dp.finished` is used as an output to notify luigi
+    that this task has finished and SIP file has been transferred to
+    preservation system.
 
     Task requires that tar archive format SIP is created.
     """

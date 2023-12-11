@@ -30,7 +30,7 @@ def test_workspace_paths(pkg_root):
 @pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_enable_disable():
     """Test enabling and disabling workflow."""
-    # Initially the workflow should be disabled
+    # Initially the workflow of the dataset should be disabled
     dataset = Dataset('foo', config=UNIT_TEST_CONFIG_FILE)
     assert dataset.enabled is False
 
@@ -55,7 +55,7 @@ def test_task_log():
     dataset.log_task('TestTask', 'success',
                      'Everything went better than expected')
 
-    # Check that task was added to workflow
+    # Check that task was added to task log
     tasks = dataset.get_tasks()
     assert tasks['TestTask']['messages'] \
         == 'Everything went better than expected'
@@ -77,7 +77,8 @@ def test_task_log():
 def test_generate_metadata():
     """Test generate_metadata function.
 
-    Tests that `generate_metadata` schedules correct task.
+    Tests that `generate_metadata` sets correct target for workflow of
+    the dataset, and creates metadata generation workspace.
 
     :returns: ``None``
     """
@@ -124,7 +125,8 @@ def test_restart_generate_metadata():
 def test_validate_dataset():
     """Test validate_dataset function.
 
-    Tests that `validate_dataset` schedules correct task.
+    Tests that `validate_dataset` sets correct target for workflow of
+    the dataset, and creates validation workspace.
 
     :returns: ``None``
     """
@@ -179,7 +181,8 @@ def test_restart_validate_metadata():
 def test_preserve_dataset():
     """Test preserve_dataset function.
 
-    Tests that `preserve_dataset` schedules correct task.
+    Tests that `prserve_dataset` sets correct target for workflow of
+    the dataset, and creates preservation workspace.
 
     :returns: ``None``
     """
@@ -201,7 +204,7 @@ def test_preserve_dataset():
 def test_restart_preserve_dataset():
     """Test restarting preservation.
 
-    When preservation is restarted, previous  preservation workspace
+    When preservation is restarted, previous preservation workspace
     should be cleared.
 
     :returns: ``None``
@@ -243,7 +246,7 @@ def test_restart_preserve_dataset():
 def test_workflow_conflict():
     """Test starting another workflow for dataset.
 
-    Tests that that new workflows can not be started when dataset
+    Tests that new workflows can not be started when dataset
     already has an active workflow.
 
     :returns: ``None``
@@ -268,7 +271,7 @@ def test_workflow_conflict():
     dataset.disable()
     dataset.preserve()
 
-    # The target_task of the workflow should be updated, and workflow
+    # The target of the workflow should be updated, and workflow
     # should be enabled
     active_datasets = find_datasets(enabled=True, config=UNIT_TEST_CONFIG_FILE)
     assert len(active_datasets) == 1

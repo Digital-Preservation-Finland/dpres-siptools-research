@@ -15,11 +15,11 @@ class CreateMets(WorkflowTask):
 
     Merges all partial METS documents found from <sip_creation_path> to
     one METS document. The METS document is written to
-    <workspace>/mets.xml.
+    <workspace>/preservation/mets.xml.
 
     Task requires logical structural map to be created. Task requires
-    dataset to be copied to PAS data catalog to ensure that dataset has
-    "preservation_dataset_version".
+    that dataset is copied to PAS data catalog to ensure that dataset
+    has "preservation_dataset_version".
     """
 
     success_message = "METS document compiled"

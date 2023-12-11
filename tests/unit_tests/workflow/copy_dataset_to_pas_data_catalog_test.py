@@ -125,7 +125,7 @@ def test_copy_pas_dataset(workspace, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_pas_dataset_already_copied(workspace, requests_mock):
-    """Test copying Ida dataset to PAS data catalog.
+    """Test copying PAS dataset to PAS data catalog.
 
     The dataset was originally created in PAS catalog, and the
     preservation state has already been updated, so the

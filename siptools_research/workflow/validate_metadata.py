@@ -9,7 +9,8 @@ class ValidateMetadata(WorkflowTask):
     """Reads metadata from Metax and validates it.
 
     A false target file `validate-metadata.finished` is created into
-    workspace directory to notify luigi that this task has finished.
+    validation workspace directory to notify luigi that this task has
+    finished.
     """
 
     success_message = "Metax metadata is valid"

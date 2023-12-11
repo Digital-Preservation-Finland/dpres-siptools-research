@@ -20,7 +20,7 @@ def test_reportpreservationstatus(luigi_mock_ssh_config, sftp_dir,
     """Test reporting status of accepted SIP.
 
     Creates new directory to "accepted" directory in digital
-    preservation server, runs ReportPreservationStatus task. Tests
+    preservation server and runs ReportPreservationStatus task. Tests
     that task is complete after it has been run and that the
     preservation status of correct dataset is updated.
 

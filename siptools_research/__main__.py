@@ -1,6 +1,6 @@
 """Commandline interface for siptools_research package.
 
-To start the workflow for dataset 1234 (for example)::
+To start the preservation workflow for dataset 1234 (for example)::
 
    siptools-research preserve 1234
 
@@ -141,7 +141,7 @@ def _setup_workflow_args(subparsers):
     get_parser.set_defaults(func=_workflow)
     get_parser.add_argument(
         'dataset_id',
-        help="Workflow identifier"
+        help="Dataset identifier"
     )
 
 
@@ -191,7 +191,7 @@ def _setup_tasks_args(subparsers):
     status_parser.set_defaults(func=_tasks)
     status_parser.add_argument(
         'dataset_id',
-        help="Workflow identifier"
+        help="Dataset identifier"
     )
 
 
@@ -327,7 +327,7 @@ def _get_dataset(args):
     dataset = Dataset(args.dataset_id, config=args.config)
     if not dataset.target:
         print(
-            f"{FAILC}Could not find document with workflow identifier:"
+            f"{FAILC}Could not find dataset with identifier:"
             f" {args.dataset_id}{ENDC}"
         )
 
@@ -335,7 +335,7 @@ def _get_dataset(args):
 
 
 def _get_datasets(args):
-    """Get a workflow documents with filters."""
+    """Find datasets with filters."""
     if args.disabled and args.enabled:
         raise ValueError("Use either disabled or enabled")
 
@@ -395,7 +395,7 @@ def _tasks(args):
                 else:
                     fail.append([task, tasks[task]])
         else:
-            print(f"Workflow {dataset.identifier} has no workflow_tasks")
+            print(f"Dataset {dataset.identifier} has no workflow_tasks")
 
         # Sort and print tasks that were completed successfully
         if success:
@@ -427,7 +427,7 @@ def _disable(args):
     dataset = _get_dataset(args)
     if dataset:
         dataset.disable()
-        print(f"Workflow {dataset.identifier} disabled")
+        print(f"Workflow of dataset {dataset.identifier} disabled")
 
 
 def _enable(args):
@@ -435,7 +435,7 @@ def _enable(args):
     dataset = _get_dataset(args)
     if dataset:
         dataset.enable()
-        print(f"Workflow {dataset.identifier} enabled")
+        print(f"Workflow of dataset {dataset.identifier} enabled")
 
 
 def _clean_cache(args):

@@ -26,7 +26,7 @@ class CreateProvenanceInformation(WorkflowTask):
     documents are written to
     `<sip_creation_path>/<uuid>-PREMIS%3AEVENT-amd.xml`. List of
     references to PREMIS events is written to
-    `<workspace>/create-provenance-information.jsonl`.
+    `<workspace>/preservation/create-provenance-information.jsonl`.
 
     The Task requires that dataset metadata is validated.
     """

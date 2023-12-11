@@ -12,7 +12,7 @@ from siptools_research.workflow.create_mets import CreateMets
 class SignSIP(WorkflowTask):
     """Task that signs METS file.
 
-    Signature is written to `<workspace>/signature.sig`.
+    Signature is written to `<workspace>/preservation/signature.sig`.
 
     Task requires METS file to be created.
     """

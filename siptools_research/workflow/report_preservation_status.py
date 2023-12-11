@@ -16,8 +16,8 @@ class ReportPreservationStatus(WorkflowTask):
     digital preservation system.
 
     A false target `report-preservation-status.finished` is created into
-    workspace directory to notify luigi (and dependent tasks) that this
-    task has finished.
+    preservation workspace directory to notify luigi that this task has
+    finished.
 
     Task requires SIP to be sent to digital preservation service and the
     validation to be finished.

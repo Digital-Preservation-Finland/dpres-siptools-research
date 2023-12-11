@@ -1,7 +1,5 @@
 """Tests for :mod:`siptools_research.workflowtask` module."""
 
-import datetime
-
 import luigi
 import pytest
 import requests
@@ -40,7 +38,7 @@ class DummyTask(WorkflowTask):
     def output(self):
         """Create output file.
 
-        :returns: local target: `<workspace>/presrvation/output_file`
+        :returns: local target: `<workspace>/preservation/output_file`
         """
         return luigi.LocalTarget(
             str(self.dataset.preservation_workspace / 'output_file')

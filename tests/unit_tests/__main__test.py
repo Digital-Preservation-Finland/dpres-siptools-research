@@ -295,7 +295,7 @@ def test_main_workflow_no_matches(capsys, monkeypatch):
     siptools_research.__main__.main()
 
     out, _ = capsys.readouterr()
-    error = 'Could not find document with workflow identifier: aineisto_2'
+    error = 'Could not find dataset with identifier: aineisto_2'
     assert error in out
 
 
@@ -432,7 +432,7 @@ def test_main_disabled(capsys, monkeypatch):
     siptools_research.__main__.main()
     assert not Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).enabled
     out, _ = capsys.readouterr()
-    assert "Workflow aineisto_1 disable" in out
+    assert "Workflow of dataset aineisto_1 disable" in out
 
     # Enable the dataset using CLI
     monkeypatch.setattr(
@@ -445,7 +445,7 @@ def test_main_disabled(capsys, monkeypatch):
     siptools_research.__main__.main()
     assert Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).enabled
     out, _ = capsys.readouterr()
-    assert "Workflow aineisto_1 enabled" in out
+    assert "Workflow of dataset aineisto_1 enabled" in out
 
 
 def test_main_clean_cache(mocker, monkeypatch):

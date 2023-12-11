@@ -11,7 +11,8 @@ class GenerateMetadata(WorkflowTask):
     """Task that generates technical metadata.
 
     A false target file `generate-metadata.finished` is created into
-    workspace directory to notify luigi that this task has finished.
+    preservation workspace directory to notify luigi that this task has
+    finished.
     """
 
     success_message = "Metadata generated"
@@ -20,7 +21,7 @@ class GenerateMetadata(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: `<metadata_generation_workspace>/`
+        :returns: `<workspace>/metadata_generation/`
                   `generate-metadata.finished`
         :rtype: LocalTarget
         """

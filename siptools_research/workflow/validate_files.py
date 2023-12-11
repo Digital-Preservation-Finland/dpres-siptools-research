@@ -10,7 +10,8 @@ class ValidateFiles(WorkflowTask):
     """Validates all files of dataset.
 
     A false target file `validate-files.finished` is created into
-    workspace directory to notify luigi that this task has finished.
+    preseration workspace directory to notify luigi that this task has
+    finished.
     """
 
     success_message = "All files are valid"

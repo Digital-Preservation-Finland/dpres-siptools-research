@@ -23,7 +23,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
     Premis event is written to
     <sip_creation_path>/<event_identifier>-PREMIS%3AEVENT-amd.xml.
     Premis event reference is written to
-    `<workspace>/create-descriptive-metadata.jsonl`.
+    `<workspace>/preservation/create-descriptive-metadata.jsonl`.
 
     Task requires that dataset metadata is validated.
     """
