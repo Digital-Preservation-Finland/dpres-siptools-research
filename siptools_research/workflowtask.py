@@ -4,7 +4,6 @@ from metax_access import (Metax,
                           DS_STATE_INVALID_METADATA,
                           DS_STATE_PACKAGING_FAILED,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE)
-from requests import HTTPError
 
 from siptools_research.config import Configuration
 from siptools_research.dataset import Dataset
@@ -120,22 +119,24 @@ def report_task_failure(task, exception):
                           f"{task.failure_message}: {str(exception)}")
 
     if isinstance(exception, InvalidDatasetError):
-        # Set preservation status for dataset in Metax
-        if isinstance(exception, InvalidSIPError):
-            preservation_state \
-                = DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
+        metax = task.get_metax_client()
+
+        metadata = metax.get_dataset(task.dataset_id)
+        if 'preservation_dataset_version' in metadata:
+            # Dataset has been copied to PAS data catalog. The
+            # preservation state of the PAS version should be updated.
+            dataset_id = metadata['preservation_dataset_version']['identifier']
+            preservation_state = (metadata['preservation_dataset_version']
+                                  ['preservation_state'])
         else:
-            # Also invalid or missing files could be reason for failure,
-            # but there is no separate preservation state for that
-            # situation.
-            preservation_state = DS_STATE_INVALID_METADATA
-        try:
-            task.get_metax_client().set_preservation_state(
-                task.dataset_id,
-                preservation_state,
-                _get_description(task, exception)
-            )
-        except HTTPError:
+            dataset_id = metadata['identifier']
+            preservation_state = metadata['preservation_state']
+
+        # Choose new preservation state
+        if isinstance(exception, InvalidSIPError):
+            new_preservation_state \
+                = DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
+        elif preservation_state >= 80:
             # TODO: DS_STATE_INVALID_METADATA can not be used if current
             # preservation state is higher than
             # DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION, i.e. when
@@ -143,12 +144,17 @@ def report_task_failure(task, exception):
             # DS_STATE_PACKAGING_FAILED is used even if the failure was
             # caused by invalid metadata. This can be removed if Metax
             # allows DS_STATE_INVALID_METADATA!
-            task.get_metax_client().set_preservation_state(
-                task.dataset_id,
-                DS_STATE_PACKAGING_FAILED,
-                _get_description(task, exception)
-            )
+            new_preservation_state = DS_STATE_PACKAGING_FAILED
+        else:
+            # Also invalid or missing files could be reason for failure,
+            # but there is no separate preservation state for that
+            # situation (TPASPKT-617).
+            new_preservation_state = DS_STATE_INVALID_METADATA
 
+        # Set preservation status for dataset in Metax
+        metax.set_preservation_state(dataset_id,
+                                     new_preservation_state,
+                                     _get_description(task, exception))
         # Disable workflow
         task.dataset.disable()
 

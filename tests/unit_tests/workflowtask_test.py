@@ -3,7 +3,9 @@
 import luigi
 import pytest
 import requests
-from metax_access import (DS_STATE_INVALID_METADATA,
+from metax_access import (DS_STATE_GENERATING_METADATA,
+                          DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+                          DS_STATE_INVALID_METADATA,
                           DS_STATE_PACKAGING_FAILED,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
                           Metax)
@@ -178,7 +180,7 @@ def test_run_workflowtask(workspace):
     Executes a DummyTask, checks that output file is created, checks
     that new task is added to task log.
 
-    :param testpath: temporary directory
+    :param workspace: temporary directory
     :returns: ``None``
     """
     # Add a workflow to database
@@ -216,7 +218,7 @@ def test_run_workflow_target_task(workspace):
     Create a workflow with DummyTask as target Task. Check that workflow
     is disabled after executing the task.
 
-    :param testpath: temporary directory
+    :param workspace: temporary directory
     :returns: ``None``
     """
     # Add workflow to database
@@ -240,23 +242,22 @@ def test_run_workflow_target_task(workspace):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_run_failing_task(workspace):
+def test_run_failing_task():
     """Test running task that fails.
 
     Executes FailingTask and checks that report of failed task is added
     to task log.
 
-    :param testpath: temporary directory
     :returns: ``None``
     """
     # Run FailingTask
     luigi.build(
-        [FailingTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+        [FailingTask('test-id', config=UNIT_TEST_CONFIG_FILE)],
         local_scheduler=True
     )
 
     # Check that new task is added to task log
-    tasks = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE).get_tasks()
+    tasks = Dataset('test-id', config=UNIT_TEST_CONFIG_FILE).get_tasks()
     # Check 'messages' field
     assert tasks['FailingTask']['messages'] \
         == 'An error occurred while running a test task: Shit hit the fan'
@@ -314,14 +315,13 @@ def test_run_failing_task(workspace):
     )
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_invalid_dataset_error(testpath, requests_mock, task, expected_state,
+def test_invalid_dataset_error(requests_mock, task, expected_state,
                                expected_description):
     """Test event handler of WorkflowTask.
 
     Event handler should report preservation state to Metax if
     InvalidDatasetError raises in a task.
 
-    :param testpath: temporary directory
     :param requests_mock: Mocker object
     :param task: Test task to be run
     :param expected_state: Preservation state that should be reported to
@@ -331,78 +331,111 @@ def test_invalid_dataset_error(testpath, requests_mock, task, expected_state,
     :returns: ``None``
     """
     # Mock metax
-    requests_mock.get('/rest/v2/datasets/1', json={})
+    requests_mock.get(
+        '/rest/v2/datasets/test-id',
+        json={
+            'identifier': 'test-id',
+            'preservation_state': DS_STATE_GENERATING_METADATA
+        }
+    )
+    patch_dataset_api = requests_mock.patch('/rest/v2/datasets/test-id')
 
     # Run the task
     luigi.build(
-        [task(str(testpath), config=UNIT_TEST_CONFIG_FILE)],
+        [task('test-id', config=UNIT_TEST_CONFIG_FILE)],
         local_scheduler=True
     )
 
-    # Check the body of last HTTP request
-    request_body = requests_mock.last_request.json()
-    assert request_body['preservation_state'] == expected_state
-    assert request_body['preservation_description'] == expected_description
-
-    # Check the method of last HTTP request
-    assert requests_mock.last_request.method == 'PATCH'
+    # Check that expected preservation state was set
+    assert patch_dataset_api.called_once
+    assert patch_dataset_api.last_request.json() == {
+        'preservation_state': expected_state,
+        'preservation_description': expected_description
+    }
+    assert patch_dataset_api.last_request.method == 'PATCH'
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_packaging_failed(workspace, requests_mock):
+def test_set_preservation_state_of_pas_version(requests_mock):
+    """Test that preservation state of correct dataset version is set.
+
+    If the dataset has been copied to PAS data catalog, the preservation
+    state of the PAS version should be set.
+
+    :param requests_mock: Mocker object
+    :returns: ``None``
+    """
+    # Mock metax
+    requests_mock.get(
+        '/rest/v2/datasets/original-id',
+        json={
+            "identifier": "original-id",
+            "preservation_dataset_version": {
+                "identifier": "pas-version-id",
+                "preservation_state": DS_STATE_GENERATING_METADATA
+            }
+        }
+    )
+    patch_dataset_api = requests_mock.patch('/rest/v2/datasets/pas-version-id')
+
+    # Run the task
+    luigi.build(
+        [InvalidDatasetTask(dataset_id='original-id',
+                            config=UNIT_TEST_CONFIG_FILE)],
+        local_scheduler=True
+    )
+
+    # The preservation state of PAS version of the dataset should be
+    # set
+    assert patch_dataset_api.called_once
+    assert patch_dataset_api.last_request.json() == {
+        'preservation_state': DS_STATE_INVALID_METADATA,
+        'preservation_description': ('An error occurred while running a '
+                                     'test task: InvalidDatasetError: '
+                                     'Dataset is invalid')
+    }
+    assert patch_dataset_api.last_request.method == 'PATCH'
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_packaging_failed(requests_mock):
     """Test failure during packaging.
 
     If packaging fails because dataset is invalid, preservation state
     should be set to DS_STATE_PACKAGING_FAILED.
 
-    :param testpath: temporary directory
     :param requests_mock: Mocker object
     :returns: ``None``
     """
     # Mock metax
-    requests_mock.get('/rest/v2/datasets/1', json={})
-
-    # Setting preservation state to "Invalid metadata" is not allowed
-    def _match_state_invalid_metadata(request):
-        return request.json()["preservation_state"] \
-            == DS_STATE_INVALID_METADATA
-    requests_mock.patch(
-        f'/rest/v2/datasets/{workspace.name}',
-        additional_matcher=_match_state_invalid_metadata,
-        status_code=400,
-        json={}
+    requests_mock.get(
+        '/rest/v2/datasets/test-id',
+        json={
+            'identifier': 'test-id',
+            'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
+        }
     )
-
-    # Setting preservation state to "Packaging failed" is allowed
-    def _match_state_packaging_failed(request):
-        return request.json()["preservation_state"] \
-            == DS_STATE_PACKAGING_FAILED
-    requests_mock.patch(
-        '/rest/v2/datasets/1',
-        additional_matcher=_match_state_packaging_failed,
-        status_code=200,
-        json={}
-    )
+    patch_dataset_api = requests_mock.patch('/rest/v2/datasets/test-id')
 
     # Run InvalidDatasetTask
     luigi.build(
-        [InvalidDatasetTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+        [InvalidDatasetTask('test-id', config=UNIT_TEST_CONFIG_FILE)],
         local_scheduler=True
     )
 
-    # Check the body of last HTTP request
-    request_body = requests_mock.last_request.json()
-    assert request_body['preservation_state'] == DS_STATE_PACKAGING_FAILED
-    assert request_body['preservation_description'] \
-        == ('An error occurred while running a test task: '
-            'InvalidDatasetError: Dataset is invalid')
-
-    # Check the method of last HTTP request
-    assert requests_mock.last_request.method == 'PATCH'
+    # Check that the preservation was set correctly
+    assert patch_dataset_api.called_once
+    assert patch_dataset_api.last_request.json() == {
+        'preservation_state': DS_STATE_PACKAGING_FAILED,
+        'preservation_description': ('An error occurred while running a '
+                                     'test task: InvalidDatasetError: '
+                                     'Dataset is invalid')
+    }
+    assert patch_dataset_api.last_request.method == 'PATCH'
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_logging(testpath, requests_mock, caplog):
+def test_logging(requests_mock, caplog):
     """Test logging failed HTTP responses."""
     # Create mocked response for HTTP request.
     requests_mock.get('https://metaksi/rest/v2/datasets/1',
@@ -411,7 +444,7 @@ def test_logging(testpath, requests_mock, caplog):
                       text='No rights to view dataset')
 
     # Run task that sends HTTP request
-    luigi.build([MetaxTask(str(testpath), config=UNIT_TEST_CONFIG_FILE)],
+    luigi.build([MetaxTask('test-id', config=UNIT_TEST_CONFIG_FILE)],
                 local_scheduler=True)
 
     # Check errors in logs
