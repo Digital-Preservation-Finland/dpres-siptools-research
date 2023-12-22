@@ -64,10 +64,15 @@ class CopyToPasDataCatalog(WorkflowTask):
             preservation_state = dataset['preservation_state']
 
         if preservation_state < DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION:
+            # TODO: The preservation description will be shown to user
+            # in management interface, so potentially confusing messages
+            # should be avoided. Note that DS_STATE_IN_PACKAGING_SERVICE
+            # would be more logical at this point, but Metax does not
+            # allow setting the preservation state higher than 80.
             metax.set_preservation_state(
                 self.dataset_id,
                 DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
-                'Accepted to preservation by packaging service'
+                'Packaging dataset'
             )
 
         with self.output().open('w') as output:

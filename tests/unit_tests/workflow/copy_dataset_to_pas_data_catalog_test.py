@@ -42,7 +42,7 @@ def test_copy_ida_dataset(workspace, requests_mock):
     assert metax_mock.last_request.json() == {
         'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
         'preservation_description':
-        'Accepted to preservation by packaging service'
+        'Packaging dataset'
     }
 
 
@@ -119,7 +119,7 @@ def test_copy_pas_dataset(workspace, requests_mock):
     assert metax_mock.last_request.json() == {
         'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
         'preservation_description':
-        'Accepted to preservation by packaging service'
+        'Packaging dataset'
     }
 
 
