@@ -2,6 +2,7 @@
 
 from luigi import LocalTarget
 from metax_access import DS_STATE_METADATA_CONFIRMED
+
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.validate_files import ValidateFiles
@@ -47,8 +48,7 @@ class ReportDatasetValidationResult(WorkflowTask):
 
         :returns: ``None``
         """
-        self.get_metax_client().set_preservation_state(
-            self.dataset_id,
+        self.dataset.set_preservation_state(
             DS_STATE_METADATA_CONFIRMED,
             'Metadata and files validated'
         )

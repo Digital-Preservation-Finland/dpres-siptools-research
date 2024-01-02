@@ -3,10 +3,11 @@ import os
 
 import luigi
 
-from siptools_research.utils.download import download_file
-from siptools_research.workflowtask import WorkflowTask
 from siptools_research.exceptions import InvalidFileMetadataError
+from siptools_research.metax import get_metax_client
+from siptools_research.utils.download import download_file
 from siptools_research.workflow.validate_metadata import ValidateMetadata
+from siptools_research.workflowtask import WorkflowTask
 
 
 class GetFiles(WorkflowTask):
@@ -46,7 +47,8 @@ class GetFiles(WorkflowTask):
         :returns: ``None``
         """
         # Find file identifiers from Metax dataset metadata.
-        files = self.get_metax_client().get_dataset_files(self.dataset_id)
+        files \
+            = get_metax_client(self.config).get_dataset_files(self.dataset_id)
 
         # Download files to temporary target directory which will be
         # moved to output target path when all files have been

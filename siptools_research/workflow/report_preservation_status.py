@@ -71,23 +71,9 @@ class ReportPreservationStatus(WorkflowTask):
         # 'accepted' or 'rejected'?
         directory = ingest_report_paths[0].split('/')[0]
 
-        # Get preservation_identifier from Metax
-        metax_client = self.get_metax_client()
-        metadata = metax_client.get_dataset(self.dataset_id)
-        catalog_id = metadata['data_catalog']['identifier']
-        if catalog_id == "urn:nbn:fi:att:data-catalog-ida":
-            preserved_dataset_id = (metadata['preservation_dataset_version']
-                                    ['identifier'])
-        elif catalog_id == "urn:nbn:fi:att:data-catalog-pas":
-            preserved_dataset_id = metadata["identifier"]
-        else:
-            raise ValueError(f'Unknown data catalog identifier: {catalog_id}')
-
         if directory == 'accepted':
-            # Set Metax preservation state of this dataset to 6 ("in
-            # longterm preservation")
-            self.get_metax_client().set_preservation_state(
-                preserved_dataset_id,
+            # Set the preservation state of this dataset
+            self.dataset.set_preservation_state(
                 DS_STATE_IN_DIGITAL_PRESERVATION,
                 'Accepted to preservation'
             )

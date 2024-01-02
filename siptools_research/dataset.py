@@ -5,7 +5,10 @@ import shutil
 
 from siptools_research.config import Configuration
 from siptools_research.exceptions import WorkflowExistsError
+from siptools_research.metax import get_metax_client
 import siptools_research.utils.database
+
+PAS_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-pas"
 
 
 def _timestamp():
@@ -24,8 +27,10 @@ class Dataset:
         """Initialize dataset."""
         self.identifier = identifier
         self._cached_document = document
+        self._cached_metadata = None
         self.conf = Configuration(config)
         self.database = siptools_research.utils.database.Database(config)
+        self._metax_client = get_metax_client(config)
 
     @property
     def _document(self):
@@ -35,6 +40,67 @@ class Dataset:
                 = self.database.get_document(self.identifier) or {}
 
         return self._cached_document
+
+    @property
+    def _metadata(self):
+        """Dataset metadata from Metax."""
+        if self._cached_metadata is None:
+            self._cached_metadata \
+                = self._metax_client.get_dataset(self.identifier)
+
+        return self._cached_metadata
+
+    @property
+    def sip_identifier(self):
+        """The SIP identifier of the dataset.
+
+        The SIP identifier is the DOI of the dataset version which is in
+        PAS data catalog.
+        """
+        if self._metadata['data_catalog']['identifier'] \
+                == PAS_DATA_CATALOG_IDENTIFIER:
+            # Dataset was originally created to PAS data catalog.
+            identifier = self._metadata["preservation_identifier"]
+
+        elif 'preservation_dataset_version' in self._metadata:
+            # Dataset was created in IDA catalog, and it has been copied
+            # to PAS data catalog. The preferred identifier of the PAS
+            # version of the dataset will be used as SIP identifier.
+            identifier = (self._metadata['preservation_dataset_version']
+                          ['preferred_identifier'])
+        else:
+            # Dataset has not yet been copied to PAS data catalog.
+            raise ValueError("The dataset has not been copied to PAS data"
+                             "catalog, so DOI does not exist.")
+
+        return identifier
+
+    @property
+    def preservation_state(self):
+        """Preservation state of the dataset."""
+        if 'preservation_dataset_version' in self._metadata:
+            state = (self._metadata['preservation_dataset_version']
+                     ['preservation_state'])
+        else:
+            state = self._metadata['preservation_state']
+
+        return state
+
+    def set_preservation_state(self, state, description):
+        """Set preservation state of the dataset.
+
+        If dataset has been copied to PAS data catalog, the preservation
+        state of the PAS version is set.
+        """
+        if 'preservation_dataset_version' in self._metadata:
+            preserved_dataset_id \
+                = self._metadata['preservation_dataset_version']['identifier']
+        else:
+            preserved_dataset_id = self._metadata["identifier"]
+
+        self._metax_client.set_preservation_state(preserved_dataset_id,
+                                                  state,
+                                                  description)
 
     @property
     def target(self):

@@ -37,8 +37,7 @@ class GenerateMetadata(WorkflowTask):
         """
         generate_metadata(self.dataset_id, self.config)
 
-        self.get_metax_client().set_preservation_state(
-            self.dataset_id,
+        self.dataset.set_preservation_state(
             DS_STATE_TECHNICAL_METADATA_GENERATED,
             'Metadata generated'
         )

@@ -8,15 +8,33 @@ from siptools_research.workflow import report_preservation_status
 
 
 @pytest.mark.parametrize(
-    'data_catalog_id,dataset_id',
+    'dataset_metadata,patched_dataset_id',
     [
-        ("urn:nbn:fi:att:data-catalog-ida", "pas-version-id"),
-        ("urn:nbn:fi:att:data-catalog-pas", "original-version-id")
+        # Ida dataset has been copied to PAS catalog. The preservation
+        # state of the dataset in PAS catalog should be updated.
+        (
+            {
+                'identifier': 'original-version-id',
+                'preservation_dataset_version': {
+                    'identifier': 'pas-version-id'
+                }
+            },
+            "pas-version-id"
+        ),
+        # Pottumounttu dataset is originally created in PAS catalog, so
+        # only one version of the dataset exists.
+        (
+            {
+                'identifier': "original-version-id"
+            },
+            'original-version-id'
+        )
     ]
 )
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_reportpreservationstatus(luigi_mock_ssh_config, sftp_dir,
-                                  requests_mock, data_catalog_id, dataset_id):
+@pytest.mark.usefixtures('testmongoclient')
+def test_reportpreservationstatus(workspace, luigi_mock_ssh_config,
+                                  sftp_dir, requests_mock, dataset_metadata,
+                                  patched_dataset_id):
     """Test reporting status of accepted SIP.
 
     Creates new directory to "accepted" directory in digital
@@ -24,40 +42,32 @@ def test_reportpreservationstatus(luigi_mock_ssh_config, sftp_dir,
     that task is complete after it has been run and that the
     preservation status of correct dataset is updated.
 
-    :param testpath: Temporary directory fixture
+    :param workspace: Temporary directory fixture
     :param luigi_mock_ssh_config: Luigi configuration file path
     :param sftp_dir: Directory that acts as DPS sftp home directory
     :param requests_mock: HTTP request mocker
-    :param data_catalog_id: Data catalog identifier of preserved dataset
-    :param dataset_id: Dataset Identifier that should be used when
-                       preservation state is update.
+    :param dataset_metadata: Dataset metadata in Metax
+    :param patched_dataset_id: Dataset identifier that should be used
+                               when preservation state is updated.
     :returns: ``None``
     """
     # Mock Metax
     requests_mock.get(
-        f'/rest/v2/datasets/{dataset_id}',
-        json={
-            'data_catalog': {
-                'identifier': data_catalog_id
-            },
-            'identifier': 'original-version-id',
-            'preservation_dataset_version': {
-                'identifier': 'pas-version-id'
-            }
-        }
+        f'/rest/v2/datasets/{workspace.name}',
+        json=dataset_metadata
     )
-    metax_mock = requests_mock.patch(f'/rest/v2/datasets/{dataset_id}')
+    metax_mock = requests_mock.patch(f'/rest/v2/datasets/{patched_dataset_id}')
 
     # Create directory with name of the workspace to digital
     # preservation server, so that the ReportPreservationStatus thinks
     # that validation has completed.
     datedir = time.strftime("%Y-%m-%d")
-    tar_name = f"{dataset_id}.tar"
+    tar_name = f"{workspace.name}.tar"
     (sftp_dir / "accepted" / datedir / tar_name).mkdir(parents=True)
 
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
-        dataset_id=dataset_id,
+        dataset_id=workspace.name,
         config=luigi_mock_ssh_config
     )
     assert not task.complete()

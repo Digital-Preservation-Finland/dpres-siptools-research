@@ -3,13 +3,14 @@
 import datetime
 import os
 import shutil
-
 from tempfile import TemporaryDirectory
 
 import siptools.mdcreator
 import siptools.scripts.import_object
 from luigi import LocalTarget
+
 from siptools_research.config import Configuration
+from siptools_research.metax import get_metax_client
 from siptools_research.workflow.generate_metadata import GenerateMetadata
 from siptools_research.workflow.get_files import GetFiles
 from siptools_research.workflow.validate_metadata import ValidateMetadata
@@ -83,7 +84,8 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         :returns: ``None``
         """
-        files = self.get_metax_client().get_dataset_files(self.dataset_id)
+        files \
+            = get_metax_client(self.config).get_dataset_files(self.dataset_id)
 
         # Create one timestamp for import_object events to avoid
         # creating new events each time import_object is iterated

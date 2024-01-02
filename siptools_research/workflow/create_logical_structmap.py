@@ -5,13 +5,13 @@ import os
 import luigi.format
 from luigi import LocalTarget
 import lxml.etree as ET
-
 import mets
 import xml_helpers.utils as h
 from siptools.utils import encode_path, read_md_references, get_md_references
 from siptools.xml.mets import NAMESPACES
 
 from siptools_research.exceptions import InvalidDatasetMetadataError
+from siptools_research.metax import get_metax_client
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
 from siptools_research.workflowtask import WorkflowTask
@@ -112,7 +112,7 @@ class CreateLogicalStructMap(WorkflowTask):
 
         :returns: list of provenance IDs
         """
-        metadata = self.get_metax_client().get_dataset(self.dataset_id)
+        metadata = get_metax_client(self.config).get_dataset(self.dataset_id)
         languages = get_dataset_languages(metadata)
 
         # Get the reference file path from Luigi task input
@@ -172,7 +172,7 @@ class CreateLogicalStructMap(WorkflowTask):
 
         :returns: logical structure map dictionary
         """
-        metax_client = self.get_metax_client()
+        metax_client = get_metax_client(self.config)
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
         dataset_metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(dataset_metadata)

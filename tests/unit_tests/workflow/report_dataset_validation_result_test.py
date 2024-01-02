@@ -16,8 +16,11 @@ def test_reportdatasetvalidationresult(workspace, requests_mock):
     :returns: ``None``
     """
     # Mock Metax
-    requests_mock.get(f'/rest/v2/datasets/{workspace.name}', json={})
-    patch_dataset = requests_mock.patch(f'/rest/v2/datasets/{workspace.name}')
+    requests_mock.get(
+        f'/rest/v2/datasets/{workspace.name}',
+        json={'identifier': 'foo'}
+    )
+    patch_dataset = requests_mock.patch('/rest/v2/datasets/foo')
 
     # Init and run task
     task = report_dataset_validation_result.ReportDatasetValidationResult(

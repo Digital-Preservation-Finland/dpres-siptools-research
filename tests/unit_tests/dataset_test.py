@@ -2,11 +2,152 @@
 import datetime
 
 import pytest
+from requests_mock import ANY
 
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.dataset import Dataset, find_datasets
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 
+
+@pytest.mark.parametrize(
+    'metadata',
+    [
+        # Pottumonttu dataset
+        {
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-pas'
+            },
+            'preservation_identifier': 'correct-id'
+        },
+        # Ida dataset
+        {
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+            },
+            'identifier': 'wrong-id',
+            'preservation_dataset_version': {
+                'preferred_identifier': 'correct-id'
+            }
+        },
+    ]
+)
+def test_sip_identifier(requests_mock, metadata):
+    """Test that dataset returns correct sip_identifier.
+
+    :param metadata: The metadata of dataset from Metax
+    """
+    requests_mock.get('/rest/v2/datasets/identifier', json=metadata)
+    dataset = Dataset('identifier', config=UNIT_TEST_CONFIG_FILE)
+    assert dataset.sip_identifier == 'correct-id'
+
+
+def test_no_sip_identifier(requests_mock):
+    """Test that exception is raised if dataset does not have SIP ID."""
+    requests_mock.get(
+        '/rest/v2/datasets/identifier',
+        json={
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+            }
+        }
+    )
+    dataset = Dataset('identifier', config=UNIT_TEST_CONFIG_FILE)
+    with pytest.raises(ValueError, match='DOI does not exist'):
+        # pylint: disable=pointless-statement
+        dataset.sip_identifier
+
+
+@pytest.mark.parametrize(
+    'metadata',
+    [
+        # Pottumonttu dataset
+        {
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-pas'
+            },
+            'preservation_state': 'correct-state'
+        },
+        # Ida dataset that has not been copied to PAS data catalog
+        {
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+            },
+            'preservation_state': 'correct-state',
+        },
+        # Ida dataset that has been copied to PAS data catalog
+        {
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+            },
+            'identifier': 'wrong-state',
+            'preservation_dataset_version': {
+                'preservation_state': 'correct-state'
+            }
+        },
+    ]
+)
+def test_preservation_state(requests_mock, metadata):
+    """Test that dataset returns correct preservation state.
+
+    :param metadata: The metadata of dataset from Metax
+    """
+    requests_mock.get('/rest/v2/datasets/identifier', json=metadata)
+    dataset = Dataset('identifier', config=UNIT_TEST_CONFIG_FILE)
+    assert dataset.preservation_state == 'correct-state'
+
+
+@pytest.mark.parametrize(
+    'metadata',
+    [
+        # Pottumonttu dataset
+        {
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-pas'
+            },
+            'identifier': 'correct-id'
+        },
+        # Ida dataset that has not been copied to PAS data catalog
+        {
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+            },
+            'identifier': 'correct-id',
+        },
+        # Ida dataset that has been copied to PAS data catalog
+        {
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+            },
+            'identifier': 'wrong-id',
+            'preservation_dataset_version': {
+                'identifier': 'correct-id'
+            }
+        },
+    ]
+)
+def test_set_preservation_state(requests_mock, metadata):
+    """Test set_preservation_state method.
+
+    :param metadata: The metadata of dataset from Metax
+    """
+    # Mock metax
+    requests_mock.get('/rest/v2/datasets/identifier', json=metadata)
+
+    # Mock any patch request
+    mocked_patch = requests_mock.patch(ANY)
+
+    dataset = Dataset('identifier', config=UNIT_TEST_CONFIG_FILE)
+    dataset.set_preservation_state('foo', 'bar')
+
+    # Check that preservation state of correct dataset was set
+    assert mocked_patch.last_request.url \
+        == 'https://metaksi/rest/v2/datasets/correct-id'
+
+    # Check that the request contains correct message
+    assert mocked_patch.last_request.json() == {
+        'preservation_state': 'foo',
+        'preservation_description': 'bar'
+    }
 
 def test_workspace_paths(pkg_root):
     """Test workspace paths."""

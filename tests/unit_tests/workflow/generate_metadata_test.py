@@ -41,7 +41,7 @@ def test_generatemetadata(workspace, requests_mock):
 
     # The text file should be detected, and technical metadata should be
     # posted to Metax
-    file_metadata_patch_request = requests_mock.request_history[-2]
+    file_metadata_patch_request = requests_mock.request_history[-3]
     assert file_metadata_patch_request.url \
         == 'https://metaksi/rest/v2/files/pid:urn:identifier'
     metadata = file_metadata_patch_request.json()['file_characteristics']

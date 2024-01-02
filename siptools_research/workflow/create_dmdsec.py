@@ -9,6 +9,7 @@ import luigi
 from siptools.scripts import import_description
 
 from siptools_research.config import Configuration
+from siptools_research.metax import get_metax_client
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 
@@ -56,8 +57,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
         :returns: ``None``
         """
         # Get datacite.xml from Metax
-        config_object = Configuration(self.config)
-        metax_client = self.get_metax_client()
+        metax_client = get_metax_client(self.config)
         dataset = metax_client.get_dataset(self.dataset_id)
         datacite = metax_client.get_datacite(dataset['identifier'])
 
@@ -66,6 +66,7 @@ class CreateDescriptiveMetadata(WorkflowTask):
             = str(self.dataset.preservation_workspace / 'datacite.xml')
         datacite.write(datacite_path)
 
+        config_object = Configuration(self.config)
         tmp = os.path.join(config_object.get('packaging_root'), 'tmp/')
         with TemporaryDirectory(prefix=tmp) as temporary_workspace:
             # Create output files with siptools

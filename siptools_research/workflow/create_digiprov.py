@@ -15,6 +15,7 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidDatasetMetadataError
+from siptools_research.metax import get_metax_client
 
 
 class CreateProvenanceInformation(WorkflowTask):
@@ -91,7 +92,7 @@ class CreateProvenanceInformation(WorkflowTask):
         :param workspace: SIP creation directory
         :returns: ``None``
         """
-        metadata = self.get_metax_client().get_dataset(self.dataset_id)
+        metadata = get_metax_client(self.config).get_dataset(self.dataset_id)
         dataset_languages = get_dataset_languages(metadata)
         provenances = metadata["research_dataset"].get("provenance", [])
 

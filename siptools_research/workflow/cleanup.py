@@ -3,6 +3,7 @@ import os
 import shutil
 
 from siptools_research.config import Configuration
+from siptools_research.metax import get_metax_client
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.report_preservation_status \
     import ReportPreservationStatus
@@ -46,7 +47,8 @@ class Cleanup(WorkflowTask):
         packaging_root = config_object.get("packaging_root")
         cache_path = os.path.join(packaging_root, "file_cache")
 
-        files = self.get_metax_client().get_dataset_files(self.dataset_id)
+        files \
+            = get_metax_client(self.config).get_dataset_files(self.dataset_id)
         return [_file["identifier"] for _file in files], cache_path
 
     def run(self):

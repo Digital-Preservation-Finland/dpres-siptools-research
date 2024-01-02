@@ -242,22 +242,23 @@ def test_run_workflow_target_task(workspace):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_run_failing_task():
+def test_run_failing_task(workspace):
     """Test running task that fails.
 
     Executes FailingTask and checks that report of failed task is added
     to task log.
 
+    :param workspace: Temporary workspace directory
     :returns: ``None``
     """
     # Run FailingTask
     luigi.build(
-        [FailingTask('test-id', config=UNIT_TEST_CONFIG_FILE)],
+        [FailingTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
         local_scheduler=True
     )
 
     # Check that new task is added to task log
-    tasks = Dataset('test-id', config=UNIT_TEST_CONFIG_FILE).get_tasks()
+    tasks = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE).get_tasks()
     # Check 'messages' field
     assert tasks['FailingTask']['messages'] \
         == 'An error occurred while running a test task: Shit hit the fan'
@@ -315,13 +316,14 @@ def test_run_failing_task():
     )
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_invalid_dataset_error(requests_mock, task, expected_state,
+def test_invalid_dataset_error(workspace, requests_mock, task, expected_state,
                                expected_description):
     """Test event handler of WorkflowTask.
 
     Event handler should report preservation state to Metax if
     InvalidDatasetError raises in a task.
 
+    :param workspace: Temporary workspace directory
     :param requests_mock: Mocker object
     :param task: Test task to be run
     :param expected_state: Preservation state that should be reported to
@@ -332,17 +334,17 @@ def test_invalid_dataset_error(requests_mock, task, expected_state,
     """
     # Mock metax
     requests_mock.get(
-        '/rest/v2/datasets/test-id',
+        f'/rest/v2/datasets/{workspace.name}',
         json={
-            'identifier': 'test-id',
+            'identifier': 'test123',
             'preservation_state': DS_STATE_GENERATING_METADATA
         }
     )
-    patch_dataset_api = requests_mock.patch('/rest/v2/datasets/test-id')
+    patch_dataset_api = requests_mock.patch('/rest/v2/datasets/test123')
 
     # Run the task
     luigi.build(
-        [task('test-id', config=UNIT_TEST_CONFIG_FILE)],
+        [task(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
         local_scheduler=True
     )
 
@@ -398,28 +400,29 @@ def test_set_preservation_state_of_pas_version(requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_packaging_failed(requests_mock):
+def test_packaging_failed(workspace, requests_mock):
     """Test failure during packaging.
 
     If packaging fails because dataset is invalid, preservation state
     should be set to DS_STATE_PACKAGING_FAILED.
 
+    :param workspace: Temporary workspace directory
     :param requests_mock: Mocker object
     :returns: ``None``
     """
     # Mock metax
     requests_mock.get(
-        '/rest/v2/datasets/test-id',
+        f'/rest/v2/datasets/{workspace.name}',
         json={
-            'identifier': 'test-id',
+            'identifier': 'test123',
             'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
         }
     )
-    patch_dataset_api = requests_mock.patch('/rest/v2/datasets/test-id')
+    patch_dataset_api = requests_mock.patch('/rest/v2/datasets/test123')
 
     # Run InvalidDatasetTask
     luigi.build(
-        [InvalidDatasetTask('test-id', config=UNIT_TEST_CONFIG_FILE)],
+        [InvalidDatasetTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
         local_scheduler=True
     )
 
@@ -435,8 +438,13 @@ def test_packaging_failed(requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_logging(requests_mock, caplog):
-    """Test logging failed HTTP responses."""
+def test_logging(workspace, requests_mock, caplog):
+    """Test logging failed HTTP responses.
+
+    :param workspace: Temporary workspace directory
+    :param responses: HTTP request mocker
+    :param caplog: Captured log messages
+    """
     # Create mocked response for HTTP request.
     requests_mock.get('https://metaksi/rest/v2/datasets/1',
                       status_code=403,
@@ -444,7 +452,7 @@ def test_logging(requests_mock, caplog):
                       text='No rights to view dataset')
 
     # Run task that sends HTTP request
-    luigi.build([MetaxTask('test-id', config=UNIT_TEST_CONFIG_FILE)],
+    luigi.build([MetaxTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
                 local_scheduler=True)
 
     # Check errors in logs

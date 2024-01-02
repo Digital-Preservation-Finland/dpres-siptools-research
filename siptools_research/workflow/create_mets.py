@@ -3,6 +3,7 @@ import luigi.format
 from luigi import LocalTarget
 from siptools.scripts import compile_mets
 
+from siptools_research.metax import get_metax_client
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.create_logical_structmap \
     import CreateLogicalStructMap
@@ -51,18 +52,8 @@ class CreateMets(WorkflowTask):
 
         :returns: ``None``
         """
-        metax_client = self.get_metax_client()
+        metax_client = get_metax_client(self.config)
         metadata = metax_client.get_dataset(self.dataset_id)
-
-        # Get preservation_identifier from Metax
-        catalog_id = metadata['data_catalog']['identifier']
-        if catalog_id == "urn:nbn:fi:att:data-catalog-ida":
-            objid = (metadata['preservation_dataset_version']
-                     ['preferred_identifier'])
-        elif catalog_id == "urn:nbn:fi:att:data-catalog-pas":
-            objid = metadata["preservation_identifier"]
-        else:
-            raise ValueError(f'Unknown data catalog identifier: {catalog_id}')
 
         # Get contract data from Metax
         contract_id = metadata["contract"]["identifier"]
@@ -76,7 +67,7 @@ class CreateMets(WorkflowTask):
             workspace=str(self.dataset.sip_creation_path),
             mets_profile='tpas',
             contractid=contract_identifier,
-            objid=objid,
+            objid=self.dataset.sip_identifier,
             organization_name=contract_org_name,
             packagingservice='Packaging Service'
         )

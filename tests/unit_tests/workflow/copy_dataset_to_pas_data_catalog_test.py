@@ -23,11 +23,11 @@ def test_copy_ida_dataset(workspace, requests_mock):
             'data_catalog': {
                 'identifier': "urn:nbn:fi:att:data-catalog-ida"
             },
-            'preservation_identifier': 'original-version-id',
+            'identifier': 'original-version-id',
             'preservation_state': DS_STATE_METADATA_CONFIRMED
         }
     )
-    metax_mock = requests_mock.patch(f'/rest/v2/datasets/{workspace.name}')
+    metax_mock = requests_mock.patch('/rest/v2/datasets/original-version-id')
 
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
@@ -101,11 +101,11 @@ def test_copy_pas_dataset(workspace, requests_mock):
             'data_catalog': {
                 'identifier': "urn:nbn:fi:att:data-catalog-pas"
             },
-            'preservation_identifier': 'original-version-id',
+            'identifier': 'original-version-id',
             'preservation_state': DS_STATE_METADATA_CONFIRMED
         }
     )
-    metax_mock = requests_mock.patch(f'/rest/v2/datasets/{workspace.name}')
+    metax_mock = requests_mock.patch('/rest/v2/datasets/original-version-id')
 
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(

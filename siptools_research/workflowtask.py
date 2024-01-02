@@ -1,11 +1,9 @@
 """Base task classes for the workflow tasks."""
 import luigi
-from metax_access import (Metax,
-                          DS_STATE_INVALID_METADATA,
+from metax_access import (DS_STATE_INVALID_METADATA,
                           DS_STATE_PACKAGING_FAILED,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE)
 
-from siptools_research.config import Configuration
 from siptools_research.dataset import Dataset
 from siptools_research.exceptions import InvalidSIPError, InvalidDatasetError
 
@@ -37,16 +35,6 @@ class WorkflowTask(luigi.Task):
         """
         super().__init__(*args, **kwargs)
         self.dataset = Dataset(self.dataset_id, config=self.config)
-
-    def get_metax_client(self):
-        """Initialize Metax client."""
-        config_object = Configuration(self.config)
-        return Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
-        )
 
 
 class WorkflowExternalTask(luigi.ExternalTask):
@@ -119,24 +107,12 @@ def report_task_failure(task, exception):
                           f"{task.failure_message}: {str(exception)}")
 
     if isinstance(exception, InvalidDatasetError):
-        metax = task.get_metax_client()
-
-        metadata = metax.get_dataset(task.dataset_id)
-        if 'preservation_dataset_version' in metadata:
-            # Dataset has been copied to PAS data catalog. The
-            # preservation state of the PAS version should be updated.
-            dataset_id = metadata['preservation_dataset_version']['identifier']
-            preservation_state = (metadata['preservation_dataset_version']
-                                  ['preservation_state'])
-        else:
-            dataset_id = metadata['identifier']
-            preservation_state = metadata['preservation_state']
 
         # Choose new preservation state
         if isinstance(exception, InvalidSIPError):
             new_preservation_state \
                 = DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
-        elif preservation_state >= 80:
+        elif task.dataset.preservation_state >= 80:
             # TODO: DS_STATE_INVALID_METADATA can not be used if current
             # preservation state is higher than
             # DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION, i.e. when
@@ -152,9 +128,10 @@ def report_task_failure(task, exception):
             new_preservation_state = DS_STATE_INVALID_METADATA
 
         # Set preservation status for dataset in Metax
-        metax.set_preservation_state(dataset_id,
-                                     new_preservation_state,
-                                     _get_description(task, exception))
+        task.dataset.set_preservation_state(
+            new_preservation_state,
+            _get_description(task, exception)
+        )
         # Disable workflow
         task.dataset.disable()
 
