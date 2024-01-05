@@ -213,11 +213,7 @@ class Dataset:
         for path in [self.metadata_generation_workspace,
                      self.validation_workspace,
                      self.preservation_workspace]:
-            try:
-                shutil.rmtree(path)
-            except FileNotFoundError:
-                # Previous workspace does not exist
-                pass
+            _delete_directory(path)
 
         self.metadata_generation_workspace.mkdir(parents=True)
 
@@ -235,11 +231,8 @@ class Dataset:
 
         # Clear the workspaces
         for path in [self.validation_workspace, self.preservation_workspace]:
-            try:
-                shutil.rmtree(path)
-            except FileNotFoundError:
-                # Previous workspace does not exist
-                pass
+            _delete_directory(path)
+
         self.validation_workspace.mkdir(parents=True)
 
         self._set_target('validation')
@@ -255,11 +248,8 @@ class Dataset:
             )
 
         # Clear the preservation workspace
-        try:
-            shutil.rmtree(self.preservation_workspace)
-        except FileNotFoundError:
-            # Previous workspace does not exist
-            pass
+        _delete_directory(self.preservation_workspace)
+
         self.preservation_workspace.mkdir(parents=True)
         self.sip_creation_path.mkdir()
 
@@ -293,3 +283,15 @@ def find_datasets(enabled=None,
         for document
         in database.find(search)
     )
+
+
+def _delete_directory(path):
+    """Delete directory if it exists.
+
+    :param path: Directory path
+    """
+    try:
+        shutil.rmtree(path)
+    except FileNotFoundError:
+        # Previous workspace does not exist
+        pass
