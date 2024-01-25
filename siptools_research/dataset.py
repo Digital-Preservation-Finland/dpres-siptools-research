@@ -292,7 +292,7 @@ def find_datasets(enabled=None,
     if target is not None:
         search['target'] = target
     if identifier is not None:
-        search['identifier'] = identifier
+        search['_id'] = identifier
 
     database = siptools_research.utils.database.Database(config)
     return list(

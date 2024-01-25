@@ -37,7 +37,7 @@ from metax_access import (
 )
 
 from siptools_research.config import Configuration
-from siptools_research.dataset import Dataset, find_datasets
+from siptools_research.dataset import find_datasets
 from siptools_research.exceptions import (InvalidDatasetFileError,
                                           InvalidDatasetError)
 from siptools_research.metadata_generator import generate_metadata
@@ -324,12 +324,16 @@ def _preserve(args):
 
 def _get_dataset(args):
     """Get a dataset by identifier."""
-    dataset = Dataset(args.dataset_id, config=args.config)
-    if not dataset.target:
+    datasets = find_datasets(identifier=args.dataset_id, config=args.config)
+    if not datasets:
         print(
             f"{FAILC}Could not find dataset with identifier:"
             f" {args.dataset_id}{ENDC}"
         )
+        dataset = None
+
+    else:
+        dataset = datasets[0]
 
     return dataset
 
@@ -356,7 +360,7 @@ def _get_datasets(args):
 def _workflow(args):
     """Get a workflow document."""
     dataset = _get_dataset(args)
-    if dataset.target:
+    if dataset:
         print(f'Dataset identifier: {dataset.identifier}\n'
               f'Target: {dataset.target.value}')
 
