@@ -1,5 +1,6 @@
 """Dataset class."""
 import datetime
+import enum
 from pathlib import Path
 import shutil
 
@@ -17,6 +18,14 @@ def _timestamp():
     :returns: ISO 8601 string
     """
     return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+
+class Target(enum.Enum):
+    """Target of a workflow."""
+
+    METADATA_GENERATION = 'metadata_generation'
+    VALIDATION = 'validation'
+    PRESERVATION = 'preservation'
 
 
 class Dataset:
@@ -104,8 +113,13 @@ class Dataset:
 
     @property
     def target(self):
-        """Target of workflow."""
-        return self._document.get('target', None)
+        """Target of the workflow."""
+        if "target" in self._document:
+            target = Target(self._document["target"])
+        else:
+            target = None
+
+        return target
 
     @property
     def workspace_root(self):
@@ -116,17 +130,17 @@ class Dataset:
     @property
     def metadata_generation_workspace(self):
         """Return metadata generation workspace directory."""
-        return self.workspace_root / "metadata_generation"
+        return self.workspace_root / Target.METADATA_GENERATION.value
 
     @property
     def validation_workspace(self):
         """Return validation workspace directory."""
-        return self.workspace_root / "validation"
+        return self.workspace_root / Target.VALIDATION.value
 
     @property
     def preservation_workspace(self):
         """Return preservation workspace directory."""
-        return self.workspace_root / "preservation"
+        return self.workspace_root / Target.PRESERVATION.value
 
     @property
     def sip_creation_path(self):
@@ -190,11 +204,14 @@ class Dataset:
         return self._document['workflow_tasks'][task_name]['timestamp']
 
     def _set_target(self, target):
-        """Set target of workflow."""
+        """Set target of workflow.
+
+        param Target target: The target of the workflow
+        """
         self._cached_document = self.database.update_document(
             self.identifier,
             {
-                'target': target,
+                'target': target.value,
                 'enabled': True
             }
         )
@@ -217,7 +234,7 @@ class Dataset:
 
         self.metadata_generation_workspace.mkdir(parents=True)
 
-        self._set_target('metadata_generation')
+        self._set_target(Target.METADATA_GENERATION)
 
     def validate(self):
         """Validate metadata and files of dataset.
@@ -235,7 +252,7 @@ class Dataset:
 
         self.validation_workspace.mkdir(parents=True)
 
-        self._set_target('validation')
+        self._set_target(Target.VALIDATION)
 
     def preserve(self):
         """Preserve dataset.
@@ -253,7 +270,7 @@ class Dataset:
         self.preservation_workspace.mkdir(parents=True)
         self.sip_creation_path.mkdir()
 
-        self._set_target('preservation')
+        self._set_target(Target.PRESERVATION)
 
 
 def find_datasets(enabled=None,

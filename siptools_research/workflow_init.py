@@ -1,7 +1,7 @@
 """A wrapper task that starts/restarts all incomplete workflows."""
 import luigi
 
-from siptools_research.dataset import find_datasets
+from siptools_research.dataset import find_datasets, Target
 
 from siptools_research.workflow.cleanup import Cleanup
 from siptools_research.workflow.generate_metadata import GenerateMetadata
@@ -9,9 +9,9 @@ from siptools_research.workflow.report_dataset_validation_result\
     import ReportDatasetValidationResult
 
 TARGET_TASKS = {
-    'preservation': Cleanup,
-    'metadata_generation': GenerateMetadata,
-    'validation': ReportDatasetValidationResult
+    Target.PRESERVATION: Cleanup,
+    Target.METADATA_GENERATION: GenerateMetadata,
+    Target.VALIDATION: ReportDatasetValidationResult
 }
 
 

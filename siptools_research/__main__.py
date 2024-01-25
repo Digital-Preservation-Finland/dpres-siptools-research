@@ -358,7 +358,7 @@ def _workflow(args):
     dataset = _get_dataset(args)
     if dataset.target:
         print(f'Dataset identifier: {dataset.identifier}\n'
-              f'Target: {dataset.target}')
+              f'Target: {dataset.target.value}')
 
 
 def _workflows(args):
@@ -369,7 +369,7 @@ def _workflows(args):
             print(dataset.identifier)
         else:
             print(f'Dataset identifier: {dataset.identifier}\n'
-                  f'Target: {dataset.target}')
+                  f'Target: {dataset.target.value}')
 
 
 def _status(args):

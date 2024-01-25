@@ -230,7 +230,7 @@ def test_generate_metadata():
     assert len(active_datasets) == 1
     dataset = active_datasets[0]
     assert dataset.identifier == 'dataset1'
-    assert dataset.target == 'metadata_generation'
+    assert dataset.target.value == 'metadata_generation'
 
     # Metadata generation workspace should be created
     assert dataset.metadata_generation_workspace.exists()
@@ -278,7 +278,7 @@ def test_validate_dataset():
     assert len(active_datasets) == 1
     dataset = active_datasets[0]
     assert dataset.identifier == 'dataset1'
-    assert dataset.target == 'validation'
+    assert dataset.target.value == 'validation'
 
     # Validation workspace should be created
     assert dataset.validation_workspace.exists()
@@ -334,7 +334,7 @@ def test_preserve_dataset():
     assert len(active_datasets) == 1
     dataset = active_datasets[0]
     assert dataset.identifier == 'dataset1'
-    assert dataset.target == 'preservation'
+    assert dataset.target.value == 'preservation'
 
     # Preservation workspace should be created
     assert dataset.preservation_workspace.exists()
@@ -404,7 +404,7 @@ def test_workflow_conflict():
     # should not be changed
     active_datasets = find_datasets(enabled=True, config=UNIT_TEST_CONFIG_FILE)
     assert len(active_datasets) == 1
-    assert active_datasets[0].target == 'validation'
+    assert active_datasets[0].target.value == 'validation'
     assert active_datasets[0].identifier == 'dataset1'
 
     # New workflow can be started when the previous workflow is
@@ -416,7 +416,7 @@ def test_workflow_conflict():
     # should be enabled
     active_datasets = find_datasets(enabled=True, config=UNIT_TEST_CONFIG_FILE)
     assert len(active_datasets) == 1
-    assert active_datasets[0].target == 'preservation'
+    assert active_datasets[0].target.value == 'preservation'
     assert active_datasets[0].identifier == 'dataset1'
 
 

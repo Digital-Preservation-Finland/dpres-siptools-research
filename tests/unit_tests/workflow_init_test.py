@@ -2,7 +2,7 @@
 import pytest
 
 from tests.conftest import UNIT_TEST_CONFIG_FILE
-from siptools_research.dataset import Dataset
+from siptools_research.dataset import Dataset, Target
 from siptools_research.workflow_init import InitWorkflows
 from siptools_research.workflow.cleanup import Cleanup
 from siptools_research.workflow.report_dataset_validation_result\
@@ -58,7 +58,7 @@ def test_init_correct_task(target, target_task):
     # Add a workflow to database
     dataset = Dataset('dataset1', config=UNIT_TEST_CONFIG_FILE)
     # pylint: disable=protected-access
-    dataset._set_target(target)
+    dataset._set_target(Target(target))
     dataset.enable()
 
     task = InitWorkflows(config=UNIT_TEST_CONFIG_FILE)
