@@ -7,6 +7,8 @@ from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflow.validate_files import ValidateFiles
 
+DESCRIPTION_CONFIRMED_AND_VALIDATED = 'Metadata and files validated'
+
 
 class ReportDatasetValidationResult(WorkflowTask):
     """Task that sets preservation status when dataset is validated.
@@ -48,9 +50,25 @@ class ReportDatasetValidationResult(WorkflowTask):
 
         :returns: ``None``
         """
+        # TODO: As all possible states of the dataset can not be
+        # described by the states that Metax currently allows (see
+        # TPASPKT-998), DS_STATE_METADATA_CONFIRMED can currently mean
+        # two different states:
+        #
+        # a) The dataset has been proposed for preservation. The dataset
+        # has then been validated, and the user can accept the dataset
+        # for preservation.
+        #
+        # b) The same user has rights for proposing and accepting the
+        # dataset for preservation. The user has checked and confirmed
+        # the dataset metadata, but the dataset has not been validated.
+        #
+        # Here, option a) should be used. Until a better solution
+        # is available, the value of 'preservation_description' field is
+        # used to differentiate these states from each other.
         self.dataset.set_preservation_state(
             DS_STATE_METADATA_CONFIRMED,
-            'Metadata and files validated'
+            DESCRIPTION_CONFIRMED_AND_VALIDATED
         )
         with self.output().open('w') as output:
             output.write('Dataset id=' + self.dataset_id)
