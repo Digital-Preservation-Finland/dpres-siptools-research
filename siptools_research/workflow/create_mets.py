@@ -68,6 +68,7 @@ class CreateMets(WorkflowTask):
             mets_profile='tpas',
             contractid=contract_identifier,
             objid=self.dataset.sip_identifier,
+            contentid=self.dataset.sip_identifier,
             organization_name=contract_org_name,
             packagingservice='Packaging Service'
         )

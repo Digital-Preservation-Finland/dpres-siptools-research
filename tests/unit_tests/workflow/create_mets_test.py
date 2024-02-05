@@ -69,6 +69,7 @@ def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
         'schemas/mets/mets.xsd',
         f"{{{NAMESPACES['fi']}}}SPECIFICATION": '1.7.5',
         'OBJID': objid,
+        f"{{{NAMESPACES['fi']}}}CONTENTID": objid,
         f"{{{NAMESPACES['fi']}}}CATALOG": '1.7.5',
     }
     assert tree.getroot().attrib == mets_attributes
