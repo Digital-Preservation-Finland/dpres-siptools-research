@@ -3,10 +3,8 @@ import os
 import shutil
 import tempfile
 
-from file_scraper.scraper import Scraper
+import file_scraper
 from metax_access import Metax
-from siptools.scripts.import_object import (DEFAULT_VERSIONS, NO_VERSION,
-                                            UNKNOWN_VERSION)
 
 from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidFileError, MissingFileError
@@ -95,9 +93,9 @@ def _generate_file_metadata(metax_client, dataset_id, tmpdir, config_file):
 def _generate_file_tech_metadata(filepath, original_file_metadata):
     """Read file and generates technical metadata.
 
-    `file_characteristics` object is read from original meta. Generated
-    metadata is appended `file_characteristics` object. If a field
-    already has a value (set by user) it will not be updated.
+    `file_characteristics` object is read from original metadata.
+    Generated metadata is appended `file_characteristics` object. If a
+    field already has a value (set by user) it will not be updated.
 
     :param filepath: path to file for which the metadata is generated
     :param original_file_metadata: full original metadata dictionary
@@ -112,7 +110,7 @@ def _generate_file_tech_metadata(filepath, original_file_metadata):
     mimetype = original_file_characteristics.get("file_format", None)
     charset = original_file_characteristics.get("encoding", None)
     version = original_file_characteristics.get("format_version", None)
-    scraper = Scraper(
+    scraper = file_scraper.scraper.Scraper(
         filepath, mimetype=mimetype, charset=charset, version=version
     )
     scraper.scrape(check_wellformed=False)
@@ -125,14 +123,8 @@ def _generate_file_tech_metadata(filepath, original_file_metadata):
         'streams': scraper.streams
     }
 
-    if scraper.version != NO_VERSION:
+    if scraper.version != file_scraper.defaults.UNAP:
         file_characteristics['format_version'] = scraper.version
-
-        # Use default version if file scraper does not return version
-        if (file_characteristics['format_version'] == UNKNOWN_VERSION
-                and file_characteristics['file_format'] in DEFAULT_VERSIONS):
-            file_characteristics['format_version'] \
-                = DEFAULT_VERSIONS[file_characteristics['file_format']]
 
     if 'charset' in scraper.streams[0]:
         file_characteristics['encoding'] = scraper.streams[0]['charset']

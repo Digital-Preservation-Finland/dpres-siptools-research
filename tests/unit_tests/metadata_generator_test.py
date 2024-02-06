@@ -14,49 +14,93 @@ from siptools_research.metadata_generator import generate_metadata
 
 
 @pytest.mark.parametrize(
-    ('path', 'file_format', 'encoding', 'stream_type'),
-    (
-        ('tests/data/sample_files/text_plain_UTF-8',
-         'text/plain',
-         'UTF-8',
-         'text'),
-        ('tests/data/sample_files/image_png.png',
-         'image/png',
-         None,
-         'image'),
-        ('tests/data/sample_files/image_tiff_large.tif',
-         'image/tiff',
-         None,
-         'image'),
-        ('tests/data/sample_files/audio_x-wav.wav',
-         'audio/x-wav',
-         None,
-         'audio'),
-        ('tests/data/sample_files/video_ffv1.mkv',
-         'video/x-matroska',
-         None,
-         'videocontainer')
-    )
+    [
+        'path',
+        'expected_file_characteristics',
+        'expected_stream_type'
+    ],
+    [
+        # Text file should have encoding, but not format_version
+        (
+            'tests/data/sample_files/text_plain_UTF-8',
+            {
+                'file_format': 'text/plain',
+                'encoding': 'UTF-8',
+            },
+            'text'
+        ),
+        (
+            'tests/data/sample_files/image_png.png',
+            {
+                'file_format': 'image/png',
+                'format_version': '1.2'
+            },
+            'image'
+        ),
+        (
+            'tests/data/sample_files/image_tiff_large.tif',
+            {
+                'file_format': 'image/tiff',
+                'format_version': '6.0'
+            },
+            'image'
+        ),
+        # WAV file should not have container stream according to DPS
+        # specs
+        (
+            'tests/data/sample_files/audio_x-wav.wav',
+            {
+                'file_format': 'audio/x-wav'
+            },
+            'audio'
+        ),
+        # The first stream of matroska file should be container
+        (
+            'tests/data/sample_files/video_ffv1.mkv',
+            {
+                'file_format': 'video/x-matroska',
+                'format_version': '4'
+            },
+            'videocontainer'
+        ),
+        # ODF text format is detected correctly correctly
+        (
+            'tests/data/sample_files/opendocument_text.odt',
+            {
+                'file_format': 'application/vnd.oasis.opendocument.text',
+                'format_version': '1.1'
+            },
+            'binary'
+        ),
+        # TODO: File-scraper does not detect format version of ODF
+        # formula, so metadata generation fails. Enable this test case
+        # when issue TPASPKT-1278 is resolved.
+        # (
+        #     'tests/data/sample_files/opendocument_formula.odf',
+        #     {
+        #         'file_format': 'application/vnd.oasis.opendocument.formula',
+        #         'format_version': '1.0'
+        #     },
+        #     'binary'
+        # )
+    ]
 )
 @pytest.mark.usefixtures('pkg_root', 'mock_ida_download')
 def test_generate_metadata(requests_mock,
                            path,
-                           file_format,
-                           encoding,
-                           stream_type):
+                           expected_file_characteristics,
+                           expected_stream_type):
     """Test metadata generation.
 
-    Generates metadata for a dataset that contains one file, and checks that
-    correct file characteristics are sent to Metax.
-
-    The file characteristics are later used to generate XML metadata without
-    having to scrape the file again.
+    Generates metadata for a dataset that contains one file, and checks
+    that correct file characteristics and file_characteristics_extension
+    are sent to Metax.
 
     :param requests_mock: Mocker object
-    :param path: path to file for which the metadata is created
-    :param file_format: expected file format
-    :param encoding: expected character set
-    :param stream_type: expected stream type
+    :param path: path to the file for which the metadata is created
+    :param expected_file_characteristics: expected file_characteristics
+    :param expected_stream_type: expected type of first stream in
+                                 file_characteristics_extension
     :returns: ``None``
     """
     # create mocked dataset in Metax and Ida
@@ -77,14 +121,16 @@ def test_generate_metadata(requests_mock,
     # verify the file characteristics that were sent to Metax
     file_characteristics \
         = file_metadata_patch.last_request.json()['file_characteristics']
-    assert file_characteristics.get('file_format') == file_format
-    assert file_characteristics.get('encoding') == encoding
+    assert file_characteristics == expected_file_characteristics
 
+    # Check that at least the mimetype and stream type of the are
+    # correct in the first stream of file_characteristics_extension
     file_char_ext = file_metadata_patch.last_request.json()[
         'file_characteristics_extension'
     ]
-    assert file_char_ext['streams']['0']['mimetype'] == file_format
-    assert file_char_ext['streams']['0']['stream_type'] == stream_type
+    assert file_char_ext['streams']['0']['mimetype'] \
+        == expected_file_characteristics['file_format']
+    assert file_char_ext['streams']['0']['stream_type'] == expected_stream_type
 
 
 @pytest.mark.usefixtures('pkg_root', 'mock_ida_download')
