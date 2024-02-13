@@ -63,26 +63,24 @@ from siptools_research.metadata_generator import generate_metadata
             },
             'videocontainer'
         ),
-        # ODF text format is detected correctly correctly
+        # Ensure that problematic ODF formats (especially ODF Formula)
+        # are detected correctly
         (
             'tests/data/sample_files/opendocument_text.odt',
             {
                 'file_format': 'application/vnd.oasis.opendocument.text',
-                'format_version': '1.1'
+                'format_version': '1.2'
             },
             'binary'
         ),
-        # TODO: File-scraper does not detect format version of ODF
-        # formula, so metadata generation fails. Enable this test case
-        # when issue TPASPKT-1278 is resolved.
-        # (
-        #     'tests/data/sample_files/opendocument_formula.odf',
-        #     {
-        #         'file_format': 'application/vnd.oasis.opendocument.formula',
-        #         'format_version': '1.0'
-        #     },
-        #     'binary'
-        # )
+        (
+            'tests/data/sample_files/opendocument_formula.odf',
+            {
+                'file_format': 'application/vnd.oasis.opendocument.formula',
+                'format_version': '1.2'
+            },
+            'binary'
+        )
     ]
 )
 @pytest.mark.usefixtures('pkg_root', 'mock_ida_download')
