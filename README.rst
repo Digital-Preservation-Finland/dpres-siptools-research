@@ -4,11 +4,52 @@ Service for creating submission information packages (SIP) from research dataset
 The service reads dataset metadata from Metax metadata database and collects files from file sources, such as Ida.
 SIP creation workflow is implemented using `Luigi <https://luigi.readthedocs.io>`_ and workflow status is logged in `MongoDB <https://www.mongodb.com/>`_ database.
 
-Installation
+Requirements
 ------------
 
-Installation and usage requires Python 3.6 or newer.
-The software is tested with Python 3.6 on Centos 7.x release.
+Installation and usage requires Python 3.9 or newer.
+The software is tested with Python 3.9 on AlmaLinux 9 release.
+
+Installation using RPM packages (preferred)
+-------------------------------------------
+
+Installation on Linux distributions is done by using the RPM Package Manager.
+See how to `configure the PAS-jakelu RPM repositories`_ to setup necessary software sources.
+
+.. _configure the PAS-jakelu RPM repositories: https://www.digitalpreservation.fi/user_guide/installation_of_tools 
+
+After the repository has been added, the package can be installed by running the following command::
+
+    sudo dnf install python3-dpres-siptools-research
+
+
+Usage
+-----
+
+To package and preserve dataset 1234, for example, run::
+
+   siptools-research preserve 1234
+
+The dataset metadata can be validated without starting the packaging workflow by running the following command::
+
+   siptools-research validate 1234
+
+To generate and post the technical metadata to Metax, run::
+
+   siptools-research generate 1234
+
+Installation using Python Virtualenv for development purposes
+-------------------------------------------------------------
+
+Install required RPM packages
+
+* gcc, swig and openssl-devel are required to install M2Crypto
+* ImageMagick, file-5.30, and ffmpeg are required by dpres-ipt
+* dpres-xml-schemas is required for testing XML validation
+* file-scraper-full is required for testing file type detection::
+
+   rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+   yum install gcc openssl-devel swig ImageMagick file-5.30 ffmpeg dpres-xml-schemas libmediainfo jhove file-scraper-full
 
 Create a virtual environment::
 
@@ -32,59 +73,8 @@ Enable systemd timer that starts/restarts all incomplete and enabled workflows f
    systemctl enable siptools_research.timer
    systemctl start siptools_research.timer
 
-
-Usage
------
-Commandline interface
-^^^^^^^^^^^^^^^^^^^^^
-To package and preserve for example dataset 1234, run::
-
-   siptools-research preserve 1234
-
-The dataset metadata can be validated without starting the packaging workflow::
-
-   siptools-research validate 1234
-
-The technical metadata can generated and posted to Metax::
-
-   siptools-research generate 1234
-
-Python inteface
-^^^^^^^^^^^^^^^
-The workflow can be started from python code::
-
-   from siptools_research import preserve_dataset
-   preserve_dataset('1234', config='~/siptools_config_file.conf')
-
-Also dataset metadata validation can be used from python::
-
-   from siptools_research import validate_dataset
-   validate_dataset('1234', config='~/siptools_config_file.conf')
-
-The ``validate_dataset`` function returns ``True`` if dataset metadata is valid.
-
-Starting workflows with luigi
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-A single workflow can be started/restarted using luigi command::
-
-   luigi --module siptools_research.workflow.init_workflow InitWorkflow --workspace /var/spool/siptools-research/testworkspace_1234 --dataset-id 1234 --config /etc/siptools_research.conf
-
-Incomplete workflows can be restarted with::
-
-   luigi --module siptools_research.workflow_init InitWorkflows --config /etc/siptools_research.conf
-
-
 Testing
 -------
-Install required RPM packages
-
-* gcc, swig and openssl-devel are required to install M2Crypto
-* ImageMagick, file-5.30, and ffmpeg are required by dpres-ipt
-* dpres-xml-schemas is required for testing XML validation
-* file-scraper-full is required for testing file type detection::
-
-   rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
-   yum install gcc openssl-devel swig ImageMagick file-5.30 ffmpeg dpres-xml-schemas libmediainfo jhove file-scraper-full
 
 Run unit tests::
 
