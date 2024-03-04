@@ -149,6 +149,7 @@ def test_set_preservation_state(requests_mock, metadata):
         'preservation_description': 'bar'
     }
 
+
 def test_workspace_paths(pkg_root):
     """Test workspace paths."""
     dataset = Dataset('foo', config=UNIT_TEST_CONFIG_FILE)

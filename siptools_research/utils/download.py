@@ -4,9 +4,9 @@ import time
 
 import requests
 from requests.exceptions import HTTPError
-from siptools_research.config import Configuration
-
 from upload_rest_api.models.file_entry import FileEntry
+
+from siptools_research.config import Configuration
 
 
 class FileNotAvailableError(Exception):
@@ -50,7 +50,9 @@ def _get_local_file(file_metadata, conf):
 
 
 def _get_ida_file(file_metadata, dataset_id, conf):
-    """Get file from IDA. If file is already cached, just return path to it.
+    """Get file from IDA.
+
+    If file is already cached, just return path to it.
 
     :param file_metadata: Metax file metadata
     :param dataset_id: Identifier for the dataset containing the file
@@ -98,7 +100,7 @@ def _get_ida_file(file_metadata, dataset_id, conf):
                 raise FileNotAvailableError(
                     f"File '{file_metadata['file_path']}' not found in Ida"
                 )
-            elif error.response.status_code == 502:
+            if error.response.status_code == 502:
                 raise FileAccessError("Ida service temporarily unavailable. "
                                       "Please, try again later.")
 
@@ -163,8 +165,8 @@ def download_file(
 
 
 def clean_file_cache(config_file):
-    """Remove all files from <packaging_root>/file_cache that have not been
-    accessed in two weeks.
+    """Remove all files from <packaging_root>/file_cache that have not
+    been accessed in two weeks.
 
     :returns: ``None``
     """
