@@ -124,6 +124,11 @@ class Dataset:
     @property
     def workspace_root(self):
         """Root workspace directory."""
+        # TODO: In TPASPKT-1269 <packaging_root>/file_cache was removed.
+        # So <packagin_root> directory contains only "tmp" and
+        # "workspaces" directories. Also "tmp" directory will be removed
+        # in TPASPKT-648. Consider if "workspaces" directory is needed
+        # anymore, or could workspaces be in <packaging_root>.
         packaging_root = self.conf.get('packaging_root')
         return Path(packaging_root) / "workspaces" / self.identifier
 

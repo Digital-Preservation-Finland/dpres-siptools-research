@@ -43,7 +43,6 @@ from siptools_research.exceptions import (InvalidDatasetFileError,
 from siptools_research.metadata_generator import generate_metadata
 from siptools_research import preserve_dataset
 from siptools_research.metadata_validator import validate_metadata
-from siptools_research.utils.download import clean_file_cache
 
 
 # ANSI escape sequences for different colors
@@ -76,7 +75,6 @@ def _parse_args():
     _setup_tasks_args(subparsers)
     _setup_disable_args(subparsers)
     _setup_enable_args(subparsers)
-    _setup_clean_cache_args(subparsers)
 
     # Define arguments common to all commands
     parser.add_argument(
@@ -219,15 +217,6 @@ def _setup_enable_args(subparsers):
         'dataset_id',
         help="Dataset identifier"
     )
-
-
-def _setup_clean_cache_args(subparsers):
-    """Define clean-cache subparser and its arguments."""
-    clean_cache_parser = subparsers.add_parser(
-        'clean-cache',
-        help='Clean old files from Ida file cache'
-    )
-    clean_cache_parser.set_defaults(func=_clean_cache)
 
 
 def _generate(args):
@@ -440,11 +429,6 @@ def _enable(args):
     if dataset:
         dataset.enable()
         print(f"Workflow of dataset {dataset.identifier} enabled")
-
-
-def _clean_cache(args):
-    """Clean files from Ida file cache."""
-    clean_file_cache(args.config)
 
 
 def main():

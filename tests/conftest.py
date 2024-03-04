@@ -45,12 +45,6 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
 @pytest.fixture(autouse=True)
-def mock_os_link(monkeypatch):
-    """Patch os.link with shutil.copyfile."""
-    monkeypatch.setattr(os, "link", shutil.copyfile)
-
-
-@pytest.fixture(autouse=True)
 def mock_upload_conf(monkeypatch):
     mongoengine.disconnect()
     # TODO remove support for mongoengine 0.24.x when RHEL9 migration is done
@@ -125,8 +119,8 @@ def pkg_root(testpath, monkeypatch):
     pkg_root_.mkdir()
 
     # Create required directory structure in workspace root
+    # TODO: "tmp" directory will be removed in TPASPKT-648
     (pkg_root_ / "tmp").mkdir()
-    (pkg_root_ / "file_cache").mkdir()
     (pkg_root_ / "workspaces").mkdir()
 
     return pkg_root_
@@ -259,17 +253,3 @@ def luigi_mock_ssh_config(config_creator, sftp_dir, sftp_server):
     )
 
     return config_path
-
-
-@pytest.fixture(scope="function")
-def mock_ida_download(requests_mock):
-    """Mock the IDA download authorization endpoint."""
-    requests_mock.post(
-        "https://download.dl-authorize.test/authorize",
-        json={
-            "token": (
-                "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0."
-                "eyJzZWNyZXQiOiJkUXc0dzlXZ1hjUSJ9."
-            )
-        }
-    )

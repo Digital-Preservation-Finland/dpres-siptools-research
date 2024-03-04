@@ -29,6 +29,12 @@ class GetFiles(WorkflowTask):
         )
 
     def run(self):
+        # Create file cache directory. To avoid unnecessary downloads,
+        # files are saved to file cache directory, which is not deleted
+        # when any workflow is restarted.
+        file_cache = self.dataset.workspace_root / "file_cache"
+        file_cache.mkdir(exist_ok=True)
+
         # Find file identifiers from Metax dataset metadata.
         files \
             = get_metax_client(self.config).get_dataset_files(self.dataset_id)
@@ -43,7 +49,8 @@ class GetFiles(WorkflowTask):
             for dataset_file in files:
                 identifier = dataset_file["identifier"]
 
-                # Full path to file
+                # Full path to file. Path normalization should not be
+                # required, but it is done just in case.
                 full_path = os.path.normpath(
                     os.path.join(
                         target_path,
@@ -60,17 +67,28 @@ class GetFiles(WorkflowTask):
                 # exist
                 os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
-                try:
-                    download_file(
-                        file_metadata=dataset_file,
-                        dataset_id=self.dataset_id,
-                        linkpath=full_path,
-                        config_file=self.config
-                    )
-                except FileNotAvailableError:
-                    missing_files.append(dataset_file['identifier'])
+                cached_file = file_cache / identifier
+                if not cached_file.exists():
+                    try:
+                        download_file(
+                            file_metadata=dataset_file,
+                            dataset_id=self.dataset_id,
+                            path=cached_file,
+                            config_file=self.config
+                        )
+                    except FileNotAvailableError:
+                        missing_files.append(identifier)
+                        continue
+
+                os.link(cached_file, full_path)
 
             if missing_files:
+                # TODO: If files are missing, there is something wrong
+                # in Ida, Metax, or upload-rest-api. The user can not do
+                # anything about it. Currently MissingFileError is
+                # raised which means that the workflow is disabled and
+                # the dataset will be marked invalid, which is
+                # misleading for the user.
                 raise MissingFileError(
                     f"{len(missing_files)} files are missing", missing_files
                 )

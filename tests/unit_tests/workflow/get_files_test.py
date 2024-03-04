@@ -67,6 +67,53 @@ def test_getfiles(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
+def test_file_cache(workspace, requests_mock):
+    """Test that files are downloaded only once.
+
+    If files have already been been downloaded to file cache, they
+    should not be downloaded from Ida again.
+
+    :param workspace: Test workspace directory fixture
+    :param requests_mock: Mocker object
+    """
+    # Mock metax. Create a dataset that contains a text file.
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=[TXT_FILE])
+
+    # Mock Ida
+    mock_download = add_mock_ida_download(
+        requests_mock=requests_mock,
+        dataset_id=workspace.name,
+        filename="path/to/file",
+        content=b"Content of Ida file\n"
+    )
+
+    # Create file to file cache directory
+    cached_file = workspace / f'file_cache/{TXT_FILE["identifier"]}'
+    cached_file.parent.mkdir()
+    cached_file.write_text('Content of cached file')
+
+    # Init task
+    task = get_files.GetFiles(
+        dataset_id=workspace.name,
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
+    assert not task.complete()
+
+    # Run task.
+    task.run()
+    assert task.complete()
+
+    # Check that the file from file cache was copied to "dataset_files"
+    path = workspace / "metadata_generation/dataset_files/path/to/file"
+    assert path.read_text() == "Content of cached file"
+
+    # Requests to Ida should not be made
+    assert not mock_download.called
+
+
+@pytest.mark.usefixtures('testmongoclient')
 def test_missing_ida_files(workspace, requests_mock):
     """Test task when a file can not be found from Ida.
 
@@ -118,6 +165,10 @@ def test_missing_ida_files(workspace, requests_mock):
 
     # Nothing should be written to dataset_files directory
     assert not (workspace / 'metadata_generation' / 'dataset_files').exists()
+
+    # But the first file should be cached
+    assert [path.name for path in (workspace / 'file_cache').iterdir()] \
+        == ['pid:urn:identifier']
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -178,8 +229,12 @@ def test_missing_local_files(workspace, requests_mock, upload_projects_path):
     # Task should not be completed
     assert not task.complete()
 
-    # Nothing should be written to workspace/dataset_files
-    assert not (workspace / 'dataset_files').exists()
+    # Nothing should be written to dataset_files directory
+    assert not (workspace / 'metadata_generation' / 'dataset_files').exists()
+
+    # But the first file should be cached
+    assert [path.name for path in (workspace / 'file_cache').iterdir()] \
+        == ['pid:urn:get_files_1_local']
 
 
 @pytest.mark.parametrize('path', ["../../file1",

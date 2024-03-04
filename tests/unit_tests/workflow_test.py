@@ -166,14 +166,16 @@ def test_workflow(workspace, module_name, task, requests_mock, mocker):
     assert document['workflow_tasks'][task]['result'] == 'success'
 
     # The workspace root directory should contain only metadata
-    # generation, validation and preservation workspaces
+    # generation workspace, validation workspace, preservation
+    # workspaces and file cache.
     if workspace.exists():
         workspace_content = {path.name
                              for path
                              in workspace.iterdir()}
         assert workspace_content.issubset({'metadata_generation',
                                            'validation',
-                                           'preservation'})
+                                           'preservation',
+                                           'file_cache'})
 
 
 @pytest.mark.usefixtures(
