@@ -1,6 +1,7 @@
 """Luigi task that creates technical metadata."""
 
 import datetime
+from pathlib import Path
 import os
 import shutil
 from tempfile import TemporaryDirectory
@@ -76,6 +77,11 @@ class CreateTechnicalMetadata(WorkflowTask):
                 / 'create-technical-metadata.jsonl')
         )
 
+    @property
+    def dataset_files_directory(self):
+        """Directory where files have been downloaded to."""
+        return Path(self.input()['files'].path)
+
     def run(self):
         """Create techincal metadta.
 
@@ -97,8 +103,8 @@ class CreateTechnicalMetadata(WorkflowTask):
         with TemporaryDirectory(prefix=tmp) as temporary_workspace:
             for file_ in files:
 
-                filepath = os.path.join('dataset_files',
-                                        file_['file_path'].strip('/'))
+                filepath = self.dataset_files_directory \
+                    / file_['file_path'].strip('/')
 
                 # Create METS document that contains PREMIS metadata
                 self.create_objects(file_, filepath, event_datetime,
@@ -129,7 +135,7 @@ class CreateTechnicalMetadata(WorkflowTask):
         by siptools import_object script.
 
         :param metadata: file metadata dictionary
-        :param filepath: file path in SIP
+        :param filepath: file path
         :param event_datetime: the timestamp for the import_object
                                events
         :param output: output directory for import_object script
@@ -163,8 +169,10 @@ class CreateTechnicalMetadata(WorkflowTask):
 
         # Create PREMIS file metadata XML
         siptools.scripts.import_object.import_object(
-            filepaths=[filepath],
-            base_path=self.dataset.preservation_workspace,
+            filepaths=[
+                str(filepath.relative_to(self.dataset_files_directory.parent))
+            ],
+            base_path=self.dataset_files_directory.parent,
             workspace=output,
             skip_wellformed_check=True,
             file_format=(
@@ -185,16 +193,13 @@ class CreateTechnicalMetadata(WorkflowTask):
         previously scraped file characteristics.
 
         :param metadata: Metax metadata of the file
-        :param filepath: path of file in SIP
+        :param filepath: path of file
         :param output: Path to the temporary workspace
         :returns: ``None``
         """
         mdcreator = siptools.mdcreator.MetsSectionCreator(output)
         metadata_generator = XMLMetadataGenerator(
-            file_path=os.path.join(
-                self.input()['files'].path,
-                metadata['file_path'].strip('/')
-            ),
+            file_path=filepath,
             file_metadata=metadata
         )
 
@@ -215,7 +220,9 @@ class CreateTechnicalMetadata(WorkflowTask):
 
             # Add reference from fileSec to TechMD
             mdcreator.add_reference(
-                techmd_id, filepath, stream=md_entry.stream_index
+                techmd_id,
+                str(filepath.relative_to(self.dataset_files_directory.parent)),
+                stream=md_entry.stream_index
             )
             mdcreator.write(ref_file=md_attributes["ref_file"])
 

@@ -1,6 +1,4 @@
 """File validation tools."""
-import os
-
 from file_scraper.scraper import Scraper
 from file_scraper.defaults import (
     BIT_LEVEL_WITH_RECOMMENDED,
@@ -10,44 +8,18 @@ from metax_access.metax import Metax
 
 from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidFileError
-from siptools_research.exceptions import MissingFileError
-from siptools_research.utils.download import (download_file,
-                                              FileNotAvailableError)
 
 
-def _download_files(metax_client, dataset_id, config_file, missing_files):
-    """Download all dataset files.
-
-    :param metax_client: metax access
-    :param dataset_id: dataset identifier
-    :param config_file: configuration file path
-    :returns: A list of the metadata of all downloaded files
-    """
-    dataset_files = metax_client.get_dataset_files(dataset_id)
-    for dataset_file in dataset_files:
-        try:
-            download_file(
-                file_metadata=dataset_file,
-                dataset_id=dataset_id,
-                config_file=config_file
-            )
-        except FileNotAvailableError:
-            missing_files.append(dataset_file['identifier'])
-
-    return dataset_files
-
-
-def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
+def validate_files(dataset_id, root_directory,
+                   config_file="/etc/siptools_research.conf"):
     """Validate all files in a dataset.
 
-    Raises InvalidFileError or MissingFileError if files are invalid.
+    Raises InvalidFileError if any of the files are invalid.
 
     :param dataset_id: dataset identifier
+    :param root_directory: directory where files are found
     :param config: configuration file path
-    :returns: ``True`` if all files are well-formed.
     """
-    invalid_files = []
-    missing_files = []
     conf = Configuration(config_file)
     metax_client = Metax(
         conf.get('metax_url'),
@@ -55,51 +27,45 @@ def validate_files(dataset_id, config_file="/etc/siptools_research.conf"):
         conf.get('metax_password'),
         verify=conf.getboolean('metax_ssl_verification')
     )
-    cache_path = os.path.join(conf.get("packaging_root"), "file_cache")
 
-    dataset_files = _download_files(
-        metax_client, dataset_id, config_file, missing_files
-    )
-    if missing_files:
-        raise MissingFileError(
-            f"{len(missing_files)} files are missing", missing_files
+    invalid_files = []
+    for file in metax_client.get_dataset_files(dataset_id):
+
+        filepath = root_directory / file["file_path"].strip('/')
+        if not filepath.is_file():
+            # Scraper won't raise exception if file is missing, so it is
+            # better to raise exception here to avoid misleading error
+            # messages.
+            raise ValueError("Trying to validate file that does not "
+                             "exist, or is not a file.")
+
+        scraper = Scraper(
+            filename=str(filepath),
+            mimetype=file["file_characteristics"]["file_format"],
+            charset=file["file_characteristics"].get("encoding"),
+            version=file["file_characteristics"].get("format_version")
         )
+        scraper.scrape(check_wellformed=True)
 
-    for dataset_file in dataset_files:
-        _validate_file(dataset_file, cache_path, invalid_files)
+        if scraper.well_formed is True:
+            # File is valid
+            pass
+
+        elif scraper.well_formed is None \
+                and scraper.grade() \
+                in [BIT_LEVEL_WITH_RECOMMENDED, BIT_LEVEL]:
+            # File was not validated, but it will be preserved only bit
+            # level, so it is ok
+            pass
+
+        else:
+            # File is invalid or could not be validated
+            invalid_files.append(file["identifier"])
+
+        del scraper
+
     if invalid_files:
         raise InvalidFileError(
             f"{len(invalid_files)} files are not well-formed",
             invalid_files
         )
-
-    return True
-
-
-def _validate_file(file_, cache_path, errors):
-    """Validate file using file-scraper.
-
-    :param file_: file metadata
-    :param mongo_file: file data in mongo
-    :param cache_path: Path to the file_cache
-    :param errors: array to store non-valid files
-    :returns: None
-    """
-    identifier = file_["identifier"]
-    file_chars = file_["file_characteristics"]
-    mimetype = file_chars["file_format"]
-    encoding = file_chars.get("encoding", None)
-    version = file_chars.get("format_version", None)
-
-    filepath = os.path.join(cache_path, identifier)
-
-    scraper = Scraper(
-        filepath, mimetype=mimetype, charset=encoding, version=version
-    )
-    scraper.scrape(check_wellformed=True)
-    if scraper.well_formed is False or (
-            scraper.well_formed is None and
-            scraper.grade() not in [BIT_LEVEL_WITH_RECOMMENDED, BIT_LEVEL]):
-        errors.append(identifier)
-
-    del scraper

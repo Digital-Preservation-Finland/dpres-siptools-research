@@ -54,13 +54,11 @@ def test_create_techmd_ok(workspace, requests_mock):
                                   files=[TIFF_FILE])
 
     # Create workspace that already contains the dataset files
-    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
-    tiff_path = Path('dataset_files') / TIFF_FILE['file_path']
-    (workspace / 'preservation' / tiff_path).parent.mkdir(parents=True)
-    shutil.copy(
-        'tests/data/sample_files/valid_tiff.tiff',
-        workspace / 'preservation' / tiff_path
-    )
+    dataset_files_parent = workspace / 'metadata_generation'
+    tiff_path = 'dataset_files/' + TIFF_FILE['file_path']
+    (dataset_files_parent / tiff_path).parent.mkdir(parents=True)
+    shutil.copy('tests/data/sample_files/valid_tiff.tiff',
+                dataset_files_parent / tiff_path)
 
     # Init task
     task = CreateTechnicalMetadata(dataset_id=workspace.name,
@@ -72,6 +70,7 @@ def test_create_techmd_ok(workspace, requests_mock):
     assert task.complete()
 
     # Premis object references should be written to file.
+    sipdirectory = workspace / 'preservation/sip-in-progress'
     premis_object_references \
         = read_md_references(sipdirectory, 'import-object-md-references.jsonl')
     assert len(premis_object_references) == 1
@@ -179,9 +178,8 @@ def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
                                   files=[MKV_FILE])
 
     # Create workspace that already contains the dataset files
-    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
-    dataset_files = workspace / 'preservation' / 'dataset_files'
-    mkv_path = dataset_files / MKV_FILE['file_path']
+    mkv_path = workspace / 'metadata_generation/dataset_files' \
+        / MKV_FILE['file_path']
     mkv_path.parent.mkdir(parents=True)
     shutil.copy('tests/data/sample_files/video_ffv1.mkv', mkv_path)
 
@@ -194,6 +192,7 @@ def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
     task.run()
     assert task.complete()
 
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
     premis_object_paths = sipdirectory.glob("*-PREMIS%3AOBJECT-amd.xml")
     premis_objects = []
     premis_objects = [
@@ -247,8 +246,8 @@ def test_create_techmd_incomplete_file_characteristics(workspace,
                                   files=[tiff_file_incomplete])
 
     # Create workspace that already contains the dataset files
-    tiff_path \
-        = workspace / "preservation" / "dataset_files" / TIFF_FILE["file_path"]
+    tiff_path = workspace / "metadata_generation" / "dataset_files" \
+        / TIFF_FILE["file_path"]
     tiff_path.parent.mkdir(parents=True)
     shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
 
@@ -264,7 +263,6 @@ def test_create_techmd_incomplete_file_characteristics(workspace,
 
 
 @pytest.mark.usefixtures()
-# pylint: disable=invalid-name
 def test_create_techmd_without_charset(workspace, requests_mock):
     """Test techmd creation for files without defined charset.
 
@@ -281,7 +279,7 @@ def test_create_techmd_without_charset(workspace, requests_mock):
 
     # Create workspace that contains a textfile
     sipdirectory = workspace / 'preservation' / 'sip-in-progress'
-    dataset_files = workspace / "preservation" / "dataset_files"
+    dataset_files = workspace / "metadata_generation" / "dataset_files"
     text_file_path = dataset_files / "path" / "to" / "file"
     text_file_path.parent.mkdir(parents=True)
     text_file_path.write_text("foo")

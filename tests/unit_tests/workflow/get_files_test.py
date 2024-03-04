@@ -6,7 +6,7 @@ from upload_rest_api.models.file_entry import FileEntry
 
 import tests.conftest
 from siptools_research.exceptions import InvalidFileMetadataError
-from siptools_research.utils.download import FileNotAvailableError
+from siptools_research.exceptions import MissingFileError
 from siptools_research.workflow import get_files
 from tests.metax_data.files import PAS_STORAGE_ID, TXT_FILE
 from tests.metax_data.datasets import BASE_DATASET
@@ -61,7 +61,7 @@ def test_getfiles(workspace, requests_mock):
 
     # Check that correct files are created into correct path
     dataset_files_dir \
-        = workspace / "preservation" / "dataset_files" / "path" / "to"
+        = workspace / "metadata_generation" / "dataset_files" / "path" / "to"
     assert (dataset_files_dir / "file1").read_text() == "foo\n"
     assert (dataset_files_dir / "file2").read_text() == "bar\n"
 
@@ -108,16 +108,16 @@ def test_missing_ida_files(workspace, requests_mock):
     assert not task.complete()
 
     # Run task.
-    with pytest.raises(FileNotAvailableError) as excinfo:
+    with pytest.raises(MissingFileError) as excinfo:
         task.run()
 
-    assert str(excinfo.value) == "File '/path/to/file2' not found in Ida"
+    assert str(excinfo.value) == "1 files are missing"
 
     # Task should not be completed
     assert not task.complete()
 
-    # Nothing should be written to workspace/dataset_files
-    assert not (workspace / 'dataset_files').exists()
+    # Nothing should be written to dataset_files directory
+    assert not (workspace / 'metadata_generation' / 'dataset_files').exists()
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -169,12 +169,11 @@ def test_missing_local_files(workspace, requests_mock, upload_projects_path):
     assert not task.complete()
 
     # Run task.
-    with pytest.raises(FileNotAvailableError) as excinfo:
+    with pytest.raises(MissingFileError) as excinfo:
         task.run()
 
     # Check exception message
-    assert str(excinfo.value) \
-        == "File '/path/to/file4' not found in pre-ingest file storage"
+    assert str(excinfo.value) == "1 files are missing"
 
     # Task should not be completed
     assert not task.complete()
@@ -277,5 +276,5 @@ def test_allowed_relative_paths(workspace, requests_mock, path):
     # Download file and check that is found in expected location
     task.run()
     files = [path.name for path
-             in (workspace / "preservation" / "dataset_files").iterdir()]
+             in (workspace / "metadata_generation/dataset_files").iterdir()]
     assert files == ['file1']

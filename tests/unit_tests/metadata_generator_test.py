@@ -1,6 +1,8 @@
 """Tests for :mod:`siptools_research.metadata_generator` module."""
 import copy
 from collections import defaultdict
+from pathlib import Path
+import shutil
 
 import pytest
 from metax_access import DatasetNotAvailableError
@@ -9,7 +11,7 @@ from requests.exceptions import HTTPError
 import tests.metax_data.datasets
 import tests.metax_data.files
 import tests.utils
-from siptools_research.exceptions import InvalidFileError, MissingFileError
+from siptools_research.exceptions import InvalidFileError
 from siptools_research.metadata_generator import generate_metadata
 
 
@@ -83,11 +85,11 @@ from siptools_research.metadata_generator import generate_metadata
         )
     ]
 )
-@pytest.mark.usefixtures('pkg_root', 'mock_ida_download')
 def test_generate_metadata(requests_mock,
                            path,
                            expected_file_characteristics,
-                           expected_stream_type):
+                           expected_stream_type,
+                           testpath):
     """Test metadata generation.
 
     Generates metadata for a dataset that contains one file, and checks
@@ -99,22 +101,29 @@ def test_generate_metadata(requests_mock,
     :param expected_file_characteristics: expected file_characteristics
     :param expected_stream_type: expected type of first stream in
                                  file_characteristics_extension
+    :param testpath: Temporary directory
     :returns: ``None``
     """
-    # create mocked dataset in Metax and Ida
+    # create mocked dataset in Metax
+    file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
+    file_path = Path('/path/to') / Path(path).name
+    file_metadata['file_path'] = str(file_path)
     tests.utils.add_metax_dataset(requests_mock,
-                                  files=[tests.metax_data.files.BASE_FILE])
+                                  files=[file_metadata])
     file_metadata_patch = requests_mock.patch(
         "https://metaksi/rest/v2/files/pid:urn:identifier",
         json={}
     )
-    with open(path, 'rb') as file_:
-        requests_mock.get("https://download.dl.test/download",
-                          content=file_.read())
 
-    # generate metadata for dataset
+    # Copy the file to temporary directory
+    tmp_file_path = testpath / file_path.relative_to('/')
+    tmp_file_path.parent.mkdir(parents=True)
+    shutil.copy(path, tmp_file_path)
+
+    # Generate metadata
     generate_metadata('dataset_identifier',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
+                      root_directory=testpath,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # verify the file characteristics that were sent to Metax
     file_characteristics \
@@ -131,11 +140,14 @@ def test_generate_metadata(requests_mock,
     assert file_char_ext['streams']['0']['stream_type'] == expected_stream_type
 
 
-@pytest.mark.usefixtures('pkg_root', 'mock_ida_download')
-def test_generate_metadata_video_streams(requests_mock):
+def test_generate_metadata_video_streams(requests_mock, testpath):
     """Test metadata generation for a video file.
 
-    Generates file characteristics for a video file with multiple streams.
+    Generates file characteristics for a video file with multiple
+    streams.
+
+    :param requests_mock: HTTP request mocker
+    :param testpath: Temporary directory
     """
     tests.utils.add_metax_dataset(
         requests_mock,
@@ -144,14 +156,13 @@ def test_generate_metadata_video_streams(requests_mock):
         "https://metaksi/rest/v2/files/pid:urn:identifier",
         json={}
     )
-    with open('tests/data/sample_files/video_ffv1.mkv', 'rb') as file_:
-        requests_mock.get(
-            "https://download.dl.test/download",
-            content=file_.read()
-        )
+
+    tmp_file_path = testpath / "path/to/file"
+    tmp_file_path.parent.mkdir(parents=True)
+    shutil.copy('tests/data/sample_files/video_ffv1.mkv', tmp_file_path)
 
     generate_metadata(
-        'dataset_identifier', tests.conftest.UNIT_TEST_CONFIG_FILE
+        'dataset_identifier', testpath, tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
     file_char_ext = file_metadata_patch.last_request.json()[
@@ -175,32 +186,34 @@ def test_generate_metadata_video_streams(requests_mock):
     assert streams_by_type['video'][0]['mimetype'] == 'video/x-ffv'
 
 
-@pytest.mark.usefixtures('pkg_root', 'mock_ida_download')
-def test_generate_metadata_unrecognized(requests_mock):
+def test_generate_metadata_unrecognized(requests_mock, testpath):
     """Test metadata generation for unrecognized file.
 
     File scraper does not recognize for example empty files. Metadata
     generation should raise error if file type is (:unav).
 
     :param requests_mock: Mocker object
-    :returns: ``None``
+    :param testpath: Temporary directory
     """
-    # create mocked dataset in Metax and Ida
+    # create mocked dataset in Metax
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.BASE_FILE])
-    requests_mock.get("https://download.dl.test/download",
-                      text="")
+
+    # Create empty file to temporary directory
+    tmp_file_path = testpath / 'path/to/file'
+    tmp_file_path.parent.mkdir(parents=True)
+    tmp_file_path.write_text("")
 
     with pytest.raises(InvalidFileError) as exception_info:
         generate_metadata('dataset_identifier',
+                          testpath,
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     assert str(exception_info.value) == 'File format was not recognized'
     assert exception_info.value.files == ['pid:urn:identifier']
 
 
-@pytest.mark.usefixtures('pkg_root', 'mock_ida_download')
-def test_generate_metadata_predefined(requests_mock):
+def test_generate_metadata_predefined(requests_mock, testpath):
     """Test generate_metadata.
 
     Tests metadata generation for files that already have some
@@ -208,7 +221,7 @@ def test_generate_metadata_predefined(requests_mock):
     overwritten, but missing information should be added.
 
     :param requests_mock: Mocker object
-    :returns: ``None``
+    :param testpath: Temporary directory
     """
     file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
     file_metadata['file_characteristics'] = {
@@ -227,14 +240,18 @@ def test_generate_metadata_predefined(requests_mock):
         }
     }
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-    requests_mock.get("https://download.dl.test/download",
-                      content=b'foo')
     patch_request = requests_mock.patch(
         "https://metaksi/rest/v2/files/pid:urn:identifier",
         json={}
     )
 
+    # Create text file in temporary directory
+    tmp_file_path = testpath / 'path/to/file'
+    tmp_file_path.parent.mkdir(parents=True)
+    tmp_file_path.write_text('foo')
+
     generate_metadata('dataset_identifier',
+                      testpath,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # verify the file characteristics that were sent to Metax
@@ -261,8 +278,7 @@ def test_generate_metadata_predefined(requests_mock):
     }
 
 
-@pytest.mark.usefixtures('pkg_root', 'mock_ida_download')
-def test_generate_metadata_csv(requests_mock):
+def test_generate_metadata_csv(requests_mock, testpath):
     """Test generate metadata.
 
     Tests addml metadata generation for a CSV file. Generates file
@@ -270,13 +286,18 @@ def test_generate_metadata_csv(requests_mock):
     document.
 
     :param requests_mock: Mocker object
-    :returns: ``None``
+    :param testpath: Temporary directory
     """
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[tests.metax_data.files.CSV_FILE])
-    requests_mock.get("https://download.dl.test/download", content=b'foo')
+
+    # Create text file in temporary directory
+    tmp_file_path = testpath / 'path/to/file.csv'
+    tmp_file_path.parent.mkdir(parents=True)
+    tmp_file_path.write_text('foo')
 
     generate_metadata('dataset_identifier',
+                      testpath,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     tech_metadata = requests_mock.last_request.json()
@@ -289,47 +310,13 @@ def test_generate_metadata_csv(requests_mock):
     assert file_char_ext['streams']['0']['mimetype'] == 'text/csv'
 
 
-@pytest.mark.usefixtures('mock_ida_download')
-# pylint: disable=invalid-name
-def test_generate_metadata_tempfile_removal(pkg_root, requests_mock):
-    """Tests that temporary files downloaded from Ida are removed.
-
-    :param pkg_root: path to packaging root directory
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    tests.utils.add_metax_dataset(requests_mock,
-                                  files=[tests.metax_data.files.BASE_FILE])
-    requests_mock.get("https://download.dl.test/download", text='foo')
-
-    tmp_path = pkg_root / "tmp"
-    file_cache_path = pkg_root / "file_cache"
-
-    # tmp and file_cache should be empty before calling generate_metadata()
-    assert list(tmp_path.iterdir()) == []
-    assert list(file_cache_path.iterdir()) == []
-
-    generate_metadata('dataset_identifier',
-                      tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # There should not be new files or directories in tmp after metadata
-    # generation, but the downloaded file should be left in file cache
-    assert list(tmp_path.iterdir()) == []
-
-    cache_files = list(file_cache_path.iterdir())
-    assert len(cache_files) == 1
-    assert cache_files[0].name == "pid:urn:identifier"
-
-
-@pytest.mark.usefixtures('pkg_root')
-def test_generate_metadata_dataset_not_found(requests_mock):
+def test_generate_metadata_dataset_not_found(requests_mock, testpath):
     """Test metadatageneration for dataset that does not exist.
 
     DatasetNotAvailableError should be raised.
 
     :param monkeypatch: Monkeypatch object
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     requests_mock.get('https://metaksi/rest/v2/datasets/foobar/files',
                       status_code=404)
@@ -337,38 +324,14 @@ def test_generate_metadata_dataset_not_found(requests_mock):
     expected_error = 'Dataset not found'
     with pytest.raises(DatasetNotAvailableError, match=expected_error):
         generate_metadata('foobar',
+                          testpath,
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
 
-@pytest.mark.usefixtures('pkg_root')
-def test_generate_metadata_ida_download_error(requests_mock):
-    """Test metadatageneration when file is available.
-
-    If file is not available, the dataset is not valid.
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    tests.utils.add_metax_dataset(requests_mock,
-                                  files=[tests.metax_data.files.BASE_FILE])
-    requests_mock.post(
-        'https://download.dl-authorize.test/authorize', status_code=404
-    )
-
-    with pytest.raises(MissingFileError) as exception_info:
-        generate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    assert str(exception_info.value) == "File is not available"
-    assert exception_info.value.files == ['pid:urn:identifier']
-
-
-@pytest.mark.usefixtures('pkg_root')
-def test_generate_metadata_httperror(requests_mock):
+def test_generate_metadata_httperror(requests_mock, testpath):
     """Test metadata generation when Metax fails.
 
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     tests.utils.add_metax_dataset(requests_mock)
     requests_mock.get(
@@ -383,4 +346,5 @@ def test_generate_metadata_httperror(requests_mock):
     expected_error = "500 Server Error: Fake error"
     with pytest.raises(HTTPError, match=expected_error):
         generate_metadata('dataset_identifier',
+                          testpath,
                           tests.conftest.UNIT_TEST_CONFIG_FILE)

@@ -3,49 +3,32 @@ import os
 
 import luigi
 
-from siptools_research.exceptions import InvalidFileMetadataError
+from siptools_research.exceptions import (InvalidFileMetadataError,
+                                          MissingFileError)
 from siptools_research.metax import get_metax_client
-from siptools_research.utils.download import download_file
-from siptools_research.workflow.validate_metadata import ValidateMetadata
+from siptools_research.utils.download import (download_file,
+                                              FileNotAvailableError)
 from siptools_research.workflowtask import WorkflowTask
 
 
 class GetFiles(WorkflowTask):
-    """A task that reads downloads the dataset files to workspace.
+    """Downloads the dataset files.
 
-    Task requires that workspace directory exists and metadata is
-    validated.
+    Does not require anything.
 
-    Task requires that  dataset metadata is validated.
+    Downloads files to `dataset_files` directory in metadata generation
+    workspace.
     """
 
     success_message = 'Files were downloaded'
     failure_message = 'Could not get files'
 
-    def requires(self):
-        """List the Tasks that this Task depends on.
-
-        :returns: list of required tasks
-        """
-        return ValidateMetadata(dataset_id=self.dataset_id, config=self.config)
-
     def output(self):
-        """Return the output target of this Task.
-
-        :returns: `<workspace>/preservation/dataset_files`
-        :rtype: LocalTarget
-        """
         return luigi.LocalTarget(
-            str(self.dataset.preservation_workspace / "dataset_files")
+            str(self.dataset.metadata_generation_workspace / "dataset_files")
         )
 
     def run(self):
-        """Read list of required files from Metax and download them.
-
-        Files are written to path based on ``file_path`` in Metax.
-
-        :returns: ``None``
-        """
         # Find file identifiers from Metax dataset metadata.
         files \
             = get_metax_client(self.config).get_dataset_files(self.dataset_id)
@@ -53,6 +36,7 @@ class GetFiles(WorkflowTask):
         # Download files to temporary target directory which will be
         # moved to output target path when all files have been
         # downloaded
+        missing_files = []
         with self.output().temporary_path() as target_path:
             os.mkdir(target_path)
 
@@ -76,9 +60,17 @@ class GetFiles(WorkflowTask):
                 # exist
                 os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
-                download_file(
-                    file_metadata=dataset_file,
-                    dataset_id=self.dataset_id,
-                    linkpath=full_path,
-                    config_file=self.config
+                try:
+                    download_file(
+                        file_metadata=dataset_file,
+                        dataset_id=self.dataset_id,
+                        linkpath=full_path,
+                        config_file=self.config
+                    )
+                except FileNotAvailableError:
+                    missing_files.append(dataset_file['identifier'])
+
+            if missing_files:
+                raise MissingFileError(
+                    f"{len(missing_files)} files are missing", missing_files
                 )

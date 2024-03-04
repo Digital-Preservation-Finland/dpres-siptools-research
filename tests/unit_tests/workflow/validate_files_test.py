@@ -17,18 +17,18 @@ def test_validatefiles(workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     :returns: ``None``
     """
-    # Create a dataset that contains one valid text file which is
-    # available in Ida
+    # Create a dataset that contains one valid text file which has been
+    # downloaded
     textfile = copy.deepcopy(tests.metax_data.files.TXT_FILE)
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset["identifier"] = workspace.name
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset,
                                   files=[textfile])
-    tests.utils.add_mock_ida_download(requests_mock,
-                                      dataset_id=workspace.name,
-                                      filename='path/to/file',
-                                      content=b'foo')
+
+    filepath = workspace / "metadata_generation/dataset_files/path/to/file"
+    filepath.parent.mkdir(parents=True)
+    filepath.write_text('foo')
 
     # Init and run task
     task = validate_files.ValidateFiles(
@@ -58,10 +58,11 @@ def test_validatefiles_invalid(workspace, requests_mock):
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset,
                                   files=[tifffile])
-    tests.utils.add_mock_ida_download(requests_mock,
-                                      dataset_id=workspace.name,
-                                      filename='path/to/file.tiff',
-                                      content=b'foo')
+
+    filepath \
+        = workspace / "metadata_generation/dataset_files/path/to/file.tiff"
+    filepath.parent.mkdir(parents=True)
+    filepath.write_text('foo')
 
     # Init and run task. Running task should raise an exception.
     task = validate_files.ValidateFiles(

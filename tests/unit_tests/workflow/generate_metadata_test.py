@@ -19,16 +19,16 @@ def test_generatemetadata(workspace, requests_mock):
     """
     # Create a dataset that contains one text file which is available in
     # Ida
-    textfile = copy.deepcopy(tests.metax_data.files.TXT_FILE)
-    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
-    dataset['identifier'] = workspace.name
+    textfile_metadata = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+    dataset_metadata = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset_metadata['identifier'] = workspace.name
     tests.utils.add_metax_dataset(requests_mock,
-                                  dataset=dataset,
-                                  files=[textfile])
-    tests.utils.add_mock_ida_download(requests_mock,
-                                      dataset_id=workspace.name,
-                                      filename='path/to/file',
-                                      content=b'foo')
+                                  dataset=dataset_metadata,
+                                  files=[textfile_metadata])
+
+    textfile = workspace / 'metadata_generation/dataset_files/path/to/file'
+    textfile.parent.mkdir(parents=True)
+    textfile.write_text('foo')
 
     # Init and run task
     task = generate_metadata.GenerateMetadata(

@@ -1,23 +1,25 @@
 """Tests for :mod:`siptools_research.file_validator` module."""
 
 import copy
-from pathlib import Path
+import shutil
 
 import pytest
 
 import tests.conftest
-from siptools_research.exceptions import InvalidFileError, MissingFileError
+from siptools_research.exceptions import InvalidFileError
 from siptools_research.file_validator import validate_files
 from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import SEG_Y_FILE, TIFF_FILE, TXT_FILE
-from tests.utils import add_metax_dataset, add_mock_ida_download
+from tests.utils import add_metax_dataset
 
 
-@pytest.mark.usefixtures("pkg_root")
-def test_validate_files(requests_mock):
-    """Test that validate_metadata function returns ``True`` for valid files.
+def test_validate_files(requests_mock, testpath):
+    """Test validating valid files.
+
+    Validator should not raise any exceptions.
 
     :param requests_mock: Mocker object
+    :param testpath: Temporary directory
     """
     # Mock metax
     file1 = copy.deepcopy(TXT_FILE)
@@ -37,35 +39,28 @@ def test_validate_files(requests_mock):
         files=[file1, file2]
     )
 
-    # Mock Ida
-    ida_mock1 = add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
-        filename="/path/to/file1",
-        content=b"foo"
-    )
-    ida_mock2 = add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
-        filename="/path/to/file2",
-        content=b"bar"
-    )
+    # Create valid files in temporary directory
+    path1 = testpath / "path/to/file1"
+    path1.parent.mkdir(parents=True)
+    path1.write_text("foo")
+    path2 = testpath / "path/to/file2"
+    path2.write_text("bar")
+
+    # Validator should return `None`, and exceptions should not be
+    # raised.
     assert validate_files("dataset_identifier",
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    # Both files should have been downloaded
-    assert ida_mock1.called
-    assert ida_mock2.called
+                          testpath,
+                          tests.conftest.UNIT_TEST_CONFIG_FILE) is None
 
 
-@pytest.mark.usefixtures("pkg_root")
-def test_validate_invalid_files(requests_mock):
+def test_validate_invalid_files(requests_mock, testpath):
     """Test validating a not well-formed file.
 
     Try to validate an empty text file. File validator should detect the
     file as not well-formed and raise exception.
 
     :param requests_mock: Mocker object
+    :param testpath: Temporary directory
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
     # of the file is text/plain.
@@ -75,17 +70,15 @@ def test_validate_invalid_files(requests_mock):
         files=[copy.deepcopy(TXT_FILE)]
     )
 
-    # Mock Ida. Create a empty file.
-    add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
-        filename="path/to/file",
-        content=b""
-    )
+    # Create a empty file to temporary directory
+    filepath = testpath / "path/to/file"
+    filepath.parent.mkdir(parents=True)
+    filepath.write_text("")
 
     with pytest.raises(InvalidFileError) as exception_info:
         validate_files(
             "dataset_identifier",
+            testpath,
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
@@ -93,13 +86,13 @@ def test_validate_invalid_files(requests_mock):
     assert exception_info.value.files == ['pid:urn:identifier']
 
 
-@pytest.mark.usefixtures("pkg_root")
-def test_validate_bitlevel_file(requests_mock):
+def test_validate_bitlevel_file(requests_mock, testpath):
     """Test validating a file only accepted for bit-level preservation.
 
     File validator should ignore the validation result in this case.
 
     :param requests_mock: Mocker object
+    :param testpath: Temporary directory
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
     # of the file is application/x.fi-dpres.segy.
@@ -109,33 +102,28 @@ def test_validate_bitlevel_file(requests_mock):
         files=[copy.deepcopy(SEG_Y_FILE)]
     )
 
-    # Mock Ida. Create a SEG-Y file.
-    ida_mock = add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
-        filename="path/to/file.sgy",
-        content=(
-            Path("tests/data/sample_files/invalid_1.0_ascii_header.sgy")
-            .read_bytes()
-        )
-    )
+    # Copy a SEG-Y file to temporary directory
+    filepath = testpath / "path/to/file.sgy"
+    filepath.parent.mkdir(parents=True)
+    shutil.copy("tests/data/sample_files/invalid_1.0_ascii_header.sgy",
+                filepath)
 
+    # Validator should return `None`, and exceptions should not be
+    # raised.
     assert validate_files(
         "dataset_identifier",
+        testpath,
         tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-
-    # File should have been downloaded
-    assert ida_mock.called
+    ) is None
 
 
-@pytest.mark.usefixtures("pkg_root")
-def test_validate_wrong_mimetype(requests_mock):
+def test_validate_wrong_mimetype(requests_mock, testpath):
     """Test validating a text file as a TIFF file.
 
     File validator should detect wrong mimetype, and raise exception.
 
     :param requests_mock: Mocker object
+    :param testpath: Temporary directory
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
     # of the file is image/tiff.
@@ -146,48 +134,16 @@ def test_validate_wrong_mimetype(requests_mock):
     )
 
     # Mock Ida. Create a plain text file instead of a TIFF file.
-    add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id="dataset_identifier",
-        filename="path/to/file.tiff",
-        content=b"foo"
-    )
+    filepath = testpath / "path/to/file.tiff"
+    filepath.parent.mkdir(parents=True)
+    filepath.write_text('foo')
 
     with pytest.raises(InvalidFileError) as exception_info:
         validate_files(
             "dataset_identifier",
+            testpath,
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
     assert str(exception_info.value) == "1 files are not well-formed"
     assert exception_info.value.files == ['pid:urn:identifier_tiff']
-
-
-@pytest.mark.usefixtures("pkg_root")
-def test_validate_files_not_found(requests_mock):
-    """Test that validating files, which are not found.
-
-    :param requests_mock: Mocker object
-    """
-    # Mock metax. Create a dataset that contains one text file which
-    # does not exist in Ida.
-    add_metax_dataset(
-        requests_mock=requests_mock,
-        dataset=copy.deepcopy(BASE_DATASET),
-        files=[copy.deepcopy(TXT_FILE)]
-    )
-
-    # Mock Ida. Do not add any files to Ida.
-    requests_mock.post(
-        'https://download.dl-authorize.test/authorize',
-        status_code=404
-    )
-
-    with pytest.raises(MissingFileError) as exception_info:
-        validate_files(
-            "dataset_identifier",
-            tests.conftest.UNIT_TEST_CONFIG_FILE
-        )
-
-    assert str(exception_info.value) == "1 files are missing"
-    assert exception_info.value.files == ['pid:urn:identifier']

@@ -14,7 +14,7 @@ def test_compresssip(workspace, testpath):
     :param workspace: Temporary workspace directory fixture
     :param pkg_root: Temporary packaging root directory fixture
     """
-    (workspace / 'preservation' / 'dataset_files').mkdir(parents=True)
+    (workspace / 'metadata_generation' / 'dataset_files').mkdir(parents=True)
 
     # Create required contents to workspace
     shutil.copy('tests/data/testsips/simple_sip/mets.xml',
