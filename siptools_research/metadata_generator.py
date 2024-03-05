@@ -4,6 +4,7 @@ import shutil
 import tempfile
 
 import file_scraper
+import file_scraper.scraper
 from metax_access import Metax
 
 from siptools_research.config import Configuration
