@@ -67,7 +67,6 @@ def test_create_techmd_ok(workspace, requests_mock):
 
     # Run task
     task.run()
-    assert task.complete()
 
     # Premis object references should be written to file.
     sipdirectory = workspace / 'preservation/sip-in-progress'
@@ -115,8 +114,8 @@ def test_create_techmd_ok(workspace, requests_mock):
 
     # Some premis agent files should be created
     premis_references = read_md_references(
-        str(workspace / 'preservation'),
-        'create-technical-metadata.jsonl'
+        str(workspace / 'preservation' / 'sip-in-progress'),
+        'premis-event-md-references.jsonl'
     )
     premis_agent_files = [f'{id_[1:]}-PREMIS%3AAGENT-amd.xml'
                           for id_ in premis_references['.']['md_ids']
@@ -159,6 +158,7 @@ def test_create_techmd_ok(workspace, requests_mock):
         == set(['import-object-md-references.jsonl',
                 premis_object_file,
                 file_properties_file,
+                'premis-event-md-references.jsonl',
                 'create-mix-md-references.jsonl',
                 'dd0f489d6e47cc2dca598beb608cc78d-NISOIMG-amd.xml']
                + premis_agent_files
@@ -190,7 +190,6 @@ def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
 
     # Run task
     task.run()
-    assert task.complete()
 
     sipdirectory = workspace / 'preservation' / 'sip-in-progress'
     premis_object_paths = sipdirectory.glob("*-PREMIS%3AOBJECT-amd.xml")

@@ -32,7 +32,6 @@ def test_createdescriptivemetadata(workspace, requests_mock):
 
     # Run task.
     task.run()
-    assert task.complete()
 
     # Check that XML is created in sip creation directory and it
     # contains correct elements.
@@ -69,20 +68,22 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     assert references['.']["streams"] == {}
     assert len(references['.']["md_ids"]) == 1
 
-    # Premis event reference file should be created in workspace
+    # Premis event reference file should be created in sip-in-progress
     # directory
-    premis_event_reference_file = \
-        workspace / "preservation" / 'create-descriptive-metadata.jsonl'
+    premis_event_reference_file = workspace / "preservation" / \
+        "sip-in-progress" / "premis-event-md-references.jsonl"
     references = json.loads(premis_event_reference_file.read_bytes())
     assert len(references['.']["md_ids"]) == 1
     premis_event_identifier = references['.']["md_ids"][0][1:]
 
     # SIP creation directory should contain only descriptive metadata
-    # XML, descriptive metadata reference file and premis event XML.
+    # XML, premis event reference file, descriptive metadata reference
+    # file and premis event XML.
     files = {path.name for path
              in (workspace / "preservation" / "sip-in-progress").iterdir()}
     assert files == {
         'dmdsec.xml',
+        "premis-event-md-references.jsonl",
         'import-description-md-references.jsonl',
         f'{premis_event_identifier}-PREMIS%3AEVENT-amd.xml'
     }

@@ -1,9 +1,6 @@
 """Luigi task that creates logical structure map."""
-
 import os
 
-import luigi.format
-from luigi import LocalTarget
 import lxml.etree as ET
 import mets
 import xml_helpers.utils as h
@@ -15,60 +12,15 @@ from siptools_research.metax import get_metax_client
 from siptools_research.utils.locale import \
     get_dataset_languages, get_localized_value
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.create_digiprov \
-    import CreateProvenanceInformation
-from siptools_research.workflow.create_structmap import CreateStructMap
 
 
 class CreateLogicalStructMap(WorkflowTask):
-    """Create METS document that contains logical structMap.
-
-    The file is written to `<sip_creation_path>/logical_structmap.xml`.
-
-    Task requires that physical structure map, fileSec and provenance
-    information are created.
-    """
-
-    success_message = "Logical structure map created"
-    failure_message = "Logical structure map could not be created"
-
-    def requires(self):
-        """List the the Tasks that this Task depends on.
-
-        Provenance premise event reference file from
-        CreateProvenanceInformation is required.
-
-        :returns: dictionary of required tasks
-        """
-        return {
-            'create_provenance_information': CreateProvenanceInformation(
-                dataset_id=self.dataset_id,
-                config=self.config
-            ),
-            'create_structmap': CreateStructMap(
-                dataset_id=self.dataset_id,
-                config=self.config
-            )
-        }
-
-    def output(self):
-        """List the output targets of this Task.
-
-        :returns: `<sip-creation-path>/logical_structmap.xml`
-        :rtype: LocalTarget
-        """
-        return LocalTarget(
-            str(self.dataset.sip_creation_path / 'logical_structmap.xml'),
-            format=luigi.format.Nop
-        )
 
     def run(self):
-        """Create a METS document that contains logical structural map.
+        """Create METS document that contains logical structMap.
 
-        Logical structural map is based on dataset metadata retrieved
-        from Metax.
-
-        :returns: ``None``
+        The file is written to
+        `<sip_creation_path>/logical_structmap.xml`.
         """
         # Read the generated physical structmap from file
         # TODO: The path is converted to string because old versions of
@@ -100,7 +52,8 @@ class CreateLogicalStructMap(WorkflowTask):
             wrapper_div.append(div)
         logical_structmap.append(wrapper_div)
 
-        with self.output().open('wb') as output:
+        output_path = self.dataset.sip_creation_path / 'logical_structmap.xml'
+        with output_path.open('wb') as output:
             output.write(h.serialize(mets_structmap))
 
     def get_provenance_ids(self):
@@ -115,13 +68,10 @@ class CreateLogicalStructMap(WorkflowTask):
         metadata = get_metax_client(self.config).get_dataset(self.dataset_id)
         languages = get_dataset_languages(metadata)
 
-        # Get the reference file path from Luigi task input
-        # It already contains the workspace path.
+        # Read the reference file
         event_ids = get_md_references(read_md_references(
-            self.dataset.preservation_workspace,
-            os.path.basename(
-                self.input()['create_provenance_information'].path
-            )
+            str(self.dataset.preservation_workspace),
+            'create-provenance-information.jsonl'
         ))
         if not event_ids:
             event_ids = []
@@ -222,7 +172,8 @@ class CreateLogicalStructMap(WorkflowTask):
         :returns: file identifier
         """
         # pylint: disable=no-member
-        filesec_xml = ET.parse(self.input()['create_structmap'].path)
+        filesec_xml \
+            = ET.parse(str(self.dataset.sip_creation_path / 'filesec.xml'))
 
         root = filesec_xml.getroot()
 

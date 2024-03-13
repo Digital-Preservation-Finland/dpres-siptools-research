@@ -41,8 +41,7 @@ import tests.utils
         )
     ]
 )
-def test_createprovenanceinformation(pkg_root,
-                                     workspace,
+def test_createprovenanceinformation(workspace,
                                      requests_mock,
                                      events,
                                      expected_ids,
@@ -53,7 +52,6 @@ def test_createprovenanceinformation(pkg_root,
     - XML files are created
     - Metadata reference file is created
 
-    :param pkg_root: Testpath fixture
     :param workspace: Testpath fixture
     :param requests_mock: HTTP request mocker
     :param events: list of preservation events in dataset metadata
@@ -83,25 +81,24 @@ def test_createprovenanceinformation(pkg_root,
 
     # Run task.
     task.run()
-    assert task.complete()
 
     # PREMIS event XML should be created for each event
     sipdirectory = workspace / 'preservation' / 'sip-in-progress'
-    created_files = {path.name for path in sipdirectory.iterdir()}
+    created_files = {path.name for path in sipdirectory.iterdir()
+                     if path.suffix == '.xml'}
     expected_files = {f'{id}-PREMIS%3AEVENT-amd.xml' for id in expected_ids}
     assert created_files == expected_files
 
     # Metadata reference file should have references to all created
     # premis events
-    references = json.loads(
-        (workspace
-         / "preservation"
-         / "create-provenance-information.jsonl").read_bytes()
-    )
-    assert set(references['.']['md_ids']) == {f'_{id}' for id in expected_ids}
-
-    # Temporary directories should be removed
-    assert not list((pkg_root / "tmp").iterdir())
+    if events:
+        references = json.loads(
+            (workspace
+             / "preservation" / "sip-in-progress"
+             / "premis-event-md-references.jsonl").read_bytes()
+        )
+        assert set(references['.']['md_ids']) \
+            == {f'_{id}' for id in expected_ids}
 
 
 @pytest.mark.usefixtures("testmongoclient")
@@ -161,14 +158,14 @@ def test_failed_createprovenanceinformation(
     ]
 )
 def test_create_premis_events(
-    testpath, requests_mock, provenance_data, premis_id
+    workspace, requests_mock, provenance_data, premis_id
 ):
-    """Test `create_premis_event` function.
+    """Test XML files content.
 
     Output XML file should be produced and it should contain some
     specified elements.
 
-    :param testpath: Temporary directory
+    :param workspace: Temporary directory
     :param requests_mock: HTTP request mocker
     :param provenance_data: The data used for creating provenance events
     :param premis_id: The id created for the PREMIS event
@@ -176,20 +173,22 @@ def test_create_premis_events(
     """
     # Mock metax. Create a dataset with one provenance event
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset['identifier'] = workspace.name
     dataset["research_dataset"]["provenance"] = [provenance_data]
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create provenance info xml-file to tempdir
     task = create_digiprov.CreateProvenanceInformation(
-        dataset_id="dataset_identifier",
+        dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    task._create_premis_events(str(testpath))
+    task.run()
 
     # Check that the created xml-file contains correct elements.
     # pylint: disable=no-member
     tree = lxml.etree.parse(str(
-        testpath / f'{premis_id}-PREMIS%3AEVENT-amd.xml'
+        workspace / 'preservation' / 'sip-in-progress'
+        / f'{premis_id}-PREMIS%3AEVENT-amd.xml'
     ))
 
     namespaces = {

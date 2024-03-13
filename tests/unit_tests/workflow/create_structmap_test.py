@@ -21,34 +21,27 @@ def _create_metadata(workspace, files, provenance_ids=None):
     :param files: path to file or directory that contains dataset files
     :returns: ``None``
     """
-    # Create dmdsec
-    (
-        workspace / 'preservation' / 'create-descriptive-metadata.jsonl'
-    ).write_text(
-        '{".": {"md_ids": ["descriptive_metadata_id"]}}'
-    )
 
-    # Create digiprov
-    if not provenance_ids:
-        provenance_ids = []
+    # dmdsec references
+    references = ["descriptive_metadata_id"]
+
+    # digiprov references
+    if provenance_ids:
+        references += provenance_ids
+
+    # Write references to file
+    sip_creation_path = workspace / 'preservation' / 'sip-in-progress'
     (
-        workspace / 'preservation' / 'create-provenance-information.jsonl'
-    ).write_text(
-        json.dumps({".": {"md_ids": provenance_ids}})
-    )
+        sip_creation_path / "premis-event-md-references.jsonl"
+    ).write_text(json.dumps({".": {"md_ids": references}}))
 
     # Create tech metadata
-    sip_creation_path = workspace / 'preservation' / 'sip-in-progress'
     import_object(
         workspace=str(sip_creation_path),
         base_path=str(sip_creation_path),
         skip_wellformed_check=True,
         filepaths=[files],
         event_target='.'
-    )
-    shutil.move(
-        sip_creation_path / "premis-event-md-references.jsonl",
-        workspace / "preservation" / "create-technical-metadata.jsonl"
     )
 
 
@@ -91,7 +84,6 @@ def test_create_structmap_ok(workspace, provenance_ids):
     task = CreateStructMap(dataset_id=workspace.name,
                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
-    assert task.complete()
 
     # Validate logical filesec XML-file
     filesec_xml = lxml.etree.parse(str(sip_creation_path / 'filesec.xml'))
@@ -135,8 +127,8 @@ def test_create_structmap_ok(workspace, provenance_ids):
     # event
     descriptive_metadata_creation_event_id \
         = read_md_references(
-            str(workspace / 'preservation'),
-            'create-descriptive-metadata.jsonl'
+            str(workspace / 'preservation' / "sip-in-progress"),
+            "premis-event-md-references.jsonl"
         )['.']['md_ids'][0]
     assert descriptive_metadata_creation_event_id in structmap_xml.xpath(
         "/mets:mets/mets:structMap/mets:div/@ADMID",
@@ -152,10 +144,10 @@ def test_create_structmap_ok(workspace, provenance_ids):
 
     # Filesec.xml, structmap.xml,
     # compile-structmap-agents-AGENTS-amd.json,
-    # premis-event-md-references.jsonl, premis event and premis agent
+    # premis event and premis agent
     # should be created into SIP directory.
     files = {path.name for path in sip_creation_path.iterdir()}
-    assert len(files) - len(set(sip_content_before_run)) == 6
+    assert len(files) - len(set(sip_content_before_run)) == 5
     assert {'filesec.xml',
             'structmap.xml',
             'compile-structmap-agents-AGENTS-amd.json',
@@ -182,7 +174,6 @@ def test_create_structmap_without_directories(workspace):
                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     task.run()
-    assert task.complete()
 
     # Check structmap file
     xml = lxml.etree.parse(str(sip_creation_path / 'structmap.xml'))
@@ -221,7 +212,6 @@ def test_filesec_othermd(workspace):
                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     task.run()
-    assert task.complete()
 
     # Filesec should contain one file which is linked to MIX metadata
     xml = lxml.etree.parse(str(sip_creation_path / 'filesec.xml'))

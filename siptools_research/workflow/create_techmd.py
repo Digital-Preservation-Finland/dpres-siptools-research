@@ -1,94 +1,49 @@
 """Luigi task that creates technical metadata."""
 
 import datetime
-from pathlib import Path
-import os
-import shutil
-from tempfile import TemporaryDirectory
 
 import siptools.mdcreator
 import siptools.scripts.import_object
-from luigi import LocalTarget
 
-from siptools_research.config import Configuration
 from siptools_research.metax import get_metax_client
-from siptools_research.workflow.generate_metadata import GenerateMetadata
-from siptools_research.workflow.get_files import GetFiles
-from siptools_research.workflow.validate_metadata import ValidateMetadata
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.xml_metadata import (TECH_ATTR_TYPES,
                                             XMLMetadataGenerator)
 
 
 class CreateTechnicalMetadata(WorkflowTask):
-    """Create METS documents that contain technical metadata.
-
-    The PREMIS object metadata is created to all dataset files and it is
-    written to
-    `<sip_creation_path>/<url_encoded_filepath>-PREMIS%3AOBJECT-amd.xml`.
-    File properties are written to
-    `<sip_creation_path>/<url_encoded_filepath>-scraper.json`.
-    PREMIS event metadata and PREMIS agent metadata are written to
-    `<sip_creation_path>/<premis_event_id>-PREMIS%3AEVENT-amd.xml` and
-    `<sip_creation_path>/<premis_agent_id>-PREMIS%3AEVENT-amd.xml`.
-    Import object PREMIS event metadata references are written to
-    `<sip_creation_path>/import-object-md-references.jsonl`.
-
-    The file format specific metadata is copied from metax if it is
-    available. It is written to
-    `<sip_creation_path>/<url_encoded_filepath>-<metadata_type>-amd.xml`,
-    where <metadata_type> is NISOIMG, ADDML, AudioMD, or VideoMD.
-    File format specific metadata references are written to a json-file
-    depending on file format. For example, refences to NISOIMG metadata
-    are written to `<sip_creation_path>/create-mix-md-references`.
-
-    List of PREMIS event references is written to
-    `<workspace>/preservation/create-technical-metadata.jsonl`
-
-    The task requires dataset metadata to be validated, dataset files to
-    be downloaded and file metadata to be generated.
-    """
-
-    success_message = 'Technical metadata for objects created'
-    failure_message = 'Technical metadata for objects could not be created'
-
-    def requires(self):
-        """List the Tasks that this Task depends on.
-
-        :returns: dictionary of required tasks
-        """
-        return {
-            'validation': ValidateMetadata(dataset_id=self.dataset_id,
-                                           config=self.config),
-            'files': GetFiles(dataset_id=self.dataset_id,
-                              config=self.config),
-            'metadata_generation': GenerateMetadata(dataset_id=self.dataset_id,
-                                                    config=self.config)
-        }
-
-    def output(self):
-        """Return output target of this Task.
-
-        :returns: `<workspace>/preservation/create-technical-metadata.jsonl`
-        :rtype: LocalTarget
-        """
-        return LocalTarget(
-            str(self.dataset.preservation_workspace
-                / 'create-technical-metadata.jsonl')
-        )
 
     @property
     def dataset_files_directory(self):
         """Directory where files have been downloaded to."""
-        return Path(self.input()['files'].path)
+        return self.dataset.metadata_generation_workspace / 'dataset_files'
 
     def run(self):
-        """Create techincal metadta.
+        """Create METS documents that contain technical metadata.
 
-        Creates PREMIS technical metadata files and technical attribute
-        files.
+        The PREMIS object metadata is created to all dataset files and
+        it is written to
+        `<sip_creation_path>/<url_encoded_filepath>-PREMIS%3AOBJECT-amd.xml`.
+        File properties are written to
+        `<sip_creation_path>/<url_encoded_filepath>-scraper.json`.
+        PREMIS event metadata and PREMIS agent metadata are written to
+        `<sip_creation_path>/<premis_event_id>-PREMIS%3AEVENT-amd.xml`
+        and
+        `<sip_creation_path>/<premis_agent_id>-PREMIS%3AEVENT-amd.xml`.
+        Import object PREMIS event metadata references are written to
+        `<sip_creation_path>/import-object-md-references.jsonl`.
 
-        :returns: ``None``
+        The file format specific metadata is copied from metax if it is
+        available. It is written to
+        `<sip_creation_path>/<url_encoded_filepath>-<metadata_type>-amd.xml`,
+        where <metadata_type> is NISOIMG, ADDML, AudioMD, or VideoMD.
+        File format specific metadata references are written to a
+        json-file depending on file format. For example, refences to
+        NISOIMG metadata are written to
+        `<sip_creation_path>/create-mix-md-references`.
+
+        List of PREMIS event references is written to
+        <sip_creation_path>/premis-event-md-references.jsonl.
         """
         files \
             = get_metax_client(self.config).get_dataset_files(self.dataset_id)
@@ -98,35 +53,19 @@ class CreateTechnicalMetadata(WorkflowTask):
         event_datetime \
             = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-        config_object = Configuration(self.config)
-        tmp = os.path.join(config_object.get('packaging_root'), 'tmp/')
-        with TemporaryDirectory(prefix=tmp) as temporary_workspace:
-            for file_ in files:
+        for file_ in files:
 
-                filepath = self.dataset_files_directory \
-                    / file_['file_path'].strip('/')
+            filepath = self.dataset_files_directory \
+                / file_['file_path'].strip('/')
 
-                # Create METS document that contains PREMIS metadata
-                self.create_objects(file_, filepath, event_datetime,
-                                    temporary_workspace)
-
-                # Create METS documents that contain technical
-                # attributes
-                self.create_technical_attributes(file_, filepath,
-                                                 temporary_workspace)
-
-            # Move created files to sip creation directory. PREMIS event
-            # reference file is moved to output target path after
-            # everything else is done.
-            with self.output().temporary_path() as target_path:
-                shutil.move(
-                    os.path.join(temporary_workspace,
-                                 'premis-event-md-references.jsonl'),
-                    target_path
-                )
-                for file_ in os.listdir(temporary_workspace):
-                    shutil.move(os.path.join(temporary_workspace, file_),
+            # Create METS document that contains PREMIS metadata
+            self.create_objects(file_, filepath, event_datetime,
                                 self.dataset.sip_creation_path)
+
+            # Create METS documents that contain technical
+            # attributes
+            self.create_technical_attributes(file_, filepath,
+                                             self.dataset.sip_creation_path)
 
     def create_objects(self, metadata, filepath, event_datetime, output):
         """Create PREMIS metadata for file.

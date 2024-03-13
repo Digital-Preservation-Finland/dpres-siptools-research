@@ -5,53 +5,68 @@ from siptools.scripts import compile_mets
 
 from siptools_research.metax import get_metax_client
 from siptools_research.workflowtask import WorkflowTask
+from siptools_research.workflow.create_structmap import CreateStructMap
 from siptools_research.workflow.create_logical_structmap \
     import CreateLogicalStructMap
 from siptools_research.workflow.copy_dataset_to_pas_data_catalog\
     import CopyToPasDataCatalog
+from siptools_research.workflow.create_digiprov import \
+    CreateProvenanceInformation
+from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
+from siptools_research.workflow.create_techmd import CreateTechnicalMetadata
+from siptools_research.workflow.get_files import GetFiles
 
 
 class CreateMets(WorkflowTask):
-    """Task that creates the METS document.
+    """Creates the METS document.
 
-    Merges all partial METS documents found from <sip_creation_path> to
-    one METS document. The METS document is written to
-    <workspace>/preservation/mets.xml.
+    Requires that dataset is copied to PAS data catalog, as the DOI of
+    the PAS version of the dataset will be included in METS.
 
-    Task requires logical structural map to be created. Task requires
-    that dataset is copied to PAS data catalog to ensure that dataset
-    has "preservation_dataset_version".
+    Writes mets.xml to preservation workspace.
     """
 
-    success_message = "METS document compiled"
-    failure_message = "Compiling METS document failed"
+    success_message = "METS document created"
+    failure_message = "Creating METS document failed"
 
     def requires(self):
-        """List the Tasks that this Task depends on.
-
-        :returns: Required task
-        """
-        return [CreateLogicalStructMap(dataset_id=self.dataset_id,
-                                       config=self.config),
-                CopyToPasDataCatalog(dataset_id=self.dataset_id,
-                                     config=self.config)]
+        # TODO: Currently this task will download metadata from Metax
+        # while METS document is build using old siptools. The plan is
+        # to move metadata download to separate Task, which is required
+        # by CreateMets task.
+        return [
+            GetFiles(
+                dataset_id=self.dataset_id, config=self.config
+            ),
+            CopyToPasDataCatalog(
+                dataset_id=self.dataset_id, config=self.config
+            ),
+        ]
 
     def output(self):
-        """Return the output target of this Task.
-
-        :returns: `<workspace>/preservation/mets.xml`
-        :rtype: LocalTarget
-        """
         return LocalTarget(
             str(self.dataset.preservation_workspace / 'mets.xml'),
             format=luigi.format.Nop
         )
 
     def run(self):
-        """Compile all metadata files into METS document.
+        # TODO: Rewrite this whole function using siptools-ng/mets-builder.
 
-        :returns: ``None``
-        """
+        # Use the run-functions of old workflow tasks to create partial
+        # METS documents which are required by compile_mets-script of
+        # old siptools. This is a temporary hack that will be changed in
+        # next commit.
+        CreateProvenanceInformation(dataset_id=self.dataset_id,
+                                    config=self.config).run()
+        CreateDescriptiveMetadata(dataset_id=self.dataset_id,
+                                  config=self.config).run()
+        CreateTechnicalMetadata(dataset_id=self.dataset_id,
+                                config=self.config).run()
+        CreateStructMap(dataset_id=self.dataset_id, config=self.config).run()
+        CreateLogicalStructMap(dataset_id=self.dataset_id,
+                               config=self.config).run()
+
+        # Get dataset metadata from Metax
         metax_client = get_metax_client(self.config)
         metadata = metax_client.get_dataset(self.dataset_id)
 

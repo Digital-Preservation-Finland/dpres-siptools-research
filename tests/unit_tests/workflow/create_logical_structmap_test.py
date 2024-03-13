@@ -128,7 +128,6 @@ def test_create_structmap_ok(
     task = CreateLogicalStructMap(dataset_id=workspace.name,
                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
     task.run()
-    assert task.complete()
 
     validate_logical_structmap_file(
         str(sip_directory / 'logical_structmap.xml'), admids
