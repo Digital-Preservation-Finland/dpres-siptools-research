@@ -68,8 +68,6 @@ def generate_metadata(dataset_id,
             'streams': scraper.streams
         }
 
-        del scraper
-
         # Merge generated file_characteristics with original data from
         # Metax. If a field was already defined in original data, it
         # will override the generated value.

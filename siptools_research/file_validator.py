@@ -62,8 +62,6 @@ def validate_files(dataset_id, root_directory,
             # File is invalid or could not be validated
             invalid_files.append(file["identifier"])
 
-        del scraper
-
     if invalid_files:
         raise InvalidFileError(
             f"{len(invalid_files)} files are not well-formed",
