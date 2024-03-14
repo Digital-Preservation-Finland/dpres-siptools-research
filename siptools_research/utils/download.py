@@ -1,7 +1,6 @@
 """IDA and upload-rest-api interface module"""
 from pathlib import Path
 import os
-import shutil
 
 import requests
 from requests.exceptions import HTTPError
@@ -18,7 +17,7 @@ class FileAccessError(Exception):
     """Raised when file cannot be accessed."""
 
 
-def _get_local_file(file_metadata, path):
+def _link_local_file(file_metadata, path):
     """Create a hard link to upload-rest-api file.
 
     :param file_metadata: Metax file metadata
@@ -44,8 +43,8 @@ def _get_local_file(file_metadata, path):
     os.link(filepath, path)
 
 
-def _get_ida_file(file_metadata, dataset_id, path, conf):
-    """Get file from IDA.
+def _download_ida_file(file_metadata, dataset_id, path, conf):
+    """Download file from IDA.
 
     :param file_metadata: Metax file metadata
     :param dataset_id: Identifier for the dataset containing the file
@@ -105,7 +104,7 @@ def _get_ida_file(file_metadata, dataset_id, path, conf):
 
     # To make the download atomic, the actual file is created after the
     # stream has been successfully written to disk.
-    shutil.move(tmp_path, path)
+    tmp_path.rename(path)
 
 
 def download_file(
@@ -127,12 +126,12 @@ def download_file(
     file_storage = file_metadata["file_storage"]["identifier"]
 
     if file_storage == pas_storage_id:
-        _get_local_file(
+        _link_local_file(
             file_metadata=file_metadata,
             path=path,
         )
     else:
-        _get_ida_file(
+        _download_ida_file(
             file_metadata=file_metadata,
             path=path,
             dataset_id=dataset_id,
