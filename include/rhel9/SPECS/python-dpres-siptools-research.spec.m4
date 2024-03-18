@@ -29,7 +29,6 @@ BuildRequires:  pyproject-rpm-macros
 BuildRequires:  %{py3_dist jsonschema2rst}
 BuildRequires:  %{py3_dist metax_access}
 BuildRequires:  %{py3_dist mock-ssh-server}
-BuildRequires:  %{py3_dist mongobox}
 BuildRequires:  %{py3_dist mongoengine}
 BuildRequires:  %{py3_dist mongomock}
 BuildRequires:  %{py3_dist sphinx}
