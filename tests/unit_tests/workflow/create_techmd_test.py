@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.create_techmd` module."""
+"""Test the `create_technical_metdata` method of CreateMets class."""
 
 import copy
 import hashlib
@@ -16,8 +16,7 @@ import xmltodict
 from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import TIFF_FILE, MKV_FILE, TXT_FILE
 import tests.utils
-from siptools_research.workflow.create_techmd import (CreateTechnicalMetadata,
-                                                      algorithm_name)
+from siptools_research.workflow.create_mets import (CreateMets, algorithm_name)
 
 
 def xml2simpledict(element):
@@ -40,7 +39,7 @@ def xml2simpledict(element):
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_create_techmd_ok(workspace, requests_mock):
-    """Test the workflow task CreateTechnicalMetadata module.
+    """Test the `create_technical_metadata` method.
 
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
@@ -61,12 +60,11 @@ def test_create_techmd_ok(workspace, requests_mock):
                 dataset_files_parent / tiff_path)
 
     # Init task
-    task = CreateTechnicalMetadata(dataset_id=workspace.name,
-                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    assert not task.complete()
+    task = CreateMets(dataset_id=workspace.name,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Run task
-    task.run()
+    # Run method
+    task.create_technical_metadata()
 
     # Premis object references should be written to file.
     sipdirectory = workspace / 'preservation/sip-in-progress'
@@ -184,12 +182,11 @@ def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
     shutil.copy('tests/data/sample_files/video_ffv1.mkv', mkv_path)
 
     # Init task
-    task = CreateTechnicalMetadata(dataset_id=workspace.name,
-                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    assert not task.complete()
+    task = CreateMets(dataset_id=workspace.name,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Run task
-    task.run()
+    # Run method
+    task.create_technical_metadata()
 
     sipdirectory = workspace / 'preservation' / 'sip-in-progress'
     premis_object_paths = sipdirectory.glob("*-PREMIS%3AOBJECT-amd.xml")
@@ -251,12 +248,12 @@ def test_create_techmd_incomplete_file_characteristics(workspace,
     shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
 
     # Init task
-    task = CreateTechnicalMetadata(dataset_id=workspace.name,
-                                   config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = CreateMets(dataset_id=workspace.name,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Run task
+    # Run method
     with pytest.raises(KeyError) as exc:
-        task.run()
+        task.create_technical_metadata()
 
     assert "bps_value" in str(exc.value)
 
@@ -283,12 +280,12 @@ def test_create_techmd_without_charset(workspace, requests_mock):
     text_file_path.parent.mkdir(parents=True)
     text_file_path.write_text("foo")
 
-    # Init and run task
-    task = CreateTechnicalMetadata(
+    # Init task and run method
+    task = CreateMets(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    task.run()
+    task.create_technical_metadata()
 
     # Metadata reference file and premis object XML file should be
     # created in SIP directory

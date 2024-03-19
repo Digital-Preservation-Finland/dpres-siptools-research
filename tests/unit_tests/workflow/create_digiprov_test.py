@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.create_digiprov` module."""
+"""Test the create_provenance_information method of CreateMets class."""
 
 import copy
 import json
@@ -6,7 +6,7 @@ import json
 import pytest
 import lxml
 
-from siptools_research.workflow import create_digiprov
+from siptools_research.workflow.create_mets import CreateMets
 from siptools_research.exceptions import InvalidDatasetMetadataError
 import tests.metax_data
 import tests.utils
@@ -46,9 +46,8 @@ def test_createprovenanceinformation(workspace,
                                      events,
                                      expected_ids,
                                      provenance_data):
-    """Test `CreateProvenanceInformation` task.
+    """Test `create_provenance_information` method.
 
-    - `Task.complete()` is true after `Task.run()`
     - XML files are created
     - Metadata reference file is created
 
@@ -73,14 +72,13 @@ def test_createprovenanceinformation(workspace,
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Init task
-    task = create_digiprov.CreateProvenanceInformation(
+    task = CreateMets(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    assert not task.complete()
 
-    # Run task.
-    task.run()
+    # Run the method.
+    task.create_provenance_information()
 
     # PREMIS event XML should be created for each event
     sipdirectory = workspace / 'preservation' / 'sip-in-progress'
@@ -104,7 +102,7 @@ def test_createprovenanceinformation(workspace,
 @pytest.mark.usefixtures("testmongoclient")
 def test_failed_createprovenanceinformation(
         workspace, pkg_root, requests_mock):
-    """Test `CreateProvenanceInformation` task failure.
+    """Test `create_provenance_information` method failure.
 
     One of the provenance events of the dataset is invalid, which should
     cause exception.
@@ -122,18 +120,17 @@ def test_failed_createprovenanceinformation(
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Init task
-    task = create_digiprov.CreateProvenanceInformation(
+    task = CreateMets(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    # Run task.
+    # Run method
     with pytest.raises(
         InvalidDatasetMetadataError,
         match="Provenance metadata does not have key 'preservation_event'"
     ):
-        task.run()
-    assert not task.complete()
+        task.create_provenance_information()
 
     # No files should have been created in workspace directory and
     # temporary directories should cleaned
@@ -178,11 +175,11 @@ def test_create_premis_events(
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Create provenance info xml-file to tempdir
-    task = create_digiprov.CreateProvenanceInformation(
+    task = CreateMets(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    task.run()
+    task.create_provenance_information()
 
     # Check that the created xml-file contains correct elements.
     # pylint: disable=no-member

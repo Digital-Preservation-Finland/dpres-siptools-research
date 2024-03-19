@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.workflow.create_logical_structmap`."""  # noqa: W505,E501
+"""Tests for `create_logical_struct_map` method of CreateMets task."""  # noqa: W505,E501
 
 import copy
 import shutil
@@ -15,8 +15,8 @@ from siptools.scripts.premis_event import premis_event
 from siptools.xml.mets import NAMESPACES
 
 import tests.utils
-from siptools_research.workflow.create_logical_structmap import (
-    CreateLogicalStructMap, find_dir_use_category, get_dirpath_dict
+from siptools_research.workflow.create_mets import (
+    CreateMets, find_dir_use_category, get_dirpath_dict
 )
 
 
@@ -44,7 +44,7 @@ from siptools_research.workflow.create_logical_structmap import (
 def test_create_structmap_ok(
     workspace, requests_mock, events, admids, provenance_is_from_qvain
 ):
-    """Test the workflow task CreateLogicalStructMap.
+    """Test the create_logical_struct_map method.
 
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
@@ -123,11 +123,11 @@ def test_create_structmap_ok(
         structmap_type='Fairdata-physical'
     )
 
-    # Init and run CreateLogicalStructMap task
+    # Init task and run create_logical_struct_map method
     sip_prerun_files = {path.name for path in sip_directory.iterdir()}
-    task = CreateLogicalStructMap(dataset_id=workspace.name,
-                                  config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    task.run()
+    task = CreateMets(dataset_id=workspace.name,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task.create_logical_struct_map()
 
     validate_logical_structmap_file(
         str(sip_directory / 'logical_structmap.xml'), admids

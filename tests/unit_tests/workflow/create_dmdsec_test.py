@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.workflow.create_dmdsec` module."""
+"""Tests for create_descriptive_metadata method of CreateMets task."""
 import json
 import copy
 
@@ -7,12 +7,12 @@ from lxml import etree
 
 import tests.utils
 from tests.metax_data.datasets import BASE_DATASET
-from siptools_research.workflow.create_dmdsec import CreateDescriptiveMetadata
+from siptools_research.workflow.create_mets import CreateMets
 
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_createdescriptivemetadata(workspace, requests_mock):
-    """Test `CreateDescriptiveMetadata` task.
+    """Test the `create_descriptive_metadata` method.
 
     :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
@@ -24,14 +24,13 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Init task
-    task = CreateDescriptiveMetadata(
+    task = CreateMets(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    assert not task.complete()
 
-    # Run task.
-    task.run()
+    # Run method
+    task.create_descriptive_metadata()
 
     # Check that XML is created in sip creation directory and it
     # contains correct elements.
@@ -91,9 +90,9 @@ def test_createdescriptivemetadata(workspace, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
-    """Test `CreateDescriptiveMetadata` task failure.
+    """Test `create_descriptive_metadata` method failure.
 
-    The task fails when datacite metadata is not valid. Nothing should
+    The method fails when datacite metadata is not valid. Nothing should
     be written in `sip-in-progress` directory.
 
     :param workspace: Test workspace directory fixture
@@ -109,16 +108,14 @@ def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
                                   datacite=datacite)
 
     # Init task
-    task = CreateDescriptiveMetadata(
+    task = CreateMets(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    assert not task.complete()
 
-    # Task should fail
+    # The method should fail
     with pytest.raises(TypeError, match='Invalid namespace: foo'):
-        task.run()
-    assert not task.complete()
+        task.create_descriptive_metadata()
 
     # Nothing should be written in `sip-in-progress` directory
     assert not list((workspace / 'preservation' / 'sip-in-progress').iterdir())

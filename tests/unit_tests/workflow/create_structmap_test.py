@@ -1,4 +1,4 @@
-"""Tests for :mod:`siptools_research.workflow.create_structmap`."""
+"""Tests for `create_structmap` method of CreateMets task."""
 
 import json
 import shutil
@@ -11,14 +11,14 @@ from siptools.xml.mets import NAMESPACES
 import lxml.etree
 
 import tests.conftest
-from siptools_research.workflow.create_structmap import CreateStructMap
+from siptools_research.workflow.create_mets import CreateMets
 
 
 def _create_metadata(workspace, files, provenance_ids=None):
     """Create all metadata that is required for structure map creation.
 
     :param workspace: workflow task workspace directory
-    :param files: path to file or directory that contains dataset files
+    :param files: path  directory that contains dataset files
     :returns: ``None``
     """
 
@@ -57,7 +57,7 @@ def _create_metadata(workspace, files, provenance_ids=None):
 )
 @pytest.mark.usefixtures('testmongoclient')
 def test_create_structmap_ok(workspace, provenance_ids):
-    """Test the workflow task CreateStructMap.
+    """Test the create_structmap method.
 
     :param workspace: Temporary workspace fixture
     :param provenance_ids: Provenance metadata identifiers
@@ -77,13 +77,13 @@ def test_create_structmap_ok(workspace, provenance_ids):
     # Create required metadata in workspace directory
     _create_metadata(workspace, 'data', provenance_ids)
 
-    # Init and run CreateStructMap task
+    # Init task and run the method
     sip_content_before_run = [
         path.name for path in sip_creation_path.iterdir()
     ]
-    task = CreateStructMap(dataset_id=workspace.name,
-                           config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    task.run()
+    task = CreateMets(dataset_id=workspace.name,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task.create_struct_map()
 
     # Validate logical filesec XML-file
     filesec_xml = lxml.etree.parse(str(sip_creation_path / 'filesec.xml'))
@@ -169,11 +169,11 @@ def test_create_structmap_without_directories(workspace):
     # Create required metadata in workspace directory
     _create_metadata(workspace, 'file1')
 
-    # Init and run CreateStructMap task
-    task = CreateStructMap(dataset_id=workspace.name,
-                           config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    # Init task and run the method
+    task = CreateMets(dataset_id=workspace.name,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    task.run()
+    task.create_struct_map()
 
     # Check structmap file
     xml = lxml.etree.parse(str(sip_creation_path / 'structmap.xml'))
@@ -186,7 +186,7 @@ def test_create_structmap_without_directories(workspace):
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_filesec_othermd(workspace):
-    """Test CreateStructMap task for dataset with othermd metadata.
+    """Test creating structmap for dataset with othermd metadata.
 
     :param workspace: Temporary packaging directory fixture
     :returns: ``None``
@@ -207,11 +207,11 @@ def test_filesec_othermd(workspace):
                workspace=str(sip_creation_path),
                base_path=str(sip_creation_path))
 
-    # Init and run CreateStructMap task
-    task = CreateStructMap(dataset_id=workspace.name,
-                           config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    # Init task and run the method
+    task = CreateMets(dataset_id=workspace.name,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    task.run()
+    task.create_struct_map()
 
     # Filesec should contain one file which is linked to MIX metadata
     xml = lxml.etree.parse(str(sip_creation_path / 'filesec.xml'))
