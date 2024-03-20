@@ -1,223 +1,212 @@
 """Tests for `create_structmap` method of CreateMets task."""
 
-import json
+import copy
 import shutil
 
 import pytest
-from siptools.scripts.create_mix import create_mix
-from siptools.scripts.import_object import import_object
-from siptools.utils import read_md_references
 from siptools.xml.mets import NAMESPACES
 import lxml.etree
 
 import tests.conftest
+import tests.utils
 from siptools_research.workflow.create_mets import CreateMets
 
 
-def _create_metadata(workspace, files, provenance_ids=None):
-    """Create all metadata that is required for structure map creation.
-
-    :param workspace: workflow task workspace directory
-    :param files: path  directory that contains dataset files
-    :returns: ``None``
-    """
-
-    # dmdsec references
-    references = ["descriptive_metadata_id"]
-
-    # digiprov references
-    if provenance_ids:
-        references += provenance_ids
-
-    # Write references to file
-    sip_creation_path = workspace / 'preservation' / 'sip-in-progress'
-    (
-        sip_creation_path / "premis-event-md-references.jsonl"
-    ).write_text(json.dumps({".": {"md_ids": references}}))
-
-    # Create tech metadata
-    import_object(
-        workspace=str(sip_creation_path),
-        base_path=str(sip_creation_path),
-        skip_wellformed_check=True,
-        filepaths=[files],
-        event_target='.'
-    )
-
-
 @pytest.mark.parametrize(
-    'provenance_ids',
+    'provenance_descriptions',
     (
         # No provenance events
         [],
         # One provenance events
-        ['procenance_id1'],
+        ['provenance1'],
         # Multiple provenance events
-        ['provenacne_id1', 'provenacne_id2'])
+        ['provenance1', 'provenance2'])
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_structmap_ok(workspace, provenance_ids):
-    """Test the create_structmap method.
+def test_create_structmap_ok(workspace, requests_mock,
+                             provenance_descriptions):
+    """Test physical structure map creation.
+
+    Creates structMap and fileSec for a dataset that contains some
+    files in a directory structure. Checks that structMap and fileSec
+    contain expected elements. Checks that structMap is linked to
+    provenance event metadata.
 
     :param workspace: Temporary workspace fixture
-    :param provenance_ids: Provenance metadata identifiers
-    :returns: ``None``
+    :param requests_mock: HTTP request mocker
+    :param provenance_descriptions: Descriptions of provenance events
     """
-    # Create clean workspace directory for dataset that contains many
-    # files in directories and subdirectories in sip creation directory
-    sip_creation_path = workspace / "preservation" / "sip-in-progress"
-    data_directory_path = sip_creation_path / 'data'
-    subdirectory_path = data_directory_path / 'subdirectory'
-    subdirectory_path.mkdir(parents=True)
+    # Create dataset that contains three text files
+    files = []
+    files = [copy.deepcopy(tests.metax_data.files.TXT_FILE) for i in range(3)]
+    files[0]["file_path"] = "/file1"
+    files[1]["file_path"] = "/file2"
+    files[2]["file_path"] = "/subdirectory/file3"
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset["identifier"] = workspace.name
+    # Add provenance events to dataset
+    if provenance_descriptions:
+        dataset["research_dataset"]["provenance"] = []
+        for provenance_description in provenance_descriptions:
+            provenance \
+                = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
+            provenance["description"]["en"] = provenance_description
+            dataset["research_dataset"]["provenance"].append(provenance)
+    tests.utils.add_metax_dataset(requests_mock=requests_mock,
+                                  dataset=dataset,
+                                  files=files)
 
-    (data_directory_path / "file1").write_text("foo")
-    (data_directory_path / "file2").write_text("bar")
-    (subdirectory_path / "file3").write_text("baz")
+    # Create files in workspace
+    dataset_files = workspace / "metadata_generation/dataset_files"
+    subdirectory = dataset_files / "subdirectory"
+    subdirectory.mkdir(parents=True)
+    (dataset_files / "file1").write_text("foo")
+    (dataset_files / "file2").write_text("bar")
+    (subdirectory / "file3").write_text("baz")
 
-    # Create required metadata in workspace directory
-    _create_metadata(workspace, 'data', provenance_ids)
-
-    # Init task and run the method
-    sip_content_before_run = [
-        path.name for path in sip_creation_path.iterdir()
-    ]
+    # Init and run task
     task = CreateMets(dataset_id=workspace.name,
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    task.create_struct_map()
+    task.run()
+    assert task.complete()
 
-    # Validate logical filesec XML-file
-    filesec_xml = lxml.etree.parse(str(sip_creation_path / 'filesec.xml'))
-    files = filesec_xml.xpath(
+    # Read created METS document
+    # NOTE: lxml<4.8 requires path as string. Newer versions support
+    # Path objects!
+    mets = lxml.etree.parse(str(workspace / 'preservation/mets.xml'))
+
+    # fileSec should contain three files
+    files = mets.xpath(
         '/mets:mets/mets:fileSec/mets:fileGrp/mets:file/mets:FLocat/'
         '@xlink:href',
         namespaces=NAMESPACES
     )
     assert len(files) == 3
-    assert set(files) == {'file://data/file1',
-                          'file://data/file2',
-                          'file://data/subdirectory/file3'}
+    assert set(files) == {'file://dataset_files/file1',
+                          'file://dataset_files/file2',
+                          'file://dataset_files/subdirectory/file3'}
 
-    # Validate directory structure in structmap XML-file.
-    structmap_xml = lxml.etree.parse(str(sip_creation_path / 'structmap.xml'))
-    assert structmap_xml.xpath(
-        "/mets:mets/mets:structMap/mets:div/@TYPE",
+    # Validate the "Fairdata-physical" structMap in METS.
+    structmap = mets.xpath("//mets:structMap[@TYPE='Fairdata-physical']",
+                           namespaces=NAMESPACES)[0]
+    assert structmap.xpath(
+        "mets:div/@TYPE",
         namespaces=NAMESPACES
     )[0] == 'directory'
-    assert structmap_xml.xpath(
-        "/mets:mets/mets:structMap/mets:div/mets:div/@TYPE",
+    assert structmap.xpath(
+        "mets:div/mets:div/@TYPE",
         namespaces=NAMESPACES
-    )[0] == 'data'
-    assert structmap_xml.xpath(
-        "/mets:mets/mets:structMap/mets:div/mets:div/mets:div/@TYPE",
+    )[0] == 'dataset_files'
+    assert structmap.xpath(
+        "mets:div/mets:div/mets:div/@TYPE",
         namespaces=NAMESPACES
     )[0] == 'subdirectory'
     # Two files should be found in data directory
-    assert len(structmap_xml.xpath(
-        '/mets:mets/mets:structMap/mets:div/mets:div/mets:fptr/@FILEID',
+    assert len(structmap.xpath(
+        'mets:div/mets:div/mets:fptr/@FILEID',
         namespaces=NAMESPACES
     )) == 2
     # One file should be found in subdirectory of data directory
-    assert len(structmap_xml.xpath(
-        '/mets:mets/mets:structMap/mets:div/mets:div/mets:div'
+    assert len(structmap.xpath(
+        'mets:div/mets:div/mets:div'
         '/mets:fptr/@FILEID',
         namespaces=NAMESPACES
     )) == 1
 
-    # Structure map should be linked to descriptive metadata creation
-    # event
-    descriptive_metadata_creation_event_id \
-        = read_md_references(
-            str(workspace / 'preservation' / "sip-in-progress"),
-            "premis-event-md-references.jsonl"
-        )['.']['md_ids'][0]
-    assert descriptive_metadata_creation_event_id in structmap_xml.xpath(
-        "/mets:mets/mets:structMap/mets:div/@ADMID",
-        namespaces=NAMESPACES
-    )[0]
+    # Premis events should be created for each provenance event found
+    # in dataset metadata
+    premis_event_descriptions = [
+        element.text for element
+        in mets.xpath("//premis:eventDetail", namespaces=NAMESPACES)
+    ]
+    for provenance_description in provenance_descriptions:
+        assert provenance_description in premis_event_descriptions
 
-    # Structure map should be linked to all provenance events
-    for provenance_id in provenance_ids:
-        assert provenance_id in structmap_xml.xpath(
-            "/mets:mets/mets:structMap/mets:div/@ADMID",
-            namespaces=NAMESPACES
-        )[0]
-
-    # Filesec.xml, structmap.xml,
-    # compile-structmap-agents-AGENTS-amd.json,
-    # premis event and premis agent
-    # should be created into SIP directory.
-    files = {path.name for path in sip_creation_path.iterdir()}
-    assert len(files) - len(set(sip_content_before_run)) == 5
-    assert {'filesec.xml',
-            'structmap.xml',
-            'compile-structmap-agents-AGENTS-amd.json',
-            'premis-event-md-references.jsonl'}.issubset(files)
+    # Structure map should be linked to all digiprovMD elements
+    digiprovmd_ids = mets.xpath("//mets:digiprovMD/@ID", namespaces=NAMESPACES)
+    structmap_admids = structmap.xpath("mets:div/@ADMID",
+                                       namespaces=NAMESPACES)[0]
+    for digiprovmd_id in digiprovmd_ids:
+        assert digiprovmd_id in structmap_admids
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_structmap_without_directories(workspace):
+def test_create_structmap_without_directories(workspace, requests_mock):
     """Test creating structmap for dataset without directories.
 
     :param workspace: Temporary workspace directory fixture
-    :returns: ``None``
+    :param requests_mock: HTTP request mocker
     """
-    # Create clean workspace directory for dataset that contains only
-    # one file
-    sip_creation_path = workspace / "preservation" / "sip-in-progress"
-    sip_creation_path.mkdir()
-    (sip_creation_path / "file1").write_text("foo")
+    # Create a dataset that contains only one file
+    files = [copy.deepcopy(tests.metax_data.files.TXT_FILE)]
+    files[0]["file_path"] = "/file1"
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset["identifier"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock=requests_mock,
+                                  dataset=dataset,
+                                  files=files)
 
-    # Create required metadata in workspace directory
-    _create_metadata(workspace, 'file1')
+    # Create the file in "dataset_files"
+    dataset_files = workspace / "metadata_generation/dataset_files"
+    dataset_files.mkdir(parents=True)
+    (dataset_files / "file1").write_text("foo")
 
-    # Init task and run the method
+    # Init and run task
     task = CreateMets(dataset_id=workspace.name,
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task.run()
 
-    task.create_struct_map()
-
-    # Check structmap file
-    xml = lxml.etree.parse(str(sip_creation_path / 'structmap.xml'))
-    assert xml.xpath("/mets:mets/mets:structMap/mets:div/@TYPE",
-                     namespaces=NAMESPACES)[0] == 'directory'
-    assert len(xml.xpath('/mets:mets/mets:structMap/mets:div/mets:fptr'
-                         '/@FILEID',
-                         namespaces=NAMESPACES)) == 1
+    # Check the structmap element
+    mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
+    structmap = mets.xpath("//mets:structMap[@TYPE='Fairdata-physical']",
+                           namespaces=NAMESPACES)[0]
+    assert structmap.xpath("mets:div/@TYPE",
+                           namespaces=NAMESPACES)[0] == 'directory'
+    assert structmap.xpath("mets:div/mets:div/@TYPE",
+                           namespaces=NAMESPACES)[0] == 'dataset_files'
+    assert len(structmap.xpath('mets:div/mets:div/mets:fptr/@FILEID',
+                               namespaces=NAMESPACES)) == 1
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_filesec_othermd(workspace):
+def test_filesec_othermd(workspace, requests_mock):
     """Test creating structmap for dataset with othermd metadata.
 
+    Creates METS for a dataset that contains image file. MIX metadata
+    should be created, and the file element in fileSec should be linked
+    to to MIX metadata.
+
     :param workspace: Temporary packaging directory fixture
-    :returns: ``None``
+    :param requests_mock: HTTP request mocker
     """
-    # Create clean workspace directory for dataset that contains only
-    # one image file
-    sip_creation_path = workspace / "preservation" / "sip-in-progress"
-    sip_creation_path.mkdir()
-    shutil.copy(
-        'tests/data/sample_files/image_png.png',
-        sip_creation_path / 'file1.png'
-    )
+    # Create a dataset that contains an image file
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset["identifier"] = workspace.name
+    files = [copy.deepcopy(tests.metax_data.files.TIFF_FILE)]
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
-    # Create required metadata in workspace directory
-    _create_metadata(workspace, 'file1.png')
+    # Copy image file to test workspace
+    filepath \
+        = workspace / "metadata_generation/dataset_files/path/to/file.tiff"
+    filepath.parent.mkdir(parents=True)
+    shutil.copy("tests/data/sample_files/valid_tiff.tiff", filepath)
 
-    # Create mix metadata
-    create_mix('file1.png',
-               workspace=str(sip_creation_path),
-               base_path=str(sip_creation_path))
-
-    # Init task and run the method
+    # Init and run task
     task = CreateMets(dataset_id=workspace.name,
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task.run()
 
-    task.create_struct_map()
+    # Filesec should contain one file
+    mets = lxml.etree.parse(str(workspace / 'preservation/mets.xml'))
+    file_elements = mets.xpath(
+        '/mets:mets/mets:fileSec/mets:fileGrp/mets:file',
+        namespaces=NAMESPACES
+    )
+    assert len(file_elements) == 1
 
-    # Filesec should contain one file which is linked to MIX metadata
-    xml = lxml.etree.parse(str(sip_creation_path / 'filesec.xml'))
-    files = xml.xpath('/mets:mets/mets:fileSec/mets:fileGrp/mets:file',
-                      namespaces=NAMESPACES)
-    assert len(files) == 1
-    assert '_6169c6604c7da29ff5f0e21cc73478cd' in files[0].attrib['ADMID']
+    # The file element should contain link to MIX metadata
+    mix_techmd_element = mets.xpath(
+        "//mets:mdWrap[@MDTYPE='NISOIMG']/parent::mets:techMD",
+        namespaces=NAMESPACES
+    )[0]
+    assert mix_techmd_element.attrib["ID"] in file_elements[0].attrib['ADMID']

@@ -51,7 +51,7 @@ def add_metax_dataset(requests_mock,
                 "identifier": file_['identifier'],
                 "use_category": {
                     "pref_label": {
-                        "en": file_['identifier']
+                        "en": "dummy-use-category"
                     }
                 }
             }

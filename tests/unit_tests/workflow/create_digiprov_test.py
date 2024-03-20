@@ -1,7 +1,6 @@
 """Test the create_provenance_information method of CreateMets class."""
 
 import copy
-import json
 
 import pytest
 import lxml
@@ -10,6 +9,12 @@ from siptools_research.workflow.create_mets import CreateMets
 from siptools_research.exceptions import InvalidDatasetMetadataError
 import tests.metax_data
 import tests.utils
+
+
+NAMESPACES = {
+    'mets': "http://www.loc.gov/METS/",
+    'premis': "info:lc/xmlns/premis-v2"
+}
 
 
 @pytest.mark.usefixtures("testmongoclient")
@@ -46,17 +51,17 @@ def test_createprovenanceinformation(workspace,
                                      events,
                                      expected_ids,
                                      provenance_data):
-    """Test `create_provenance_information` method.
+    """Test creating METS document with multiple provenance events.
 
-    - XML files are created
-    - Metadata reference file is created
+    Premis event should be created for each event.
 
     :param workspace: Testpath fixture
     :param requests_mock: HTTP request mocker
     :param events: list of preservation events in dataset metadata
-    :param expected_ids: expected identifiers of PREMIS events that are created
-    :param provenance_data: The data used for creating provenance events.
-    :returns: ``None``
+    :param expected_ids: expected identifiers of PREMIS events that are
+                         created
+    :param provenance_data: The data used for creating provenance
+                            events.
     """
     # Mock metax. Create a dataset with provenance events.
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
@@ -71,48 +76,45 @@ def test_createprovenanceinformation(workspace,
         dataset['research_dataset']['provenance'].append(provenance)
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
-    # Init task
+    # Init and run task
     task = CreateMets(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
+    task.run()
+    assert task.complete()
 
-    # Create sip-in-progress directory
-    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
-    sipdirectory.mkdir()
+    # PREMIS event should be created for each event
+    mets = lxml.etree.parse(str(workspace / "preservation" / "mets.xml"))
+    digiprovmd_elements = mets.xpath('/mets:mets/mets:amdSec/mets:digiprovMD',
+                                     namespaces=NAMESPACES)
+    digiprovmd_identifiers \
+        = [elem.attrib['ID'].strip('_') for elem in digiprovmd_elements]
+    for expected_id in expected_ids:
+        assert expected_id in digiprovmd_identifiers
 
-    # Run the method.
-    task.create_provenance_information()
-
-    # PREMIS event XML should be created for each event
-    created_files = {path.name for path in sipdirectory.iterdir()
-                     if path.suffix == '.xml'}
-    expected_files = {f'{id}-PREMIS%3AEVENT-amd.xml' for id in expected_ids}
-    assert created_files == expected_files
-
-    # Metadata reference file should have references to all created
-    # premis events
-    if events:
-        references = json.loads(
-            (workspace
-             / "preservation" / "sip-in-progress"
-             / "premis-event-md-references.jsonl").read_bytes()
-        )
-        assert set(references['.']['md_ids']) \
-            == {f'_{id}' for id in expected_ids}
+    # PREMIS events should be refenced in structure map
+    structmap_root_div_elements \
+        = mets.xpath('/mets:mets/mets:structMap/mets:div',
+                     namespaces=NAMESPACES)
+    structmap_references = [
+        identifier.strip("_")
+        for identifier
+        in structmap_root_div_elements[0].attrib.get('ADMID', "").split()
+    ]
+    for expected_id in expected_ids:
+        assert expected_id in structmap_references
 
 
 @pytest.mark.usefixtures("testmongoclient")
-def test_failed_createprovenanceinformation(
-        workspace, pkg_root, requests_mock):
-    """Test `create_provenance_information` method failure.
+def test_failed_createprovenanceinformation(workspace, requests_mock):
+    """Test provenance event creation failure.
 
     One of the provenance events of the dataset is invalid, which should
     cause exception.
 
     :param workspace: Test workspace directory fixture
-    :param pkg_root: Test packaging root directory fixture
-    :returns: ``None``
+    :param requests_mock: HTTP request mocker
     """
     # Mock metax. Create a dataset with invalid provenance metadata.
     provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
@@ -128,22 +130,16 @@ def test_failed_createprovenanceinformation(
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    # Create sip-in-progress directory
-    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
-    sipdirectory.mkdir()
-
-    # Run method
+    # Run task
     with pytest.raises(
         InvalidDatasetMetadataError,
         match="Provenance metadata does not have key 'preservation_event'"
     ):
-        task.create_provenance_information()
+        task.run()
 
-    # No files should have been created in workspace directory
-    assert {path.name for path in workspace.iterdir()} == {'preservation'}
-    assert {path.name for path in (workspace / 'preservation').iterdir()} \
-        == {'sip-in-progress'}
-    assert not list((workspace / 'preservation' / 'sip-in-progress').iterdir())
+    # Task should not be complete
+    assert not task.complete()
+    assert not (workspace / 'preservation/mets.xml').exists()
 
 
 @pytest.mark.parametrize(
@@ -162,7 +158,7 @@ def test_failed_createprovenanceinformation(
 def test_create_premis_events(
     workspace, requests_mock, provenance_data, premis_id
 ):
-    """Test XML files content.
+    """Test creating METS with provenance event.
 
     Output XML file should be produced and it should contain some
     specified elements.
@@ -171,7 +167,6 @@ def test_create_premis_events(
     :param requests_mock: HTTP request mocker
     :param provenance_data: The data used for creating provenance events
     :param premis_id: The id created for the PREMIS event
-    :returns: ``None``
     """
     # Mock metax. Create a dataset with one provenance event
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
@@ -179,45 +174,42 @@ def test_create_premis_events(
     dataset["research_dataset"]["provenance"] = [provenance_data]
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
-    # Create provenance info xml-file to tempdir
+    # Run task
     task = CreateMets(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
-    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
-    sipdirectory.mkdir()
-    task.create_provenance_information()
+    task.run()
 
-    # Check that the created xml-file contains correct elements.
-    # pylint: disable=no-member
-    tree = lxml.etree.parse(str(
-        workspace / 'preservation' / 'sip-in-progress'
-        / f'{premis_id}-PREMIS%3AEVENT-amd.xml'
-    ))
+    # Find the digiprovMD element of provenance event from METS document
+    mets = lxml.etree.parse(str(workspace / 'preservation' / 'mets.xml'))
+    digiprovmd = mets.xpath(
+        f"/mets:mets/mets:amdSec/mets:digiprovMD[@ID='_{premis_id}']",
+        namespaces=NAMESPACES
+    )[0]
 
-    namespaces = {
-        'mets': "http://www.loc.gov/METS/",
-        'premis': "info:lc/xmlns/premis-v2"
-    }
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap',
-                          namespaces=namespaces)
+    # Check that created  digiprovMD element contains correct elements.
+    elements = digiprovmd.xpath('mets:mdWrap', namespaces=NAMESPACES)
     assert elements[0].attrib["MDTYPE"] == "PREMIS:EVENT"
     assert elements[0].attrib["MDTYPEVERSION"] == "2.3"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
-                          '/mets:xmlData/premis:event/premis:eventIdentifier'
-                          '/premis:eventIdentifierType',
-                          namespaces=namespaces)
+    elements = digiprovmd.xpath(
+        'mets:mdWrap/mets:xmlData/premis:event/premis:eventIdentifier'
+        '/premis:eventIdentifierType',
+        namespaces=NAMESPACES
+    )
     assert elements[0].text == "UUID"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
-                          '/mets:xmlData/premis:event/premis:eventType',
-                          namespaces=namespaces)
+    elements = digiprovmd.xpath(
+        'mets:mdWrap/mets:xmlData/premis:event/premis:eventType',
+        namespaces=NAMESPACES
+    )
     assert elements[0].text == "creation"
 
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
-                          '/mets:xmlData/premis:event/premis:eventDateTime',
-                          namespaces=namespaces)
+    elements = digiprovmd.xpath(
+        'mets:mdWrap/mets:xmlData/premis:event/premis:eventDateTime',
+        namespaces=NAMESPACES
+    )
     if "temporal" in provenance_data:
         assert elements[0].text == "2014-01-01T08:19:58Z"
     else:
@@ -225,9 +217,10 @@ def test_create_premis_events(
 
     # Title and description should be formatted together as "title:
     # description" or just as is if the other one does not exist
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
-                          '/mets:xmlData/premis:event/premis:eventDetail',
-                          namespaces=namespaces)
+    elements = digiprovmd.xpath(
+        'mets:mdWrap/mets:xmlData/premis:event/premis:eventDetail',
+        namespaces=NAMESPACES
+    )
     if "title" in provenance_data and "description" in provenance_data:
         assert elements[0].text == "Title: Description of provenance"
     elif "title" in provenance_data:
@@ -239,23 +232,22 @@ def test_create_premis_events(
         assert False
 
     # Outcome should be "unknown" if missing
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
-                          '/mets:xmlData/premis:event'
-                          '/premis:eventOutcomeInformation'
-                          '/premis:eventOutcome',
-                          namespaces=namespaces)
+    elements = digiprovmd.xpath(
+        'mets:mdWrap/mets:xmlData/premis:event'
+        '/premis:eventOutcomeInformation/premis:eventOutcome',
+        namespaces=NAMESPACES)
     if "event_outcome" in provenance_data:
         assert elements[0].text == "outcome"
     else:
         assert elements[0].text == "unknown"
 
     # Outcome description is optional
-    elements = tree.xpath('/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap'
-                          '/mets:xmlData/premis:event'
-                          '/premis:eventOutcomeInformation'
-                          '/premis:eventOutcomeDetail'
-                          '/premis:eventOutcomeDetailNote',
-                          namespaces=namespaces)
+    elements = digiprovmd.xpath(
+        'mets:mdWrap/mets:xmlData/premis:event'
+        '/premis:eventOutcomeInformation/premis:eventOutcomeDetail'
+        '/premis:eventOutcomeDetailNote',
+        namespaces=NAMESPACES
+    )
     if "outcome_description" in provenance_data:
         assert elements[0].text == "outcome_description"
     else:
