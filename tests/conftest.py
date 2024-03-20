@@ -114,13 +114,9 @@ def pkg_root(testpath, monkeypatch):
         siptools_research.config.Configuration, "get", _mock_get
     )
 
+    # Create packaging root directory
     pkg_root_ = testpath / "packaging"
     pkg_root_.mkdir()
-
-    # Create required directory structure in workspace root
-    # TODO: "tmp" directory will be removed in TPASPKT-648
-    (pkg_root_ / "tmp").mkdir()
-    (pkg_root_ / "workspaces").mkdir()
 
     return pkg_root_
 
@@ -150,6 +146,7 @@ def workspace(pkg_root):
     """
     identifier = str(uuid.uuid4())
     workspace_ = pkg_root / "workspaces" / identifier
+    workspace_.parent.mkdir()
     workspace_.mkdir()
     (workspace_ / "preservation").mkdir()
     return workspace_

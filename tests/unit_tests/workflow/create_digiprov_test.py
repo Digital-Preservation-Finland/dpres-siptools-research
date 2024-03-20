@@ -139,13 +139,11 @@ def test_failed_createprovenanceinformation(
     ):
         task.create_provenance_information()
 
-    # No files should have been created in workspace directory and
-    # temporary directories should cleaned
+    # No files should have been created in workspace directory
     assert {path.name for path in workspace.iterdir()} == {'preservation'}
     assert {path.name for path in (workspace / 'preservation').iterdir()} \
         == {'sip-in-progress'}
     assert not list((workspace / 'preservation' / 'sip-in-progress').iterdir())
-    assert not list((pkg_root / 'tmp').iterdir())
 
 
 @pytest.mark.parametrize(
