@@ -40,4 +40,4 @@ def test_signsip(workspace):
 
     # Preservation workspace should contain only METS, signature, and
     # sip-in-progress directory.
-    assert names == {'signature.sig', 'mets.xml', 'sip-in-progress'}
+    assert names == {'signature.sig', 'mets.xml'}

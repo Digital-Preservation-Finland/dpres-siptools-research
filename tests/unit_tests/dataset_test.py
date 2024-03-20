@@ -165,9 +165,6 @@ def test_workspace_paths(pkg_root):
     assert dataset.preservation_workspace \
         == pkg_root / 'workspaces' / 'foo' / 'preservation'
 
-    assert dataset.sip_creation_path \
-        == pkg_root / 'workspaces' / 'foo' / 'preservation' / 'sip-in-progress'
-
 
 @pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_enable_disable():
@@ -339,7 +336,6 @@ def test_preserve_dataset():
 
     # Preservation workspace should be created
     assert dataset.preservation_workspace.exists()
-    assert dataset.sip_creation_path.exists()
 
 
 @pytest.mark.usefixtures('testmongoclient', 'pkg_root')
@@ -360,8 +356,6 @@ def test_restart_preserve_dataset():
     (dataset.validation_workspace / 'test').write_text('bar')
     dataset.preservation_workspace.mkdir(parents=True)
     (dataset.preservation_workspace / 'test').write_text('baz')
-    dataset.sip_creation_path.mkdir()
-    (dataset.sip_creation_path / 'test').write_text('spam')
 
     # Restart validation
     dataset.preserve()
@@ -377,11 +371,7 @@ def test_restart_preserve_dataset():
             in dataset.validation_workspace.iterdir()] == ['test']
 
     # Preservation workspace should be cleaned
-    assert [path.name
-            for path
-            in dataset.preservation_workspace.iterdir()] \
-        == ['sip-in-progress']
-    assert not any(dataset.sip_creation_path.iterdir())
+    assert not any(dataset.preservation_workspace.iterdir())
 
 
 @pytest.mark.usefixtures('testmongoclient', 'pkg_root')

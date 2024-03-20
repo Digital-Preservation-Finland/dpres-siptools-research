@@ -83,6 +83,7 @@ def test_create_structmap_ok(
 
     # Create workspace that already contains dataset files
     sip_directory = workspace / "preservation" / "sip-in-progress"
+    sip_directory.mkdir()
     file_directory = workspace / 'dataset_files' / 'files'
     file_directory.mkdir(parents=True)
 

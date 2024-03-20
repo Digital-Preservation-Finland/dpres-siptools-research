@@ -164,6 +164,7 @@ def test_create_structmap_without_directories(workspace):
     # Create clean workspace directory for dataset that contains only
     # one file
     sip_creation_path = workspace / "preservation" / "sip-in-progress"
+    sip_creation_path.mkdir()
     (sip_creation_path / "file1").write_text("foo")
 
     # Create required metadata in workspace directory
@@ -194,6 +195,7 @@ def test_filesec_othermd(workspace):
     # Create clean workspace directory for dataset that contains only
     # one image file
     sip_creation_path = workspace / "preservation" / "sip-in-progress"
+    sip_creation_path.mkdir()
     shutil.copy(
         'tests/data/sample_files/image_png.png',
         sip_creation_path / 'file1.png'

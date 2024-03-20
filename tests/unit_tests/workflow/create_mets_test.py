@@ -5,9 +5,9 @@ import lxml
 import pytest
 
 import tests.utils
+from siptools_research.workflow.create_mets import CreateMets
 from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import TXT_FILE
-from siptools_research.workflow.create_mets import CreateMets
 
 NAMESPACES = {
     'xsi': "http://www.w3.org/2001/XMLSchema-instance",
@@ -96,3 +96,49 @@ def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
     assert creator.attrib['OTHERTYPE'] == 'SOFTWARE'
     assert creator.xpath("mets:name", namespaces=NAMESPACES)[0].text \
         == "Packaging Service"
+
+
+def test_idempotence(workspace, requests_mock):
+    """Test that CreateMets task is idempotent.
+
+    Run the task twice and ensure that the created METS document is
+    identical, excluding random identifiers and dates that are generated
+    during the process.
+
+    :param workspace: Temporary directory fixture
+    :param requests_mock: Mocker object
+    :returns: ``None``
+    """
+    # Mock metax
+    dataset = copy.deepcopy(BASE_DATASET)
+    files = [copy.deepcopy(TXT_FILE)]
+    dataset['identifier'] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
+
+    # Add text file to "dataset_files" directory
+    filepath = workspace / "metadata_generation/dataset_files/path/to/file"
+    filepath.parent.mkdir(parents=True)
+    filepath.write_text('foo')
+
+    # Init and run task
+    task = CreateMets(dataset_id=workspace.name,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task.run()
+    assert task.complete()
+
+    # Stash the created METS document to workspace root
+    (workspace / 'preservation' / 'mets.xml').rename(workspace / 'mets1.xml')
+    assert not task.complete()
+
+    # Rerun the task
+    task.run()
+    assert task.complete()
+
+    # Compare the created METS documents.
+    # The documents should be mostly the same, but some lines contain
+    # random identifiers, creation dates etc., and the elements are not
+    # always in the same order, so it is hard to reliably test if they
+    # are similar. But at least the documents should have the same size.
+    mets1 = workspace / 'mets1.xml'
+    mets2 = workspace / 'preservation' / 'mets.xml'
+    assert mets1.stat().st_size == mets2.stat().st_size

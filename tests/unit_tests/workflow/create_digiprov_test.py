@@ -77,11 +77,14 @@ def test_createprovenanceinformation(workspace,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
+    # Create sip-in-progress directory
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
+    sipdirectory.mkdir()
+
     # Run the method.
     task.create_provenance_information()
 
     # PREMIS event XML should be created for each event
-    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
     created_files = {path.name for path in sipdirectory.iterdir()
                      if path.suffix == '.xml'}
     expected_files = {f'{id}-PREMIS%3AEVENT-amd.xml' for id in expected_ids}
@@ -124,6 +127,10 @@ def test_failed_createprovenanceinformation(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
+
+    # Create sip-in-progress directory
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
+    sipdirectory.mkdir()
 
     # Run method
     with pytest.raises(
@@ -179,6 +186,8 @@ def test_create_premis_events(
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
+    sipdirectory.mkdir()
     task.create_provenance_information()
 
     # Check that the created xml-file contains correct elements.

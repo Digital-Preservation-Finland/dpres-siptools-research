@@ -29,12 +29,16 @@ def test_createdescriptivemetadata(workspace, requests_mock):
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
+    # Create sip-in-progress directory
+    sip_in_progress = workspace / 'preservation' / 'sip-in-progress'
+    sip_in_progress.mkdir()
+
     # Run method
     task.create_descriptive_metadata()
 
     # Check that XML is created in sip creation directory and it
     # contains correct elements.
-    dmdsecfile = workspace / 'preservation' / 'sip-in-progress' / 'dmdsec.xml'
+    dmdsecfile = sip_in_progress / 'dmdsec.xml'
     dmdsec = etree.parse(str(dmdsecfile))
     namespaces = {'mets': "http://www.loc.gov/METS/",
                   'datacite': "http://datacite.org/schema/kernel-4"}
@@ -112,6 +116,10 @@ def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
+
+    # Create sip-in-progress directory
+    sip_in_progress = workspace / 'preservation' / 'sip-in-progress'
+    sip_in_progress.mkdir()
 
     # The method should fail
     with pytest.raises(TypeError, match='Invalid namespace: foo'):

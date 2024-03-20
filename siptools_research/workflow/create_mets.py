@@ -60,8 +60,18 @@ class CreateMets(WorkflowTask):
             format=luigi.format.Nop
         )
 
+    @property
+    def sip_creation_path(self):
+        """Sandbox directory for old siptools."""
+        return self.dataset.preservation_workspace / 'sip-in-progress'
+
     def run(self):
         # TODO: Rewrite this whole function using siptools-ng/mets-builder.
+
+        # Clean up sip_creation_path if it has been created by previous
+        # run.
+        shutil.rmtree(self.sip_creation_path, ignore_errors=True)
+        self.sip_creation_path.mkdir()
 
         # These methods are the run methods of old METS part creation
         # tasks. They were copied to this task without changes, which is
@@ -87,7 +97,7 @@ class CreateMets(WorkflowTask):
 
         # Compile METS
         mets = compile_mets.create_mets(
-            workspace=str(self.dataset.sip_creation_path),
+            workspace=str(self.sip_creation_path),
             mets_profile='tpas',
             contractid=contract_identifier,
             objid=self.dataset.sip_identifier,
@@ -188,7 +198,7 @@ class CreateMets(WorkflowTask):
                 )
 
             premis_event.premis_event(
-                workspace=self.dataset.sip_creation_path,
+                workspace=self.sip_creation_path,
                 event_type=event_type,
                 event_datetime=event_datetime, event_detail=event_detail,
                 event_outcome=event_outcome,
@@ -200,8 +210,7 @@ class CreateMets(WorkflowTask):
         # structuremap creation.
         if provenances:
             shutil.copy(
-                self.dataset.sip_creation_path
-                / 'premis-event-md-references.jsonl',
+                self.sip_creation_path / 'premis-event-md-references.jsonl',
                 self.dataset.preservation_workspace
                 / 'create-provenance-information.jsonl'
             )
@@ -231,7 +240,7 @@ class CreateMets(WorkflowTask):
         # Create output files with siptools
         import_description.import_description(
             dmdsec_location=datacite_path,
-            workspace=self.dataset.sip_creation_path,
+            workspace=self.sip_creation_path,
             without_uuid=True
         )
 
@@ -282,12 +291,12 @@ class CreateMets(WorkflowTask):
 
             # Create METS document that contains PREMIS metadata
             self.create_objects(file_, filepath, event_datetime,
-                                self.dataset.sip_creation_path)
+                                self.sip_creation_path)
 
             # Create METS documents that contain technical
             # attributes
             self.create_technical_attributes(file_, filepath,
-                                             self.dataset.sip_creation_path)
+                                             self.sip_creation_path)
 
     def create_objects(self, metadata, filepath, event_datetime, output):
         """Create PREMIS metadata for file.
@@ -395,7 +404,7 @@ class CreateMets(WorkflowTask):
         `<sip_creation_path>/filesec.xml`
         """
         compile_structmap.compile_structmap(
-            workspace=self.dataset.sip_creation_path,
+            workspace=self.sip_creation_path,
             structmap_type='Fairdata-physical',
             stdout=False
         )
@@ -411,7 +420,7 @@ class CreateMets(WorkflowTask):
         # lxml do not support pathlib Paths. The conversion can
         # probably be removed when Centos7 support is not required..
         physical_structmap \
-            = ET.parse(str(self.dataset.sip_creation_path / 'structmap.xml'))
+            = ET.parse(str(self.sip_creation_path / 'structmap.xml'))
 
         # Get dmdsec id from physical_structmap
         dmdsec_id = physical_structmap.getroot()[0][0].attrib['DMDID']
@@ -436,7 +445,7 @@ class CreateMets(WorkflowTask):
             wrapper_div.append(div)
         logical_structmap.append(wrapper_div)
 
-        output_path = self.dataset.sip_creation_path / 'logical_structmap.xml'
+        output_path = self.sip_creation_path / 'logical_structmap.xml'
         with output_path.open('wb') as output:
             output.write(h.serialize(mets_structmap))
 
@@ -463,7 +472,7 @@ class CreateMets(WorkflowTask):
         event_type_ids = {}
         for event_id in event_ids:
             event_file = event_id[1:] + "-PREMIS%3AEVENT-amd.xml"
-            event_file_path = self.dataset.sip_creation_path / event_file
+            event_file_path = self.sip_creation_path / event_file
             if not os.path.exists(event_file_path):
                 continue
             root = ET.parse(encode_path(str(event_file_path))).getroot()
@@ -557,7 +566,7 @@ class CreateMets(WorkflowTask):
         """
         # pylint: disable=no-member
         filesec_xml \
-            = ET.parse(str(self.dataset.sip_creation_path / 'filesec.xml'))
+            = ET.parse(str(self.sip_creation_path / 'filesec.xml'))
 
         root = filesec_xml.getroot()
 

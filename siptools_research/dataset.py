@@ -148,11 +148,6 @@ class Dataset:
         return self.workspace_root / Target.PRESERVATION.value
 
     @property
-    def sip_creation_path(self):
-        """Return preservation workspace directory."""
-        return self.preservation_workspace / "sip-in-progress"
-
-    @property
     def enabled(self):
         """Check if dataset has active workflow."""
         return self._document.get('enabled', False)
@@ -273,7 +268,6 @@ class Dataset:
         _delete_directory(self.preservation_workspace)
 
         self.preservation_workspace.mkdir(parents=True)
-        self.sip_creation_path.mkdir()
 
         self._set_target(Target.PRESERVATION)
 

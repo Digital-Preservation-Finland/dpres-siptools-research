@@ -64,10 +64,11 @@ def test_create_techmd_ok(workspace, requests_mock):
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Run method
+    sipdirectory = workspace / 'preservation/sip-in-progress'
+    sipdirectory.mkdir()
     task.create_technical_metadata()
 
     # Premis object references should be written to file.
-    sipdirectory = workspace / 'preservation/sip-in-progress'
     premis_object_references \
         = read_md_references(sipdirectory, 'import-object-md-references.jsonl')
     assert len(premis_object_references) == 1
@@ -186,9 +187,10 @@ def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Run method
+    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
+    sipdirectory.mkdir()
     task.create_technical_metadata()
 
-    sipdirectory = workspace / 'preservation' / 'sip-in-progress'
     premis_object_paths = sipdirectory.glob("*-PREMIS%3AOBJECT-amd.xml")
     premis_objects = []
     premis_objects = [
@@ -252,6 +254,8 @@ def test_create_techmd_incomplete_file_characteristics(workspace,
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # Run method
+    sipdirectory = workspace / "preservation/sip-in-progress"
+    sipdirectory.mkdir()
     with pytest.raises(KeyError) as exc:
         task.create_technical_metadata()
 
@@ -285,6 +289,8 @@ def test_create_techmd_without_charset(workspace, requests_mock):
         dataset_id=workspace.name,
         config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
+    sipdirectory = workspace / "preservation/sip-in-progress"
+    sipdirectory.mkdir()
     task.create_technical_metadata()
 
     # Metadata reference file and premis object XML file should be

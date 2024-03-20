@@ -1,7 +1,6 @@
 """Configure py.test default values and functionality."""
 import logging
 import os
-import shutil
 import sys
 import uuid
 from configparser import ConfigParser
@@ -153,7 +152,6 @@ def workspace(pkg_root):
     workspace_ = pkg_root / "workspaces" / identifier
     workspace_.mkdir()
     (workspace_ / "preservation").mkdir()
-    (workspace_ / "preservation" / "sip-in-progress").mkdir()
     return workspace_
 
 
