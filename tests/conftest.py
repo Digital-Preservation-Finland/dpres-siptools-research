@@ -1,24 +1,24 @@
 """Configure py.test default values and functionality."""
-from configparser import ConfigParser
 import logging
 import os
 import shutil
 import sys
 import uuid
+from configparser import ConfigParser
 from pathlib import Path
 
 import luigi.configuration
+import mongoengine
 import mongomock
 import pymongo
 import pytest
 import urllib3
-
-import mongoengine
+from click.testing import CliRunner
 
 import siptools_research.metadata_generator
 import siptools_research.utils.mimetypes
+from siptools_research.__main__ import Context, cli
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
-
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -253,3 +253,24 @@ def luigi_mock_ssh_config(config_creator, sftp_dir, sftp_server):
     )
 
     return config_path
+
+
+@pytest.fixture(scope="function")
+def cli_runner():
+    """
+    Run the CLI entrypoint using the provided arguments and return the
+    result
+    """
+    def wrapper(args, **kwargs):
+        """
+        Run the CLI entrypoint using provided arguments and return
+        the result.
+        """
+        runner = CliRunner()
+
+        result = runner.invoke(
+            cli, args, obj=Context(), catch_exceptions=False, **kwargs
+        )
+        return result
+
+    return wrapper

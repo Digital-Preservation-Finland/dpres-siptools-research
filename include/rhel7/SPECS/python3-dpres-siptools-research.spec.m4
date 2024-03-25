@@ -33,6 +33,7 @@ Requires:       python36-lxml
 Requires:       python36-paramiko
 Requires:       python36-jsonschema
 Requires:       python36-requests
+Requires:       python36-click
 Requires:       python3-iso-639
 Requires:       ImageMagick
 Requires:       python36-dateutil

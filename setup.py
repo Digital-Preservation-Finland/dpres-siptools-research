@@ -21,6 +21,7 @@ def main():
             "jsonschema",
             "iso-639",
             "python-dateutil",
+            "click",
         ],
         entry_points={
             'console_scripts': [

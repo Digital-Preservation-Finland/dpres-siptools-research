@@ -1,279 +1,135 @@
 """Commandline interface for siptools_research package.
 
-To start the preservation workflow for dataset 1234 (for example)::
+Workflow status can be changed and queried with commands::
 
-   siptools-research preserve 1234
-
-To generate metadata::
-
-   siptools-research generate 1234
-
-To validate metadata::
-
-   siptools-research validate 1234
-
-MongoDB can be queried and updated with commands: get, status, tasks,
-workflows, disable and enable. For further information run::
-
-   siptools-research --help
+   siptools-research dataset {disable,enable,status} <dataset_id>
+   siptools-research dataset list
 
 and::
 
    siptools-research command --help
 
 """
-import argparse
-import json
+import click
+import pprint
 
 from siptools_research.dataset import find_datasets
 
-# ANSI escape sequences for different colors
-SUCCESSC = '\033[92m'
-FAILC = '\033[91m'
-ENDC = '\033[0m'
 
-
-def _parse_args():
-    """Parse command line arguments.
-
-    :returns: Parsed arguments
-    """
-    # Parse commandline arguments
-    parser = argparse.ArgumentParser(
-        description='Generate technical metadata for a dataset in Metax, '
-                    'validate Metax dataset metadata, start digital '
-                    'preservation workflow a Metax dataset, or query/edit '
-                    'workflows in MongoDB.'
-    )
-
-    # Add the alternative commands
-    subparsers = parser.add_subparsers(title='Available commands')
-    _setup_workflow_args(subparsers)
-    _setup_workflows_args(subparsers)
-    _setup_status_args(subparsers)
-    _setup_tasks_args(subparsers)
-    _setup_disable_args(subparsers)
-    _setup_enable_args(subparsers)
-
-    # Define arguments common to all commands
-    parser.add_argument(
-        '--config',
-        default='/etc/siptools_research.conf',
-        metavar='config_file',
-        help="path to configuration file"
-    )
-
-    # Parse arguments and return the arguments
-    return parser.parse_args()
-
-
-def _setup_workflow_args(subparsers):
-    """Define workflow subparser and its arguments."""
-    get_parser = subparsers.add_parser(
-        'workflow',
-        help='Get a workflow'
-    )
-    get_parser.set_defaults(func=_workflow)
-    get_parser.add_argument(
-        'dataset_id',
-        help="Dataset identifier"
-    )
-
-
-def _setup_workflows_args(subparsers):
-    """Define workflows subparser and its arguments."""
-    parser = subparsers.add_parser(
-        'workflows',
-        help='Get workflow documents with specified filters'
-    )
-    parser.set_defaults(func=_workflows)
-    parser.add_argument(
-        '--disabled',
-        action="store_true", default=False,
-        help="Filter by disabled == True"
-    )
-    parser.add_argument(
-        '--enabled',
-        action="store_true", default=False,
-        help="Filter by disabled == False"
-    )
-    parser.add_argument(
-        '--full',
-        action="store_true", default=False,
-        help="Print the full workflows"
-    )
-
-
-def _setup_status_args(subparsers):
-    """Define status subparser and its arguments."""
-    status_parser = subparsers.add_parser(
-        'status',
-        help='Get workflow status'
-    )
-    status_parser.set_defaults(func=_status)
-    status_parser.add_argument(
-        'dataset_id',
-        help="Dataset identifier"
-    )
-
-
-def _setup_tasks_args(subparsers):
-    """Define tasks subparser and its arguments."""
-    status_parser = subparsers.add_parser(
-        'tasks',
-        help='Get workflow task results'
-    )
-    status_parser.set_defaults(func=_tasks)
-    status_parser.add_argument(
-        'dataset_id',
-        help="Dataset identifier"
-    )
-
-
-def _setup_disable_args(subparsers):
-    """Define disable subparser and its arguments."""
-    disable_parser = subparsers.add_parser(
-        'disable',
-        help='Disable workflow'
-    )
-    disable_parser.set_defaults(func=_disable)
-    disable_parser.add_argument(
-        'dataset_id',
-        help="Dataset identifier"
-    )
-
-
-def _setup_enable_args(subparsers):
-    """Define enable subparser and its arguments."""
-    enable_parser = subparsers.add_parser(
-        'enable',
-        help='Enable workflow'
-    )
-    enable_parser.set_defaults(func=_enable)
-    enable_parser.add_argument(
-        'dataset_id',
-        help="Dataset identifier"
-    )
-
-
-def _get_dataset(args):
+def _get_dataset(dataset_id, config):
     """Get a dataset by identifier."""
-    datasets = find_datasets(identifier=args.dataset_id, config=args.config)
-    if not datasets:
-        print(
-            f"{FAILC}Could not find dataset with identifier:"
-            f" {args.dataset_id}{ENDC}"
-        )
-        dataset = None
+    datasets = find_datasets(identifier=dataset_id, config=config)
 
-    else:
-        dataset = datasets[0]
-
-    return dataset
+    return datasets[0] if datasets else None
 
 
-def _get_datasets(args):
+def _get_datasets(enabled, disabled, config):
     """Find datasets with filters."""
-    if args.disabled and args.enabled:
-        raise ValueError("Use either disabled or enabled")
-
-    if args.disabled:
+    if disabled:
         enabled = False
-    elif args.enabled:
+    elif enabled:
         enabled = True
     else:
         enabled = None
 
-    datasets = find_datasets(enabled=enabled, config=args.config)
-    if not datasets:
-        print(FAILC + "Could not find any workflows" + ENDC)
+    datasets = find_datasets(enabled=enabled, config=config)
 
     return datasets
 
 
-def _workflow(args):
-    """Get a workflow document."""
-    dataset = _get_dataset(args)
-    if dataset:
-        print(f'Dataset identifier: {dataset.identifier}\n'
-              f'Target: {dataset.target.value}')
+class Context:
+    """Context class for the Click application"""
+    config: str = None
 
 
-def _workflows(args):
-    """Get a workflow documents."""
-    datasets = _get_datasets(args)
-    for dataset in datasets:
-        if not args.full:
-            print(dataset.identifier)
-        else:
-            print(f'Dataset identifier: {dataset.identifier}\n'
-                  f'Target: {dataset.target.value}')
+@click.group()
+@click.option(
+    "--config",
+    type=click.Path(file_okay=True, dir_okay=False, readable=True),
+    default="/etc/siptools_research.conf",
+    help="Path to the siptools-research configuration file"
+)
+@click.pass_obj
+def cli(ctx, config):
+    """
+    CLI main entrypoint
+    """
+    ctx.config = config
 
 
-def _status(args):
-    """Get workflow status."""
-    dataset = _get_dataset(args)
-    if dataset:
-        status = "enabled" if dataset.enabled else "disabled"
-        print(f"Workflow is {status}")
+@cli.group()
+def dataset():
+    """Dataset related operations"""
+    pass
 
 
-def _tasks(args):
-    """Get workflow task results."""
-    dataset = _get_dataset(args)
-    if dataset:
-        success = []
-        fail = []
+@dataset.command("list", help="List datasets based on various filters")
+@click.option("--enabled", is_flag=True, default=None)
+@click.option("--disabled", is_flag=True, default=None)
+@click.option("--show-target", is_flag=True, default=False)
+@click.pass_obj
+def list_datasets(ctx, enabled, disabled, show_target):
+    if enabled and disabled:
+        raise click.UsageError(
+            "'enabled' and 'disabled' are mutually exclusive"
+        )
 
-        tasks = dataset.get_tasks()
-        if tasks:
-            for task in tasks:
-                if tasks[task]["result"] == "success":
-                    success.append([task, tasks[task]])
-                else:
-                    fail.append([task, tasks[task]])
-        else:
-            print(f"Dataset {dataset.identifier} has no workflow_tasks")
+    datasets = _get_datasets(
+        enabled=enabled, disabled=disabled, config=ctx.config
+    )
+    if datasets:
+        for dataset in datasets:
+            if show_target:
+                try:
+                    target = dataset.target.value
+                except AttributeError:
+                    target = "None"
 
-        # Sort and print tasks that were completed successfully
-        if success:
-            # Sort by timestamp
-            success = sorted(success, key=lambda k: k[1]["timestamp"])
-
-            # Print
-            print("Ran successfully:")
-            print(SUCCESSC)
-            for task in success:
-                print(task[0])
-            print(ENDC, end="")
-
-        # Sort and print tasks that failed
-        if fail:
-            # Sort by timestamp
-            success = sorted(success, key=lambda k: k[1]["timestamp"])
-
-            # Print
-            print("\nFailed:")
-            print(FAILC)
-            for task in fail:
-                print(json.dumps(task, indent=4))
-            print(ENDC, end="")
+                click.echo(f"{dataset.identifier} (target: {target})")
+            else:
+                click.echo(dataset.identifier)
+    else:
+        click.echo(click.style("Datasets not found!", fg="red"))
 
 
-def _disable(args):
-    """Disable workflow."""
-    dataset = _get_dataset(args)
+@dataset.command("disable", help="Disable dataset workflow")
+@click.argument("dataset_id")
+@click.pass_obj
+def disable_workflow(ctx, dataset_id):
+    """Disable dataset workflow"""
+    dataset = _get_dataset(dataset_id, config=ctx.config)
     if dataset:
         dataset.disable()
-        print(f"Workflow of dataset {dataset.identifier} disabled")
+        click.echo(f"Workflow of dataset {dataset.identifier} disabled")
+    else:
+        click.echo(click.style("Dataset not found!", fg="red"))
 
 
-def _enable(args):
-    """Enable workflow."""
-    dataset = _get_dataset(args)
+@dataset.command("enable", help="Enable dataset workflow")
+@click.argument("dataset_id")
+@click.pass_obj
+def enable_workflow(ctx, dataset_id):
+    """Enable dataset workflow"""
+    dataset = _get_dataset(dataset_id, config=ctx.config)
     if dataset:
         dataset.enable()
-        print(f"Workflow of dataset {dataset.identifier} enabled")
+        click.echo(f"Workflow of dataset {dataset.identifier} enabled")
+    else:
+        click.echo(click.style("Dataset not found!", fg="red"))
+
+
+@dataset.command("status", help="Show dataset workflow status")
+@click.argument("dataset_id")
+@click.pass_obj
+def workflow_status(ctx, dataset_id):
+    """Show status for dataset workflow"""
+    dataset = _get_dataset(dataset_id, config=ctx.config)
+    if dataset:
+        click.echo(
+            pprint.pformat(dataset._document)
+        )
+    else:
+        click.echo(click.style("Dataset not found!", fg="red"))
 
 
 def main():
@@ -281,9 +137,7 @@ def main():
 
     :returns: None
     """
-    # Parse arguments and call function defined by chosen subparser.
-    args = _parse_args()
-    args.func(args)
+    cli(obj=Context())
 
 
 if __name__ == '__main__':
