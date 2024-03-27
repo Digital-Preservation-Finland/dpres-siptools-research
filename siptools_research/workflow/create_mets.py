@@ -150,6 +150,9 @@ class CreateMets(WorkflowTask):
                     languages=dataset_languages
                 )
             else:
+                # TODO: Invalid metadata should be found in metadata
+                # validation. So it should be unnecessary to raise
+                # InvalidDatasetMetadataError here!
                 raise InvalidDatasetMetadataError(
                     "Provenance metadata does not have key "
                     "'preservation_event' or 'lifecycle_event'. "
@@ -507,6 +510,7 @@ class CreateMets(WorkflowTask):
 
         return provenance_ids
 
+    # TODO: This method might be unnecessary: TPASPKT-1107
     def find_file_categories(self):
         """Create logical structure map of dataset files.
 
@@ -583,6 +587,7 @@ class CreateMets(WorkflowTask):
         )
 
 
+# TODO: This function will be removed in TPASPKT-741
 def algorithm_name(algorithm, value):
     """Guess the checksum algorithm.
 
@@ -607,6 +612,7 @@ def algorithm_name(algorithm, value):
     return algorithm_key
 
 
+# TODO: This function might be unnecessary: TPASPKT-1107
 def find_file_use_category(identifier, dataset_metadata):
     """Look for file with identifier from dataset metadata.
 
@@ -655,6 +661,7 @@ def _match_paths(parent_path, dir_path):
     return matches
 
 
+# TODO: This function might be unnecessary: TPASPKT-1107
 def get_dirpath_dict(metax_client, dataset_metadata):
     """Map directory paths to use categories.
 
@@ -679,6 +686,7 @@ def get_dirpath_dict(metax_client, dataset_metadata):
     return dirpath_dict
 
 
+# TODO: This function might be unnecessary: TPASPKT-1107
 def find_dir_use_category(parent_path, dirpath2usecategory, languages):
     """Find use category of path.
 

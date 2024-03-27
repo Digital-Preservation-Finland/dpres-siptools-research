@@ -1,4 +1,5 @@
 """Sample Metax dataset metadata."""
+import copy
 import lxml.etree
 
 BASE_DATACITE = lxml.etree.parse('tests/data/datacite_sample.xml')
@@ -25,6 +26,10 @@ BASE_PROVENANCE = {
         "en": "outcome_description"
     }
 }
+
+METADATA_MODIFICATION_PROVENANCE = copy.deepcopy(BASE_PROVENANCE)
+METADATA_MODIFICATION_PROVENANCE["preservation_event"]["pref_label"]["en"]\
+    = "metadata modification"
 
 QVAIN_PROVENANCE = {
     "title": {

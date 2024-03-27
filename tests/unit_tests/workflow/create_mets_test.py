@@ -3,9 +3,7 @@ import copy
 import hashlib
 import shutil
 
-import lxml
 import lxml.etree
-from lxml import etree
 import pytest
 import xmltodict
 from metax_access import Metax
@@ -16,7 +14,12 @@ from siptools_research.workflow.create_mets import (CreateMets,
                                                     get_dirpath_dict)
 from siptools_research.exceptions import InvalidDatasetMetadataError
 import tests.utils
-from tests.metax_data.datasets import BASE_DATASET
+from tests.conftest import UNIT_TEST_CONFIG_FILE
+from tests.metax_data.datasets import (BASE_DATASET,
+                                       BASE_DATACITE,
+                                       BASE_PROVENANCE,
+                                       METADATA_MODIFICATION_PROVENANCE,
+                                       QVAIN_PROVENANCE)
 from tests.metax_data.files import TXT_FILE, TIFF_FILE, MKV_FILE
 
 
@@ -41,16 +44,19 @@ NAMESPACES = {
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
+def test_create_mets(workspace, requests_mock, data_catalog, objid):
     """Test the workflow task CreateMets.
 
-    Test creating METS for a simple dataset that contains one text file.
+    Creates METS for a dataset that contains one text file.
+
+    Tests that:
+    * the task is complete when METS has been created.
+    * METS root element and METS header contain correct information.
 
     :param workspace: Temporary directory fixture
     :param requests_mock: Mocker object
     :param data_catalog: Data catalog identifier of dataset
     :param objid: Identifier expected to be used as OBJID
-    :returns: ``None``
     """
     # Mock metax
     dataset = copy.deepcopy(BASE_DATASET)
@@ -67,13 +73,12 @@ def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
     filepath.write_text('foo')
 
     # Init and run task
-    task = CreateMets(dataset_id=workspace.name,
-                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
 
     # Read created mets.xml
-    tree = lxml.etree.parse(str(workspace / 'preservation' / 'mets.xml'))
+    mets = lxml.etree.parse(str(workspace / 'preservation' / 'mets.xml'))
 
     # Check that the root element contains expected attributes.
     mets_attributes = {
@@ -88,16 +93,16 @@ def test_create_mets_ok(workspace, requests_mock, data_catalog, objid):
         f"{{{NAMESPACES['fi']}}}CONTENTID": objid,
         f"{{{NAMESPACES['fi']}}}CATALOG": '1.7.6',
     }
-    assert tree.getroot().attrib == mets_attributes
+    assert mets.getroot().attrib == mets_attributes
 
     # Check that XML documents contains expected namespaces
-    assert tree.getroot().nsmap == {
+    assert mets.getroot().nsmap == {
         key: NAMESPACES[key]
         for key in ("xsi", "mets", "fi", "premis", "xlink")
     }
 
     # Check metsHdr element attributes
-    metshdr = tree.xpath('/mets:mets/mets:metsHdr', namespaces=NAMESPACES)[0]
+    metshdr = mets.xpath('/mets:mets/mets:metsHdr', namespaces=NAMESPACES)[0]
     assert metshdr.attrib['RECORDSTATUS'] == 'submission'
     assert metshdr.attrib['CREATEDATE']
 
@@ -125,7 +130,6 @@ def test_idempotence(workspace, requests_mock):
 
     :param workspace: Temporary directory fixture
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     # Mock metax
     dataset = copy.deepcopy(BASE_DATASET)
@@ -139,8 +143,7 @@ def test_idempotence(workspace, requests_mock):
     filepath.write_text('foo')
 
     # Init and run task
-    task = CreateMets(dataset_id=workspace.name,
-                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
     task.run()
     assert task.complete()
 
@@ -164,93 +167,93 @@ def test_idempotence(workspace, requests_mock):
 
 @pytest.mark.usefixtures("testmongoclient")
 @pytest.mark.parametrize(
-    ["events", "expected_ids", "provenance_data"],
+    "provenance_data",
     [
         # 0 events
-        (
-            [], [], None
-        ),
+        [],
         # 1 event
-        (
-            ["creation"],
-            ['6fc8a863bb6ed3cee2b1e853aa38d2db'],
-            tests.metax_data.datasets.BASE_PROVENANCE
-        ),
+        [BASE_PROVENANCE],
         # multiple events
-        (
-            ["creation", "metadata modification"],
-            ['6fc8a863bb6ed3cee2b1e853aa38d2db',
-             'f1ffc55803b971ab8dd013710766f47e'],
-            tests.metax_data.datasets.BASE_PROVENANCE
-        ),
+        [BASE_PROVENANCE, METADATA_MODIFICATION_PROVENANCE],
         # provenance event made in Qvain
-        (
-            ['creation'],
-            ['56e8efc54b66b68319a3db79e6038eb3'],
-            tests.metax_data.datasets.QVAIN_PROVENANCE
-        )
+        [QVAIN_PROVENANCE],
     ]
 )
-def test_createprovenanceinformation(workspace,
-                                     requests_mock,
-                                     events,
-                                     expected_ids,
-                                     provenance_data):
-    """Test creating METS document with multiple provenance events.
+def test_multiple_provenance_events(workspace,
+                                    requests_mock,
+                                    provenance_data):
+    """Test creating PREMIS metadata for multiple provenance events.
 
-    Premis event should be created for each event.
+    Creates METS document dataset that has multiple provenance events.
+
+    Tests that:
+    * PREMIS event metadata is created for each provenance event
+    * The PREMIS event metadata is referenced in physical structure map
+    * The PREMIS event metadata is referenced in logical structure map
 
     :param workspace: Testpath fixture
     :param requests_mock: HTTP request mocker
-    :param events: list of preservation events in dataset metadata
-    :param expected_ids: expected identifiers of PREMIS events that are
-                         created
-    :param provenance_data: The data used for creating provenance
-                            events.
+    :param provenance_data: List of provenance events in dataset
     """
     # Mock metax. Create a dataset with provenance events.
-    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    dataset['research_dataset']['provenance'] = []
-    for event in events:
-        provenance = copy.deepcopy(provenance_data)
-        if "preservation_event" in provenance:
-            provenance["preservation_event"]["pref_label"]["en"] = event
-        else:
-            provenance["lifecycle_event"]["pref_label"]["en"] = event
-        dataset['research_dataset']['provenance'].append(provenance)
+    if provenance_data:
+        dataset['research_dataset']['provenance'] = provenance_data
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Init and run task
-    task = CreateMets(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-    task.run()
-    assert task.complete()
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
 
-    # PREMIS event should be created for each event
+    # Find identifiers of provenance events from METS
     mets = lxml.etree.parse(str(workspace / "preservation" / "mets.xml"))
-    digiprovmd_elements = mets.xpath('/mets:mets/mets:amdSec/mets:digiprovMD',
-                                     namespaces=NAMESPACES)
-    digiprovmd_identifiers \
-        = [elem.attrib['ID'].strip('_') for elem in digiprovmd_elements]
-    for expected_id in expected_ids:
-        assert expected_id in digiprovmd_identifiers
+    provenance_ids = []
+    for provenance in provenance_data:
+        if "preservation_event" in provenance:
+            event_type = provenance["preservation_event"]["pref_label"]["en"]
+            event_detail = provenance["description"]["en"]
+        else:
+            event_type = provenance["lifecycle_event"]["pref_label"]["en"]
+            event_detail = provenance["title"]["en"]
+        digiprovmd = mets.xpath(
+            f"//*[premis:eventType='{event_type}'"
+            f" and premis:eventDetail='{event_detail}']"
+            "/ancestor::mets:digiprovMD",
+            namespaces=NAMESPACES)
+        assert len(digiprovmd) == 1
+        provenance_ids.append(digiprovmd[0].attrib["ID"])
 
-    # PREMIS events should be refenced in structure map
-    structmap_root_div_elements \
-        = mets.xpath('/mets:mets/mets:structMap/mets:div',
-                     namespaces=NAMESPACES)
-    structmap_references = [
-        identifier.strip("_")
-        for identifier
-        in structmap_root_div_elements[0].attrib.get('ADMID', "").split()
-    ]
-    for expected_id in expected_ids:
-        assert expected_id in structmap_references
+    # PREMIS events should be refenced in physical structure map
+    physical_structmap = mets.xpath(
+        '/mets:mets/mets:structMap[@TYPE="Fairdata-physical"]',
+        namespaces=NAMESPACES
+    )[0]
+    physical_structmap_references \
+        = physical_structmap.xpath('mets:div/@ADMID', namespaces=NAMESPACES)[0]
+    for provenance_id in provenance_ids:
+        assert provenance_id in physical_structmap_references
+
+    # PREMIS events should be refenced in logical structure map
+    logical_structmap = mets.xpath(
+        '/mets:mets/mets:structMap[@TYPE="Fairdata-logical"]',
+        namespaces=NAMESPACES
+    )[0]
+    logical_structmap_reference_list = logical_structmap.xpath(
+        'mets:div/@ADMID',
+        namespaces=NAMESPACES
+    )
+    if logical_structmap_reference_list:
+        logical_structmap_references = logical_structmap_reference_list[0]
+    else:
+        # Logical structure map does not have any ADMIDs if user does
+        # not provide any provenance events
+        logical_structmap_references = []
+    for provenance_id in provenance_ids:
+        assert provenance_id in logical_structmap_references
 
 
+# TODO: Invalid provenance metadata should be found already in metadata
+# validation task, so this test is probably unnecessary.
 @pytest.mark.usefixtures("testmongoclient")
 def test_failed_createprovenanceinformation(workspace, requests_mock):
     """Test provenance event creation failure.
@@ -262,20 +265,17 @@ def test_failed_createprovenanceinformation(workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock metax. Create a dataset with invalid provenance metadata.
-    provenance = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
+    provenance = copy.deepcopy(BASE_PROVENANCE)
     del provenance["preservation_event"]
-    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset['research_dataset']['provenance'] = [provenance]
     dataset['identifier'] = workspace.name
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Init task
-    task = CreateMets(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
+    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
 
-    # Run task
+    # The run method should fail
     with pytest.raises(
         InvalidDatasetMetadataError,
         match="Provenance metadata does not have key 'preservation_event'"
@@ -288,48 +288,41 @@ def test_failed_createprovenanceinformation(workspace, requests_mock):
 
 
 @pytest.mark.parametrize(
-    ['provenance_data', 'premis_id'],
-    [
-        [
-            tests.metax_data.datasets.BASE_PROVENANCE,
-            '6fc8a863bb6ed3cee2b1e853aa38d2db'
-        ],
-        [
-            tests.metax_data.datasets.QVAIN_PROVENANCE,
-            '56e8efc54b66b68319a3db79e6038eb3'
-        ]
-    ]
+    'provenance_data', [BASE_PROVENANCE, QVAIN_PROVENANCE]
 )
-def test_create_premis_events(
-    workspace, requests_mock, provenance_data, premis_id
+def test_premis_event_metadata(
+    workspace, requests_mock, provenance_data
 ):
-    """Test creating METS with provenance event.
+    """Test creating PREMIS events for provenance metadata.
 
-    Output XML file should be produced and it should contain some
-    specified elements.
+    Creates METS for dataset that has provenance event.
+
+    Tests that PREMIS event metadata created for provenance event
+    contains correct information.
 
     :param workspace: Temporary directory
     :param requests_mock: HTTP request mocker
     :param provenance_data: The data used for creating provenance events
-    :param premis_id: The id created for the PREMIS event
     """
     # Mock metax. Create a dataset with one provenance event
-    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
+
     dataset["research_dataset"]["provenance"] = [provenance_data]
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
-    # Run task
-    task = CreateMets(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-    task.run()
+    # Init and run task
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
 
     # Find the digiprovMD element of provenance event from METS document
+    if 'description' in provenance_data:
+        expected_event_detail = provenance_data['description']['en']
+    else:
+        expected_event_detail = provenance_data['title']['en']
     mets = lxml.etree.parse(str(workspace / 'preservation' / 'mets.xml'))
     digiprovmd = mets.xpath(
-        f"/mets:mets/mets:amdSec/mets:digiprovMD[@ID='_{premis_id}']",
+        f"//*[premis:eventDetail='{expected_event_detail}']"
+        "/ancestor::mets:digiprovMD",
         namespaces=NAMESPACES
     )[0]
 
@@ -403,9 +396,12 @@ def test_create_premis_events(
 def test_createdescriptivemetadata(workspace, requests_mock):
     """Test descriptive metadata creation.
 
-    Datacite XML should be imported to dmdSec of METS. DmdSec should be
-    referenced in structure maps. Premis event should be created for
-    datacite import.
+    Creates METS for a simple dataset.
+
+    Tests that:
+    * datacite XML is imported to dmdSec of METS
+    * dmdSec is referenced in both structure maps
+    * premis event is created for datacite import
 
     :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
@@ -415,16 +411,11 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     dataset['identifier'] = workspace.name
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
-    # Init and runtask
-    task = CreateMets(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-    task.run()
-    assert task.complete()
+    # Init and run task
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
 
     # Check that METS document contains correct elements.
-    mets = etree.parse(str(workspace / 'preservation/mets.xml'))
+    mets = lxml.etree.parse(str(workspace / 'preservation/mets.xml'))
 
     # The mdWrap element should contain the datacite metadata
     dmdsec = mets.xpath('/mets:mets//mets:dmdSec', namespaces=NAMESPACES)[0]
@@ -437,11 +428,12 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     # Compare datacite metadata in METS file to the original datacite
     # metadata retrieved from metax. First rip the datacite from METS
     # and lean up extra namespaces.
-    mets_datacite = etree.fromstring(etree.tostring(mets_datacite))
-    etree.cleanup_namespaces(mets_datacite)
-    # Compare XMLs. The string presertations should be indentical
-    metax_datacite = tests.metax_data.datasets.BASE_DATACITE.getroot()
-    assert etree.tostring(mets_datacite) == etree.tostring(metax_datacite)
+    mets_datacite = lxml.etree.fromstring(lxml.etree.tostring(mets_datacite))
+    lxml.etree.cleanup_namespaces(mets_datacite)
+    # Compare XMLs. The string presentations should be indentical
+    metax_datacite = BASE_DATACITE.getroot()
+    assert lxml.etree.tostring(mets_datacite) \
+        == lxml.etree.tostring(metax_datacite)
 
     # Check that descriptive metadata is referenced in both structMaps
     # (Fairdata-physical and Fairdata-logical)
@@ -463,6 +455,8 @@ def test_createdescriptivemetadata(workspace, requests_mock):
         == 'Descriptive metadata import from external source'
 
 
+# TODO: Datacite should be validated in metadata validation task. Is
+# this test necessary?
 @pytest.mark.usefixtures('testmongoclient')
 def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
     """Test importing invalid Datacite XML.
@@ -473,7 +467,7 @@ def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
     :param requests_mock: Mocker object
     """
     # Create dataset that contains invalid datacite metadata
-    datacite = etree.Element("{foo}bar")
+    datacite = lxml.etree.Element("{foo}bar")
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
     tests.utils.add_metax_dataset(requests_mock,
@@ -481,19 +475,18 @@ def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
                                   datacite=datacite)
 
     # Init task
-    task = CreateMets(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
+    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
 
-    # The method should fail
+    # The run method should fail
     with pytest.raises(TypeError, match='Invalid namespace: foo'):
         task.run()
 
+    # Task should not be complete
     assert not task.complete()
+    assert not (workspace / 'preservation/mets.xml').exists()
 
 
-def xml2simpledict(element):
+def _xml2simpledict(element):
     """Convert XML element to simple dict.
 
     :param element: XML element
@@ -512,13 +505,16 @@ def xml2simpledict(element):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_techmd_ok(workspace, requests_mock):
+def test_create_techmd(workspace, requests_mock):
     """Test technical metadata creation.
 
-    Create METS for a dataset that contains one TIFF file. Test that
-    METS contains PREMIS object and NISOIMG metadata that are linked to
-    structure map. Test that PREMIS agent metadata is created for tools
-    of file-scraper.
+    Creates METS for a dataset that contains one TIFF file.
+
+    Tests that:
+    * METS contains PREMIS object with correct information
+    * METS contains NISOIMG metadata with correct information
+    * PREMIS and NISOIMG are linked to physical structure map
+    * PREMIS agent metadata is created for tools of file-scraper
 
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
@@ -538,24 +534,10 @@ def test_create_techmd_ok(workspace, requests_mock):
                 dataset_files_parent / tiff_path)
 
     # Init and run task
-    task = CreateMets(dataset_id=workspace.name,
-                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    task.run()
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
 
     # Read created METS
     mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
-
-    # There should be one file in fileSec
-    file_elements = mets.xpath('//mets:file', namespaces=NAMESPACES)
-    assert len(file_elements) == 1
-
-    # METS should contain two techMD elements, one for PREMIS:OBJECT and
-    # one for NISOIMG. Both of them should be linked to a to the file in
-    # fileSec.
-    techmd_elements = mets.xpath("//mets:techMD", namespaces=NAMESPACES)
-    assert len(techmd_elements) == 2
-    for element in techmd_elements:
-        assert element.attrib['ID'] in file_elements[0].attrib["ADMID"]
 
     # Check that the PREMIS object element has desired properties
     premis_object_element \
@@ -571,6 +553,37 @@ def test_create_techmd_ok(workspace, requests_mock):
         namespaces=NAMESPACES
     )[0].text == '6.0'
 
+    # Compare MIX metadata in METS file to original MIX metadata in
+    # Metax
+    mix = mets.xpath('//mix:mix', namespaces=NAMESPACES)[0]
+    original_mix = lxml.etree.parse("tests/data/mix_sample_tiff.xml")
+    original_mix = original_mix.xpath(
+        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
+        namespaces=NAMESPACES
+    )[0]
+    assert _xml2simpledict(mix) == _xml2simpledict(original_mix)
+
+    # There should be one file in fileSec
+    file_elements = mets.xpath('//mets:file', namespaces=NAMESPACES)
+    assert len(file_elements) == 1
+
+    # METS should contain two techMD elements, one for PREMIS:OBJECT and
+    # one for NISOIMG. Both of them should be linked to a to the file in
+    # fileSec.
+    techmd_elements = mets.xpath("//mets:techMD", namespaces=NAMESPACES)
+    assert len(techmd_elements) == 2
+    premis_object_techmd_element = mets.xpath(
+        "//mets:mdWrap[@MDTYPE='PREMIS:OBJECT']/parent::mets:techMD",
+        namespaces=NAMESPACES
+    )[0]
+    assert premis_object_techmd_element.attrib["ID"] \
+        in file_elements[0].attrib['ADMID']
+    mix_techmd_element = mets.xpath(
+        "//mets:mdWrap[@MDTYPE='NISOIMG']/parent::mets:techMD",
+        namespaces=NAMESPACES
+    )[0]
+    assert mix_techmd_element.attrib["ID"] in file_elements[0].attrib['ADMID']
+
     # METS should contain PREMIS agents for variety if detectors of
     # file-scraper, for example FidoDetector, MagicDetetector,
     # SiardDetector etc.
@@ -584,26 +597,18 @@ def test_create_techmd_ok(workspace, requests_mock):
                    for premis_agent_name
                    in premis_agent_names)
 
-    # Compare MIX metadata in METS file to original MIX metadata in
-    # Metax
-    mix = mets.xpath('//mix:mix', namespaces=NAMESPACES)[0]
-    original_mix = lxml.etree.parse("tests/data/mix_sample_tiff.xml")
-    original_mix = original_mix.xpath(
-        "/mets:mets/mets:amdSec/mets:techMD/mets:mdWrap/mets:xmlData/*",
-        namespaces=NAMESPACES
-    )[0]
-    assert xml2simpledict(mix) == xml2simpledict(original_mix)
-
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
     """Test techmd creation for a file with multiple streams.
 
-    Create a METS document for a dataset that contains a Matroska file
+    Creates a METS document for a dataset that contains a Matroska file
     which contains two similar audio streams and one video streams.
-    PREMIS objects should be created for all streams and the container.
-    One AudioMD metadata should be created for the audio streams, and
-    one VideoMD metadata should be created for the video stream.
+
+    Tests that:
+    * PREMIS objects are created for all streams and the container
+    * one AudioMD metadata is created for the audio streams
+    * one VideoMD metadata is created for the video stream
 
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
@@ -621,9 +626,7 @@ def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
     shutil.copy('tests/data/sample_files/video_ffv1.mkv', mkv_path)
 
     # Init and run task
-    task = CreateMets(dataset_id=workspace.name,
-                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    task.run()
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
 
     # Read created mets
     mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
@@ -653,6 +656,9 @@ def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
                              namespaces=NAMESPACES)[0].text == "FFV1"
 
 
+# TODO: This test probably is not necessary, and could be removed. The
+# file_characteristics_extension is created by packaging service, so it
+# should always be valid.
 @pytest.mark.usefixtures('testmongoclient')
 def test_create_techmd_incomplete_file_characteristics(workspace,
                                                        requests_mock):
@@ -662,9 +668,6 @@ def test_create_techmd_incomplete_file_characteristics(workspace,
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     """
-    # TODO: This test probably is not necessary, and could be removed.
-    # The file_characteristics_extension is created by packaging
-    # service, so it should always be valid.
     tiff_file_incomplete = copy.deepcopy(TIFF_FILE)
     del (tiff_file_incomplete["file_characteristics_extension"]["streams"]
          [0]["bps_value"])
@@ -682,14 +685,17 @@ def test_create_techmd_incomplete_file_characteristics(workspace,
     shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
 
     # Init task
-    task = CreateMets(dataset_id=workspace.name,
-                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
 
-    # Run task
+    # The run method should fail
     with pytest.raises(KeyError) as exc:
         task.run()
 
     assert "bps_value" in str(exc.value)
+
+    # Task should not be complete
+    assert not task.complete()
+    assert not (workspace / 'preservation/mets.xml').exists()
 
 
 @pytest.mark.usefixtures()
@@ -716,11 +722,7 @@ def test_create_techmd_without_charset(workspace, requests_mock):
     text_file_path.write_text("foo")
 
     # Init and run task
-    task = CreateMets(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-    task.run()
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
 
     # Read METS
     mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
@@ -739,6 +741,7 @@ def test_create_techmd_without_charset(workspace, requests_mock):
                           ('sha2', hashlib.sha256, 'SHA-256'),
                           ('sha2', hashlib.sha384, 'SHA-384'),
                           ('sha2', hashlib.sha512, 'SHA-512')])
+# TODO: This test will be removed in TPASPKT-741
 def test_algorithm_name_valid_input(algorithm, hash_function, expected):
     """Test ``algorithm_name`` function with valid inputs."""
     assert algorithm_name(algorithm,
@@ -748,52 +751,41 @@ def test_algorithm_name_valid_input(algorithm, hash_function, expected):
 @pytest.mark.parametrize(('algorithm', 'value', 'expected_exception'),
                          [('foo', 'bar', UnboundLocalError),
                           ('sha2', 'foobar', KeyError)])
+# TODO: This test will be removed in TPASPKT-741
 def test_algorithm_name_invalid_input(algorithm, value, expected_exception):
     """Test ``algorithm_name`` function with invalid inputs."""
     with pytest.raises(expected_exception):
         algorithm_name(algorithm, value)
 
 
-@pytest.mark.parametrize(
-    'provenance_descriptions',
-    (
-        # No provenance events
-        [],
-        # One provenance events
-        ['provenance1'],
-        # Multiple provenance events
-        ['provenance1', 'provenance2'])
-)
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_structmap_ok(workspace, requests_mock,
-                             provenance_descriptions):
-    """Test physical structure map creation.
+def test_create_filesec_and_structmap(workspace, requests_mock):
+    """Test fileSec and physical structure map creation.
 
-    Creates structMap and fileSec for a dataset that contains some
-    files in a directory structure. Checks that structMap and fileSec
-    contain expected elements. Checks that structMap is linked to
-    provenance event metadata.
+    Creates METS for a dataset that contains three files in a directory
+    structure.
+
+    Tests that
+    * The files are added to fileSec
+    * structMap contain expected information
+    * strucmMap is linked to all digiprovMD elements
 
     :param workspace: Temporary workspace fixture
     :param requests_mock: HTTP request mocker
-    :param provenance_descriptions: Descriptions of provenance events
     """
     # Create dataset that contains three text files
     files = []
-    files = [copy.deepcopy(tests.metax_data.files.TXT_FILE) for i in range(3)]
+    files = [copy.deepcopy(TXT_FILE) for i in range(3)]
     files[0]["file_path"] = "/file1"
     files[1]["file_path"] = "/file2"
     files[2]["file_path"] = "/subdirectory/file3"
-    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["identifier"] = workspace.name
     # Add provenance events to dataset
-    if provenance_descriptions:
-        dataset["research_dataset"]["provenance"] = []
-        for provenance_description in provenance_descriptions:
-            provenance \
-                = copy.deepcopy(tests.metax_data.datasets.BASE_PROVENANCE)
-            provenance["description"]["en"] = provenance_description
-            dataset["research_dataset"]["provenance"].append(provenance)
+    provenance = copy.deepcopy(BASE_PROVENANCE)
+    provenance_description = 'Unique description of event'
+    provenance["description"]["en"] = provenance_description
+    dataset["research_dataset"]["provenance"] = [provenance]
     tests.utils.add_metax_dataset(requests_mock=requests_mock,
                                   dataset=dataset,
                                   files=files)
@@ -807,10 +799,7 @@ def test_create_structmap_ok(workspace, requests_mock,
     (subdirectory / "file3").write_text("baz")
 
     # Init and run task
-    task = CreateMets(dataset_id=workspace.name,
-                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    task.run()
-    assert task.complete()
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
 
     # Read created METS document
     # NOTE: lxml<4.8 requires path as string. Newer versions support
@@ -828,7 +817,7 @@ def test_create_structmap_ok(workspace, requests_mock,
                           'file://dataset_files/file2',
                           'file://dataset_files/subdirectory/file3'}
 
-    # Validate the "Fairdata-physical" structMap in METS.
+    # Validate the "Fairdata-physical" structMap
     structmap = mets.xpath("//mets:structMap[@TYPE='Fairdata-physical']",
                            namespaces=NAMESPACES)[0]
     assert structmap.xpath(
@@ -855,15 +844,6 @@ def test_create_structmap_ok(workspace, requests_mock,
         namespaces=NAMESPACES
     )) == 1
 
-    # Premis events should be created for each provenance event found
-    # in dataset metadata
-    premis_event_descriptions = [
-        element.text for element
-        in mets.xpath("//premis:eventDetail", namespaces=NAMESPACES)
-    ]
-    for provenance_description in provenance_descriptions:
-        assert provenance_description in premis_event_descriptions
-
     # Structure map should be linked to all digiprovMD elements
     digiprovmd_ids = mets.xpath("//mets:digiprovMD/@ID", namespaces=NAMESPACES)
     structmap_admids = structmap.xpath("mets:div/@ADMID",
@@ -876,13 +856,16 @@ def test_create_structmap_ok(workspace, requests_mock,
 def test_create_structmap_without_directories(workspace, requests_mock):
     """Test creating structmap for dataset without directories.
 
+    Creates METS for a dataset that has files only in root directory
+    and tests that structMap is created correctly.
+
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: HTTP request mocker
     """
     # Create a dataset that contains only one file
-    files = [copy.deepcopy(tests.metax_data.files.TXT_FILE)]
+    files = [copy.deepcopy(TXT_FILE)]
     files[0]["file_path"] = "/file1"
-    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["identifier"] = workspace.name
     tests.utils.add_metax_dataset(requests_mock=requests_mock,
                                   dataset=dataset,
@@ -894,9 +877,7 @@ def test_create_structmap_without_directories(workspace, requests_mock):
     (dataset_files / "file1").write_text("foo")
 
     # Init and run task
-    task = CreateMets(dataset_id=workspace.name,
-                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    task.run()
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
 
     # Check the structmap element
     mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
@@ -911,106 +892,21 @@ def test_create_structmap_without_directories(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_filesec_othermd(workspace, requests_mock):
-    """Test creating structmap for dataset with othermd metadata.
-
-    Creates METS for a dataset that contains image file. MIX metadata
-    should be created, and the file element in fileSec should be linked
-    to to MIX metadata.
-
-    :param workspace: Temporary packaging directory fixture
-    :param requests_mock: HTTP request mocker
-    """
-    # Create a dataset that contains an image file
-    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
-    dataset["identifier"] = workspace.name
-    files = [copy.deepcopy(tests.metax_data.files.TIFF_FILE)]
-    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
-
-    # Copy image file to test workspace
-    filepath \
-        = workspace / "metadata_generation/dataset_files/path/to/file.tiff"
-    filepath.parent.mkdir(parents=True)
-    shutil.copy("tests/data/sample_files/valid_tiff.tiff", filepath)
-
-    # Init and run task
-    task = CreateMets(dataset_id=workspace.name,
-                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    task.run()
-
-    # Filesec should contain one file
-    mets = lxml.etree.parse(str(workspace / 'preservation/mets.xml'))
-    file_elements = mets.xpath(
-        '/mets:mets/mets:fileSec/mets:fileGrp/mets:file',
-        namespaces=NAMESPACES
-    )
-    assert len(file_elements) == 1
-
-    # The file element should contain link to MIX metadata
-    mix_techmd_element = mets.xpath(
-        "//mets:mdWrap[@MDTYPE='NISOIMG']/parent::mets:techMD",
-        namespaces=NAMESPACES
-    )[0]
-    assert mix_techmd_element.attrib["ID"] in file_elements[0].attrib['ADMID']
-
-
-@pytest.mark.parametrize(
-    ("events", "provenance_is_from_qvain"),
-    [
-        (
-            [], False
-        ),
-        (
-            ['creation'], False
-        ),
-        (
-            ['creation', 'foobar'], False
-        ),
-        (
-            ['creation'], True
-        ),
-    ]
-)
-@pytest.mark.usefixtures('testmongoclient')
-def test_create_logical_structmap_ok(
-    workspace, requests_mock, events, provenance_is_from_qvain
-):
+def test_create_logical_structmap(workspace, requests_mock):
     """Test creating logical structure map.
+
+    Creates METS for a dataset that contains two files and tests that
+    logical structure map contains correct information.
 
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
-    :param events: List of provenance events in dataset
-    :param provenance_is_from_qvain: Choose type provenance event
     """
-    provenance_description = "This is a string"
-    # Create a dataset
-    # Dataset contains two files
-    files = [copy.deepcopy(tests.metax_data.files.TXT_FILE),
-             copy.deepcopy(tests.metax_data.files.TXT_FILE)]
+    # Create a dataset that contains two files
+    files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['file_path'] = 'files/file1'
     files[1]['file_path'] = 'files/file2'
-    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    # Dataset contans zero or more events
-    dataset["research_dataset"]["provenance"] = []
-    for event in events:
-        # Provenances made in Qvain have 'lifecycle_event' instead of
-        # 'provenance_event'
-        if provenance_is_from_qvain:
-            provenance = copy.deepcopy(
-                tests.metax_data.datasets.QVAIN_PROVENANCE
-            )
-            provenance["lifecycle_event"]["pref_label"]["en"] = event
-            provenance["title"]["en"] = provenance_description
-        else:
-            provenance = copy.deepcopy(
-                tests.metax_data.datasets.BASE_PROVENANCE
-            )
-            provenance["preservation_event"]["pref_label"]["en"] = event
-            provenance["description"]["en"] = provenance_description
-        dataset["research_dataset"]["provenance"].append(provenance)
-    if not dataset["research_dataset"]["provenance"]:
-        del dataset["research_dataset"]["provenance"]
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Create workspace that already contains dataset files
@@ -1020,9 +916,7 @@ def test_create_logical_structmap_ok(
     (file_directory / "file2").write_text("bar")
 
     # Init and run task
-    task = CreateMets(dataset_id=workspace.name,
-                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
-    task.run()
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
 
     # Validate logical Fairdata-logical structure map
     mets = lxml.etree.parse(str(workspace / 'preservation/mets.xml'))
@@ -1033,24 +927,6 @@ def test_create_logical_structmap_ok(
     assert structmap.xpath('mets:div',
                            namespaces=NAMESPACES)[0].attrib['TYPE'] \
         == "logical"
-
-    # Find the digiprovMD elements that were created for provenance
-    # events
-    provenance_digiprovmd_elements = mets.xpath(
-        f"//*[premis:eventDetail='{provenance_description}']"
-        "/ancestor::mets:digiprovMD",
-        namespaces=NAMESPACES
-    )
-
-    # There should be one digiprovMD element per provenance event
-    assert len(provenance_digiprovmd_elements) == len(events)
-
-    # Each provenance event should be linked to logical structMap
-    for element in provenance_digiprovmd_elements:
-        assert element.attrib['ID'] in structmap.xpath(
-            'mets:div',
-            namespaces=NAMESPACES
-        )[0].attrib['ADMID'].split()
 
     # There should be one div in structMap
     directories = structmap.xpath(
