@@ -426,14 +426,10 @@ def test_createdescriptivemetadata(workspace, requests_mock):
                                     namespaces=NAMESPACES)[0]
 
     # Compare datacite metadata in METS file to the original datacite
-    # metadata retrieved from metax. First rip the datacite from METS
-    # and lean up extra namespaces.
-    mets_datacite = lxml.etree.fromstring(lxml.etree.tostring(mets_datacite))
-    lxml.etree.cleanup_namespaces(mets_datacite)
-    # Compare XMLs. The string presentations should be indentical
+    # metadata retrieved from metax.
     metax_datacite = BASE_DATACITE.getroot()
-    assert lxml.etree.tostring(mets_datacite) \
-        == lxml.etree.tostring(metax_datacite)
+    assert lxml.etree.tostring(mets_datacite, method="c14n2") \
+        == lxml.etree.tostring(metax_datacite, method="c14n2")
 
     # Check that descriptive metadata is referenced in both structMaps
     # (Fairdata-physical and Fairdata-logical)
