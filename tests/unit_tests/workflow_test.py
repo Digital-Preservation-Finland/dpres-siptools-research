@@ -8,7 +8,6 @@ import shutil
 import tarfile
 
 from lxml.isoschematron import Schematron
-from siptools.xml.mets import NAMESPACES
 from upload_rest_api.models.file_entry import FileEntry
 import luigi
 import lxml.etree as ET
@@ -17,7 +16,8 @@ import pytest
 
 from siptools_research.config import Configuration
 from siptools_research.remoteanytarget import RemoteAnyTarget
-from siptools_research.workflow.compress import CompressSIP
+import siptools_research.workflow.compress
+import siptools_research.workflow.create_mets
 from tests.metax_data.files import PAS_STORAGE_ID
 import tests.metax_data.contracts
 import tests.utils
@@ -62,6 +62,11 @@ SCHEMATRON_FILES = [
     '/usr/share/dpres-xml-schemas/schematron/mets_techmd.sch',
     '/usr/share/dpres-xml-schemas/schematron/mets_videomd.sch'
 ]
+
+NAMESPACES = {
+    "mets": "http://www.loc.gov/METS/",
+    "premis": "info:lc/xmlns/premis-v2",
+}
 
 
 def _get_schematrons():
@@ -133,7 +138,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mocker):
     tests.utils.add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id=workspace.name,
-        filename="path/to/file",
+        filename="/path/to/file",
         content=b"foo"
     )
 
@@ -338,7 +343,7 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
                 )
 
     assert luigi.build(
-        [CompressSIP(
+        [siptools_research.workflow.compress.CompressSIP(
             dataset_id=workspace.name,
             config=tests.conftest.UNIT_TEST_CONFIG_FILE
         )],
@@ -382,7 +387,7 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
     for file in files:
         file_in_sip = (
             testpath / "extracted_sip" / "dataset_files"
-            / file["metadata"]["file_path"]
+            / file["metadata"]["file_path"].strip('/')
         )
         assert filecmp.cmp(file_in_sip, file['path'])
 

@@ -18,18 +18,13 @@ BASE_PROVENANCE = {
         "en": "Description of provenance"
     },
     'event_outcome': {
-        "pref_label": {
-            "en": "outcome"
-        }
+        "identifier":
+        "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success",
     },
     'outcome_description': {
         "en": "outcome_description"
     }
 }
-
-METADATA_MODIFICATION_PROVENANCE = copy.deepcopy(BASE_PROVENANCE)
-METADATA_MODIFICATION_PROVENANCE["preservation_event"]["pref_label"]["en"]\
-    = "metadata modification"
 
 QVAIN_PROVENANCE = {
     "title": {

@@ -273,7 +273,7 @@ SEG_Y_FILE_METADATA = {
 
 BASE_FILE = {
     "identifier": "pid:urn:identifier",
-    "file_path": "path/to/file",
+    "file_path": "/path/to/file",
     "file_storage": {
         "identifier": "urn:nbn:fi:att:file-storage-ida"
     },

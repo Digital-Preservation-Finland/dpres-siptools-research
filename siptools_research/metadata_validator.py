@@ -119,12 +119,6 @@ def _validate_dataset_localization(dataset_metadata):
                 "provenance/lifecycle_event/pref_label"
             )
 
-        if "event_outcome" in provenance:
-            _validate_localization(
-                provenance["event_outcome"]["pref_label"],
-                "provenance/event_outcome/pref_label"
-            )
-
         if "outcome_description" in provenance:
             _validate_localization(
                 provenance["outcome_description"],

@@ -64,6 +64,11 @@ def generate_metadata(dataset_id,
 
         # Scraper output will be saved to file_characteristics_extension
         # for later use
+        # TODO: Currently it is not possible to use previosly scraped
+        # metadata to create METS with siptools-ng. Therefore,
+        # file_characteristics_extension in Metax is useless.
+        # Siptools-ng will scrape the file again in CreateMets task.
+        # See TPASPKT-1326.
         file_characteristics_extension = {
             'streams': scraper.streams
         }

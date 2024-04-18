@@ -90,12 +90,12 @@
                                 "title": "Event outcome",
                                 "description": "Digital provenance event outcome information",
                                 "type": "object",
-                                "required": ["pref_label"],
+                                "required": ["identifier"],
                                 "properties": {
-                                    "pref_label": {
-                                        "title": "Preferred label",
-                                        "description": "The outcome of digital provenance event in multiple languages. The outcome in the default language of the dataset is used as value of premis:eventOutcomeInformation element",
-                                        "type": "object"
+                                    "identifier": {
+                                        "title": "The URI of preservation event outcome",
+                                        "description": "The URI is mapped to a valid value of premis:eventOutcomeInformation element",
+                                        "type": "string"
                                     }
                                 }
                             },

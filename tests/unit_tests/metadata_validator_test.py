@@ -262,7 +262,7 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
     # Try to validate dataset with a file that has an unsupported
     # file_format
     expected_error = (
-        "Validation error in file path/to/file: Incorrect file format: "
+        "Validation error in file /path/to/file: Incorrect file format: "
         "application/unsupported{}".format(version_info)
     )
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
@@ -478,7 +478,7 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
     )
 
     expected_error = (
-        "Validation error in metadata of path/to/file: 'file_format' is"
+        "Validation error in metadata of /path/to/file: 'file_format' is"
         " a required property\n\nFailed validating 'required' in schema"
     )
     with pytest.raises(InvalidFileMetadataError, match=expected_error):

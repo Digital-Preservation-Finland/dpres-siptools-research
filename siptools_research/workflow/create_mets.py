@@ -1,31 +1,30 @@
 """Luigi task that creates METS document."""
-import datetime
-import shutil
-import os
-
 import luigi.format
 from luigi import LocalTarget
-import lxml.etree as ET
-import mets
-import siptools.mdcreator
-from siptools.utils import encode_path, read_md_references, get_md_references
-from siptools.scripts import (compile_mets, premis_event, import_description,
-                              compile_structmap)
-import siptools.scripts.import_object
-from siptools.xml.mets import NAMESPACES
-import xml_helpers.utils as h
+from mets_builder import (METS, MetsProfile, StructuralMap, AgentType,
+                          AgentRole, StructuralMapDiv)
+from mets_builder.metadata import (DigitalProvenanceEventMetadata,
+                                   ImportedMetadata)
+from siptools_ng.sip_digital_object import SIPDigitalObject
 
-from siptools_research.utils.locale import (
-    get_dataset_languages, get_localized_value
-)
 from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.metax import get_metax_client
+from siptools_research.utils.locale import (get_dataset_languages,
+                                            get_localized_value)
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.copy_dataset_to_pas_data_catalog\
     import CopyToPasDataCatalog
 from siptools_research.workflow.get_files import GetFiles
-from siptools_research.xml_metadata import (TECH_ATTR_TYPES,
-                                            XMLMetadataGenerator)
+
+# Map event_outcome URI to a valid event outcome
+EVENT_OUTCOME = {
+    "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success":
+    "success",
+    "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/failure":
+    "failure",
+    "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/unknown":
+    "(:unkn)",
+}
 
 
 class CreateMets(WorkflowTask):
@@ -42,9 +41,9 @@ class CreateMets(WorkflowTask):
 
     def requires(self):
         # TODO: Currently this task will download metadata from Metax
-        # while METS document is build using old siptools. The plan is
-        # to move metadata download to separate Task, which is required
-        # by CreateMets task.
+        # while METS document is build. The plan is to move metadata
+        # download to separate Task, which is required by CreateMets
+        # task.
         return [
             GetFiles(
                 dataset_id=self.dataset_id, config=self.config
@@ -60,79 +59,68 @@ class CreateMets(WorkflowTask):
             format=luigi.format.Nop
         )
 
-    @property
-    def sip_creation_path(self):
-        """Sandbox directory for old siptools."""
-        return self.dataset.preservation_workspace / 'sip-in-progress'
-
     def run(self):
-        # TODO: Rewrite this whole function using siptools-ng/mets-builder.
-
-        # Clean up sip_creation_path if it has been created by previous
-        # run.
-        shutil.rmtree(self.sip_creation_path, ignore_errors=True)
-        self.sip_creation_path.mkdir()
-
-        # These methods are the run methods of old METS part creation
-        # tasks. They were copied to this task without changes, which is
-        # stupid, but this way we don't have to try to understand what
-        # each these tasks does, and why. All of them will be removed
-        # when we migrate to siptools-ng anyway.
-        self.create_provenance_information()
-        self.create_descriptive_metadata()
-        self.create_technical_metadata()
-        self.create_struct_map()
-        self.create_logical_struct_map()
-
         # Get dataset metadata from Metax
         metax_client = get_metax_client(self.config)
         metadata = metax_client.get_dataset(self.dataset_id)
-
-        # Get contract data from Metax
-        contract_id = metadata["contract"]["identifier"]
-        contract_metadata = metax_client.get_contract(contract_id)
-        contract_identifier = contract_metadata["contract_json"]["identifier"]
+        contract_identifier = metadata["contract"]["identifier"]
+        contract_metadata = metax_client.get_contract(contract_identifier)
         contract_org_name \
             = contract_metadata["contract_json"]["organization"]["name"]
+        files = metax_client.get_dataset_files(self.dataset_id)
 
-        # Compile METS
-        mets = compile_mets.create_mets(
-            workspace=str(self.sip_creation_path),
-            mets_profile='tpas',
-            contractid=contract_identifier,
-            objid=self.dataset.sip_identifier,
-            contentid=self.dataset.sip_identifier,
-            organization_name=contract_org_name,
-            packagingservice='Packaging Service'
+        # Create METS
+        mets = METS(
+            mets_profile=MetsProfile.RESEARCH_DATA,
+            contract_id=contract_identifier,
+            package_id=self.dataset.sip_identifier,
+            content_id=self.dataset.sip_identifier,
+            creator_name="Packaging Service",
+            creator_type='OTHER',
+            creator_other_type="SOFTWARE"
         )
 
-        with self.output().open('wb') as outputfile:
-            mets.write(outputfile,
-                       pretty_print=True,
-                       xml_declaration=True,
-                       encoding='UTF-8')
+        # Add user organization as agent
+        mets.add_agent(
+            name=contract_org_name,
+            agent_role=AgentRole.ARCHIVIST,
+            agent_type=AgentType.ORGANIZATION
+        )
+
+        # Create digital objects and physical structural map
+        digital_objects = self.create_digital_objects(files)
+        physical_structural_map \
+            = StructuralMap.from_directory_structure(digital_objects)
+        physical_structural_map.structural_map_type = 'Fairdata-physical'
+        mets.add_structural_map(physical_structural_map)
+
+        # Create logical structural map
+        logical_structural_map \
+            = self.create_logical_struct_map(digital_objects)
+        mets.add_structural_map(logical_structural_map)
+
+        # Add provenance metadata to structural maps
+        provenance_metadatas = self.create_provenance_information()
+        for provenance_metadata in provenance_metadatas:
+            physical_structural_map.root_div.add_metadata(provenance_metadata)
+            logical_structural_map.root_div.add_metadata(provenance_metadata)
+
+        # Add descriptive metadata to structural map
+        physical_structural_map.root_div.add_metadata(
+            self.create_descriptive_metadata()
+        )
+
+        # Write METS to file
+        mets.generate_file_references()
+        mets.write(self.output().path)
 
     def create_provenance_information(self):
-        """Create provenance information.
-
-        Creates METS documents that contain PREMIS event element for
-        each provenance event. Each document contains a digiprovMD
-        element identified by hash generated from the document filename.
-        The METS documents are written to
-        `<sip_creation_path>/<uuid>-PREMIS%3AEVENT-amd.xml`. Premis
-        event reference is written to
-        <sip_creation_path>/premis-event-md-references.jsonl.
-
-        The premis-event-md-references.jsonl file is copied to
-        `<workspace>/preservation/create-provenance-information.jsonl`,
-        because logical structuremap creation needs a reference file
-        that contains only provenance events. Other events created by
-        siptools-scripts would break the logical structuremap.
-        """
+        """Create provenance information."""
         metadata = get_metax_client(self.config).get_dataset(self.dataset_id)
         dataset_languages = get_dataset_languages(metadata)
         provenances = metadata["research_dataset"].get("provenance", [])
 
+        digital_provenance_event_metadatas = []
         for provenance in provenances:
 
             # Although it shouldn't happen, theoretically both
@@ -186,12 +174,10 @@ class CreateMets(WorkflowTask):
             event_detail = ": ".join(event_detail_items)
 
             if "event_outcome" in provenance:
-                event_outcome = get_localized_value(
-                    provenance["event_outcome"]["pref_label"],
-                    languages=dataset_languages
-                )
+                uri = provenance["event_outcome"]["identifier"]
+                event_outcome = EVENT_OUTCOME[uri.lower()]
             else:
-                event_outcome = "unknown"
+                event_outcome = "(:unav)"
 
             event_outcome_detail = provenance.get("outcome_description", None)
             if event_outcome_detail is not None:
@@ -200,36 +186,20 @@ class CreateMets(WorkflowTask):
                     languages=dataset_languages
                 )
 
-            premis_event.premis_event(
-                workspace=self.sip_creation_path,
-                event_type=event_type,
-                event_datetime=event_datetime, event_detail=event_detail,
-                event_outcome=event_outcome,
-                event_outcome_detail=event_outcome_detail
+            digital_provenance_event_metadatas.append(
+                DigitalProvenanceEventMetadata(
+                    event_type=event_type,
+                    event_datetime=event_datetime,
+                    event_detail=event_detail,
+                    event_outcome=event_outcome,
+                    event_outcome_detail=event_outcome_detail
+                )
             )
 
-        # Create a copy of premis-event-md-references.jsonl before other
-        # siptools-scripts will pollute it. It is needed for logical
-        # structuremap creation.
-        if provenances:
-            shutil.copy(
-                self.sip_creation_path / 'premis-event-md-references.jsonl',
-                self.dataset.preservation_workspace
-                / 'create-provenance-information.jsonl'
-            )
+        return digital_provenance_event_metadatas
 
     def create_descriptive_metadata(self):
-        """Create METS dmdSec document.
-
-        Descriptive metadata is read from Metax in DataCite format.
-        Descriptive metadata is written to <sip_creation_path>/dmdsec.xml.
-        Descriptive metadata references are written to
-        <sip_creation_path>/import-description-md-references.jsonl.
-        Premis event is written to
-        <sip_creation_path>/<event_identifier>-PREMIS%3AEVENT-amd.xml.
-        Premis event reference is written to
-        <sip_creation_path>/premis-event-md-references.jsonl.
-        """
+        """Create METS dmdSec document."""
         # Get datacite.xml from Metax
         metax_client = get_metax_client(self.config)
         dataset = metax_client.get_dataset(self.dataset_id)
@@ -240,268 +210,72 @@ class CreateMets(WorkflowTask):
             = str(self.dataset.preservation_workspace / 'datacite.xml')
         datacite.write(datacite_path)
 
-        # Create output files with siptools
-        import_description.import_description(
-            dmdsec_location=datacite_path,
-            workspace=self.sip_creation_path,
-            without_uuid=True
-        )
+        return ImportedMetadata(data_path=datacite_path,
+                                metadata_type="descriptive",
+                                metadata_format="OTHER",
+                                other_format="DATACITE",
+                                # TODO: Version 4.1 is chosen because
+                                # old siptools is using it. Is it
+                                # correct?
+                                format_version="4.1")
 
     @property
     def dataset_files_directory(self):
         """Directory where files have been downloaded to."""
         return self.dataset.metadata_generation_workspace / 'dataset_files'
 
-    def create_technical_metadata(self):
-        """Create METS documents that contain technical metadata.
-
-        The PREMIS object metadata is created to all dataset files and
-        it is written to
-        `<sip_creation_path>/<url_encoded_filepath>-PREMIS%3AOBJECT-amd.xml`.
-        File properties are written to
-        `<sip_creation_path>/<url_encoded_filepath>-scraper.json`.
-        PREMIS event metadata and PREMIS agent metadata are written to
-        `<sip_creation_path>/<premis_event_id>-PREMIS%3AEVENT-amd.xml`
-        and
-        `<sip_creation_path>/<premis_agent_id>-PREMIS%3AEVENT-amd.xml`.
-        Import object PREMIS event metadata references are written to
-        `<sip_creation_path>/import-object-md-references.jsonl`.
-
-        The file format specific metadata is copied from metax if it is
-        available. It is written to
-        `<sip_creation_path>/<url_encoded_filepath>-<metadata_type>-amd.xml`,
-        where <metadata_type> is NISOIMG, ADDML, AudioMD, or VideoMD.
-        File format specific metadata references are written to a
-        json-file depending on file format. For example, refences to
-        NISOIMG metadata are written to
-        `<sip_creation_path>/create-mix-md-references`.
-
-        List of PREMIS event references is written to
-        <sip_creation_path>/premis-event-md-references.jsonl.
-        """
-        files \
-            = get_metax_client(self.config).get_dataset_files(self.dataset_id)
-
-        # Create one timestamp for import_object events to avoid
-        # creating new events each time import_object is iterated
-        event_datetime \
-            = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
+    def create_digital_objects(self, files):
+        """Create digital objects."""
+        digital_objects = []
         for file_ in files:
-
-            filepath = self.dataset_files_directory \
-                / file_['file_path'].strip('/')
-
-            # Create METS document that contains PREMIS metadata
-            self.create_objects(file_, filepath, event_datetime,
-                                self.sip_creation_path)
-
-            # Create METS documents that contain technical
-            # attributes
-            self.create_technical_attributes(file_, filepath,
-                                             self.sip_creation_path)
-
-    def create_objects(self, metadata, filepath, event_datetime, output):
-        """Create PREMIS metadata for file.
-
-        Reads file metadata from Metax. Technical metadata is generated
-        by siptools import_object script.
-
-        :param metadata: file metadata dictionary
-        :param filepath: file path
-        :param event_datetime: the timestamp for the import_object
-                               events
-        :param output: output directory for import_object script
-        :returns: ``None``
-        """
-        # Read character set if it defined for this file
-        try:
-            charset = metadata["file_characteristics"]["encoding"]
-        except KeyError:
-            charset = None
-
-        # Read format version if it is defined for this file
-        try:
-            formatversion = metadata["file_characteristics"]["format_version"]
-        except KeyError:
-            formatversion = ""
-
-        # Read file creation date if it is defined for this file
-        try:
-            date_created = metadata["file_characteristics"]["file_created"]
-        except KeyError:
-            date_created = None
-
-        # Create PREMIS file metadata XML
-        siptools.scripts.import_object.import_object(
-            filepaths=[
-                str(filepath.relative_to(self.dataset_files_directory.parent))
-            ],
-            base_path=self.dataset_files_directory.parent,
-            workspace=output,
-            skip_wellformed_check=True,
-            file_format=(
-                metadata["file_characteristics"]["file_format"],
-                formatversion
-            ),
-            checksum=(metadata["checksum"]["algorithm"],
-                      metadata["checksum"]["value"]),
-            charset=charset,
-            date_created=date_created,
-            event_datetime=event_datetime,
-            event_target='.'
-        )
-
-    def create_technical_attributes(self, metadata, filepath, output):
-        """Create technical metadata for a file.
-
-        Create METS TechMD files for each metadata type based on
-        previously scraped file characteristics.
-
-        :param metadata: Metax metadata of the file
-        :param filepath: path of file
-        :param output: Path to the temporary workspace
-        :returns: ``None``
-        """
-        mdcreator = siptools.mdcreator.MetsSectionCreator(output)
-        metadata_generator = XMLMetadataGenerator(
-            file_path=filepath,
-            file_metadata=metadata
-        )
-
-        metadata_entries = metadata_generator.create()
-        for md_entry in metadata_entries:
-
-            md_elem = md_entry.md_elem
-            md_namespace = md_elem.nsmap[md_elem.prefix]
-            md_attributes = TECH_ATTR_TYPES[md_namespace]
-
-            # Create METS TechMD file
-            techmd_id, _ = mdcreator.write_md(
-                metadata=md_elem,
-                mdtype=md_attributes["mdtype"],
-                mdtypeversion=md_attributes["mdtypeversion"],
-                othermdtype=md_attributes.get("othermdtype", None)
+            filepath = file_['file_path'].strip('/')
+            source_filepath = self.dataset_files_directory / filepath
+            sip_filepath = "dataset_files/" + filepath
+            fc = file_["file_characteristics"]
+            digital_object = SIPDigitalObject(
+                source_filepath=source_filepath,
+                sip_filepath=sip_filepath,
             )
 
-            # Add reference from fileSec to TechMD
-            mdcreator.add_reference(
-                techmd_id,
-                str(filepath.relative_to(self.dataset_files_directory.parent)),
-                stream=md_entry.stream_index
+            digital_object.generate_technical_metadata(
+                csv_has_header=fc.get("csv_has_header"),
+                csv_delimiter=fc.get("csv_delimiter"),
+                csv_record_separator=fc.get("csv_record_separator"),
+                csv_quoting_character=fc.get("csv_quoting_char"),
+                file_format=fc["file_format"],
+                file_format_version=fc.get("format_version"),
+                charset=fc.get("encoding"),
+                file_created_date=fc.get("file_created"),
+                checksum_algorithm=file_["checksum"]["algorithm"],
+                checksum=file_["checksum"]["value"],
             )
-            mdcreator.write(ref_file=md_attributes["ref_file"])
+            digital_objects.append(digital_object)
 
-    def create_struct_map(self):
-        """Creates structural map and file section.
+        return digital_objects
 
-        Structural map and file section are written to separate METS
-        documents: `<sip_creation_path>/structmap.xml` and
-        `<sip_creation_path>/filesec.xml`
-        """
-        compile_structmap.compile_structmap(
-            workspace=self.sip_creation_path,
-            structmap_type='Fairdata-physical',
-            stdout=False
-        )
-
-    def create_logical_struct_map(self):
-        """Create METS document that contains logical structMap.
-
-        The file is written to
-        `<sip_creation_path>/logical_structmap.xml`.
-        """
-        # Read the generated physical structmap from file
-        # TODO: The path is converted to string because old versions of
-        # lxml do not support pathlib Paths. The conversion can
-        # probably be removed when Centos7 support is not required..
-        physical_structmap \
-            = ET.parse(str(self.sip_creation_path / 'structmap.xml'))
-
-        # Get dmdsec id from physical_structmap
-        dmdsec_id = physical_structmap.getroot()[0][0].attrib['DMDID']
-
-        # Get provenance id's
-        provenance_ids = self.get_provenance_ids()
-
-        # Init logical structmap
-        logical_structmap = mets.structmap(type_attr='Fairdata-logical')
-        mets_structmap = mets.mets(child_elements=[logical_structmap])
-
-        # Create logical structmap
+    def create_logical_struct_map(self, all_digital_objects):
+        """Create logical structural map."""
         categories = self.find_file_categories()
-        wrapper_div = mets.div(type_attr='logical',
-                               dmdid=[dmdsec_id],
-                               admid=provenance_ids)
-        for category in categories:
-            div = mets.div(type_attr=category)
-            for filename in categories.get(category):
-                fileid = self.get_fileid(encode_path(filename, safe='/'))
-                div.append(mets.fptr(fileid))
-            wrapper_div.append(div)
-        logical_structmap.append(wrapper_div)
+        divs = []
+        for category, filepaths in categories.items():
+            sip_filepaths = ["dataset_files/" + path.strip("/")
+                             for path in filepaths]
+            digital_objects = [
+                digital_object
+                for digital_object
+                in all_digital_objects
+                if digital_object.sip_filepath in sip_filepaths
+            ]
+            divs.append(
+                StructuralMapDiv(div_type=category,
+                                 digital_objects=digital_objects)
+            )
 
-        output_path = self.sip_creation_path / 'logical_structmap.xml'
-        with output_path.open('wb') as output:
-            output.write(h.serialize(mets_structmap))
+        root_div = StructuralMapDiv(div_type="logical")
+        root_div.add_divs(divs)
 
-    def get_provenance_ids(self):
-        """List identifiers of provenance events.
-
-        Gets list of dataset provenance events from Metax, and reads
-        provenance IDs of the events from event.xml files found in the
-        workspace directory.
-
-        :returns: list of provenance IDs
-        """
-        metadata = get_metax_client(self.config).get_dataset(self.dataset_id)
-        languages = get_dataset_languages(metadata)
-
-        # Read the reference file
-        event_ids = get_md_references(read_md_references(
-            str(self.dataset.preservation_workspace),
-            'create-provenance-information.jsonl'
-        ))
-        if not event_ids:
-            event_ids = []
-
-        event_type_ids = {}
-        for event_id in event_ids:
-            event_file = event_id[1:] + "-PREMIS%3AEVENT-amd.xml"
-            event_file_path = self.sip_creation_path / event_file
-            if not os.path.exists(event_file_path):
-                continue
-            root = ET.parse(encode_path(str(event_file_path))).getroot()
-            event_type = root.xpath("//premis:eventType",
-                                    namespaces=NAMESPACES)[0].text
-            event_type_ids[event_type] = event_id
-
-        provenance_ids = []
-        provenances = metadata["research_dataset"].get("provenance", [])
-        for provenance in provenances:
-            # Although it shouldn't happen, theoretically both
-            # 'preservation_event' and 'lifecycle_event' could exist in
-            # the same provenance metadata.  'preservation_event' is
-            # used as the overriding value if both exist.
-            if "preservation_event" in provenance:
-                event_type = get_localized_value(
-                    provenance["preservation_event"]["pref_label"],
-                    languages=languages
-                )
-            elif "lifecycle_event" in provenance:
-                event_type = get_localized_value(
-                    provenance["lifecycle_event"]["pref_label"],
-                    languages=languages
-                )
-            else:
-                raise InvalidDatasetMetadataError(
-                    "Provenance metadata does not have key "
-                    "'preservation_event' or 'lifecycle_event'. Invalid "
-                    f"provenance: {provenance}"
-                )
-            provenance_ids += [event_type_ids[event_type]]
-
-        return provenance_ids
+        return StructuralMap(root_div=root_div,
+                             structural_map_type='Fairdata-logical')
 
     # TODO: This method might be unnecessary: TPASPKT-1107
     def find_file_categories(self):
@@ -554,30 +328,6 @@ class CreateMets(WorkflowTask):
             logical_struct[filecategory].append(dataset_file['file_path'])
 
         return logical_struct
-
-    def get_fileid(self, filepath):
-        """Get file id from filesec.xml by filepath.
-
-        :param filepath: file path
-        :returns: file identifier
-        """
-        # pylint: disable=no-member
-        filesec_xml \
-            = ET.parse(str(self.sip_creation_path / 'filesec.xml'))
-
-        root = filesec_xml.getroot()
-
-        files = root[0][0]
-        for file_ in files:
-            for file__ in file_:
-                if str(file__.get('{http://www.w3.org/1999/xlink}href'))[7:] \
-                        == os.path.join('dataset_files', filepath.strip('/')):
-                    return file_.get('ID')
-
-        raise ValueError(
-            f"File ID for file {filepath} not found from fileSec: "
-            f"{filesec_xml}"
-        )
 
 
 # TODO: This function might be unnecessary: TPASPKT-1107

@@ -27,7 +27,7 @@ Requires:       python3
 Requires:       python3-setuptools
 Requires:       python3-luigi
 Requires:       python36-pymongo
-Requires:       python3-dpres-siptools
+Requires:       python3-dpres-siptools-ng
 Requires:       python3-mets
 Requires:       python36-lxml
 Requires:       python36-paramiko

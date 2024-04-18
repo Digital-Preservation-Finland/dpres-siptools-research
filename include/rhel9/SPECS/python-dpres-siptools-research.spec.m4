@@ -52,7 +52,7 @@ Summary:  %{summary}
 # Require the full version of file-scraper manually just in case dnf would
 # install the minimal version automatically.
 Requires: python3-file-scraper-full
-Requires: %{py3_dist siptools}
+Requires: %{py3_dist dpres-siptools-ng}
 Requires: %{py3_dist metax_access}
 Requires: %{py3_dist upload_rest_api}
 Requires: dpres-xml-schemas
