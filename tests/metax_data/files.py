@@ -281,7 +281,7 @@ BASE_FILE = {
         "identifier": "pid:urn:dir:wf1"
     },
     "checksum": {
-        "algorithm": "md5",
+        "algorithm": "MD5",
         "value": "58284d6cdd8deaffe082d063580a9df3"
     }
 }

@@ -326,14 +326,6 @@ class CreateMets(WorkflowTask):
         except KeyError:
             formatversion = ""
 
-        digest_algorithm = metadata["checksum"]["algorithm"]
-
-        # figure out the checksum algorithm
-        if digest_algorithm in ["md5", "sha2"]:
-            digest_algorithm = algorithm_name(
-                digest_algorithm, metadata["checksum"]["value"]
-            )
-
         # Read file creation date if it is defined for this file
         try:
             date_created = metadata["file_characteristics"]["file_created"]
@@ -352,7 +344,8 @@ class CreateMets(WorkflowTask):
                 metadata["file_characteristics"]["file_format"],
                 formatversion
             ),
-            checksum=(digest_algorithm, metadata["checksum"]["value"]),
+            checksum=(metadata["checksum"]["algorithm"],
+                      metadata["checksum"]["value"]),
             charset=charset,
             date_created=date_created,
             event_datetime=event_datetime,
@@ -585,31 +578,6 @@ class CreateMets(WorkflowTask):
             f"File ID for file {filepath} not found from fileSec: "
             f"{filesec_xml}"
         )
-
-
-# TODO: This function will be removed in TPASPKT-741
-def algorithm_name(algorithm, value):
-    """Guess the checksum algorithm.
-
-    The name of checksum algorithm in Metax is either 'md5' or 'sha2'.
-    If it is 'sha2' the exact algorithm has to be deduced from the
-    length of checksum value.
-
-    :param algorithm: algorithm string, 'md5' or 'sha2'
-    :param value: the checksum value
-    :returns: 'MD5', 'SHA-224', 'SHA-256', 'SHA-384', or 'SHA-512'
-    """
-    sha2_bit_lengths = {
-        224: 'SHA-224', 256: 'SHA-256', 384: 'SHA-384', 512: 'SHA-512'
-    }
-    hash_bit_length = len(value) * 4
-
-    if algorithm == 'md5':
-        algorithm_key = 'MD5'
-    elif algorithm == 'sha2':
-        algorithm_key = sha2_bit_lengths[hash_bit_length]
-
-    return algorithm_key
 
 
 # TODO: This function might be unnecessary: TPASPKT-1107

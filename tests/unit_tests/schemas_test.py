@@ -203,6 +203,26 @@ def test_validate_invalid_file_charset():
         "'foo' is not one of ['ISO-8859-15', 'UTF-8', 'UTF-16', 'UTF-32']"
 
 
+def test_validate_invalid_checksum_algorithm():
+    """Test validation of invalid checksum algorithm.
+
+    The validation should raise ``ValidationError``.
+    """
+    invalid_file_metadata = copy.deepcopy(TXT_FILE)
+    invalid_file_metadata['checksum']['algorithm'] = "sha2"
+
+    # Validation of invalid dataset raise error
+    with pytest.raises(jsonschema.ValidationError) as excinfo:
+        assert not jsonschema.validate(
+            invalid_file_metadata,
+            siptools_research.schemas.FILE_METADATA_SCHEMA
+        )
+
+    assert excinfo.value.message == ("'sha2' is not one of ['MD5', 'SHA-1', "
+                                     "'SHA-224', 'SHA-256', 'SHA-384', "
+                                     "'SHA-512']")
+
+
 @pytest.mark.parametrize(
      'attribute',
      (

@@ -1,6 +1,5 @@
 """Tests for module :mod:`siptools_research.workflow.create_mets`."""
 import copy
-import hashlib
 import shutil
 
 import lxml.etree
@@ -9,7 +8,6 @@ import xmltodict
 from metax_access import Metax
 
 from siptools_research.workflow.create_mets import (CreateMets,
-                                                    algorithm_name,
                                                     find_dir_use_category,
                                                     get_dirpath_dict)
 from siptools_research.exceptions import InvalidDatasetMetadataError
@@ -525,13 +523,14 @@ def test_create_techmd(workspace, requests_mock):
     # Mock metax
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
+    file_metadata = copy.deepcopy(TIFF_FILE)
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset,
-                                  files=[TIFF_FILE])
+                                  files=[file_metadata])
 
     # Create workspace that already contains the dataset files
     dataset_files_parent = workspace / 'metadata_generation'
-    tiff_path = 'dataset_files/' + TIFF_FILE['file_path']
+    tiff_path = 'dataset_files/' + file_metadata['file_path']
     (dataset_files_parent / tiff_path).parent.mkdir(parents=True)
     shutil.copy('tests/data/sample_files/valid_tiff.tiff',
                 dataset_files_parent / tiff_path)
@@ -550,11 +549,19 @@ def test_create_techmd(workspace, requests_mock):
     )[0] == 'premis:file'
     assert premis_object_element.xpath(
         "//premis:formatName", namespaces=NAMESPACES
-    )[0].text == 'image/tiff'
+    )[0].text == file_metadata["file_characteristics"]["file_format"]
     assert premis_object_element.xpath(
         "//premis:formatVersion",
         namespaces=NAMESPACES
-    )[0].text == '6.0'
+    )[0].text == file_metadata["file_characteristics"]["format_version"]
+    assert premis_object_element.xpath(
+        "//premis:messageDigestAlgorithm",
+        namespaces=NAMESPACES
+    )[0].text == file_metadata["checksum"]["algorithm"]
+    assert premis_object_element.xpath(
+        "//premis:messageDigest",
+        namespaces=NAMESPACES
+    )[0].text == file_metadata["checksum"]["value"]
 
     # Compare MIX metadata in METS file to original MIX metadata in
     # Metax
@@ -736,29 +743,6 @@ def test_create_techmd_without_charset(workspace, requests_mock):
     format_name = mets.xpath("//premis:formatName",
                              namespaces=NAMESPACES)[0].text
     assert format_name == 'text/plain; charset=UTF-8'
-
-
-@pytest.mark.parametrize(('algorithm', 'hash_function', 'expected'),
-                         [('md5', hashlib.md5, 'MD5'),
-                          ('sha2', hashlib.sha224, 'SHA-224'),
-                          ('sha2', hashlib.sha256, 'SHA-256'),
-                          ('sha2', hashlib.sha384, 'SHA-384'),
-                          ('sha2', hashlib.sha512, 'SHA-512')])
-# TODO: This test will be removed in TPASPKT-741
-def test_algorithm_name_valid_input(algorithm, hash_function, expected):
-    """Test ``algorithm_name`` function with valid inputs."""
-    assert algorithm_name(algorithm,
-                          hash_function(b'foo').hexdigest()) == expected
-
-
-@pytest.mark.parametrize(('algorithm', 'value', 'expected_exception'),
-                         [('foo', 'bar', UnboundLocalError),
-                          ('sha2', 'foobar', KeyError)])
-# TODO: This test will be removed in TPASPKT-741
-def test_algorithm_name_invalid_input(algorithm, value, expected_exception):
-    """Test ``algorithm_name`` function with invalid inputs."""
-    with pytest.raises(expected_exception):
-        algorithm_name(algorithm, value)
 
 
 @pytest.mark.usefixtures('testmongoclient')
