@@ -250,41 +250,6 @@ def test_multiple_provenance_events(workspace,
         assert provenance_id in logical_structmap_references
 
 
-# TODO: Invalid provenance metadata should be found already in metadata
-# validation task, so this test is probably unnecessary.
-@pytest.mark.usefixtures("testmongoclient")
-def test_failed_createprovenanceinformation(workspace, requests_mock):
-    """Test provenance event creation failure.
-
-    One of the provenance events of the dataset is invalid, which should
-    cause exception.
-
-    :param workspace: Test workspace directory fixture
-    :param requests_mock: HTTP request mocker
-    """
-    # Mock metax. Create a dataset with invalid provenance metadata.
-    provenance = copy.deepcopy(BASE_PROVENANCE)
-    del provenance["preservation_event"]
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['research_dataset']['provenance'] = [provenance]
-    dataset['identifier'] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
-
-    # Init task
-    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
-
-    # The run method should fail
-    with pytest.raises(
-        InvalidDatasetMetadataError,
-        match="Provenance metadata does not have key 'preservation_event'"
-    ):
-        task.run()
-
-    # Task should not be complete
-    assert not task.complete()
-    assert not (workspace / 'preservation/mets.xml').exists()
-
-
 @pytest.mark.parametrize(
     'provenance_data', [BASE_PROVENANCE, QVAIN_PROVENANCE]
 )
@@ -454,37 +419,6 @@ def test_createdescriptivemetadata(workspace, requests_mock):
                                               namespaces=NAMESPACES)[0]
     assert event_detail.text \
         == 'Descriptive metadata import from external source'
-
-
-# TODO: Datacite should be validated in metadata validation task. Is
-# this test necessary?
-@pytest.mark.usefixtures('testmongoclient')
-def test_createdescriptivemetadata_invalid_datacite(workspace, requests_mock):
-    """Test importing invalid Datacite XML.
-
-    The METS creation should fail when datacite metadata is not valid.
-
-    :param workspace: Test workspace directory fixture
-    :param requests_mock: Mocker object
-    """
-    # Create dataset that contains invalid datacite metadata
-    datacite = lxml.etree.Element("{foo}bar")
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['identifier'] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock,
-                                  dataset=dataset,
-                                  datacite=datacite)
-
-    # Init task
-    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
-
-    # The run method should fail
-    with pytest.raises(TypeError, match='Invalid namespace: foo'):
-        task.run()
-
-    # Task should not be complete
-    assert not task.complete()
-    assert not (workspace / 'preservation/mets.xml').exists()
 
 
 def _xml2simpledict(element):
@@ -664,48 +598,6 @@ def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
     assert len(videomds) == 1
     assert videomds[0].xpath(".//videomd:codecName",
                              namespaces=NAMESPACES)[0].text == "FFV1"
-
-
-# TODO: This test probably is not necessary, and could be removed. The
-# file_characteristics_extension is created by packaging service, so it
-# should always be valid.
-@pytest.mark.usefixtures('testmongoclient')
-def test_create_techmd_incomplete_file_characteristics(workspace,
-                                                       requests_mock):
-    """Test techmd creation for a file without all the necessary file
-    characteristics.
-
-    :param workspace: Temporary workspace directory fixture
-    :param requests_mock: Mocker object
-    """
-    tiff_file_incomplete = copy.deepcopy(TIFF_FILE)
-    del (tiff_file_incomplete["file_characteristics_extension"]["streams"]
-         [0]["bps_value"])
-    # Mock metax
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['identifier'] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock,
-                                  dataset=dataset,
-                                  files=[tiff_file_incomplete])
-
-    # Create workspace that already contains the dataset files
-    tiff_path = workspace / "metadata_generation" / "dataset_files" \
-        / TIFF_FILE["file_path"]
-    tiff_path.parent.mkdir(parents=True)
-    shutil.copy('tests/data/sample_files/valid_tiff.tiff', tiff_path)
-
-    # Init task
-    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
-
-    # The run method should fail
-    with pytest.raises(KeyError) as exc:
-        task.run()
-
-    assert "bps_value" in str(exc.value)
-
-    # Task should not be complete
-    assert not task.complete()
-    assert not (workspace / 'preservation/mets.xml').exists()
 
 
 @pytest.mark.usefixtures()
