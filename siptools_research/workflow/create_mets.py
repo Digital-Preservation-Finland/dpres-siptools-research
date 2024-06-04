@@ -65,9 +65,11 @@ class CreateMets(WorkflowTask):
         metadata = metax_client.get_dataset(self.dataset_id)
         contract_identifier = metadata["contract"]["identifier"]
         contract_metadata = metax_client.get_contract(contract_identifier)
-        contract_org_name \
-            = contract_metadata["contract_json"]["organization"]["name"]
         files = metax_client.get_dataset_files(self.dataset_id)
+        datacite = metax_client.get_datacite(self.dataset_id)
+        datacite_path \
+            = str(self.dataset.preservation_workspace / 'datacite.xml')
+        datacite.write(datacite_path)
 
         # Create METS
         mets = METS(
@@ -82,13 +84,15 @@ class CreateMets(WorkflowTask):
 
         # Add user organization as agent
         mets.add_agent(
-            name=contract_org_name,
+            name=contract_metadata["contract_json"]["organization"]["name"],
             agent_role=AgentRole.ARCHIVIST,
             agent_type=AgentType.ORGANIZATION
         )
 
-        # Create digital objects and physical structural map
-        digital_objects = self.create_digital_objects(files)
+        # Create digital objects
+        digital_objects = self._create_digital_objects(files)
+
+        # Create physical structural map
         physical_structural_map \
             = StructuralMap.from_directory_structure(digital_objects)
         physical_structural_map.structural_map_type = 'Fairdata-physical'
@@ -96,33 +100,87 @@ class CreateMets(WorkflowTask):
 
         # Create logical structural map
         logical_structural_map \
-            = self.create_logical_struct_map(digital_objects)
+            = self._create_logical_structmap(digital_objects)
         mets.add_structural_map(logical_structural_map)
 
         # Add provenance metadata to structural maps
-        provenance_metadatas = self.create_provenance_information()
+        provenance_metadatas = self._create_provenance_metadata(metadata)
         for provenance_metadata in provenance_metadatas:
             physical_structural_map.root_div.add_metadata(provenance_metadata)
             logical_structural_map.root_div.add_metadata(provenance_metadata)
 
         # Add descriptive metadata to structural map
-        physical_structural_map.root_div.add_metadata(
-            self.create_descriptive_metadata()
+        descriptive_metadata = ImportedMetadata(
+            data_path=datacite_path,
+            metadata_type="descriptive",
+            metadata_format="OTHER",
+            other_format="DATACITE",
+            # TODO: Version 4.1 is chosen because
+            # old siptools is using it. Is it
+            # correct?
+            format_version="4.1"
         )
+        physical_structural_map.root_div.add_metadata(descriptive_metadata)
 
         # Write METS to file
         mets.generate_file_references()
         mets.write(self.output().path)
 
-    def create_provenance_information(self):
-        """Create provenance information."""
-        metadata = get_metax_client(self.config).get_dataset(self.dataset_id)
+    def _create_digital_objects(self, files):
+        digital_objects = []
+        for file_ in files:
+            filepath = file_['file_path'].strip('/')
+            source_filepath = (self.dataset.metadata_generation_workspace
+                               / "dataset_files" / filepath)
+            sip_filepath = "dataset_files/" + filepath
+            fc = file_["file_characteristics"]
+            digital_object = SIPDigitalObject(
+                source_filepath=source_filepath,
+                sip_filepath=sip_filepath,
+            )
+            digital_object.generate_technical_metadata(
+                csv_has_header=fc.get("csv_has_header"),
+                csv_delimiter=fc.get("csv_delimiter"),
+                csv_record_separator=fc.get("csv_record_separator"),
+                csv_quoting_character=fc.get("csv_quoting_char"),
+                file_format=fc["file_format"],
+                file_format_version=fc.get("format_version"),
+                charset=fc.get("encoding"),
+                file_created_date=fc.get("file_created"),
+                checksum_algorithm=file_["checksum"]["algorithm"],
+                checksum=file_["checksum"]["value"],
+            )
+            digital_objects.append(digital_object)
+
+        return digital_objects
+
+    def _create_logical_structmap(self, digital_objects):
+        divs = []
+        for category, filepaths in self._find_file_categories().items():
+            sip_filepaths = ["dataset_files/" + path.strip("/")
+                             for path in filepaths]
+            category_digital_objects = [
+                digital_object
+                for digital_object
+                in digital_objects
+                if digital_object.sip_filepath in sip_filepaths
+            ]
+            divs.append(
+                StructuralMapDiv(div_type=category,
+                                 digital_objects=category_digital_objects)
+            )
+
+        root_div = StructuralMapDiv(div_type="logical")
+        root_div.add_divs(divs)
+
+        return StructuralMap(root_div=root_div,
+                             structural_map_type='Fairdata-logical')
+
+    def _create_provenance_metadata(self, metadata):
+        provenance_metadatas = []
         dataset_languages = get_dataset_languages(metadata)
         provenances = metadata["research_dataset"].get("provenance", [])
-
-        digital_provenance_event_metadatas = []
         for provenance in provenances:
-
             # Although it shouldn't happen, theoretically both
             # 'preservation_event' and 'lifecycle_event' could exist in
             # the same provenance metadata. 'preservation_event' is used
@@ -186,7 +244,7 @@ class CreateMets(WorkflowTask):
                     languages=dataset_languages
                 )
 
-            digital_provenance_event_metadatas.append(
+            provenance_metadatas.append(
                 DigitalProvenanceEventMetadata(
                     event_type=event_type,
                     event_datetime=event_datetime,
@@ -196,89 +254,10 @@ class CreateMets(WorkflowTask):
                 )
             )
 
-        return digital_provenance_event_metadatas
-
-    def create_descriptive_metadata(self):
-        """Create METS dmdSec document."""
-        # Get datacite.xml from Metax
-        metax_client = get_metax_client(self.config)
-        dataset = metax_client.get_dataset(self.dataset_id)
-        datacite = metax_client.get_datacite(dataset['identifier'])
-
-        # Write datacite.xml to file
-        datacite_path \
-            = str(self.dataset.preservation_workspace / 'datacite.xml')
-        datacite.write(datacite_path)
-
-        return ImportedMetadata(data_path=datacite_path,
-                                metadata_type="descriptive",
-                                metadata_format="OTHER",
-                                other_format="DATACITE",
-                                # TODO: Version 4.1 is chosen because
-                                # old siptools is using it. Is it
-                                # correct?
-                                format_version="4.1")
-
-    @property
-    def dataset_files_directory(self):
-        """Directory where files have been downloaded to."""
-        return self.dataset.metadata_generation_workspace / 'dataset_files'
-
-    def create_digital_objects(self, files):
-        """Create digital objects."""
-        digital_objects = []
-        for file_ in files:
-            filepath = file_['file_path'].strip('/')
-            source_filepath = self.dataset_files_directory / filepath
-            sip_filepath = "dataset_files/" + filepath
-            fc = file_["file_characteristics"]
-            digital_object = SIPDigitalObject(
-                source_filepath=source_filepath,
-                sip_filepath=sip_filepath,
-            )
-
-            digital_object.generate_technical_metadata(
-                csv_has_header=fc.get("csv_has_header"),
-                csv_delimiter=fc.get("csv_delimiter"),
-                csv_record_separator=fc.get("csv_record_separator"),
-                csv_quoting_character=fc.get("csv_quoting_char"),
-                file_format=fc["file_format"],
-                file_format_version=fc.get("format_version"),
-                charset=fc.get("encoding"),
-                file_created_date=fc.get("file_created"),
-                checksum_algorithm=file_["checksum"]["algorithm"],
-                checksum=file_["checksum"]["value"],
-            )
-            digital_objects.append(digital_object)
-
-        return digital_objects
-
-    def create_logical_struct_map(self, all_digital_objects):
-        """Create logical structural map."""
-        categories = self.find_file_categories()
-        divs = []
-        for category, filepaths in categories.items():
-            sip_filepaths = ["dataset_files/" + path.strip("/")
-                             for path in filepaths]
-            digital_objects = [
-                digital_object
-                for digital_object
-                in all_digital_objects
-                if digital_object.sip_filepath in sip_filepaths
-            ]
-            divs.append(
-                StructuralMapDiv(div_type=category,
-                                 digital_objects=digital_objects)
-            )
-
-        root_div = StructuralMapDiv(div_type="logical")
-        root_div.add_divs(divs)
-
-        return StructuralMap(root_div=root_div,
-                             structural_map_type='Fairdata-logical')
+        return provenance_metadatas
 
     # TODO: This method might be unnecessary: TPASPKT-1107
-    def find_file_categories(self):
+    def _find_file_categories(self):
         """Create logical structure map of dataset files.
 
         Returns dictionary with filecategories as keys and filepaths as
