@@ -282,8 +282,9 @@ def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):
     except DataciteGenerationError as exception:
         raise InvalidDatasetMetadataError(str(exception)) from exception
 
+    datacite_etree = lxml.etree.fromstring(datacite)
     schema = lxml.etree.XMLSchema(lxml.etree.parse(DATACITE_SCHEMA))
-    if schema.validate(datacite) is False:
+    if schema.validate(datacite_etree) is False:
         # pylint: disable=not-an-iterable
         errors = [error.message for error in schema.error_log]
         raise InvalidDatasetMetadataError(

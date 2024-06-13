@@ -67,9 +67,6 @@ class CreateMets(WorkflowTask):
         contract_metadata = metax_client.get_contract(contract_identifier)
         files = metax_client.get_dataset_files(self.dataset_id)
         datacite = metax_client.get_datacite(self.dataset_id)
-        datacite_path \
-            = str(self.dataset.preservation_workspace / 'datacite.xml')
-        datacite.write(datacite_path)
 
         # Create METS
         mets = METS(
@@ -111,7 +108,7 @@ class CreateMets(WorkflowTask):
 
         # Add descriptive metadata to structural map
         descriptive_metadata = ImportedMetadata(
-            data_path=datacite_path,
+            data_string=datacite,
             metadata_type="descriptive",
             metadata_format="OTHER",
             other_format="DATACITE",
