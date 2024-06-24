@@ -1,5 +1,4 @@
 """Sample Metax dataset metadata."""
-import copy
 import lxml.etree
 
 BASE_DATACITE = lxml.etree.parse('tests/data/datacite_sample.xml')

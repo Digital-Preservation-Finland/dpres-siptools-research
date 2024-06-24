@@ -1,9 +1,6 @@
 """Tests for :mod:`siptools_research.__main__` module."""
-import sys
-
 import pytest
 
-import siptools_research.__main__
 from siptools_research.dataset import Dataset
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 
@@ -77,7 +74,6 @@ def test_main_list(cli_runner):
         assert f"aineisto_{i}" in result.output
 
 
-
 @pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 @pytest.mark.parametrize(
     "command",
@@ -87,7 +83,6 @@ def test_main_list(cli_runner):
         ["dataset", "disable", "1"]
     ]
 )
-
 def test_main_status_no_match(cli_runner, command):
     """Test that missing dataset prints correct error for all dataset commands
 
