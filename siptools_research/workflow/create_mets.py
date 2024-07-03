@@ -6,7 +6,7 @@ from mets_builder import (METS, MetsProfile, StructuralMap, AgentType,
 from mets_builder.metadata import (DigitalProvenanceEventMetadata,
                                    ImportedMetadata)
 from siptools_ng.sip_digital_object import SIPDigitalObject
-from siptools_ng.sip import structural_map_from_directory_structure
+import siptools_ng.sip
 
 from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.metax import get_metax_client
@@ -92,7 +92,9 @@ class CreateMets(WorkflowTask):
 
         # Create physical structural map
         physical_structural_map \
-            = structural_map_from_directory_structure(digital_objects)
+            = siptools_ng.sip.structural_map_from_directory_structure(
+                digital_objects
+            )
         physical_structural_map.structural_map_type = 'Fairdata-physical'
         mets.add_structural_map(physical_structural_map)
 
@@ -118,7 +120,11 @@ class CreateMets(WorkflowTask):
             # correct?
             format_version="4.1"
         )
-        physical_structural_map.root_div.add_metadata(descriptive_metadata)
+        # TODO: Private function should not be used!
+        siptools_ng.sip._add_metadata(
+            physical_structural_map.root_div,
+            descriptive_metadata
+        )
 
         # Write METS to file
         mets.generate_file_references()
