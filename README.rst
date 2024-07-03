@@ -43,13 +43,14 @@ Installation using Python Virtualenv for development purposes
 
 Install required RPM packages
 
-* gcc, swig and openssl-devel are required to install M2Crypto
-* ImageMagick, file-5.30, and ffmpeg are required by dpres-ipt
+* gcc, swig, openssl-devel and python3-devel are required to install M2Crypto
+* ImageMagick, file, and ffmpeg are required by dpres-ipt
 * dpres-xml-schemas is required for testing XML validation
 * file-scraper-full is required for testing file type detection::
 
-   rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
-   yum install gcc openssl-devel swig ImageMagick file-5.30 ffmpeg dpres-xml-schemas libmediainfo jhove file-scraper-full
+   dnf config-manager --set-enable crb
+   dnf repolist
+   dnf install gcc openssl-devel python3-devel swig ImageMagick file ffmpeg dpres-xml-schemas libmediainfo jhove python3-file-scraper-full
 
 Create a virtual environment::
 
