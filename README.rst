@@ -43,14 +43,15 @@ Installation using Python Virtualenv for development purposes
 
 Install required RPM packages
 
-* gcc, swig, openssl-devel and python3-devel are required to install M2Crypto
-* ImageMagick, file, and ffmpeg are required by dpres-ipt
+* gcc, swig, python3-devel are required to install M2Crypto
+* CRB repository is required to install swig
 * dpres-xml-schemas is required for testing XML validation
-* file-scraper-full is required for testing file type detection::
+* python3-file-scraper-full is required for testing file type detection
+* rpmfusion repository is required for ffmpeg, which is required by file-scraper::
 
-   dnf config-manager --set-enable crb
-   dnf repolist
-   dnf install gcc openssl-devel python3-devel swig ImageMagick file ffmpeg dpres-xml-schemas libmediainfo jhove python3-file-scraper-full
+   dnf config-manager --set-enabled crb
+   dnf install https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm
+   dnf install gcc python3-devel swig python3-file-scraper-full dpres-xml-schemas libmediainfo jhove
 
 Create a virtual environment::
 
