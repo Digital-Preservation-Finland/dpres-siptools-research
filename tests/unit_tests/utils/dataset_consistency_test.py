@@ -2,10 +2,9 @@
 import copy
 import pytest
 
-from metax_access import Metax
+from siptools_research.metax import get_metax_client
 from siptools_research.utils.dataset_consistency import DatasetConsistency
 from siptools_research.exceptions import InvalidDatasetMetadataError
-from siptools_research.config import Configuration
 import tests.conftest
 
 
@@ -19,13 +18,8 @@ def test_verify_file_contained_by_dataset_files():
     :returns: ``None``
     """
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     dataset = {
         'identifier': 'dataset_identifier',
         'research_dataset': {'files': [
@@ -57,13 +51,8 @@ def test_verify_file_contained_by_dataset_directories(requests_mock):
     :returns: ``None``
     """
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     dataset = {
         'identifier': 'dataset_identifier',
         'research_dataset': {
@@ -109,13 +98,8 @@ def test_verify_file_contained_by_dataset_missing_from_dataset(requests_mock):
     :returns: ``None``
     """
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     dataset = {
         'identifier': 'dataset_identifier',
         'research_dataset': {
@@ -181,13 +165,8 @@ def test_dataset_directories_caching_works(requests_mock):
     file_2['identifier'] = 'file_identifier2'
 
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     dataset = {
         'identifier': 'dataset_identifier',
         'research_dataset': {

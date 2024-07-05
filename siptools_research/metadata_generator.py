@@ -1,9 +1,8 @@
 """Generates metadata required to create SIP."""
 import file_scraper
 import file_scraper.scraper
-from metax_access import Metax
+from siptools_research.metax import get_metax_client
 
-from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidFileError
 
 
@@ -24,13 +23,7 @@ def generate_metadata(dataset_id,
     :param config: path to configuration file
     :returns: ``None``
     """
-    config_object = Configuration(config)
-    metax_client = Metax(
-        config_object.get('metax_url'),
-        config_object.get('metax_user'),
-        config_object.get('metax_password'),
-        verify=config_object.getboolean('metax_ssl_verification')
-    )
+    metax_client = get_metax_client(config)
 
     for file_ in metax_client.get_dataset_files(dataset_id):
         # Get file information from Metax

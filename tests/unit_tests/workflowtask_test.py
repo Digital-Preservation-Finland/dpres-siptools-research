@@ -7,11 +7,10 @@ from metax_access import (DS_STATE_GENERATING_METADATA,
                           DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
                           DS_STATE_INVALID_METADATA,
                           DS_STATE_PACKAGING_FAILED,
-                          DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
-                          Metax)
+                          DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE)
+from siptools_research.metax import get_metax_client
 
 from tests.conftest import UNIT_TEST_CONFIG_FILE
-from siptools_research.config import Configuration
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import (InvalidDatasetError,
                                           InvalidDatasetMetadataError,
@@ -163,13 +162,7 @@ class MetaxTask(WorkflowTask):
 
         :returns:  ``None``
         """
-        config_object = Configuration(self.config)
-        metax_client = Metax(
-            config_object.get('metax_url'),
-            config_object.get('metax_user'),
-            config_object.get('metax_password'),
-            verify=config_object.getboolean('metax_ssl_verification')
-        )
+        metax_client = get_metax_client(self.config)
         metax_client.get_dataset('1')
 
 

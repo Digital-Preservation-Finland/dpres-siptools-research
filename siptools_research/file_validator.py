@@ -4,9 +4,7 @@ from file_scraper.defaults import (
     BIT_LEVEL_WITH_RECOMMENDED,
     BIT_LEVEL
 )
-from metax_access.metax import Metax
-
-from siptools_research.config import Configuration
+from siptools_research.metax import get_metax_client
 from siptools_research.exceptions import InvalidFileError
 
 
@@ -20,13 +18,8 @@ def validate_files(dataset_id, root_directory,
     :param root_directory: directory where files are found
     :param config: configuration file path
     """
-    conf = Configuration(config_file)
-    metax_client = Metax(
-        conf.get('metax_url'),
-        conf.get('metax_user'),
-        conf.get('metax_password'),
-        verify=conf.getboolean('metax_ssl_verification')
-    )
+
+    metax_client = get_metax_client(config_file)
 
     invalid_files = []
     for file in metax_client.get_dataset_files(dataset_id):

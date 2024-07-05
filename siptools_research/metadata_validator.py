@@ -6,11 +6,11 @@ import os
 import lxml
 import lxml.isoschematron
 from iso639 import languages
-from metax_access import DataciteGenerationError, Metax
+from metax_access import DataciteGenerationError
+from siptools_research.metax import get_metax_client
 
 import jsonschema
 import siptools_research.schemas
-from siptools_research.config import Configuration
 from siptools_research.exceptions import (InvalidContractMetadataError,
                                           InvalidDatasetMetadataError,
                                           InvalidFileMetadataError)
@@ -42,13 +42,7 @@ def validate_metadata(
                        used
     :returns: ``True``, if dataset metadata is valid.
     """
-    conf = Configuration(config)
-    metax_client = Metax(
-        conf.get('metax_url'),
-        conf.get('metax_user'),
-        conf.get('metax_password'),
-        verify=conf.getboolean('metax_ssl_verification')
-    )
+    metax_client = get_metax_client(config)
     # Get dataset metadata from Metax
     dataset_metadata = metax_client.get_dataset(dataset_id)
 

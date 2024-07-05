@@ -4,13 +4,12 @@ import copy
 
 import lxml.etree
 import pytest
-from metax_access import Metax
+from siptools_research.metax import get_metax_client
 from requests.exceptions import HTTPError
 
 import siptools_research
 from siptools_research import metadata_validator
 from siptools_research.metadata_validator import validate_metadata
-from siptools_research.config import Configuration
 from siptools_research.exceptions import (InvalidContractMetadataError,
                                           InvalidDatasetMetadataError,
                                           InvalidFileMetadataError)
@@ -438,13 +437,7 @@ def test_validate_file_metadata(requests_mock):
     )
 
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # pylint: disable=protected-access
     siptools_research.metadata_validator._validate_file_metadata(dataset,
@@ -469,13 +462,7 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
 
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     expected_error = (
         "Validation error in metadata of /path/to/file: 'file_format' is"
@@ -501,13 +488,7 @@ def test_validate_datacite(requests_mock):
     :returns: ``None``
     """
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    metax_client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    metax_client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier?"
                       "dataset_format=datacite",

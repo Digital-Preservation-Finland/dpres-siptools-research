@@ -2,10 +2,9 @@
 import copy
 import pytest
 
-from metax_access import Metax
+from siptools_research.metax import get_metax_client
 import tests.conftest
 from siptools_research.exceptions import InvalidDatasetMetadataError
-from siptools_research.config import Configuration
 from siptools_research.utils.directory_validation import DirectoryValidation
 
 FILE_METADATA = {
@@ -23,13 +22,7 @@ def test_successful_directory_validation(requests_mock):
     :returns: ``None``
     """
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     first_par_dir_adapter = requests_mock.get(
         tests.conftest.METAX_URL + '/directories/first_par',
@@ -81,13 +74,8 @@ def test_directory_validation_caching_works(requests_mock):
     :returns: ``None``
     """
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     first_par_dir_adapter = requests_mock.get(
         tests.conftest.METAX_URL + '/directories/first_par',
         json={
@@ -139,13 +127,8 @@ def test_successful_directory_validation_fails(requests_mock):
     :returns: ``None``
     """
     # Init metax client
-    configuration = Configuration(tests.conftest.UNIT_TEST_CONFIG_FILE)
-    client = Metax(
-        configuration.get('metax_url'),
-        configuration.get('metax_user'),
-        configuration.get('metax_password'),
-        verify=configuration.getboolean('metax_ssl_verification')
-    )
+    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
+
     first_par_dir_adapter = requests_mock.get(
         tests.conftest.METAX_URL + '/directories/first_par',
         json={

@@ -5,7 +5,7 @@ from packaging.version import Version
 
 import lxml.etree
 import pytest
-from metax_access import Metax
+from siptools_research.metax import get_metax_client
 
 from siptools_research.workflow.create_mets import (CreateMets,
                                                     find_dir_use_category,
@@ -17,6 +17,7 @@ from tests.metax_data.datasets import (BASE_DATASET,
                                        BASE_PROVENANCE,
                                        QVAIN_PROVENANCE)
 from tests.metax_data.files import TXT_FILE, TIFF_FILE, MKV_FILE, CSV_FILE
+import tests.conftest
 
 
 NAMESPACES = {
@@ -1002,21 +1003,21 @@ def test_get_dirpath_dict(requests_mock):
     :param requests_mock: Mocker object
     """
     requests_mock.get(
-        "https://metaksi/rest/v2/directories/1",
+        "/rest/v2/directories/1",
         json={
             "identifier": "1",
             "directory_path": "/"
         }
     )
     requests_mock.get(
-        "https://metaksi/rest/v2/directories/2",
+        "/rest/v2/directories/2",
         json={
             "identifier": "2",
             "directory_path": "/test"
         }
     )
 
-    metax_client = Metax("https://metaksi", "test", "test")
+    metax_client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
     dataset_metadata = {
         "research_dataset": {
             "directories": [
@@ -1044,7 +1045,7 @@ def test_get_dirpath_dict_no_directories():
     The function should return an empty dict when no directories are
     defined in the research_dataset.
     """
-    metax_client = Metax("https://metaksi", "test", "test")
+    metax_client = None
     assert not get_dirpath_dict(metax_client, {"research_dataset": {}})
 
 
