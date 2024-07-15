@@ -16,7 +16,6 @@ from siptools_research.exceptions import (InvalidContractMetadataError,
                                           InvalidFileMetadataError)
 from siptools_research.utils import mimetypes
 from siptools_research.utils.dataset_consistency import DatasetConsistency
-from siptools_research.utils.directory_validation import DirectoryValidation
 
 DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
@@ -221,7 +220,6 @@ def _validate_file_metadata(dataset, metax_client):
     # /datasets/datasetid/files can be found from dataset.file or
     # dataset.directories properties
     consistency = DatasetConsistency(metax_client, dataset)
-    directory_validation = DirectoryValidation(metax_client)
 
     dataset_files = metax_client.get_dataset_files(dataset['identifier'])
     if not dataset_files:
@@ -248,8 +246,6 @@ def _validate_file_metadata(dataset, metax_client):
             raise InvalidFileMetadataError(
                 f"Validation error in metadata of {file_path}: {str(exc)}"
             ) from exc
-
-        directory_validation.is_valid_for_file(file_metadata)
 
         # Check that mimetype is supported
         _check_mimetype(file_metadata)

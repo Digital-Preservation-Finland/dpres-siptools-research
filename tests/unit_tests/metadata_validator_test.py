@@ -503,30 +503,6 @@ def test_validate_datacite(requests_mock):
             metax_client
         )
 
-
-# pylint: disable=invalid-name
-def test_validate_metadata_invalid_directory_metadata(requests_mock):
-    """Test validate_metadata wihth invalid directory metadata.
-
-    Function should raise exception if directory metadata is not valid
-    (directory_path attribute is missing).
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    file_metadata = copy.deepcopy(TXT_FILE)
-    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-    requests_mock.get("https://metaksi/rest/v2/directories/pid:urn:dir:wf1",
-                      json={"identifier": "pid:urn:dir:wf1"})
-
-    # Try to validate invalid dataset
-    expected_error = ("Validation error in metadata of pid:urn:dir:wf1: "
-                      "'directory_path' is a required property")
-    with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
 # pylint: disable=invalid-name
 def test_validate_metadata_http_error_raised(requests_mock):
     """Test validate_metadata.
