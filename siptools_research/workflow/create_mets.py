@@ -5,7 +5,7 @@ from mets_builder import (METS, MetsProfile, StructuralMap, AgentType,
                           AgentRole, StructuralMapDiv)
 from mets_builder.metadata import (DigitalProvenanceEventMetadata,
                                    ImportedMetadata)
-from siptools_ng.sip_digital_object import SIPDigitalObject
+from siptools_ng.file import File
 import siptools_ng.sip
 
 from siptools_research.exceptions import InvalidDatasetMetadataError
@@ -131,18 +131,18 @@ class CreateMets(WorkflowTask):
         mets.write(self.output().path)
 
     def _create_digital_objects(self, files):
-        digital_objects = []
+        sip_files = []
         for file_ in files:
             filepath = file_['file_path'].strip('/')
             source_filepath = (self.dataset.metadata_generation_workspace
                                / "dataset_files" / filepath)
             sip_filepath = "dataset_files/" + filepath
             fc = file_["file_characteristics"]
-            digital_object = SIPDigitalObject(
-                source_filepath=source_filepath,
-                sip_filepath=sip_filepath,
+            sip_file = File(
+                path=source_filepath,
+                digital_object_path=sip_filepath,
             )
-            digital_object.generate_technical_metadata(
+            sip_file.generate_technical_metadata(
                 csv_has_header=fc.get("csv_has_header"),
                 csv_delimiter=fc.get("csv_delimiter"),
                 csv_record_separator=fc.get("csv_record_separator"),
@@ -154,20 +154,20 @@ class CreateMets(WorkflowTask):
                 checksum_algorithm=file_["checksum"]["algorithm"],
                 checksum=file_["checksum"]["value"],
             )
-            digital_objects.append(digital_object)
+            sip_files.append(sip_file)
 
+        digital_objects = [file.digital_object for file in sip_files]
         return digital_objects
 
     def _create_logical_structmap(self, digital_objects):
         divs = []
         for category, filepaths in self._find_file_categories().items():
-            sip_filepaths = ["dataset_files/" + path.strip("/")
-                             for path in filepaths]
+            paths = ["dataset_files/" + path.strip("/") for path in filepaths]
             category_digital_objects = [
                 digital_object
                 for digital_object
                 in digital_objects
-                if digital_object.sip_filepath in sip_filepaths
+                if digital_object.path in paths
             ]
             divs.append(
                 StructuralMapDiv(div_type=category,
