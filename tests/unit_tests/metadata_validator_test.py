@@ -138,55 +138,6 @@ def test_validate_metadata_missing_file(requests_mock):
         )
 
 
-@pytest.mark.parametrize(
-    ("translations", "expectation"),
-    (
-        (
-            {"en": "Something in english"},
-            does_not_raise()),
-        (
-            {"fi": "Jotain suomeksi"},
-            does_not_raise()
-        ),
-        (
-            {"en": "Something in english", "fi": "Jotain suomeksi"},
-            does_not_raise()
-        ),
-        (
-            {"foo": "Something in invalid language"},
-            pytest.raises(InvalidDatasetMetadataError,
-                          match=("Invalid language code: 'foo' in field: "
-                                 "'research_dataset/provenance/description"))
-        ),
-        (
-            {},
-            pytest.raises(InvalidDatasetMetadataError,
-                          match=("No localization provided in field: "
-                                 "'research_dataset/provenance/description'"))
-        )
-    )
-)
-def test_validate_metadata_languages(translations, expectation, requests_mock):
-    """Test validate_metadata.
-
-    Function should raise exception when one of the localized
-    fields has invalid values.
-
-    :returns: ``None``
-    """
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset_file = copy.deepcopy(TXT_FILE)
-    dataset['research_dataset']['provenance'] \
-        = [copy.deepcopy(BASE_PROVENANCE)]
-    dataset['research_dataset']['provenance'][0]['description'] = translations
-    tests.utils.add_metax_dataset(requests_mock, dataset=dataset,
-                                  files=[dataset_file])
-
-    with expectation:
-        assert validate_metadata('dataset_identifier',
-                                 tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid(requests_mock):
     """Test validate_metadata.

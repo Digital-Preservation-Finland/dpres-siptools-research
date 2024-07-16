@@ -5,7 +5,6 @@ import os
 
 import lxml
 import lxml.isoschematron
-from iso639 import languages
 from metax_access import DataciteGenerationError
 from siptools_research.metax import get_metax_client
 
@@ -48,9 +47,6 @@ def validate_metadata(
     # Validate dataset metadata
     _validate_dataset_metadata(dataset_metadata, dummy_doi=dummy_doi)
 
-    # Validate dataset localization
-    _validate_dataset_localization(dataset_metadata)
-
     # Validate contract metadata
     _validate_contract_metadata(dataset_metadata['contract']['identifier'],
                                 metax_client)
@@ -82,89 +78,6 @@ def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
         jsonschema.validate(dataset_metadata, schema)
     except jsonschema.ValidationError as exc:
         raise InvalidDatasetMetadataError(str(exc)) from exc
-
-
-def _validate_dataset_localization(dataset_metadata):
-    """Validate dataset localization.
-
-    Validates that all required translations are provided with valid ISO
-    639-1 language codes.
-    """
-    research_dataset = dataset_metadata["research_dataset"]
-    provenance_list = research_dataset.get("provenance", [])
-
-    # Provenance translations
-    for provenance in provenance_list:
-        if "description" in provenance:
-            _validate_localization(
-                provenance["description"], "provenance/description"
-            )
-
-        if "preservation_event" in provenance:
-            _validate_localization(
-                provenance["preservation_event"]["pref_label"],
-                "provenance/preservation_event/pref_label"
-            )
-
-        if "lifecycle_event" in provenance:
-            _validate_localization(
-                provenance["lifecycle_event"]["pref_label"],
-                "provenance/lifecycle_event/pref_label"
-            )
-
-        if "outcome_description" in provenance:
-            _validate_localization(
-                provenance["outcome_description"],
-                "provenance/outcome_description"
-            )
-
-        if "title" in provenance:
-            _validate_localization(
-                provenance["title"],
-                "provenance/title"
-            )
-
-    # Files translations
-    if "files" in research_dataset:
-        for _file in research_dataset["files"]:
-            _validate_localization(
-                _file["use_category"]["pref_label"],
-                "files/use_category/pref_label"
-            )
-
-    # Directories translations
-    if "directories" in research_dataset:
-        for _dir in research_dataset["directories"]:
-            _validate_localization(
-                _dir["use_category"]["pref_label"],
-                "directories/user_category/pref_label"
-            )
-
-
-def _validate_localization(localization_dict, field):
-    """Validate languages.
-
-    Check that the localization dict is not empty and all the keys are
-    valid ISO 639-1 language codes.
-    """
-    if not localization_dict:
-        raise InvalidDatasetMetadataError(
-            f"No localization provided in field: 'research_dataset/{field}'"
-        )
-
-    for language in localization_dict:
-        # Per MetaX schema, 'und' and 'zxx' are fallbacks for content
-        # that can't be localized
-        if language in ("und", "zxx"):
-            continue
-
-        try:
-            languages.get(part1=language)
-        except KeyError as exception:
-            raise InvalidDatasetMetadataError(
-                f"Invalid language code: '{language}' in field: "
-                f"'research_dataset/{field}'"
-            ) from exception
 
 
 def _validate_contract_metadata(contract_id, metax_client):
