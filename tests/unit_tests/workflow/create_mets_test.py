@@ -493,25 +493,12 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     # should be identical.
     mets_datacite = lxml.etree.fromstring(lxml.etree.tostring(mets_datacite))
     metax_datacite = BASE_DATACITE.getroot()
-
-    version = lxml.etree.LXML_VERSION
-    version_str = f"{version[0]}.{version[1]}.{version[2]}"
-    if Version(version_str) < Version("4.6.1"):
-        # TODO: Canonical string presentation comparison does not work
-        # with lxml versions older than 4.6.1, so simply check that at
-        # least element contains expected information. This hack can be
-        # removed when support for old lxml is not required anymore.
-        assert mets_datacite.xpath(
-            "datacite:creators/datacite:creator/datacite:creatorName",
-            namespaces=NAMESPACES
-        )[0].text == "Puupää, Pekka"
-    else:
-        assert lxml.etree.tostring(mets_datacite,
-                                   strip_text=True,
-                                   method="c14n2") \
-            == lxml.etree.tostring(metax_datacite,
-                                   strip_text=True,
-                                   method="c14n2")
+    assert lxml.etree.tostring(mets_datacite,
+                               strip_text=True,
+                               method="c14n2") \
+        == lxml.etree.tostring(metax_datacite,
+                               strip_text=True,
+                               method="c14n2")
 
     # Check that descriptive metadata is referenced in Fairdata-physical
     # structmap
