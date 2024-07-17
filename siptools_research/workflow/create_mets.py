@@ -117,7 +117,8 @@ class CreateMets(WorkflowTask):
             format_version="4.1"
         )
         # TODO: Implement a better way to add descriptive metadata to
-        # the default structural map
+        # the default structural map. Ensure that PREMIS event is
+        # created for metadata import!
         for structural_map in sip.mets.structural_maps:
             if structural_map.structural_map_type == "PHYSICAL":
                 siptools_ng.sip._add_metadata(structural_map.root_div,

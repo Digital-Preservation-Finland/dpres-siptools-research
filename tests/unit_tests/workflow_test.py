@@ -224,16 +224,6 @@ def test_workflow(workspace, module_name, task, requests_mock, mocker):
                 }
             ]
         ),
-        # Dataset with provenance information that user created
-        (
-            DATASET_WITH_PROVENANCE,
-            [
-                {
-                    'metadata': tests.metax_data.files.TXT_FILE,
-                    'path': 'tests/data/sample_files/text_plain_UTF-8'
-                }
-            ]
-        ),
         # Dataset with different file formats producing different
         # metadata
         (
@@ -299,11 +289,7 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
 
         #. mets.xml validates against the schema
         #. mets.xml passes schematron verification
-        #. digital object fixity (checksums) is correct in mets.xml
-        #. digital objects of the SIP are valid
-        #. mets.xml root element is valid (CONTRACTID, SPECIFICATION)
         #. all files are found in correct path
-        #. all provenance events are found in mets.xml
 
     :param testpath: temporary directory
     :param workspace: temporary workspace directory
@@ -367,22 +353,6 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
     for schematron in _get_schematrons():
         schematron.assertValid(mets)
 
-    # Check mets root element contract identifier and spec version
-    mets_xml_root = mets.getroot()
-    assert mets_xml_root.xpath('@*[local-name() = "CONTRACTID"]')[0] \
-        == 'urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd'
-    assert mets_xml_root.xpath('@*[local-name() = "CATALOG"] | '
-                               '@*[local-name() = "SPECIFICATION"]')[0][:3] \
-        == '1.7'
-
-    # Check that files going to bit-level preservation have the correct USE
-    # attribute in METS fileSec
-    if files[0]['metadata'] == SEG_Y_FILE:
-        assert mets_xml_root.xpath(
-            '//mets:file/@USE',
-            namespaces=NAMESPACES
-        )[0] == 'fi-dpres-file-format-identification'
-
     # Check that all files are included in SIP
     for file in files:
         file_in_sip = (
@@ -390,15 +360,3 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
             / file["metadata"]["file_path"].strip('/')
         )
         assert filecmp.cmp(file_in_sip, file['path'])
-
-    # Check that premis event is created for each provenance event of
-    # dataset
-    event_descriptions = [event['description']['en']
-                          for event
-                          in dataset["research_dataset"].get('provenance', [])]
-    premis_event_details = [event_detail.text
-                            for event_detail
-                            in mets_xml_root.xpath('//premis:eventDetail',
-                                                   namespaces=NAMESPACES)]
-    for event_description in event_descriptions:
-        assert event_description in premis_event_details

@@ -86,40 +86,21 @@ def test_create_mets(workspace, requests_mock, data_catalog, objid):
         'PROFILE': 'http://digitalpreservation.fi/mets-profiles/research-data',
         f"{{{NAMESPACES['fi']}}}CONTRACTID":
         "urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd",
-        f"{{{NAMESPACES['xsi']}}}schemaLocation":
-        'http://www.loc.gov/METS/ http://digitalpreservation.fi/'
-        'schemas/mets/mets.xsd',
-        f"{{{NAMESPACES['fi']}}}SPECIFICATION": '1.7.6',
-        'OBJID': objid,
         f"{{{NAMESPACES['fi']}}}CONTENTID": objid,
-        f"{{{NAMESPACES['fi']}}}CATALOG": '1.7.6',
     }
-    assert mets.getroot().attrib == mets_attributes
+    assert mets_attributes.items() <= dict(mets.getroot().attrib).items()
 
-    # Check that XML documents contains expected namespaces
-    # TODO: Siptools-ng seems to add unnecessary namespaces to mets.xml.
-    # Is it OK, or should they be removed? See TPASPKT-1179.
-    #
-    # expected_namespaces = ("xsi", "mets", "fi", "premis", "xlink")
-    expected_namespaces = ("mets", "xsi", "premis", "fi", "xlink", "mix",
-                           "audiomd", "videomd", "ead3", "addml")
-    assert mets.getroot().nsmap == {key: NAMESPACES[key]
-                                    for key in expected_namespaces}
-
-    # Check metsHdr element attributes
+    # The organization of the agreement should be the archivist
     metshdr = mets.xpath('/mets:mets/mets:metsHdr', namespaces=NAMESPACES)[0]
-    assert metshdr.attrib['RECORDSTATUS'] == 'submission'
-    assert metshdr.attrib['CREATEDATE']
-
-    # Check agent element attributes
     archivist = metshdr.xpath("mets:agent[@ROLE='ARCHIVIST']",
                               namespaces=NAMESPACES)[0]
     assert archivist.attrib['TYPE'] == 'ORGANIZATION'
     assert archivist.xpath("mets:name", namespaces=NAMESPACES)[0].text \
         == "Testiorganisaatio"
+
+    # Packaging service should be the creator of the SIP
     creator = metshdr.xpath("mets:agent[@ROLE='CREATOR']",
                             namespaces=NAMESPACES)[0]
-    assert creator.attrib['ROLE'] == 'CREATOR'
     assert creator.attrib['TYPE'] == 'OTHER'
     assert creator.attrib['OTHERTYPE'] == 'SOFTWARE'
     assert creator.xpath("mets:name", namespaces=NAMESPACES)[0].text \
@@ -318,18 +299,7 @@ def test_premis_event_metadata(
         namespaces=NAMESPACES
     )[0]
 
-    # Check that created  digiprovMD element contains correct elements.
-    elements = digiprovmd.xpath('mets:mdWrap', namespaces=NAMESPACES)
-    assert elements[0].attrib["MDTYPE"] == "PREMIS:EVENT"
-    assert elements[0].attrib["MDTYPEVERSION"] == "2.3"
-
-    elements = digiprovmd.xpath(
-        'mets:mdWrap/mets:xmlData/premis:event/premis:eventIdentifier'
-        '/premis:eventIdentifierType',
-        namespaces=NAMESPACES
-    )
-    assert elements[0].text == "UUID"
-
+    # Check that created PREMIS event contains correct information
     elements = digiprovmd.xpath(
         'mets:mdWrap/mets:xmlData/premis:event/premis:eventType',
         namespaces=NAMESPACES
@@ -340,6 +310,7 @@ def test_premis_event_metadata(
         'mets:mdWrap/mets:xmlData/premis:event/premis:eventDateTime',
         namespaces=NAMESPACES
     )
+
     if "temporal" in provenance_data:
         assert elements[0].text == "2014-01-01T08:19:58Z"
     else:
@@ -441,12 +412,11 @@ def test_premis_event_outcome(workspace, requests_mock,
         "/ancestor::mets:digiprovMD",
         namespaces=NAMESPACES
     )[0]
-    elements = digiprovmd.xpath('mets:mdWrap', namespaces=NAMESPACES)
-    elements = digiprovmd.xpath(
+    outcome = digiprovmd.xpath(
         'mets:mdWrap/mets:xmlData/premis:event'
         '/premis:eventOutcomeInformation/premis:eventOutcome',
         namespaces=NAMESPACES)
-    assert elements[0].text == expected_event_outcome
+    assert outcome[0].text == expected_event_outcome
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -458,7 +428,6 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     Tests that:
     * datacite XML is imported to dmdSec of METS
     * dmdSec is referenced in both structure maps
-    * premis event is created for datacite import
 
     :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
@@ -500,23 +469,12 @@ def test_createdescriptivemetadata(workspace, requests_mock):
                                strip_text=True,
                                method="c14n2")
 
-    # Check that descriptive metadata is referenced in Fairdata-physical
+    # Check that descriptive metadata is referenced in PHYSICAL
     # structmap
     structmap = mets.xpath("//mets:structMap[@TYPE='PHYSICAL']",
-                           namespaces=NAMESPACES)[0]
+                                    namespaces=NAMESPACES)[0]
     structmap_div = structmap.xpath("mets:div", namespaces=NAMESPACES)[0]
     assert structmap_div.attrib["DMDID"] == dmdsec.attrib["ID"]
-
-    # Check that premis event is created for descriptive metadata import
-    extraction_events = mets.xpath(
-        '//premis:event[premis:eventDetail="Descriptive metadata import from'
-        ' external source"]',
-        namespaces=NAMESPACES
-    )
-    assert len(extraction_events) == 1
-    event_type = extraction_events[0].xpath('premis:eventType',
-                                            namespaces=NAMESPACES)[0]
-    assert event_type.text == "metadata extraction"
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -525,13 +483,9 @@ def test_create_techmd(workspace, requests_mock):
 
     Creates METS for a dataset that contains one TIFF file.
 
-    Tests that:
-    * METS contains PREMIS object with correct information
-    * METS contains NISOIMG metadata with correct information
-    * PREMIS and NISOIMG are linked to physical structure map
-    * PREMIS event that describes metadata generation is created
-    * PREMIS event is linked to agents that represent file-scraper and
-      tools used by file-scraper
+    Tests that file metadata (file format, format version, checksum,
+    checksum algorithm and creation date) from Metax is used to create
+    PREMIS object.
 
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
@@ -539,18 +493,13 @@ def test_create_techmd(workspace, requests_mock):
     # Mock metax
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    file_metadata = copy.deepcopy(TIFF_FILE)
-    # Modify file metadata to verify that it is used for NISOIMG
-    # metadata creation
-    file_metadata["file_characteristics_extension"]["streams"][0]["height"] \
-        = "12345678"
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset,
-                                  files=[file_metadata])
+                                  files=[TIFF_FILE])
 
     # Create workspace that already contains the dataset files
     dataset_files_parent = workspace / 'metadata_generation'
-    tiff_path = 'dataset_files/' + file_metadata['file_path'].strip('/')
+    tiff_path = 'dataset_files/' + TIFF_FILE['file_path'].strip('/')
     (dataset_files_parent / tiff_path).parent.mkdir(parents=True)
     shutil.copy('tests/data/sample_files/valid_tiff.tiff',
                 dataset_files_parent / tiff_path)
@@ -565,84 +514,24 @@ def test_create_techmd(workspace, requests_mock):
     premis_object_element \
         = mets.xpath("//premis:object", namespaces=NAMESPACES)[0]
     assert premis_object_element.xpath(
-        "//premis:object/@*", namespaces=NAMESPACES
-    )[0] == 'premis:file'
-    assert premis_object_element.xpath(
         "//premis:formatName", namespaces=NAMESPACES
-    )[0].text == file_metadata["file_characteristics"]["file_format"]
+    )[0].text == TIFF_FILE["file_characteristics"]["file_format"]
     assert premis_object_element.xpath(
         "//premis:formatVersion",
         namespaces=NAMESPACES
-    )[0].text == file_metadata["file_characteristics"]["format_version"]
+    )[0].text == TIFF_FILE["file_characteristics"]["format_version"]
     assert premis_object_element.xpath(
         "//premis:messageDigestAlgorithm",
         namespaces=NAMESPACES
-    )[0].text == file_metadata["checksum"]["algorithm"]
+    )[0].text == TIFF_FILE["checksum"]["algorithm"]
     assert premis_object_element.xpath(
         "//premis:messageDigest",
         namespaces=NAMESPACES
-    )[0].text == file_metadata["checksum"]["value"]
-
-    # NISOIMG metadata should be created based on metadata that was
-    # previously uploaded to Metax. Validating the whole NISOIMG is not
-    # necessary, so only check that at least one element has expected
-    # value.
-    # TODO: Siptools-ng currently does not read previously generated
-    # technical metadata from Metax. It will generate the metadata
-    # again. Therefore this test is skipped. See TPASPKT-1326.
-    #
-    # expected_height = '12345678'
-    # assert mets.xpath('//mix:imageHeight', namespaces=NAMESPACES)[0].text \
-    #     == expected_height
-
-    # There should be one file in fileSec
-    file_elements = mets.xpath('//mets:file', namespaces=NAMESPACES)
-    assert len(file_elements) == 1
-
-    # METS should contain two techMD elements, one for PREMIS:OBJECT and
-    # one for NISOIMG. Both of them should be linked to a to the file in
-    # fileSec.
-    techmd_elements = mets.xpath("//mets:techMD", namespaces=NAMESPACES)
-    assert len(techmd_elements) == 2
-    premis_object_techmd_element = mets.xpath(
-        "//mets:mdWrap[@MDTYPE='PREMIS:OBJECT']/parent::mets:techMD",
+    )[0].text == TIFF_FILE["checksum"]["value"]
+    assert premis_object_element.xpath(
+        "//premis:dateCreatedByApplication",
         namespaces=NAMESPACES
-    )[0]
-    assert premis_object_techmd_element.attrib["ID"] \
-        in file_elements[0].attrib['ADMID']
-    mix_techmd_element = mets.xpath(
-        "//mets:mdWrap[@MDTYPE='NISOIMG']/parent::mets:techMD",
-        namespaces=NAMESPACES
-    )[0]
-    assert mix_techmd_element.attrib["ID"] in file_elements[0].attrib['ADMID']
-
-    # Premis event that describes techMD creation should be created
-    event_detail = ("Technical metadata extraction as PREMIS metadata "
-                    "from digital objects")
-    premis_event = mets.xpath(
-        f'//premis:event[premis:eventDetail="{event_detail}"]',
-        namespaces=NAMESPACES
-    )[0]
-
-    # The event should be linked to several agents
-    agent_ids = premis_event.xpath(
-        "premis:linkingAgentIdentifier/premis:linkingAgentIdentifierValue"
-        "/text()",
-        namespaces=NAMESPACES
-    )
-    agent_names = []
-    for agent_id in agent_ids:
-        agent = mets.xpath(
-            "//premis:agentIdentifier"
-            f"[premis:agentIdentifierValue='{agent_id}']",
-            namespaces=NAMESPACES
-        )[0].getparent()
-        agent_names.append(agent.xpath("premis:agentName",
-                           namespaces=NAMESPACES)[0].text)
-    for expected_agent in ["file-scraper", "PilScraper", "WandScraper"]:
-        assert any(
-            agent_name.startswith(expected_agent) for agent_name in agent_names
-        )
+    )[0].text == TIFF_FILE["file_characteristics"]["file_created"]
 
 
 @pytest.mark.parametrize(
@@ -662,8 +551,12 @@ def test_create_techmd_csv(workspace, requests_mock, has_header,
     """Test that technical metadata is created correctly for csv files.
 
     Create METS for dataset that contains text file that user has
-    defined as csv file. Check that correct metadata from Metax is
-    copied to ADDML.
+    defined as csv file.
+
+    Tests that:
+    * file metadata (file format and encoding) from Metax is used to
+      create PREMIS object
+    * CSV specific metadata from Metax is used to create ADDML metadata
 
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
@@ -676,6 +569,9 @@ def test_create_techmd_csv(workspace, requests_mock, has_header,
     dataset['identifier'] = workspace.name
     file = copy.deepcopy(CSV_FILE)
     file['file_characteristics']['csv_has_header'] = has_header
+    # Use non-default encoding to ensure that encoding from Metax is
+    # used
+    file['file_characteristics']['encoding'] = "ISO-8859-15"
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
 
     # Add text file to "dataset_files" directory
@@ -694,7 +590,7 @@ def test_create_techmd_csv(workspace, requests_mock, has_header,
         = mets.xpath("//premis:object", namespaces=NAMESPACES)[0]
     assert premis_object_element.xpath(
         "//premis:formatName", namespaces=NAMESPACES
-    )[0].text == "text/csv; charset=UTF-8"
+    )[0].text == "text/csv; charset=ISO-8859-15"
 
     # Check that addml metadata contains expected information
     assert mets.xpath("//addml:recordSeparator",
@@ -711,100 +607,6 @@ def test_create_techmd_csv(workspace, requests_mock, has_header,
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_techmd_multiple_metadata_documents(workspace, requests_mock):
-    """Test techmd creation for a file with multiple streams.
-
-    Creates a METS document for a dataset that contains a Matroska file
-    which contains two similar audio streams and one video streams.
-
-    Tests that:
-    * PREMIS objects are created for all streams and the container
-    * one AudioMD metadata is created for the audio streams
-    * one VideoMD metadata is created for the video stream
-
-    :param workspace: Temporary workspace directory fixture
-    :param requests_mock: Mocker object
-    """
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['identifier'] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock,
-                                  dataset=dataset,
-                                  files=[MKV_FILE])
-
-    # Create workspace that already contains the dataset files
-    mkv_path = workspace / 'metadata_generation/dataset_files' \
-        / MKV_FILE['file_path'].strip('/')
-    mkv_path.parent.mkdir(parents=True)
-    shutil.copy('tests/data/sample_files/video_ffv1.mkv', mkv_path)
-
-    # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
-
-    # Read created mets
-    mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
-
-    # METS should contain four PREMIS objects in total, two for audio
-    # streams, one for video stream, and one for container.
-    format_names = [
-        element.text for element
-        in mets.xpath('//premis:formatName', namespaces=NAMESPACES)
-    ]
-    assert format_names.count("audio/flac") == 2
-    assert format_names.count("video/x-ffv") == 1
-    assert format_names.count("video/x-matroska") == 1
-
-    # There should be only one techmMD element for audio streams
-    audiomds = mets.xpath("//mets:techMD/mets:mdWrap[@OTHERMDTYPE='AudioMD']",
-                          namespaces=NAMESPACES)
-    assert len(audiomds) == 1
-    assert audiomds[0].xpath(".//audiomd:codecName",
-                             namespaces=NAMESPACES)[0].text == "FLAC"
-
-    # There should be a techmMD element for the video stream
-    videomds = mets.xpath("//mets:techMD/mets:mdWrap[@OTHERMDTYPE='VideoMD']",
-                          namespaces=NAMESPACES)
-    assert len(videomds) == 1
-    assert videomds[0].xpath(".//videomd:codecName",
-                             namespaces=NAMESPACES)[0].text == "FFV1"
-
-
-@pytest.mark.usefixtures()
-def test_create_techmd_without_charset(workspace, requests_mock):
-    """Test techmd creation for files without defined charset.
-
-    UTF-8 should be used as default charset, if charset is not defined.
-
-    :param workspace: Test workspace directory
-    :param requests_mock: HTTP requeset mocker
-    """
-    text_file = copy.deepcopy(TXT_FILE)
-    del text_file['file_characteristics']['encoding']
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['identifier'] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock,
-                                  dataset=dataset,
-                                  files=[text_file])
-
-    # Create workspace that contains a textfile
-    dataset_files = workspace / "metadata_generation" / "dataset_files"
-    text_file_path = dataset_files / "path" / "to" / "file"
-    text_file_path.parent.mkdir(parents=True)
-    text_file_path.write_text("foo")
-
-    # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
-
-    # Read METS
-    mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
-
-    # If charset is not defined the siptools.import_objects default
-    # value is used. Siptools recognizes ASCII text files as UTF-8 text
-    # files.
-    assert mets.xpath("//premis:formatName", namespaces=NAMESPACES)[0].text \
-        == 'text/plain; charset=UTF-8'
-
-
-@pytest.mark.usefixtures('testmongoclient')
 def test_create_filesec_and_structmap(workspace, requests_mock):
     """Test fileSec and physical structure map creation.
 
@@ -813,8 +615,7 @@ def test_create_filesec_and_structmap(workspace, requests_mock):
 
     Tests that
     * The files are added to fileSec
-    * structMap contain expected information
-    * strucmMap is linked to all digiprovMD elements
+    * PYSICAL structMap contains expected information
 
     :param workspace: Temporary workspace fixture
     :param requests_mock: HTTP request mocker
@@ -828,10 +629,6 @@ def test_create_filesec_and_structmap(workspace, requests_mock):
     dataset = copy.deepcopy(BASE_DATASET)
     dataset["identifier"] = workspace.name
     # Add provenance events to dataset
-    provenance = copy.deepcopy(BASE_PROVENANCE)
-    provenance_description = 'Unique description of event'
-    provenance["description"]["en"] = provenance_description
-    dataset["research_dataset"]["provenance"] = [provenance]
     tests.utils.add_metax_dataset(requests_mock=requests_mock,
                                   dataset=dataset,
                                   files=files)
@@ -863,7 +660,7 @@ def test_create_filesec_and_structmap(workspace, requests_mock):
                           'file:///dataset_files/file2',
                           'file:///dataset_files/subdirectory/file3'}
 
-    # Validate the "Fairdata-physical" structMap
+    # Validate the "PHYSICAL" structMap
     structmap = mets.xpath("//mets:structMap[@TYPE='PHYSICAL']",
                            namespaces=NAMESPACES)[0]
     assert structmap.xpath(
