@@ -886,9 +886,17 @@ def test_create_filesec_and_structmap(workspace, requests_mock):
     assert structmap.xpath(
         "mets:div/mets:div/@TYPE",
         namespaces=NAMESPACES
+    )[0] == 'directory'
+    assert structmap.xpath(
+        "mets:div/mets:div/@LABEL",
+        namespaces=NAMESPACES
     )[0] == 'dataset_files'
     assert structmap.xpath(
         "mets:div/mets:div/mets:div/@TYPE",
+        namespaces=NAMESPACES
+    )[0] == 'directory'
+    assert structmap.xpath(
+        "mets:div/mets:div/mets:div/@LABEL",
         namespaces=NAMESPACES
     )[0] == 'subdirectory'
     # Two files should be found in data directory
@@ -938,6 +946,8 @@ def test_create_structmap_without_directories(workspace, requests_mock):
     assert structmap.xpath("mets:div/@TYPE",
                            namespaces=NAMESPACES)[0] == 'directory'
     assert structmap.xpath("mets:div/mets:div/@TYPE",
+                           namespaces=NAMESPACES)[0] == 'directory'
+    assert structmap.xpath("mets:div/mets:div/@LABEL",
                            namespaces=NAMESPACES)[0] == 'dataset_files'
     assert len(structmap.xpath('mets:div/mets:div/mets:fptr/@FILEID',
                                namespaces=NAMESPACES)) == 1
