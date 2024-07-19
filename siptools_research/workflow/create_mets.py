@@ -66,7 +66,7 @@ class CreateMets(WorkflowTask):
         metadata = metax_client.get_dataset(self.dataset_id)
         contract_identifier = metadata["contract"]["identifier"]
         contract_metadata = metax_client.get_contract(contract_identifier)
-        files = metax_client.get_dataset_files(self.dataset_id)
+        files_metadata = metax_client.get_dataset_files(self.dataset_id)
         datacite = metax_client.get_datacite(self.dataset_id)
 
         # Create METS
@@ -87,27 +87,23 @@ class CreateMets(WorkflowTask):
             agent_type=AgentType.ORGANIZATION
         )
 
-        # Create digital objects
-        digital_objects = self._create_digital_objects(files)
+        # Create File objects
+        files = self._create_files(files_metadata)
 
-        # Create physical structural map
-        physical_structural_map \
-            = siptools_ng.sip.structural_map_from_directory_structure(
-                digital_objects
-            )
-        physical_structural_map.structural_map_type = 'Fairdata-physical'
-        mets.add_structural_map(physical_structural_map)
+        # Create SIP. The physical structure map is automatically
+        # created.
+        sip = siptools_ng.sip.SIP(mets=mets, files=files)
 
         # Create logical structural map
         logical_structural_map \
-            = self._create_logical_structmap(digital_objects)
+            = self._create_logical_structmap(files)
         mets.add_structural_map(logical_structural_map)
 
         # Add provenance metadata to structural maps
         provenance_metadatas = self._create_provenance_metadata(metadata)
         for provenance_metadata in provenance_metadatas:
-            physical_structural_map.root_div.add_metadata(provenance_metadata)
-            logical_structural_map.root_div.add_metadata(provenance_metadata)
+            for structural_map in mets.structural_maps:
+                structural_map.root_div.add_metadata(provenance_metadata)
 
         # Add descriptive metadata to structural map
         descriptive_metadata = ImportedMetadata(
@@ -120,19 +116,20 @@ class CreateMets(WorkflowTask):
             # correct?
             format_version="4.1"
         )
-        # TODO: Private function should not be used!
-        siptools_ng.sip._add_metadata(
-            physical_structural_map.root_div,
-            descriptive_metadata
-        )
+        # TODO: Implement a better way to add descriptive metadata to
+        # the default structural map
+        for structural_map in sip.mets.structural_maps:
+            if structural_map.structural_map_type == "PHYSICAL":
+                siptools_ng.sip._add_metadata(structural_map.root_div,
+                                              descriptive_metadata)
 
         # Write METS to file
         mets.generate_file_references()
         mets.write(self.output().path)
 
-    def _create_digital_objects(self, files):
+    def _create_files(self, files_metadata):
         sip_files = []
-        for file_ in files:
+        for file_ in files_metadata:
             filepath = file_['file_path'].strip('/')
             source_filepath = (self.dataset.metadata_generation_workspace
                                / "dataset_files" / filepath)
@@ -156,10 +153,10 @@ class CreateMets(WorkflowTask):
             )
             sip_files.append(sip_file)
 
-        digital_objects = [file.digital_object for file in sip_files]
-        return digital_objects
+        return sip_files
 
-    def _create_logical_structmap(self, digital_objects):
+    def _create_logical_structmap(self, files):
+        digital_objects = [file.digital_object for file in files]
         divs = []
         for category, filepaths in self._find_file_categories().items():
             paths = ["dataset_files/" + path.strip("/") for path in filepaths]

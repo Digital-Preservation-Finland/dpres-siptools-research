@@ -246,7 +246,7 @@ def test_multiple_provenance_events(workspace,
 
     # PREMIS events should be refenced in physical structure map
     physical_structmap = mets.xpath(
-        '/mets:mets/mets:structMap[@TYPE="Fairdata-physical"]',
+        '/mets:mets/mets:structMap[@TYPE="PHYSICAL"]',
         namespaces=NAMESPACES
     )[0]
     physical_structmap_references \
@@ -515,7 +515,7 @@ def test_createdescriptivemetadata(workspace, requests_mock):
 
     # Check that descriptive metadata is referenced in Fairdata-physical
     # structmap
-    structmap = mets.xpath("//mets:structMap[@TYPE='Fairdata-physical']",
+    structmap = mets.xpath("//mets:structMap[@TYPE='PHYSICAL']",
                            namespaces=NAMESPACES)[0]
     structmap_div = structmap.xpath("mets:div", namespaces=NAMESPACES)[0]
     assert structmap_div.attrib["DMDID"] == dmdsec.attrib["ID"]
@@ -877,7 +877,7 @@ def test_create_filesec_and_structmap(workspace, requests_mock):
                           'file:///dataset_files/subdirectory/file3'}
 
     # Validate the "Fairdata-physical" structMap
-    structmap = mets.xpath("//mets:structMap[@TYPE='Fairdata-physical']",
+    structmap = mets.xpath("//mets:structMap[@TYPE='PHYSICAL']",
                            namespaces=NAMESPACES)[0]
     assert structmap.xpath(
         "mets:div/@TYPE",
@@ -941,7 +941,7 @@ def test_create_structmap_without_directories(workspace, requests_mock):
 
     # Check the structmap element
     mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
-    structmap = mets.xpath("//mets:structMap[@TYPE='Fairdata-physical']",
+    structmap = mets.xpath("//mets:structMap[@TYPE='PHYSICAL']",
                            namespaces=NAMESPACES)[0]
     assert structmap.xpath("mets:div/@TYPE",
                            namespaces=NAMESPACES)[0] == 'directory'
