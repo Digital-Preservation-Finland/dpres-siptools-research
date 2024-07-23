@@ -476,6 +476,13 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     structmap_div = structmap.xpath("mets:div", namespaces=NAMESPACES)[0]
     assert structmap_div.attrib["DMDID"] == dmdsec.attrib["ID"]
 
+    # Check that descriptive metadata is referenced in Fairdata-logical
+    # structmap
+    structmap = mets.xpath("//mets:structMap[@TYPE='Fairdata-logical']",
+                                    namespaces=NAMESPACES)[0]
+    structmap_div = structmap.xpath("mets:div", namespaces=NAMESPACES)[0]
+    assert structmap_div.attrib["DMDID"] == dmdsec.attrib["ID"]
+
 
 @pytest.mark.usefixtures('testmongoclient')
 def test_create_techmd(workspace, requests_mock):

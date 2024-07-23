@@ -120,9 +120,8 @@ class CreateMets(WorkflowTask):
         # the default structural map. Ensure that PREMIS event is
         # created for metadata import!
         for structural_map in sip.mets.structural_maps:
-            if structural_map.structural_map_type == "PHYSICAL":
-                siptools_ng.sip._add_metadata(structural_map.root_div,
-                                              descriptive_metadata)
+            siptools_ng.sip._add_metadata(structural_map.root_div,
+                                          descriptive_metadata)
 
         # Write METS to file
         mets.generate_file_references()
