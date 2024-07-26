@@ -283,7 +283,8 @@ BASE_FILE = {
     "checksum": {
         "algorithm": "MD5",
         "value": "58284d6cdd8deaffe082d063580a9df3"
-    }
+    },
+    "project_identifier": "test_project"
 }
 
 TXT_FILE = deepcopy(BASE_FILE)

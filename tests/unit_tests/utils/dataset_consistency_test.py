@@ -66,15 +66,18 @@ def test_verify_file_contained_by_dataset_directories(requests_mock):
         'file_path': "/path/to/file",
         'parent_directory': {
             'identifier': 'parent_directory_identifier'
-        }
+        },
+        'project_identifier':'project1'
     }
     requests_mock.get(
-        tests.conftest.METAX_URL + '/directories/parent_directory_identifier',
+        tests.conftest.METAX_URL + '/directories/files?path=%2Fpath%2Fto&project=project1&depth=1&include_parent=true',
         json={
             'identifier': 'parent_directory_identifier',
             'parent_directory': {
                 'identifier': 'root_directory'
-            }
+            },
+            'directories':[],
+            'files':[],
         },
         status_code=200
     )
@@ -107,17 +110,19 @@ def test_verify_file_contained_by_dataset_missing_from_dataset(requests_mock):
             'directories': []
         }
     }
-
     file_metadata = {
         'identifier': 'file_identifier',
         'file_path': "/path/to/file",
         'parent_directory': {
             'identifier': 'parent_directory_identifier'
-        }
+        },
+        'project_identifier':'project1'
     }
     requests_mock.get(
-        tests.conftest.METAX_URL + '/directories/parent_directory_identifier',
-        json={'identifier': 'parent_directory_identifier'},
+        tests.conftest.METAX_URL + '/directories/files?path=%2Fpath%2Fto&project=project1&depth=1&include_parent=true',
+        json={'identifier': 'parent_directory_identifier',
+              'directories':[],
+              'files':[]},
         status_code=200
     )
     with pytest.raises(InvalidDatasetMetadataError) as exc_info:
@@ -157,7 +162,8 @@ def test_dataset_directories_caching_works(requests_mock):
         "file_storage": {
             "identifier": "foobar",
             "id": 1
-        }
+        },
+        'project_identifier': 'project_id'
     }
     file_1 = copy.deepcopy(FILE_METADATA)
     file_1['identifier'] = 'file_identifier1'
@@ -176,22 +182,26 @@ def test_dataset_directories_caching_works(requests_mock):
     }
 
     first_par_dir_adapter = requests_mock.get(
-        tests.conftest.METAX_URL + '/directories/first_par_dir',
+        tests.conftest.METAX_URL + '/directories/files?path=%2Fpath%2Fto&project=project_id&depth=1&include_parent=true',
         json={
             'identifier': 'first_par_dir',
             'parent_directory': {
                 'identifier': 'second_par_dir'
-            }
+            },
+            'directories':[],
+            'files':[]
         },
         status_code=200
     )
     second_par_dir_adapter = requests_mock.get(
-        tests.conftest.METAX_URL + '/directories/second_par_dir',
+        tests.conftest.METAX_URL + '/directories/files?path=%2Fpath&project=project_id&depth=1&include_parent=true',
         json={
             'identifier': 'second_par_dir',
             'parent_directory': {
                 'identifier': 'root_dir'
-            }
+            },
+            'directories':[],
+            'files':[]
         },
         status_code=200
     )

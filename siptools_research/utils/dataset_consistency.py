@@ -1,4 +1,5 @@
 from siptools_research.exceptions import InvalidDatasetMetadataError
+from pathlib import PurePath
 
 
 class DatasetConsistency:
@@ -31,7 +32,9 @@ class DatasetConsistency:
         if file_md['parent_directory']['identifier'] not in self.directories:
             temp_dirs = set()
             if not self._is_directory_contained_by_dataset_directories(
-                    file_md['parent_directory']['identifier'], temp_dirs):
+                    file_md['parent_directory']['identifier'],
+                    file_md,
+                    temp_dirs):
                 raise InvalidDatasetMetadataError(
                     'File not found from dataset files nor directories: %s'
                     % (file_md["file_path"])
@@ -40,6 +43,7 @@ class DatasetConsistency:
             self.directories.update(temp_dirs)
 
     def _is_directory_contained_by_dataset_directories(self, identifier,
+                                                       file_md,
                                                        temp_dirs):
         """Checks recursively if directory is contained by dataset
         directories, if any.
@@ -52,14 +56,19 @@ class DatasetConsistency:
         :returns: ``True`` if file contained by dataset directory
         otherwise ``False``
         """
-
+        # file_md['parent_directory']['identifier'],
         if 'directories' in self.dataset['research_dataset']:
             for directory in self.dataset['research_dataset']['directories']:
                 if directory['identifier'] == identifier:
                     temp_dirs.add(identifier)
                     return True
 
-            dire = self.metax_client.get_directory(identifier)
+            # get parent directory's metadata
+            parent_dir_path = str(PurePath(file_md['file_path']).parent)
+
+            dire = self.metax_client.get_project_directory(
+                file_md['project_identifier'],
+                parent_dir_path)
 
             if 'parent_directory' in dire:
                 temp_dirs.update(
@@ -67,7 +76,11 @@ class DatasetConsistency:
                      dire['parent_directory']['identifier']]
                 )
                 return self._is_directory_contained_by_dataset_directories(
-                    dire['parent_directory']['identifier'], temp_dirs
+                    dire['parent_directory']['identifier'],
+                    file_md={'file_path': parent_dir_path,
+                             'project_identifier':
+                             file_md['project_identifier']},
+                    temp_dirs=temp_dirs
                 )
         temp_dirs.clear()
         return False

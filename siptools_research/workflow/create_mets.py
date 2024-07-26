@@ -270,7 +270,7 @@ class CreateMets(WorkflowTask):
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
         dataset_metadata = metax_client.get_dataset(self.dataset_id)
         languages = get_dataset_languages(dataset_metadata)
-        dirpath2usecategory = get_dirpath_dict(metax_client, dataset_metadata)
+        dirpath2usecategory = get_dirpath_dict(dataset_metadata)
         logical_struct = {}
 
         for dataset_file in dataset_files:
@@ -360,7 +360,7 @@ def _match_paths(parent_path, dir_path):
 
 
 # TODO: This function might be unnecessary: TPASPKT-1107
-def get_dirpath_dict(metax_client, dataset_metadata):
+def get_dirpath_dict(dataset_metadata):
     """Map directory paths to use categories.
 
     Returns a dict, which maps all research_dataset directory paths to
@@ -376,8 +376,7 @@ def get_dirpath_dict(metax_client, dataset_metadata):
     if "directories" in research_dataset:
         for _dir in research_dataset["directories"]:
             use_category = _dir["use_category"]
-            directory = metax_client.get_directory(_dir["identifier"])
-            dirpath = directory["directory_path"]
+            dirpath = _dir["details"]["directory_path"]
 
             dirpath_dict[dirpath] = use_category
 

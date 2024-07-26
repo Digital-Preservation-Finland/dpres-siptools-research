@@ -803,38 +803,24 @@ def test_get_dirpath_dict(requests_mock):
 
     :param requests_mock: Mocker object
     """
-    requests_mock.get(
-        "/rest/v2/directories/1",
-        json={
-            "identifier": "1",
-            "directory_path": "/"
-        }
-    )
-    requests_mock.get(
-        "/rest/v2/directories/2",
-        json={
-            "identifier": "2",
-            "directory_path": "/test"
-        }
-    )
-
-    metax_client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
     dataset_metadata = {
         "research_dataset": {
             "directories": [
                 {
                     "identifier": "1",
-                    "use_category": {"pref_label": {"en": "rootdir"}}
+                    "use_category": {"pref_label": {"en": "rootdir"}},
+                    "details" : {"directory_path" : "/"}
                 },
                 {
                     "identifier": "2",
-                    "use_category": {"pref_label": {"en": "testdir"}}
+                    "use_category": {"pref_label": {"en": "testdir"}},
+                    "details" : {"directory_path" : "/test"}
                 }
             ]
         }
     }
 
-    assert get_dirpath_dict(metax_client, dataset_metadata) == {
+    assert get_dirpath_dict(dataset_metadata) == {
         "/": {"pref_label": {"en": "rootdir"}},
         "/test": {"pref_label": {"en": "testdir"}}
     }
@@ -846,8 +832,7 @@ def test_get_dirpath_dict_no_directories():
     The function should return an empty dict when no directories are
     defined in the research_dataset.
     """
-    metax_client = None
-    assert not get_dirpath_dict(metax_client, {"research_dataset": {}})
+    assert not get_dirpath_dict({"research_dataset": {}})
 
 
 def test_find_dir_use_category():

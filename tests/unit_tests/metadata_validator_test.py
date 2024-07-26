@@ -362,18 +362,21 @@ def test_validate_file_metadata(requests_mock):
     file_1['identifier'] = 'file_identifier1'
     file_2 = copy.deepcopy(TXT_FILE)
     file_2['identifier'] = 'file_identifier2'
+
     requests_mock.get(
-        tests.conftest.METAX_URL + '/directories/pid:urn:dir:wf1',
+        tests.conftest.METAX_URL + '/directories/files?path=%2Fpath%2Fto&project=test_project&depth=1&include_parent=true',
         json={'identifier': 'first_par_dir',
-              'directory_path': '',
-              'parent_directory': {'identifier': 'second_par_dir'}},
+              'parent_directory': {'identifier': 'second_par_dir'},
+              'directories':[],
+              'files':[]},
         status_code=200
     )
     requests_mock.get(
-        tests.conftest.METAX_URL + '/directories/second_par_dir',
+        tests.conftest.METAX_URL + '/directories/files?path=%2Fpath&project=test_project&depth=1&include_parent=true',
         json={'identifier': 'second_par_dir',
-              'directory_path': '',
-              'parent_directory': {'identifier': 'root_dir'}},
+              'parent_directory': {'identifier': 'root_dir'},
+              'directories':[],
+              'files':[]},
         status_code=200
     )
     requests_mock.get(
