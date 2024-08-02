@@ -92,7 +92,7 @@ class CreateMets(WorkflowTask):
 
         # Create SIP. The physical structure map is automatically
         # created.
-        sip = siptools_ng.sip.SIP(mets=mets, files=files)
+        sip = siptools_ng.sip.SIP.from_files(mets=mets, files=files)
 
         # Create logical structural map
         logical_structural_map \
