@@ -248,10 +248,10 @@ class CreateMets(WorkflowTask):
             provenance_metadatas.append(
                 DigitalProvenanceEventMetadata(
                     event_type=event_type,
-                    event_datetime=event_datetime,
-                    event_detail=event_detail,
-                    event_outcome=event_outcome,
-                    event_outcome_detail=event_outcome_detail
+                    datetime=event_datetime,
+                    detail=event_detail,
+                    outcome=event_outcome,
+                    outcome_detail=event_outcome_detail
                 )
             )
 
