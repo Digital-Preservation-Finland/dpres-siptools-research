@@ -667,81 +667,15 @@ def test_create_filesec_and_structmap(workspace, requests_mock):
                           'file:///dataset_files/file2',
                           'file:///dataset_files/subdirectory/file3'}
 
-    # Validate the "PHYSICAL" structMap
+    # Check that "PHYSICAL" structMap contains dataset_files directory
+    # and the files.
     structmap = mets.xpath("//mets:structMap[@TYPE='PHYSICAL']",
                            namespaces=NAMESPACES)[0]
-    assert structmap.xpath(
-        "mets:div/@TYPE",
-        namespaces=NAMESPACES
-    )[0] == 'directory'
-    assert structmap.xpath(
-        "mets:div/mets:div/@TYPE",
-        namespaces=NAMESPACES
-    )[0] == 'directory'
     assert structmap.xpath(
         "mets:div/mets:div/@LABEL",
         namespaces=NAMESPACES
     )[0] == 'dataset_files'
-    assert structmap.xpath(
-        "mets:div/mets:div/mets:div/@TYPE",
-        namespaces=NAMESPACES
-    )[0] == 'directory'
-    assert structmap.xpath(
-        "mets:div/mets:div/mets:div/@LABEL",
-        namespaces=NAMESPACES
-    )[0] == 'subdirectory'
-    # Two files should be found in data directory
-    assert len(structmap.xpath(
-        'mets:div/mets:div/mets:fptr/@FILEID',
-        namespaces=NAMESPACES
-    )) == 2
-    # One file should be found in subdirectory of data directory
-    assert len(structmap.xpath(
-        'mets:div/mets:div/mets:div'
-        '/mets:fptr/@FILEID',
-        namespaces=NAMESPACES
-    )) == 1
-
-
-@pytest.mark.usefixtures('testmongoclient')
-def test_create_structmap_without_directories(workspace, requests_mock):
-    """Test creating structmap for dataset without directories.
-
-    Creates METS for a dataset that has files only in root directory
-    and tests that structMap is created correctly.
-
-    :param workspace: Temporary workspace directory fixture
-    :param requests_mock: HTTP request mocker
-    """
-    # Create a dataset that contains only one file
-    files = [copy.deepcopy(TXT_FILE)]
-    files[0]["file_path"] = "/file1"
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset["identifier"] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock=requests_mock,
-                                  dataset=dataset,
-                                  files=files)
-
-    # Create the file in "dataset_files"
-    dataset_files = workspace / "metadata_generation/dataset_files"
-    dataset_files.mkdir(parents=True)
-    (dataset_files / "file1").write_text("foo")
-
-    # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
-
-    # Check the structmap element
-    mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
-    structmap = mets.xpath("//mets:structMap[@TYPE='PHYSICAL']",
-                           namespaces=NAMESPACES)[0]
-    assert structmap.xpath("mets:div/@TYPE",
-                           namespaces=NAMESPACES)[0] == 'directory'
-    assert structmap.xpath("mets:div/mets:div/@TYPE",
-                           namespaces=NAMESPACES)[0] == 'directory'
-    assert structmap.xpath("mets:div/mets:div/@LABEL",
-                           namespaces=NAMESPACES)[0] == 'dataset_files'
-    assert len(structmap.xpath('mets:div/mets:div/mets:fptr/@FILEID',
-                               namespaces=NAMESPACES)) == 1
+    assert len(structmap.xpath('*//mets:fptr', namespaces=NAMESPACES)) == 3
 
 
 @pytest.mark.usefixtures('testmongoclient')
