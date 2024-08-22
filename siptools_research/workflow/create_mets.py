@@ -97,13 +97,13 @@ class CreateMets(WorkflowTask):
         # Create logical structural map
         logical_structural_map \
             = self._create_logical_structmap(files)
-        mets.add_structural_map(logical_structural_map)
+        mets.add_structural_maps([logical_structural_map])
 
         # Add provenance metadata to structural maps
         provenance_metadatas = self._create_provenance_metadata(metadata)
         for provenance_metadata in provenance_metadatas:
             for structural_map in mets.structural_maps:
-                structural_map.root_div.add_metadata(provenance_metadata)
+                structural_map.root_div.add_metadata([provenance_metadata])
 
         # Add descriptive metadata to structural map
         descriptive_metadata = ImportedMetadata(
@@ -121,7 +121,7 @@ class CreateMets(WorkflowTask):
         # created for metadata import!
         for structural_map in sip.mets.structural_maps:
             siptools_ng.sip._add_metadata(structural_map.root_div,
-                                          descriptive_metadata)
+                                          [descriptive_metadata])
 
         # Write METS to file
         mets.generate_file_references()
