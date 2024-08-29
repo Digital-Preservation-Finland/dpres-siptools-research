@@ -102,10 +102,10 @@ class CreateMets(WorkflowTask):
         # Add provenance metadata to structural maps
         provenance_metadatas = self._create_provenance_metadata(metadata)
         for provenance_metadata in provenance_metadatas:
-            for structural_map in mets.structural_maps:
-                structural_map.root_div.add_metadata([provenance_metadata])
+            sip.add_metadata([provenance_metadata])
+            logical_structural_map.root_div.add_metadata([provenance_metadata])
 
-        # Add descriptive metadata to structural map
+        # Add descriptive metadata to structural maps
         descriptive_metadata = ImportedMetadata(
             data_string=datacite,
             metadata_type="descriptive",
@@ -116,12 +116,8 @@ class CreateMets(WorkflowTask):
             # correct?
             format_version="4.1"
         )
-        # TODO: Implement a better way to add descriptive metadata to
-        # the default structural map. Ensure that PREMIS event is
-        # created for metadata import!
-        for structural_map in sip.mets.structural_maps:
-            siptools_ng.sip._add_metadata(structural_map.root_div,
-                                          [descriptive_metadata])
+        sip.add_metadata([descriptive_metadata])
+        logical_structural_map.root_div.add_metadata([descriptive_metadata])
 
         # Write METS to file
         mets.generate_file_references()
