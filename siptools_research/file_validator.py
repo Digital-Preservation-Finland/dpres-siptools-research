@@ -24,7 +24,7 @@ def validate_files(dataset_id, root_directory,
     invalid_files = []
     for file in metax_client.get_dataset_files(dataset_id):
 
-        filepath = root_directory / file["file_path"].strip('/')
+        filepath = root_directory / file["pathname"].strip('/')
         if not filepath.is_file():
             # Scraper won't raise exception if file is missing, so it is
             # better to raise exception here to avoid misleading error
@@ -34,9 +34,11 @@ def validate_files(dataset_id, root_directory,
 
         scraper = Scraper(
             filename=str(filepath),
-            mimetype=file["file_characteristics"]["file_format"],
-            charset=file["file_characteristics"].get("encoding"),
-            version=file["file_characteristics"].get("format_version")
+            mimetype=file["characteristics"].get(
+                'file_format_version', {}).get("file_format"),
+            charset=file["characteristics"].get("encoding"),
+            version=file["characteristics"].get(
+                'file_format_version', {}).get("format_version")
         )
         scraper.scrape(check_wellformed=True)
 
@@ -53,7 +55,7 @@ def validate_files(dataset_id, root_directory,
 
         else:
             # File is invalid or could not be validated
-            invalid_files.append(file["identifier"])
+            invalid_files.append(file["id"])
 
     if invalid_files:
         raise InvalidFileError(

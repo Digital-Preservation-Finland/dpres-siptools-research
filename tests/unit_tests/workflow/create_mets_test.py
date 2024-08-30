@@ -193,6 +193,8 @@ def test_multiple_provenance_events(workspace,
     dataset['identifier'] = workspace.name
     # Add use category to a file to ensure that logical structuremap is
     # created
+
+    # V3 does not support saving the files use category from research dataset
     dataset["research_dataset"]["files"] = [
         {
             "identifier": "pid:urn:identifier",
@@ -556,7 +558,7 @@ def test_create_techmd(workspace, requests_mock):
     assert premis_object_element.xpath(
         "//premis:messageDigest",
         namespaces=NAMESPACES
-    )[0].text == TIFF_FILE["checksum"]["value"]
+    )[0].text == f'{TIFF_FILE["checksum"]["value"]}'
     assert premis_object_element.xpath(
         "//premis:dateCreatedByApplication",
         namespaces=NAMESPACES

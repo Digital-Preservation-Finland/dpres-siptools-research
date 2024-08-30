@@ -227,6 +227,7 @@ def test_generate_metadata_predefined(requests_mock, testpath):
     file_metadata['file_characteristics'] = {
         'encoding': 'user_defined',
         'dummy_key': 'dummy_value'
+
     }
     file_metadata['file_characteristics_extension'] = {
         'streams': {
@@ -308,6 +309,60 @@ def test_generate_metadata_csv(requests_mock, testpath):
     assert file_characteristics['csv_delimiter'] == ';'
 
     assert file_char_ext['streams']['0']['mimetype'] == 'text/csv'
+
+
+def test_generate_metadata_wrong_type(requests_mock, testpath):
+    """Test generate metadata for a file which type is falsely defined.
+
+    User has defined the type of the CSV file as image/tiff and
+    scraper returns CSV as a type. An error is thrown.
+
+    :param requests_mock: Mocker object
+    :param testpath: Temporary directory
+    """
+    csv_file = copy.deepcopy(tests.metax_data.files.CSV_FILE)
+    csv_file["file_characteristics"]["file_format"] = "image/tiff"
+    tests.utils.add_metax_dataset(requests_mock,
+                                  files=[csv_file])
+
+    # Create text file in temporary directory
+    tmp_file_path = testpath / 'path/to/file.csv'
+    tmp_file_path.parent.mkdir(parents=True)
+    tmp_file_path.write_text('foo')
+
+    with pytest.raises(InvalidFileError) as exception_info:
+        generate_metadata('dataset_identifier',
+                          testpath,
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    assert str(exception_info.value) == 'File scraper detects a different file type'
+    assert exception_info.value.files == ['pid:urn:identifier_csv']
+
+
+def test_generate_metadata_wrong_version(requests_mock, testpath):
+    """Test generating metadata for a file with wrong version defined.
+
+    :param requests_mock: Mocker object
+    :param testpath: Temporary directory
+    """
+    file = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
+    # Change the predefined version. Scraper should detect the correct
+    # version, which is 6.0
+    file["file_characteristics"]["format_version"] = "9.9999999"
+    tests.utils.add_metax_dataset(requests_mock, files=[file])
+
+    tmp_file_path = testpath / 'path/to/file.tiff'
+    tmp_file_path.parent.mkdir(parents=True)
+    shutil.copy('tests/data/sample_files/image_tiff_large.tif', tmp_file_path)
+
+    with pytest.raises(InvalidFileError) as exception_info:
+        generate_metadata('dataset_identifier',
+                          testpath,
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    assert str(exception_info.value) \
+        == 'File scraper detects a different file version'
+    assert exception_info.value.files == ['pid:urn:identifier_tiff']
 
 
 def test_generate_metadata_dataset_not_found(requests_mock, testpath):

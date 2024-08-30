@@ -47,20 +47,20 @@ class GetFiles(WorkflowTask):
             os.mkdir(target_path)
 
             for dataset_file in files:
-                identifier = dataset_file["identifier"]
+                identifier = dataset_file["id"]
 
                 # Full path to file. Path normalization should not be
                 # required, but it is done just in case.
                 full_path = os.path.normpath(
                     os.path.join(
                         target_path,
-                        dataset_file["file_path"].strip('/')
+                        dataset_file["pathname"].strip('/')
                     )
                 )
                 if not full_path.startswith(target_path):
                     raise InvalidFileMetadataError(
                         f'The file path of file {identifier} is invalid:'
-                        f' {dataset_file["file_path"]}'
+                        f' {dataset_file["pathname"]}'
                     )
 
                 # Create the download directory for file if it does not

@@ -17,7 +17,7 @@ BASE_PROVENANCE = {
         "en": "Description of provenance"
     },
     'event_outcome': {
-        "identifier":
+        "url":
         "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success",
     },
     'outcome_description': {
@@ -37,15 +37,11 @@ QVAIN_PROVENANCE = {
 }
 
 BASE_DATASET = {
-    "identifier": "dataset_identifier",
-    "data_catalog": {
-        "identifier": "urn:nbn:fi:att:data-catalog-pas"
-    },
-    "preservation_identifier": "doi:test",
-    "contract": {
-        "identifier": "contract_identifier"
-    },
-    "research_dataset": {
-    },
-    "preservation_state": 0
+    "id": "dataset_identifier",
+    "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
+    "preservation": {
+        "id": "doi:test",
+        "contract": "contract_identifier",
+        "state": 0
+    }
 }

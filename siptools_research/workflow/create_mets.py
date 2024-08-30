@@ -64,7 +64,7 @@ class CreateMets(WorkflowTask):
         # Get dataset metadata from Metax
         metax_client = get_metax_client(self.config)
         metadata = metax_client.get_dataset(self.dataset_id)
-        contract_identifier = metadata["contract"]["identifier"]
+        contract_identifier = metadata.get('preservation', {})["contract"]
         contract_metadata = metax_client.get_contract(contract_identifier)
         files_metadata = metax_client.get_dataset_files(self.dataset_id)
         datacite = metax_client.get_datacite(self.dataset_id)
@@ -82,7 +82,7 @@ class CreateMets(WorkflowTask):
 
         # Add user organization as agent
         mets.add_agent(
-            name=contract_metadata["contract_json"]["organization"]["name"],
+            name=contract_metadata["organization"]["name"],
             agent_role=AgentRole.ARCHIVIST,
             agent_type=AgentType.ORGANIZATION
         )
@@ -127,26 +127,36 @@ class CreateMets(WorkflowTask):
     def _create_files(self, files_metadata):
         sip_files = []
         for file_ in files_metadata:
-            filepath = file_['file_path'].strip('/')
+            filepath = file_['pathname'].strip('/')
             source_filepath = (self.dataset.metadata_generation_workspace
                                / "dataset_files" / filepath)
             sip_filepath = "dataset_files/" + filepath
-            fc = file_["file_characteristics"]
+            fc = file_["characteristics"]
             sip_file = File(
                 path=source_filepath,
                 digital_object_path=sip_filepath,
             )
+            checksum_algo_conversion = {
+                'sha256': 'SHA-256',
+                'sha512': 'SHA-512',
+                'md5': 'MD5'
+            }
+            checksum_value = file_["checksum"].split(':')[-1]
             sip_file.generate_technical_metadata(
                 csv_has_header=fc.get("csv_has_header"),
                 csv_delimiter=fc.get("csv_delimiter"),
                 csv_record_separator=fc.get("csv_record_separator"),
                 csv_quoting_character=fc.get("csv_quoting_char"),
-                file_format=fc["file_format"],
-                file_format_version=fc.get("format_version"),
+                file_format=fc['file_format_version']["file_format"],
+                file_format_version=fc.get(
+                    'file_format_version', {}
+                ).get("format_version"),
                 charset=fc.get("encoding"),
                 file_created_date=fc.get("file_created"),
-                checksum_algorithm=file_["checksum"]["algorithm"],
-                checksum=file_["checksum"]["value"],
+                checksum_algorithm=checksum_algo_conversion[
+                    file_["checksum"].split(':')[0]
+                    ],
+                checksum=checksum_value,
             )
             sip_files.append(sip_file)
 
@@ -177,7 +187,7 @@ class CreateMets(WorkflowTask):
     def _create_provenance_metadata(self, metadata):
         provenance_metadatas = []
         dataset_languages = get_dataset_languages(metadata)
-        provenances = metadata["research_dataset"].get("provenance", [])
+        provenances = metadata.get("provenance", [])
         for provenance in provenances:
             # Although it shouldn't happen, theoretically both
             # 'preservation_event' and 'lifecycle_event' could exist in
@@ -230,7 +240,7 @@ class CreateMets(WorkflowTask):
             event_detail = ": ".join(event_detail_items)
 
             if "event_outcome" in provenance:
-                uri = provenance["event_outcome"]["identifier"]
+                uri = provenance["event_outcome"]["url"]
                 event_outcome = EVENT_OUTCOME[uri.lower()]
             else:
                 event_outcome = "(:unav)"
@@ -270,11 +280,10 @@ class CreateMets(WorkflowTask):
 
         for dataset_file in dataset_files:
 
-            file_id = dataset_file['identifier']
-
             # Get the use category of file. The path to the file in
             # logical structmap is stored in 'use_category' in metax.
-            filecategory = find_file_use_category(file_id, dataset_metadata)
+            filecategory = find_file_use_category(
+                dataset_file, dataset_metadata)
             if not filecategory:
                 continue
 
@@ -282,13 +291,13 @@ class CreateMets(WorkflowTask):
             # list if it does not exist already
             if filecategory not in logical_struct:
                 logical_struct[filecategory] = []
-            logical_struct[filecategory].append(dataset_file['file_path'])
+            logical_struct[filecategory].append(dataset_file['pathname'])
 
         return logical_struct
 
 
 # TODO: This function might be unnecessary: TPASPKT-1107
-def find_file_use_category(identifier, dataset_metadata):
+def find_file_use_category(file_metadata, dataset_metadata):
     """Look for file with identifier from dataset metadata.
 
     Returns the `use_category` of file if it is found. If file is not
@@ -299,13 +308,12 @@ def find_file_use_category(identifier, dataset_metadata):
     :returns: `use_category` attribute of file
     """
     languages = get_dataset_languages(dataset_metadata)
+    category_label = file_metadata.get(
+        "dataset_metadata", {}
+    ).get(
+        "use_category", {}
+    ).get('pref_label')
+    if category_label is None:
+        return None
 
-    if 'files' in dataset_metadata['research_dataset']:
-        for file_ in dataset_metadata['research_dataset']['files']:
-            if file_['identifier'] == identifier:
-                return get_localized_value(
-                    file_['use_category']['pref_label'],
-                    languages=languages)
-
-    # Nothing found
-    return None
+    return get_localized_value(category_label, languages=languages)

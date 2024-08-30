@@ -5,13 +5,13 @@ import pytest
 import jsonschema
 import siptools_research.schemas
 
-from tests.metax_data.datasets import (
+from tests.metax_data.datasetsV3 import (
     BASE_DATASET, BASE_PROVENANCE, QVAIN_PROVENANCE
 )
-from tests.metax_data.files import (
+from tests.metax_data.filesV3 import (
     TXT_FILE, CSV_FILE, PDF_FILE, TIFF_FILE, AUDIO_FILE, MKV_FILE, VIDEO_FILE
 )
-from tests.metax_data.contracts import BASE_CONTRACT
+from tests.metax_data.contractsV3 import BASE_CONTRACT
 
 SAMPLE_FILES = [
     {
@@ -60,7 +60,7 @@ def test_validate_dataset_metadata_with_provenance(provenance):
     :returns: ``None``
     """
     dataset_metadata = copy.deepcopy(BASE_DATASET)
-    dataset_metadata['research_dataset']['provenance'] = provenance
+    dataset_metadata['provenance'] = provenance
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
@@ -79,7 +79,7 @@ def test_validate_invalid_dataset_metadata():
     # Create invalid metadata by deleting required key from valid
     # dataset
     invalid_dataset_metadata = copy.deepcopy(BASE_DATASET)
-    del invalid_dataset_metadata["preservation_identifier"]
+    del invalid_dataset_metadata["preservation"]["id"]
 
     # Validation of invalid dataset should raise error
     with pytest.raises(jsonschema.ValidationError) as error:
@@ -89,7 +89,7 @@ def test_validate_invalid_dataset_metadata():
         )
 
     assert error.value.message == (
-        "'preservation_identifier' is a required property"
+        "'id' is a required property"
     )
 
 
@@ -121,7 +121,7 @@ def test_validate_valid_file_metadata_optional_attribute_missing():
     :returns: ``None``
     """
     valid_file_metadata = copy.deepcopy(TXT_FILE)
-    del valid_file_metadata['file_characteristics']['file_created']
+    del valid_file_metadata['csc_project']
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
@@ -139,7 +139,7 @@ def test_validate_invalid_file_metadata():
     :returns: ``None``
     """
     invalid_file_metadata = copy.deepcopy(TXT_FILE)
-    del invalid_file_metadata['file_path']
+    del invalid_file_metadata['pathname']
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError) as excinfo:
@@ -148,7 +148,7 @@ def test_validate_invalid_file_metadata():
             siptools_research.schemas.FILE_METADATA_SCHEMA
         )
 
-    assert excinfo.value.message == "'file_path' is a required property"
+    assert excinfo.value.message == "'pathname' is a required property"
 
 
 def test_validate_invalid_file_charset():
@@ -160,7 +160,7 @@ def test_validate_invalid_file_charset():
     :returns: ``None``
     """
     invalid_file_metadata = copy.deepcopy(TXT_FILE)
-    invalid_file_metadata['file_characteristics']['encoding'] = "foo"
+    invalid_file_metadata['characteristics']['encoding'] = "foo"
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError) as excinfo:
@@ -179,7 +179,7 @@ def test_validate_invalid_checksum_algorithm():
     The validation should raise ``ValidationError``.
     """
     invalid_file_metadata = copy.deepcopy(TXT_FILE)
-    invalid_file_metadata['checksum']['algorithm'] = "sha2"
+    invalid_file_metadata['checksum'] = "sha2:123"
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError) as excinfo:
@@ -188,20 +188,19 @@ def test_validate_invalid_checksum_algorithm():
             siptools_research.schemas.FILE_METADATA_SCHEMA
         )
 
-    assert excinfo.value.message == ("'sha2' is not one of ['MD5', 'SHA-1', "
-                                     "'SHA-224', 'SHA-256', 'SHA-384', "
-                                     "'SHA-512']")
+    assert excinfo.value.message == (
+        "'sha2:123' does not match '^(md5|sha256|sha512|sha1|sha224|sha383):[a-z0-9_]+$'")
 
 
 @pytest.mark.parametrize(
-     'attribute',
-     (
-         'csv_delimiter',
-         'csv_has_header',
-         'csv_record_separator',
-         'csv_quoting_char'
-     )
- )
+    'attribute',
+    (
+        'csv_delimiter',
+        'csv_has_header',
+        'csv_record_separator',
+        'csv_quoting_char'
+    )
+)
 def test_validate_invalid_csv(attribute):
     """Test validation of invalid CSV metadata.
 
@@ -213,7 +212,7 @@ def test_validate_invalid_csv(attribute):
     :returns: ``None``
     """
     invalid_file_metadata = copy.deepcopy(CSV_FILE)
-    del invalid_file_metadata['file_characteristics'][attribute]
+    del invalid_file_metadata['characteristics'][attribute]
 
     # Validation of invalid dataset raise error
     with pytest.raises(jsonschema.ValidationError) as excinfo:
@@ -244,7 +243,7 @@ def test_validate_invalid_contract():
     :returns: ``None``
     """
     invalid_contract_metadata = copy.deepcopy(BASE_CONTRACT)
-    invalid_contract_metadata['contract_json']['organization']['name'] = 1234
+    invalid_contract_metadata['organization']['name'] = 1234
 
     with pytest.raises(jsonschema.ValidationError) as excinfo:
         jsonschema.validate(invalid_contract_metadata,
@@ -263,7 +262,7 @@ def test_validate_dataset_with_files():
     :returns: ``None``
     """
     valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
-    valid_dataset_metadata['research_dataset']['files'] = SAMPLE_FILES
+    valid_dataset_metadata['files'] = SAMPLE_FILES
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
@@ -282,8 +281,6 @@ def test_validate_dataset_without_files():
     :returns: ``None``
     """
     valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
-    del valid_dataset_metadata['research_dataset']['files']
-
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
         valid_dataset_metadata,

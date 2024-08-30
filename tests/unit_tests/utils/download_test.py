@@ -12,9 +12,9 @@ from tests.utils import add_mock_ida_download
 def _get_file_metadata(identifier):
     """Return Metax file metadata."""
     return {
-        "file_path": "/path/to/file",
-        "identifier": identifier,
-        "file_storage": {"identifier": "urn:nbn:fi:att:file-storage-ida"}
+        "pathname": "/path/to/file",
+        "id": identifier,
+        "storage_identifier": "urn:nbn:fi:att:file-storage-ida"
     }
 
 

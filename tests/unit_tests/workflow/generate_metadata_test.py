@@ -44,6 +44,7 @@ def test_generatemetadata(workspace, requests_mock):
     file_metadata_patch_request = requests_mock.request_history[-3]
     assert file_metadata_patch_request.url \
         == 'https://metaksi/rest/v2/files/pid:urn:identifier'
+
     metadata = file_metadata_patch_request.json()['file_characteristics']
     assert metadata['file_format'] == 'text/plain'
     assert metadata['encoding'] == 'UTF-8'

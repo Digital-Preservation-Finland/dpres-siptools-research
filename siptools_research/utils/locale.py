@@ -10,7 +10,7 @@ def get_dataset_languages(dataset):
               eg. ["fi", "en"]
     """
     try:
-        languages = dataset["research_dataset"]["language"]
+        languages = dataset["language"]
     except KeyError:
         # If 'language' list doesn't exist, use ['en', 'fi'] as a default
         return ["en", "fi"]
@@ -20,8 +20,8 @@ def get_dataset_languages(dataset):
     for lang in languages:
         # The value of 'identifier' seems to be
         # 'http://lexvo.org/id/iso639-3/eng'
-        lang_id = lang["identifier"].split("/")[-1]
-        lang_type = lang["identifier"].split("/")[-2]
+        lang_id = lang["url"].split("/")[-1]
+        lang_type = lang["url"].split("/")[-2]
 
         # TODO: Could the 'iso639-2' be also used?
         if lang_type != "iso639-3":

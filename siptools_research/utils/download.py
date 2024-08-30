@@ -24,7 +24,7 @@ def _link_local_file(file_metadata, path):
     :param path: Path where file is downloaded
     :param conf: Configuration object
     """
-    identifier = file_metadata["identifier"]
+    identifier = file_metadata["id"]
     try:
         filepath = FileEntry.objects.get(identifier=identifier).path
     except FileEntry.DoesNotExist:
@@ -36,7 +36,7 @@ def _link_local_file(file_metadata, path):
     # file really exists.
     if (filepath is None) or (not Path(filepath).is_file()):
         raise FileNotAvailableError(
-            f"File '{file_metadata['file_path']}' not found in pre-ingest "
+            f"File '{file_metadata['pathname']}' not found in pre-ingest "
             f"file storage"
         )
 
@@ -68,7 +68,7 @@ def _download_ida_file(file_metadata, dataset_id, path, conf):
             verify=verify,
             json={
                 "dataset": dataset_id,
-                "file": file_metadata["file_path"]
+                "file": file_metadata["pathname"]
             }
         )
         response.raise_for_status()
@@ -78,7 +78,7 @@ def _download_ida_file(file_metadata, dataset_id, path, conf):
     except HTTPError as error:
         if error.response.status_code == 404:
             raise FileNotAvailableError(
-                f"File '{file_metadata['file_path']}' not found in Ida"
+                f"File '{file_metadata['pathname']}' not found in Ida"
             )
         if error.response.status_code == 502:
             raise FileAccessError("Ida service temporarily unavailable. "
@@ -123,7 +123,7 @@ def download_file(
     """
     conf = Configuration(config_file)
     pas_storage_id = conf.get("pas_storage_id")
-    file_storage = file_metadata["file_storage"]["identifier"]
+    file_storage = file_metadata["storage_identifier"]
 
     if file_storage == pas_storage_id:
         _link_local_file(

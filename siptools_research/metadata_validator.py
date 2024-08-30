@@ -10,22 +10,24 @@ from siptools_research.metax import get_metax_client
 
 import jsonschema
 import siptools_research.schemas
-from siptools_research.exceptions import (InvalidContractMetadataError,
-                                          InvalidDatasetMetadataError,
-                                          InvalidFileMetadataError)
+from siptools_research.exceptions import (
+    InvalidContractMetadataError,
+    InvalidDatasetMetadataError,
+    InvalidFileMetadataError,
+)
 from siptools_research.utils import mimetypes
 
-DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
-                   '/schemas_external/datacite/4.1/metadata.xsd')
+DATACITE_SCHEMA = (
+    "/etc/xml/dpres-xml-schemas/schema_catalogs"
+    "/schemas_external/datacite/4.1/metadata.xsd"
+)
 
 
-DATACITE_VALIDATION_ERROR = 'Datacite metadata is invalid: %s'
+DATACITE_VALIDATION_ERROR = "Datacite metadata is invalid: %s"
 
 
 def validate_metadata(
-        dataset_id,
-        config="/etc/siptools_research.conf",
-        dummy_doi="false"
+    dataset_id, config="/etc/siptools_research.conf", dummy_doi="false"
 ):
     """Validate dataset.
 
@@ -42,13 +44,15 @@ def validate_metadata(
     metax_client = get_metax_client(config)
     # Get dataset metadata from Metax
     dataset_metadata = metax_client.get_dataset(dataset_id)
-
+    # TODO: Replace JSON Schema files with proper Metax V3
+    # schemas once those are available. See CSCMETAXREWORK-409.
     # Validate dataset metadata
     _validate_dataset_metadata(dataset_metadata, dummy_doi=dummy_doi)
 
     # Validate contract metadata
-    _validate_contract_metadata(dataset_metadata['contract']['identifier'],
-                                metax_client)
+    _validate_contract_metadata(
+        dataset_metadata.get("preservation", {}).get("contract"), metax_client
+    )
 
     # Validate file metadata for each file in dataset files
     _validate_file_metadata(dataset_metadata, metax_client)
@@ -70,8 +74,8 @@ def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
     schema = copy.deepcopy(siptools_research.schemas.DATASET_METADATA_SCHEMA)
     # If dummy DOI is used, drop preeservation_identifier from schema
     if dummy_doi == "true":
-        schema["required"] = ["research_dataset", "contract"]
-        del schema["properties"]["preservation_identifier"]
+        schema["properties"]["preservation"]["required"] = ["contract"]
+        del schema["properties"]["preservation"]["properties"]["id"]
 
     try:
         jsonschema.validate(dataset_metadata, schema)
@@ -88,8 +92,10 @@ def _validate_contract_metadata(contract_id, metax_client):
     """
     contract_metadata = metax_client.get_contract(contract_id)
     try:
-        jsonschema.validate(contract_metadata,
-                            siptools_research.schemas.CONTRACT_METADATA_SCHEMA)
+        jsonschema.validate(
+            contract_metadata,
+            siptools_research.schemas.CONTRACT_METADATA_SCHEMA,
+        )
     except jsonschema.ValidationError as exc:
         raise InvalidContractMetadataError(str(exc)) from exc
 
@@ -100,16 +106,19 @@ def _check_mimetype(file_metadata):
     :param file_metadata: file metadata dictionary
     :returns: ``None``
     """
-    file_format = file_metadata["file_characteristics"]["file_format"]
+    file_format = file_metadata["characteristics"]["file_format_version"][
+        "file_format"
+    ]
     try:
-        format_version \
-            = file_metadata["file_characteristics"]["format_version"]
+        format_version = file_metadata["characteristics"][
+            "file_format_version"
+        ]["format_version"]
     except KeyError:
         format_version = ""
 
     if not mimetypes.is_supported(file_format, format_version):
         message = (
-            f"Validation error in file {file_metadata['file_path']}: "
+            f"Validation error in file {file_metadata['pathname']}: "
             f"Incorrect file format: {file_format}"
         )
 
@@ -127,15 +136,14 @@ def _validate_file_metadata(dataset, metax_client):
     :param conf: siptools_research Configuration object
     :returns: ``None``
     """
-    dataset_files = metax_client.get_dataset_files(dataset['identifier'])
+    dataset_files = metax_client.get_dataset_files(dataset["id"])
     if not dataset_files:
         raise InvalidDatasetMetadataError(
             "Dataset must contain at least one file"
         )
     for file_metadata in dataset_files:
-
-        file_identifier = file_metadata["identifier"]
-        file_path = file_metadata["file_path"]
+        file_identifier = file_metadata["id"]
+        file_path = file_metadata["pathname"]
 
         # Validate metadata against JSON schema. The schema contains
         # properties introduced in JSON schema draft 7. Using
@@ -145,9 +153,7 @@ def _validate_file_metadata(dataset, metax_client):
         try:
             jsonschema.Draft7Validator(
                 siptools_research.schemas.FILE_METADATA_SCHEMA
-            ).validate(
-                file_metadata
-            )
+            ).validate(file_metadata)
         except jsonschema.ValidationError as exc:
             raise InvalidFileMetadataError(
                 f"Validation error in metadata of {file_path}: {str(exc)}"
@@ -157,11 +163,11 @@ def _validate_file_metadata(dataset, metax_client):
         _check_mimetype(file_metadata)
 
         # Check that file path does not point outside SIP
-        normalised_path = os.path.normpath(file_path.strip('/'))
-        if normalised_path.startswith('..'):
+        normalised_path = os.path.normpath(file_path.strip("/"))
+        if normalised_path.startswith(".."):
             raise InvalidFileMetadataError(
-                f'The file path of file {file_identifier} is invalid:'
-                f' {file_path}'
+                f"The file path of file {file_identifier} is invalid:"
+                f" {file_path}"
             )
 
 
@@ -196,9 +202,9 @@ def _format_error_list(errors):
     if len(errors) == 1:
         message = errors[0]
     elif len(errors) > 1:
-        message = 'The following errors were detected:\n'
+        message = "The following errors were detected:\n"
         for error in enumerate(errors, 1):
-            message += f'\n{error[0]}. {error[1]}'
+            message += f"\n{error[0]}. {error[1]}"
     else:
         raise TypeError("Can not format empty list")
 

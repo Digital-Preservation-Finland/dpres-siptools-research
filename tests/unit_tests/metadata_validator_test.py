@@ -16,8 +16,10 @@ from siptools_research.exceptions import (InvalidContractMetadataError,
 from siptools_research.metadata_validator import _validate_dataset_metadata
 import tests.utils
 from tests.metax_data.contracts import BASE_CONTRACT
+
 from tests.metax_data.datasets import (BASE_DATACITE, BASE_DATASET,
                                        BASE_PROVENANCE, QVAIN_PROVENANCE)
+from tests.metax_data.datasetsV3 import BASE_DATASET as BASE_DATASETV3
 from tests.metax_data.files import (BASE_FILE, CSV_FILE, MKV_FILE, TIFF_FILE,
                                     TXT_FILE, PDF_FILE, AUDIO_FILE, VIDEO_FILE)
 
@@ -94,7 +96,7 @@ def test_validate_metadata_with_provenance(requests_mock, provenance):
     :returns: ``None``
     """
     dataset = copy.deepcopy(BASE_DATASET)
-    dataset["research_dataset"]["provenance"] = provenance
+    dataset["provenance"] = provenance
 
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset,
@@ -168,14 +170,14 @@ def test_validate_preservation_identifier():
 
     :returns: ``None``
     """
-    dataset = copy.deepcopy(BASE_DATASET)
-    del dataset['preservation_identifier']
+    dataset = copy.deepcopy(BASE_DATASETV3)
+    del dataset['preservation']['id']
 
     # Validation with dummy DOI should not raise an exception
     _validate_dataset_metadata(dataset, dummy_doi="true")
 
     # Validation without dummy DOI should raise an exception
-    expected_error = "'preservation_identifier' is a required property"
+    expected_error = "'id' is a required property"
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
         _validate_dataset_metadata(dataset)
 
@@ -235,7 +237,7 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
     tests.utils.add_metax_dataset(requests_mock, contract=invalid_contract)
 
     # Try to validate invalid dataset
-    expected_error = ("'name' is a required property\n\n"
+    expected_error = ("'organization' is a required property\n\n"
                       "Failed validating 'required' in schema")
     with pytest.raises(InvalidContractMetadataError, match=expected_error):
         validate_metadata('dataset_identifier',
@@ -356,7 +358,8 @@ def test_validate_file_metadata(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASETV3)
+    dataset['directories'] = [{'identifier': 'root_dir'}]
     file_1 = copy.deepcopy(TXT_FILE)
     file_1['identifier'] = 'file_identifier1'
     file_2 = copy.deepcopy(TXT_FILE)
@@ -366,6 +369,19 @@ def test_validate_file_metadata(requests_mock):
         tests.conftest.METAX_URL + '/datasets/dataset_identifier/files',
         json=[file_1, file_2],
         status_code=200
+    )
+
+    # This is here only for the support of V2 and the normalization
+    requests_mock.get(
+        tests.conftest.METAX_URL + '/datasets/dataset_identifier',
+        json={
+            "research_dataset": {
+                "files": [
+                    {"identifier": "file_identifier1"},
+                    {"identifier": "file_identifier2"}
+                ]
+            }
+        }
     )
 
     # Init metax client
@@ -389,7 +405,7 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
     """
     file_metadata = copy.deepcopy(BASE_FILE)
     file_metadata['file_characteristics'] = {
-        "file_created": "2014-01-17T08:19:31Z"
+        "title": "A Great File"
     }
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
 
@@ -397,14 +413,14 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
     client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     expected_error = (
-        "Validation error in metadata of /path/to/file: 'file_format' is"
-        " a required property\n\nFailed validating 'required' in schema"
+        "Validation error in metadata of /path/to/file: 'file_format' "
+        "is a required property\n\nFailed validating 'required' in schema"
     )
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
         # pylint: disable=protected-access
         siptools_research.metadata_validator._validate_file_metadata(
             {
-                'identifier': 'dataset_identifier'
+                'id': 'dataset_identifier'
             },
             client,
         )
@@ -436,6 +452,8 @@ def test_validate_datacite(requests_mock):
         )
 
 # pylint: disable=invalid-name
+
+
 def test_validate_metadata_http_error_raised(requests_mock):
     """Test validate_metadata.
 

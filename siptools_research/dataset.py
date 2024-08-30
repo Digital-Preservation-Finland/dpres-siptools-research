@@ -1,4 +1,5 @@
 """Dataset class."""
+
 import datetime
 import enum
 from pathlib import Path
@@ -23,16 +24,17 @@ def _timestamp():
 class Target(enum.Enum):
     """Target of a workflow."""
 
-    METADATA_GENERATION = 'metadata_generation'
-    VALIDATION = 'validation'
-    PRESERVATION = 'preservation'
+    METADATA_GENERATION = "metadata_generation"
+    VALIDATION = "validation"
+    PRESERVATION = "preservation"
 
 
 class Dataset:
     """Class for managing workflows of dataset."""
 
-    def __init__(self, identifier, document=None,
-                 config='/etc/siptools_research.conf'):
+    def __init__(
+        self, identifier, document=None, config="/etc/siptools_research.conf"
+    ):
         """Initialize dataset."""
         self.identifier = identifier
         self._cached_document = document
@@ -45,8 +47,9 @@ class Dataset:
     def _document(self):
         """Document in database."""
         if self._cached_document is None:
-            self._cached_document \
-                = self.database.get_document(self.identifier) or {}
+            self._cached_document = (
+                self.database.get_document(self.identifier) or {}
+            )
 
         return self._cached_document
 
@@ -54,8 +57,9 @@ class Dataset:
     def _metadata(self):
         """Dataset metadata from Metax."""
         if self._cached_metadata is None:
-            self._cached_metadata \
-                = self._metax_client.get_dataset(self.identifier)
+            self._cached_metadata = self._metax_client.get_dataset(
+                self.identifier
+            )
 
         return self._cached_metadata
 
@@ -66,32 +70,35 @@ class Dataset:
         The SIP identifier is the DOI of the dataset version which is in
         PAS data catalog.
         """
-        if self._metadata['data_catalog']['identifier'] \
-                == PAS_DATA_CATALOG_IDENTIFIER:
+        if self._metadata["data_catalog"] == PAS_DATA_CATALOG_IDENTIFIER:
             # Dataset was originally created to PAS data catalog.
-            identifier = self._metadata["preservation_identifier"]
+            identifier = self._metadata.get("preservation", {}).get("id")
 
-        elif 'preservation_dataset_version' in self._metadata:
+        elif "dataset_version" in self._metadata.get("preservation", {}):
             # Dataset was created in IDA catalog, and it has been copied
             # to PAS data catalog. The preferred identifier of the PAS
             # version of the dataset will be used as SIP identifier.
-            identifier = (self._metadata['preservation_dataset_version']
-                          ['preferred_identifier'])
+            identifier = self._metadata.get("preservation", {}).get(
+                "dataset_version"
+            )["preferred_identifier"]
         else:
             # Dataset has not yet been copied to PAS data catalog.
-            raise ValueError("The dataset has not been copied to PAS data"
-                             "catalog, so DOI does not exist.")
+            raise ValueError(
+                "The dataset has not been copied to PAS data"
+                "catalog, so DOI does not exist."
+            )
 
         return identifier
 
     @property
     def preservation_state(self):
         """Preservation state of the dataset."""
-        if 'preservation_dataset_version' in self._metadata:
-            state = (self._metadata['preservation_dataset_version']
-                     ['preservation_state'])
+        if "dataset_version" in self._metadata.get("preservation", {}):
+            state = self._metadata.get("preservation", {}).get(
+                "dataset_version"
+            )["preservation_state"]
         else:
-            state = self._metadata['preservation_state']
+            state = self._metadata.get("preservation", {}).get("state")
 
         return state
 
@@ -101,15 +108,16 @@ class Dataset:
         If dataset has been copied to PAS data catalog, the preservation
         state of the PAS version is set.
         """
-        if 'preservation_dataset_version' in self._metadata:
-            preserved_dataset_id \
-                = self._metadata['preservation_dataset_version']['identifier']
+        if "dataset_version" in self._metadata.get("preservation", {}):
+            preserved_dataset_id = self._metadata["preservation"][
+                "dataset_version"
+            ]["identifier"]
         else:
-            preserved_dataset_id = self._metadata["identifier"]
+            preserved_dataset_id = self._metadata["id"]
 
-        self._metax_client.set_preservation_state(preserved_dataset_id,
-                                                  state,
-                                                  description)
+        self._metax_client.set_preservation_state(
+            preserved_dataset_id, state, description
+        )
 
     @property
     def target(self):
@@ -124,7 +132,7 @@ class Dataset:
     @property
     def workspace_root(self):
         """Root workspace directory."""
-        packaging_root = self.conf.get('packaging_root')
+        packaging_root = self.conf.get("packaging_root")
         # Currently packaging_root contains only the workspace
         # directories, but it might have other purposes in future, so
         # workspaces are created in "workspaces" subdirectory.
@@ -148,20 +156,18 @@ class Dataset:
     @property
     def enabled(self):
         """Check if dataset has active workflow."""
-        return self._document.get('enabled', False)
+        return self._document.get("enabled", False)
 
     def disable(self):
         """Disable workflow."""
         self._cached_document = self.database.update_document(
-            self.identifier,
-            {'enabled': False}
+            self.identifier, {"enabled": False}
         )
 
     def enable(self):
         """Enable workflow."""
         self._cached_document = self.database.update_document(
-            self.identifier,
-            {'enabled': True}
+            self.identifier, {"enabled": True}
         )
 
     # TODO: These task logs are not required anymore for anything else
@@ -179,17 +185,18 @@ class Dataset:
         self._cached_document = self.database.update_document(
             self.identifier,
             {
-                'workflow_tasks.' + task_name: {
-                    'timestamp': _timestamp(),
-                    'messages': message,
-                    'result': result
+                "workflow_tasks."
+                + task_name: {
+                    "timestamp": _timestamp(),
+                    "messages": message,
+                    "result": result,
                 }
-            }
+            },
         )
 
     def get_tasks(self):
         """Get dictionary of events."""
-        return self._document.get('workflow_tasks', {})
+        return self._document.get("workflow_tasks", {})
 
     def get_task_timestamp(self, task_name):
         """Read task timestamp for a task.
@@ -199,7 +206,7 @@ class Dataset:
         """
         if not self._document:
             raise ValueError
-        return self._document['workflow_tasks'][task_name]['timestamp']
+        return self._document["workflow_tasks"][task_name]["timestamp"]
 
     def _set_target(self, target):
         """Set target of workflow.
@@ -207,11 +214,7 @@ class Dataset:
         param Target target: The target of the workflow
         """
         self._cached_document = self.database.update_document(
-            self.identifier,
-            {
-                'target': target.value,
-                'enabled': True
-            }
+            self.identifier, {"target": target.value, "enabled": True}
         )
 
     def generate_metadata(self):
@@ -221,13 +224,15 @@ class Dataset:
         """
         if self.enabled:
             raise WorkflowExistsError(
-                'Active workflow already exists for this dataset.'
+                "Active workflow already exists for this dataset."
             )
 
         # Clear the workspaces
-        for path in [self.metadata_generation_workspace,
-                     self.validation_workspace,
-                     self.preservation_workspace]:
+        for path in [
+            self.metadata_generation_workspace,
+            self.validation_workspace,
+            self.preservation_workspace,
+        ]:
             _delete_directory(path)
 
         self.metadata_generation_workspace.mkdir(parents=True)
@@ -241,7 +246,7 @@ class Dataset:
         """
         if self.enabled:
             raise WorkflowExistsError(
-                'Active workflow already exists for this dataset.'
+                "Active workflow already exists for this dataset."
             )
 
         # Clear the workspaces
@@ -259,7 +264,7 @@ class Dataset:
         """
         if self.enabled:
             raise WorkflowExistsError(
-                'Active workflow already exists for this dataset.'
+                "Active workflow already exists for this dataset."
             )
 
         # Clear the preservation workspace
@@ -270,10 +275,12 @@ class Dataset:
         self._set_target(Target.PRESERVATION)
 
 
-def find_datasets(enabled=None,
-                  target=None,
-                  identifier=None,
-                  config='/etc/siptools_research.conf'):
+def find_datasets(
+    enabled=None,
+    target=None,
+    identifier=None,
+    config="/etc/siptools_research.conf",
+):
     """Find datasets by search criteria.
 
     :param bool enabled: If `True`, show only enabled datasets, if
@@ -285,17 +292,16 @@ def find_datasets(enabled=None,
     """
     search = {}
     if enabled is not None:
-        search['enabled'] = enabled
+        search["enabled"] = enabled
     if target is not None:
-        search['target'] = target
+        search["target"] = target
     if identifier is not None:
-        search['_id'] = identifier
+        search["_id"] = identifier
 
     database = siptools_research.utils.database.Database(config)
     return list(
-        Dataset(document['_id'], document=document, config=config)
-        for document
-        in database.find(search)
+        Dataset(document["_id"], document=document, config=config)
+        for document in database.find(search)
     )
 
 

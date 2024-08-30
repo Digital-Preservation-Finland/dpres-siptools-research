@@ -1,7 +1,6 @@
 """Common utility functions for tests."""
 
 import copy
-import os
 import uuid
 
 import lxml.etree
@@ -60,6 +59,16 @@ def add_metax_dataset(requests_mock,
         "{}/datasets/{}".format(tests.conftest.METAX_URL,
                                 dataset['identifier']),
         json=dataset
+    )
+    requests_mock.get(
+        "{}/datacatalogs/{}".format(tests.conftest.METAX_URL,
+                                    dataset['data_catalog']['identifier']),
+        json={}
+    )
+    requests_mock.get(
+        "{}/contracts/{}".format(tests.conftest.METAX_URL,
+                                 dataset['contract']['identifier']),
+        json={}
     )
     requests_mock.patch(
         "{}/datasets/{}".format(tests.conftest.METAX_URL,
