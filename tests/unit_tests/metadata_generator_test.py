@@ -1,8 +1,8 @@
 """Tests for :mod:`siptools_research.metadata_generator` module."""
 import copy
+import shutil
 from collections import defaultdict
 from pathlib import Path
-import shutil
 
 import pytest
 from metax_access import DatasetNotAvailableError
@@ -11,8 +11,59 @@ from requests.exceptions import HTTPError
 import tests.metax_data.datasets
 import tests.metax_data.files
 import tests.utils
-from siptools_research.exceptions import InvalidFileError
+from siptools_research.exceptions import (
+    InvalidFileError,
+    InvalidFileMetadataError,
+)
 from siptools_research.metadata_generator import generate_metadata
+
+
+def test_generate_metadata(requests_mock, testpath):
+    """Test metadata generation.
+
+    Generates metadata for text file. Checks that expected request is
+    sent to Metax.
+    """
+    # create mocked dataset in Metax
+    file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
+    file_metadata["file_path"] = "textfile"
+    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
+    file_metadata_patch = requests_mock.patch(
+        "https://metaksi/rest/v2/files/pid:urn:identifier",
+        json={}
+    )
+
+    # Create a text file in temporary directory
+    tmp_file_path = testpath / "textfile"
+    tmp_file_path.write_text("foo")
+
+    # Generate metadata
+    generate_metadata("dataset_identifier",
+                      root_directory=testpath,
+                      config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+    # Check the patch request
+    json = file_metadata_patch.last_request.json()
+    assert json["file_characteristics"] == {
+        "file_format": "text/plain",
+        "encoding": "UTF-8"
+    }
+    assert json["file_characteristics_extension"]["streams"] == {
+        "0": {
+            "charset": "UTF-8",
+            "index": 0,
+            "mimetype": "text/plain",
+            "stream_type": "text",
+            "version": "(:unap)"
+        }
+    }
+    # It does not make sense to validate "info", but at least it should
+    # not be empty
+    assert json["file_characteristics_extension"]["info"]
+    assert json["file_characteristics_extension"]["mimetype"] == "text/plain"
+    assert json["file_characteristics_extension"]["version"] ==  "(:unap)"
+    assert json["file_characteristics_extension"]["grade"] \
+        == "fi-dpres-recommended-file-format"
 
 
 @pytest.mark.parametrize(
@@ -85,16 +136,15 @@ from siptools_research.metadata_generator import generate_metadata
         )
     ]
 )
-def test_generate_metadata(requests_mock,
-                           path,
-                           expected_file_characteristics,
-                           expected_stream_type,
-                           testpath):
-    """Test metadata generation.
+def test_file_format_detection(requests_mock,
+                                        path,
+                                        expected_file_characteristics,
+                                        expected_stream_type,
+                                        testpath):
+    """Test file format detection.
 
     Generates metadata for a dataset that contains one file, and checks
-    that correct file characteristics and file_characteristics_extension
-    are sent to Metax.
+    that file format is detected correctly.
 
     :param requests_mock: Mocker object
     :param path: path to the file for which the metadata is created
@@ -256,113 +306,161 @@ def test_generate_metadata_predefined(requests_mock, testpath):
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # verify the file characteristics that were sent to Metax
-    assert patch_request.last_request.json() == {
-        'file_characteristics': {
+    json = patch_request.last_request.json()
+    assert json["file_characteristics"] == {
             # missing keys are added
             'file_format': 'text/plain',
             # user defined value is not overwritten
             'encoding': 'user_defined',
             # additional keys are copied
             'dummy_key': 'dummy_value',
-        },
-        'file_characteristics_extension': {
-            'streams': {
-                '0': {
-                    'charset': 'user_defined',
-                    'index': 0,
-                    'mimetype': 'text/plain',
-                    'stream_type': 'text',
-                    'version': '(:unap)'
-                }
-            }
+        }
+    assert json["file_characteristics_extension"]["streams"] == {
+        '0': {
+            'charset': 'user_defined',
+            'index': 0,
+            'mimetype': 'text/plain',
+            'stream_type': 'text',
+            'version': '(:unap)'
         }
     }
 
 
-def test_generate_metadata_csv(requests_mock, testpath):
+@pytest.mark.parametrize(
+    ("predefined_file_characteristics", "expected_file_characteristics"),
+    [
+        (
+            # User has predefined all parameters. Predefined parameters
+            # should not change
+            {
+                "file_format": "text/csv",
+                "encoding": "UTF-8",
+                "csv_delimiter": "x",
+                "csv_record_separator": "y",
+                "csv_quoting_char": "z"
+            },
+            {
+                "file_format": "text/csv",
+                "encoding": "UTF-8",
+                "csv_delimiter": "x",
+                "csv_record_separator": "y",
+                "csv_quoting_char": "z"
+            }
+        ),
+        (
+            # User has predefined only file_format. File-scraper should
+            # detect the parameter automatically
+            {
+                "file_format": "text/csv"
+            },
+            {
+                "file_format": "text/csv",
+                "encoding": "UTF-8",
+                "csv_delimiter": ";",
+                "csv_record_separator": "\r\n",
+                "csv_quoting_char": "'"
+            },
+        ),
+        (
+            # User has predefined file_format as plain text. CSV
+            # specific parameter should not be added.
+            {
+                "file_format": "text/plain"
+            },
+            {
+                "file_format": "text/plain",
+                "encoding": "UTF-8",
+            },
+        )
+    ]
+)
+def test_generate_metadata_csv(requests_mock, testpath,
+                               predefined_file_characteristics,
+                               expected_file_characteristics):
     """Test generate metadata.
 
-    Tests addml metadata generation for a CSV file. Generates file
-    characteristics metadata that is later used to generate an ADDML
-    document.
+    Tests metadata generation for a CSV file.
 
     :param requests_mock: Mocker object
     :param testpath: Temporary directory
+    :param predefined_file_characteristics: File characteristics that
+        have been defined before metadata generation
+    :param expected_file_characteristics: File characteristics that
+        should be posted to Metax when metadata is generated
     """
-    tests.utils.add_metax_dataset(requests_mock,
-                                  files=[tests.metax_data.files.CSV_FILE])
+    file = copy.deepcopy(tests.metax_data.files.CSV_FILE)
+    del file["file_characteristics"]
+    del file["file_characteristics_extension"]
+    file["file_characteristics"] = predefined_file_characteristics
+    tests.utils.add_metax_dataset(requests_mock, files=[file])
 
     # Create text file in temporary directory
     tmp_file_path = testpath / 'path/to/file.csv'
     tmp_file_path.parent.mkdir(parents=True)
-    tmp_file_path.write_text('foo')
+    shutil.copy("tests/data/sample_files/text_csv.csv", tmp_file_path)
 
     generate_metadata('dataset_identifier',
                       testpath,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     tech_metadata = requests_mock.last_request.json()
+
     file_characteristics = tech_metadata['file_characteristics']
-    file_char_ext = tech_metadata['file_characteristics_extension']
+    assert file_characteristics == expected_file_characteristics
 
-    assert file_characteristics['file_format'] == 'text/csv'
-    assert file_characteristics['csv_delimiter'] == ';'
-
-    assert file_char_ext['streams']['0']['mimetype'] == 'text/csv'
-
-
-def test_generate_metadata_wrong_type(requests_mock, testpath):
-    """Test generate metadata for a file which type is falsely defined.
-
-    User has defined the type of the CSV file as image/tiff and
-    scraper returns CSV as a type. An error is thrown.
-
-    :param requests_mock: Mocker object
-    :param testpath: Temporary directory
-    """
-    csv_file = copy.deepcopy(tests.metax_data.files.CSV_FILE)
-    csv_file["file_characteristics"]["file_format"] = "image/tiff"
-    tests.utils.add_metax_dataset(requests_mock,
-                                  files=[csv_file])
-
-    # Create text file in temporary directory
-    tmp_file_path = testpath / 'path/to/file.csv'
-    tmp_file_path.parent.mkdir(parents=True)
-    tmp_file_path.write_text('foo')
-
-    with pytest.raises(InvalidFileError) as exception_info:
-        generate_metadata('dataset_identifier',
-                          testpath,
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-    assert str(exception_info.value) == 'File scraper detects a different file type'
-    assert exception_info.value.files == ['pid:urn:identifier_csv']
+    # The file_characteristics_extension should contain same metadata as
+    # file_characteristics
+    stream = tech_metadata['file_characteristics_extension']["streams"]["0"]
+    assert file_characteristics["file_format"] == stream["mimetype"]
+    assert file_characteristics.get("csv_delimiter") == stream.get("delimiter")
+    assert file_characteristics.get("csv_record_separator") \
+        == stream.get("separator")
+    assert file_characteristics.get("csv_quoting_char") \
+        == stream.get("quotechar")
 
 
-def test_generate_metadata_wrong_version(requests_mock, testpath):
-    """Test generating metadata for a file with wrong version defined.
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("file_format", "image/tiff"),
+        ("format_version", "foo"),
+        ("csv_record_separator", "foo"),
+        ("csv_delimiter", "foo"),
+        ("csv_quoting_char", "foo"),
+        # NOTE: file-scraper does not ignore user defined encoding even
+        # if it does not make any sense. So the following test case
+        # would fail:
+        # ("encoding": "foo")
+    ]
+)
+def test_overwriting_user_defined_metadata(requests_mock, testpath, key,
+                                           value):
+    """Test that use defined metadata is not overwritten.
+
+    Exception should be raised if metadata generated by file-scraper
+    does not match the pre-defined metadata.
 
     :param requests_mock: Mocker object
     :param testpath: Temporary directory
+    :param key: key to be modified in file_characteristics
+    :param value: value to for key
     """
-    file = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
-    # Change the predefined version. Scraper should detect the correct
-    # version, which is 6.0
-    file["file_characteristics"]["format_version"] = "9.9999999"
+    file = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+    file["file_characteristics"][key] = value
     tests.utils.add_metax_dataset(requests_mock, files=[file])
 
-    tmp_file_path = testpath / 'path/to/file.tiff'
+    tmp_file_path = testpath / 'path/to/file'
     tmp_file_path.parent.mkdir(parents=True)
-    shutil.copy('tests/data/sample_files/image_tiff_large.tif', tmp_file_path)
+    tmp_file_path.write_text("foo")
 
-    with pytest.raises(InvalidFileError) as exception_info:
+    with pytest.raises(InvalidFileMetadataError) as exception_info:
         generate_metadata('dataset_identifier',
                           testpath,
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     assert str(exception_info.value) \
-        == 'File scraper detects a different file version'
-    assert exception_info.value.files == ['pid:urn:identifier_tiff']
+        == f"File scraper detects a different {key}"
+    assert exception_info.value.files == ["pid:urn:identifier"]
 
 
 def test_generate_metadata_dataset_not_found(requests_mock, testpath):

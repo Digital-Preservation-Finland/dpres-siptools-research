@@ -1,10 +1,12 @@
 """Generates metadata required to create SIP."""
-
 import file_scraper
 import file_scraper.scraper
-from siptools_research.metax import get_metax_client
 
-from siptools_research.exceptions import InvalidFileError
+from siptools_research.exceptions import (
+    InvalidFileError,
+    InvalidFileMetadataError,
+)
+from siptools_research.metax import get_metax_client
 
 
 def generate_metadata(
@@ -35,66 +37,85 @@ def generate_metadata(
             "characteristics", {}
         )
 
-        # Detect file using scraper. Use mimetype, charset, and version
-        # defined by user.
+        # Detect file using scraper. Use metadata defined by user.
         file_path = root_directory / file_["pathname"].strip("/")
         mimetype = original_file_characteristics.get(
             "file_format_version", {}
-        ).get("file_format", None)
-        charset = original_file_characteristics.get("encoding", None)
+        ).get("file_format")
+        charset = original_file_characteristics.get("encoding")
         version = original_file_characteristics.get(
             "file_format_version", {}
-        ).get("format_version", None)
+        ).get("format_version")
+        delimiter = original_file_characteristics.get("csv_delimiter")
+        separator = original_file_characteristics.get("csv_record_separator")
+        quotechar = original_file_characteristics.get("csv_quoting_char")
         scraper = file_scraper.scraper.Scraper(
             str(file_path),
             mimetype=mimetype,
             charset=charset,
-            version=version
+            version=version,
+            delimiter=delimiter,
+            separator=separator,
+            quotechar=quotechar,
         )
         scraper.scrape(check_wellformed=False)
-        # This dict is in Metax V2 format as
+
+        # Create new file_characteristics based on scraping results
+        # NOTE: This dict is in Metax V2 format as
         # patch does not support Metax V3 yet.
         # When normalizing path request change the format
-        scraper_file_characteristics = {}
+        scraper_file_characteristics = {
+            "file_format": scraper.mimetype,
+            "encoding": scraper.streams[0].get("charset"),
+            "format_version": scraper.version,
+            # TODO: ensure that user-defined csv paramters are not
+            # overwritten!
+            "csv_delimiter": scraper.streams[0].get("delimiter"),
+            "csv_record_separator": scraper.streams[0].get("separator"),
+            "csv_quoting_char": scraper.streams[0].get("quotechar"),
+        }
 
-        if mimetype and mimetype != scraper.mimetype:
-            raise InvalidFileError(
-                "File scraper detects a different file type",
-                [file_id]
-            )
-        scraper_file_characteristics['file_format'] = scraper.mimetype
-
-        if "charset" in scraper.streams[0]:
-            if charset and charset != scraper.streams[0]["charset"]:
-                raise InvalidFileError(
-                    "File scraper detects a different encoding type",
-                    [file_id]
-                )
-            scraper_file_characteristics['encoding']\
-                = scraper.streams[0]["charset"]
-
-        if scraper.version != file_scraper.defaults.UNAP:
-            if version and version != scraper.version:
-                raise InvalidFileError(
-                    "File scraper detects a different file version",
-                    [file_id]
-                )
-            scraper_file_characteristics['format_version'] = scraper.version
-
-        # Scraper output will be saved to file_characteristics_extension
-        # for later use
-        # TODO: Currently it is not possible to use previosly scraped
-        # metadata to create METS with siptools-ng. Therefore,
-        # file_characteristics_extension in Metax is useless.
-        # Siptools-ng will scrape the file again in CreateMets task.
-        # See TPASPKT-1326.
-        file_characteristics_extension = {"streams": scraper.streams}
+        # Check that user defined metadata is not ignored by
+        # file-scraper
+        # TODO: This is necessary until TPASPKT-381 is resolved
+        for key, value in {"file_format": mimetype,
+                           "encoding": charset,
+                           "format_version": version,
+                           "csv_delimiter": delimiter,
+                           "csv_record_separator": separator,
+                           "csv_quoting_char": quotechar}.items():
+            if value is None:
+                continue
+            # File creation date is never automatically generated
+            if key == "file_created":
+                continue
+            if scraper_file_characteristics[key] != value:
+                error_message = f"File scraper detects a different {key}"
+                raise InvalidFileMetadataError(error_message, [file_id])
 
         if "(:unav)" in scraper_file_characteristics.values():
             raise InvalidFileError(
                 "File format was not recognized",
                 [file_id]
             )
+
+        # Remove "(:unap)" and None values from scraper_file_characteristics
+        scraper_file_characteristics = {
+            key: value
+            for key, value
+            in scraper_file_characteristics.items()
+            if value not in (file_scraper.defaults.UNAP, None)
+        }
+
+        # Scraper output will be saved to file_characteristics_extension
+        # for later use
+        file_characteristics_extension = {
+            "streams": scraper.streams,
+            "info": scraper.info,
+            "mimetype": scraper.mimetype,
+            "version": scraper.version,
+            "grade": scraper.grade(),
+        }
 
         metax_client.patch_file(
             file_id,

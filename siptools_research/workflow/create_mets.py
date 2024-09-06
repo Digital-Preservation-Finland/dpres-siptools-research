@@ -8,7 +8,8 @@ from mets_builder.metadata import (DigitalProvenanceEventMetadata,
 from siptools_ng.file import File
 import siptools_ng.sip
 
-from siptools_research.exceptions import InvalidDatasetMetadataError
+from siptools_research.exceptions import (InvalidDatasetMetadataError,
+                                          InvalidFileMetadataError)
 from siptools_research.metax import get_metax_client
 from siptools_research.utils.locale import (get_dataset_languages,
                                             get_localized_value)
@@ -131,7 +132,53 @@ class CreateMets(WorkflowTask):
             source_filepath = (self.dataset.metadata_generation_workspace
                                / "dataset_files" / filepath)
             sip_filepath = "dataset_files/" + filepath
+
+            # Check for conflicts between file_characteristics and
+            # file_characteristics_extension
+            # TODO: This should not be necessary when TPASPKT-1105 has
+            # been resolved
             fc = file_["characteristics"]
+            fc_extension = file_["characteristics_extension"]
+            for value1, value2 in [
+                    (
+                        fc['file_format_version']["file_format"],
+                        fc_extension["streams"]['0']["mimetype"]
+                    ),
+                    (
+                        fc.get("encoding"),
+                        fc_extension["streams"]['0'].get("charset")
+                    ),
+                    (
+                        fc['file_format_version'].get("format_version"),
+                        fc_extension["version"]
+                    ),
+                    (
+                        fc.get("csv_delimiter"),
+                        fc_extension["streams"]['0'].get("delimiter")
+                    ),
+                    (
+                        fc.get("csv_record_separator"),
+                        fc_extension["streams"]['0'].get("separator")
+                    ),
+                    (
+                        fc.get("csv_quoting_char"),
+                        fc_extension["streams"]['0'].get("quotechar")
+                    ),
+            ]:
+                if value1 and value1 != value2:
+                    raise InvalidFileMetadataError(
+                        "File characteristics have changed after"
+                        " metadata generation"
+                    )
+
+            # Transform string keys to integer keys in "streams"
+            # dictionary
+            streams = file_["characteristics_extension"]["streams"]
+            streams = {
+                int(key): value for key, value in streams.items()
+            }
+            file_["characteristics_extension"]["streams"] = streams
+
             sip_file = File(
                 path=source_filepath,
                 digital_object_path=sip_filepath,
@@ -144,19 +191,13 @@ class CreateMets(WorkflowTask):
             checksum_value = file_["checksum"].split(':')[-1]
             sip_file.generate_technical_metadata(
                 csv_has_header=fc.get("csv_has_header"),
-                csv_delimiter=fc.get("csv_delimiter"),
-                csv_record_separator=fc.get("csv_record_separator"),
-                csv_quoting_character=fc.get("csv_quoting_char"),
                 file_format=fc['file_format_version']["file_format"],
-                file_format_version=fc.get(
-                    'file_format_version', {}
-                ).get("format_version"),
-                charset=fc.get("encoding"),
                 file_created_date=fc.get("file_created"),
                 checksum_algorithm=checksum_algo_conversion[
                     file_["checksum"].split(':')[0]
                     ],
                 checksum=checksum_value,
+                scraper_result=file_["characteristics_extension"]
             )
             sip_files.append(sip_file)
 

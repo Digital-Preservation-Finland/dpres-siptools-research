@@ -1,22 +1,20 @@
 """Tests for module :mod:`siptools_research.workflow.create_mets`."""
 import copy
-import shutil
-from packaging.version import Version
 
 import lxml.etree
 import pytest
-from siptools_research.metax import get_metax_client
 
-from siptools_research.workflow.create_mets import CreateMets
 import tests.utils
+from siptools_research.exceptions import InvalidFileMetadataError
+from siptools_research.workflow.create_mets import CreateMets
 from tests.conftest import UNIT_TEST_CONFIG_FILE
-from tests.metax_data.datasets import (BASE_DATASET,
-                                       BASE_DATACITE,
-                                       BASE_PROVENANCE,
-                                       QVAIN_PROVENANCE)
-from tests.metax_data.files import TXT_FILE, TIFF_FILE, MKV_FILE, CSV_FILE
-import tests.conftest
-
+from tests.metax_data.datasets import (
+    BASE_DATACITE,
+    BASE_DATASET,
+    BASE_PROVENANCE,
+    QVAIN_PROVENANCE,
+)
+from tests.metax_data.files import CSV_FILE, TIFF_FILE, TXT_FILE
 
 NAMESPACES = {
     "mets": "http://www.loc.gov/METS/",
@@ -65,11 +63,12 @@ def test_create_mets(workspace, requests_mock, data_catalog, objid):
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Add text file to "dataset_files" directory
-    # TODO: Creating this file should not be required, because techMD
-    # should be created based on metadata in Metax. See TPASPKT-1326.
+    # TODO: This file is not really used during the test, but it is
+    # required because siptools-ng will raise exception if it does not
+    # exist
     filepath = workspace / "metadata_generation/dataset_files/path/to/file"
     filepath.parent.mkdir(parents=True)
-    filepath.write_text('foo')
+    filepath.touch()
 
     # Init and run task
     task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
@@ -124,7 +123,7 @@ def test_idempotence(workspace, requests_mock):
     # Add text file to "dataset_files" directory
     filepath = workspace / "metadata_generation/dataset_files/path/to/file"
     filepath.parent.mkdir(parents=True)
-    filepath.write_text('foo')
+    filepath.touch()
 
     # Init and run task
     task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
@@ -214,7 +213,7 @@ def test_multiple_provenance_events(workspace,
     # Add text file to "dataset_files" directory
     filepath = workspace / "metadata_generation/dataset_files/path/to/file"
     filepath.parent.mkdir(parents=True)
-    filepath.write_text('foo')
+    filepath.touch()
 
     # Init and run task
     CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
@@ -294,7 +293,7 @@ def test_premis_event_metadata(
     # Add text file to "dataset_files" directory
     filepath = workspace / "metadata_generation/dataset_files/path/to/file"
     filepath.parent.mkdir(parents=True)
-    filepath.write_text('foo')
+    filepath.touch()
 
     # Init and run task
     CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
@@ -412,7 +411,7 @@ def test_premis_event_outcome(workspace, requests_mock,
     # Add text file to "dataset_files" directory
     filepath = workspace / "metadata_generation/dataset_files/path/to/file"
     filepath.parent.mkdir(parents=True)
-    filepath.write_text('foo')
+    filepath.touch()
 
     # Init and run task
     CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
@@ -465,7 +464,7 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     # Add text file to "dataset_files" directory
     filepath = workspace / "metadata_generation/dataset_files/path/to/file"
     filepath.parent.mkdir(parents=True)
-    filepath.write_text('foo')
+    filepath.touch()
 
     # Init and run task
     CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
@@ -532,8 +531,7 @@ def test_create_techmd(workspace, requests_mock):
     dataset_files_parent = workspace / 'metadata_generation'
     tiff_path = 'dataset_files/' + TIFF_FILE['file_path'].strip('/')
     (dataset_files_parent / tiff_path).parent.mkdir(parents=True)
-    shutil.copy('tests/data/sample_files/valid_tiff.tiff',
-                dataset_files_parent / tiff_path)
+    (dataset_files_parent / tiff_path).touch()
 
     # Init and run task
     CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
@@ -565,6 +563,69 @@ def test_create_techmd(workspace, requests_mock):
     )[0].text == TIFF_FILE["file_characteristics"]["file_created"]
 
 
+
+@pytest.mark.parametrize(
+    ("checksum_algorithm", "encoding"),
+    [
+        # These probably are the defaults
+        ("MD5", "UTF-8"),
+        # and these are not
+        ("SHA-256", "ISO-8859-15")
+    ]
+)
+@pytest.mark.usefixtures('testmongoclient')
+def test_user_defined_techmd(workspace, requests_mock, checksum_algorithm,
+                             encoding):
+    """Test using user defined values.
+
+    Creates METS for a dataset that contains one text file with
+    predefined checksum algorithm and encoding.
+
+    Tests that the user defined values from Metax metadata are used
+    instead of the default values of siptools-ng.
+
+    :param workspace: Temporary workspace directory fixture
+    :param requests_mock: Mocker object
+    :param checksum_algorithm: Checksum algorithm to file medatada
+    :param encoding: File encoding to file medatada
+    """
+    # Mock metax
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+
+    file = copy.deepcopy(TXT_FILE)
+    file["file_characteristics"]["encoding"] = encoding
+    file["file_characteristics_extension"]["streams"][0]["charset"] \
+        = encoding
+    file["checksum"]["algorithm"] = checksum_algorithm
+    tests.utils.add_metax_dataset(requests_mock,
+                                  dataset=dataset,
+                                  files=[file])
+
+    # Create workspace that already contains the dataset files
+    filepath = workspace / "metadata_generation/dataset_files" \
+        / file["file_path"].strip('/')
+    filepath.parent.mkdir(parents=True)
+    filepath.touch()
+
+    # Init and run task
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+
+    # Read created METS
+    mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
+
+    # Check that the PREMIS object element has desired properties
+    premis_object_element \
+        = mets.xpath("//premis:object", namespaces=NAMESPACES)[0]
+    assert premis_object_element.xpath(
+        "//premis:formatName", namespaces=NAMESPACES
+    )[0].text == f"text/plain; charset={encoding}"
+    assert premis_object_element.xpath(
+        "//premis:messageDigestAlgorithm",
+        namespaces=NAMESPACES
+    )[0].text == checksum_algorithm
+
+
 @pytest.mark.parametrize(
     'has_header,expected_field_definition',
     [
@@ -573,7 +634,7 @@ def test_create_techmd(workspace, requests_mock):
         (False, "header1"),
         # If csv has header, the field definition will be read from the
         # file
-        (True, 'foo'),
+        (True, 'a'),
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
@@ -600,15 +661,12 @@ def test_create_techmd_csv(workspace, requests_mock, has_header,
     dataset['identifier'] = workspace.name
     file = copy.deepcopy(CSV_FILE)
     file['file_characteristics']['csv_has_header'] = has_header
-    # Use non-default encoding to ensure that encoding from Metax is
-    # used
-    file['file_characteristics']['encoding'] = "ISO-8859-15"
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
 
     # Add text file to "dataset_files" directory
     filepath = workspace / "metadata_generation/dataset_files/path/to/file.csv"
     filepath.parent.mkdir(parents=True)
-    filepath.write_text('foo')
+    filepath.touch()
 
     # Init and run task
     CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
@@ -621,7 +679,7 @@ def test_create_techmd_csv(workspace, requests_mock, has_header,
         = mets.xpath("//premis:object", namespaces=NAMESPACES)[0]
     assert premis_object_element.xpath(
         "//premis:formatName", namespaces=NAMESPACES
-    )[0].text == "text/csv; charset=ISO-8859-15"
+    )[0].text == "text/csv; charset=UTF-8"
 
     # Check that addml metadata contains expected information
     assert mets.xpath("//addml:recordSeparator",
@@ -668,9 +726,9 @@ def test_create_filesec_and_structmap(workspace, requests_mock):
     dataset_files = workspace / "metadata_generation/dataset_files"
     subdirectory = dataset_files / "subdirectory"
     subdirectory.mkdir(parents=True)
-    (dataset_files / "file1").write_text("foo")
-    (dataset_files / "file2").write_text("bar")
-    (subdirectory / "file3").write_text("baz")
+    (dataset_files / "file1").touch()
+    (dataset_files / "file2").touch()
+    (subdirectory / "file3").touch()
 
     # Init and run task
     CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
@@ -751,9 +809,9 @@ def test_create_logical_structmap(workspace, requests_mock):
     # Create workspace that already contains dataset files
     file_directory = workspace / 'metadata_generation/dataset_files/files'
     file_directory.mkdir(parents=True)
-    (file_directory / "file1").write_text("foo")
-    (file_directory / "file2").write_text("bar")
-    (file_directory / "file3").write_text("baz")
+    (file_directory / "file1").touch()
+    (file_directory / "file2").touch()
+    (file_directory / "file3").touch()
 
     # Init and run task
     CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
@@ -816,3 +874,41 @@ def test_empty_logical_structuremap(workspace, requests_mock):
         '/mets:mets/mets:structMap[@TYPE="Fairdata-logical"]',
         namespaces=NAMESPACES
     )
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "file_format",
+        "encoding",
+        "format_version",
+        "csv_delimiter",
+        "csv_record_separator",
+        "csv_quoting_char",
+    ]
+)
+# TODO: This test is probably unnecessary when issue TPASPKT-1105 has
+# been resolved
+def test_file_characteristics_conflict(workspace, requests_mock, key):
+    """Test creating METS with conflicting file metadata.
+
+    Create a conflict between file_characteristics and
+    file_characteristics_extension by changing value of `key` in
+    file_characteristics. Exception should be raised while creating
+    METS.
+    """
+    file = copy.deepcopy(CSV_FILE)
+    # Create a conflict between file_characteristics and
+    # file_characteristics_extension
+    file["file_characteristics"][key] = "foo"
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
+
+    # Init and run task
+    with pytest.raises(InvalidFileMetadataError,
+                       match="File characteristics have changed"):
+        CreateMets(dataset_id=workspace.name,
+                   config=UNIT_TEST_CONFIG_FILE).run()
+
+

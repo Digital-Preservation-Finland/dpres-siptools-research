@@ -1,7 +1,6 @@
 """Sample Metax file metadata."""
 from copy import deepcopy
 
-
 PAS_STORAGE_ID = "urn:nbn:fi:att:file-storage-pas"
 
 CSV_FILE_METADATA = {
@@ -19,9 +18,18 @@ CSV_FILE_METADATA = {
         "streams": {
             0: {
                 "mimetype": "text/csv",
-                "stream_type": "text"
-            }
-        }
+                "stream_type": "text",
+                "first_line": ['a', 'b', '"c"'],
+                "charset": "UTF-8",
+                "delimiter": ";",
+                "separator": "CR+LF",
+                "quotechar": "'",
+           }
+        },
+        "info": {},
+        "mimetype": "text/csv",
+        "version": "(:unap)",
+        "grade": "fi-dpres-recommended-file-format"
     }
 }
 
@@ -35,9 +43,14 @@ TXT_FILE_METADATA = {
         "streams": {
             0: {
                 "mimetype": "text/plain",
+                "charset": "UTF-8",
                 "stream_type": "text"
-            }
-        }
+            },
+        },
+        "info": {},
+        "mimetype": "text/plain",
+        "version": "(:unap)",
+        "grade": "fi-dpres-recommended-file-format"
     }
 }
 
@@ -64,7 +77,11 @@ TIFF_FILE_METADATA = {
                 "samples_per_pixel": "3",
                 "compression": "no"
             }
-        }
+        },
+        "info": {},
+        "mimetype": "image/tiff",
+        "version": "6.0",
+        "grade": "fi-dpres-recommended-file-format"
     }
 }
 
@@ -142,7 +159,11 @@ MKV_FILE_METADATA = {
                 "data_rate": "(:unav)",
                 "codec_creator_app": "Lavf57.71.100"
             }
-        }
+        },
+        "info": {},
+        "mimetype": "video/x-matroska",
+        "version": "4",
+        "grade": "fi-dpres-recommended-file-format"
     }
 }
 
@@ -169,7 +190,11 @@ AUDIO_FILE_METADATA = {
                 'stream_type': 'audio',
                 'version': '(:unap)'
             }
-        }
+        },
+        "info": {},
+        "mimetype": "audio/x-wav",
+        "version": "(:unap)",
+        "grade": "fi-dpres-recommended-file-format"
     }
 }
 
@@ -186,7 +211,11 @@ PDF_FILE_METADATA = {
                 "mimetype": "application/pdf",
                 "stream_type": "binary"
             }
-        }
+        },
+        "info": {},
+        "mimetype": "application/pdf",
+        "version": "A-3b",
+        "grade": "fi-dpres-recommended-file-format"
     }
 }
 
@@ -219,7 +248,11 @@ VIDEO_FILE_METADATA = {
                 "codec_creator_app": "(:unav)",
                 "codec_creator_app_version": "(:unav)"
             }
-        }
+        },
+        "info": {},
+        "mimetype": "video/dv",
+        "version": "(:unap)",
+        "grade": "fi-dpres-acceptable-file-format"
     }
 }
 
@@ -236,7 +269,11 @@ SEG_Y_FILE_METADATA = {
                 "mimetype": "application/x.fi-dpres.segy",
                 "stream_type": "binary"
             }
-        }
+        },
+        "info": {},
+        "mimetype": "application/x.fi-dpres.segy",
+        "version": "1.0",
+        "grade": "fi-dpres-bit-level-file-format"
     }
 }
 
