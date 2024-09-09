@@ -68,37 +68,6 @@ TIFF_FILE_METADATA = {
     }
 }
 
-HTML_FILE_METADATA = {
-    "file_characteristics": {
-        "file_format": "text/html",
-        "format_version": "5.0",
-        "encoding": "UTF-8",
-    },
-    "file_characteristics_extension": {
-        "streams": {
-            0: {
-                "mimetype": "text/html",
-                "stream_type": "text"
-            }
-        }
-    }
-}
-
-XML_FILE_METADATA = {
-    "file_characteristics": {
-        "file_format": "text/xml",
-        "format_version": "1.0",
-        "encoding": "UTF-8",
-    },
-    "file_characteristics_extension": {
-        "streams": {
-            0: {
-                "mimetype": "text/xml",
-                "stream_type": "text"
-            }
-        }
-    }
-}
 
 MKV_FILE_METADATA = {
     "file_characteristics": {
