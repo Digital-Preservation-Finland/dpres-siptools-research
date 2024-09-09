@@ -395,9 +395,6 @@ def test_generate_metadata_httperror(requests_mock, testpath):
         reason='Fake error'
     )
 
-    # TODO: The message of HTTPErrors will be different in newer versions of
-    # requests library (this test works with version 2.6 which is available in
-    # centos7 repositories).
     expected_error = "500 Server Error: Fake error"
     with pytest.raises(HTTPError, match=expected_error):
         generate_metadata('dataset_identifier',
