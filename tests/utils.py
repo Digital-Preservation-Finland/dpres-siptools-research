@@ -78,18 +78,6 @@ def add_metax_dataset(requests_mock,
                                  file_['identifier']),
             json=file_
         )
-        requests_mock.get(
-            "{}/files/{}/xml".format(
-                tests.conftest.METAX_URL,
-                file_['identifier']
-            ),
-            json=[]
-        )
-        requests_mock.post(
-            "{}/files/{}/xml".format(tests.conftest.METAX_URL,
-                                     file_['identifier']),
-            status_code=201
-        )
 
     # Mock Metax datasets API
     requests_mock.get(
