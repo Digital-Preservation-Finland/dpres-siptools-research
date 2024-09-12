@@ -39,16 +39,6 @@ SAMPLE_FILES = [
         }
     }
 ]
-SAMPLE_DIRECTORIES = [
-    {
-        "identifier": "foo",
-        "use_category": {
-            "pref_label": {
-                "en": "foo"
-            }
-        }
-    }
-]
 
 
 @pytest.mark.parametrize(
@@ -101,26 +91,6 @@ def test_validate_invalid_dataset_metadata():
     assert error.value.message == (
         "'preservation_identifier' is a required property"
     )
-
-
-def test_invalid_directory():
-    """Test validation of dataset metadata with invalid directory.
-
-    :returns: ``None``
-    """
-    metadata = copy.deepcopy(BASE_DATASET)
-    metadata['research_dataset']['directories'] \
-        = copy.deepcopy(SAMPLE_DIRECTORIES)
-    metadata['research_dataset']['directories'][0]["identifier"] = 1
-
-    # Validation of valid dataset should raise error
-    with pytest.raises(jsonschema.ValidationError) as error:
-        assert not jsonschema.validate(
-            metadata,
-            siptools_research.schemas.DATASET_METADATA_SCHEMA
-        )
-
-    assert error.value.message == "1 is not of type 'string'"
 
 
 @pytest.mark.parametrize(
@@ -283,39 +253,17 @@ def test_validate_invalid_contract():
     assert excinfo.value.message == "1234 is not of type 'string'"
 
 
-def test_validate_dataset_with_files_and_directories():
-    """Test validation of dataset that has files and directories.
-
-    Defines a valid sample metadata dictionary that contais directories
-    but not files. The dictionary is then validated against
-    ``DATASET_METADATA_SCHEMA``.
-
-    :returns: ``None``
-    """
-    valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
-    valid_dataset_metadata['research_dataset']['files'] = SAMPLE_FILES
-    valid_dataset_metadata['research_dataset']['directories'] \
-        = SAMPLE_DIRECTORIES
-
-    # Validation of valid dataset should return 'None'
-    assert jsonschema.validate(
-        valid_dataset_metadata,
-        siptools_research.schemas.DATASET_METADATA_SCHEMA
-    ) is None
-
-
 def test_validate_dataset_with_files():
-    """Test validation of dataset that has files but not directories.
+    """Test validation of dataset that has some files.
 
-    Defines a valid sample metadata dictionary that contais directories
-    but not files. The dictionary is then validated against
+    Defines a valid sample metadata dictionary that contains some files.
+    The dictionary is then validated against
     ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
     valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
     valid_dataset_metadata['research_dataset']['files'] = SAMPLE_FILES
-    del valid_dataset_metadata['research_dataset']['directories']
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
@@ -324,18 +272,16 @@ def test_validate_dataset_with_files():
     ) is None
 
 
-def test_validate_dataset_with_directories():
-    """Test validation of dataset that has directories but not files.
+def test_validate_dataset_without_files():
+    """Test validation of dataset without files.
 
-    Defines a valid sample metadata dictionary that contais directories
-    but not files. The dictionary is then validated against
+    Defines a valid sample metadata dictionary that does not contain any
+    files. The dictionary is then validated against
     ``DATASET_METADATA_SCHEMA``.
 
     :returns: ``None``
     """
     valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
-    valid_dataset_metadata['research_dataset']['directories'] \
-        = SAMPLE_DIRECTORIES
     del valid_dataset_metadata['research_dataset']['files']
 
     # Validation of valid dataset should return 'None'
@@ -343,27 +289,3 @@ def test_validate_dataset_with_directories():
         valid_dataset_metadata,
         siptools_research.schemas.DATASET_METADATA_SCHEMA
     ) is None
-
-
-def test_validate_dataset_no_files_and_directories():
-    """Test validation of dataset without directories nor files.
-
-    Defines a sample metadata dictionary that has no directories or
-    files. The dictionary is then validated against
-    ``DATASET_METADATA_SCHEMA``. Validation shoudl raise error.
-
-    :returns: ``None``
-    """
-    invalid_dataset_metadata = copy.deepcopy(BASE_DATASET)
-    del invalid_dataset_metadata['research_dataset']['files']
-    del invalid_dataset_metadata['research_dataset']['directories']
-
-    with pytest.raises(jsonschema.ValidationError) as excinfo:
-        jsonschema.validate(invalid_dataset_metadata,
-                            siptools_research.schemas.DATASET_METADATA_SCHEMA)
-
-    assert str(excinfo.value.message.endswith(
-        "'files' is a required property"
-    ))
-
-

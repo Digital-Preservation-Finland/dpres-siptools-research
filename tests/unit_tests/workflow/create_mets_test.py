@@ -7,9 +7,7 @@ import lxml.etree
 import pytest
 from siptools_research.metax import get_metax_client
 
-from siptools_research.workflow.create_mets import (CreateMets,
-                                                    find_dir_use_category,
-                                                    get_dirpath_dict)
+from siptools_research.workflow.create_mets import CreateMets
 import tests.utils
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 from tests.metax_data.datasets import (BASE_DATASET,
@@ -688,12 +686,40 @@ def test_create_logical_structmap(workspace, requests_mock):
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     """
-    # Create a dataset that contains two files
-    files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
+    # Create a dataset that contains three files
+    files = [copy.deepcopy(TXT_FILE),
+             copy.deepcopy(TXT_FILE),
+             copy.deepcopy(TXT_FILE)]
+    files[0]['identifier'] = 'fileid1'
     files[0]['file_path'] = 'files/file1'
+    files[1]['identifier'] = 'fileid2'
     files[1]['file_path'] = 'files/file2'
+    files[2]['identifier'] = 'fileid3'
+    files[2]['file_path'] = 'files/file3'
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
+
+    # Add use category to two of the files
+    dataset["research_dataset"]["files"] = [
+        {
+            "identifier": files[0]['identifier'],
+            "use_category": {
+                "pref_label": {
+                    "en": "dummy-use-category"
+                }
+            }
+        },
+        {
+            "identifier": files[1]['identifier'],
+            "use_category": {
+                "pref_label": {
+                    "en": "dummy-use-category"
+                }
+            }
+        }
+    ]
+
+    # Add dataset to Metax mock
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Create workspace that already contains dataset files
@@ -701,6 +727,7 @@ def test_create_logical_structmap(workspace, requests_mock):
     file_directory.mkdir(parents=True)
     (file_directory / "file1").write_text("foo")
     (file_directory / "file2").write_text("bar")
+    (file_directory / "file3").write_text("baz")
 
     # Init and run task
     CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
@@ -728,76 +755,3 @@ def test_create_logical_structmap(workspace, requests_mock):
         'mets:div/mets:div/mets:fptr',
         namespaces=NAMESPACES
     )) == 2
-
-
-def test_get_dirpath_dict(requests_mock):
-    """Test that get_dirpath_dict returns the correct dictionary.
-
-    The dictionary maps dirpath to use_category.
-
-    :param requests_mock: Mocker object
-    """
-    dataset_metadata = {
-        "research_dataset": {
-            "directories": [
-                {
-                    "identifier": "1",
-                    "use_category": {"pref_label": {"en": "rootdir"}},
-                    "details" : {"directory_path" : "/"}
-                },
-                {
-                    "identifier": "2",
-                    "use_category": {"pref_label": {"en": "testdir"}},
-                    "details" : {"directory_path" : "/test"}
-                }
-            ]
-        }
-    }
-
-    assert get_dirpath_dict(dataset_metadata) == {
-        "/": {"pref_label": {"en": "rootdir"}},
-        "/test": {"pref_label": {"en": "testdir"}}
-    }
-
-
-def test_get_dirpath_dict_no_directories():
-    """Test get_dirpath_dict function with dataset without directories.
-
-    The function should return an empty dict when no directories are
-    defined in the research_dataset.
-    """
-    assert not get_dirpath_dict({"research_dataset": {}})
-
-
-def test_find_dir_use_category():
-    """Test that find_dir_use_category returns the correct label."""
-    dirpath_dict = {
-        "/test1": {"pref_label": {"en": "testdir1"}},
-        "/test2": {"pref_label": {"en": "testdir2"}}
-    }
-    languages = ["en"]
-
-    # Straightforward cases
-    assert find_dir_use_category("/test1", dirpath_dict, languages) \
-        == "testdir1"
-    assert find_dir_use_category("/test2", dirpath_dict, languages) \
-        == "testdir2"
-
-    # Closest parent that matches
-    assert find_dir_use_category(
-        "/test1/test", dirpath_dict, languages
-    ) == "testdir1"
-
-    # No matches
-    assert not find_dir_use_category("/", dirpath_dict, languages)
-    assert not find_dir_use_category("/test3", dirpath_dict, languages)
-
-    # No directories were found in the research_dataset
-    assert not find_dir_use_category("/test", {}, languages)
-
-    # Match to root
-    assert find_dir_use_category(
-        "/",
-        {"/": {"pref_label": {"en": "root"}}},
-        languages
-    ) == "root"

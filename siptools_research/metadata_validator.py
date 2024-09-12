@@ -14,7 +14,6 @@ from siptools_research.exceptions import (InvalidContractMetadataError,
                                           InvalidDatasetMetadataError,
                                           InvalidFileMetadataError)
 from siptools_research.utils import mimetypes
-from siptools_research.utils.dataset_consistency import DatasetConsistency
 
 DATACITE_SCHEMA = ('/etc/xml/dpres-xml-schemas/schema_catalogs'
                    '/schemas_external/datacite/4.1/metadata.xsd')
@@ -128,12 +127,6 @@ def _validate_file_metadata(dataset, metax_client):
     :param conf: siptools_research Configuration object
     :returns: ``None``
     """
-    # DatasetConsistency is used to verify file consistency within the
-    # dataset i.e. every file returned by Metax API
-    # /datasets/datasetid/files can be found from dataset.file or
-    # dataset.directories properties
-    consistency = DatasetConsistency(metax_client, dataset)
-
     dataset_files = metax_client.get_dataset_files(dataset['identifier'])
     if not dataset_files:
         raise InvalidDatasetMetadataError(
@@ -170,7 +163,6 @@ def _validate_file_metadata(dataset, metax_client):
                 f'The file path of file {file_identifier} is invalid:'
                 f' {file_path}'
             )
-        consistency.is_consistent_for_file(file_metadata)
 
 
 def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):

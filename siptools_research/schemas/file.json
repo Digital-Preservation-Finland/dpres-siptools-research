@@ -1,8 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "required": ["checksum", "file_characteristics", "file_storage",
-                 "file_path", "parent_directory"],
+    "required": ["checksum", "file_characteristics", "file_storage", "file_path"],
     "properties": {
         "checksum": {
             "title": "Checksum",
@@ -76,19 +75,6 @@
                 "identifier": {
                     "title": "Identifier",
                     "description": "Identifier that defines from which storage service the file is copied.",
-                    "type": "string"
-                }
-            }
-        },
-        "parent_directory": {
-            "title": "Parent directory",
-            "description": "Parent directory of file defines the category of file in logical structure map if use category is not defined for the file.",
-            "type": "object",
-            "required": ["identifier"],
-            "properties": {
-                "identifier": {
-                    "title": "Identifier",
-                    "description": "Identifier used for finding parent directory metadata",
                     "type": "string"
                 }
             }

@@ -47,7 +47,6 @@ BASE_DATASET = {
     },
     "research_dataset": {
         "files": [],
-        "directories": []
     },
     "preservation_state": 0
 }

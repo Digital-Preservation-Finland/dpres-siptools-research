@@ -25,10 +25,6 @@
             "title": "Research dataset",
             "description": "Administrative metadata and files included in dataset",
             "type": "object",
-            "anyOf": [
-                {"required": ["files"]},
-                {"required": ["directories"]}
-            ],
             "properties": {
                 "provenance": {
                     "title": "Provenance",
@@ -134,35 +130,6 @@
                                     "pref_label": {
                                         "title": "Preferred label",
                                         "description": "The category of file in logical structure map in multiple languages. The category in the default language of the dataset is used as TYPE attribute for div element in logical structmap.",
-                                        "type": "object"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "directories": {
-                    "title": "Directories",
-                    "description": "List of directories included in dataset",
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "required": ["identifier", "use_category"],
-                        "properties": {
-                            "identifier": {
-                                "title": "Identifier",
-                                "description": "Identifier of category used for searching parent directories of files",
-                                "type": "string"
-                            },
-                            "use_category": {
-                                "title": "Use category",
-                                "description": "The category of directory",
-                                "type": "object",
-                                "required": ["pref_label"],
-                                "properties": {
-                                    "pref_label": {
-                                        "title": "Preferred label",
-                                        "description": "The category of directory files in logical structure map. If use category is not defined for a file, the use category of parent directory is used as TYPE attribute for div element in logical structmap.",
                                         "type": "object"
                                     }
                                 }

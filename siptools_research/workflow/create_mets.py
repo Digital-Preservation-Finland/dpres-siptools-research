@@ -265,8 +265,6 @@ class CreateMets(WorkflowTask):
         metax_client = get_metax_client(self.config)
         dataset_files = metax_client.get_dataset_files(self.dataset_id)
         dataset_metadata = metax_client.get_dataset(self.dataset_id)
-        languages = get_dataset_languages(dataset_metadata)
-        dirpath2usecategory = get_dirpath_dict(dataset_metadata)
         logical_struct = {}
 
         for dataset_file in dataset_files:
@@ -276,30 +274,12 @@ class CreateMets(WorkflowTask):
             # Get the use category of file. The path to the file in
             # logical structmap is stored in 'use_category' in metax.
             filecategory = find_file_use_category(file_id, dataset_metadata)
-
-            # If file listed in datasets/<id>/files is not listed in
-            # 'files' section of dataset metadata, look for
-            # parent_directory of the file from  'directories' section.
-            # The "use_category" of file is the "use_category" of the
-            # parent directory.
-            if filecategory is None:
-                name_len = len(dataset_file["file_name"])
-
-                filecategory = find_dir_use_category(
-                    dataset_file["file_path"][:-name_len],
-                    dirpath2usecategory, languages
-                )
-
-            # If file category was not found even for the parent
-            # directory, raise error
-            if filecategory is None:
-                raise InvalidDatasetMetadataError(
-                    f"File category for file {file_id} was not found"
-                )
+            if not filecategory:
+                continue
 
             # Append path to logical_struct[filecategory] list. Create
             # list if it does not exist already
-            if filecategory not in logical_struct.keys():
+            if filecategory not in logical_struct:
                 logical_struct[filecategory] = []
             logical_struct[filecategory].append(dataset_file['file_path'])
 
@@ -327,88 +307,4 @@ def find_file_use_category(identifier, dataset_metadata):
                     languages=languages)
 
     # Nothing found
-    return None
-
-
-def _match_paths(parent_path, dir_path):
-    """Retun the depth to which the two paths match.
-
-    Returns 0 if dir_path is deeper than parent_path since we don't want
-    to consider directories, which are lower in the directory tree than
-    the parent directory.
-    """
-    parent_path = parent_path[1:] if parent_path[0] == "/" else parent_path
-    dir_path = dir_path[1:] if dir_path[0] == "/" else dir_path
-    parent_list = parent_path.split("/")
-    dir_list = dir_path.split("/")
-
-    if len(dir_list) > len(parent_list):
-        return 0
-
-    matches = 0
-    for i, _dir in enumerate(dir_list):
-        if parent_list[i] == _dir:
-            matches += 1
-        else:
-            break
-
-    return matches
-
-
-# TODO: This function might be unnecessary: TPASPKT-1107
-def get_dirpath_dict(dataset_metadata):
-    """Map directory paths to use categories.
-
-    Returns a dict, which maps all research_dataset directory paths to
-    the correcponding use_category values.
-
-    :param metax_client: metax access
-    :dataset_metadata: dataset metadata dictionary
-    :returns: Dict {dirpath: use_category}
-    """
-    dirpath_dict = {}
-    research_dataset = dataset_metadata["research_dataset"]
-
-    if "directories" in research_dataset:
-        for _dir in research_dataset["directories"]:
-            use_category = _dir["use_category"]
-            dirpath = _dir["details"]["directory_path"]
-
-            dirpath_dict[dirpath] = use_category
-
-    return dirpath_dict
-
-
-# TODO: This function might be unnecessary: TPASPKT-1107
-def find_dir_use_category(parent_path, dirpath2usecategory, languages):
-    """Find use category of path.
-
-    Find use_category of the closest parent directory listed in the
-    research_dataset. This is done by checking how well the directory
-    paths in the research_dataset match with the parent directory path.
-
-    :param parent_path: path to the parent directory of the file
-    :param dirpath2usecategory: Dictionary, which maps research_dataset
-                                directory paths to the corresponding
-                                use_categories.
-    :param languages: A list of ISO 639-1 formatted language codes of
-                      the dataset
-    :returns: `use_category` attribute of directory
-    """
-    max_matches = 0
-    use_category = None
-
-    for dirpath in dirpath2usecategory:
-        matches = _match_paths(parent_path, dirpath)
-
-        if matches > max_matches:
-            max_matches = matches
-            use_category = dirpath2usecategory[dirpath]
-
-    if use_category:
-        return get_localized_value(
-            use_category["pref_label"],
-            languages=languages
-        )
-
     return None

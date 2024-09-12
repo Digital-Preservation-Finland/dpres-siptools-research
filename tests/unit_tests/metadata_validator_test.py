@@ -357,33 +357,11 @@ def test_validate_file_metadata(requests_mock):
     :returns: ``None``
     """
     dataset = copy.deepcopy(BASE_DATASET)
-    dataset['research_dataset']['directories'] = [{'identifier': 'root_dir'}]
     file_1 = copy.deepcopy(TXT_FILE)
     file_1['identifier'] = 'file_identifier1'
     file_2 = copy.deepcopy(TXT_FILE)
     file_2['identifier'] = 'file_identifier2'
 
-    requests_mock.get(
-        tests.conftest.METAX_URL + '/directories/files?path=%2Fpath%2Fto&project=test_project&depth=1&include_parent=true',
-        json={'identifier': 'first_par_dir',
-              'parent_directory': {'identifier': 'second_par_dir'},
-              'directories':[],
-              'files':[]},
-        status_code=200
-    )
-    requests_mock.get(
-        tests.conftest.METAX_URL + '/directories/files?path=%2Fpath&project=test_project&depth=1&include_parent=true',
-        json={'identifier': 'second_par_dir',
-              'parent_directory': {'identifier': 'root_dir'},
-              'directories':[],
-              'files':[]},
-        status_code=200
-    )
-    requests_mock.get(
-        tests.conftest.METAX_URL + '/directories/root_dir',
-        json={'identifier': 'second_par_dir', 'directory_path': '/'},
-        status_code=200
-    )
     files_adapter = requests_mock.get(
         tests.conftest.METAX_URL + '/datasets/dataset_identifier/files',
         json=[file_1, file_2],

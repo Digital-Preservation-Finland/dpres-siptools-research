@@ -277,9 +277,6 @@ BASE_FILE = {
     "file_storage": {
         "identifier": "urn:nbn:fi:att:file-storage-ida"
     },
-    "parent_directory": {
-        "identifier": "pid:urn:dir:wf1"
-    },
     "checksum": {
         "algorithm": "MD5",
         "value": "58284d6cdd8deaffe082d063580a9df3"

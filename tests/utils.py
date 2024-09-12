@@ -45,30 +45,6 @@ def add_metax_dataset(requests_mock,
     dataset['contract']['identifier'] = contract['contract_json']['identifier']
 
     for file_ in files:
-        # Add files to dataset
-        dataset["research_dataset"]["files"].append(
-            {
-                "identifier": file_['identifier'],
-                "use_category": {
-                    "pref_label": {
-                        "en": "dummy-use-category"
-                    }
-                }
-            }
-        )
-
-        # Mock Metax directories API
-        requests_mock.get(
-            "{}/directories/{}".format(
-                tests.conftest.METAX_URL,
-                file_['parent_directory']['identifier']
-            ),
-            json={
-                "identifier": file_['parent_directory']['identifier'],
-                "directory_path": os.path.dirname(file_['file_path'])
-            }
-        )
-
         # Mock Metax files API
         requests_mock.get("{}/files/{}".format(tests.conftest.METAX_URL,
                                                file_['identifier']),

@@ -258,7 +258,6 @@ def test_forbidden_relative_path(workspace, requests_mock, path):
     files = [
         {
             "file_path": path,
-            "parent_directory": {'identifier': 'foo'},
             "identifier": "pid:urn:1",
             "file_storage": {
                 "identifier": "urn:nbn:fi:att:file-storage-ida"
@@ -305,7 +304,6 @@ def test_allowed_relative_paths(workspace, requests_mock, path):
     files = [
         {
             "file_path": path,
-            "parent_directory": {'identifier': 'foo'},
             "identifier": "pid:urn:1",
             "file_storage": {
                 "identifier": "urn:nbn:fi:att:file-storage-ida"
