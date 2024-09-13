@@ -191,6 +191,18 @@ def test_multiple_provenance_events(workspace,
     # Mock metax. Create a dataset with provenance events.
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
+    # Add use category to a file to ensure that logical structuremap is
+    # created
+    dataset["research_dataset"]["files"] = [
+        {
+            "identifier": "pid:urn:identifier",
+            "use_category": {
+                "pref_label": {
+                    "en": "dummy-use-category"
+                }
+            }
+        }
+    ]
     if provenance_data:
         dataset['research_dataset']['provenance'] = provenance_data
     tests.utils.add_metax_dataset(requests_mock,
@@ -433,6 +445,18 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     # Mock Metax
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
+    # Add use category to a file to ensure that logical structuremap is
+    # created
+    dataset["research_dataset"]["files"] = [
+        {
+            "identifier": "pid:urn:identifier",
+            "use_category": {
+                "pref_label": {
+                    "en": "dummy-use-category"
+                }
+            }
+        }
+    ]
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset,
                                   files=[TXT_FILE])
 
@@ -755,3 +779,38 @@ def test_create_logical_structmap(workspace, requests_mock):
         'mets:div/mets:div/mets:fptr',
         namespaces=NAMESPACES
     )) == 2
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_empty_logical_structuremap(workspace, requests_mock):
+    """Test that empty logical structuremap is not created.
+
+    Creates METS for a dataset that contains files, but use category is
+    not defined any of them. Logical structuremap should not be created.
+
+    :param workspace: Temporary workspace directory fixture
+    :param requests_mock: Mocker object
+    """
+    # Create a dataset that contains three files
+    file = copy.deepcopy(TXT_FILE)
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset['identifier'] = workspace.name
+
+    # Add dataset to Metax mock
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
+
+    # Create workspace that already contains dataset files
+    file_path = workspace / "metadata_generation/dataset_files/" \
+        / file["file_path"].strip("/")
+    file_path.parent.mkdir(parents=True)
+    file_path.write_text("foo")
+
+    # Init and run task
+    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+
+    # Validate logical Fairdata-logical structure map
+    mets = lxml.etree.parse(str(workspace / 'preservation/mets.xml'))
+    assert not mets.xpath(
+        '/mets:mets/mets:structMap[@TYPE="Fairdata-logical"]',
+        namespaces=NAMESPACES
+    )

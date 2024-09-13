@@ -94,10 +94,11 @@ class CreateMets(WorkflowTask):
         # created.
         sip = siptools_ng.sip.SIP.from_files(mets=mets, files=files)
 
-        # Create logical structural map
-        logical_structural_map \
-            = self._create_logical_structmap(files)
-        mets.add_structural_maps([logical_structural_map])
+        # Create logical structural map. If the structural map does not
+        # contain any files, it is not added to METS
+        logical_structural_map = self._create_logical_structmap(files)
+        if logical_structural_map.root_div.divs:
+            mets.add_structural_maps([logical_structural_map])
 
         # Add provenance metadata to structural maps
         provenance_metadatas = self._create_provenance_metadata(metadata)
