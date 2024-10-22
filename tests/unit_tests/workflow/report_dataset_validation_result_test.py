@@ -18,7 +18,17 @@ def test_reportdatasetvalidationresult(workspace, requests_mock):
     # Mock Metax
     requests_mock.get(
         f'/rest/v2/datasets/{workspace.name}',
-        json={'identifier': 'foo'}
+        json={'identifier': 'foo',
+              "research_dataset": {
+                    "files": [
+                        {
+                            "details": {
+                                "project_identifier": "foo"
+                            }
+                        }
+                    ]
+                }
+            }
     )
     patch_dataset = requests_mock.patch('/rest/v2/datasets/foo')
 

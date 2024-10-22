@@ -330,7 +330,16 @@ def test_invalid_dataset_error(workspace, requests_mock, task, expected_state,
         f'/rest/v2/datasets/{workspace.name}',
         json={
             'identifier': 'test123',
-            'preservation_state': DS_STATE_GENERATING_METADATA
+            'preservation_state': DS_STATE_GENERATING_METADATA,
+            "research_dataset": {
+                    "files": [
+                        {
+                            "details": {
+                                "project_identifier": "foo"
+                            }
+                        }
+                    ]
+                }
         }
     )
     patch_dataset_api = requests_mock.patch('/rest/v2/datasets/test123')
@@ -368,7 +377,16 @@ def test_set_preservation_state_of_pas_version(requests_mock):
             "preservation_dataset_version": {
                 "identifier": "pas-version-id",
                 "preservation_state": DS_STATE_GENERATING_METADATA
-            }
+            },
+            "research_dataset": {
+                    "files": [
+                        {
+                            "details": {
+                                "project_identifier": "foo"
+                            }
+                        }
+                    ]
+                }
         }
     )
     patch_dataset_api = requests_mock.patch('/rest/v2/datasets/pas-version-id')
@@ -408,7 +426,16 @@ def test_packaging_failed(workspace, requests_mock):
         f'/rest/v2/datasets/{workspace.name}',
         json={
             'identifier': 'test123',
-            'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
+            'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+            "research_dataset": {
+                    "files": [
+                        {
+                            "details": {
+                                "project_identifier": "foo"
+                            }
+                        }
+                    ]
+                }
         }
     )
     patch_dataset_api = requests_mock.patch('/rest/v2/datasets/test123')

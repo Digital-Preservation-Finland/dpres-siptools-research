@@ -17,7 +17,8 @@ from tests.conftest import UNIT_TEST_CONFIG_FILE
             'data_catalog': {
                 'identifier': 'urn:nbn:fi:att:data-catalog-pas'
             },
-            'preservation_identifier': 'correct-id'
+            'preservation_identifier': 'correct-id',
+            
         },
         # Ida dataset
         {
@@ -37,6 +38,8 @@ def test_sip_identifier(requests_mock, metadata):
     :param metadata: The metadata of dataset from Metax
     """
     requests_mock.get('/rest/v2/datasets/identifier', json=metadata)
+    requests_mock.get('/rest/v2/datasets/wrong-id?include_user_metadata=true&file_details=true', json={})
+    requests_mock.get('/rest/v2/datasets/wrong-id/files', json={})
     dataset = Dataset('identifier', config=UNIT_TEST_CONFIG_FILE)
     assert dataset.sip_identifier == 'correct-id'
 
@@ -65,7 +68,16 @@ def test_no_sip_identifier(requests_mock):
             'data_catalog': {
                 'identifier': 'urn:nbn:fi:att:data-catalog-pas'
             },
-            'preservation_state': 'correct-state'
+            'preservation_state': 'correct-state',
+            "research_dataset": {
+                "files": [
+                    {
+                        "details": {
+                            "project_identifier": "foo"
+                        }
+                    }
+                ]
+            }
         },
         # Ida dataset that has not been copied to PAS data catalog
         {
@@ -73,6 +85,15 @@ def test_no_sip_identifier(requests_mock):
                 'identifier': 'urn:nbn:fi:att:data-catalog-ida'
             },
             'preservation_state': 'correct-state',
+            "research_dataset": {
+                "files": [
+                    {
+                        "details": {
+                            "project_identifier": "foo"
+                        }
+                    }
+                ]
+            }
         },
         # Ida dataset that has been copied to PAS data catalog
         {
@@ -82,8 +103,17 @@ def test_no_sip_identifier(requests_mock):
             'identifier': 'wrong-state',
             'preservation_dataset_version': {
                 'preservation_state': 'correct-state'
+            },
+            "research_dataset": {
+                "files": [
+                    {
+                        "details": {
+                            "project_identifier": "foo"
+                        }
+                    }
+                ]
             }
-        },
+        }
     ]
 )
 def test_preservation_state(requests_mock, metadata):
@@ -104,7 +134,16 @@ def test_preservation_state(requests_mock, metadata):
             'data_catalog': {
                 'identifier': 'urn:nbn:fi:att:data-catalog-pas'
             },
-            'identifier': 'correct-id'
+            'identifier': 'correct-id',
+            "research_dataset": {
+                "files": [
+                    {
+                        "details": {
+                            "project_identifier": "foo"
+                        }
+                    }
+                ]
+            }
         },
         # Ida dataset that has not been copied to PAS data catalog
         {
@@ -112,6 +151,15 @@ def test_preservation_state(requests_mock, metadata):
                 'identifier': 'urn:nbn:fi:att:data-catalog-ida'
             },
             'identifier': 'correct-id',
+            "research_dataset": {
+                "files": [
+                    {
+                        "details": {
+                            "project_identifier": "foo"
+                        }
+                    }
+                ]
+            }
         },
         # Ida dataset that has been copied to PAS data catalog
         {
@@ -121,6 +169,15 @@ def test_preservation_state(requests_mock, metadata):
             'identifier': 'wrong-id',
             'preservation_dataset_version': {
                 'identifier': 'correct-id'
+            },
+            "research_dataset": {
+                "files": [
+                    {
+                        "details": {
+                            "project_identifier": "foo"
+                        }
+                    }
+                ]
             }
         },
     ]

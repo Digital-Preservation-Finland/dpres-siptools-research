@@ -17,6 +17,15 @@ from siptools_research.workflow import report_preservation_status
                 'identifier': 'original-version-id',
                 'preservation_dataset_version': {
                     'identifier': 'pas-version-id'
+                },
+                "research_dataset": {
+                    "files": [
+                        {
+                            "details": {
+                                "project_identifier": "foo"
+                            }
+                        }
+                    ]
                 }
             },
             "pas-version-id"
@@ -25,7 +34,16 @@ from siptools_research.workflow import report_preservation_status
         # only one version of the dataset exists.
         (
             {
-                'identifier': "original-version-id"
+                'identifier': "original-version-id",
+                "research_dataset": {
+                    "files": [
+                        {
+                            "details": {
+                                "project_identifier": "foo"
+                            }
+                        }
+                    ]
+                }
             },
             'original-version-id'
         )

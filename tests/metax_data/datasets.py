@@ -46,6 +46,13 @@ BASE_DATASET = {
         "identifier": "contract_identifier"
     },
     "research_dataset": {
+        "files": [
+            {
+                "details": {
+                    "project_identifier": "foo"
+                }
+            }
+        ]
     },
     "preservation_state": 0
 }
