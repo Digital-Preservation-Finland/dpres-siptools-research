@@ -108,16 +108,7 @@ class CreateMets(WorkflowTask):
             logical_structural_map.root_div.add_metadata([provenance_metadata])
 
         # Add descriptive metadata to structural maps
-        descriptive_metadata = ImportedMetadata(
-            data_string=datacite,
-            metadata_type="descriptive",
-            metadata_format="OTHER",
-            other_format="DATACITE",
-            # TODO: Version 4.1 is chosen because
-            # old siptools is using it. Is it
-            # correct?
-            format_version="4.1"
-        )
+        descriptive_metadata = ImportedMetadata.from_string(datacite)
         sip.add_metadata([descriptive_metadata])
         logical_structural_map.root_div.add_metadata([descriptive_metadata])
 
