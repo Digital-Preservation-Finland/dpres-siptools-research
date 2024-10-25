@@ -52,6 +52,3 @@ clean-rpm:
 	rm -rf rpmbuild
 	rm -rf doc/build doc/modules
 
-.PHONY: doc
-doc:
-	PYTHONPATH="../" make -C doc html
