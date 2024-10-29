@@ -1,11 +1,10 @@
 """Generates metadata required to create SIP."""
 import file_scraper
 import file_scraper.scraper
+from metax_access.response import MetaxFileCharacteristics
 
-from siptools_research.exceptions import (
-    InvalidFileError,
-    InvalidFileMetadataError,
-)
+from siptools_research.exceptions import (InvalidFileError,
+                                          InvalidFileMetadataError)
 from siptools_research.metax import get_metax_client
 
 
@@ -64,10 +63,12 @@ def generate_metadata(
         # NOTE: This dict is in Metax V2 format as
         # patch does not support Metax V3 yet.
         # When normalizing path request change the format
-        scraper_file_characteristics = {
-            "file_format": scraper.mimetype,
+        scraper_file_characteristics: MetaxFileCharacteristics = {
+            "file_format_version": {
+                "file_format": scraper.mimetype,
+                "format_version": scraper.version
+            },
             "encoding": scraper.streams[0].get("charset"),
-            "format_version": scraper.version,
             # TODO: ensure that user-defined csv paramters are not
             # overwritten!
             "csv_delimiter": scraper.streams[0].get("delimiter"),
@@ -75,37 +76,49 @@ def generate_metadata(
             "csv_quoting_char": scraper.streams[0].get("quotechar"),
         }
 
+        compare_file_chars = [
+            (
+                scraper_file_characteristics["file_format_version"],
+                {
+                    "file_format": mimetype,
+                    "format_version": version
+                }
+            ),
+            (
+                scraper_file_characteristics,
+                {
+                    "encoding": charset,
+                    "csv_delimiter": delimiter,
+                    "csv_record_separator": separator,
+                    "csv_quoting_char": quotechar
+                }
+            )
+        ]
+
         # Check that user defined metadata is not ignored by
         # file-scraper
         # TODO: This is necessary until TPASPKT-381 is resolved
-        for key, value in {"file_format": mimetype,
-                           "encoding": charset,
-                           "format_version": version,
-                           "csv_delimiter": delimiter,
-                           "csv_record_separator": separator,
-                           "csv_quoting_char": quotechar}.items():
-            if value is None:
-                continue
-            # File creation date is never automatically generated
-            if key == "file_created":
-                continue
-            if scraper_file_characteristics[key] != value:
-                error_message = f"File scraper detects a different {key}"
-                raise InvalidFileMetadataError(error_message, [file_id])
+        for scraper_metadata, user_metadata in compare_file_chars:
+            for key, value in user_metadata.items():
+                if value is None:
+                    continue
+                if scraper_metadata[key] != value:
+                    error_message = f"File scraper detects a different {key}"
+                    raise InvalidFileMetadataError(error_message, [file_id])
 
-        if "(:unav)" in scraper_file_characteristics.values():
-            raise InvalidFileError(
-                "File format was not recognized",
-                [file_id]
-            )
+            if "(:unav)" in scraper_metadata.values():
+                raise InvalidFileError(
+                    "File format was not recognized",
+                    [file_id]
+                )
 
-        # Remove "(:unap)" and None values from scraper_file_characteristics
-        scraper_file_characteristics = {
-            key: value
-            for key, value
-            in scraper_file_characteristics.items()
-            if value not in (file_scraper.defaults.UNAP, None)
-        }
+            # Remove "(:unap)" and None values from scraper metadata
+            keys_to_remove = [
+                key for key, value in scraper_metadata.items()
+                if value in (file_scraper.defaults.UNAP, None)
+            ]
+            for key in keys_to_remove:
+                del scraper_metadata[key]
 
         # Scraper output will be saved to file_characteristics_extension
         # for later use
@@ -120,8 +133,7 @@ def generate_metadata(
         metax_client.patch_file(
             file_id,
             {
-                "file_characteristics": scraper_file_characteristics,
-                "file_characteristics_extension":
-                    file_characteristics_extension
+                "characteristics": scraper_file_characteristics,
+                "characteristics_extension": file_characteristics_extension
              }
         )

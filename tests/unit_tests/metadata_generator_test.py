@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from metax_access import DatasetNotAvailableError
+from metax_access.metax import Metax
 from requests.exceptions import HTTPError
 
 import tests.metax_data.datasets
@@ -18,7 +19,26 @@ from siptools_research.exceptions import (
 from siptools_research.metadata_generator import generate_metadata
 
 
-def test_generate_metadata(requests_mock, testpath):
+@pytest.fixture(scope="function")
+def file_v3_mock(mocker):
+    """
+    Mock `Metax.patch_file` in metax-access in order to inspect
+    V3 file metadata submitted to Metax
+    """
+    yield mocker.spy(Metax, "patch_file")
+
+
+def _create_file_v2_http_mock(requests_mock):
+    # This would preferably be a fixture instead of a method.
+    # However, 'add_metax_v2_dataset' also adds its own PATCH file endpoint
+    # mock and we need to run this afterwards to override it.
+    return requests_mock.patch(
+        "https://metaksi/rest/v2/files/pid:urn:identifier",
+        json={}
+    )
+
+
+def test_generate_metadata(file_v3_mock, requests_mock, testpath):
     """Test metadata generation.
 
     Generates metadata for text file. Checks that expected request is
@@ -28,10 +48,7 @@ def test_generate_metadata(requests_mock, testpath):
     file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
     file_metadata["file_path"] = "textfile"
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-    file_metadata_patch = requests_mock.patch(
-        "https://metaksi/rest/v2/files/pid:urn:identifier",
-        json={}
-    )
+    file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     # Create a text file in temporary directory
     tmp_file_path = testpath / "textfile"
@@ -42,10 +59,39 @@ def test_generate_metadata(requests_mock, testpath):
                       root_directory=testpath,
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # Check the patch request
-    json = file_metadata_patch.last_request.json()
+    # V3: verify the file characteristics that were provided to metax-access
+    assert len(file_v3_mock.mock_calls) == 1
+    call = file_v3_mock.mock_calls[0]
+    file_characteristics = call.args[2]["characteristics"]
+    file_char_ext = call.args[2]["characteristics_extension"]
+
+    assert file_characteristics == {
+        "file_format_version": {
+            "file_format": "text/plain"
+        },
+        "encoding": "UTF-8"
+    }
+    assert file_char_ext["streams"] == {
+        0: {
+            "charset": "UTF-8",
+            "index": 0,
+            "mimetype": "text/plain",
+            "stream_type": "text",
+            "version": "(:unap)"
+        }
+    }
+    # It does not make sense to validate "info", but at least it should
+    # not be empty
+    assert file_char_ext["info"]
+    assert file_char_ext["mimetype"] == "text/plain"
+    assert file_char_ext["version"] ==  "(:unap)"
+    assert file_char_ext["grade"] == "fi-dpres-recommended-file-format"
+
+    # V2: ditto
+    json = file_v2_http_mock.last_request.json()
     assert json["file_characteristics"] == {
         "file_format": "text/plain",
+
         "encoding": "UTF-8"
     }
     assert json["file_characteristics_extension"]["streams"] == {
@@ -57,8 +103,6 @@ def test_generate_metadata(requests_mock, testpath):
             "version": "(:unap)"
         }
     }
-    # It does not make sense to validate "info", but at least it should
-    # not be empty
     assert json["file_characteristics_extension"]["info"]
     assert json["file_characteristics_extension"]["mimetype"] == "text/plain"
     assert json["file_characteristics_extension"]["version"] ==  "(:unap)"
@@ -69,7 +113,8 @@ def test_generate_metadata(requests_mock, testpath):
 @pytest.mark.parametrize(
     [
         'path',
-        'expected_file_characteristics',
+        'expected_v3_file_characteristics',
+        'expected_v2_file_characteristics',
         'expected_stream_type'
     ],
     [
@@ -77,13 +122,23 @@ def test_generate_metadata(requests_mock, testpath):
         (
             'tests/data/sample_files/text_plain_UTF-8',
             {
-                'file_format': 'text/plain',
+                'file_format_version': {'file_format': 'text/plain'},
                 'encoding': 'UTF-8',
+            },
+            {
+                'file_format': 'text/plain',
+                'encoding': 'UTF-8'
             },
             'text'
         ),
         (
             'tests/data/sample_files/image_png.png',
+            {
+                'file_format_version': {
+                    'file_format': 'image/png',
+                    'format_version': '1.2'
+                }
+            },
             {
                 'file_format': 'image/png',
                 'format_version': '1.2'
@@ -92,6 +147,12 @@ def test_generate_metadata(requests_mock, testpath):
         ),
         (
             'tests/data/sample_files/image_tiff_large.tif',
+            {
+                'file_format_version': {
+                    'file_format': 'image/tiff',
+                    'format_version': '6.0'
+                }
+            },
             {
                 'file_format': 'image/tiff',
                 'format_version': '6.0'
@@ -103,6 +164,9 @@ def test_generate_metadata(requests_mock, testpath):
         (
             'tests/data/sample_files/audio_x-wav.wav',
             {
+                'file_format_version': {'file_format': 'audio/x-wav'}
+            },
+            {
                 'file_format': 'audio/x-wav'
             },
             'audio'
@@ -110,6 +174,12 @@ def test_generate_metadata(requests_mock, testpath):
         # The first stream of matroska file should be container
         (
             'tests/data/sample_files/video_ffv1.mkv',
+            {
+                'file_format_version': {
+                    'file_format': 'video/x-matroska',
+                    'format_version': '4'
+                }
+            },
             {
                 'file_format': 'video/x-matroska',
                 'format_version': '4'
@@ -121,6 +191,12 @@ def test_generate_metadata(requests_mock, testpath):
         (
             'tests/data/sample_files/opendocument_text.odt',
             {
+                'file_format_version': {
+                    'file_format': 'application/vnd.oasis.opendocument.text',
+                    'format_version': '1.2'
+                }
+            },
+            {
                 'file_format': 'application/vnd.oasis.opendocument.text',
                 'format_version': '1.2'
             },
@@ -129,6 +205,12 @@ def test_generate_metadata(requests_mock, testpath):
         (
             'tests/data/sample_files/opendocument_formula.odf',
             {
+                'file_format_version': {
+                    'file_format': 'application/vnd.oasis.opendocument.formula',
+                    'format_version': '1.2'
+                }
+            },
+            {
                 'file_format': 'application/vnd.oasis.opendocument.formula',
                 'format_version': '1.2'
             },
@@ -136,11 +218,11 @@ def test_generate_metadata(requests_mock, testpath):
         )
     ]
 )
-def test_file_format_detection(requests_mock,
-                                        path,
-                                        expected_file_characteristics,
-                                        expected_stream_type,
-                                        testpath):
+def test_file_format_detection(
+        file_v3_mock, requests_mock, path,
+        expected_v2_file_characteristics,
+        expected_v3_file_characteristics,
+        expected_stream_type, testpath):
     """Test file format detection.
 
     Generates metadata for a dataset that contains one file, and checks
@@ -160,10 +242,7 @@ def test_file_format_detection(requests_mock,
     file_metadata['file_path'] = str(file_path)
     tests.utils.add_metax_dataset(requests_mock,
                                   files=[file_metadata])
-    file_metadata_patch = requests_mock.patch(
-        "https://metaksi/rest/v2/files/pid:urn:identifier",
-        json={}
-    )
+    file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     # Copy the file to temporary directory
     tmp_file_path = testpath / file_path.relative_to('/')
@@ -175,22 +254,36 @@ def test_file_format_detection(requests_mock,
                       root_directory=testpath,
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # verify the file characteristics that were sent to Metax
+    # V3: test the PATCH request was sent
+    assert len(file_v3_mock.mock_calls) == 1
+    call = file_v3_mock.mock_calls[0]
+
+    # V3: verify the file characteristics that were sent to Metax
     file_characteristics \
-        = file_metadata_patch.last_request.json()['file_characteristics']
-    assert file_characteristics == expected_file_characteristics
+        = call.args[2]['characteristics']
+    assert file_characteristics == expected_v3_file_characteristics
 
     # Check that at least the mimetype and stream type of the are
     # correct in the first stream of file_characteristics_extension
-    file_char_ext = file_metadata_patch.last_request.json()[
+    file_char_ext = call.args[2]['characteristics_extension']
+    assert file_char_ext['streams'][0]['mimetype'] \
+        == expected_v3_file_characteristics['file_format_version']['file_format']
+    assert file_char_ext['streams'][0]['stream_type'] == expected_stream_type
+
+    # V2: ditto
+    file_characteristics \
+        = file_v2_http_mock.last_request.json()['file_characteristics']
+    assert file_characteristics == expected_v2_file_characteristics
+
+    file_char_ext = file_v2_http_mock.last_request.json()[
         'file_characteristics_extension'
     ]
     assert file_char_ext['streams']['0']['mimetype'] \
-        == expected_file_characteristics['file_format']
+        == expected_v2_file_characteristics['file_format']
     assert file_char_ext['streams']['0']['stream_type'] == expected_stream_type
 
 
-def test_generate_metadata_video_streams(requests_mock, testpath):
+def test_generate_metadata_video_streams(file_v3_mock, requests_mock, testpath):
     """Test metadata generation for a video file.
 
     Generates file characteristics for a video file with multiple
@@ -202,20 +295,40 @@ def test_generate_metadata_video_streams(requests_mock, testpath):
     tests.utils.add_metax_dataset(
         requests_mock,
         files=[tests.metax_data.files.BASE_FILE])
-    file_metadata_patch = requests_mock.patch(
-        "https://metaksi/rest/v2/files/pid:urn:identifier",
-        json={}
-    )
 
     tmp_file_path = testpath / "path/to/file"
     tmp_file_path.parent.mkdir(parents=True)
     shutil.copy('tests/data/sample_files/video_ffv1.mkv', tmp_file_path)
+    file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     generate_metadata(
         'dataset_identifier', testpath, tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
-    file_char_ext = file_metadata_patch.last_request.json()[
+    # V3: test that correct streams were found
+    assert len(file_v3_mock.mock_calls) == 1
+    call = file_v3_mock.mock_calls[0]
+
+    file_char_ext = call.args[2]['characteristics_extension']
+
+    # Four different streams found
+    assert {0, 1, 2, 3} == set(file_char_ext['streams'].keys())
+
+    streams_by_type = defaultdict(list)
+    for stream in file_char_ext['streams'].values():
+        streams_by_type[stream['stream_type']].append(stream)
+
+    assert len(streams_by_type['audio']) == 2
+    assert len(streams_by_type['videocontainer']) == 1
+    assert len(streams_by_type['video']) == 1
+
+    assert streams_by_type['audio'][0]['mimetype'] == 'audio/flac'
+    assert streams_by_type['videocontainer'][0]['mimetype'] == \
+        'video/x-matroska'
+    assert streams_by_type['video'][0]['mimetype'] == 'video/x-ffv'
+
+    # V2: ditto
+    file_char_ext = file_v2_http_mock.last_request.json()[
         'file_characteristics_extension'
     ]
 
@@ -263,7 +376,7 @@ def test_generate_metadata_unrecognized(requests_mock, testpath):
     assert exception_info.value.files == ['pid:urn:identifier']
 
 
-def test_generate_metadata_predefined(requests_mock, testpath):
+def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
     """Test generate_metadata.
 
     Tests metadata generation for files that already have some
@@ -275,9 +388,7 @@ def test_generate_metadata_predefined(requests_mock, testpath):
     """
     file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
     file_metadata['file_characteristics'] = {
-        'encoding': 'user_defined',
-        'dummy_key': 'dummy_value'
-
+        'encoding': 'user_defined'
     }
     file_metadata['file_characteristics_extension'] = {
         'streams': {
@@ -291,10 +402,7 @@ def test_generate_metadata_predefined(requests_mock, testpath):
         }
     }
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-    patch_request = requests_mock.patch(
-        "https://metaksi/rest/v2/files/pid:urn:identifier",
-        json={}
-    )
+    file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     # Create text file in temporary directory
     tmp_file_path = testpath / 'path/to/file'
@@ -305,16 +413,35 @@ def test_generate_metadata_predefined(requests_mock, testpath):
                       testpath,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    # verify the file characteristics that were sent to Metax
-    json = patch_request.last_request.json()
-    assert json["file_characteristics"] == {
-            # missing keys are added
-            'file_format': 'text/plain',
-            # user defined value is not overwritten
-            'encoding': 'user_defined',
-            # additional keys are copied
-            'dummy_key': 'dummy_value',
+    # V3: Verify file characteristics were sent to Metax
+    assert len(file_v3_mock.mock_calls) == 1
+    call = file_v3_mock.mock_calls[0]
+
+    file_metadata = call.args[2]
+    assert file_metadata["characteristics"] == {
+        # missing keys are added
+        'file_format_version': {'file_format': 'text/plain'},
+        # user defined value is not overwritten
+        'encoding': 'user_defined',
+    }
+    assert file_metadata["characteristics_extension"]["streams"] == {
+        0: {
+            'charset': 'user_defined',
+            'index': 0,
+            'mimetype': 'text/plain',
+            'stream_type': 'text',
+            'version': '(:unap)'
         }
+    }
+
+    # V2: ditto
+    json = file_v2_http_mock.last_request.json()
+    assert json["file_characteristics"] == {
+        # missing keys are added
+        'file_format': 'text/plain',
+        # user defined value is not overwritten
+        'encoding': 'user_defined',
+    }
     assert json["file_characteristics_extension"]["streams"] == {
         '0': {
             'charset': 'user_defined',
@@ -327,13 +454,24 @@ def test_generate_metadata_predefined(requests_mock, testpath):
 
 
 @pytest.mark.parametrize(
-    ("predefined_file_characteristics", "expected_file_characteristics"),
+    (
+        "predefined_file_characteristics",
+        "expected_v3_file_characteristics",
+        "expected_v2_file_characteristics"
+    ),
     [
         (
             # User has predefined all parameters. Predefined parameters
             # should not change
             {
                 "file_format": "text/csv",
+                "encoding": "UTF-8",
+                "csv_delimiter": "x",
+                "csv_record_separator": "y",
+                "csv_quoting_char": "z"
+            },
+            {
+                "file_format_version": {"file_format": "text/csv"},
                 "encoding": "UTF-8",
                 "csv_delimiter": "x",
                 "csv_record_separator": "y",
@@ -354,12 +492,19 @@ def test_generate_metadata_predefined(requests_mock, testpath):
                 "file_format": "text/csv"
             },
             {
-                "file_format": "text/csv",
+                "file_format_version": {"file_format": "text/csv"},
                 "encoding": "UTF-8",
                 "csv_delimiter": ";",
                 "csv_record_separator": "\r\n",
                 "csv_quoting_char": "'"
             },
+            {
+                "file_format": "text/csv",
+                "encoding": "UTF-8",
+                "csv_delimiter": ";",
+                "csv_record_separator": "\r\n",
+                "csv_quoting_char": "'"
+            }
         ),
         (
             # User has predefined file_format as plain text. CSV
@@ -368,15 +513,21 @@ def test_generate_metadata_predefined(requests_mock, testpath):
                 "file_format": "text/plain"
             },
             {
-                "file_format": "text/plain",
+                "file_format_version": {"file_format": "text/plain"},
                 "encoding": "UTF-8",
             },
+            {
+                "file_format": "text/plain",
+                "encoding": "UTF-8",
+            }
         )
     ]
 )
-def test_generate_metadata_csv(requests_mock, testpath,
-                               predefined_file_characteristics,
-                               expected_file_characteristics):
+def test_generate_metadata_csv(
+        file_v3_mock, requests_mock, testpath,
+        predefined_file_characteristics,
+        expected_v3_file_characteristics,
+        expected_v2_file_characteristics):
     """Test generate metadata.
 
     Tests metadata generation for a CSV file.
@@ -393,6 +544,10 @@ def test_generate_metadata_csv(requests_mock, testpath,
     del file["file_characteristics_extension"]
     file["file_characteristics"] = predefined_file_characteristics
     tests.utils.add_metax_dataset(requests_mock, files=[file])
+    file_v2_http_mock = requests_mock.patch(
+        "https://metaksi/rest/v2/files/pid:urn:identifier_csv",
+        json={}
+    )
 
     # Create text file in temporary directory
     tmp_file_path = testpath / 'path/to/file.csv'
@@ -403,10 +558,31 @@ def test_generate_metadata_csv(requests_mock, testpath,
                       testpath,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    tech_metadata = requests_mock.last_request.json()
+    # V3: verify the file characteristics that were sent to Metax
+    assert len(file_v3_mock.mock_calls) == 1
+    call = file_v3_mock.mock_calls[0]
+
+    tech_metadata = call.args[2]
+
+    file_characteristics = tech_metadata['characteristics']
+    assert file_characteristics == expected_v3_file_characteristics
+
+    # The file_characteristics_extension should contain same metadata as
+    # file_characteristics
+    stream = tech_metadata['characteristics_extension']["streams"][0]
+    assert file_characteristics["file_format_version"]["file_format"] \
+        == stream["mimetype"]
+    assert file_characteristics.get("csv_delimiter") == stream.get("delimiter")
+    assert file_characteristics.get("csv_record_separator") \
+        == stream.get("separator")
+    assert file_characteristics.get("csv_quoting_char") \
+        == stream.get("quotechar")
+
+    # V2: ditto
+    tech_metadata = file_v2_http_mock.last_request.json()
 
     file_characteristics = tech_metadata['file_characteristics']
-    assert file_characteristics == expected_file_characteristics
+    assert file_characteristics == expected_v2_file_characteristics
 
     # The file_characteristics_extension should contain same metadata as
     # file_characteristics
