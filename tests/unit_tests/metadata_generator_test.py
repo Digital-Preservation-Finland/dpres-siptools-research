@@ -47,7 +47,7 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
     # create mocked dataset in Metax
     file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
     file_metadata["file_path"] = "textfile"
-    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[file_metadata])
     file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     # Create a text file in temporary directory
@@ -240,8 +240,9 @@ def test_file_format_detection(
     file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
     file_path = Path('/path/to') / Path(path).name
     file_metadata['file_path'] = str(file_path)
-    tests.utils.add_metax_dataset(requests_mock,
-                                  files=[file_metadata])
+    tests.utils.add_metax_v2_dataset(
+        requests_mock, files=[file_metadata]
+    )
     file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     # Copy the file to temporary directory
@@ -292,7 +293,7 @@ def test_generate_metadata_video_streams(file_v3_mock, requests_mock, testpath):
     :param requests_mock: HTTP request mocker
     :param testpath: Temporary directory
     """
-    tests.utils.add_metax_dataset(
+    tests.utils.add_metax_v2_dataset(
         requests_mock,
         files=[tests.metax_data.files.BASE_FILE])
 
@@ -359,8 +360,10 @@ def test_generate_metadata_unrecognized(requests_mock, testpath):
     :param testpath: Temporary directory
     """
     # create mocked dataset in Metax
-    tests.utils.add_metax_dataset(requests_mock,
-                                  files=[tests.metax_data.files.BASE_FILE])
+    tests.utils.add_metax_v2_dataset(
+        requests_mock,
+        files=[tests.metax_data.files.BASE_FILE]
+    )
 
     # Create empty file to temporary directory
     tmp_file_path = testpath / 'path/to/file'
@@ -401,7 +404,7 @@ def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
             }
         }
     }
-    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[file_metadata])
     file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     # Create text file in temporary directory
@@ -543,7 +546,7 @@ def test_generate_metadata_csv(
     del file["file_characteristics"]
     del file["file_characteristics_extension"]
     file["file_characteristics"] = predefined_file_characteristics
-    tests.utils.add_metax_dataset(requests_mock, files=[file])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[file])
     file_v2_http_mock = requests_mock.patch(
         "https://metaksi/rest/v2/files/pid:urn:identifier_csv",
         json={}
@@ -623,7 +626,7 @@ def test_overwriting_user_defined_metadata(requests_mock, testpath, key,
     """
     file = copy.deepcopy(tests.metax_data.files.TXT_FILE)
     file["file_characteristics"][key] = value
-    tests.utils.add_metax_dataset(requests_mock, files=[file])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[file])
 
     tmp_file_path = testpath / 'path/to/file'
     tmp_file_path.parent.mkdir(parents=True)
@@ -662,7 +665,7 @@ def test_generate_metadata_httperror(requests_mock, testpath):
 
     :param requests_mock: Mocker object
     """
-    tests.utils.add_metax_dataset(requests_mock)
+    tests.utils.add_metax_v2_dataset(requests_mock)
     requests_mock.get(
         'https://metaksi/rest/v2/datasets/dataset_identifier/files',
         status_code=500,

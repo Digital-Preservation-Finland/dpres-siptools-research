@@ -22,7 +22,7 @@ def test_validatefiles(workspace, requests_mock):
     textfile = copy.deepcopy(tests.metax_data.files.TXT_FILE)
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset["identifier"] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock,
+    tests.utils.add_metax_v2_dataset(requests_mock,
                                   dataset=dataset,
                                   files=[textfile])
 
@@ -55,7 +55,7 @@ def test_validatefiles_invalid(workspace, requests_mock):
     tifffile = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset["identifier"] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock,
+    tests.utils.add_metax_v2_dataset(requests_mock,
                                   dataset=dataset,
                                   files=[tifffile])
 

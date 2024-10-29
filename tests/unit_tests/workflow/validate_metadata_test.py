@@ -7,7 +7,7 @@ import pytest
 from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 import tests.conftest
-from tests.utils import add_metax_dataset
+from tests.utils import add_metax_v2_dataset
 from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import TXT_FILE
 
@@ -31,9 +31,11 @@ def test_validatemetadata(workspace, requests_mock):
     file2['file_path'] = '/'
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    add_metax_dataset(requests_mock=requests_mock,
-                      dataset=dataset,
-                      files=[file1, file2])
+    add_metax_v2_dataset(
+        requests_mock=requests_mock,
+        dataset=dataset,
+        files=[file1, file2]
+    )
 
     # Init task
     task = ValidateMetadata(dataset_id=workspace.name,

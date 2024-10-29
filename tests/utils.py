@@ -10,15 +10,16 @@ import tests.metax_data.files
 import tests.metax_data.contracts
 
 
-def add_metax_dataset(requests_mock,
-                      dataset=copy.deepcopy(
-                          tests.metax_data.datasets.BASE_DATASET
-                      ),
-                      datacite=tests.metax_data.datasets.BASE_DATACITE,
-                      files=None,
-                      contract=copy.deepcopy(
-                          tests.metax_data.contracts.BASE_CONTRACT
-                      )):
+def add_metax_v2_dataset(
+        requests_mock,
+        dataset=copy.deepcopy(
+            tests.metax_data.datasets.BASE_DATASET
+        ),
+        datacite=tests.metax_data.datasets.BASE_DATACITE,
+        files=None,
+        contract=copy.deepcopy(
+            tests.metax_data.contracts.BASE_CONTRACT
+        )):
     """Mock responses of Metax APIs.
 
     Mocks datasets API, files API, contracts API, and directories API

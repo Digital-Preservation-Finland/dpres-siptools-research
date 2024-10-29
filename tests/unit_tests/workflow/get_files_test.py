@@ -10,7 +10,7 @@ from siptools_research.exceptions import MissingFileError
 from siptools_research.workflow import get_files
 from tests.metax_data.files import PAS_STORAGE_ID, TXT_FILE
 from tests.metax_data.datasets import BASE_DATASET
-from tests.utils import add_metax_dataset, add_mock_ida_download
+from tests.utils import add_metax_v2_dataset, add_mock_ida_download
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -32,7 +32,7 @@ def test_getfiles(workspace, requests_mock):
     files[1]['file_path'] = '/path/to/file2'
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    add_metax_dataset(requests_mock, dataset=dataset, files=files)
+    add_metax_v2_dataset(requests_mock, dataset=dataset, files=files)
 
     # Mock Ida. Add the two text files to Ida.
     add_mock_ida_download(
@@ -79,7 +79,7 @@ def test_file_cache(workspace, requests_mock):
     # Mock metax. Create a dataset that contains a text file.
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    add_metax_dataset(requests_mock, dataset=dataset, files=[TXT_FILE])
+    add_metax_v2_dataset(requests_mock, dataset=dataset, files=[TXT_FILE])
 
     # Mock Ida
     mock_download = add_mock_ida_download(
@@ -131,7 +131,7 @@ def test_missing_ida_files(workspace, requests_mock):
     files[1]['file_path'] = '/path/to/file2'
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    add_metax_dataset(requests_mock, dataset=dataset, files=files)
+    add_metax_v2_dataset(requests_mock, dataset=dataset, files=files)
 
     # Mock Ida. First file can be downloaded, but requesting the second
     # file will cause 404 "Not found" error.
@@ -192,7 +192,7 @@ def test_missing_local_files(workspace, requests_mock, upload_projects_path):
     files[1]['file_path'] = '/path/to/file4'
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    add_metax_dataset(requests_mock, dataset=dataset, files=files)
+    add_metax_v2_dataset(requests_mock, dataset=dataset, files=files)
 
     # Init mocked upload.files collection
     mongo_files = [
@@ -266,7 +266,7 @@ def test_forbidden_relative_path(workspace, requests_mock, path):
     ]
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    add_metax_dataset(requests_mock, dataset=dataset, files=files)
+    add_metax_v2_dataset(requests_mock, dataset=dataset, files=files)
 
     # Init task
     task = get_files.GetFiles(
@@ -312,7 +312,7 @@ def test_allowed_relative_paths(workspace, requests_mock, path):
     ]
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    add_metax_dataset(requests_mock, dataset=dataset, files=files)
+    add_metax_v2_dataset(requests_mock, dataset=dataset, files=files)
     add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id=workspace.name,

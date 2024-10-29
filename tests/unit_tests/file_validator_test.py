@@ -10,7 +10,7 @@ from siptools_research.exceptions import InvalidFileError
 from siptools_research.file_validator import validate_files
 from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import SEG_Y_FILE, TIFF_FILE, TXT_FILE
-from tests.utils import add_metax_dataset
+from tests.utils import add_metax_v2_dataset
 
 
 def test_validate_files(requests_mock, testpath):
@@ -33,7 +33,7 @@ def test_validate_files(requests_mock, testpath):
     file2['identifier'] = 'pid:urn:textfile2'
     file2['file_path'] = '/path/to/file2'
     # file2['checksum']['value'] = '90dd1fc82b5d523f6f85716c1c67c0f3'
-    add_metax_dataset(
+    add_metax_v2_dataset(
         requests_mock=requests_mock,
         dataset=copy.deepcopy(BASE_DATASET),
         files=[file1, file2]
@@ -64,7 +64,7 @@ def test_validate_invalid_files(requests_mock, testpath):
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
     # of the file is text/plain.
-    add_metax_dataset(
+    add_metax_v2_dataset(
         requests_mock=requests_mock,
         dataset=copy.deepcopy(BASE_DATASET),
         files=[copy.deepcopy(TXT_FILE)]
@@ -96,7 +96,7 @@ def test_validate_bitlevel_file(requests_mock, testpath):
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
     # of the file is application/x.fi-dpres.segy.
-    add_metax_dataset(
+    add_metax_v2_dataset(
         requests_mock=requests_mock,
         dataset=copy.deepcopy(BASE_DATASET),
         files=[copy.deepcopy(SEG_Y_FILE)]
@@ -127,7 +127,7 @@ def test_validate_wrong_mimetype(requests_mock, testpath):
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
     # of the file is image/tiff.
-    add_metax_dataset(
+    add_metax_v2_dataset(
         requests_mock=requests_mock,
         dataset=copy.deepcopy(BASE_DATASET),
         files=[copy.deepcopy(TIFF_FILE)]

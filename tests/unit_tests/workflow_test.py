@@ -132,9 +132,11 @@ def test_workflow(workspace, module_name, task, requests_mock, mocker):
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset["identifier"] = workspace.name
 
-    tests.utils.add_metax_dataset(requests_mock,
-                                  dataset=dataset,
-                                  files=[tests.metax_data.files.TXT_FILE])
+    tests.utils.add_metax_v2_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[tests.metax_data.files.TXT_FILE]
+    )
     tests.utils.add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id=workspace.name,
@@ -301,9 +303,11 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
     # Mock Metax
     dataset = copy.deepcopy(dataset)
     dataset['identifier'] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock,
-                                  dataset=dataset,
-                                  files=[file['metadata'] for file in files])
+    tests.utils.add_metax_v2_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[file['metadata'] for file in files]
+    )
 
     # Mock file download sources
     for file in files:

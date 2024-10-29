@@ -22,7 +22,7 @@ def test_generatemetadata(workspace, requests_mock):
     textfile_metadata = copy.deepcopy(tests.metax_data.files.TXT_FILE)
     dataset_metadata = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset_metadata['identifier'] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock,
+    tests.utils.add_metax_v2_dataset(requests_mock,
                                   dataset=dataset_metadata,
                                   files=[textfile_metadata])
 

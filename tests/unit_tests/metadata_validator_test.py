@@ -73,7 +73,7 @@ def test_validate_metadata(requests_mock, file_metadata):
     :param file_metadata: Metadata of file included in dataset
     :returns: ``None``
     """
-    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[file_metadata])
 
     assert validate_metadata('dataset_identifier',
                              tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -98,9 +98,11 @@ def test_validate_metadata_with_provenance(requests_mock, provenance):
     dataset = copy.deepcopy(BASE_DATASET)
     dataset["provenance"] = provenance
 
-    tests.utils.add_metax_dataset(requests_mock,
-                                  dataset=dataset,
-                                  files=[TXT_FILE])
+    tests.utils.add_metax_v2_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[TXT_FILE]
+    )
 
     assert validate_metadata('dataset_identifier',
                              tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -115,7 +117,7 @@ def test_validate_metadata_multiple_files(requests_mock):
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['identifier'] = "pid:urn:1"
     files[1]['identifier'] = "pid:urn:2"
-    tests.utils.add_metax_dataset(requests_mock, files=files)
+    tests.utils.add_metax_v2_dataset(requests_mock, files=files)
 
     assert validate_metadata('dataset_identifier',
                              tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -130,7 +132,7 @@ def test_validate_metadata_missing_file(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    tests.utils.add_metax_dataset(requests_mock)
+    tests.utils.add_metax_v2_dataset(requests_mock)
     expected_error = "Dataset must contain at least one file"
 
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
@@ -209,7 +211,7 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
     """
     unsupported_file = copy.deepcopy(BASE_FILE)
     unsupported_file['file_characteristics'] = file_characteristics
-    tests.utils.add_metax_dataset(requests_mock, files=[unsupported_file])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[unsupported_file])
 
     # Try to validate dataset with a file that has an unsupported
     # file_format
@@ -234,7 +236,7 @@ def test_validate_metadata_invalid_contract_metadata(requests_mock):
     """
     invalid_contract = copy.deepcopy(BASE_CONTRACT)
     del invalid_contract['contract_json']['organization']['name']
-    tests.utils.add_metax_dataset(requests_mock, contract=invalid_contract)
+    tests.utils.add_metax_v2_dataset(requests_mock, contract=invalid_contract)
 
     # Try to validate invalid dataset
     expected_error = ("'organization' is a required property\n\n"
@@ -256,7 +258,7 @@ def test_validate_metadata_invalid_file_path(requests_mock):
     """
     invalid_file = copy.deepcopy(TXT_FILE)
     invalid_file['file_path'] = "../../file_in_invalid_path"
-    tests.utils.add_metax_dataset(requests_mock, files=[invalid_file])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[invalid_file])
 
     # Try to validate invalid dataset
     expected_error = ("The file path of file pid:urn:identifier is invalid: "
@@ -277,7 +279,7 @@ def test_validate_metadata_invalid_datacite(requests_mock):
     :returns: ``None``
     """
     dataset_file = copy.deepcopy(TXT_FILE)
-    tests.utils.add_metax_dataset(requests_mock, files=[dataset_file])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
     requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       content=get_invalid_datacite())
@@ -305,7 +307,7 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     :returns: ``None``
     """
     dataset_file = copy.deepcopy(TXT_FILE)
-    tests.utils.add_metax_dataset(requests_mock, files=[dataset_file])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
     requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier?"
                       "dataset_format=datacite",
                       text="<resource\n")
@@ -330,7 +332,7 @@ def test_validate_metadata_datacite_bad_request(requests_mock):
     :returns: ``None``
     """
     dataset_file = copy.deepcopy(TXT_FILE)
-    tests.utils.add_metax_dataset(requests_mock, files=[dataset_file])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
 
     # Mock datacite request response. Mocked response has status code
     # 400, and response body contains error information.
@@ -407,7 +409,7 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
     file_metadata['file_characteristics'] = {
         "title": "A Great File"
     }
-    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
+    tests.utils.add_metax_v2_dataset(requests_mock, files=[file_metadata])
 
     # Init metax client
     client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
@@ -462,7 +464,7 @@ def test_validate_metadata_http_error_raised(requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    tests.utils.add_metax_dataset(requests_mock)
+    tests.utils.add_metax_v2_dataset(requests_mock)
     requests_mock.get(
         'https://metaksi/rest/v2/datasets/dataset_identifier/files',
         status_code=500,
