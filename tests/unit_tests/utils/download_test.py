@@ -14,7 +14,7 @@ def _get_file_metadata(identifier):
     return {
         "pathname": "/path/to/file",
         "id": identifier,
-        "storage_identifier": "urn:nbn:fi:att:file-storage-ida"
+        "storage_service": "ida"
     }
 
 

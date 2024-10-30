@@ -2,7 +2,7 @@
 from copy import deepcopy
 
 
-PAS_STORAGE_ID = "urn:nbn:fi:att:file-storage-pas"
+PAS_STORAGE_ID = "pas"
 
 CSV_FILE_METADATA = {
     "characteristics": {
@@ -291,7 +291,7 @@ SEG_Y_FILE_METADATA = {
 BASE_FILE = {
     "id": "pid:urn:identifier",
     "pathname": "/path/to/file",
-    "storage_identifier": "urn:nbn:fi:att:file-storage-ida",
+    "storage_service": "ida",
     # "parent_directory": {
     #    "identifier": "pid:urn:dir:wf1"
     # },

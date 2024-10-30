@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "required": ["checksum", "characteristics", "storage_identifier", "pathname"],
+    "required": ["checksum", "characteristics", "storage_service", "pathname"],
     "properties": {
         "checksum": {
             "title": "Checksum",
@@ -64,8 +64,8 @@
                 "required": ["csv_delimiter", "csv_has_header", "encoding", "csv_record_separator", "csv_quoting_char"]
             }
         },
-        "storage_identifier": {
-            "title": "File Storage Identifier",
+        "storage_service": {
+            "title": "File Storage Service",
             "description": "Identifier that defines from which storage service the file is copied.",
             "type": "string"
         }

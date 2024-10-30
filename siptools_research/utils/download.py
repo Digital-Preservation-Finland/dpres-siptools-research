@@ -123,7 +123,7 @@ def download_file(
     """
     conf = Configuration(config_file)
     pas_storage_id = conf.get("pas_storage_id")
-    file_storage = file_metadata["storage_identifier"]
+    file_storage = file_metadata["storage_service"]
 
     if file_storage == pas_storage_id:
         _link_local_file(
