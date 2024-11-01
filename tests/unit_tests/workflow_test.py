@@ -6,6 +6,8 @@ import filecmp
 import importlib
 import shutil
 import tarfile
+import os
+import time
 
 from lxml.isoschematron import Schematron
 from upload_rest_api.models.file_entry import FileEntry
@@ -15,7 +17,6 @@ import pymongo
 import pytest
 
 from siptools_research.config import Configuration
-from siptools_research.remoteanytarget import RemoteAnyTarget
 import siptools_research.workflow.compress
 import siptools_research.workflow.create_mets
 from tests.metax_data.files import PAS_STORAGE_SERVICE
@@ -83,10 +84,6 @@ def _get_schematrons():
     return SCHEMATRONS
 
 
-def _mock_exists(_, path):
-    return f'accepted/{datetime.date.today().strftime("%Y-%m-%d")}/' in path
-
-
 @pytest.mark.parametrize(
     "module_name,task", [
         ("cleanup", "Cleanup"),
@@ -108,7 +105,7 @@ def _mock_exists(_, path):
 @pytest.mark.usefixtures(
     'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf'
 )
-def test_workflow(workspace, module_name, task, requests_mock, mocker):
+def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_config, sftp_dir):
     """Test workflow dependency tree.
 
     Each workflow task should be able complete if it is directly called
@@ -126,8 +123,8 @@ def test_workflow(workspace, module_name, task, requests_mock, mocker):
     :param mocker: Pytest-mock mocker
     :returns: ``None``
     """
-    mocker.patch('siptools_research.workflow.send_sip.paramiko.SSHClient',
-                 new=mock.MagicMock)
+    # Create transfer directory to PAS
+    (sftp_dir / "transfer").mkdir(parents=True, exist_ok=True)
 
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset["identifier"] = workspace.name
@@ -144,21 +141,27 @@ def test_workflow(workspace, module_name, task, requests_mock, mocker):
         content=b"foo\n"
     )
 
+    # Create new directory to digital preservation server
+    datedir = time.strftime("%Y-%m-%d")
+    tar_name = os.path.basename(workspace) + '.tar'
+    (sftp_dir / "accepted" / datedir / tar_name).mkdir(
+        parents=True, exist_ok=True
+    )
+
     # Init pymongo client
-    conf = Configuration(tests.conftest.TEST_CONFIG_FILE)
+    conf = Configuration(luigi_mock_ssh_config)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
 
-    with mock.patch.object(RemoteAnyTarget, '_exists', _mock_exists):
-        module = importlib.import_module('siptools_research.workflow.'
-                                         + module_name)
-        task_class = getattr(module, task)
-        luigi.build(
-            [task_class(
-                dataset_id=workspace.name,
-                config=tests.conftest.UNIT_TEST_CONFIG_FILE
-            )],
-            local_scheduler=True
-        )
+    module = importlib.import_module('siptools_research.workflow.'
+                                     + module_name)
+    task_class = getattr(module, task)
+    luigi.build(
+        [task_class(
+            dataset_id=workspace.name,
+            config=luigi_mock_ssh_config
+        )],
+        local_scheduler=True
+    )
 
     collection = (mongoclient[conf.get('mongodb_database')]
                   [conf.get('mongodb_collection')])

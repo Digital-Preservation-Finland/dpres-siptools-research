@@ -233,7 +233,7 @@ def luigi_mock_ssh_config(config_creator, sftp_dir, sftp_server):
     instead of a real instance
     """
     config_path = config_creator(
-        config_path=TEST_CONFIG_FILE,
+        config_path=UNIT_TEST_CONFIG_FILE,
         new_config={
             "siptools_research": {
                 "dp_host": "127.0.0.1",

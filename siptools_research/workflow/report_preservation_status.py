@@ -1,5 +1,6 @@
 """Task that reports preservation status after SIP ingestion."""
 
+from pathlib import Path
 from luigi import LocalTarget
 from metax_access import DS_STATE_IN_DIGITAL_PRESERVATION
 from siptools_research.workflowtask import WorkflowTask
@@ -59,8 +60,11 @@ class ReportPreservationStatus(WorkflowTask):
 
         :returns: ``None``
         """
+
         # List of all matching paths ValidateSIP found
-        ingest_report_paths = self.input()[0].existing_paths()
+        ingest_report_paths = [
+            str(path) for path in Path(self.input()[0].path).rglob('*.tar')
+        ]
 
         # Only one ingest report should be found
         if len(ingest_report_paths) != 1:
@@ -69,9 +73,7 @@ class ReportPreservationStatus(WorkflowTask):
             )
 
         # 'accepted' or 'rejected'?
-        directory = ingest_report_paths[0].split('/')[0]
-
-        if directory == 'accepted':
+        if 'accepted' in ingest_report_paths[0]:
             # Set the preservation state of this dataset
             self.dataset.set_preservation_state(
                 DS_STATE_IN_DIGITAL_PRESERVATION,
@@ -79,7 +81,7 @@ class ReportPreservationStatus(WorkflowTask):
             )
             with self.output().open('w') as output:
                 output.write('Dataset id=' + self.dataset_id)
-        elif directory == 'rejected':
+        elif 'rejected' in ingest_report_paths[0]:
             # Raise exception that informs event handler that dataset
             # did not pass validation
             raise InvalidSIPError("SIP was rejected")

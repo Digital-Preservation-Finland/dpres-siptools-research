@@ -5,6 +5,7 @@ import time
 import pytest
 from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
+import tests
 
 
 @pytest.mark.parametrize(
@@ -50,8 +51,7 @@ from siptools_research.workflow import report_preservation_status
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_reportpreservationstatus(workspace, luigi_mock_ssh_config,
-                                  sftp_dir, requests_mock, dataset_metadata,
+def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
                                   patched_dataset_id):
     """Test reporting status of accepted SIP.
 
@@ -81,12 +81,12 @@ def test_reportpreservationstatus(workspace, luigi_mock_ssh_config,
     # that validation has completed.
     datedir = time.strftime("%Y-%m-%d")
     tar_name = f"{workspace.name}.tar"
-    (sftp_dir / "accepted" / datedir / tar_name).mkdir(parents=True)
+    (workspace / "validation" / "ingest-reports" / "accepted" / datedir / tar_name).mkdir(parents=True)
 
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
         dataset_id=workspace.name,
-        config=luigi_mock_ssh_config
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
     task.run()
@@ -96,9 +96,7 @@ def test_reportpreservationstatus(workspace, luigi_mock_ssh_config,
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_reportpreservationstatus_rejected(
-        workspace, luigi_mock_ssh_config, sftp_dir, requests_mock
-):
+def test_reportpreservationstatus_rejected(workspace, requests_mock):
     """Test reporting status of rejected SIP.
 
     Creates new directory with a report file to "rejected" directory in
@@ -125,7 +123,8 @@ def test_reportpreservationstatus_rejected(
     # thinks that validation has been rejected.
     datedir = time.strftime("%Y-%m-%d")
     tar_name = f"{workspace.name}.tar"
-    dir_path = sftp_dir / "rejected" / datedir / tar_name
+    dir_path = \
+        workspace / "validation" / "ingest-reports" / "rejected" / datedir / tar_name / f"{workspace.name}.html"
     dir_path.mkdir(parents=True)
 
     (dir_path / f"{workspace.name}.html").write_bytes(b"Failed")
@@ -133,7 +132,7 @@ def test_reportpreservationstatus_rejected(
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
         dataset_id=workspace.name,
-        config=luigi_mock_ssh_config
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
     # Running task should raise exception
@@ -147,9 +146,7 @@ def test_reportpreservationstatus_rejected(
 
 @pytest.mark.usefixtures('testmongoclient')
 # pylint: disable=invalid-name
-def test_reportpreservationstatus_rejected_int_error(
-        workspace, luigi_mock_ssh_config, sftp_dir
-):
+def test_reportpreservationstatus_rejected_int_error(workspace):
     """Test handling conflicting ingest reports.
 
     Creates ingest report files to "rejected" and "accepted" directories
@@ -168,9 +165,9 @@ def test_reportpreservationstatus_rejected_int_error(
     tar_name = f"{workspace.name}.tar"
 
     accepted_report_path = \
-        sftp_dir / "accepted" / datedir / tar_name / f"{workspace.name}.html"
+        workspace / "validation" / "ingest-reports" / "accepted" / datedir / tar_name / f"{workspace.name}.html"
     rejected_report_path = \
-        sftp_dir / "rejected" / datedir / tar_name / f"{workspace.name}.html"
+        workspace / "validation" / "ingest-reports" / "rejected" / datedir / tar_name / f"{workspace.name}.html"
 
     accepted_report_path.parent.mkdir(parents=True)
     accepted_report_path.write_bytes(b"Accepted")
@@ -181,7 +178,7 @@ def test_reportpreservationstatus_rejected_int_error(
     # Run task like it would be run from command line
     task = report_preservation_status.ReportPreservationStatus(
         dataset_id=workspace.name,
-        config=luigi_mock_ssh_config
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
     )
     assert not task.complete()
 

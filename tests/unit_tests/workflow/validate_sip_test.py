@@ -28,6 +28,8 @@ def test_validatesip_accepted(workspace, luigi_mock_ssh_config, sftp_dir):
     )
 
     # Check that task is completed after new directory is created
+    assert not task.complete()
+    task.run()
     assert task.complete()
 
 
@@ -52,4 +54,6 @@ def test_validatesip_rejected(workspace, luigi_mock_ssh_config, sftp_dir):
     )
 
     # Check that task is completed after new directory is created
+    assert not task.complete()
+    task.run()
     assert task.complete()
