@@ -1,4 +1,6 @@
 """Luigi task that creates METS document."""
+from collections import defaultdict
+
 import luigi.format
 from luigi import LocalTarget
 from mets_builder import (METS, MetsProfile, StructuralMap, AgentType,
@@ -97,7 +99,8 @@ class CreateMets(WorkflowTask):
 
         # Create logical structural map. If the structural map does not
         # contain any files, it is not added to METS
-        logical_structural_map = self._create_logical_structmap(files)
+        logical_structural_map \
+            = self._create_logical_structmap(files, metadata, files_metadata)
         if logical_structural_map.root_div.divs:
             mets.add_structural_maps([logical_structural_map])
 
@@ -194,10 +197,28 @@ class CreateMets(WorkflowTask):
 
         return sip_files
 
-    def _create_logical_structmap(self, files):
-        digital_objects = [file.digital_object for file in files]
+    def _create_logical_structmap(self, files, metadata, files_metadata):
+
+        # Map filepaths to use category
+        use_category_files = defaultdict(list)
+        for file in files_metadata:
+
+            use_category_object \
+                = file.get("dataset_metadata", {}).get("use_category")
+            if not use_category_object:
+                continue
+
+            use_category = get_localized_value(
+                use_category_object["pref_label"],
+                languages=get_dataset_languages(metadata)
+            )
+
+            use_category_files[use_category].append(file['pathname'])
+
+        # Create structural map div for each use category
         divs = []
-        for category, filepaths in self._find_file_categories().items():
+        digital_objects = [file.digital_object for file in files]
+        for use_category, filepaths in use_category_files.items():
             paths = ["dataset_files/" + path.strip("/") for path in filepaths]
             category_digital_objects = [
                 digital_object
@@ -206,13 +227,13 @@ class CreateMets(WorkflowTask):
                 if digital_object.path in paths
             ]
             divs.append(
-                StructuralMapDiv(div_type=category,
+                StructuralMapDiv(div_type=use_category,
                                  digital_objects=category_digital_objects)
             )
 
+        # Create the structural map
         root_div = StructuralMapDiv(div_type="logical")
         root_div.add_divs(divs)
-
         return StructuralMap(root_div=root_div,
                              structural_map_type='Fairdata-logical')
 
@@ -295,57 +316,3 @@ class CreateMets(WorkflowTask):
             )
 
         return provenance_metadatas
-
-    # TODO: This method might be unnecessary: TPASPKT-1107
-    def _find_file_categories(self):
-        """Create logical structure map of dataset files.
-
-        Returns dictionary with filecategories as keys and filepaths as
-        values.
-
-        :returns: logical structure map dictionary
-        """
-        metax_client = get_metax_client(self.config)
-        dataset_files = metax_client.get_dataset_files(self.dataset_id)
-        dataset_metadata = metax_client.get_dataset(self.dataset_id)
-        logical_struct = {}
-
-        for dataset_file in dataset_files:
-
-            # Get the use category of file. The path to the file in
-            # logical structmap is stored in 'use_category' in metax.
-            filecategory = find_file_use_category(
-                dataset_file, dataset_metadata)
-            if not filecategory:
-                continue
-
-            # Append path to logical_struct[filecategory] list. Create
-            # list if it does not exist already
-            if filecategory not in logical_struct:
-                logical_struct[filecategory] = []
-            logical_struct[filecategory].append(dataset_file['pathname'])
-
-        return logical_struct
-
-
-# TODO: This function might be unnecessary: TPASPKT-1107
-def find_file_use_category(file_metadata, dataset_metadata):
-    """Look for file with identifier from dataset metadata.
-
-    Returns the `use_category` of file if it is found. If file is not
-    found from list, return None.
-
-    :param identifier: file identifier
-    :param dataset_metadata: dataset metadata dictionary
-    :returns: `use_category` attribute of file
-    """
-    languages = get_dataset_languages(dataset_metadata)
-    category_label = file_metadata.get(
-        "dataset_metadata", {}
-    ).get(
-        "use_category", {}
-    ).get('pref_label')
-    if category_label is None:
-        return None
-
-    return get_localized_value(category_label, languages=languages)
