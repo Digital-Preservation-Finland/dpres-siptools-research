@@ -18,14 +18,14 @@ from siptools_research.config import Configuration
 from siptools_research.remoteanytarget import RemoteAnyTarget
 import siptools_research.workflow.compress
 import siptools_research.workflow.create_mets
-from tests.metax_data.files import PAS_STORAGE_ID
+from tests.metax_data.files import PAS_STORAGE_SERVICE
 import tests.metax_data.contracts
 import tests.utils
 
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
 PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
-PAS_STORAGE_TXT_FILE["file_storage"]["identifier"] = PAS_STORAGE_ID
+PAS_STORAGE_TXT_FILE["file_storage"]["identifier"] = PAS_STORAGE_SERVICE
 XML_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
 XML_FILE["file_path"] = "mets.xml"
 SIG_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
@@ -311,7 +311,7 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
 
     # Mock file download sources
     for file in files:
-        if file['metadata']['file_storage']['identifier'] == PAS_STORAGE_ID:
+        if file['metadata']['file_storage']['identifier'] == PAS_STORAGE_SERVICE:
             # Mock upload-rest-api
             file_storage_path = (upload_projects_path / "project_id"
                                  / file["metadata"]["identifier"])

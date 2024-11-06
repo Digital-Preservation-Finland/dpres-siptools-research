@@ -8,7 +8,7 @@ import tests.conftest
 from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.exceptions import MissingFileError
 from siptools_research.workflow import get_files
-from tests.metax_data.files import PAS_STORAGE_ID, TXT_FILE
+from tests.metax_data.files import PAS_STORAGE_SERVICE, TXT_FILE
 from tests.metax_data.datasets import BASE_DATASET
 from tests.utils import add_metax_v2_dataset, add_mock_ida_download
 
@@ -185,10 +185,10 @@ def test_missing_local_files(workspace, requests_mock, upload_projects_path):
     # Mock metax
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['identifier'] = 'pid:urn:get_files_1_local'
-    files[0]['file_storage']['identifier'] = PAS_STORAGE_ID
+    files[0]['file_storage']['identifier'] = PAS_STORAGE_SERVICE
     files[0]['file_path'] = '/path/to/file1'
     files[1]['identifier'] = 'pid:urn:does_not_exist_local'
-    files[1]['file_storage']['identifier'] = PAS_STORAGE_ID
+    files[1]['file_storage']['identifier'] = PAS_STORAGE_SERVICE
     files[1]['file_path'] = '/path/to/file4'
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name

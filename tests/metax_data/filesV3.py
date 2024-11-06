@@ -2,7 +2,7 @@
 from copy import deepcopy
 
 
-PAS_STORAGE_ID = "pas"
+PAS_STORAGE_SERVICE = "pas"
 
 CSV_FILE_METADATA = {
     "characteristics": {

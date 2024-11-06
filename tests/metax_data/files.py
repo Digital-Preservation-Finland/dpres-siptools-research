@@ -1,7 +1,7 @@
 """Sample Metax file metadata."""
 from copy import deepcopy
 
-PAS_STORAGE_ID = "urn:nbn:fi:att:file-storage-pas"
+PAS_STORAGE_SERVICE = "urn:nbn:fi:att:file-storage-pas"
 
 CSV_FILE_METADATA = {
     "file_characteristics": {
