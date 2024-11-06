@@ -9,6 +9,9 @@ from upload_rest_api.models.file_entry import FileEntry
 from siptools_research.config import Configuration
 
 
+PAS_STORAGE_SERVICE = "pas"
+
+
 class FileNotAvailableError(Exception):
     """Exception raised when file is not available."""
 
@@ -122,10 +125,9 @@ def download_file(
     :param config_file: Configuration file
     """
     conf = Configuration(config_file)
-    pas_storage_id = conf.get("pas_storage_id")
     file_storage = file_metadata["storage_service"]
 
-    if file_storage == pas_storage_id:
+    if file_storage == PAS_STORAGE_SERVICE:
         _link_local_file(
             file_metadata=file_metadata,
             path=path,
