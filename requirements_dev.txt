@@ -31,6 +31,7 @@ git+https://gitlab.ci.csc.fi/dpres/dpres-siptools-ng.git@develop#eggs=dpres_sipt
 git+https://gitlab.ci.csc.fi/dpres/dpres-mets-builder.git@develop#egg=dpres_mets_builder
 git+https://gitlab.ci.csc.fi/dpres/metax-access.git@develop#egg=metax_access
 git+https://gitlab.ci.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
+git+https://gitlab.ci.csc.fi/dpres/access-rest-api-client.git@develop
 
 # Temporary patch for ffmpeg-python / jpeg2000 lossless detection
 git+https://gitlab.ci.csc.fi/dpres/ffmpeg-python.git#egg=ffmpeg_python
