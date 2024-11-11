@@ -1,13 +1,11 @@
 """Unit tests for :mod:`siptools_research.workflow` package."""
-from unittest import mock
 import copy
 import datetime
 import filecmp
 import importlib
 import shutil
 import tarfile
-import os
-import time
+from datetime import datetime
 
 from lxml.isoschematron import Schematron
 from upload_rest_api.models.file_entry import FileEntry
@@ -141,12 +139,34 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
         content=b"foo\n"
     )
 
-    # Create new directory to digital preservation server
-    datedir = time.strftime("%Y-%m-%d")
-    tar_name = os.path.basename(workspace) + '.tar'
-    (sftp_dir / "accepted" / datedir / tar_name).mkdir(
-        parents=True, exist_ok=True
-    )
+    #Mock metax
+    requests_mock.get(f'https://metaksi/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true',
+                      json = dataset)
+
+    #Mock DPS
+    requests_mock.get(f'https://access/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest',
+                      json={
+                          "data": {
+                            "results": [
+                            {
+                                "download": {
+                                "html": "foo?type=html",
+                                "xml": "foo?type=xml"
+                            },
+                            "id": dataset['preservation_identifier'],
+                            "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                            "status": "accepted"
+                      }
+                    ]
+                }
+            }
+        )
+    requests_mock.get('https://access/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=xml',
+                      content=b'<hello world/>')
+    requests_mock.get('https://access/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=html',
+                      content=b'<hello world/>')
+    
+
 
     # Init pymongo client
     conf = Configuration(luigi_mock_ssh_config)

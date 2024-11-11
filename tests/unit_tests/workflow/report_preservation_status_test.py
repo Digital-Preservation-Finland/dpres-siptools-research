@@ -19,6 +19,7 @@ import tests
                 'preservation_dataset_version': {
                     'identifier': 'pas-version-id'
                 },
+                "preservation_identifier": "doi:test",
                 "research_dataset": {
                     "files": [
                         {
@@ -36,6 +37,7 @@ import tests
         (
             {
                 'identifier': "original-version-id",
+                "preservation_identifier": "doi:test",
                 "research_dataset": {
                     "files": [
                         {
@@ -79,9 +81,10 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
     # Create directory with name of the workspace to digital
     # preservation server, so that the ReportPreservationStatus thinks
     # that validation has completed.
-    datedir = time.strftime("%Y-%m-%d")
-    tar_name = f"{workspace.name}.tar"
-    (workspace / "validation" / "ingest-reports" / "accepted" / datedir / tar_name).mkdir(parents=True)
+    ingest_report \
+        = workspace / "validation" / "ingest-reports" / "accepted" / f"{dataset_metadata['preservation_identifier']}.xml"
+    ingest_report.parent.mkdir(parents=True, exist_ok=True)
+    ingest_report.write_text('foo')
 
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
@@ -114,20 +117,21 @@ def test_reportpreservationstatus_rejected(workspace, requests_mock):
         f'/rest/v2/datasets/{workspace.name}',
         json={
             'data_catalog': {'identifier': 'urn:nbn:fi:att:data-catalog-pas'},
-            'identifier': 'foobar'
+            'identifier': 'foobar',
+            "preservation_identifier": "doi:test"
         }
     )
 
-    # Create directory with name of the workspace to digital
-    # preservation server over SSH, so that the ReportPreservationStatus
-    # thinks that validation has been rejected.
-    datedir = time.strftime("%Y-%m-%d")
-    tar_name = f"{workspace.name}.tar"
-    dir_path = \
-        workspace / "validation" / "ingest-reports" / "rejected" / datedir / tar_name / f"{workspace.name}.html"
-    dir_path.mkdir(parents=True)
+    ingest_report \
+        = workspace / "validation" / "ingest-reports" / "rejected" / "doi:test.xml"
+    ingest_report.parent.mkdir(parents=True, exist_ok=True)
+    ingest_report.write_text('foo')
 
-    (dir_path / f"{workspace.name}.html").write_bytes(b"Failed")
+    # Init and run task
+    task = report_preservation_status.ReportPreservationStatus(
+        dataset_id=workspace.name,
+        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+    )
 
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
@@ -161,13 +165,11 @@ def test_reportpreservationstatus_rejected_int_error(workspace):
     # Create directory with name of the workspace to digital
     # preservation server over SSH, so that the ReportPreservationStatus
     # thinks that validation has been rejected.
-    datedir = time.strftime("%Y-%m-%d")
-    tar_name = f"{workspace.name}.tar"
 
     accepted_report_path = \
-        workspace / "validation" / "ingest-reports" / "accepted" / datedir / tar_name / f"{workspace.name}.html"
+        workspace / "validation" / "ingest-reports" / "accepted" / "doi:test.xml"
     rejected_report_path = \
-        workspace / "validation" / "ingest-reports" / "rejected" / datedir / tar_name / f"{workspace.name}.html"
+        workspace / "validation" / "ingest-reports" / "rejected" / "doi:test.xml"
 
     accepted_report_path.parent.mkdir(parents=True)
     accepted_report_path.write_bytes(b"Accepted")

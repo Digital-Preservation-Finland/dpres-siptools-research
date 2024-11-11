@@ -24,11 +24,11 @@ DEFAULTS = {
     'dp_ssh_key': '~/.ssh/id_rsa_tpas_pouta',
     'sip_sign_key': '~/sip_sign_pas.pem',
     'pas_storage_id': 'urn:nbn:fi:att:file-storage-pas',
-    'ACCESS_REST_API_HOST': "https://access.localhost",
-    'ACCESS_REST_API_USER': "organisaatio1",
-    'ACCESS_REST_API_PASSWORD': "csc123",
-    'ACCESS_REST_API_BASE_PATH': "/",
-    'ACCESS_REST_API_SSL_VERIFICATION': 'True'
+    'access_rest_api_host': "https://access.localhost",
+    'access_rest_api_user': "organisaatio1",
+    'access_rest_api_password': "csc123",
+    'access_rest_api_base_path': "/",
+    'access_rest_api_ssl_verification': 'True'
 }
 
 

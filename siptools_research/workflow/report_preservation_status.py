@@ -63,7 +63,7 @@ class ReportPreservationStatus(WorkflowTask):
 
         # List of all matching paths ValidateSIP found
         ingest_report_paths = [
-            str(path) for path in Path(self.input()[0].path).rglob('*.tar')
+            str(path) for path in Path(self.input()[0].path).rglob('*.xml')
         ]
 
         # Only one ingest report should be found

@@ -2,14 +2,14 @@
 
 import os
 from pathlib import Path
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from luigi import LocalTarget
-import paramiko
 
 import dateutil.parser
-from siptools_research.config import Configuration
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.workflowtask import WorkflowTask
+from siptools_research.dps import get_dps
+from siptools_research.metax import get_metax_client
 
 
 class ValidateSIP(WorkflowTask):
@@ -61,53 +61,35 @@ class ValidateSIP(WorkflowTask):
         except (ValueError, KeyError):
             sip_to_dp_date = datetime.now(timezone.utc).date()
 
-        lim_date = datetime.today().date()
-        paths = []
-        while sip_to_dp_date <= lim_date:
-            paths.append(
-                os.path.join(
-                    f"accepted/{sip_to_dp_date}/{self.dataset_id}.tar"
-                )
-            )
-            paths.append(
-                os.path.join(
-                    f"rejected/{sip_to_dp_date}/{self.dataset_id}.tar"
-                )
-            )
-            sip_to_dp_date += timedelta(days=1)
+        dataset_metadata \
+            = get_metax_client(self.config).get_dataset(self.dataset_id)
+        objid = dataset_metadata.get("preservation", {}).get("id")
+        dps = get_dps(
+            dataset_metadata.get("preservation", {}).get("contract"),
+            self.config
+        )
+        entries = dps.get_ingest_report_entries(objid)
 
-        with self.output().temporary_path() as target_path:
-            existing_paths = self.existing_paths(paths)
-            if len(existing_paths) > 0:
+        if entries:
+            with self.output().temporary_path() as target_path:
                 os.mkdir(target_path)
-                for path in existing_paths:
-                    full_path = Path(target_path) / path
-                    full_path.parent.mkdir(parents=True, exist_ok=True)
-                    full_path.touch()
+                for entry in entries:
+                    if sip_to_dp_date <= entry['date'].date():
+                        self._write_file(entry, target_path, 'xml', dps, objid)
+                        self._write_file(
+                            entry, target_path, 'html', dps, objid
+                        )
+        else:
+            raise ValueError("Ingest report not available yet.")
 
-    def existing_paths(self, paths):
-        """Returns the paths that exists."""
-        conf = Configuration(self.config)
-        host = conf.get("dp_host")
-        port = int(conf.get("dp_port"))
-        username = conf.get("dp_user")
-        keyfile = conf.get("dp_ssh_key")
-        with paramiko.SSHClient() as ssh:
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(
-                host, port=int(port), username=username, key_filename=keyfile
-            )
-            with ssh.open_sftp() as sftp:
-                return [path for path in paths if self._exists(sftp, path)]
-
-    def _exists(self, sftp, path):
-        """Returns ``True`` if the path exists in remote host.
-        :param path: path to verify at remote host
-        """
-        try:
-            sftp.stat(path)
-            return True
-        except OSError as ex:
-            if "No such file" not in str(ex):
-                raise
-        return False
+    def _write_file(self, entry, target_path, file_type, dps, objid):
+        status = entry['status']
+        transfer_id = entry['transfer_id']
+        path = Path(
+            f"{target_path}/{status}/{transfer_id}.{file_type}"
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(dps.get_ingest_report(
+                            objid, transfer_id, file_type
+                            ).decode()
+                        )
