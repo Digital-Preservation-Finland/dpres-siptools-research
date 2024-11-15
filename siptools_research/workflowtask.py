@@ -37,38 +37,6 @@ class WorkflowTask(luigi.Task):
         self.dataset = Dataset(self.dataset_id, config=self.config)
 
 
-class WorkflowExternalTask(luigi.ExternalTask):
-    """Common base class for external workflow tasks.
-
-    External tasks are executed externally from this process and task
-    does not implement the run() method, only output() and requires()
-    methods. In addition to functionality of normal luigi ExternalTask,
-    every task has some luigi parameters:
-
-    :dataset_id: Dataset identifier.
-    :config: Path to configuration file
-
-    WorkflowExternalTask also has some extra instance variables that can
-    be used to identify the task and current workflow, forexample when
-    storing workflow status information to database:
-
-    :sip_creation_path: A path in the workspace in which the SIP is
-                        created
-    """
-
-    dataset_id = luigi.Parameter()
-    config = luigi.Parameter()
-
-    def __init__(self, *args, **kwargs):
-        """Initialize external workflow task.
-
-        Calls luigi.Task's __init__ and sets additional instance
-        variables.
-        """
-        super().__init__(*args, **kwargs)
-        self.dataset = Dataset(self.dataset_id, config=self.config)
-
-
 @WorkflowTask.event_handler(luigi.Event.SUCCESS)
 def report_task_success(task):
     """Report task success.
