@@ -2,10 +2,9 @@
 
 import os
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime
 from luigi import LocalTarget
 
-import dateutil.parser
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.dps import get_dps
@@ -13,10 +12,12 @@ from siptools_research.metax import get_metax_client
 
 
 class ValidateSIP(WorkflowTask):
-    """External task that completes when SIP has been validated.
+    """Task that completes when SIP has been validated.
 
     The SIP is validated when ingest report is available in ~/rejected/
     or ~/accepted/ directories in digital preservation system.
+    Ingest reports are fetched using the DPS's REST API, where they
+    are loaded to the workspace.
 
     Task requires that SIP is sent to digital preservation service.
     """
@@ -34,39 +35,27 @@ class ValidateSIP(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: remote target that may exist on digital preservation
-                  server in any path formatted::
+        :returns: `<workspace>/validation/ingest-resports/`, where 
+        the ingest reports are loaded in xml and html format.
+        If SIP was accepted, the reports are in path ingest-reports/accepted/.
+        If the SIP was rejected the reports are in path ingest-reports/rejected/.
 
-                      ~/accepted/<datepath>/<dataset_id>.tar/
-                      ~/rejected/<datepath>/<dataset_id>.tar/
-
-                  where datepath is any date between the date the SIP
-                  was sent to the server and the current date.
-
-        :rtype: RemoteAnyTarget
+        :rtype: LocalTarget
         """
         return LocalTarget(
             str(self.dataset.validation_workspace / "ingest-reports")
         )
 
     def run(self):
-        # Get SendSIPToDP completion datetime or use the current UTC
-        # time. This is necessary since ValidateSip output is checked
-        # first time before any of the dependencies are ran.
-        # Dependencies are ran only if ValidateSip task is not
-        # completed.
-        #try:
-        #    send_timestamp = self.dataset.get_task_timestamp("SendSIPToDP")
-        #    sip_to_dp_date = dateutil.parser.parse(send_timestamp).date()
-        #except (ValueError, KeyError):
-        #    sip_to_dp_date = datetime.now(timezone.utc).date()
-        
         input_file = Path(self.input().path)
+
         sip_to_dp_str = input_file.read_text().split(',')[-1].split('=')[-1]
         sip_to_dp_date = datetime.fromisoformat(sip_to_dp_str)
+
         dataset_metadata \
             = get_metax_client(self.config).get_dataset(self.dataset_id)
         objid = dataset_metadata.get("preservation", {}).get("id")
+
         dps = get_dps(
             dataset_metadata.get("preservation", {}).get("contract"),
             self.config

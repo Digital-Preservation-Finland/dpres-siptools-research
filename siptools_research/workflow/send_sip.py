@@ -76,4 +76,6 @@ class SendSIPToDP(WorkflowTask):
 
             with self.output().open('w') as log:
                 log.write(f'Dataset id={self.dataset_id},')
-                log.write(f'Timestamp={datetime.now(timezone.utc).isoformat()}')
+                log.write(
+                    f'Timestamp={datetime.now(timezone.utc).isoformat()}'
+                )
