@@ -4,7 +4,7 @@ from pathlib import Path
 from luigi import LocalTarget
 from metax_access import DS_STATE_IN_DIGITAL_PRESERVATION
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.validate_sip import ValidateSIP
+from siptools_research.workflow.poll_reports import GetValidationReports
 from siptools_research.workflow.send_sip import SendSIPToDP
 from siptools_research.exceptions import InvalidSIPError
 
@@ -32,8 +32,8 @@ class ReportPreservationStatus(WorkflowTask):
 
         :returns: list of required tasks
         """
-        return [ValidateSIP(dataset_id=self.dataset_id,
-                            config=self.config),
+        return [GetValidationReports(dataset_id=self.dataset_id,
+                                     config=self.config),
                 SendSIPToDP(dataset_id=self.dataset_id,
                             config=self.config)]
 

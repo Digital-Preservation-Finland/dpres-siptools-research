@@ -11,7 +11,7 @@ from siptools_research.dps import get_dps
 from siptools_research.metax import get_metax_client
 
 
-class ValidateSIP(WorkflowTask):
+class GetValidationReports(WorkflowTask):
     """Task that completes when SIP has been validated.
 
     The SIP is validated when ingest report is available in ~/rejected/
@@ -35,10 +35,11 @@ class ValidateSIP(WorkflowTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: `<workspace>/validation/ingest-resports/`, where 
+        :returns: `<workspace>/validation/ingest-resports/`, where
         the ingest reports are loaded in xml and html format.
-        If SIP was accepted, the reports are in path ingest-reports/accepted/.
-        If the SIP was rejected the reports are in path ingest-reports/rejected/.
+        Dependign of the status of the SIP,
+        the reports are in path `ingest-reports/accepted/` or
+        `ingest-reports/rejected/`.
 
         :rtype: LocalTarget
         """

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from datetime import datetime, timezone, timedelta
 
-from siptools_research.workflow.validate_sip import ValidateSIP
+from siptools_research.workflow.poll_reports import GetValidationReports
 from tests.metax_data.datasets import BASE_DATASET
 
 @pytest.mark.parametrize(
@@ -28,7 +28,7 @@ def test_validatesip(workspace, luigi_mock_ssh_config, requests_mock, status):
     :returns: ``None``
     """
     # Init task
-    task = ValidateSIP(dataset_id=workspace.name, config=luigi_mock_ssh_config)
+    task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
     assert not task.complete()
 
     dataset = copy.deepcopy(BASE_DATASET)
@@ -88,7 +88,7 @@ def test_validatesip_timestamp_error(workspace, luigi_mock_ssh_config, requests_
     :returns: ``None``
     """
     # Init task
-    task = ValidateSIP(dataset_id=workspace.name, config=luigi_mock_ssh_config)
+    task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
     assert not task.complete()
 
     dataset = copy.deepcopy(BASE_DATASET)

@@ -96,8 +96,7 @@ def _get_schematrons():
         ("sign", "SignSIP"),
         ("validate_files", "ValidateFiles"),
         ("validate_metadata", "ValidateMetadata"),
-        # TODO: ValidateSIP is not tested because of TPASPKT-435
-        # ("validate_sip", "ValidateSIP"),
+        ("poll_reports", "GetValidationReports"),
     ]
 )
 @pytest.mark.usefixtures(
