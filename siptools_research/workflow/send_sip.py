@@ -3,6 +3,7 @@
 import os
 import paramiko
 import luigi
+from datetime import datetime, timezone
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.workflow.compress import CompressSIP
@@ -74,4 +75,5 @@ class SendSIPToDP(WorkflowTask):
                 )
 
             with self.output().open('w') as log:
-                log.write('Dataset id=' + self.dataset_id)
+                log.write(f'Dataset id={self.dataset_id},')
+                log.write(f'Timestamp={datetime.now(timezone.utc).isoformat()}')

@@ -5,7 +5,7 @@ import filecmp
 import importlib
 import shutil
 import tarfile
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from lxml.isoschematron import Schematron
 from upload_rest_api.models.file_entry import FileEntry
@@ -154,7 +154,7 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
                                 "xml": "foo?type=xml"
                             },
                             "id": dataset['preservation_identifier'],
-                            "date": datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                            "date": (datetime.now()+timedelta(minutes=1)).strftime('%Y-%m-%dT%H:%M:%SZ'),
                             "status": "accepted"
                       }
                     ]

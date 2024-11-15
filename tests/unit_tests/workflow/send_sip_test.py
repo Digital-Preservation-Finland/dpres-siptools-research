@@ -2,6 +2,8 @@
 
 import logging
 import shutil
+from pathlib import Path
+from datetime import datetime, timezone
 
 import pytest
 from siptools_research.workflow.send_sip import SendSIPToDP
@@ -37,3 +39,12 @@ def test_send_sip(workspace, luigi_mock_ssh_config, sftp_dir):
 
     # Check that tar-file is created on the SFTP server
     assert (transfer_dir / tar_file_name).is_file()
+
+    # Check that a timestamp exists and has at least todays date
+    log_file_path \
+        = Path(workspace / "preservation" / "task-send-sip-to-dp.finished")
+    sip_to_dp_str = log_file_path.read_text().split(',')[-1].split('=')[-1]
+    assert sip_to_dp_str
+    sip_to_dp_date = datetime.fromisoformat(sip_to_dp_str)
+    assert sip_to_dp_date.date() == datetime.now(timezone.utc).date()
+

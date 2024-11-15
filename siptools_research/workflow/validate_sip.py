@@ -55,12 +55,15 @@ class ValidateSIP(WorkflowTask):
         # first time before any of the dependencies are ran.
         # Dependencies are ran only if ValidateSip task is not
         # completed.
-        try:
-            send_timestamp = self.dataset.get_task_timestamp("SendSIPToDP")
-            sip_to_dp_date = dateutil.parser.parse(send_timestamp).date()
-        except (ValueError, KeyError):
-            sip_to_dp_date = datetime.now(timezone.utc).date()
-
+        #try:
+        #    send_timestamp = self.dataset.get_task_timestamp("SendSIPToDP")
+        #    sip_to_dp_date = dateutil.parser.parse(send_timestamp).date()
+        #except (ValueError, KeyError):
+        #    sip_to_dp_date = datetime.now(timezone.utc).date()
+        
+        input_file = Path(self.input().path)
+        sip_to_dp_str = input_file.read_text().split(',')[-1].split('=')[-1]
+        sip_to_dp_date = datetime.fromisoformat(sip_to_dp_str)
         dataset_metadata \
             = get_metax_client(self.config).get_dataset(self.dataset_id)
         objid = dataset_metadata.get("preservation", {}).get("id")
@@ -74,7 +77,7 @@ class ValidateSIP(WorkflowTask):
             with self.output().temporary_path() as target_path:
                 os.mkdir(target_path)
                 for entry in entries:
-                    if sip_to_dp_date <= entry['date'].date():
+                    if sip_to_dp_date <= entry['date']:
                         self._write_file(entry, target_path, 'xml', dps, objid)
                         self._write_file(
                             entry, target_path, 'html', dps, objid
