@@ -1,17 +1,15 @@
 """External task that waits for SIP validation in DPS."""
-
-import os
 from pathlib import Path
 from datetime import datetime
 from luigi import LocalTarget
 
 from siptools_research.workflow.send_sip import SendSIPToDP
-from siptools_research.workflowtask import WorkflowTask
+from siptools_research.workflowtask import WorkflowExternalTask
 from siptools_research.dps import get_dps
 from siptools_research.metax import get_metax_client
 
 
-class GetValidationReports(WorkflowTask):
+class GetValidationReports(WorkflowExternalTask):
     """Task that completes when SIP has been validated.
 
     The SIP is validated when ingest report is available in ~/rejected/
@@ -47,7 +45,18 @@ class GetValidationReports(WorkflowTask):
             str(self.dataset.validation_workspace / "ingest-reports")
         )
 
-    def run(self):
+    def complete(self):
+
+        if (self.dataset.validation_workspace / "ingest-reports").exists():
+            # Task is already completed as the ingest report folder exists
+            return True
+
+
+        if not self.input().exists():
+            # SIP has not even been sent to DPS so checking
+            # for ingest report is waste of time
+            return False
+
         input_file = Path(self.input().path)
 
         sip_to_dp_str = input_file.read_text().split(',')[-1].split('=')[-1]
@@ -62,25 +71,30 @@ class GetValidationReports(WorkflowTask):
             self.config
         )
         entries = dps.get_ingest_report_entries(objid)
+     
 
         if entries:
-            with self.output().temporary_path() as target_path:
-                os.mkdir(target_path)
+            with self.output().temporary_path() as target:
+                target_path = Path(target)
+                target_path.mkdir()
                 for entry in entries:
                     if sip_to_dp_date <= entry['date']:
-                        self._write_file(entry, target_path, 'xml', dps, objid)
+                        self._write_file(
+                            entry, target_path, 'xml', dps, objid
+                        )
                         self._write_file(
                             entry, target_path, 'html', dps, objid
                         )
         else:
-            raise ValueError("Ingest report not available yet.")
+            # Ingest report not available yet
+            return False
+
+        return True
 
     def _write_file(self, entry, target_path, file_type, dps, objid):
         status = entry['status']
         transfer_id = entry['transfer_id']
-        path = Path(
-            f"{target_path}/{status}/{transfer_id}.{file_type}"
-        )
+        path = target_path / status / f"{transfer_id}.{file_type}"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(dps.get_ingest_report(
                             objid, transfer_id, file_type

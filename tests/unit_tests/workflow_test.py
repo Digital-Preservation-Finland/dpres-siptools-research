@@ -96,7 +96,7 @@ def _get_schematrons():
         ("sign", "SignSIP"),
         ("validate_files", "ValidateFiles"),
         ("validate_metadata", "ValidateMetadata"),
-        ("poll_reports", "GetValidationReports"),
+        #("poll_reports", "GetValidationReports"),
     ]
 )
 @pytest.mark.usefixtures(
@@ -174,6 +174,13 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
     module = importlib.import_module('siptools_research.workflow.'
                                      + module_name)
     task_class = getattr(module, task)
+    luigi.build(
+        [task_class(
+            dataset_id=workspace.name,
+            config=luigi_mock_ssh_config
+        )],
+        local_scheduler=True
+    )
     luigi.build(
         [task_class(
             dataset_id=workspace.name,

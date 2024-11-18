@@ -27,19 +27,9 @@ def test_validatesip(workspace, luigi_mock_ssh_config, requests_mock, status):
     :param status: SIP's status in DPS.
     :returns: ``None``
     """
-    # Init task
-    task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
-    assert not task.complete()
-
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
 
-    send_sip_log_file_path \
-        = Path(workspace / "preservation" / "task-send-sip-to-dp.finished")
-    send_sip_log_file_path.write_text(
-        f'Dataset id={dataset["identifier"]},Timestamp={(datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()}'
-    )
-    
     #Mock metax
     requests_mock.get(f'https://metaksi/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true',
                       json = dataset)
@@ -68,9 +58,16 @@ def test_validatesip(workspace, luigi_mock_ssh_config, requests_mock, status):
     requests_mock.get('https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest/doi%3Atest?type=html',
                       content=b'<html>hello world</html>')
 
+    # Init task
+    task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
     assert not task.complete()
-    task.run()
+
+    # Task is run when the input file is created.
+    file_content = f'Dataset id={dataset["identifier"]},Timestamp={(datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()}'
+    Path(task.input().path).write_text(file_content)
     assert task.complete()
+
+    # Ingest reports appeared
     ingest_report_path \
         = workspace / "validation" / "ingest-reports" / status
     assert (ingest_report_path / f"{dataset['preservation_identifier']}.xml").read_text() == "<hello world/>"
@@ -87,17 +84,10 @@ def test_validatesip_timestamp_error(workspace, luigi_mock_ssh_config, requests_
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    # Init task
-    task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
-    assert not task.complete()
 
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
 
-    send_sip_log_file_path \
-        = Path(workspace / "preservation" / "task-send-sip-to-dp.finished")
-    send_sip_log_file_path.write_text(f'Dataset id={dataset["identifier"]},={(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat()}')
-    
     #Mock metax
     requests_mock.get(f'https://metaksi/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true',
                       json = dataset)
@@ -121,9 +111,13 @@ def test_validatesip_timestamp_error(workspace, luigi_mock_ssh_config, requests_
             }
         )
 
+    task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
     assert not task.complete()
-    task.run()
+
+    file_content = f'Dataset id={dataset["identifier"]},Timestamp={(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat()}'
+    Path(task.input().path).write_text(file_content)
     assert task.complete()
+    
     ingest_report_path \
         = workspace / "validation" / "ingest-reports" / 'accepted'
     assert not (ingest_report_path / f"{dataset['preservation_identifier']}.xml").exists()
