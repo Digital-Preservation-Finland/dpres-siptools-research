@@ -69,7 +69,7 @@ def test_validatesip(workspace, luigi_mock_ssh_config, requests_mock, status):
 
     # Ingest reports appeared
     ingest_report_path \
-        = workspace / "validation" / "ingest-reports" / status
+        = workspace / "preservation" / "ingest-reports" / status
     assert (ingest_report_path / f"{dataset['preservation_identifier']}.xml").read_text() == "<hello world/>"
     assert (ingest_report_path / f"{dataset['preservation_identifier']}.html").read_text() == "<html>hello world</html>"
 
@@ -119,6 +119,6 @@ def test_validatesip_timestamp_error(workspace, luigi_mock_ssh_config, requests_
     assert task.complete()
     
     ingest_report_path \
-        = workspace / "validation" / "ingest-reports" / 'accepted'
+        = workspace / "preservation" / "ingest-reports" / 'accepted'
     assert not (ingest_report_path / f"{dataset['preservation_identifier']}.xml").exists()
     assert not (ingest_report_path / f"{dataset['preservation_identifier']}.html").exists()

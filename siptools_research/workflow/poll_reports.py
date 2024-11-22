@@ -33,7 +33,7 @@ class GetValidationReports(WorkflowExternalTask):
     def output(self):
         """Return the output target of this Task.
 
-        :returns: `<workspace>/validation/ingest-resports/`, where
+        :returns: `<workspace>/preservation/ingest-resports/`, where
         the ingest reports are loaded in xml and html format.
         Dependign of the status of the SIP,
         the reports are in path `ingest-reports/accepted/` or
@@ -42,12 +42,12 @@ class GetValidationReports(WorkflowExternalTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            str(self.dataset.validation_workspace / "ingest-reports")
+            str(self.dataset.preservation_workspace / "ingest-reports")
         )
 
     def complete(self):
 
-        if (self.dataset.validation_workspace / "ingest-reports").exists():
+        if (self.dataset.preservation_workspace / "ingest-reports").exists():
             # Task is already completed as the ingest report folder exists
             return True
 

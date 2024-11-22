@@ -1,7 +1,5 @@
 """Unit tests for ReportPreservationStatus task."""
 
-import time
-
 import pytest
 from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
@@ -57,8 +55,8 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
                                   patched_dataset_id):
     """Test reporting status of accepted SIP.
 
-    Creates new directory to "accepted" directory in digital
-    preservation server and runs ReportPreservationStatus task. Tests
+    Creates new directory to "accepted" directory in local workspace
+    and runs ReportPreservationStatus task. Tests
     that task is complete after it has been run and that the
     preservation status of correct dataset is updated.
 
@@ -78,11 +76,11 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
     )
     metax_mock = requests_mock.patch(f'/rest/v2/datasets/{patched_dataset_id}')
 
-    # Create directory with name of the workspace to digital
-    # preservation server, so that the ReportPreservationStatus thinks
+    # Create directory with name of the workspace to the local
+    # workspace directory, so that the ReportPreservationStatus thinks
     # that validation has completed.
     ingest_report \
-        = workspace / "validation" / "ingest-reports" / "accepted" / f"{dataset_metadata['preservation_identifier']}.xml"
+        = workspace / "preservation" / "ingest-reports" / "accepted" / f"{dataset_metadata['preservation_identifier']}.xml"
     ingest_report.parent.mkdir(parents=True, exist_ok=True)
     ingest_report.write_text('foo')
 
@@ -123,7 +121,7 @@ def test_reportpreservationstatus_rejected(workspace, requests_mock):
     )
 
     ingest_report \
-        = workspace / "validation" / "ingest-reports" / "rejected" / "doi:test.xml"
+        = workspace / "preservation" / "ingest-reports" / "rejected" / "doi:test.xml"
     ingest_report.parent.mkdir(parents=True, exist_ok=True)
     ingest_report.write_text('foo')
 
@@ -167,9 +165,9 @@ def test_reportpreservationstatus_rejected_int_error(workspace):
     # thinks that validation has been rejected.
 
     accepted_report_path = \
-        workspace / "validation" / "ingest-reports" / "accepted" / "doi:test.xml"
+        workspace / "preservation" / "ingest-reports" / "accepted" / "doi:test.xml"
     rejected_report_path = \
-        workspace / "validation" / "ingest-reports" / "rejected" / "doi:test.xml"
+        workspace / "preservation" / "ingest-reports" / "rejected" / "doi:test.xml"
 
     accepted_report_path.parent.mkdir(parents=True)
     accepted_report_path.write_bytes(b"Accepted")
