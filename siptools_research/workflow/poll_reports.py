@@ -35,9 +35,8 @@ class GetValidationReports(WorkflowExternalTask):
 
         :returns: `<workspace>/preservation/ingest-resports/`, where
         the ingest reports are loaded in xml and html format.
-        Dependign of the status of the SIP,
-        the reports are in path `ingest-reports/accepted/` or
-        `ingest-reports/rejected/`.
+        The reports are in path `ingest-reports/accepted/` or
+        `ingest-reports/rejected/`, depending on the status of the SIP.
 
         :rtype: LocalTarget
         """

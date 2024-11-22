@@ -16,10 +16,11 @@ from tests.metax_data.datasets import BASE_DATASET
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_validatesip(workspace, luigi_mock_ssh_config, requests_mock, status):
-    """Initializes validate_sip task and tests that it is not complete. Then
-    runs the validate_sip task and checks that the ingest reports were
-    succesfully loaded to the workspace.
+def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock, status):
+    """Initializes GetValidationReports task with the input files of the task.
+    After the input files are created, the GetValidationReports is triggered
+    automatically. Checks that the ingest reports were succesfully loaded to
+    the workspace and the task is completed.
 
     :param workspace: Temporary directory fixture
     :param luigi_mock_ssh_config: Configurations object
@@ -75,7 +76,7 @@ def test_validatesip(workspace, luigi_mock_ssh_config, requests_mock, status):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_validatesip_timestamp_error(workspace, luigi_mock_ssh_config, requests_mock):
+def test_getvalidationreportstimestamp_error(workspace, luigi_mock_ssh_config, requests_mock):
     """If a SIP's  is newer than the ingest report's ,
         ingest reports are not loaded to workspace.
 

@@ -55,14 +55,13 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
                                   patched_dataset_id):
     """Test reporting status of accepted SIP.
 
-    Creates new directory to "accepted" directory in local workspace
+    Creates new ''ingest-reports/accepted'' directory in local workspace
     and runs ReportPreservationStatus task. Tests
     that task is complete after it has been run and that the
     preservation status of correct dataset is updated.
 
     :param workspace: Temporary directory fixture
     :param luigi_mock_ssh_config: Luigi configuration file path
-    :param sftp_dir: Directory that acts as DPS sftp home directory
     :param requests_mock: HTTP request mocker
     :param dataset_metadata: Dataset metadata in Metax
     :param patched_dataset_id: Dataset identifier that should be used
@@ -100,10 +99,9 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
 def test_reportpreservationstatus_rejected(workspace, requests_mock):
     """Test reporting status of rejected SIP.
 
-    Creates new directory with a report file to "rejected" directory in
-    digital preservation server. Runs ReportPreservationStatus task,
-    which should raise an exception and write ingest report HTML to
-    workspace.
+    Creates new directory with a report file to "rejected" directory.
+    Runs ReportPreservationStatus task,
+    which should raise an exception.
 
     :param testpath: Temporary directory fixture
     :param luigi_mock_ssh_config: Luigi configuration file path
@@ -151,8 +149,8 @@ def test_reportpreservationstatus_rejected(workspace, requests_mock):
 def test_reportpreservationstatus_rejected_int_error(workspace):
     """Test handling conflicting ingest reports.
 
-    Creates ingest report files to "rejected" and "accepted" directories
-    in digital preservation server. Runs ReportPreservationStatus task,
+    Creates ingest report files to "rejected" and "accepted" directories.
+    Runs ReportPreservationStatus task,
     and tests that the report file is NOT sent.
 
     :param testpath: Temporary directory fixture
