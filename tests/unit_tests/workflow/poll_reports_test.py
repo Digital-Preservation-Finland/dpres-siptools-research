@@ -63,7 +63,7 @@ def test_validatesip(workspace, luigi_mock_ssh_config, requests_mock, status):
     assert not task.complete()
 
     # Task is run when the input file is created.
-    file_content = f'Dataset id={dataset["identifier"]},Timestamp={(datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()}'
+    file_content = f'Dataset id={dataset["identifier"]},{(datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()}'
     Path(task.input().path).write_text(file_content)
     assert task.complete()
 
@@ -114,7 +114,7 @@ def test_validatesip_timestamp_error(workspace, luigi_mock_ssh_config, requests_
     task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
     assert not task.complete()
 
-    file_content = f'Dataset id={dataset["identifier"]},Timestamp={(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat()}'
+    file_content = f'Dataset id={dataset["identifier"]},{(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat()}'
     Path(task.input().path).write_text(file_content)
     assert task.complete()
     

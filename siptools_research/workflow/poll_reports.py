@@ -59,7 +59,7 @@ class GetValidationReports(WorkflowExternalTask):
 
         input_file = Path(self.input().path)
 
-        sip_to_dp_str = input_file.read_text().split(',')[-1].split('=')[-1]
+        sip_to_dp_str = input_file.read_text().split(',')[-1]
         sip_to_dp_date = datetime.fromisoformat(sip_to_dp_str)
 
         dataset_metadata \
