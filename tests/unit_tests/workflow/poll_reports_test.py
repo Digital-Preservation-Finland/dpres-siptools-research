@@ -76,7 +76,7 @@ def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock, s
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_getvalidationreportstimestamp_error(workspace, luigi_mock_ssh_config, requests_mock):
+def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_sip(workspace, luigi_mock_ssh_config, requests_mock):
     """If a SIP's  is newer than the ingest report's ,
         ingest reports are not loaded to workspace.
 
@@ -104,7 +104,7 @@ def test_getvalidationreportstimestamp_error(workspace, luigi_mock_ssh_config, r
                                 "xml": "foo?type=xml"
                             },
                             "id": dataset['preservation_identifier'],
-                            "date": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                            "date": (datetime.now(timezone.utc)-timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%SZ'),
                             "status": 'accepted'
                       }
                     ]
@@ -115,11 +115,13 @@ def test_getvalidationreportstimestamp_error(workspace, luigi_mock_ssh_config, r
     task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
     assert not task.complete()
 
-    file_content = f'Dataset id={dataset["identifier"]},{(datetime.now(timezone.utc)+timedelta(hours=1)).isoformat()}'
+    # This should complete the task but because DPS entries are older than SIP
+    # task is not completed and the files are not created.
+    file_content = f'Dataset id={dataset["identifier"]},{datetime.now(timezone.utc).isoformat()}'
     Path(task.input().path).write_text(file_content)
-    assert task.complete()
     
     ingest_report_path \
-        = workspace / "preservation" / "ingest-reports" / 'accepted'
-    assert not (ingest_report_path / f"{dataset['preservation_identifier']}.xml").exists()
-    assert not (ingest_report_path / f"{dataset['preservation_identifier']}.html").exists()
+        = workspace / "preservation" / "ingest-reports"
+    assert not (ingest_report_path / 'accepted' / f"{dataset['preservation_identifier']}.xml").exists()
+    assert not (ingest_report_path / 'accepted' / f"{dataset['preservation_identifier']}.html").exists()
+    assert not ingest_report_path.exists()

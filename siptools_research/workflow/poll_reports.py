@@ -76,7 +76,6 @@ class GetValidationReports(WorkflowExternalTask):
         if entries:
             with self.output().temporary_path() as target:
                 target_path = Path(target)
-                target_path.mkdir()
                 for entry in entries:
                     if sip_to_dp_date <= entry['date']:
                         self._write_file(
