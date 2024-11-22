@@ -123,12 +123,6 @@ def test_reportpreservationstatus_rejected(workspace, requests_mock):
     ingest_report.parent.mkdir(parents=True, exist_ok=True)
     ingest_report.write_text('foo')
 
-    # Init and run task
-    task = report_preservation_status.ReportPreservationStatus(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
-
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
         dataset_id=workspace.name,
