@@ -63,12 +63,13 @@ class GetValidationReports(WorkflowExternalTask):
 
         dataset_metadata \
             = get_metax_client(self.config).get_dataset(self.dataset_id)
-        objid = dataset_metadata.get("preservation", {}).get("id")
 
         dps = get_dps(
             dataset_metadata.get("preservation", {}).get("contract"),
             self.config
         )
+
+        objid = self.dataset.sip_identifier
         entries = dps.get_ingest_report_entries(objid)
      
 
