@@ -174,6 +174,9 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
     module = importlib.import_module('siptools_research.workflow.'
                                      + module_name)
     task_class = getattr(module, task)
+
+    # The workflow is run twice because GetValidationReports in poll_reports.py
+    #  is an external task and triggers only with the second run.
     luigi.build(
         [task_class(
             dataset_id=workspace.name,
