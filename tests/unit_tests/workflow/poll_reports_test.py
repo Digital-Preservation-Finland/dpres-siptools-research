@@ -119,7 +119,8 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
     # task is not completed and the files are not created.
     file_content = f'Dataset id={dataset["identifier"]},{datetime.now(timezone.utc).isoformat()}'
     Path(task.input().path).write_text(file_content)
-    
+    assert not task.complete()
+
     ingest_report_path \
         = workspace / "preservation" / "ingest-reports"
     assert not (ingest_report_path / 'accepted' / f"{dataset['preservation_identifier']}.xml").exists()

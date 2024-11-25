@@ -70,20 +70,21 @@ class GetValidationReports(WorkflowExternalTask):
         )
 
         objid = self.dataset.sip_identifier
-        entries = dps.get_ingest_report_entries(objid)
-     
+        entries = [
+            entry for entry in dps.get_ingest_report_entries(objid)
+            if sip_to_dp_date <= entry['date']
+        ]
 
         if entries:
             with self.output().temporary_path() as target:
                 target_path = Path(target)
                 for entry in entries:
-                    if sip_to_dp_date <= entry['date']:
-                        self._write_file(
-                            entry, target_path, 'xml', dps, objid
-                        )
-                        self._write_file(
-                            entry, target_path, 'html', dps, objid
-                        )
+                    self._write_file(
+                        entry, target_path, 'xml', dps, objid
+                    )
+                    self._write_file(
+                        entry, target_path, 'html', dps, objid
+                    )
         else:
             # Ingest report not available yet
             return False
