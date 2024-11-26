@@ -1,12 +1,19 @@
 """IDA and upload-rest-api interface module"""
-from pathlib import Path
+import hashlib
 import os
+from pathlib import Path
 
 import requests
 from requests.exceptions import HTTPError
 from upload_rest_api.models.file_entry import FileEntry
 
 from siptools_research.config import Configuration
+
+CHECKSUM_ALGO_TO_CONSTRUCTOR = {
+    "sha256": hashlib.sha256,
+    "sha512": hashlib.sha512,
+    "md5": hashlib.md5
+}
 
 
 PAS_STORAGE_SERVICE = "pas"
@@ -99,11 +106,23 @@ def _download_ida_file(file_metadata, dataset_id, path, conf):
     )
     response.raise_for_status()
 
-    # Write the stream to disk.
+    checksum_algo, checksum_value = file_metadata["checksum"].split(":")
+    hasher = CHECKSUM_ALGO_TO_CONSTRUCTOR[checksum_algo]()
+
+    # Write the stream to disk and calculate checksum
     tmp_path = path.parent / (path.name + '.tmp')
     with open(tmp_path, 'wb') as new_file:
         for chunk in response.iter_content(chunk_size=1024):
             new_file.write(chunk)
+            hasher.update(chunk)
+
+    # Ensure the checksum matches with that recorded in Metax
+    if (hash_ := hasher.hexdigest()) != checksum_value:
+        tmp_path.unlink()
+        raise ValueError(
+            f"Computed checksum was different. "
+            f"Expected {checksum_value}, got {hash_}."
+        )
 
     # To make the download atomic, the actual file is created after the
     # stream has been successfully written to disk.

@@ -28,8 +28,16 @@ def test_getfiles(workspace, requests_mock):
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['identifier'] = 'pid:urn:1'
     files[0]['file_path'] = '/path/to/file1'
+    files[0]['checksum'] = {
+        'algorithm': 'MD5',
+        'value': 'd3b07384d113edec49eaa6238ad5ff00'
+    }
     files[1]['identifier'] = 'pid:urn:2'
     files[1]['file_path'] = '/path/to/file2'
+    files[1]['checksum'] = {
+        'algorithm': 'MD5',
+        'value': 'c157a79031e1c40f85931829bc5fc552'
+    }
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
     add_metax_v2_dataset(requests_mock, dataset=dataset, files=files)
@@ -307,6 +315,10 @@ def test_allowed_relative_paths(workspace, requests_mock, path):
             "identifier": "pid:urn:1",
             "file_storage": {
                 "identifier": "urn:nbn:fi:att:file-storage-ida"
+            },
+            "checksum": {
+                "algorithm": "MD5",
+                "value": "d3b07384d113edec49eaa6238ad5ff00"
             }
         }
     ]

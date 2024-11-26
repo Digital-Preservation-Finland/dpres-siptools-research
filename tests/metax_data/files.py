@@ -30,6 +30,10 @@ CSV_FILE_METADATA = {
         "mimetype": "text/csv",
         "version": "(:unap)",
         "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": {
+        "algorithm": "MD5",
+        "value": "4495863617f91b43dda27ffccc8b3455"
     }
 }
 
@@ -51,6 +55,10 @@ TXT_FILE_METADATA = {
         "mimetype": "text/plain",
         "version": "(:unap)",
         "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": {
+        "algorithm": "MD5",
+        "value": "d3b07384d113edec49eaa6238ad5ff00"
     }
 }
 
@@ -82,6 +90,10 @@ TIFF_FILE_METADATA = {
         "mimetype": "image/tiff",
         "version": "6.0",
         "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": {
+        "algorithm": "MD5",
+        "value": "3cf7c3b90f5a52b2f817a1c5b3bfbc52"
     }
 }
 
@@ -164,6 +176,10 @@ MKV_FILE_METADATA = {
         "mimetype": "video/x-matroska",
         "version": "4",
         "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": {
+        "algorithm": "MD5",
+        "value": "2189cab6a4f7573afc8171381f83e135"
     }
 }
 
@@ -195,6 +211,10 @@ AUDIO_FILE_METADATA = {
         "mimetype": "audio/x-wav",
         "version": "(:unap)",
         "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": {
+        "algorithm": "MD5",
+        "value": "2b1a74ecc1fa89f182e42bca7719c555"
     }
 }
 
@@ -216,6 +236,10 @@ PDF_FILE_METADATA = {
         "mimetype": "application/pdf",
         "version": "A-3b",
         "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": {
+        "algorithm": "MD5",
+        "value": "5db57524e33bbf53c13d256234b92fbd"
     }
 }
 
@@ -253,6 +277,10 @@ VIDEO_FILE_METADATA = {
         "mimetype": "video/dv",
         "version": "(:unap)",
         "grade": "fi-dpres-acceptable-file-format"
+    },
+    "checksum": {
+        "algorithm": "MD5",
+        "value": "646912efe14a049ceb9f3a6f741d7b66"
     }
 }
 
@@ -274,6 +302,10 @@ SEG_Y_FILE_METADATA = {
         "mimetype": "application/x.fi-dpres.segy",
         "version": "1.0",
         "grade": "fi-dpres-bit-level-file-format"
+    },
+    "checksum": {
+        "algorithm": "MD5",
+        "value": "c5edc06ea17769fd38c5f6014f29b5f3"
     }
 }
 

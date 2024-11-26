@@ -25,14 +25,9 @@ def test_validate_files(requests_mock, testpath):
     file1 = copy.deepcopy(TXT_FILE)
     file1['identifier'] = 'pid:urn:textfile1'
     file1['file_path'] = '/path/to/file1'
-    # TODO: At the moment, the file validator does not validate checksum
-    # of the file. When checksum validation is implemented, correct
-    # checksum should be defined here.
-    # file1['checksum']['value'] = '58284d6cdd8deaffe082d063580a9df3'
     file2 = copy.deepcopy(TXT_FILE)
     file2['identifier'] = 'pid:urn:textfile2'
     file2['file_path'] = '/path/to/file2'
-    # file2['checksum']['value'] = '90dd1fc82b5d523f6f85716c1c67c0f3'
     add_metax_v2_dataset(
         requests_mock=requests_mock,
         dataset=copy.deepcopy(BASE_DATASET),

@@ -141,7 +141,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mocker):
         requests_mock=requests_mock,
         dataset_id=workspace.name,
         filename="/path/to/file",
-        content=b"foo"
+        content=b"foo\n"
     )
 
     # Init pymongo client
