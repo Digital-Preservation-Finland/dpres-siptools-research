@@ -292,9 +292,6 @@ BASE_FILE = {
     "id": "pid:urn:identifier",
     "pathname": "/path/to/file",
     "storage_service": "ida",
-    # "parent_directory": {
-    #    "identifier": "pid:urn:dir:wf1"
-    # },
     "checksum": "md5:58284d6cdd8deaffe082d063580a9df3",
     "csc_project": "test_project"
 }

@@ -72,15 +72,17 @@ class Dataset:
         """
         if self._metadata["data_catalog"] == PAS_DATA_CATALOG_IDENTIFIER:
             # Dataset was originally created to PAS data catalog.
-            identifier = self._metadata.get("preservation", {}).get("id")
+            identifier = self._metadata["preservation"]["id"]
 
-        elif "dataset_version" in self._metadata.get("preservation", {}):
+        elif (
+            ida_id := self._metadata["preservation"]["dataset_version"][
+                "persistent_identifier"
+            ]
+        ) is not None:
             # Dataset was created in IDA catalog, and it has been copied
             # to PAS data catalog. The preferred identifier of the PAS
             # version of the dataset will be used as SIP identifier.
-            identifier = self._metadata.get("preservation", {}).get(
-                "dataset_version"
-            )["preferred_identifier"]
+            identifier = ida_id
         else:
             # Dataset has not yet been copied to PAS data catalog.
             raise ValueError(
@@ -93,14 +95,11 @@ class Dataset:
     @property
     def preservation_state(self):
         """Preservation state of the dataset."""
-        if "dataset_version" in self._metadata.get("preservation", {}):
-            state = self._metadata.get("preservation", {}).get(
-                "dataset_version"
-            )["preservation_state"]
+        if self._metadata["preservation"]["dataset_version"]["preservation_state"] != -1:
+            return self._metadata["preservation"]["dataset_version"]["preservation_state"]
         else:
-            state = self._metadata.get("preservation", {}).get("state")
+            return self._metadata["preservation"]["state"]
 
-        return state
 
     def set_preservation_state(self, state, description):
         """Set preservation state of the dataset.
@@ -108,10 +107,10 @@ class Dataset:
         If dataset has been copied to PAS data catalog, the preservation
         state of the PAS version is set.
         """
-        if "dataset_version" in self._metadata.get("preservation", {}):
+        if self._metadata["preservation"][
+                "dataset_version"]["id"] is not None:
             preserved_dataset_id = self._metadata["preservation"][
-                "dataset_version"
-            ]["identifier"]
+                "dataset_version"]["id"]
         else:
             preserved_dataset_id = self._metadata["id"]
 

@@ -49,11 +49,6 @@ def validate_metadata(
     # Validate dataset metadata
     _validate_dataset_metadata(dataset_metadata, dummy_doi=dummy_doi)
 
-    # Validate contract metadata
-    _validate_contract_metadata(
-        dataset_metadata.get("preservation", {}).get("contract"), metax_client
-    )
-
     # Validate file metadata for each file in dataset files
     _validate_file_metadata(dataset_metadata, metax_client)
 
@@ -82,24 +77,6 @@ def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
     except jsonschema.ValidationError as exc:
         raise InvalidDatasetMetadataError(str(exc)) from exc
 
-
-def _validate_contract_metadata(contract_id, metax_client):
-    """Validate contract metadata from /rest/v2/contracts/<contract_id>.
-
-    :param contract_id: contract identifier
-    :param metax_clien: metax_access.Metax instance
-    :returns: ``None``
-    """
-    contract_metadata = metax_client.get_contract(contract_id)
-    try:
-        jsonschema.validate(
-            contract_metadata,
-            siptools_research.schemas.CONTRACT_METADATA_SCHEMA,
-        )
-    except jsonschema.ValidationError as exc:
-        raise InvalidContractMetadataError(str(exc)) from exc
-
-
 def _check_mimetype(file_metadata):
     """Check that file format is supported.
 
@@ -109,11 +86,10 @@ def _check_mimetype(file_metadata):
     file_format = file_metadata["characteristics"]["file_format_version"][
         "file_format"
     ]
-    try:
-        format_version = file_metadata["characteristics"][
+    format_version = file_metadata["characteristics"][
             "file_format_version"
         ]["format_version"]
-    except KeyError:
+    if format_version is None:
         format_version = ""
 
     if not mimetypes.is_supported(file_format, format_version):
@@ -150,6 +126,7 @@ def _validate_file_metadata(dataset, metax_client):
         # Draft7Validator ensures that older validators that do not
         # support draft 7 are not used, in which case part of the schema
         # would be ignored without any warning.
+
         try:
             jsonschema.Draft7Validator(
                 siptools_research.schemas.FILE_METADATA_SCHEMA

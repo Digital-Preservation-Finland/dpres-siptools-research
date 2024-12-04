@@ -77,5 +77,5 @@ def test_invalid_metadata(workspace, requests_mock):
         task.run()
 
     # run should fail the following error message:
-    assert "'contract' is a required property" in str(exc.value)
+    assert "None is not of type 'string'" in str(exc.value)
     assert not task.complete()

@@ -1,19 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "required": ["checksum", "characteristics", "storage_service", "pathname"],
+    "required": ["characteristics"],
     "properties": {
-        "checksum": {
-            "title": "Checksum",
-            "description": "File checksum algorithm and value",
-            "type": "string",
-            "pattern": "^(md5|sha256|sha512|sha1|sha224|sha383):[a-z0-9_]+$"
-        },
-        "pathname": {
-            "title": "File path",
-            "description": "Path of file in SIP",
-            "type": "string"
-        },
         "characteristics": {
             "title": "File characteristics",
             "description": "Technical characteristics of file",
@@ -36,17 +25,6 @@
                         "description": "Format version is used as value for premis:formatVersion element in technical metadata.",
                         "type": "string"
                     }
-                },
-                "encoding": {
-                    "title": "File encoding",
-                    "description": "Character encoding of file is included in premis:formatName element in technical metadata.",
-                    "type": "string",
-                    "enum": ["ISO-8859-15", "UTF-8", "UTF-16", "UTF-32"]
-                },
-                "file_created": {
-                    "title": "File created",
-                    "description": "File creation date is used as value of premis:dateCreatedByApplication element in technical metadata. If value is not provided, the file creation date in packaging service is used.",
-                    "type": "string"
                 }
             },
             "if": {
@@ -63,11 +41,6 @@
             "then": {
                 "required": ["csv_delimiter", "csv_has_header", "encoding", "csv_record_separator", "csv_quoting_char"]
             }
-        },
-        "storage_service": {
-            "title": "File Storage Service",
-            "description": "Identifier that defines from which storage service the file is copied.",
-            "type": "string"
         }
     }
 }

@@ -15,6 +15,3 @@ with open(os.path.join(SCHEMAS_PATH, 'dataset.json')) as json_file:
 with open(os.path.join(SCHEMAS_PATH, 'file.json')) as json_file:
     FILE_METADATA_SCHEMA = json.load(json_file)
 
-# JSON schema for contract metadata
-with open(os.path.join(SCHEMAS_PATH, 'contract.json')) as json_file:
-    CONTRACT_METADATA_SCHEMA = json.load(json_file)

@@ -96,8 +96,7 @@ def test_validate_metadata_with_provenance(requests_mock, provenance):
     :returns: ``None``
     """
     dataset = copy.deepcopy(BASE_DATASET)
-    dataset["provenance"] = provenance
-
+    dataset["research_dataset"]["provenance"] = provenance
     tests.utils.add_metax_v2_dataset(
         requests_mock,
         dataset=dataset,
@@ -106,6 +105,34 @@ def test_validate_metadata_with_provenance(requests_mock, provenance):
 
     assert validate_metadata('dataset_identifier',
                              tests.conftest.UNIT_TEST_CONFIG_FILE)
+
+
+@pytest.mark.parametrize(
+    'provenance',
+    (
+        [{}],
+        [{"preservation_event": {}}]
+    )
+)
+def test_validate_metadata_with_invalid_provenance(requests_mock, provenance):
+    """Test validation of dataset metadata with invalid provenance events.
+
+    :param requests_mock: Mocker object
+    :param provenance: List of provenance events in dataset metadata
+    :returns: ``None``
+    """
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["research_dataset"]["provenance"] = provenance
+    tests.utils.add_metax_v2_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[TXT_FILE]
+    )
+
+    expected_error = "None is not of type 'object'"
+    with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
+        validate_metadata('dataset_identifier',
+                          tests.conftest.UNIT_TEST_CONFIG_FILE)
 
 
 def test_validate_metadata_multiple_files(requests_mock):
@@ -157,31 +184,10 @@ def test_validate_metadata_invalid(requests_mock):
                       json=dataset)
 
     # Try to validate invalid dataset
-    expected_error = "'contract' is a required property"
+    expected_error = "None is not of type 'string'"
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
-# pylint: disable=invalid-name
-def test_validate_preservation_identifier():
-    """Test _validate_dataset_metadata.
-
-    Function should raise exception if preservation_identifier is
-    missing from metadata.
-
-    :returns: ``None``
-    """
-    dataset = copy.deepcopy(BASE_DATASETV3)
-    del dataset['preservation']['id']
-
-    # Validation with dummy DOI should not raise an exception
-    _validate_dataset_metadata(dataset, dummy_doi="true")
-
-    # Validation without dummy DOI should raise an exception
-    expected_error = "'id' is a required property"
-    with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        _validate_dataset_metadata(dataset)
 
 
 @pytest.mark.parametrize(
@@ -222,29 +228,6 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
-
-
-# pylint: disable=invalid-name
-def test_validate_metadata_invalid_contract_metadata(requests_mock):
-    """Test validate_metadata.
-
-    Function raises exception with correct error message for invalid
-    dataset.
-
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    invalid_contract = copy.deepcopy(BASE_CONTRACT)
-    del invalid_contract['contract_json']['organization']['name']
-    tests.utils.add_metax_v2_dataset(requests_mock, contract=invalid_contract)
-
-    # Try to validate invalid dataset
-    expected_error = ("'organization' is a required property\n\n"
-                      "Failed validating 'required' in schema")
-    with pytest.raises(InvalidContractMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
-
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_file_path(requests_mock):
@@ -415,8 +398,7 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
     client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     expected_error = (
-        "Validation error in metadata of /path/to/file: 'file_format' "
-        "is a required property\n\nFailed validating 'required' in schema"
+        "Validation error in file /path/to/file: Incorrect file format: None"
     )
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
         # pylint: disable=protected-access

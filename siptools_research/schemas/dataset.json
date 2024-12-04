@@ -9,13 +9,8 @@
             "title": "Preservation",
             "description": "",
             "type": "object",
-            "required": [ "contract", "id"],
+            "required": ["contract"],
             "properties": {
-                "id": {
-                    "title": "Preservation identifier",
-                    "description": "Package identifier i.e. the OBJID attribute in METS document",
-                    "type": "string"
-                },
                 "contract": {
                     "title": "Contract",
                     "description": "Identifier of contract in Metax",
@@ -29,44 +24,16 @@
             "type": "array",
             "minItems": 0,
             "items": {
-                "type": "object",
-                "anyOf": [
-                    {"required": ["preservation_event", "description"]},
-                    {"required": ["lifecycle_event", "title"]}
-                ],
-                "properties": {
-                    "temporal": {
-                        "title": "Temporal",
-                        "description": "Creation date of dataset",
-                        "type": "object",
-                        "required": ["start_date"],
-                        "properties": {
-                            "start_date": {
-                                "title": "Start date",
-                                "description": "The value of premis:eventDateTime element",
-                                "type": "string"
-                            }
+                "if": {
+                    "properties": {
+                        "preservation_event": {
+                            "type": "null"
                         }
-                    },
-                    "description": {
-                        "title": "Description",
-                        "description": "The description of digital provenance event in multiple languages. The description in the default language of the dataset is used in the value of premis:eventDetail element.",
-                        "type": "object"
-                    },
-                    "preservation_event": {
-                        "title": "Preservation event",
-                        "description": "The digital provenance event",
-                        "type": "object",
-                        "required": ["pref_label"],
-                        "properties": {
-                            "pref_label": {
-                                "title": "Preferred label",
-                                "description": "The type of digital provenance event in multiple languages. The type in the default language of the dataset is used as value of premis:eventType element.",
-                                "type": "object"
-                            }
-                        }
-                    },
-                    "lifecycle_event": {
+                    }
+                },
+                "then": {
+                    "properties": {
+                        "lifecycle_event": {
                         "title": "Lifecycle event",
                         "description": "Digital lifecycle event",
                         "type": "object",
@@ -78,29 +45,24 @@
                                 "type": "object"
                             }
                         }
-                    },
-                    "event_outcome": {
-                        "title": "Event outcome",
-                        "description": "Digital provenance event outcome information",
+                    }
+                    }
+                },
+                "else": {
+                    "properties": {
+                        "preservation_event": {
+                        "title": "Preservation event",
+                        "description": "The digital provenance event",
                         "type": "object",
-                        "required": ["url"],
+                        "required": ["pref_label"],
                         "properties": {
-                            "url": {
-                                "title": "The URI of preservation event outcome",
-                                "description": "The URI is mapped to a valid value of premis:eventOutcomeInformation element",
-                                "type": "string"
+                            "pref_label": {
+                                "title": "Preferred label",
+                                "description": "The type of digital provenance event in multiple languages. The type in the default language of the dataset is used as value of premis:eventType element.",
+                                "type": "object"
                             }
                         }
-                    },
-                    "outcome_description": {
-                        "title": "Outcome description",
-                        "description": "The outcome detail note of digital provenance event in multiple languages. The outcome detail note in the default language of the dataset is used as value of premis:eventOutcomeDetailNote element",
-                        "type": "object"
-                    },
-                    "title": {
-                        "title": "Provenance title",
-                        "description": "The title of digital provenance event in multiple languages. The title in the default language of the dataset is used in the value of premis:eventDetail element.",
-                        "type": "object"
+                    }
                     }
                 }
             }

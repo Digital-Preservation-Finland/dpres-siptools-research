@@ -240,18 +240,18 @@ class CreateMets(WorkflowTask):
     def _create_provenance_metadata(self, metadata):
         provenance_metadatas = []
         dataset_languages = get_dataset_languages(metadata)
-        provenances = metadata.get("provenance", [])
+        provenances = metadata["provenance"] or []
         for provenance in provenances:
             # Although it shouldn't happen, theoretically both
             # 'preservation_event' and 'lifecycle_event' could exist in
             # the same provenance metadata. 'preservation_event' is used
             # as the overriding value if both exist.
-            if "preservation_event" in provenance:
+            if provenance["preservation_event"] is not None:
                 event_type = get_localized_value(
                     provenance["preservation_event"]["pref_label"],
                     languages=dataset_languages
                 )
-            elif "lifecycle_event" in provenance:
+            elif provenance["lifecycle_event"] is not None:
                 event_type = get_localized_value(
                     provenance["lifecycle_event"]["pref_label"],
                     languages=dataset_languages
@@ -268,7 +268,7 @@ class CreateMets(WorkflowTask):
 
             try:
                 event_datetime = provenance["temporal"]["start_date"]
-            except KeyError:
+            except TypeError:
                 event_datetime = 'OPEN'
 
             # Add provenance title and description to eventDetail
@@ -276,14 +276,14 @@ class CreateMets(WorkflowTask):
             # "title: description". Our JSON schema validates that at
             # least one is present.
             event_detail_items = []
-            if "title" in provenance:
+            if provenance["title"] is not None:
                 event_detail_items.append(
                     get_localized_value(
                         provenance["title"],
                         languages=dataset_languages
                     )
                 )
-            if "description" in provenance:
+            if provenance["description"] is not None:
                 event_detail_items.append(
                     get_localized_value(
                         provenance["description"],
@@ -292,13 +292,13 @@ class CreateMets(WorkflowTask):
                 )
             event_detail = ": ".join(event_detail_items)
 
-            if "event_outcome" in provenance:
+            if provenance["event_outcome"] is not None:
                 uri = provenance["event_outcome"]["url"]
                 event_outcome = EVENT_OUTCOME[uri.lower()]
             else:
                 event_outcome = "(:unav)"
 
-            event_outcome_detail = provenance.get("outcome_description", None)
+            event_outcome_detail = provenance["outcome_description"]
             if event_outcome_detail is not None:
                 event_outcome_detail = get_localized_value(
                     provenance["outcome_description"],

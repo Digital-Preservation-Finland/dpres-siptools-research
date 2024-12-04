@@ -33,8 +33,7 @@ def generate_metadata(
         # TODO: Could we fetch metadata of all files at once?
         file_metadata = metax_client.get_file(file_id)
         original_file_characteristics = file_metadata.get(
-            "characteristics", {}
-        )
+            "characteristics") or {}
 
         # Detect file using scraper. Use metadata defined by user.
         file_path = root_directory / file_["pathname"].strip("/")
