@@ -1,5 +1,4 @@
 """Configure py.test default values and functionality."""
-import logging
 import os
 import sys
 import uuid
@@ -20,9 +19,6 @@ from siptools_research.__main__ import Context, cli
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# Print debug messages to stdout
-logging.basicConfig(level=logging.DEBUG)
 
 METAX_URL = "https://metaksi/rest/v2"
 TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
