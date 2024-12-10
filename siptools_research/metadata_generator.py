@@ -59,9 +59,6 @@ def generate_metadata(
         scraper.scrape(check_wellformed=False)
 
         # Create new file_characteristics based on scraping results
-        # NOTE: This dict is in Metax V2 format as
-        # patch does not support Metax V3 yet.
-        # When normalizing path request change the format
         scraper_file_characteristics: MetaxFileCharacteristics = {
             "file_format_version": {
                 "file_format": scraper.mimetype,
@@ -129,7 +126,7 @@ def generate_metadata(
             "grade": scraper.grade(),
         }
 
-        metax_client.patch_file(
+        metax_client.patch_file_characteristics(
             file_id,
             {
                 "characteristics": scraper_file_characteristics,

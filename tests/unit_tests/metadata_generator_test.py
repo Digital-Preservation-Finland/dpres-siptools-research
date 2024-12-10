@@ -25,7 +25,7 @@ def file_v3_mock(mocker):
     Mock `Metax.patch_file` in metax-access in order to inspect
     V3 file metadata submitted to Metax
     """
-    yield mocker.spy(Metax, "patch_file")
+    yield mocker.spy(Metax, "patch_file_characteristics")
 
 
 def _create_file_v2_http_mock(requests_mock):
@@ -92,12 +92,6 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
     assert json["file_characteristics"] == {
         "file_format": "text/plain",
         "encoding": "UTF-8",
-        'csv_delimiter': None,
-        'csv_has_header': None,
-        'csv_quoting_char': None,
-        'csv_record_separator': None,
-        'format_version': None,
-        'title': None
     }
     assert json["file_characteristics_extension"]["streams"] == {
         "0": {
@@ -133,12 +127,6 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
             {
                 'file_format': 'text/plain',
                 'encoding': 'UTF-8',
-                'format_version': None,
-                'title': None,
-                'csv_record_separator': None,
-                'csv_quoting_char': None,
-                'csv_has_header': None,
-                'csv_delimiter': None
             },
             'text'
         ),
@@ -153,12 +141,6 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
             {
                 'file_format': 'image/png',
                 'format_version': '1.2',
-                'title': None,
-                'csv_record_separator': None,
-                'csv_quoting_char': None,
-                'csv_has_header': None,
-                'csv_delimiter': None,
-                'encoding': None
             },
             'image'
         ),
@@ -173,12 +155,6 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
             {
                 'file_format': 'image/tiff',
                 'format_version': '6.0',
-                'title': None,
-                'csv_record_separator': None,
-                'csv_quoting_char': None,
-                'csv_has_header': None,
-                'csv_delimiter': None,
-                'encoding': None
             },
             'image'
         ),
@@ -191,13 +167,6 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
             },
             {
                 'file_format': 'audio/x-wav',
-                'format_version': None,
-                'title': None,
-                'csv_record_separator': None,
-                'csv_quoting_char': None,
-                'csv_has_header': None,
-                'csv_delimiter': None,
-                'encoding': None
             },
             'audio'
         ),
@@ -213,12 +182,6 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
             {
                 'file_format': 'video/x-matroska',
                 'format_version': '4',
-                'title': None,
-                'csv_record_separator': None,
-                'csv_quoting_char': None,
-                'csv_has_header': None,
-                'csv_delimiter': None,
-                'encoding': None
             },
             'videocontainer'
         ),
@@ -235,12 +198,6 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
             {
                 'file_format': 'application/vnd.oasis.opendocument.text',
                 'format_version': '1.2',
-                'title': None,
-                'csv_record_separator': None,
-                'csv_quoting_char': None,
-                'csv_has_header': None,
-                'csv_delimiter': None,
-                'encoding': None
             },
             'binary'
         ),
@@ -255,12 +212,6 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
             {
                 'file_format': 'application/vnd.oasis.opendocument.formula',
                 'format_version': '1.2',
-                'title': None,
-                'csv_record_separator': None,
-                'csv_quoting_char': None,
-                'csv_has_header': None,
-                'csv_delimiter': None,
-                'encoding': None
             },
             'binary'
         )
@@ -492,12 +443,6 @@ def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
         'file_format': 'text/plain',
         # user defined value is not overwritten
         'encoding': 'user_defined',
-        'csv_delimiter': None,
-        'csv_has_header': None,
-        'csv_quoting_char': None,
-        'csv_record_separator': None,
-        'format_version': None,
-        'title': None
 
     }
     assert json["file_characteristics_extension"]["streams"] == {
@@ -541,9 +486,6 @@ def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
                 "csv_delimiter": "x",
                 "csv_record_separator": "y",
                 "csv_quoting_char": "z",
-                'csv_has_header': None,
-                'format_version': None,
-                'title': None,
             }
         ),
         (
@@ -565,9 +507,6 @@ def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
                 "csv_delimiter": ";",
                 "csv_record_separator": "\r\n",
                 "csv_quoting_char": "'",
-                'csv_has_header': None,
-                'format_version': None,
-                'title': None
             }
         ),
         (
@@ -583,12 +522,6 @@ def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
             {
                 "file_format": "text/plain",
                 "encoding": "UTF-8",
-                'csv_delimiter': None,
-                'csv_has_header': None,
-                'csv_quoting_char': None,
-                'csv_record_separator': None,
-                'format_version': None,
-                'title': None
             }
         )
     ]
