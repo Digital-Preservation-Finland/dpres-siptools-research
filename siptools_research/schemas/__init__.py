@@ -14,4 +14,3 @@ with open(os.path.join(SCHEMAS_PATH, 'dataset.json')) as json_file:
 # JSON schema for file metadata
 with open(os.path.join(SCHEMAS_PATH, 'file.json')) as json_file:
     FILE_METADATA_SCHEMA = json.load(json_file)
-

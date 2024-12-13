@@ -95,11 +95,17 @@ class Dataset:
     @property
     def preservation_state(self):
         """Preservation state of the dataset."""
-        if self._metadata["preservation"]["dataset_version"]["preservation_state"] != -1:
-            return self._metadata["preservation"]["dataset_version"]["preservation_state"]
+        if (
+            self._metadata["preservation"]["dataset_version"][
+                "preservation_state"
+            ]
+            != -1
+        ):
+            return self._metadata["preservation"]["dataset_version"][
+                "preservation_state"
+            ]
         else:
             return self._metadata["preservation"]["state"]
-
 
     def set_preservation_state(self, state, description):
         """Set preservation state of the dataset.
