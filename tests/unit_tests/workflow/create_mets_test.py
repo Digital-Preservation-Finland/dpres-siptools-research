@@ -202,6 +202,7 @@ def test_multiple_provenance_events(workspace,
         {
             "identifier": "pid:urn:identifier",
             "use_category": {
+                "identifier": None,
                 "pref_label": {
                     "en": "dummy-use-category"
                 }
@@ -462,6 +463,7 @@ def test_createdescriptivemetadata(workspace, requests_mock):
         {
             "identifier": "pid:urn:identifier",
             "use_category": {
+                "identifier": None,
                 "pref_label": {
                     "en": "dummy-use-category"
                 }
@@ -808,6 +810,7 @@ def test_create_logical_structmap(workspace, requests_mock):
         {
             "identifier": files[0]['identifier'],
             "use_category": {
+                "identifier": 'foo',
                 "pref_label": {
                     "en": "dummy-use-category"
                 }
@@ -816,6 +819,7 @@ def test_create_logical_structmap(workspace, requests_mock):
         {
             "identifier": files[1]['identifier'],
             "use_category": {
+                "identifier": 'foo',
                 "pref_label": {
                     "en": "dummy-use-category"
                 }
