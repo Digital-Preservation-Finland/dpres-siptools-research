@@ -52,8 +52,8 @@ def test_validatemetadata(workspace, requests_mock):
 def test_invalid_metadata(workspace, requests_mock):
     """Test ValidateMetadata class.
 
-    Run task for dataset that has invalid metadata. The dataset is
-    missing attribute: 'type' for each object in files list.
+    Run task for dataset that has invalid metadata that does
+    not pass schema validation.
 
     :param workspace: Temporary workspace directory fixture
     :returns: ``None``
