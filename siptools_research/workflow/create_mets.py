@@ -240,7 +240,7 @@ class CreateMets(WorkflowTask):
     def _create_provenance_metadata(self, metadata):
         provenance_metadatas = []
         dataset_languages = get_dataset_languages(metadata)
-        provenances = metadata["provenance"] or []
+        provenances = metadata["provenance"]
         for provenance in provenances:
             # Although it shouldn't happen, theoretically both
             # 'preservation_event' and 'lifecycle_event' could exist in
