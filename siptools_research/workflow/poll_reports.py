@@ -1,12 +1,13 @@
 """External task that waits for SIP validation in DPS."""
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 from luigi import LocalTarget
 
-from siptools_research.workflow.send_sip import SendSIPToDP
-from siptools_research.workflowtask import WorkflowExternalTask
 from siptools_research.dps import get_dps
 from siptools_research.metax import get_metax_client
+from siptools_research.workflow.send_sip import SendSIPToDP
+from siptools_research.workflowtask import WorkflowExternalTask
 
 
 class GetValidationReports(WorkflowExternalTask):
@@ -47,9 +48,9 @@ class GetValidationReports(WorkflowExternalTask):
     def complete(self):
 
         if (self.dataset.preservation_workspace / "ingest-reports").exists():
-            # Task is already completed as the ingest report folder exists
+            # Task is already completed as the ingest report folder
+            # exists
             return True
-
 
         if not self.input().exists():
             # SIP has not even been sent to DPS so checking
