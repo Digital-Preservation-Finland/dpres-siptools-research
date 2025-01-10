@@ -3,17 +3,16 @@
 import pytest
 from metax_access.metax import DS_STATE_METADATA_CONFIRMED
 
-import tests
 from siptools_research.workflow import report_dataset_validation_result
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_reportdatasetvalidationresult(workspace, requests_mock):
+def test_reportdatasetvalidationresult(config, workspace, requests_mock):
     """Test reporting dataset validation result.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
-    :returns: ``None``
     """
     # Mock Metax
     requests_mock.get(
@@ -35,7 +34,7 @@ def test_reportdatasetvalidationresult(workspace, requests_mock):
     # Init and run task
     task = report_dataset_validation_result.ReportDatasetValidationResult(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config
     )
     assert not task.complete()
     task.run()

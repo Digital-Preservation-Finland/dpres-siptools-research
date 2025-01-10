@@ -2,18 +2,18 @@
 import pytest
 
 from siptools_research.dataset import Dataset
-from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_main_status_match(cli_runner):
+@pytest.mark.usefixtures("testmongoclient")
+def test_main_status_match(config, cli_runner):
     """Test that dataset workflow information is printed correctly.
 
-    :returns: ``None``
+    :param config: Configuration file
+    :param cli_runner: Click CLI runner
     """
     # Add a single workflow document and a couple of workflow tasks to
     # the db
-    dataset = Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset("aineisto_1", config=config)
     dataset.preserve()
     dataset.log_task(
         "CreateWorkspace",
@@ -33,7 +33,7 @@ def test_main_status_match(cli_runner):
 
     # Run siptools-research status 1
     result = cli_runner([
-        "--config", UNIT_TEST_CONFIG_FILE,
+        "--config", config,
         "dataset", "status", "aineisto_1"
         ]
     )
@@ -59,22 +59,26 @@ def test_main_status_match(cli_runner):
     assert create_provenance["result"] == "failure"
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_main_list(cli_runner):
-    """Test that list of datasets is printed correctly."""
+@pytest.mark.usefixtures("testmongoclient")
+def test_main_list(config, cli_runner):
+    """Test that list of datasets is printed correctly.
+
+    :param config: Configuration file
+    :param cli_runner: Click CLI runner
+    """
     for i in range(0, 10):
-        dataset = Dataset(f"aineisto_{i}", config=UNIT_TEST_CONFIG_FILE)
+        dataset = Dataset(f"aineisto_{i}", config=config)
         dataset.preserve()
 
     result = cli_runner([
-        "--config", UNIT_TEST_CONFIG_FILE, "dataset", "list"
+        "--config", config, "dataset", "list"
     ])
 
     for i in range(0, 10):
         assert f"aineisto_{i}" in result.output
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
+@pytest.mark.usefixtures("testmongoclient")
 @pytest.mark.parametrize(
     "command",
     [
@@ -83,43 +87,43 @@ def test_main_list(cli_runner):
         ["dataset", "disable", "1"]
     ]
 )
-def test_main_status_no_match(cli_runner, command):
+def test_main_status_no_match(config, cli_runner, command):
     """Test that missing dataset prints correct error for all dataset commands
 
-    :returns: ``None``
+    :param config: Configuration file
+    :param cli_runner: Click CLI runner
+    :param command: List of CLI arguments
     """
-    result = cli_runner([
-        "--config", UNIT_TEST_CONFIG_FILE,
-        *command
-    ])
+    result = cli_runner(["--config", config, *command])
 
     assert "Dataset not found" in result.output
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_main_disabled(cli_runner):
+@pytest.mark.usefixtures("testmongoclient")
+def test_main_disabled(config, cli_runner):
     """Test that the disable and enable commands set the correct dataset as
     disabled and enabled respectively.
 
-    :returns: ``None``
+    :param config: Configuration file
+    :param cli_runner: Click CLI runner
     """
     # Add a single workflow document to the db
-    Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).preserve()
+    Dataset("aineisto_1", config=config).preserve()
 
     # Disable the dataset using CLI
     result = cli_runner([
-        "--config", UNIT_TEST_CONFIG_FILE,
+        "--config", config,
         "dataset", "disable", "aineisto_1"
     ])
 
-    assert not Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).enabled
+    assert not Dataset("aineisto_1", config=config).enabled
     assert "Workflow of dataset aineisto_1 disable" in result.output
 
     # Enable the dataset using CLI
     result = cli_runner([
-        "--config", UNIT_TEST_CONFIG_FILE,
+        "--config", config,
         "dataset", "enable", "aineisto_1"
     ])
 
-    assert Dataset("aineisto_1", config=UNIT_TEST_CONFIG_FILE).enabled
+    assert Dataset("aineisto_1", config=config).enabled
     assert "Workflow of dataset aineisto_1 enabled" in result.output

@@ -6,7 +6,6 @@ from requests_mock import ANY
 
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import WorkflowExistsError
-from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
 @pytest.mark.parametrize(
@@ -31,20 +30,26 @@ from tests.conftest import UNIT_TEST_CONFIG_FILE
         },
     ]
 )
-def test_sip_identifier(requests_mock, metadata):
+def test_sip_identifier(config, requests_mock, metadata):
     """Test that dataset returns correct sip_identifier.
 
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     :param metadata: The metadata of dataset from Metax
     """
     requests_mock.get('/rest/v2/datasets/identifier', json=metadata)
     requests_mock.get('/rest/v2/datasets/wrong-id?include_user_metadata=true&file_details=true', json={})
     requests_mock.get('/rest/v2/datasets/wrong-id/files', json={})
-    dataset = Dataset('identifier', config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset('identifier', config=config)
     assert dataset.sip_identifier == 'correct-id'
 
 
-def test_no_sip_identifier(requests_mock):
-    """Test that exception is raised if dataset does not have SIP ID."""
+def test_no_sip_identifier(config, requests_mock):
+    """Test that exception is raised if dataset does not have SIP ID.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    """
     requests_mock.get(
         '/rest/v2/datasets/identifier',
         json={
@@ -53,7 +58,7 @@ def test_no_sip_identifier(requests_mock):
             }
         }
     )
-    dataset = Dataset('identifier', config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset('identifier', config=config)
     with pytest.raises(ValueError, match='DOI does not exist'):
         # pylint: disable=pointless-statement
         dataset.sip_identifier
@@ -115,13 +120,15 @@ def test_no_sip_identifier(requests_mock):
         }
     ]
 )
-def test_preservation_state(requests_mock, metadata):
+def test_preservation_state(config, requests_mock, metadata):
     """Test that dataset returns correct preservation state.
 
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     :param metadata: The metadata of dataset from Metax
     """
     requests_mock.get('/rest/v2/datasets/identifier', json=metadata)
-    dataset = Dataset('identifier', config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset('identifier', config=config)
     assert dataset.preservation_state == 'correct-state'
 
 
@@ -181,9 +188,11 @@ def test_preservation_state(requests_mock, metadata):
         },
     ]
 )
-def test_set_preservation_state(requests_mock, metadata):
+def test_set_preservation_state(config, requests_mock, metadata):
     """Test set_preservation_state method.
 
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     :param metadata: The metadata of dataset from Metax
     """
     # Mock metax
@@ -192,7 +201,7 @@ def test_set_preservation_state(requests_mock, metadata):
     # Mock any patch request
     mocked_patch = requests_mock.patch(ANY)
 
-    dataset = Dataset('identifier', config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset('identifier', config=config)
     dataset.set_preservation_state('foo', 'bar')
 
     # Check that preservation state of correct dataset was set
@@ -206,27 +215,34 @@ def test_set_preservation_state(requests_mock, metadata):
     }
 
 
-def test_workspace_paths(pkg_root):
-    """Test workspace paths."""
-    dataset = Dataset('foo', config=UNIT_TEST_CONFIG_FILE)
+def test_workspace_paths(config, workspace):
+    """Test workspace paths.
+
+    :param config: Configuration file
+    :param workspace: Workspace directory
+    """
+    dataset = Dataset(workspace.name, config=config)
     assert dataset.workspace_root \
-        == pkg_root / 'workspaces' / 'foo'
+        == workspace
 
     assert dataset.metadata_generation_workspace \
-        == pkg_root / 'workspaces' / 'foo' / 'metadata_generation'
+        == workspace / 'metadata_generation'
 
     assert dataset.validation_workspace \
-        == pkg_root / 'workspaces' / 'foo' / 'validation'
+        == workspace / 'validation'
 
     assert dataset.preservation_workspace \
-        == pkg_root / 'workspaces' / 'foo' / 'preservation'
+        == workspace / 'preservation'
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_enable_disable():
-    """Test enabling and disabling workflow."""
+@pytest.mark.usefixtures("testmongoclient")
+def test_enable_disable(config):
+    """Test enabling and disabling workflow.
+
+    :param config: Configuration file
+    """
     # Initially the workflow of the dataset should be disabled
-    dataset = Dataset('foo', config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset('foo', config=config)
     assert dataset.enabled is False
 
     # Worklfow can be enabled
@@ -239,12 +255,12 @@ def test_enable_disable():
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_task_log():
+def test_task_log(config):
     """Test logging tasks and reading the log.
 
-    :returns: ``None``
+    :param config: Configuration file
     """
-    dataset = Dataset('foo', config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset('foo', config=config)
 
     # Add a task to log
     dataset.log_task('TestTask', 'success',
@@ -265,22 +281,22 @@ def test_task_log():
     )
 
     # Check that there is no extra workflows in database
-    assert len(find_datasets(config=UNIT_TEST_CONFIG_FILE)) == 1
+    assert len(find_datasets(config=config)) == 1
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_generate_metadata():
+@pytest.mark.usefixtures("testmongoclient")
+def test_generate_metadata(config):
     """Test generate_metadata function.
 
     Tests that `generate_metadata` sets correct target for workflow of
     the dataset, and creates metadata generation workspace.
 
-    :returns: ``None``
+    :param config: Configuration file
     """
-    Dataset('dataset1', config=UNIT_TEST_CONFIG_FILE).generate_metadata()
+    Dataset('dataset1', config=config).generate_metadata()
 
     # Check that dataset was added to database.
-    active_datasets = find_datasets(enabled=True, config=UNIT_TEST_CONFIG_FILE)
+    active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     dataset = active_datasets[0]
     assert dataset.identifier == 'dataset1'
@@ -290,16 +306,16 @@ def test_generate_metadata():
     assert dataset.metadata_generation_workspace.exists()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_restart_generate_metadata():
+@pytest.mark.usefixtures("testmongoclient")
+def test_restart_generate_metadata(config):
     """Test restarting metadata generation.
 
     When metadata generation is restarted, previous workspaces should be
     cleared.
 
-    :returns: ``None``
+    :param config: Configuration file
     """
-    dataset = Dataset('dataset1', config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset('dataset1', config=config)
 
     # Create preservation workspaces
     dataset.metadata_generation_workspace.mkdir(parents=True)
@@ -316,19 +332,19 @@ def test_restart_generate_metadata():
     assert not dataset.preservation_workspace.exists()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_validate_dataset():
+@pytest.mark.usefixtures("testmongoclient")
+def test_validate_dataset(config):
     """Test validate_dataset function.
 
     Tests that `validate_dataset` sets correct target for workflow of
     the dataset, and creates validation workspace.
 
-    :returns: ``None``
+    :param config: Configuration file
     """
-    Dataset('dataset1', config=UNIT_TEST_CONFIG_FILE).validate()
+    Dataset('dataset1', config=config).validate()
 
     # Check that dataset was added to database.
-    active_datasets = find_datasets(enabled=True, config=UNIT_TEST_CONFIG_FILE)
+    active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     dataset = active_datasets[0]
     assert dataset.identifier == 'dataset1'
@@ -338,16 +354,16 @@ def test_validate_dataset():
     assert dataset.validation_workspace.exists()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_restart_validate_metadata():
+@pytest.mark.usefixtures("testmongoclient")
+def test_restart_validate_metadata(config):
     """Test restarting validation.
 
     When validation is restarted, previous validation and preservation
     workspaces should be cleared.
 
-    :returns: ``None``
+    :param config: Configuration file
     """
-    dataset = Dataset('dataset1', config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset('dataset1', config=config)
 
     # Create workspaces
     dataset.metadata_generation_workspace.mkdir(parents=True)
@@ -372,19 +388,19 @@ def test_restart_validate_metadata():
     assert not dataset.preservation_workspace.exists()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_preserve_dataset():
+@pytest.mark.usefixtures("testmongoclient")
+def test_preserve_dataset(config):
     """Test preserve_dataset function.
 
     Tests that `prserve_dataset` sets correct target for workflow of
     the dataset, and creates preservation workspace.
 
-    :returns: ``None``
+    :param config: Configuration file
     """
-    Dataset('dataset1', config=UNIT_TEST_CONFIG_FILE).preserve()
+    Dataset('dataset1', config=config).preserve()
 
     # Check that dataset was added to database.
-    active_datasets = find_datasets(enabled=True, config=UNIT_TEST_CONFIG_FILE)
+    active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     dataset = active_datasets[0]
     assert dataset.identifier == 'dataset1'
@@ -394,16 +410,16 @@ def test_preserve_dataset():
     assert dataset.preservation_workspace.exists()
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_restart_preserve_dataset():
+@pytest.mark.usefixtures("testmongoclient")
+def test_restart_preserve_dataset(config):
     """Test restarting preservation.
 
     When preservation is restarted, previous preservation workspace
     should be cleared.
 
-    :returns: ``None``
+    :param config: Configuration file
     """
-    dataset = Dataset('dataset1', config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset('dataset1', config=config)
 
     # Create workspaces
     dataset.metadata_generation_workspace.mkdir(parents=True)
@@ -430,17 +446,17 @@ def test_restart_preserve_dataset():
     assert not any(dataset.preservation_workspace.iterdir())
 
 
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_workflow_conflict():
+@pytest.mark.usefixtures("testmongoclient")
+def test_workflow_conflict(config):
     """Test starting another workflow for dataset.
 
     Tests that new workflows can not be started when dataset
     already has an active workflow.
 
-    :returns: ``None``
+    :param config: Configuration file
     """
     # Add a sample workflow to database
-    dataset = Dataset("dataset1", config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset("dataset1", config=config)
     dataset.validate()
 
     # Try to start another workflow
@@ -449,7 +465,7 @@ def test_workflow_conflict():
 
     # New workflows should not be created and the existing workflow
     # should not be changed
-    active_datasets = find_datasets(enabled=True, config=UNIT_TEST_CONFIG_FILE)
+    active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     assert active_datasets[0].target.value == 'validation'
     assert active_datasets[0].identifier == 'dataset1'
@@ -461,7 +477,7 @@ def test_workflow_conflict():
 
     # The target of the workflow should be updated, and workflow
     # should be enabled
-    active_datasets = find_datasets(enabled=True, config=UNIT_TEST_CONFIG_FILE)
+    active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     assert active_datasets[0].target.value == 'preservation'
     assert active_datasets[0].identifier == 'dataset1'
@@ -482,31 +498,31 @@ def test_workflow_conflict():
         ({"target": "preservation", "enabled": True}, ["ds5"]),
     ]
 )
-@pytest.mark.usefixtures('testmongoclient', 'pkg_root')
-def test_find_datasets(kwargs, expected_datasets):
+@pytest.mark.usefixtures("testmongoclient")
+def test_find_datasets(config, kwargs, expected_datasets):
     """Test find_datasets function.
 
     Check that find_datasets finds correct datasets.
 
+    :param config: Configuration file
     :param kwargs: Keyword arguments to be used
     :param expected_datasets: Identifiers of datasets that should be
                               found
-    :returns: ``None``
     """
     # Add some datasets to database
-    ds1 = Dataset('ds1', config=UNIT_TEST_CONFIG_FILE)
+    ds1 = Dataset('ds1', config=config)
     ds1.generate_metadata()
-    ds2 = Dataset('ds2', config=UNIT_TEST_CONFIG_FILE)
+    ds2 = Dataset('ds2', config=config)
     ds2.generate_metadata()
     ds2.disable()
-    ds3 = Dataset('ds3', config=UNIT_TEST_CONFIG_FILE)
+    ds3 = Dataset('ds3', config=config)
     ds3.validate()
-    ds4 = Dataset('ds4', config=UNIT_TEST_CONFIG_FILE)
+    ds4 = Dataset('ds4', config=config)
     ds4.validate()
     ds4.disable()
-    ds5 = Dataset('ds5', config=UNIT_TEST_CONFIG_FILE)
+    ds5 = Dataset('ds5', config=config)
     ds5.preserve()
-    ds6 = Dataset('ds6', config=UNIT_TEST_CONFIG_FILE)
+    ds6 = Dataset('ds6', config=config)
     ds6.preserve()
     ds6.disable()
 
@@ -514,7 +530,7 @@ def test_find_datasets(kwargs, expected_datasets):
     dataset_identifiers = [
         dataset.identifier
         for dataset
-        in find_datasets(**kwargs, config=UNIT_TEST_CONFIG_FILE)
+        in find_datasets(**kwargs, config=config)
     ]
 
     assert dataset_identifiers == expected_datasets

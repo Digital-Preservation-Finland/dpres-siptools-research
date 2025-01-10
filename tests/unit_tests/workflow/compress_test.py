@@ -2,16 +2,16 @@
 import shutil
 import tarfile
 
-import tests.conftest
 from siptools_research.workflow.compress import CompressSIP
 
 
-def test_compresssip(workspace, tmp_path):
+def test_compresssip(config, workspace, tmp_path):
     """Test CompresSIP task.
 
     Run function should create a tar-file and complete function should
     return ``True`` when tar-file exists.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param tmp_path: Temporary directory
     """
@@ -26,8 +26,7 @@ def test_compresssip(workspace, tmp_path):
                     workspace / 'dataset_files' / 'tests')
 
     # Init task
-    task = CompressSIP(dataset_id=workspace.name,
-                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = CompressSIP(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Run task

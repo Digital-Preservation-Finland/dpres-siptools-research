@@ -33,7 +33,6 @@ def get_fd_download_service_token():
     return getpass.getpass(prompt="Ida token:")
 
 
-@pytest.mark.usefixtures("pkg_root")
 def test_ida_download(testpath):
     """Download a file from Ida.
 

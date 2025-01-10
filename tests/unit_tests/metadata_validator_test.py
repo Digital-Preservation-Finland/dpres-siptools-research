@@ -76,17 +76,16 @@ def get_very_invalid_datacite():
     'file_metadata',
     [TXT_FILE, CSV_FILE, TIFF_FILE, MKV_FILE, PDF_FILE, AUDIO_FILE, VIDEO_FILE]
 )
-def test_validate_metadata(requests_mock, file_metadata):
+def test_validate_metadata(config, requests_mock, file_metadata):
     """Test validation of dataset metadata that contains one file.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
     :param file_metadata: Metadata of file included in dataset
-    :returns: ``None``
     """
     tests.utils.add_metax_v2_dataset(requests_mock, files=[file_metadata])
 
-    assert validate_metadata('dataset_identifier',
-                             tests.conftest.UNIT_TEST_CONFIG_FILE)
+    assert validate_metadata('dataset_identifier', config)
 
 
 @pytest.mark.parametrize(
@@ -98,12 +97,12 @@ def test_validate_metadata(requests_mock, file_metadata):
         [QVAIN_PROVENANCE]
     ]
 )
-def test_validate_metadata_with_provenance(requests_mock, provenance):
+def test_validate_metadata_with_provenance(config, requests_mock, provenance):
     """Test validation of dataset metadata with provenance events.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
     :param provenance: List of provenance events in dataset metadata
-    :returns: ``None``
     """
     dataset = copy.deepcopy(BASE_DATASET)
     dataset["research_dataset"]["provenance"] = provenance
@@ -113,8 +112,7 @@ def test_validate_metadata_with_provenance(requests_mock, provenance):
         files=[TXT_FILE]
     )
 
-    assert validate_metadata('dataset_identifier',
-                             tests.conftest.UNIT_TEST_CONFIG_FILE)
+    assert validate_metadata('dataset_identifier', config)
 
 
 @pytest.mark.parametrize(
@@ -124,12 +122,13 @@ def test_validate_metadata_with_provenance(requests_mock, provenance):
         [{"preservation_event": {}}]
     ]
 )
-def test_validate_metadata_with_invalid_provenance(requests_mock, provenance):
+def test_validate_metadata_with_invalid_provenance(config, requests_mock,
+                                                   provenance):
     """Test validation of dataset metadata with invalid provenance events.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
     :param provenance: List of provenance events in dataset metadata
-    :returns: ``None``
     """
     dataset = copy.deepcopy(BASE_DATASET)
     dataset["research_dataset"]["provenance"] = provenance
@@ -141,31 +140,30 @@ def test_validate_metadata_with_invalid_provenance(requests_mock, provenance):
 
     expected_error = "None is not of type 'object'"
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        validate_metadata('dataset_identifier', config)
 
 
-def test_validate_metadata_multiple_files(requests_mock):
+def test_validate_metadata_multiple_files(config, requests_mock):
     """Test validation of dataset metadata that contains multiple files.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['identifier'] = "pid:urn:1"
     files[1]['identifier'] = "pid:urn:2"
     tests.utils.add_metax_v2_dataset(requests_mock, files=files)
 
-    assert validate_metadata('dataset_identifier',
-                             tests.conftest.UNIT_TEST_CONFIG_FILE)
+    assert validate_metadata('dataset_identifier', config)
 
 
-def test_validate_metadata_missing_file(requests_mock):
+def test_validate_metadata_missing_file(config, requests_mock):
     """Test validate_metadata with an empty dataset.
 
     Function should raise InvalidDatasetMetadataError for datasets,
     which do not contain any files.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
     :returns: ``None``
     """
@@ -173,20 +171,18 @@ def test_validate_metadata_missing_file(requests_mock):
     expected_error = "Dataset must contain at least one file"
 
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        validate_metadata(
-            'dataset_identifier',
-            tests.conftest.UNIT_TEST_CONFIG_FILE
-        )
+        validate_metadata('dataset_identifier', config)
 
 
 # pylint: disable=invalid-name
-def test_validate_metadata_invalid(requests_mock):
+def test_validate_metadata_invalid(config, requests_mock):
     """Test validate_metadata.
 
     Function should raise exception with correct error message for
     invalid dataset.
 
-    :returns: ``None``
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
     dataset = copy.deepcopy(BASE_DATASET)
     del dataset['contract']
@@ -196,8 +192,7 @@ def test_validate_metadata_invalid(requests_mock):
     # Try to validate invalid dataset
     expected_error = "None is not of type 'string'"
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        validate_metadata('dataset_identifier', config)
 
 
 @pytest.mark.parametrize(
@@ -219,13 +214,14 @@ def test_validate_metadata_invalid(requests_mock):
     ]
 )
 # pylint: disable=invalid-name
-def test_validate_invalid_file_type(file_characteristics, version_info,
+def test_validate_invalid_file_type(config, file_characteristics, version_info,
                                     requests_mock):
     """Test validate_metadata.
 
     Function should raise exception with correct error message for
     unsupported file type.
 
+    :param config: Configuration file
     :param file_characteristics: file characteristics dict in file
                                  metadata
     :param version_info: expected version information in exception
@@ -244,19 +240,18 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
         f"application/unsupported{version_info}"
     )
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        validate_metadata('dataset_identifier', config)
 
 
 # pylint: disable=invalid-name
-def test_validate_metadata_invalid_file_path(requests_mock):
+def test_validate_metadata_invalid_file_path(config, requests_mock):
     """Test validate_metadata.
 
     Function should raise exception if some of the
     file paths point outside SIP.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     invalid_file = copy.deepcopy(TXT_FILE)
     invalid_file['file_path'] = "../../file_in_invalid_path"
@@ -266,19 +261,18 @@ def test_validate_metadata_invalid_file_path(requests_mock):
     expected_error = ("The file path of file pid:urn:identifier is invalid: "
                       "../../file_in_invalid_path")
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        validate_metadata('dataset_identifier', config)
 
 
 # pylint: disable=invalid-name
-def test_validate_metadata_invalid_datacite(requests_mock):
+def test_validate_metadata_invalid_datacite(config, requests_mock):
     """Test validate_metadata.
 
     Function should raise exception with correct error message for
     invalid datacite where required attribute identifier is missing.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     dataset_file = copy.deepcopy(TXT_FILE)
     tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
@@ -289,8 +283,7 @@ def test_validate_metadata_invalid_datacite(requests_mock):
 
     # Try to validate invalid dataset
     with pytest.raises(InvalidDatasetMetadataError) as exception_info:
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        validate_metadata('dataset_identifier', config)
 
     # Check error message
     assert str(exception_info.value).startswith(
@@ -301,13 +294,13 @@ def test_validate_metadata_invalid_datacite(requests_mock):
 
 
 # pylint: disable=invalid-name
-def test_validate_metadata_corrupted_datacite(requests_mock):
+def test_validate_metadata_corrupted_datacite(config, requests_mock):
     """Test validate_metadata.
 
     Function should raise exception  if datacite XML is corrupted.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     dataset_file = copy.deepcopy(TXT_FILE)
     tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
@@ -320,20 +313,19 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     expected_error \
         = "Couldn't find end of Start Tag resource line 1, line 2, column 1"
     with pytest.raises(Exception, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        validate_metadata('dataset_identifier', config)
 
 
 # pylint: disable=invalid-name
-def test_validate_metadata_datacite_bad_request(requests_mock):
+def test_validate_metadata_datacite_bad_request(config, requests_mock):
     """Test validate_metadata.
 
     Function should raise exception with correct error message if Metax
     fails to generate datacite for dataset, for example when `publisher`
     attribute is missing.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     dataset_file = copy.deepcopy(TXT_FILE)
     tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
@@ -349,19 +341,18 @@ def test_validate_metadata_datacite_bad_request(requests_mock):
     # Try to validate invalid dataset
     expected_error = "Datacite generation failed: Bad request"
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        validate_metadata('dataset_identifier', config)
 
 
-def test_validate_file_metadata(requests_mock):
+def test_validate_file_metadata(config, requests_mock):
     """Test _validate_file_metadata.
 
     Check that dataset directory caching is working correctly in
     DatasetConsistency when the files have common root directory in
     dataset.directories property.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     dataset = copy.deepcopy(BASE_DATASETV3)
     dataset['directories'] = [{'identifier': 'root_dir'}]
@@ -390,7 +381,7 @@ def test_validate_file_metadata(requests_mock):
     )
 
     # Init metax client
-    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    client = get_metax_client(config)
 
     # pylint: disable=protected-access
     siptools_research.metadata_validator._validate_file_metadata(dataset,
@@ -400,13 +391,13 @@ def test_validate_file_metadata(requests_mock):
 
 
 # pylint: disable=invalid-name
-def test_validate_file_metadata_invalid_metadata(requests_mock):
+def test_validate_file_metadata_invalid_metadata(config, requests_mock):
     """Test ``_validate_file_metadata``.
 
     Function should raise exceptions with descriptive error messages.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     file_metadata = copy.deepcopy(BASE_FILE)
     file_metadata['file_characteristics'] = {
@@ -415,7 +406,7 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
     tests.utils.add_metax_v2_dataset(requests_mock, files=[file_metadata])
 
     # Init metax client
-    client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    client = get_metax_client(config)
 
     expected_error = (
         "Validation error in file /path/to/file: Incorrect file format: None"
@@ -430,17 +421,17 @@ def test_validate_file_metadata_invalid_metadata(requests_mock):
         )
 
 
-def test_validate_datacite(requests_mock):
+def test_validate_datacite(config, requests_mock):
     """Test _validate_datacite.
 
     Function should raises exception with readable error message when
     datacite XML contains multiple errors.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     # Init metax client
-    metax_client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
+    metax_client = get_metax_client(config)
 
     requests_mock.get(
         "/rest/v2/datasets/dataset_identifier?dataset_format=datacite",
@@ -459,13 +450,13 @@ def test_validate_datacite(requests_mock):
 # pylint: disable=invalid-name
 
 
-def test_validate_metadata_http_error_raised(requests_mock):
+def test_validate_metadata_http_error_raised(config, requests_mock):
     """Test validate_metadata.
 
     Function should raise HTTPError if Metax fails.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     tests.utils.add_metax_v2_dataset(requests_mock)
     requests_mock.get(
@@ -476,5 +467,4 @@ def test_validate_metadata_http_error_raised(requests_mock):
 
     expected_error = '500 Server Error: Something not to be shown to user'
     with pytest.raises(HTTPError, match=expected_error):
-        validate_metadata('dataset_identifier',
-                          tests.conftest.UNIT_TEST_CONFIG_FILE)
+        validate_metadata('dataset_identifier', config)

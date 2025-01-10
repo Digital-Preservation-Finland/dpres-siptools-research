@@ -2,13 +2,15 @@
 import pytest
 
 from siptools_research.utils.database import Database
-from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_update_dataset():
-    """Test update_dataset method."""
-    database = Database(UNIT_TEST_CONFIG_FILE)
+def test_update_dataset(config):
+    """Test update_dataset method.
+
+    :param config: Configuration file
+    """
+    database = Database(config)
 
     # Add some data to a document
     database.update_document(
@@ -51,14 +53,15 @@ def test_update_dataset():
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_find(search, document_identifiers):
+def test_find(config, search, document_identifiers):
     """Test find method.
 
+    :param config: Configuration file
     :param search: Search argument to be used
     :param document_identifiers: Identifiers of documents expected to be
                                  found
     """
-    database = Database(UNIT_TEST_CONFIG_FILE)
+    database = Database(config)
 
     # Add some documents to database
     database.update_document(

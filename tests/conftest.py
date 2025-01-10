@@ -13,14 +13,13 @@ import pytest
 import urllib3
 from click.testing import CliRunner
 
+import siptools_research.config
 from siptools_research.__main__ import Context, cli
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
-UNIT_TEST_CONFIG_FILE = \
-    "tests/data/configuration_files/siptools_research_unit_test.conf"
 UNIT_TEST_SSL_CONFIG_FILE = \
     "tests/data/configuration_files/siptools_research_unit_test_ssl.conf"
 
@@ -34,6 +33,32 @@ PROJECT_ROOT_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')
 )
 sys.path.insert(0, PROJECT_ROOT_PATH)
+
+
+@pytest.fixture(autouse=True)
+def config(tmp_path):
+    """Create temporary config file.
+
+    A temporary packaging root directory is created, and configuration
+    is modified to use it.
+    """
+    # Create temporary packaging root directory
+    pkg_root = tmp_path / "packaging"
+    pkg_root.mkdir()
+
+    # Read sample config
+    parser = ConfigParser()
+    parser.read("tests/data/configuration_files/siptools_research_unit_test.conf")
+
+    # Modify configuration
+    parser.set("siptools_research", "packaging_root", str(pkg_root))
+
+    # Write configuration to temporary file
+    config_ = tmp_path / "siptools_research.conf"
+    with config_.open('w') as file:
+        parser.write(file)
+
+    return config_
 
 
 @pytest.fixture(autouse=True)
@@ -66,36 +91,6 @@ def testmongoclient(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def pkg_root(tmp_path, monkeypatch):
-    """Create a temporary packaging root directory.
-
-    Mocks configuration module to use the temporary directory as
-    packaging root directory.
-
-    :param tmp_path: pathlib.Path object
-    :param monkeypatch: monkeypatch object
-    :returns: pathlib.Path pointing to temporary directory
-    """
-
-    def _mock_get(self, parameter):
-        """Mock get method."""
-        if parameter == "packaging_root":
-            return str(tmp_path / "packaging")
-        # pylint: disable=protected-access
-        return self._parser.get(self.config_section, parameter)
-
-    monkeypatch.setattr(
-        siptools_research.config.Configuration, "get", _mock_get
-    )
-
-    # Create packaging root directory
-    pkg_root_ = tmp_path / "packaging"
-    pkg_root_.mkdir()
-
-    return pkg_root_
-
-
-@pytest.fixture(scope="function")
 # TODO: This hack can be removed when TPASPKT-516 is resolved
 def upload_projects_path(tmp_path, monkeypatch):
     """Configure UPLOAD_PROJECTS_PATH for upload-rest-api."""
@@ -109,7 +104,7 @@ def upload_projects_path(tmp_path, monkeypatch):
 
 @pytest.fixture(scope="function")
 # pylint: disable=redefined-outer-name
-def workspace(pkg_root):
+def workspace(config):
     """Create a temporary workspace directory.
 
     Creates directory `pkg_root / "workspaces / <identifier>"`
@@ -118,8 +113,9 @@ def workspace(pkg_root):
     :returns: Path to the workspce directory
     :rtype: pathlib.Path
     """
+    config = siptools_research.config.Configuration(config)
     identifier = str(uuid.uuid4())
-    workspace_ = pkg_root / "workspaces" / identifier
+    workspace_ = Path(config.get("packaging_root")) / "workspaces" / identifier
     workspace_.parent.mkdir()
     workspace_.mkdir()
     (workspace_ / "preservation").mkdir()
@@ -139,7 +135,6 @@ def mock_luigi_config_path(monkeypatch):
     monkeypatch.setattr(luigi.configuration.LuigiConfigParser,
                         '_config_paths',
                         ['tests/data/configuration_files/luigi.cfg'])
-
 
 
 @pytest.yield_fixture(scope="function")
@@ -191,13 +186,13 @@ def config_creator(tmpdir):
 
 
 @pytest.fixture(scope="function")
-def luigi_mock_ssh_config(config_creator, sftp_dir, sftp_server):
+def luigi_mock_ssh_config(config, config_creator, sftp_dir, sftp_server):
     """
     Luigi configuration file that connects to a mocked DPS SFTP server
     instead of a real instance
     """
     config_path = config_creator(
-        config_path=UNIT_TEST_CONFIG_FILE,
+        config_path=config,
         new_config={
             "siptools_research": {
                 "dp_host": "127.0.0.1",

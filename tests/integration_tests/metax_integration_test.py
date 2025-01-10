@@ -58,9 +58,7 @@ def get_metax_password():
     return getpass.getpass(prompt='Metax password for user \'tpas\':')
 
 
-@pytest.mark.usefixtures(
-    'testmongoclient', 'mock_luigi_config_path', 'pkg_root'
-)
+@pytest.mark.usefixtures('testmongoclient', 'mock_luigi_config_path')
 def test_workflow(testpath):
     """Add test dataset metadata and associated file metadata to Metax. Run
     partial workflow by calling CreateMets task with luigi.

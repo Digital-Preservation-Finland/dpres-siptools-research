@@ -309,8 +309,8 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
         )
     ]
 )
-def test_mets_creation(tmp_path, workspace, requests_mock, dataset, files,
-                       upload_projects_path):
+def test_mets_creation(config, tmp_path, workspace, requests_mock, dataset,
+                       files, upload_projects_path):
     """Test SIP validity.
 
     Run CompressSIP task (and all tasks it requires) and check that:
@@ -319,12 +319,12 @@ def test_mets_creation(tmp_path, workspace, requests_mock, dataset, files,
         #. mets.xml passes schematron verification
         #. all files are found in correct path
 
+    :param config: Configuration file
     :param tmp_path: temporary directory
     :param workspace: temporary workspace directory
     :param requests_mock: Mocker object
     :param dataset: dataset metadata
     :param files: list of file metadata objects
-    :returns: ``None``
     """
     # Mock Metax
     dataset = copy.deepcopy(dataset)
@@ -362,7 +362,7 @@ def test_mets_creation(tmp_path, workspace, requests_mock, dataset, files,
     assert luigi.build(
         [siptools_research.workflow.compress.CompressSIP(
             dataset_id=workspace.name,
-            config=tests.conftest.UNIT_TEST_CONFIG_FILE
+            config=config
         )],
         local_scheduler=True
     )

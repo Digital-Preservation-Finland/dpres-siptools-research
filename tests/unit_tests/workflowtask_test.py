@@ -22,7 +22,6 @@ from siptools_research.exceptions import (
 )
 from siptools_research.metax import get_metax_client
 from siptools_research.workflowtask import WorkflowTask
-from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
 # pylint: disable=too-few-public-methods
@@ -178,7 +177,7 @@ class MetaxTask(WorkflowTask):
 
 
 @pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
-def test_run_workflowtask(workspace):
+def test_run_workflowtask(config, workspace):
     """Test WorkflowTask execution.
 
     Executes a DummyTask, checks that output file is created, checks
@@ -188,12 +187,12 @@ def test_run_workflowtask(workspace):
     :returns: ``None``
     """
     # Add a workflow to database
-    dataset = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset(workspace.name, config=config)
     dataset.preserve()
 
     # Run DummyTask
     luigi.build(
-        [DummyTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+        [DummyTask(workspace.name, config=config)],
         local_scheduler=True
     )
 
@@ -201,7 +200,7 @@ def test_run_workflowtask(workspace):
     assert (workspace / "preservation" / "output_file").read_text() \
         == "Hello world"
 
-    dataset = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset(workspace.name, config=config)
     tasks = dataset.get_tasks()
     # Check 'messages' field
     assert tasks['DummyTask']['messages'] == 'Test task was successful'
@@ -212,32 +211,32 @@ def test_run_workflowtask(workspace):
     assert dataset.enabled
 
     # Check that there is no extra workflows in database
-    assert len(find_datasets(config=UNIT_TEST_CONFIG_FILE)) == 1
+    assert len(find_datasets(config=config)) == 1
 
 
 @pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
-def test_run_workflow_target_task(workspace):
+def test_run_workflow_target_task(config, workspace):
     """Test running target task of the workflow.
 
     Create a workflow with DummyTask as target Task. Check that workflow
     is disabled after executing the task.
 
+    :param config: Configuration file
     :param workspace: temporary directory
-    :returns: ``None``
     """
     # Add workflow to database
-    Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE).preserve()
+    Dataset(workspace.name, config=config).preserve()
 
     # Run DummyTask
     luigi.build(
         [DummyTask(workspace.name,
-                   config=UNIT_TEST_CONFIG_FILE,
+                   config=config,
                    is_target_task=True)],
         local_scheduler=True
     )
 
     # Check that new task is added to task log
-    dataset = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE)
+    dataset = Dataset(workspace.name, config=config)
     tasks = dataset.get_tasks()
     assert tasks['DummyTask']['result'] == 'success'
 
@@ -246,23 +245,23 @@ def test_run_workflow_target_task(workspace):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_run_failing_task(workspace):
+def test_run_failing_task(config, workspace):
     """Test running task that fails.
 
     Executes FailingTask and checks that report of failed task is added
     to task log.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
-    :returns: ``None``
     """
     # Run FailingTask
     luigi.build(
-        [FailingTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+        [FailingTask(workspace.name, config=config)],
         local_scheduler=True
     )
 
     # Check that new task is added to task log
-    tasks = Dataset(workspace.name, config=UNIT_TEST_CONFIG_FILE).get_tasks()
+    tasks = Dataset(workspace.name, config=config).get_tasks()
     # Check 'messages' field
     assert tasks['FailingTask']['messages'] \
         == 'An error occurred while running a test task: Shit hit the fan'
@@ -320,13 +319,14 @@ def test_run_failing_task(workspace):
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_invalid_dataset_error(workspace, requests_mock, task, expected_state,
-                               expected_description):
+def test_invalid_dataset_error(config, workspace, requests_mock, task,
+                               expected_state, expected_description):
     """Test event handler of WorkflowTask.
 
     Event handler should report preservation state to Metax if
     InvalidDatasetError raises in a task.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: Mocker object
     :param task: Test task to be run
@@ -357,7 +357,7 @@ def test_invalid_dataset_error(workspace, requests_mock, task, expected_state,
 
     # Run the task
     luigi.build(
-        [task(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+        [task(workspace.name, config=config)],
         local_scheduler=True
     )
 
@@ -371,14 +371,14 @@ def test_invalid_dataset_error(workspace, requests_mock, task, expected_state,
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_set_preservation_state_of_pas_version(requests_mock):
+def test_set_preservation_state_of_pas_version(config, requests_mock):
     """Test that preservation state of correct dataset version is set.
 
     If the dataset has been copied to PAS data catalog, the preservation
     state of the PAS version should be set.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     # Mock metax
     requests_mock.get(
@@ -405,7 +405,7 @@ def test_set_preservation_state_of_pas_version(requests_mock):
     # Run the task
     luigi.build(
         [InvalidDatasetTask(dataset_id='original-id',
-                            config=UNIT_TEST_CONFIG_FILE)],
+                            config=config)],
         local_scheduler=True
     )
 
@@ -422,15 +422,15 @@ def test_set_preservation_state_of_pas_version(requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_packaging_failed(workspace, requests_mock):
+def test_packaging_failed(config, workspace, requests_mock):
     """Test failure during packaging.
 
     If packaging fails because dataset is invalid, preservation state
     should be set to DS_STATE_PACKAGING_FAILED.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     # Mock metax
     requests_mock.get(
@@ -453,7 +453,7 @@ def test_packaging_failed(workspace, requests_mock):
 
     # Run InvalidDatasetTask
     luigi.build(
-        [InvalidDatasetTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+        [InvalidDatasetTask(workspace.name, config=config)],
         local_scheduler=True
     )
 
@@ -469,11 +469,12 @@ def test_packaging_failed(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_logging(workspace, requests_mock, caplog):
+def test_logging(config, workspace, requests_mock, caplog):
     """Test logging failed HTTP responses.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
-    :param responses: HTTP request mocker
+    :param requests_mock HTTP request mocker
     :param caplog: Captured log messages
     """
     # Create mocked response for HTTP request.
@@ -483,7 +484,7 @@ def test_logging(workspace, requests_mock, caplog):
                       text="No rights to view dataset")
 
     # Run task that sends HTTP request
-    luigi.build([MetaxTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],
+    luigi.build([MetaxTask(workspace.name, config=config)],
                 local_scheduler=True)
 
     # Check errors in logs

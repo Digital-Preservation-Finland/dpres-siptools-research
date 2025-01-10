@@ -7,7 +7,6 @@ import pytest
 import tests.utils
 from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.workflow.create_mets import CreateMets
-from tests.conftest import UNIT_TEST_CONFIG_FILE
 from tests.metax_data.datasets import (
     BASE_DATACITE,
     BASE_DATASET,
@@ -39,7 +38,7 @@ NAMESPACES = {
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_mets(workspace, requests_mock, data_catalog, objid):
+def test_create_mets(config, workspace, requests_mock, data_catalog, objid):
     """Test the workflow task CreateMets.
 
     Creates METS for a dataset that contains one text file.
@@ -73,7 +72,7 @@ def test_create_mets(workspace, requests_mock, data_catalog, objid):
     filepath.touch()
 
     # Init and run task
-    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
+    task = CreateMets(dataset_id=workspace.name, config=config)
     task.run()
     assert task.complete()
 
@@ -106,7 +105,7 @@ def test_create_mets(workspace, requests_mock, data_catalog, objid):
         == "Packaging Service"
 
 
-def test_idempotence(workspace, requests_mock):
+def test_idempotence(config, workspace, requests_mock):
     """Test that CreateMets task is idempotent.
 
     Run the task twice and ensure that the created METS document is
@@ -130,7 +129,7 @@ def test_idempotence(workspace, requests_mock):
     filepath.touch()
 
     # Init and run task
-    task = CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE)
+    task = CreateMets(dataset_id=workspace.name, config=config)
     task.run()
     assert task.complete()
 
@@ -175,7 +174,8 @@ ANOTHER_BASE_PROVENANCE["description"]["en"] = "another description"
         [QVAIN_PROVENANCE],
     ]
 )
-def test_multiple_provenance_events(workspace,
+def test_multiple_provenance_events(config,
+                                    workspace,
                                     requests_mock,
                                     provenance_data):
     """Test creating PREMIS metadata for multiple provenance events.
@@ -223,7 +223,7 @@ def test_multiple_provenance_events(workspace,
     filepath.touch()
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Find identifiers of provenance events from METS
     mets = lxml.etree.parse(str(workspace / "preservation" / "mets.xml"))
@@ -276,7 +276,7 @@ def test_multiple_provenance_events(workspace,
     'provenance_data', [BASE_PROVENANCE, QVAIN_PROVENANCE]
 )
 def test_premis_event_metadata(
-    workspace, requests_mock, provenance_data
+    config, workspace, requests_mock, provenance_data
 ):
     """Test creating PREMIS events for provenance metadata.
 
@@ -305,7 +305,7 @@ def test_premis_event_metadata(
     filepath.touch()
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Find the digiprovMD element of provenance event from METS document
     if 'description' in provenance_data:
@@ -390,7 +390,7 @@ def test_premis_event_metadata(
          "success"),
     ]
 )
-def test_premis_event_outcome(workspace, requests_mock,
+def test_premis_event_outcome(config, workspace, requests_mock,
                               event_outcome_identifier,
                               expected_event_outcome):
     """Test that correct PREMIS eventOutcome is used.
@@ -425,7 +425,7 @@ def test_premis_event_outcome(workspace, requests_mock,
     filepath.touch()
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Check that correct event outcome is written to METS
     mets = lxml.etree.parse(str(workspace / 'preservation' / 'mets.xml'))
@@ -442,7 +442,7 @@ def test_premis_event_outcome(workspace, requests_mock,
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_createdescriptivemetadata(workspace, requests_mock):
+def test_createdescriptivemetadata(config, workspace, requests_mock):
     """Test descriptive metadata creation.
 
     Creates METS for a simple dataset.
@@ -481,7 +481,7 @@ def test_createdescriptivemetadata(workspace, requests_mock):
     filepath.touch()
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Check that METS document contains correct elements.
     mets = lxml.etree.parse(str(workspace / 'preservation/mets.xml'))
@@ -522,7 +522,7 @@ def test_createdescriptivemetadata(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_techmd(workspace, requests_mock):
+def test_create_techmd(config, workspace, requests_mock):
     """Test technical metadata creation.
 
     Creates METS for a dataset that contains one TIFF file.
@@ -550,7 +550,7 @@ def test_create_techmd(workspace, requests_mock):
     (dataset_files_parent / tiff_path).touch()
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Read created METS
     mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
@@ -585,8 +585,8 @@ def test_create_techmd(workspace, requests_mock):
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_user_defined_techmd(workspace, requests_mock, checksum_algorithm,
-                             encoding):
+def test_user_defined_techmd(config, workspace, requests_mock,
+                             checksum_algorithm, encoding):
     """Test using user defined values.
 
     Creates METS for a dataset that contains one text file with
@@ -622,7 +622,7 @@ def test_user_defined_techmd(workspace, requests_mock, checksum_algorithm,
     filepath.touch()
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Read created METS
     mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
@@ -651,7 +651,7 @@ def test_user_defined_techmd(workspace, requests_mock, checksum_algorithm,
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_techmd_csv(workspace, requests_mock, has_header,
+def test_create_techmd_csv(config, workspace, requests_mock, has_header,
                            expected_field_definition):
     """Test that technical metadata is created correctly for csv files.
 
@@ -684,7 +684,7 @@ def test_create_techmd_csv(workspace, requests_mock, has_header,
     filepath.touch()
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Read created METS
     mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
@@ -711,7 +711,7 @@ def test_create_techmd_csv(workspace, requests_mock, has_header,
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_filesec_and_structmap(workspace, requests_mock):
+def test_create_filesec_and_structmap(config, workspace, requests_mock):
     """Test fileSec and physical structure map creation.
 
     Creates METS for a dataset that contains three files in a directory
@@ -748,7 +748,7 @@ def test_create_filesec_and_structmap(workspace, requests_mock):
     (subdirectory / "file3").touch()
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Read created METS document
     # NOTE: lxml<4.8 requires path as string. Newer versions support
@@ -778,7 +778,7 @@ def test_create_filesec_and_structmap(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_create_logical_structmap(workspace, requests_mock):
+def test_create_logical_structmap(config, workspace, requests_mock):
     """Test creating logical structure map.
 
     Creates METS for a dataset that contains two files and tests that
@@ -835,7 +835,7 @@ def test_create_logical_structmap(workspace, requests_mock):
     (file_directory / "file3").touch()
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Validate logical Fairdata-logical structure map
     mets = lxml.etree.parse(str(workspace / 'preservation/mets.xml'))
@@ -863,7 +863,7 @@ def test_create_logical_structmap(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_empty_logical_structuremap(workspace, requests_mock):
+def test_empty_logical_structuremap(config, workspace, requests_mock):
     """Test that empty logical structuremap is not created.
 
     Creates METS for a dataset that contains files, but use category is
@@ -889,7 +889,7 @@ def test_empty_logical_structuremap(workspace, requests_mock):
     file_path.write_text("foo")
 
     # Init and run task
-    CreateMets(dataset_id=workspace.name, config=UNIT_TEST_CONFIG_FILE).run()
+    CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Validate logical Fairdata-logical structure map
     mets = lxml.etree.parse(str(workspace / 'preservation/mets.xml'))
@@ -912,7 +912,7 @@ def test_empty_logical_structuremap(workspace, requests_mock):
 )
 # TODO: This test is probably unnecessary when issue TPASPKT-1105 has
 # been resolved
-def test_file_characteristics_conflict(workspace, requests_mock, key):
+def test_file_characteristics_conflict(config, workspace, requests_mock, key):
     """Test creating METS with conflicting file metadata.
 
     Create a conflict between file_characteristics and
@@ -933,7 +933,6 @@ def test_file_characteristics_conflict(workspace, requests_mock, key):
     # Init and run task
     with pytest.raises(InvalidFileMetadataError,
                        match="File characteristics have changed"):
-        CreateMets(dataset_id=workspace.name,
-                   config=UNIT_TEST_CONFIG_FILE).run()
+        CreateMets(dataset_id=workspace.name, config=config).run()
 
 

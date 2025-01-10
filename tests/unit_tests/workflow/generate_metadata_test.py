@@ -10,12 +10,12 @@ from siptools_research.workflow import generate_metadata
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_generatemetadata(workspace, requests_mock):
+def test_generatemetadata(config, workspace, requests_mock):
     """Test metadata generation.
 
+    :param config: Configuration file
     :param workspace: Temporary directory
     :param requests_mock: HTTP request mocker
-    :returns: ``None``
     """
     # Create a dataset that contains one text file which is available in
     # Ida
@@ -33,7 +33,7 @@ def test_generatemetadata(workspace, requests_mock):
     # Init and run task
     task = generate_metadata.GenerateMetadata(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config,
     )
     assert not task.complete()
     task.run()

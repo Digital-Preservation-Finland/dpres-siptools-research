@@ -5,7 +5,6 @@ import shutil
 
 import pytest
 
-import tests.conftest
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.file_validator import validate_files
 from tests.metax_data.datasets import BASE_DATASET
@@ -13,11 +12,12 @@ from tests.metax_data.files import SEG_Y_FILE, TIFF_FILE, TXT_FILE
 from tests.utils import add_metax_v2_dataset
 
 
-def test_validate_files(requests_mock, tmp_path):
+def test_validate_files(config, requests_mock, tmp_path):
     """Test validating valid files.
 
     Validator should not raise any exceptions.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
     :param tmp_path: Temporary directory
     """
@@ -43,17 +43,16 @@ def test_validate_files(requests_mock, tmp_path):
 
     # Validator should return `None`, and exceptions should not be
     # raised.
-    assert validate_files("dataset_identifier",
-                          tmp_path,
-                          tests.conftest.UNIT_TEST_CONFIG_FILE) is None
+    assert validate_files("dataset_identifier", tmp_path, config) is None
 
 
-def test_validate_invalid_files(requests_mock, tmp_path):
+def test_validate_invalid_files(config, requests_mock, tmp_path):
     """Test validating a not well-formed file.
 
     Try to validate an empty text file. File validator should detect the
     file as not well-formed and raise exception.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
     :param tmp_path: Temporary directory
     """
@@ -71,21 +70,18 @@ def test_validate_invalid_files(requests_mock, tmp_path):
     filepath.write_text("")
 
     with pytest.raises(InvalidFileError) as exception_info:
-        validate_files(
-            "dataset_identifier",
-            tmp_path,
-            tests.conftest.UNIT_TEST_CONFIG_FILE
-        )
+        validate_files( "dataset_identifier", tmp_path, config)
 
     assert str(exception_info.value) == "1 files are not well-formed"
     assert exception_info.value.files == ['pid:urn:identifier']
 
 
-def test_validate_bitlevel_file(requests_mock, tmp_path):
+def test_validate_bitlevel_file(config, requests_mock, tmp_path):
     """Test validating a file only accepted for bit-level preservation.
 
     File validator should ignore the validation result in this case.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
     :param tmp_path: Temporary directory
     """
@@ -105,18 +101,15 @@ def test_validate_bitlevel_file(requests_mock, tmp_path):
 
     # Validator should return `None`, and exceptions should not be
     # raised.
-    assert validate_files(
-        "dataset_identifier",
-        tmp_path,
-        tests.conftest.UNIT_TEST_CONFIG_FILE
-    ) is None
+    assert validate_files("dataset_identifier", tmp_path, config) is None
 
 
-def test_validate_wrong_mimetype(requests_mock, tmp_path):
+def test_validate_wrong_mimetype(config, requests_mock, tmp_path):
     """Test validating a text file as a TIFF file.
 
     File validator should detect wrong mimetype, and raise exception.
 
+    :param config: Configuration file
     :param requests_mock: Mocker object
     :param tmp_path: Temporary directory
     """
@@ -134,11 +127,7 @@ def test_validate_wrong_mimetype(requests_mock, tmp_path):
     filepath.write_text('foo')
 
     with pytest.raises(InvalidFileError) as exception_info:
-        validate_files(
-            "dataset_identifier",
-            tmp_path,
-            tests.conftest.UNIT_TEST_CONFIG_FILE
-        )
+        validate_files("dataset_identifier", tmp_path, config)
 
     assert str(exception_info.value) == "1 files are not well-formed"
     assert exception_info.value.files == ['pid:urn:identifier_tiff']

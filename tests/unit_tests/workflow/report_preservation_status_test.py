@@ -2,7 +2,6 @@
 
 import pytest
 
-import tests
 from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
 
@@ -52,8 +51,8 @@ from siptools_research.workflow import report_preservation_status
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
-                                  patched_dataset_id):
+def test_reportpreservationstatus(config, workspace, requests_mock,
+                                  dataset_metadata, patched_dataset_id):
     """Test reporting status of accepted SIP.
 
     Creates new ''ingest-reports/accepted'' directory in local workspace
@@ -61,6 +60,7 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
     that task is complete after it has been run and that the
     preservation status of correct dataset is updated.
 
+    :param config: Configuration file
     :param workspace: Temporary directory fixture
     :param requests_mock: HTTP request mocker
     :param dataset_metadata: Dataset metadata in Metax
@@ -86,7 +86,7 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config,
     )
     assert not task.complete()
     task.run()
@@ -96,13 +96,14 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_reportpreservationstatus_rejected(workspace, requests_mock):
+def test_reportpreservationstatus_rejected(config, workspace, requests_mock):
     """Test reporting status of rejected SIP.
 
     Creates new directory with a report file to "rejected" directory.
     Runs ReportPreservationStatus task,
     which should raise an exception.
 
+    :param config: Configuration file
     :param workspace: Temporary worpspace directory
     :param requests_mock: HTTP request mocker
     """
@@ -124,7 +125,7 @@ def test_reportpreservationstatus_rejected(workspace, requests_mock):
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config,
     )
 
     # Running task should raise exception
@@ -138,13 +139,14 @@ def test_reportpreservationstatus_rejected(workspace, requests_mock):
 
 @pytest.mark.usefixtures('testmongoclient')
 # pylint: disable=invalid-name
-def test_reportpreservationstatus_rejected_int_error(workspace):
+def test_reportpreservationstatus_rejected_int_error(config, workspace):
     """Test handling conflicting ingest reports.
 
     Creates ingest report files to "rejected" and "accepted"
     directories. Runs ReportPreservationStatus task, and tests that the
     report file is NOT sent.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     """
     # Create directory with name of the workspace to digital
@@ -165,7 +167,7 @@ def test_reportpreservationstatus_rejected_int_error(workspace):
     # Run task like it would be run from command line
     task = report_preservation_status.ReportPreservationStatus(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config
     )
     assert not task.complete()
 

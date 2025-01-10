@@ -6,7 +6,7 @@ from siptools_research.utils.download import (
     FileNotAvailableError,
     download_file,
 )
-from tests.conftest import UNIT_TEST_CONFIG_FILE, UNIT_TEST_SSL_CONFIG_FILE
+from tests.conftest import UNIT_TEST_SSL_CONFIG_FILE
 from tests.utils import add_mock_ida_download
 
 TEST_DATA = b"foo\n"
@@ -24,11 +24,18 @@ def _get_file_metadata(identifier, checksum):
     }
 
 
-@pytest.mark.parametrize(('config_file', 'request_verified'),
-                         [
-                             (UNIT_TEST_CONFIG_FILE, False),
-                             (UNIT_TEST_SSL_CONFIG_FILE, True)
-                         ])
+@pytest.mark.parametrize(
+    ('config_file', 'request_verified'),
+    [
+        (
+            "tests/data/configuration_files/siptools_research_unit_test.conf",
+            False
+        ),
+        (
+            UNIT_TEST_SSL_CONFIG_FILE,
+            True
+        )
+    ])
 def test_download_file(tmp_path, requests_mock, config_file, request_verified):
     """Test downloading a file to a temporary directory.
 
@@ -64,8 +71,13 @@ def test_download_file(tmp_path, requests_mock, config_file, request_verified):
     assert requests_mock.last_request.verify is request_verified
 
 
-def test_download_file_invalid_checksum(tmp_path, requests_mock):
-    """Try to download a file from IDA with a non-matching checksum."""
+def test_download_file_invalid_checksum(config, tmp_path, requests_mock):
+    """Try to download a file from IDA with a non-matching checksum.
+
+    :param config: Configuration file
+    :param tmp_path: Temporary path
+    :param requests_mock: HTTP request mocker
+    """
     add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id="dataset_id",
@@ -84,7 +96,7 @@ def test_download_file_invalid_checksum(tmp_path, requests_mock):
             ),
             "dataset_id",
             new_file_path,
-            UNIT_TEST_CONFIG_FILE
+            config
         )
 
     assert "Computed checksum was different" in str(exc.value)
@@ -92,11 +104,12 @@ def test_download_file_invalid_checksum(tmp_path, requests_mock):
     assert "got b5bb9d8014" in str(exc.value)
 
 
-def test_download_file_404(tmp_path, requests_mock):
+def test_download_file_404(config, tmp_path, requests_mock):
     """Try to download non-existing file from IDA.
 
+    :param config: Configuration file
     :param tmp_path: Temporary directory
-    :returns: ``None``
+    :param requests_mock: HTTP request mocker
     """
     requests_mock.post('https://download.dl-authorize.test/authorize',
                        status_code=404)
@@ -109,15 +122,16 @@ def test_download_file_404(tmp_path, requests_mock):
             ),
             "fake_dataset",
             str(new_file_path),
-            UNIT_TEST_CONFIG_FILE
+            config
         )
 
 
-def test_download_file_502(tmp_path, requests_mock):
+def test_download_file_502(config, tmp_path, requests_mock):
     """Try to download from Ida when Ida returns 502.
 
+    :param config: Configuration file
     :param tmp_path: Temporary directory fixture
-    :returns: ``None``
+    :param requests_mock: HTTP request mocker
     """
     requests_mock.post('https://download.dl-authorize.test/authorize',
                        status_code=502)
@@ -131,7 +145,7 @@ def test_download_file_502(tmp_path, requests_mock):
             ),
             "fake_dataset",
             str(new_file_path),
-            UNIT_TEST_CONFIG_FILE
+            config
         )
     assert str(exc_info.value) == ("Ida service temporarily unavailable. "
                                    "Please, try again later.")

@@ -10,12 +10,12 @@ from siptools_research.workflow import validate_files
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_validatefiles(workspace, requests_mock):
+def test_validatefiles(config, workspace, requests_mock):
     """Test file validation.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
-    :returns: ``None``
     """
     # Create a dataset that contains one valid text file which has been
     # downloaded
@@ -33,7 +33,7 @@ def test_validatefiles(workspace, requests_mock):
     # Init and run task
     task = validate_files.ValidateFiles(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config,
     )
     assert not task.complete()
     task.run()
@@ -41,14 +41,14 @@ def test_validatefiles(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_validatefiles_invalid(workspace, requests_mock):
+def test_validatefiles_invalid(config, workspace, requests_mock):
     """Test file validation for invalid file.
 
     Validate dataset that contains invalid file. The task should fail.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
-    :returns: ``None``
     """
     # Create a dataset that contains one file which has metadata of
     # image file but content of a text file.
@@ -67,7 +67,7 @@ def test_validatefiles_invalid(workspace, requests_mock):
     # Init and run task. Running task should raise an exception.
     task = validate_files.ValidateFiles(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config,
     )
     with pytest.raises(InvalidFileError, match='1 files are not well-formed'):
         task.run()

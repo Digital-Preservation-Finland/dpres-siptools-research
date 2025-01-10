@@ -6,17 +6,16 @@ from metax_access import (
     DS_STATE_METADATA_CONFIRMED,
 )
 
-import tests.conftest
 from siptools_research.workflow import copy_dataset_to_pas_data_catalog
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_copy_ida_dataset(workspace, requests_mock):
+def test_copy_ida_dataset(config, workspace, requests_mock):
     """Test copying Ida dataset to PAS data catalog.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
-    :returns: ``None``
     """
     # Mock Metax
     requests_mock.get(
@@ -43,7 +42,7 @@ def test_copy_ida_dataset(workspace, requests_mock):
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config
     )
     assert not task.complete()
     task.run()
@@ -58,12 +57,12 @@ def test_copy_ida_dataset(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_ida_dataset_already_copied(workspace, requests_mock):
+def test_ida_dataset_already_copied(config, workspace, requests_mock):
     """Test running task when dataset has already been copied.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
-    :returns: ``None``
     """
     # Mock Metax
     requests_mock.get(
@@ -85,7 +84,7 @@ def test_ida_dataset_already_copied(workspace, requests_mock):
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config
     )
     assert not task.complete()
     task.run()
@@ -95,15 +94,15 @@ def test_ida_dataset_already_copied(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_copy_pas_dataset(workspace, requests_mock):
+def test_copy_pas_dataset(config, workspace, requests_mock):
     """Test running task for pottumounttu dataset.
 
     The dataset was originally created in PAS catalog. So it is not
     actually copied anywhere, but preservation state is updated.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
-    :returns: ``None``
     """
     # Mock Metax
     requests_mock.get(
@@ -130,7 +129,7 @@ def test_copy_pas_dataset(workspace, requests_mock):
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config
     )
     assert not task.complete()
     task.run()
@@ -144,16 +143,16 @@ def test_copy_pas_dataset(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_pas_dataset_already_copied(workspace, requests_mock):
+def test_pas_dataset_already_copied(config, workspace, requests_mock):
     """Test copying PAS dataset to PAS data catalog.
 
     The dataset was originally created in PAS catalog, and the
     preservation state has already been updated, so the
     CopyToPasDataCatalog task does not really do anything.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
-    :returns: ``None``
     """
     # Mock Metax
     requests_mock.get(
@@ -171,7 +170,7 @@ def test_pas_dataset_already_copied(workspace, requests_mock):
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
         dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
+        config=config
     )
     assert not task.complete()
     task.run()

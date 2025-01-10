@@ -4,7 +4,6 @@ import copy
 import pytest
 from upload_rest_api.models.file_entry import FileEntry
 
-import tests.conftest
 from siptools_research.exceptions import (
     InvalidFileMetadataError,
     MissingFileError,
@@ -16,12 +15,13 @@ from tests.utils import add_metax_v2_dataset, add_mock_ida_download
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_getfiles(workspace, requests_mock):
+def test_getfiles(config, workspace, requests_mock):
     """Tests for ``GetFiles`` task for IDA and local files.
 
     - ``Task.complete()`` is true after ``Task.run()``
     - Files are copied to correct path
 
+    :param config: Configuration file
     :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
     :returns: ``None``
@@ -59,10 +59,7 @@ def test_getfiles(workspace, requests_mock):
     )
 
     # Init task
-    task = get_files.GetFiles(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
+    task = get_files.GetFiles(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Run task.
@@ -77,12 +74,13 @@ def test_getfiles(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_file_cache(workspace, requests_mock):
+def test_file_cache(config, workspace, requests_mock):
     """Test that files are downloaded only once.
 
     If files have already been been downloaded to file cache, they
     should not be downloaded from Ida again.
 
+    :param config: Configuration file
     :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
     """
@@ -105,10 +103,7 @@ def test_file_cache(workspace, requests_mock):
     cached_file.write_text('Content of cached file')
 
     # Init task
-    task = get_files.GetFiles(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
+    task = get_files.GetFiles(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Run task.
@@ -124,15 +119,15 @@ def test_file_cache(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_missing_ida_files(workspace, requests_mock):
+def test_missing_ida_files(config, workspace, requests_mock):
     """Test task when a file can not be found from Ida.
 
     The first file should successfully downloaded, but the second file
     is not found. Task should fail with Exception.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     # Mock metax. Create a dataset that contains two text files.
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
@@ -158,10 +153,7 @@ def test_missing_ida_files(workspace, requests_mock):
     )
 
     # Init task
-    task = get_files.GetFiles(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
+    task = get_files.GetFiles(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Run task.
@@ -182,15 +174,16 @@ def test_missing_ida_files(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_missing_local_files(workspace, requests_mock, upload_projects_path):
+def test_missing_local_files(config, workspace, requests_mock,
+                             upload_projects_path):
     """Test task when a local file is not available.
 
     The first file should successfully downloaded, but the second file
     is not found. Task should fail with Exception.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: requests_mock mocker
-    :returns: ``None``
     """
     # Mock metax
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
@@ -223,10 +216,7 @@ def test_missing_local_files(workspace, requests_mock, upload_projects_path):
     (upload_projects_path / "path/to/file1").write_text("foo\n")
 
     # Init task
-    task = get_files.GetFiles(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
+    task = get_files.GetFiles(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Run task.
@@ -250,7 +240,7 @@ def test_missing_local_files(workspace, requests_mock, upload_projects_path):
 @pytest.mark.parametrize('path', ["../../file1",
                                   "/../../file1",
                                   "//../../file1"])
-def test_forbidden_relative_path(workspace, requests_mock, path):
+def test_forbidden_relative_path(config, workspace, requests_mock, path):
     """Test that files can not be saved outside the workspace.
 
     Saving files outside the workspace by using relative file paths in
@@ -259,10 +249,10 @@ def test_forbidden_relative_path(workspace, requests_mock, path):
     which equals to `<packaging_root>/workspaces/file1`, if the path was
     not validated.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace fixture
     :param requests_mock: Request mocker
     :param path: sample file path
-    :returns: ``None``
     """
     # Mock metax
     files = [
@@ -279,10 +269,7 @@ def test_forbidden_relative_path(workspace, requests_mock, path):
     add_metax_v2_dataset(requests_mock, dataset=dataset, files=files)
 
     # Init task
-    task = get_files.GetFiles(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
+    task = get_files.GetFiles(dataset_id=workspace.name, config=config)
 
     # File download should fail
     with pytest.raises(InvalidFileMetadataError) as exception_info:
@@ -301,13 +288,13 @@ def test_forbidden_relative_path(workspace, requests_mock, path):
                                   "./file1",
                                   "././file1",
                                   "/./file1"])
-def test_allowed_relative_paths(workspace, requests_mock, path):
+def test_allowed_relative_paths(config, workspace, requests_mock, path):
     """Test that file is downloaded to correct location.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace path fixture
     :param requests_mock: Request mocker
     :param path: sample file path
-    :returns: ``None``
     """
     # Mock Ida and Metax
     requests_mock.get('https://ida.test/files/pid:urn:1/download')
@@ -335,10 +322,7 @@ def test_allowed_relative_paths(workspace, requests_mock, path):
     )
 
     # Init task
-    task = get_files.GetFiles(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
+    task = get_files.GetFiles(dataset_id=workspace.name, config=config)
 
     # Download file and check that is found in expected location
     task.run()

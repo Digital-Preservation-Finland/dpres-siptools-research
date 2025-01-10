@@ -2,19 +2,18 @@
 
 import shutil
 
-import tests.conftest
 from siptools_research.workflow import sign
 
 
-def test_signsip(workspace):
+def test_signsip(config, workspace):
     """Tests for `SignSIP` task.
 
     - `Task.complete()` is true after `Task.run()`
     - Signature file created
     - Log file is created
 
+    :param config: Configuration file
     :param workspace: Test workspace directory fixture
-    :returns: ``None``
     """
     # Copy sample METS file to workspace
     shutil.copy(
@@ -23,8 +22,7 @@ def test_signsip(workspace):
     )
 
     # Init task
-    task = sign.SignSIP(dataset_id=workspace.name,
-                        config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = sign.SignSIP(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Run task.

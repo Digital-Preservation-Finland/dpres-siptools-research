@@ -4,7 +4,6 @@ import copy
 
 import pytest
 
-import tests.conftest
 from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
 from tests.metax_data.datasets import BASE_DATASET
@@ -13,14 +12,14 @@ from tests.utils import add_metax_v2_dataset
 
 
 @pytest.mark.usefixtures("testmongoclient")
-def test_validatemetadata(workspace, requests_mock):
+def test_validatemetadata(config, workspace, requests_mock):
     """Test ValidateMetadata class.
 
     Run task for dataset that has valid metadata.
 
+    :param config: Configuration file
     :param workspace: Temporary directory fixture
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
     # Mock metax. Create a valid dataset that contains two text files.
     file1 = copy.deepcopy(TXT_FILE)
@@ -38,8 +37,7 @@ def test_validatemetadata(workspace, requests_mock):
     )
 
     # Init task
-    task = ValidateMetadata(dataset_id=workspace.name,
-                            config=tests.conftest.UNIT_TEST_CONFIG_FILE)
+    task = ValidateMetadata(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Run task
@@ -49,14 +47,15 @@ def test_validatemetadata(workspace, requests_mock):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_invalid_metadata(workspace, requests_mock):
+def test_invalid_metadata(config, workspace, requests_mock):
     """Test ValidateMetadata class.
 
     Run task for dataset that has invalid metadata that does
     not pass schema validation.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory fixture
-    :returns: ``None``
+    :param requests_mock: HTTP request mocker
     """
     # Mock Metax. Remove "contract" from dataset metadata to create an
     # invalid dataset.
@@ -66,10 +65,7 @@ def test_invalid_metadata(workspace, requests_mock):
     requests_mock.get(f'/rest/v2/datasets/{workspace.name}', json=dataset)
 
     # Init task
-    task = ValidateMetadata(
-        dataset_id=workspace.name,
-        config=tests.conftest.UNIT_TEST_CONFIG_FILE
-    )
+    task = ValidateMetadata(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Run task
