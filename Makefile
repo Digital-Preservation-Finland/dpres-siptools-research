@@ -33,7 +33,8 @@ install:
 	python3 ./setup.py install -O1 --prefix="${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
 
 test:
-	${PYTHON} -m pytest tests/unit_tests -svvvv --junitprefix=dpres-siptools-research --junitxml=junit.xml
+	${PYTHON} -m pytest tests/unit_tests -svvv --junitxml=junit.xml
+	${PYTHON} -m pytest tests/unit_tests -svvv --junitxml=junit_metax-api-v3.xml --v3
 
 coverage:
 	${PYTHON} -m pytest tests \

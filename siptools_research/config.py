@@ -13,6 +13,7 @@ DEFAULTS = {
     'metax_user': 'tpas',
     'metax_password': '',
     'metax_ssl_verification': 'True',
+    'metax_api_version': 'v2',
     'fd_download_service_authorize_url':
         'https://download.fd-test.csc.fi:4431',
     'fd_download_service_url': 'https://download.fd-test.csc.fi:4430',

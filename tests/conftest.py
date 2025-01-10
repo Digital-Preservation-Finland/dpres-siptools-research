@@ -31,16 +31,22 @@ PROJECT_ROOT_PATH = os.path.abspath(
 sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
+def pytest_addoption(parser):
+    """Add --v3 option."""
+    parser.addoption('--v3', action='store_const', const=True)
+
+
 @pytest.fixture(autouse=True)
-def config(tmp_path):
+def config(request, tmp_path):
     """Create temporary config file.
 
     A temporary packaging root directory is created, and configuration
-    is modified to use it.
+    is modified to use it. If --v3 option is used, Metax is configured
+    to use V3 API.
 
+    :param request: pytest CLI arguments.
     :param tmp_path: Temporary path where packaging root directory is
         created
-    :returns: Configuration file path
     """
     # Create temporary packaging root directory
     pkg_root = tmp_path / "packaging"
@@ -66,6 +72,8 @@ def config(tmp_path):
     parser.set(
         "siptools_research", "access_rest_api_ssl_verification", "False"
     )
+    if request.config.getoption("--v3"):
+        parser.set("siptools_research", "metax_api_version", "v3")
 
     # Write configuration to temporary file
     config_ = tmp_path / "siptools_research.conf"
