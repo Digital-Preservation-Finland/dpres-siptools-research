@@ -1,15 +1,11 @@
 """Unit tests for :mod:`siptools_research.workflow.send_sip` module."""
 
-import logging
 import shutil
 from pathlib import Path
 from datetime import datetime, timezone
 
 import pytest
 from siptools_research.workflow.send_sip import SendSIPToDP
-
-# Print debug messages to stdout
-logging.basicConfig(level=logging.DEBUG)
 
 
 @pytest.mark.usefixtures('testmongoclient')
