@@ -59,8 +59,7 @@ def get_metax_password():
 
 
 @pytest.mark.usefixtures(
-    'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf',
-    'pkg_root'
+    'testmongoclient', 'mock_luigi_config_path', 'pkg_root'
 )
 def test_workflow(testpath):
     """Add test dataset metadata and associated file metadata to Metax. Run

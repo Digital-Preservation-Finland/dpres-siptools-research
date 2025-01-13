@@ -13,8 +13,6 @@ import pytest
 import urllib3
 from click.testing import CliRunner
 
-import siptools_research.metadata_generator
-import siptools_research.utils.mimetypes
 from siptools_research.__main__ import Context, cli
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
@@ -142,20 +140,6 @@ def mock_luigi_config_path(monkeypatch):
                         '_config_paths',
                         ['tests/data/configuration_files/luigi.cfg'])
 
-
-@pytest.fixture(scope="function")
-def mock_filetype_conf(monkeypatch):
-    """Monkeypatch supported filetypes config file path.
-
-    :param monkeypatch: pytest `monkeypatch` fixture
-    :returns: ``None``
-    """
-    # Patching DEFAULT_CONFIG variable would not affect is_supported
-    # -function default arguments. Therefore, the argument defaults are
-    # patched instead.
-    monkeypatch.setattr(siptools_research.utils.mimetypes.is_supported,
-                        "__defaults__",
-                        ('include/etc/dpres_mimetypes.json',))
 
 
 @pytest.yield_fixture(scope="function")

@@ -12,7 +12,7 @@ from tests.metax_data.files import TXT_FILE
 from tests.utils import add_metax_v2_dataset
 
 
-@pytest.mark.usefixtures('testmongoclient', 'mock_filetype_conf')
+@pytest.mark.usefixtures("testmongoclient")
 def test_validatemetadata(workspace, requests_mock):
     """Test ValidateMetadata class.
 
