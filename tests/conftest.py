@@ -20,7 +20,6 @@ from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-METAX_URL = "https://metaksi/rest/v2"
 TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
 UNIT_TEST_CONFIG_FILE = \
     "tests/data/configuration_files/siptools_research_unit_test.conf"

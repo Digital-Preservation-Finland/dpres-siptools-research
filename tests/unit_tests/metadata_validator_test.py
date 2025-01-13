@@ -180,7 +180,7 @@ def test_validate_metadata_invalid(requests_mock):
     """
     dataset = copy.deepcopy(BASE_DATASET)
     del dataset['contract']
-    requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier",
+    requests_mock.get("/rest/v2/datasets/dataset_identifier",
                       json=dataset)
 
     # Try to validate invalid dataset
@@ -263,9 +263,10 @@ def test_validate_metadata_invalid_datacite(requests_mock):
     """
     dataset_file = copy.deepcopy(TXT_FILE)
     tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
-    requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier?"
-                      "dataset_format=datacite",
-                      content=get_invalid_datacite())
+    requests_mock.get(
+        "/rest/v2/datasets/dataset_identifier?dataset_format=datacite",
+        content=get_invalid_datacite()
+    )
 
     # Try to validate invalid dataset
     with pytest.raises(InvalidDatasetMetadataError) as exception_info:
@@ -291,9 +292,10 @@ def test_validate_metadata_corrupted_datacite(requests_mock):
     """
     dataset_file = copy.deepcopy(TXT_FILE)
     tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
-    requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier?"
-                      "dataset_format=datacite",
-                      text="<resource\n")
+    requests_mock.get(
+        "/rest/v2/datasets/dataset_identifier?dataset_format=datacite",
+        text="<resource\n"
+    )
 
     # Try to validate invalid dataset
     expected_error \
@@ -320,8 +322,7 @@ def test_validate_metadata_datacite_bad_request(requests_mock):
     # Mock datacite request response. Mocked response has status code
     # 400, and response body contains error information.
     requests_mock.get(
-        tests.conftest.METAX_URL + '/datasets/dataset_identifier?'
-        'dataset_format=datacite',
+        "/rest/v2/datasets/dataset_identifier?dataset_format=datacite",
         json={"detail": "Bad request"},
         status_code=400
     )
@@ -351,14 +352,14 @@ def test_validate_file_metadata(requests_mock):
     file_2['identifier'] = 'file_identifier2'
 
     files_adapter = requests_mock.get(
-        tests.conftest.METAX_URL + '/datasets/dataset_identifier/files',
+        "/rest/v2/datasets/dataset_identifier/files",
         json=[file_1, file_2],
         status_code=200
     )
 
     # This is here only for the support of V2 and the normalization
     requests_mock.get(
-        tests.conftest.METAX_URL + '/datasets/dataset_identifier',
+        "/rest/v2/datasets/dataset_identifier",
         json={
             "research_dataset": {
                 "files": [
@@ -422,9 +423,10 @@ def test_validate_datacite(requests_mock):
     # Init metax client
     metax_client = get_metax_client(tests.conftest.UNIT_TEST_CONFIG_FILE)
 
-    requests_mock.get("https://metaksi/rest/v2/datasets/dataset_identifier?"
-                      "dataset_format=datacite",
-                      content=get_very_invalid_datacite())
+    requests_mock.get(
+        "/rest/v2/datasets/dataset_identifier?dataset_format=datacite",
+        content=get_very_invalid_datacite()
+    )
 
     # Try to validate datacite
     expected_error = "Datacite metadata is invalid:"
@@ -448,9 +450,9 @@ def test_validate_metadata_http_error_raised(requests_mock):
     """
     tests.utils.add_metax_v2_dataset(requests_mock)
     requests_mock.get(
-        'https://metaksi/rest/v2/datasets/dataset_identifier/files',
+        "/rest/v2/datasets/dataset_identifier/files",
         status_code=500,
-        reason='Something not to be shown to user'
+        reason="Something not to be shown to user"
     )
 
     expected_error = '500 Server Error: Something not to be shown to user'

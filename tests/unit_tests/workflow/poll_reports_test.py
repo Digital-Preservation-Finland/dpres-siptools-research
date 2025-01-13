@@ -32,7 +32,7 @@ def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock, s
     dataset['identifier'] = workspace.name
 
     #Mock metax
-    requests_mock.get(f'https://metaksi/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true',
+    requests_mock.get(f"/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true",
                       json = dataset)
 
     #Mock DPS
@@ -90,8 +90,10 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
     dataset['identifier'] = workspace.name
 
     #Mock metax
-    requests_mock.get(f'https://metaksi/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true',
-                      json = dataset)
+    requests_mock.get(
+        f"/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true",
+        json = dataset
+    )
 
     #Mock DPS
     requests_mock.get('https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest',

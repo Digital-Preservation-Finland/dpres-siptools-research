@@ -139,7 +139,7 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
     )
 
     #Mock metax
-    requests_mock.get(f'https://metaksi/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true',
+    requests_mock.get(f"/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true",
                       json = dataset)
 
     #Mock DPS

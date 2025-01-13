@@ -5,9 +5,9 @@ import uuid
 
 import lxml.etree
 
+import tests.metax_data.contracts
 import tests.metax_data.datasets
 import tests.metax_data.files
-import tests.metax_data.contracts
 
 
 def add_metax_v2_dataset(
@@ -46,58 +46,48 @@ def add_metax_v2_dataset(
 
     for file_ in files:
         # Mock Metax files API
-        requests_mock.get("{}/files/{}".format(tests.conftest.METAX_URL,
-                                               file_['identifier']),
-                          json=file_)
+        requests_mock.get(
+            "/rest/v2/files/{}".format(file_['identifier']),
+            json=file_
+        )
         requests_mock.patch(
-            "{}/files/{}".format(tests.conftest.METAX_URL,
-                                 file_['identifier']),
+            "/rest/v2/files/{}".format(file_['identifier']),
             json=file_
         )
 
     # Mock Metax datasets API
     requests_mock.get(
-        "{}/datasets/{}".format(tests.conftest.METAX_URL,
-                                dataset['identifier']),
+        "/rest/v2/datasets/{}".format(dataset['identifier']),
         json=dataset
     )
     requests_mock.get(
-        "{}/datacatalogs/{}".format(tests.conftest.METAX_URL,
-                                    dataset['data_catalog']['identifier']),
+        "/rest/v2/datacatalogs/{}".format(dataset['data_catalog']['identifier']),
         json={}
     )
     requests_mock.get(
-        "{}/contracts/{}".format(tests.conftest.METAX_URL,
-                                 dataset['contract']['identifier']),
+        "/rest/v2/contracts/{}".format(dataset['contract']['identifier']),
         json={}
     )
     requests_mock.patch(
-        "{}/datasets/{}".format(tests.conftest.METAX_URL,
-                                dataset['identifier']),
+        "/rest/v2/datasets/{}".format(dataset['identifier']),
         json=dataset
     )
     requests_mock.patch(
-        "{}/datasets/{}".format(tests.conftest.METAX_URL,
-                                dataset['preservation_identifier']),
+        "/rest/v2/datasets/{}".format(dataset['preservation_identifier']),
         json=dataset
     )
     requests_mock.get(
-        "{}/datasets/{}?dataset_format=datacite".format(
-            tests.conftest.METAX_URL,
-            dataset['identifier']
-        ),
+        "/rest/v2/datasets/{}?dataset_format=datacite".format(dataset['identifier']),
         content=lxml.etree.tostring(datacite)
     )
     requests_mock.get(
-        "{}/datasets/{}/files".format(tests.conftest.METAX_URL,
-                                      dataset['identifier']),
+        "/rest/v2/datasets/{}/files".format(dataset["identifier"]),
         json=files
     )
 
     # Mock Metax contracts API
     requests_mock.get(
-        "{}/contracts/{}".format(tests.conftest.METAX_URL,
-                                 contract['contract_json']["identifier"]),
+        "/rest/v2/contracts/{}".format(contract["contract_json"]["identifier"]),
         json=contract
     )
 

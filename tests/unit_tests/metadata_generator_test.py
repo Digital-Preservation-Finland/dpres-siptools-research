@@ -33,7 +33,7 @@ def _create_file_v2_http_mock(requests_mock):
     # However, 'add_metax_v2_dataset' also adds its own PATCH file endpoint
     # mock and we need to run this afterwards to override it.
     return requests_mock.patch(
-        "https://metaksi/rest/v2/files/pid:urn:identifier",
+        "/rest/v2/files/pid:urn:identifier",
         json={}
     )
 
@@ -548,7 +548,7 @@ def test_generate_metadata_csv(
     file["file_characteristics"] = predefined_file_characteristics
     tests.utils.add_metax_v2_dataset(requests_mock, files=[file])
     file_v2_http_mock = requests_mock.patch(
-        "https://metaksi/rest/v2/files/pid:urn:identifier_csv",
+        "/rest/v2/files/pid:urn:identifier_csv",
         json={}
     )
 
@@ -650,8 +650,7 @@ def test_generate_metadata_dataset_not_found(requests_mock, testpath):
     :param monkeypatch: Monkeypatch object
     :param requests_mock: Mocker object
     """
-    requests_mock.get('https://metaksi/rest/v2/datasets/foobar/files',
-                      status_code=404)
+    requests_mock.get("/rest/v2/datasets/foobar/files", status_code=404)
 
     expected_error = 'Dataset not found'
     with pytest.raises(DatasetNotAvailableError, match=expected_error):
@@ -667,9 +666,9 @@ def test_generate_metadata_httperror(requests_mock, testpath):
     """
     tests.utils.add_metax_v2_dataset(requests_mock)
     requests_mock.get(
-        'https://metaksi/rest/v2/datasets/dataset_identifier/files',
+        "/rest/v2/datasets/dataset_identifier/files",
         status_code=500,
-        reason='Fake error'
+        reason="Fake error"
     )
 
     expected_error = "500 Server Error: Fake error"

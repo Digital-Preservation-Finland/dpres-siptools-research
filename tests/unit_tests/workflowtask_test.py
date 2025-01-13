@@ -466,10 +466,10 @@ def test_logging(workspace, requests_mock, caplog):
     :param caplog: Captured log messages
     """
     # Create mocked response for HTTP request.
-    requests_mock.get('https://metaksi/rest/v2/datasets/1',
+    requests_mock.get("/rest/v2/datasets/1",
                       status_code=403,
-                      reason='Access denied',
-                      text='No rights to view dataset')
+                      reason="Access denied",
+                      text="No rights to view dataset")
 
     # Run task that sends HTTP request
     luigi.build([MetaxTask(workspace.name, config=UNIT_TEST_CONFIG_FILE)],

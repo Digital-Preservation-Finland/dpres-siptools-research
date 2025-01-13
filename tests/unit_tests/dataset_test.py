@@ -198,7 +198,7 @@ def test_set_preservation_state(requests_mock, metadata):
 
     # Check that preservation state of correct dataset was set
     assert mocked_patch.last_request.url \
-        == 'https://metaksi/rest/v2/datasets/correct-id'
+        == "https://metaksi/rest/v2/datasets/correct-id"
 
     # Check that the request contains correct message
     assert mocked_patch.last_request.json() == {
