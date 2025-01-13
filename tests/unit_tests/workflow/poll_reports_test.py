@@ -1,12 +1,13 @@
 """Unit tests for :mod:`siptools_research.workflow.validate_sip`."""
 import copy
-
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
 import pytest
-from datetime import datetime, timezone, timedelta
 
 from siptools_research.workflow.poll_reports import GetValidationReports
 from tests.metax_data.datasets import BASE_DATASET
+
 
 @pytest.mark.parametrize(
     'status',
@@ -16,11 +17,13 @@ from tests.metax_data.datasets import BASE_DATASET
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock, status):
+def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock,
+                              status):
     """Initializes GetValidationReports task with the input files of the task.
-    After the input files are created, the GetValidationReports is triggered
-    automatically. Checks that the ingest reports were succesfully loaded to
-    the workspace and the task is completed.
+
+    After the input files are created, the GetValidationReports is
+    triggered automatically. Checks that the ingest reports were
+    succesfully loaded to the workspace and the task is completed.
 
     :param workspace: Temporary directory fixture
     :param luigi_mock_ssh_config: Configurations object
@@ -36,31 +39,33 @@ def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock, s
                       json = dataset)
 
     #Mock DPS
-    requests_mock.get('https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest',
-                      json={
-                          "data": {
-                            "results": [
-                            {
-                                "download": {
-                                "html": "foo?type=html",
-                                "xml": "foo?type=xml"
-                            },
-                            "id": dataset['preservation_identifier'],
-                            "date": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
-                            "status": status
-                      }
-                    ]
-                }
+    requests_mock.get(
+        "https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest",
+        json={
+            "data": {
+                "results": [
+                    {
+                        "download": {
+                            "html": "foo?type=html",
+                            "xml": "foo?type=xml"
+                        },
+                        "id": dataset['preservation_identifier'],
+                        "date": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                        "status": status
+                    }
+                ]
             }
-        )
-    
+        }
+    )
+
     requests_mock.get('https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest/doi%3Atest?type=xml',
                       content=b'<hello world/>')
     requests_mock.get('https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest/doi%3Atest?type=html',
                       content=b'<html>hello world</html>')
 
     # Init task
-    task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
+    task = GetValidationReports(dataset_id=workspace.name,
+                                config=luigi_mock_ssh_config)
     assert not task.complete()
 
     # Task is run when the input file is created.

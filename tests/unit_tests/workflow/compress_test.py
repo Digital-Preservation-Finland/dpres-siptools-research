@@ -1,6 +1,7 @@
 """Tests for :mod:`siptools_research.workflow.compress` module."""
 import shutil
 import tarfile
+
 import tests.conftest
 from siptools_research.workflow.compress import CompressSIP
 

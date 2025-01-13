@@ -4,8 +4,8 @@ import datetime
 import pytest
 from requests_mock import ANY
 
-from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.dataset import Dataset, find_datasets
+from siptools_research.exceptions import WorkflowExistsError
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
@@ -18,7 +18,6 @@ from tests.conftest import UNIT_TEST_CONFIG_FILE
                 'identifier': 'urn:nbn:fi:att:data-catalog-pas'
             },
             'preservation_identifier': 'correct-id',
-            
         },
         # Ida dataset
         {
@@ -469,7 +468,7 @@ def test_workflow_conflict():
 
 
 @pytest.mark.parametrize(
-    'kwargs,expected_datasets',
+    ("kwargs", "expected_datasets"),
     [
         # Search without parameters should return all datasets
         ({}, ["ds1", "ds2", "ds3", "ds4", "ds5", "ds6"]),

@@ -38,7 +38,8 @@ def test_main_status_match(cli_runner):
         ]
     )
 
-    # The output is a pretty-printed Python dict: evaluate it to inspect it
+    # The output is a pretty-printed Python dict: evaluate it to inspect
+    # it
     status_data = eval(result.output)
 
     assert status_data["_id"] == "aineisto_1"
@@ -60,8 +61,7 @@ def test_main_status_match(cli_runner):
 
 @pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 def test_main_list(cli_runner):
-    """Test that list of datasets is printed correctly
-    """
+    """Test that list of datasets is printed correctly."""
     for i in range(0, 10):
         dataset = Dataset(f"aineisto_{i}", config=UNIT_TEST_CONFIG_FILE)
         dataset.preserve()

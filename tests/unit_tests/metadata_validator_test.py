@@ -4,24 +4,34 @@ import copy
 
 import lxml.etree
 import pytest
-from siptools_research.metax import get_metax_client
 from requests.exceptions import HTTPError
 
 import siptools_research
-from siptools_research import metadata_validator
-from siptools_research.metadata_validator import validate_metadata
-from siptools_research.exceptions import (InvalidContractMetadataError,
-                                          InvalidDatasetMetadataError,
-                                          InvalidFileMetadataError)
-from siptools_research.metadata_validator import _validate_dataset_metadata
 import tests.utils
-from tests.metax_data.contracts import BASE_CONTRACT
-
-from tests.metax_data.datasets import (BASE_DATACITE, BASE_DATASET,
-                                       BASE_PROVENANCE, QVAIN_PROVENANCE)
+from siptools_research import metadata_validator
+from siptools_research.exceptions import (
+    InvalidDatasetMetadataError,
+    InvalidFileMetadataError,
+)
+from siptools_research.metadata_validator import validate_metadata
+from siptools_research.metax import get_metax_client
+from tests.metax_data.datasets import (
+    BASE_DATACITE,
+    BASE_DATASET,
+    BASE_PROVENANCE,
+    QVAIN_PROVENANCE,
+)
 from tests.metax_data.datasetsV3 import BASE_DATASET as BASE_DATASETV3
-from tests.metax_data.files import (BASE_FILE, CSV_FILE, MKV_FILE, TIFF_FILE,
-                                    TXT_FILE, PDF_FILE, AUDIO_FILE, VIDEO_FILE)
+from tests.metax_data.files import (
+    AUDIO_FILE,
+    BASE_FILE,
+    CSV_FILE,
+    MKV_FILE,
+    PDF_FILE,
+    TIFF_FILE,
+    TXT_FILE,
+    VIDEO_FILE,
+)
 
 
 @contextlib.contextmanager
@@ -64,7 +74,7 @@ def get_very_invalid_datacite():
 
 @pytest.mark.parametrize(
     'file_metadata',
-    (TXT_FILE, CSV_FILE, TIFF_FILE, MKV_FILE, PDF_FILE, AUDIO_FILE, VIDEO_FILE)
+    [TXT_FILE, CSV_FILE, TIFF_FILE, MKV_FILE, PDF_FILE, AUDIO_FILE, VIDEO_FILE]
 )
 def test_validate_metadata(requests_mock, file_metadata):
     """Test validation of dataset metadata that contains one file.
@@ -81,12 +91,12 @@ def test_validate_metadata(requests_mock, file_metadata):
 
 @pytest.mark.parametrize(
     'provenance',
-    (
+    [
         [],
         [BASE_PROVENANCE],
         [BASE_PROVENANCE, BASE_PROVENANCE],
         [QVAIN_PROVENANCE]
-    )
+    ]
 )
 def test_validate_metadata_with_provenance(requests_mock, provenance):
     """Test validation of dataset metadata with provenance events.
@@ -109,10 +119,10 @@ def test_validate_metadata_with_provenance(requests_mock, provenance):
 
 @pytest.mark.parametrize(
     'provenance',
-    (
+    [
         [{}],
         [{"preservation_event": {}}]
-    )
+    ]
 )
 def test_validate_metadata_with_invalid_provenance(requests_mock, provenance):
     """Test validation of dataset metadata with invalid provenance events.
@@ -194,10 +204,18 @@ def test_validate_metadata_invalid(requests_mock):
     ('file_characteristics',
      'version_info'),
     [
-        ({'file_format': 'application/unsupported', 'format_version': '1.0'},
-         ", version 1.0"),
-        ({'file_format': 'application/unsupported'},
-         "")
+        (
+            {
+                'file_format': 'application/unsupported',
+                'format_version': '1.0'
+            },
+            ", version 1.0"),
+        (
+            {
+                'file_format': 'application/unsupported'
+            },
+            "",
+        )
     ]
 )
 # pylint: disable=invalid-name
@@ -223,11 +241,12 @@ def test_validate_invalid_file_type(file_characteristics, version_info,
     # file_format
     expected_error = (
         "Validation error in file /path/to/file: Incorrect file format: "
-        "application/unsupported{}".format(version_info)
+        f"application/unsupported{version_info}"
     )
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
         validate_metadata('dataset_identifier',
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
+
 
 # pylint: disable=invalid-name
 def test_validate_metadata_invalid_file_path(requests_mock):

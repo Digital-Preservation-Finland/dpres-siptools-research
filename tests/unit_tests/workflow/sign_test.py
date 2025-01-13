@@ -1,6 +1,7 @@
 """Test the :mod:`siptools_research.workflow.sign` module."""
 
 import shutil
+
 import tests.conftest
 from siptools_research.workflow import sign
 

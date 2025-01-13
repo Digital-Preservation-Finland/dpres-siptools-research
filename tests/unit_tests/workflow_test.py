@@ -1,26 +1,24 @@
 """Unit tests for :mod:`siptools_research.workflow` package."""
 import copy
-import datetime
 import filecmp
 import importlib
 import shutil
 import tarfile
 from datetime import datetime, timedelta
 
-from lxml.isoschematron import Schematron
-from upload_rest_api.models.file_entry import FileEntry
 import luigi
-import lxml.etree as ET
+import lxml.etree
 import pymongo
 import pytest
+from lxml.isoschematron import Schematron
+from upload_rest_api.models.file_entry import FileEntry
 
-from siptools_research.config import Configuration
 import siptools_research.workflow.compress
 import siptools_research.workflow.create_mets
-from tests.metax_data.files import PAS_STORAGE_SERVICE
 import tests.metax_data.contracts
 import tests.utils
-
+from siptools_research.config import Configuration
+from tests.metax_data.files import PAS_STORAGE_SERVICE
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
 PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
@@ -76,14 +74,15 @@ def _get_schematrons():
     """
     if not SCHEMATRONS:
         for schematron_file in SCHEMATRON_FILES:
-            schematron = Schematron(ET.parse(schematron_file))
+            schematron = Schematron(lxml.etree.parse(schematron_file))
             SCHEMATRONS.append(schematron)
 
     return SCHEMATRONS
 
 
 @pytest.mark.parametrize(
-    "module_name,task", [
+    ("module_name", "task"),
+    [
         ("cleanup", "Cleanup"),
         ("compress", "CompressSIP"),
         ("copy_dataset_to_pas_data_catalog", "CopyToPasDataCatalog"),
@@ -164,7 +163,6 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
                       content=b'<hello world/>')
     requests_mock.get('https://access/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=html',
                       content=b'<hello world/>')
-    
 
 
     # Init pymongo client
@@ -216,7 +214,7 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
     'testmongoclient', 'mock_luigi_config_path', 'mock_filetype_conf'
 )
 @pytest.mark.parametrize(
-    ['dataset', 'files'],
+    ('dataset', 'files'),
     [
         # Dataset with one text file
         (
@@ -343,7 +341,8 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
 
     # Mock file download sources
     for file in files:
-        if file['metadata']['file_storage']['identifier'] == PAS_STORAGE_SERVICE:
+        if file['metadata']['file_storage']['identifier'] \
+                == PAS_STORAGE_SERVICE:
             # Mock upload-rest-api
             file_storage_path = (upload_projects_path / "project_id"
                                  / file["metadata"]["identifier"])
@@ -379,10 +378,10 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
         tar.extractall(testpath / 'extracted_sip')
 
     # Read mets.xml
-    mets = ET.parse(str(testpath / 'extracted_sip' / 'mets.xml'))
+    mets = lxml.etree.parse(str(testpath / 'extracted_sip' / 'mets.xml'))
 
     # Validate mets.xml against schema
-    schema = ET.XMLSchema(ET.parse(METS_XSD))
+    schema = lxml.etree.XMLSchema(lxml.etree.parse(METS_XSD))
     assert schema.validate(mets)
 
     # Validate mets.xml against Schematrons

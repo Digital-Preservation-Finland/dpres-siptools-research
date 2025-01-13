@@ -32,7 +32,7 @@ NAMESPACES = {
 
 
 @pytest.mark.parametrize(
-    'data_catalog,objid',
+    ("data_catalog", "objid"),
     [
         ('urn:nbn:fi:att:data-catalog-ida', 'doi:pas-version-id'),
         ('urn:nbn:fi:att:data-catalog-pas', 'doi:test')
@@ -349,8 +349,8 @@ def test_premis_event_metadata(
     elif "description" in provenance_data:
         assert elements[0].text == "Description of provenance"
     else:
-        # Invalid provenance, there is no title or description
-        assert False
+        error = "Invalid provenance, there is no title or description"
+        raise AssertionError(error)
 
     # Outcome should be "(:unav)" if missing
     elements = digiprovmd.xpath(
@@ -376,7 +376,7 @@ def test_premis_event_metadata(
 
 
 @pytest.mark.parametrize(
-    "event_outcome_identifier,expected_event_outcome",
+    ("event_outcome_identifier", "expected_event_outcome"),
     [
         ("http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success",
          "success"),

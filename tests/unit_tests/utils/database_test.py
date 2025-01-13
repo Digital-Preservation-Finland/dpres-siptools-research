@@ -1,5 +1,6 @@
 """Tests for :mod:`siptools_research.utils.database` module."""
 import pytest
+
 from siptools_research.utils.database import Database
 from tests.conftest import UNIT_TEST_CONFIG_FILE
 
@@ -40,7 +41,7 @@ def test_update_dataset():
 
 
 @pytest.mark.parametrize(
-    'search,document_identifiers',
+    ("search", "document_identifiers"),
     [
         ({}, ['test_id1', 'test_id2', 'test_id3']),
         ({'key1': 'value1'}, ['test_id1', 'test_id2', 'test_id3']),

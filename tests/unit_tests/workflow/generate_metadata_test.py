@@ -4,9 +4,9 @@ import copy
 import pytest
 from metax_access.metax import DS_STATE_TECHNICAL_METADATA_GENERATED
 
-from siptools_research.workflow import generate_metadata
 import tests.metax_data
 import tests.utils
+from siptools_research.workflow import generate_metadata
 
 
 @pytest.mark.usefixtures('testmongoclient')

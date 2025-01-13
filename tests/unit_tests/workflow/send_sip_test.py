@@ -1,10 +1,10 @@
 """Unit tests for :mod:`siptools_research.workflow.send_sip` module."""
-
 import shutil
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
+
 from siptools_research.workflow.send_sip import SendSIPToDP
 
 

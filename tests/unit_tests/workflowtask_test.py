@@ -1,25 +1,28 @@
 """Tests for :mod:`siptools_research.workflowtask` module."""
-
 import luigi
 import pytest
 import requests
-from metax_access import (DS_STATE_GENERATING_METADATA,
-                          DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
-                          DS_STATE_INVALID_METADATA,
-                          DS_STATE_PACKAGING_FAILED,
-                          DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE)
-from siptools_research.metax import get_metax_client
+from metax_access import (
+    DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+    DS_STATE_GENERATING_METADATA,
+    DS_STATE_INVALID_METADATA,
+    DS_STATE_PACKAGING_FAILED,
+    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+)
 
-from tests.conftest import UNIT_TEST_CONFIG_FILE
 from siptools_research.dataset import Dataset, find_datasets
-from siptools_research.exceptions import (InvalidDatasetError,
-                                          InvalidDatasetMetadataError,
-                                          InvalidFileMetadataError,
-                                          InvalidContractMetadataError,
-                                          InvalidFileError,
-                                          MissingFileError,
-                                          InvalidSIPError)
+from siptools_research.exceptions import (
+    InvalidContractMetadataError,
+    InvalidDatasetError,
+    InvalidDatasetMetadataError,
+    InvalidFileError,
+    InvalidFileMetadataError,
+    InvalidSIPError,
+    MissingFileError,
+)
+from siptools_research.metax import get_metax_client
 from siptools_research.workflowtask import WorkflowTask
+from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
 # pylint: disable=too-few-public-methods
@@ -68,7 +71,8 @@ class FailingTask(WorkflowTask):
 
         :returns:  ``None``
         """
-        raise Exception('Shit hit the fan')
+        error = "Shit hit the fan"
+        raise ValueError(error)
 
 
 class InvalidDatasetTask(FailingTask):
@@ -79,7 +83,8 @@ class InvalidDatasetTask(FailingTask):
 
         :returns:  ``None``
         """
-        raise InvalidDatasetError('Dataset is invalid')
+        error = "Dataset is invalid"
+        raise InvalidDatasetError(error)
 
 
 class InvalidDatasetMetadataTask(FailingTask):
@@ -90,7 +95,8 @@ class InvalidDatasetMetadataTask(FailingTask):
 
         :returns:  ``None``
         """
-        raise InvalidDatasetMetadataError('Missing some important metadata')
+        error = "Missing some important metadata"
+        raise InvalidDatasetMetadataError(error)
 
 
 class InvalidFileMetadataTask(FailingTask):
@@ -101,7 +107,8 @@ class InvalidFileMetadataTask(FailingTask):
 
         :returns:  ``None``
         """
-        raise InvalidFileMetadataError('Invalid file encoding')
+        error = "Invalid file encoding"
+        raise InvalidFileMetadataError(error)
 
 
 class InvalidContractMetadataTask(FailingTask):
@@ -112,7 +119,8 @@ class InvalidContractMetadataTask(FailingTask):
 
         :returns: ``None``
         """
-        raise InvalidContractMetadataError('Missing organization identifier')
+        error = "Missing organization identifier"
+        raise InvalidContractMetadataError(error)
 
 
 class MissingFileTask(FailingTask):
@@ -123,7 +131,8 @@ class MissingFileTask(FailingTask):
 
         :returns:  ``None``
         """
-        raise MissingFileError('A file was not found in Ida')
+        error = "A file was not found in Ida"
+        raise MissingFileError(error)
 
 
 class InvalidFileTask(FailingTask):
@@ -134,7 +143,8 @@ class InvalidFileTask(FailingTask):
 
         :returns:  ``None``
         """
-        raise InvalidFileError('A file is not well-formed')
+        error = "A file is not well-formed"
+        raise InvalidFileError(error)
 
 
 class InvalidSIPTask(FailingTask):
@@ -145,7 +155,8 @@ class InvalidSIPTask(FailingTask):
 
         :returns:  ``None``
         """
-        raise InvalidSIPError('SIP was rejected in DPS')
+        error = "SIP was rejected in DPS"
+        raise InvalidSIPError(error)
 
 
 class MetaxTask(WorkflowTask):
@@ -262,51 +273,51 @@ def test_run_failing_task(workspace):
 
 @pytest.mark.parametrize(
     ('task', 'expected_state', 'expected_description'),
-    (
+    [
 
-        [
+        (
             InvalidDatasetTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidDatasetError: Dataset is invalid'
-        ],
-        [
+        ),
+        (
             InvalidDatasetMetadataTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidDatasetMetadataError: Missing some important metadata'
-        ],
-        [
+        ),
+        (
             InvalidFileMetadataTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidFileMetadataError: Invalid file encoding'
-        ],
-        [
+        ),
+        (
             InvalidContractMetadataTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidContractMetadataError: Missing organization identifier'
-        ],
-        [
+        ),
+        (
             InvalidFileTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidFileError: A file is not well-formed'
-        ],
-        [
+        ),
+        (
             MissingFileTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'MissingFileError: A file was not found in Ida'
-        ],
-        [
+        ),
+        (
             InvalidSIPTask,
             DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
             'An error occurred while running a test task: '
             'InvalidSIPError: SIP was rejected in DPS'
-        ],
-    )
+        ),
+    ]
 )
 @pytest.mark.usefixtures('testmongoclient')
 def test_invalid_dataset_error(workspace, requests_mock, task, expected_state,
@@ -495,7 +506,5 @@ def test_logging(workspace, requests_mock, caplog):
     assert isinstance(exception, requests.HTTPError)
     assert str(exception).startswith('403 Client Error: Access denied')
 
-
-# TODO: Test for WorkflowWrapperTask
 
 # TODO: Test for WorkfloExternalTask

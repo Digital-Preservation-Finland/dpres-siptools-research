@@ -1,13 +1,14 @@
 """Unit tests for ReportPreservationStatus task."""
 
 import pytest
+
+import tests
 from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
-import tests
 
 
 @pytest.mark.parametrize(
-    'dataset_metadata,patched_dataset_id',
+    ("dataset_metadata", "patched_dataset_id"),
     [
         # Ida dataset has been copied to PAS catalog. The preservation
         # state of the dataset in PAS catalog should be updated.
@@ -78,8 +79,8 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
     # Create directory with name of the workspace to the local
     # workspace directory, so that the ReportPreservationStatus thinks
     # that validation has completed.
-    ingest_report \
-        = workspace / "preservation" / "ingest-reports" / "accepted" / f"{dataset_metadata['preservation_identifier']}.xml"
+    ingest_report = (workspace / "preservation" / "ingest-reports" / "accepted"
+                     / f"{dataset_metadata['preservation_identifier']}.xml")
     ingest_report.parent.mkdir(parents=True, exist_ok=True)
     ingest_report.write_text('foo')
 
@@ -118,8 +119,8 @@ def test_reportpreservationstatus_rejected(workspace, requests_mock):
         }
     )
 
-    ingest_report \
-        = workspace / "preservation" / "ingest-reports" / "rejected" / "doi:test.xml"
+    ingest_report = (workspace / "preservation" / "ingest-reports" / "rejected"
+                     / "doi:test.xml")
     ingest_report.parent.mkdir(parents=True, exist_ok=True)
     ingest_report.write_text('foo')
 
@@ -143,9 +144,9 @@ def test_reportpreservationstatus_rejected(workspace, requests_mock):
 def test_reportpreservationstatus_rejected_int_error(workspace):
     """Test handling conflicting ingest reports.
 
-    Creates ingest report files to "rejected" and "accepted" directories.
-    Runs ReportPreservationStatus task,
-    and tests that the report file is NOT sent.
+    Creates ingest report files to "rejected" and "accepted"
+    directories. Runs ReportPreservationStatus task, and tests that the
+    report file is NOT sent.
 
     :param testpath: Temporary directory fixture
     :param luigi_mock_ssh_config: Luigi configuration file path
@@ -156,10 +157,10 @@ def test_reportpreservationstatus_rejected_int_error(workspace):
     # preservation server over SSH, so that the ReportPreservationStatus
     # thinks that validation has been rejected.
 
-    accepted_report_path = \
-        workspace / "preservation" / "ingest-reports" / "accepted" / "doi:test.xml"
-    rejected_report_path = \
-        workspace / "preservation" / "ingest-reports" / "rejected" / "doi:test.xml"
+    accepted_report_path = (workspace / "preservation" / "ingest-reports" /
+                            "accepted" / "doi:test.xml")
+    rejected_report_path = (workspace / "preservation" / "ingest-reports" /
+                            "rejected" / "doi:test.xml")
 
     accepted_report_path.parent.mkdir(parents=True)
     accepted_report_path.write_bytes(b"Accepted")

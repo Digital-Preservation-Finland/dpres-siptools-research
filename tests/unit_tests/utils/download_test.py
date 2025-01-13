@@ -1,13 +1,13 @@
 """Tests for :mod:`siptools_research.utils.download` module."""
-
 import pytest
-from siptools_research.utils.download import (FileAccessError,
-                                              FileNotAvailableError,
-                                              download_file)
 
+from siptools_research.utils.download import (
+    FileAccessError,
+    FileNotAvailableError,
+    download_file,
+)
 from tests.conftest import UNIT_TEST_CONFIG_FILE, UNIT_TEST_SSL_CONFIG_FILE
 from tests.utils import add_mock_ida_download
-
 
 TEST_DATA = b"foo\n"
 TEST_CHECKSUM = \
@@ -65,8 +65,7 @@ def test_download_file(testpath, requests_mock, config_file, request_verified):
 
 
 def test_download_file_invalid_checksum(testpath, requests_mock):
-    """Try to download a file from IDA with a non-matching checksum
-    """
+    """Try to download a file from IDA with a non-matching checksum."""
     add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id="dataset_id",

@@ -1,15 +1,23 @@
 """Tests for :mod:`siptools_research.schemas` module."""
 import copy
 
-import pytest
 import jsonschema
-import siptools_research.schemas
+import pytest
 
+import siptools_research.schemas
 from tests.metax_data.datasetsV3 import (
-    BASE_DATASET, BASE_PROVENANCE, QVAIN_PROVENANCE
+    BASE_DATASET,
+    BASE_PROVENANCE,
+    QVAIN_PROVENANCE,
 )
 from tests.metax_data.filesV3 import (
-    TXT_FILE, CSV_FILE, PDF_FILE, TIFF_FILE, AUDIO_FILE, MKV_FILE, VIDEO_FILE
+    AUDIO_FILE,
+    CSV_FILE,
+    MKV_FILE,
+    PDF_FILE,
+    TIFF_FILE,
+    TXT_FILE,
+    VIDEO_FILE,
 )
 
 SAMPLE_FILES = [
@@ -94,7 +102,7 @@ def test_validate_invalid_dataset_metadata():
 
 @pytest.mark.parametrize(
     'file_metadata',
-    (TXT_FILE, CSV_FILE, PDF_FILE, TIFF_FILE, AUDIO_FILE, MKV_FILE, VIDEO_FILE)
+    [TXT_FILE, CSV_FILE, PDF_FILE, TIFF_FILE, AUDIO_FILE, MKV_FILE, VIDEO_FILE]
 )
 def test_validate_valid_file_metadata(file_metadata):
     """Test validation of valid file metadata.
@@ -152,13 +160,13 @@ def test_validate_invalid_file_metadata():
 
 @pytest.mark.parametrize(
     'attribute',
-    (
+    [
         'csv_delimiter',
         'csv_has_header',
         'csv_record_separator',
         'csv_quoting_char',
         'encoding'
-    )
+    ]
 )
 def test_validate_invalid_csv(attribute):
     """Test validation of invalid CSV metadata.

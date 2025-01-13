@@ -110,12 +110,12 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
 
 
 @pytest.mark.parametrize(
-    [
+    (
         'path',
         'expected_v3_file_characteristics',
         'expected_v2_file_characteristics',
         'expected_stream_type'
-    ],
+    ),
     [
         # Text file should have encoding, but not format_version
         (

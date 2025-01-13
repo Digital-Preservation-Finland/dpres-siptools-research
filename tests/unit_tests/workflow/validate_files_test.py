@@ -3,10 +3,10 @@ import copy
 
 import pytest
 
-from siptools_research.workflow import validate_files
-from siptools_research.exceptions import InvalidFileError
 import tests.metax_data.files
 import tests.utils
+from siptools_research.exceptions import InvalidFileError
+from siptools_research.workflow import validate_files
 
 
 @pytest.mark.usefixtures('testmongoclient')

@@ -1,13 +1,16 @@
 """Tests for :mod:`siptools_research.workflow_init` module."""
 import pytest
 
-from tests.conftest import UNIT_TEST_CONFIG_FILE
-from siptools_research.dataset import Dataset, Target
-from siptools_research.workflow_init import InitWorkflows
+from siptools_research.dataset import (
+    Dataset,
+    Target,
+)
 from siptools_research.workflow.cleanup import Cleanup
-from siptools_research.workflow.report_dataset_validation_result\
-    import ReportDatasetValidationResult
 from siptools_research.workflow.generate_metadata import GenerateMetadata
+from siptools_research.workflow_init import InitWorkflows
+from siptools_research.workflow.report_dataset_validation_result import \
+    ReportDatasetValidationResult
+from tests.conftest import UNIT_TEST_CONFIG_FILE
 
 
 @pytest.mark.usefixtures('testmongoclient', 'pkg_root')
@@ -38,7 +41,7 @@ def test_initworkflows():
 
 @pytest.mark.usefixtures('testmongoclient', 'pkg_root')
 @pytest.mark.parametrize(
-    'target,target_task',
+    ("target", "target_task"),
     [
         ('preservation', Cleanup),
         ('validation', ReportDatasetValidationResult),

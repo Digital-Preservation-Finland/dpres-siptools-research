@@ -1,8 +1,10 @@
 """Unit tests for CopyToPasDataCatalog task."""
 import pytest
-from metax_access import (DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
-                          DS_STATE_METADATA_CONFIRMED,
-                          DS_STATE_INITIALIZED)
+from metax_access import (
+    DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+    DS_STATE_INITIALIZED,
+    DS_STATE_METADATA_CONFIRMED,
+)
 
 import tests.conftest
 from siptools_research.workflow import copy_dataset_to_pas_data_catalog

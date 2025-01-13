@@ -4,12 +4,12 @@ import copy
 
 import pytest
 
+import tests.conftest
 from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
-import tests.conftest
-from tests.utils import add_metax_v2_dataset
 from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import TXT_FILE
+from tests.utils import add_metax_v2_dataset
 
 
 @pytest.mark.usefixtures('testmongoclient', 'mock_filetype_conf')
