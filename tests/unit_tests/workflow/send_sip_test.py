@@ -15,7 +15,7 @@ def test_send_sip(workspace, luigi_mock_ssh_config, sftp_dir):
     Run task and check that .tar is copied to digital preservation
     server.
 
-    :param testpath: Temporary directory fixture
+    :param workspace: Temporary workspace directory
     :returns: ``None``
     """
     tar_file_name = f"{workspace.name}.tar"

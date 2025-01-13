@@ -13,7 +13,7 @@ from siptools_research.workflow import validate_files
 def test_validatefiles(workspace, requests_mock):
     """Test file validation.
 
-    :param testpath: Temporary directory
+    :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
     :returns: ``None``
     """
@@ -46,7 +46,7 @@ def test_validatefiles_invalid(workspace, requests_mock):
 
     Validate dataset that contains invalid file. The task should fail.
 
-    :param testpath: Temporary directory
+    :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
     :returns: ``None``
     """

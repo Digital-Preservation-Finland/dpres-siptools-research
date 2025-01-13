@@ -38,7 +38,7 @@ def _create_file_v2_http_mock(requests_mock):
     )
 
 
-def test_generate_metadata(file_v3_mock, requests_mock, testpath):
+def test_generate_metadata(file_v3_mock, requests_mock, tmp_path):
     """Test metadata generation.
 
     Generates metadata for text file. Checks that expected request is
@@ -51,12 +51,12 @@ def test_generate_metadata(file_v3_mock, requests_mock, testpath):
     file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     # Create a text file in temporary directory
-    tmp_file_path = testpath / "textfile"
+    tmp_file_path = tmp_path / "textfile"
     tmp_file_path.write_text("foo")
 
     # Generate metadata
     generate_metadata("dataset_identifier",
-                      root_directory=testpath,
+                      root_directory=tmp_path,
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # V3: verify the file characteristics that were provided to metax-access
@@ -221,7 +221,7 @@ def test_file_format_detection(
         file_v3_mock, requests_mock, path,
         expected_v2_file_characteristics,
         expected_v3_file_characteristics,
-        expected_stream_type, testpath):
+        expected_stream_type, tmp_path):
     """Test file format detection.
 
     Generates metadata for a dataset that contains one file, and checks
@@ -232,7 +232,7 @@ def test_file_format_detection(
     :param expected_file_characteristics: expected file_characteristics
     :param expected_stream_type: expected type of first stream in
                                  file_characteristics_extension
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     :returns: ``None``
     """
     # create mocked dataset in Metax
@@ -245,13 +245,13 @@ def test_file_format_detection(
     file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     # Copy the file to temporary directory
-    tmp_file_path = testpath / file_path.relative_to('/')
+    tmp_file_path = tmp_path / file_path.relative_to('/')
     tmp_file_path.parent.mkdir(parents=True)
     shutil.copy(path, tmp_file_path)
 
     # Generate metadata
     generate_metadata('dataset_identifier',
-                      root_directory=testpath,
+                      root_directory=tmp_path,
                       config=tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # V3: test the PATCH request was sent
@@ -283,26 +283,26 @@ def test_file_format_detection(
     assert file_char_ext['streams']['0']['stream_type'] == expected_stream_type
 
 
-def test_generate_metadata_video_streams(file_v3_mock, requests_mock, testpath):
+def test_generate_metadata_video_streams(file_v3_mock, requests_mock, tmp_path):
     """Test metadata generation for a video file.
 
     Generates file characteristics for a video file with multiple
     streams.
 
     :param requests_mock: HTTP request mocker
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     """
     tests.utils.add_metax_v2_dataset(
         requests_mock,
         files=[tests.metax_data.files.BASE_FILE])
 
-    tmp_file_path = testpath / "path/to/file"
+    tmp_file_path = tmp_path / "path/to/file"
     tmp_file_path.parent.mkdir(parents=True)
     shutil.copy('tests/data/sample_files/video_ffv1.mkv', tmp_file_path)
     file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     generate_metadata(
-        'dataset_identifier', testpath, tests.conftest.UNIT_TEST_CONFIG_FILE
+        'dataset_identifier', tmp_path, tests.conftest.UNIT_TEST_CONFIG_FILE
     )
 
     # V3: test that correct streams were found
@@ -349,14 +349,14 @@ def test_generate_metadata_video_streams(file_v3_mock, requests_mock, testpath):
     assert streams_by_type['video'][0]['mimetype'] == 'video/x-ffv'
 
 
-def test_generate_metadata_unrecognized(requests_mock, testpath):
+def test_generate_metadata_unrecognized(requests_mock, tmp_path):
     """Test metadata generation for unrecognized file.
 
     File scraper does not recognize for example empty files. Metadata
     generation should raise error if file type is (:unav).
 
     :param requests_mock: Mocker object
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     """
     # create mocked dataset in Metax
     tests.utils.add_metax_v2_dataset(
@@ -365,20 +365,20 @@ def test_generate_metadata_unrecognized(requests_mock, testpath):
     )
 
     # Create empty file to temporary directory
-    tmp_file_path = testpath / 'path/to/file'
+    tmp_file_path = tmp_path / 'path/to/file'
     tmp_file_path.parent.mkdir(parents=True)
     tmp_file_path.write_text("")
 
     with pytest.raises(InvalidFileError) as exception_info:
         generate_metadata('dataset_identifier',
-                          testpath,
+                          tmp_path,
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     assert str(exception_info.value) == 'File format was not recognized'
     assert exception_info.value.files == ['pid:urn:identifier']
 
 
-def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
+def test_generate_metadata_predefined(file_v3_mock, requests_mock, tmp_path):
     """Test generate_metadata.
 
     Tests metadata generation for files that already have some
@@ -386,7 +386,7 @@ def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
     overwritten, but missing information should be added.
 
     :param requests_mock: Mocker object
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     """
     file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
     file_metadata['file_characteristics'] = {
@@ -407,12 +407,12 @@ def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
     file_v2_http_mock = _create_file_v2_http_mock(requests_mock)
 
     # Create text file in temporary directory
-    tmp_file_path = testpath / 'path/to/file'
+    tmp_file_path = tmp_path / 'path/to/file'
     tmp_file_path.parent.mkdir(parents=True)
     tmp_file_path.write_text('foo')
 
     generate_metadata('dataset_identifier',
-                      testpath,
+                      tmp_path,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # V3: Verify file characteristics were sent to Metax
@@ -527,7 +527,7 @@ def test_generate_metadata_predefined(file_v3_mock, requests_mock, testpath):
     ]
 )
 def test_generate_metadata_csv(
-        file_v3_mock, requests_mock, testpath,
+        file_v3_mock, requests_mock, tmp_path,
         predefined_file_characteristics,
         expected_v3_file_characteristics,
         expected_v2_file_characteristics):
@@ -536,7 +536,7 @@ def test_generate_metadata_csv(
     Tests metadata generation for a CSV file.
 
     :param requests_mock: Mocker object
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     :param predefined_file_characteristics: File characteristics that
         have been defined before metadata generation
     :param expected_file_characteristics: File characteristics that
@@ -553,12 +553,12 @@ def test_generate_metadata_csv(
     )
 
     # Create text file in temporary directory
-    tmp_file_path = testpath / 'path/to/file.csv'
+    tmp_file_path = tmp_path / 'path/to/file.csv'
     tmp_file_path.parent.mkdir(parents=True)
     shutil.copy("tests/data/sample_files/text_csv.csv", tmp_file_path)
 
     generate_metadata('dataset_identifier',
-                      testpath,
+                      tmp_path,
                       tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     # V3: verify the file characteristics that were sent to Metax
@@ -612,7 +612,7 @@ def test_generate_metadata_csv(
         # ("encoding": "foo")
     ]
 )
-def test_overwriting_user_defined_metadata(requests_mock, testpath, key,
+def test_overwriting_user_defined_metadata(requests_mock, tmp_path, key,
                                            value):
     """Test that use defined metadata is not overwritten.
 
@@ -620,7 +620,7 @@ def test_overwriting_user_defined_metadata(requests_mock, testpath, key,
     does not match the pre-defined metadata.
 
     :param requests_mock: Mocker object
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     :param key: key to be modified in file_characteristics
     :param value: value to for key
     """
@@ -628,13 +628,13 @@ def test_overwriting_user_defined_metadata(requests_mock, testpath, key,
     file["file_characteristics"][key] = value
     tests.utils.add_metax_v2_dataset(requests_mock, files=[file])
 
-    tmp_file_path = testpath / 'path/to/file'
+    tmp_file_path = tmp_path / 'path/to/file'
     tmp_file_path.parent.mkdir(parents=True)
     tmp_file_path.write_text("foo")
 
     with pytest.raises(InvalidFileMetadataError) as exception_info:
         generate_metadata('dataset_identifier',
-                          testpath,
+                          tmp_path,
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
     assert str(exception_info.value) \
@@ -642,7 +642,7 @@ def test_overwriting_user_defined_metadata(requests_mock, testpath, key,
     assert exception_info.value.files == ["pid:urn:identifier"]
 
 
-def test_generate_metadata_dataset_not_found(requests_mock, testpath):
+def test_generate_metadata_dataset_not_found(requests_mock, tmp_path):
     """Test metadatageneration for dataset that does not exist.
 
     DatasetNotAvailableError should be raised.
@@ -655,11 +655,11 @@ def test_generate_metadata_dataset_not_found(requests_mock, testpath):
     expected_error = 'Dataset not found'
     with pytest.raises(DatasetNotAvailableError, match=expected_error):
         generate_metadata('foobar',
-                          testpath,
+                          tmp_path,
                           tests.conftest.UNIT_TEST_CONFIG_FILE)
 
 
-def test_generate_metadata_httperror(requests_mock, testpath):
+def test_generate_metadata_httperror(requests_mock, tmp_path):
     """Test metadata generation when Metax fails.
 
     :param requests_mock: Mocker object
@@ -674,5 +674,5 @@ def test_generate_metadata_httperror(requests_mock, testpath):
     expected_error = "500 Server Error: Fake error"
     with pytest.raises(HTTPError, match=expected_error):
         generate_metadata('dataset_identifier',
-                          testpath,
+                          tmp_path,
                           tests.conftest.UNIT_TEST_CONFIG_FILE)

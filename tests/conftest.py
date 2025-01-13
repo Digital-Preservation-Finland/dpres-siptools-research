@@ -39,15 +39,12 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
 @pytest.fixture(autouse=True)
-def mock_upload_conf(monkeypatch):
+def mock_upload_conf():
+    """Mock upload-rest-api database connection."""
     mongoengine.disconnect()
-    # TODO remove support for mongoengine 0.24.x when RHEL9 migration is done
-    if mongoengine.__version__ <= "0.24.2":
-        mongoengine.connect(host="mongomock://localhost/upload", tz_aware=True)
-    else:
-        mongoengine.connect("upload", host="mongodb://localhost",
-                            tz_aware=True,
-                            mongo_client_class=mongomock.MongoClient)
+    mongoengine.connect("upload", host="mongodb://localhost",
+                        tz_aware=True,
+                        mongo_client_class=mongomock.MongoClient)
 
 
 @pytest.fixture(scope="function")
@@ -71,29 +68,13 @@ def testmongoclient(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def testpath(tmpdir):
-    """
-    Create a temporary test directory and return a pathlib.Path object.
-
-    This is pretty much identical to `tmp_path` fixture found in pytest
-    3.9.0 and up, and can be replaced accordingly once that is
-    available.
-    """
-    # TODO: Replace `testpath` with built-in `tmp_path` in pytest 3.9.0 and up
-    return Path(str(tmpdir))
-
-
-@pytest.fixture(scope="function")
-# TODO: Replace tmpdir fixture with tmp_path fixture when pytest>=3.9.1
-# is available on Centos
-# pylint: disable=redefined-outer-name
-def pkg_root(testpath, monkeypatch):
+def pkg_root(tmp_path, monkeypatch):
     """Create a temporary packaging root directory.
 
     Mocks configuration module to use the temporary directory as
     packaging root directory.
 
-    :param testpath: pathlib.Path object
+    :param tmp_path: pathlib.Path object
     :param monkeypatch: monkeypatch object
     :returns: pathlib.Path pointing to temporary directory
     """
@@ -101,7 +82,7 @@ def pkg_root(testpath, monkeypatch):
     def _mock_get(self, parameter):
         """Mock get method."""
         if parameter == "packaging_root":
-            return str(testpath / "packaging")
+            return str(tmp_path / "packaging")
         # pylint: disable=protected-access
         return self._parser.get(self.config_section, parameter)
 
@@ -110,7 +91,7 @@ def pkg_root(testpath, monkeypatch):
     )
 
     # Create packaging root directory
-    pkg_root_ = testpath / "packaging"
+    pkg_root_ = tmp_path / "packaging"
     pkg_root_.mkdir()
 
     return pkg_root_
@@ -118,10 +99,10 @@ def pkg_root(testpath, monkeypatch):
 
 @pytest.fixture(scope="function")
 # TODO: This hack can be removed when TPASPKT-516 is resolved
-def upload_projects_path(testpath, monkeypatch):
+def upload_projects_path(tmp_path, monkeypatch):
     """Configure UPLOAD_PROJECTS_PATH for upload-rest-api."""
     # Mock upload-rest-api configuration
-    path = testpath / "upload_projects"
+    path = tmp_path / "upload_projects"
     path.mkdir()
     from upload_rest_api.config import CONFIG
     monkeypatch.setitem(CONFIG, 'UPLOAD_PROJECTS_PATH', path)

@@ -62,7 +62,6 @@ def test_reportpreservationstatus(workspace, requests_mock, dataset_metadata,
     preservation status of correct dataset is updated.
 
     :param workspace: Temporary directory fixture
-    :param luigi_mock_ssh_config: Luigi configuration file path
     :param requests_mock: HTTP request mocker
     :param dataset_metadata: Dataset metadata in Metax
     :param patched_dataset_id: Dataset identifier that should be used
@@ -104,10 +103,8 @@ def test_reportpreservationstatus_rejected(workspace, requests_mock):
     Runs ReportPreservationStatus task,
     which should raise an exception.
 
-    :param testpath: Temporary directory fixture
-    :param luigi_mock_ssh_config: Luigi configuration file path
-    :param sftp_dir: Directory that acts as DPS sftp home directory
-    :returns: ``None``
+    :param workspace: Temporary worpspace directory
+    :param requests_mock: HTTP request mocker
     """
     # Mock metax
     requests_mock.get(
@@ -148,10 +145,7 @@ def test_reportpreservationstatus_rejected_int_error(workspace):
     directories. Runs ReportPreservationStatus task, and tests that the
     report file is NOT sent.
 
-    :param testpath: Temporary directory fixture
-    :param luigi_mock_ssh_config: Luigi configuration file path
-    :param sftp_dir: Directory that acts as DPS sftp home directory
-    :returns: ``None``
+    :param workspace: Temporary workspace directory
     """
     # Create directory with name of the workspace to digital
     # preservation server over SSH, so that the ReportPreservationStatus

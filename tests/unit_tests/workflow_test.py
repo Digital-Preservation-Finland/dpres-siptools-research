@@ -313,7 +313,7 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
         )
     ]
 )
-def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
+def test_mets_creation(tmp_path, workspace, requests_mock, dataset, files,
                        upload_projects_path):
     """Test SIP validity.
 
@@ -323,7 +323,7 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
         #. mets.xml passes schematron verification
         #. all files are found in correct path
 
-    :param testpath: temporary directory
+    :param tmp_path: temporary directory
     :param workspace: temporary workspace directory
     :param requests_mock: Mocker object
     :param dataset: dataset metadata
@@ -375,10 +375,10 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
     with tarfile.open(workspace
                       / 'preservation'
                       / f'{workspace.name}.tar') as tar:
-        tar.extractall(testpath / 'extracted_sip')
+        tar.extractall(tmp_path / 'extracted_sip')
 
     # Read mets.xml
-    mets = lxml.etree.parse(str(testpath / 'extracted_sip' / 'mets.xml'))
+    mets = lxml.etree.parse(str(tmp_path / 'extracted_sip' / 'mets.xml'))
 
     # Validate mets.xml against schema
     schema = lxml.etree.XMLSchema(lxml.etree.parse(METS_XSD))
@@ -391,7 +391,7 @@ def test_mets_creation(testpath, workspace, requests_mock, dataset, files,
     # Check that all files are included in SIP
     for file in files:
         file_in_sip = (
-            testpath / "extracted_sip" / "dataset_files"
+            tmp_path / "extracted_sip" / "dataset_files"
             / file["metadata"]["file_path"].strip('/')
         )
         assert filecmp.cmp(file_in_sip, file['path'])

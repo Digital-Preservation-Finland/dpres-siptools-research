@@ -6,14 +6,14 @@ import tests.conftest
 from siptools_research.workflow.compress import CompressSIP
 
 
-def test_compresssip(workspace, testpath):
+def test_compresssip(workspace, tmp_path):
     """Test CompresSIP task.
 
     Run function should create a tar-file and complete function should
     return ``True`` when tar-file exists.
 
-    :param workspace: Temporary workspace directory fixture
-    :param pkg_root: Temporary packaging root directory fixture
+    :param workspace: Temporary workspace directory
+    :param tmp_path: Temporary directory
     """
     (workspace / 'metadata_generation' / 'dataset_files').mkdir(parents=True)
 
@@ -39,9 +39,9 @@ def test_compresssip(workspace, testpath):
     with tarfile.open(
         workspace / "preservation" / f"{workspace.name}.tar"
     ) as tar:
-        tar.extractall(testpath / 'extracted_tar')
+        tar.extractall(tmp_path / 'extracted_tar')
 
     found_files = {
-        path.name for path in (testpath / "extracted_tar").iterdir()
+        path.name for path in (tmp_path / "extracted_tar").iterdir()
     }
     assert found_files == {'signature.sig', 'mets.xml', 'dataset_files'}

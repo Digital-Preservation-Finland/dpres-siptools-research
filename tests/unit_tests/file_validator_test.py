@@ -13,13 +13,13 @@ from tests.metax_data.files import SEG_Y_FILE, TIFF_FILE, TXT_FILE
 from tests.utils import add_metax_v2_dataset
 
 
-def test_validate_files(requests_mock, testpath):
+def test_validate_files(requests_mock, tmp_path):
     """Test validating valid files.
 
     Validator should not raise any exceptions.
 
     :param requests_mock: Mocker object
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     """
     # Mock metax
     file1 = copy.deepcopy(TXT_FILE)
@@ -35,27 +35,27 @@ def test_validate_files(requests_mock, testpath):
     )
 
     # Create valid files in temporary directory
-    path1 = testpath / "path/to/file1"
+    path1 = tmp_path / "path/to/file1"
     path1.parent.mkdir(parents=True)
     path1.write_text("foo")
-    path2 = testpath / "path/to/file2"
+    path2 = tmp_path / "path/to/file2"
     path2.write_text("bar")
 
     # Validator should return `None`, and exceptions should not be
     # raised.
     assert validate_files("dataset_identifier",
-                          testpath,
+                          tmp_path,
                           tests.conftest.UNIT_TEST_CONFIG_FILE) is None
 
 
-def test_validate_invalid_files(requests_mock, testpath):
+def test_validate_invalid_files(requests_mock, tmp_path):
     """Test validating a not well-formed file.
 
     Try to validate an empty text file. File validator should detect the
     file as not well-formed and raise exception.
 
     :param requests_mock: Mocker object
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
     # of the file is text/plain.
@@ -66,14 +66,14 @@ def test_validate_invalid_files(requests_mock, testpath):
     )
 
     # Create a empty file to temporary directory
-    filepath = testpath / "path/to/file"
+    filepath = tmp_path / "path/to/file"
     filepath.parent.mkdir(parents=True)
     filepath.write_text("")
 
     with pytest.raises(InvalidFileError) as exception_info:
         validate_files(
             "dataset_identifier",
-            testpath,
+            tmp_path,
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 
@@ -81,13 +81,13 @@ def test_validate_invalid_files(requests_mock, testpath):
     assert exception_info.value.files == ['pid:urn:identifier']
 
 
-def test_validate_bitlevel_file(requests_mock, testpath):
+def test_validate_bitlevel_file(requests_mock, tmp_path):
     """Test validating a file only accepted for bit-level preservation.
 
     File validator should ignore the validation result in this case.
 
     :param requests_mock: Mocker object
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
     # of the file is application/x.fi-dpres.segy.
@@ -98,7 +98,7 @@ def test_validate_bitlevel_file(requests_mock, testpath):
     )
 
     # Copy a SEG-Y file to temporary directory
-    filepath = testpath / "path/to/file.sgy"
+    filepath = tmp_path / "path/to/file.sgy"
     filepath.parent.mkdir(parents=True)
     shutil.copy("tests/data/sample_files/invalid_1.0_ascii_header.sgy",
                 filepath)
@@ -107,18 +107,18 @@ def test_validate_bitlevel_file(requests_mock, testpath):
     # raised.
     assert validate_files(
         "dataset_identifier",
-        testpath,
+        tmp_path,
         tests.conftest.UNIT_TEST_CONFIG_FILE
     ) is None
 
 
-def test_validate_wrong_mimetype(requests_mock, testpath):
+def test_validate_wrong_mimetype(requests_mock, tmp_path):
     """Test validating a text file as a TIFF file.
 
     File validator should detect wrong mimetype, and raise exception.
 
     :param requests_mock: Mocker object
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     """
     # Mock metax. Create a dataset that contains one file. The mimetype
     # of the file is image/tiff.
@@ -129,14 +129,14 @@ def test_validate_wrong_mimetype(requests_mock, testpath):
     )
 
     # Mock Ida. Create a plain text file instead of a TIFF file.
-    filepath = testpath / "path/to/file.tiff"
+    filepath = tmp_path / "path/to/file.tiff"
     filepath.parent.mkdir(parents=True)
     filepath.write_text('foo')
 
     with pytest.raises(InvalidFileError) as exception_info:
         validate_files(
             "dataset_identifier",
-            testpath,
+            tmp_path,
             tests.conftest.UNIT_TEST_CONFIG_FILE
         )
 

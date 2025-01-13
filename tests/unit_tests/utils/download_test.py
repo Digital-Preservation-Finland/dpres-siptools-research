@@ -29,10 +29,10 @@ def _get_file_metadata(identifier, checksum):
                              (UNIT_TEST_CONFIG_FILE, False),
                              (UNIT_TEST_SSL_CONFIG_FILE, True)
                          ])
-def test_download_file(testpath, requests_mock, config_file, request_verified):
+def test_download_file(tmp_path, requests_mock, config_file, request_verified):
     """Test downloading a file to a temporary directory.
 
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     :param requests_mock: HTTP request mocker
     :param config_file: used configuration file
     :param request_verified: should HTTP request to Ida be verified?
@@ -47,7 +47,7 @@ def test_download_file(testpath, requests_mock, config_file, request_verified):
     requests_mock.get("https://download.dl.test/download",
                       content=TEST_DATA)
 
-    new_file_path = testpath / 'new_file'
+    new_file_path = tmp_path / 'new_file'
     download_file(
         _get_file_metadata(
             'pid:urn:1',
@@ -64,7 +64,7 @@ def test_download_file(testpath, requests_mock, config_file, request_verified):
     assert requests_mock.last_request.verify is request_verified
 
 
-def test_download_file_invalid_checksum(testpath, requests_mock):
+def test_download_file_invalid_checksum(tmp_path, requests_mock):
     """Try to download a file from IDA with a non-matching checksum."""
     add_mock_ida_download(
         requests_mock=requests_mock,
@@ -75,7 +75,7 @@ def test_download_file_invalid_checksum(testpath, requests_mock):
     requests_mock.get("https://download.dl.test/download",
                       content=TEST_DATA)
 
-    new_file_path = testpath / 'new_file'
+    new_file_path = tmp_path / 'new_file'
     with pytest.raises(ValueError) as exc:
         download_file(
             _get_file_metadata(
@@ -92,16 +92,16 @@ def test_download_file_invalid_checksum(testpath, requests_mock):
     assert "got b5bb9d8014" in str(exc.value)
 
 
-def test_download_file_404(testpath, requests_mock):
+def test_download_file_404(tmp_path, requests_mock):
     """Try to download non-existing file from IDA.
 
-    :param testpath: Temporary directory
+    :param tmp_path: Temporary directory
     :returns: ``None``
     """
     requests_mock.post('https://download.dl-authorize.test/authorize',
                        status_code=404)
 
-    new_file_path = testpath / 'new_file'
+    new_file_path = tmp_path / 'new_file'
     with pytest.raises(FileNotAvailableError):
         download_file(
             _get_file_metadata(
@@ -113,16 +113,16 @@ def test_download_file_404(testpath, requests_mock):
         )
 
 
-def test_download_file_502(testpath, requests_mock):
+def test_download_file_502(tmp_path, requests_mock):
     """Try to download from Ida when Ida returns 502.
 
-    :param testpath: Temporary directory fixture
+    :param tmp_path: Temporary directory fixture
     :returns: ``None``
     """
     requests_mock.post('https://download.dl-authorize.test/authorize',
                        status_code=502)
 
-    new_file_path = testpath / 'new_file'
+    new_file_path = tmp_path / 'new_file'
     with pytest.raises(FileAccessError) as exc_info:
         download_file(
             _get_file_metadata(

@@ -11,7 +11,7 @@ from siptools_research.workflow import report_dataset_validation_result
 def test_reportdatasetvalidationresult(workspace, requests_mock):
     """Test reporting dataset validation result.
 
-    :param testpath: Temporary directory
+    :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
     :returns: ``None``
     """
