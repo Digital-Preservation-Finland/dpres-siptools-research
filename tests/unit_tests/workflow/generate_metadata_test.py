@@ -43,7 +43,7 @@ def test_generatemetadata(config, workspace, requests_mock):
     # posted to Metax
     file_metadata_patch_request = requests_mock.request_history[-3]
     assert file_metadata_patch_request.url \
-        == "https://metaksi/rest/v2/files/pid:urn:identifier"
+        == "https://metax.localhost/rest/v2/files/pid:urn:identifier"
 
     metadata = file_metadata_patch_request.json()['file_characteristics']
     assert metadata['file_format'] == 'text/plain'
@@ -52,7 +52,7 @@ def test_generatemetadata(config, workspace, requests_mock):
     # The dataset preservation state should be updated
     preservation_state_patch_request = requests_mock.request_history[-1]
     assert preservation_state_patch_request.url \
-        == f"https://metaksi/rest/v2/datasets/{workspace.name}"
+        == f"https://metax.localhost/rest/v2/datasets/{workspace.name}"
     assert preservation_state_patch_request.json() \
         == {'preservation_state': DS_STATE_TECHNICAL_METADATA_GENERATED,
             'preservation_description': 'Metadata generated'}

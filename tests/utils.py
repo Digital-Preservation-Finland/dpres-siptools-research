@@ -101,7 +101,7 @@ def add_mock_ida_download(requests_mock, dataset_id, filename, content):
     # connect the authorize and download requests together is good enough.
     token = str(uuid.uuid4())
     requests_mock.post(
-        "https://download.dl-authorize.test/authorize",
+        "https://download.localhost:4431/authorize",
         json={
             "token": token
         },
@@ -112,6 +112,6 @@ def add_mock_ida_download(requests_mock, dataset_id, filename, content):
     )
 
     return requests_mock.get(
-        f"https://download.dl.test/download?token={token}",
+        f"https://download.localhost:4430/download?token={token}",
         content=content
     )

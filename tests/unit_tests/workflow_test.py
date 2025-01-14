@@ -99,7 +99,8 @@ def _get_schematrons():
     ]
 )
 @pytest.mark.usefixtures("testmongoclient", "mock_luigi_config_path")
-def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_config, sftp_dir):
+def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
+                  sftp_dir):
     """Test workflow dependency tree.
 
     Each workflow task should be able complete if it is directly called
@@ -140,7 +141,7 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
                       json = dataset)
 
     #Mock DPS
-    requests_mock.get(f'https://access/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest',
+    requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest',
                       json={
                           "data": {
                             "results": [
@@ -157,14 +158,14 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
                 }
             }
         )
-    requests_mock.get('https://access/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=xml',
+    requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=xml',
                       content=b'<hello world/>')
-    requests_mock.get('https://access/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=html',
+    requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=html',
                       content=b'<hello world/>')
 
 
     # Init pymongo client
-    conf = Configuration(luigi_mock_ssh_config)
+    conf = Configuration(mock_ssh_config)
     mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
 
     module = importlib.import_module('siptools_research.workflow.'
@@ -176,14 +177,14 @@ def test_workflow(workspace, module_name, task, requests_mock, luigi_mock_ssh_co
     luigi.build(
         [task_class(
             dataset_id=workspace.name,
-            config=luigi_mock_ssh_config
+            config=mock_ssh_config
         )],
         local_scheduler=True
     )
     luigi.build(
         [task_class(
             dataset_id=workspace.name,
-            config=luigi_mock_ssh_config
+            config=mock_ssh_config
         )],
         local_scheduler=True
     )

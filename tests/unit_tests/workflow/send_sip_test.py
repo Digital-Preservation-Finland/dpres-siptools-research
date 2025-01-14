@@ -9,7 +9,7 @@ from siptools_research.workflow.send_sip import SendSIPToDP
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_send_sip(workspace, luigi_mock_ssh_config, sftp_dir):
+def test_send_sip(workspace, mock_ssh_config, sftp_dir):
     """Test the SendSipToDP task.
 
     Run task and check that .tar is copied to digital preservation
@@ -28,8 +28,7 @@ def test_send_sip(workspace, luigi_mock_ssh_config, sftp_dir):
     transfer_dir.mkdir()
 
     # Init and run task
-    task = SendSIPToDP(dataset_id=workspace.name,
-                       config=luigi_mock_ssh_config)
+    task = SendSIPToDP(dataset_id=workspace.name, config=mock_ssh_config)
     task.run()
     assert task.complete()
 

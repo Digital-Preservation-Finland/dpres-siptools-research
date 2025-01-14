@@ -19,10 +19,6 @@ from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-TEST_CONFIG_FILE = "tests/data/configuration_files/siptools_research.conf"
-UNIT_TEST_SSL_CONFIG_FILE = \
-    "tests/data/configuration_files/siptools_research_unit_test_ssl.conf"
-
 SSH_KEY_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "data", "ssh", "test_ssh_key"
@@ -41,6 +37,10 @@ def config(tmp_path):
 
     A temporary packaging root directory is created, and configuration
     is modified to use it.
+
+    :param tmp_path: Temporary path where packaging root directory is
+        created
+    :returns: Configuration file path
     """
     # Create temporary packaging root directory
     pkg_root = tmp_path / "packaging"
@@ -48,10 +48,24 @@ def config(tmp_path):
 
     # Read sample config
     parser = ConfigParser()
-    parser.read("tests/data/configuration_files/siptools_research_unit_test.conf")
+    parser.read("include/etc/siptools_research.conf")
 
     # Modify configuration
-    parser.set("siptools_research", "packaging_root", str(pkg_root))
+    parser.set(
+        "siptools_research", "packaging_root", str(pkg_root)
+    )
+    parser.set(
+        "siptools_research", "sip_sign_key", "tests/data/sip_sign_pas.pem"
+    )
+    parser.set(
+        "siptools_research", "metax_ssl_verification", "False"
+    )
+    parser.set(
+        "siptools_research", "fd_download_service_ssl_verification", "False"
+    )
+    parser.set(
+        "siptools_research", "access_rest_api_ssl_verification", "False"
+    )
 
     # Write configuration to temporary file
     config_ = tmp_path / "siptools_research.conf"
@@ -158,51 +172,22 @@ def sftp_server(sftp_dir, monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def config_creator(tmpdir):
+def mock_ssh_config(tmpdir, config, sftp_server):
+    """Create modified configuration file to use mocked DPS SFTP server
+    instead of a real instance.
+
+    :returns: Configuration file path
     """
-    Factory functioon to create a modified config file and return a path to
-    the configuration file
-    """
-    config_dir = tmpdir.mkdir("config")
+    parser = ConfigParser()
+    parser.read(config)
+    parser.set("siptools_research", "dp_host", "127.0.0.1")
+    parser.set("siptools_research", "dp_port", str(sftp_server.port))
+    parser.set("siptools_research", "dp_ssh_key", SSH_KEY_PATH)
+    mocked_ssh_config = tmpdir / "siptools_research_mock_ssh.conf"
+    with mocked_ssh_config.open('w') as file:
+        parser.write(file)
 
-    def wrapper(config_path, new_config):
-        config = ConfigParser()
-        config.read(config_path)
-
-        for section in new_config.keys():
-            if section not in config:
-                config[section] = {}
-
-            for key, value in new_config[section].items():
-                config[section][key] = str(value)
-
-        config_path = str(config_dir.join("config.ini"))
-        with open(config_path, "w") as file_:
-            config.write(file_)
-
-        return config_path
-
-    return wrapper
-
-
-@pytest.fixture(scope="function")
-def luigi_mock_ssh_config(config, config_creator, sftp_dir, sftp_server):
-    """
-    Luigi configuration file that connects to a mocked DPS SFTP server
-    instead of a real instance
-    """
-    config_path = config_creator(
-        config_path=config,
-        new_config={
-            "siptools_research": {
-                "dp_host": "127.0.0.1",
-                "dp_port": sftp_server.port,
-                "dp_ssh_key": SSH_KEY_PATH
-            }
-        }
-    )
-
-    return config_path
+    return mocked_ssh_config
 
 
 @pytest.fixture(scope="function")

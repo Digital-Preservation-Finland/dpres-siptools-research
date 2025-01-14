@@ -17,19 +17,17 @@ from tests.metax_data.datasets import BASE_DATASET
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
-def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock,
-                              status):
+def test_getvalidationreports(config, workspace, requests_mock, status):
     """Initializes GetValidationReports task with the input files of the task.
 
     After the input files are created, the GetValidationReports is
     triggered automatically. Checks that the ingest reports were
     succesfully loaded to the workspace and the task is completed.
 
+    :param config: Configuration file
     :param workspace: Temporary directory fixture
-    :param luigi_mock_ssh_config: Configurations object
     :param requests_mock: Mocker object
     :param status: SIP's status in DPS.
-    :returns: ``None``
     """
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
@@ -40,7 +38,7 @@ def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock,
 
     #Mock DPS
     requests_mock.get(
-        "https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest",
+        "https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest",
         json={
             "data": {
                 "results": [
@@ -58,14 +56,13 @@ def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock,
         }
     )
 
-    requests_mock.get('https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest/doi%3Atest?type=xml',
+    requests_mock.get('https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest/doi%3Atest?type=xml',
                       content=b'<hello world/>')
-    requests_mock.get('https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest/doi%3Atest?type=html',
+    requests_mock.get('https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest/doi%3Atest?type=html',
                       content=b'<html>hello world</html>')
 
     # Init task
-    task = GetValidationReports(dataset_id=workspace.name,
-                                config=luigi_mock_ssh_config)
+    task = GetValidationReports(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Task is run when the input file is created.
@@ -81,14 +78,15 @@ def test_getvalidationreports(workspace, luigi_mock_ssh_config, requests_mock,
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_sip(workspace, luigi_mock_ssh_config, requests_mock):
-    """If a SIP's  is newer than the ingest report's ,
+def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_sip(
+        config, workspace, requests_mock
+):
+    """If a SIP's is newer than the ingest report's,
         ingest reports are not loaded to workspace.
 
+    :param config: Configuration file
     :param workspace: Temporary directory fixture
-    :param luigi_mock_ssh_config: Configurations object
     :param requests_mock: Mocker object
-    :returns: ``None``
     """
 
     dataset = copy.deepcopy(BASE_DATASET)
@@ -101,7 +99,7 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
     )
 
     #Mock DPS
-    requests_mock.get('https://access/api/2.0/contract_identifier/ingest/report/doi%3Atest',
+    requests_mock.get('https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest',
                       json={
                           "data": {
                             "results": [
@@ -119,7 +117,7 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
             }
         )
 
-    task = GetValidationReports(dataset_id=workspace.name, config=luigi_mock_ssh_config)
+    task = GetValidationReports(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # This should complete the task but because DPS entries are older than SIP

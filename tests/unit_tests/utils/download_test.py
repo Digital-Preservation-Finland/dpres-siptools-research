@@ -1,4 +1,6 @@
 """Tests for :mod:`siptools_research.utils.download` module."""
+import configparser
+
 import pytest
 
 from siptools_research.utils.download import (
@@ -6,7 +8,6 @@ from siptools_research.utils.download import (
     FileNotAvailableError,
     download_file,
 )
-from tests.conftest import UNIT_TEST_SSL_CONFIG_FILE
 from tests.utils import add_mock_ida_download
 
 TEST_DATA = b"foo\n"
@@ -24,35 +25,33 @@ def _get_file_metadata(identifier, checksum):
     }
 
 
-@pytest.mark.parametrize(
-    ('config_file', 'request_verified'),
-    [
-        (
-            "tests/data/configuration_files/siptools_research_unit_test.conf",
-            False
-        ),
-        (
-            UNIT_TEST_SSL_CONFIG_FILE,
-            True
-        )
-    ])
-def test_download_file(tmp_path, requests_mock, config_file, request_verified):
+@pytest.mark.parametrize("request_verified", [False, True])
+def test_download_file(config, tmp_path, requests_mock, request_verified):
     """Test downloading a file to a temporary directory.
 
+    :param config: Configuration file
     :param tmp_path: Temporary directory
     :param requests_mock: HTTP request mocker
-    :param config_file: used configuration file
     :param request_verified: should HTTP request to Ida be verified?
-    :returns: ``None``
     """
+    # Modify configuration file
+    parser = configparser.ConfigParser()
+    parser.read(config)
+    parser.set(
+        "siptools_research",
+        "fd_download_service_ssl_verification",
+        str(request_verified)
+    )
+    with config.open('w') as file:
+        parser.write(file)
+
+    # Mock ida
     add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id="dataset_id",
         filename="/path/to/file",
         content=TEST_DATA
     )
-    requests_mock.get("https://download.dl.test/download",
-                      content=TEST_DATA)
 
     new_file_path = tmp_path / 'new_file'
     download_file(
@@ -62,12 +61,14 @@ def test_download_file(tmp_path, requests_mock, config_file, request_verified):
         ),
         "dataset_id",
         new_file_path,
-        config_file
+        config
     )
 
     # The file should be a text file that says: "foo\n"
     assert new_file_path.read_bytes() == TEST_DATA
 
+    # Request should be verified if verification was enabled in
+    # configuration file
     assert requests_mock.last_request.verify is request_verified
 
 
@@ -84,8 +85,6 @@ def test_download_file_invalid_checksum(config, tmp_path, requests_mock):
         filename="/path/to/file",
         content=TEST_DATA
     )
-    requests_mock.get("https://download.dl.test/download",
-                      content=TEST_DATA)
 
     new_file_path = tmp_path / 'new_file'
     with pytest.raises(ValueError) as exc:
@@ -111,7 +110,7 @@ def test_download_file_404(config, tmp_path, requests_mock):
     :param tmp_path: Temporary directory
     :param requests_mock: HTTP request mocker
     """
-    requests_mock.post('https://download.dl-authorize.test/authorize',
+    requests_mock.post('https://download.localhost:4431/authorize',
                        status_code=404)
 
     new_file_path = tmp_path / 'new_file'
@@ -133,7 +132,7 @@ def test_download_file_502(config, tmp_path, requests_mock):
     :param tmp_path: Temporary directory fixture
     :param requests_mock: HTTP request mocker
     """
-    requests_mock.post('https://download.dl-authorize.test/authorize',
+    requests_mock.post('https://download.localhost:4431/authorize',
                        status_code=502)
 
     new_file_path = tmp_path / 'new_file'

@@ -495,7 +495,7 @@ def test_logging(config, workspace, requests_mock, caplog):
     error_message = errors[0].getMessage()
 
     assert error_message.startswith(
-        "HTTP request to https://metaksi/rest/v2/datasets/1?"
+        "HTTP request to https://metax.localhost/rest/v2/datasets/1?"
     )
     assert error_message.endswith(
         "Response from server was: No rights to view dataset"
