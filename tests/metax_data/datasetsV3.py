@@ -38,10 +38,36 @@ QVAIN_PROVENANCE = {
 
 BASE_DATASET = {
     "id": "dataset_identifier",
-    "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
+    "created": None,
+    "title": None,
+    "description": None,
+    "modified": None,
+    "fileset": {
+        "csc_project": None,
+        "total_files_size": 0
+    },
     "preservation": {
-        "id": "doi:test",
+        "state": -1,
+        "description": None,
+        "reason_description": None,
+        "dataset_version": {
+            "id": None,
+            "persistent_identifier": None,
+            "preservation_state": -1
+        },
         "contract": "contract_identifier",
-        "state": 0
-    }
+    },
+    "access_rights": None,
+    "version": None,
+    "language": [],
+    "persistent_identifier": None,
+    "issued": None,
+    "actors": [],
+    "keyword": [],
+    "theme": [],
+    "spatial": [],
+    "field_of_science": [],
+    "provenance": [],
+    "metadata_owner": None,
+    "data_catalog": None
 }
