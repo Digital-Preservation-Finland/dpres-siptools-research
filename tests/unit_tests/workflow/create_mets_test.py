@@ -57,6 +57,7 @@ def test_create_mets(config, workspace, requests_mock, data_catalog, objid):
     files = [copy.deepcopy(TXT_FILE)]
     dataset['identifier'] = workspace.name
     dataset['data_catalog']['identifier'] = data_catalog
+    dataset["research_dataset"]["preferred_identifier"] =  "doi:test"
     dataset['preservation_dataset_version'] \
         = {'preferred_identifier': 'doi:pas-version-id'}
     tests.utils.add_metax_v2_dataset(

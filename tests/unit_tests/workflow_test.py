@@ -141,23 +141,25 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
                       json = dataset)
 
     #Mock DPS
-    requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest',
-                      json={
-                          "data": {
-                            "results": [
-                            {
-                                "download": {
-                                "html": "foo?type=html",
-                                "xml": "foo?type=xml"
-                            },
-                            "id": dataset['preservation_identifier'],
-                            "date": (datetime.now()+timedelta(minutes=1)).strftime('%Y-%m-%dT%H:%M:%SZ'),
-                            "status": "accepted"
-                      }
-                    ]
-                }
+    requests_mock.get(
+        "https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest",
+        json={
+            "data": {
+                "results": [
+                    {
+                        "download": {
+                            "html": "foo?type=html",
+                            "xml": "foo?type=xml"
+                        },
+                        "id":
+                        dataset["research_dataset"]["preferred_identifier"],
+                        "date": (datetime.now()+timedelta(minutes=1)).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                        "status": "accepted"
+                    }
+                ]
             }
-        )
+        }
+    )
     requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=xml',
                       content=b'<hello world/>')
     requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=html',

@@ -72,10 +72,6 @@ def add_metax_v2_dataset(
         "/rest/v2/datasets/{}".format(dataset['identifier']),
         json=dataset
     )
-    requests_mock.patch(
-        "/rest/v2/datasets/{}".format(dataset['preservation_identifier']),
-        json=dataset
-    )
     requests_mock.get(
         "/rest/v2/datasets/{}?dataset_format=datacite".format(dataset['identifier']),
         content=lxml.etree.tostring(datacite)

@@ -2,15 +2,16 @@
 
 import datetime
 import enum
-from pathlib import Path
 import shutil
+from pathlib import Path
 
+import siptools_research.utils.database
 from siptools_research.config import Configuration
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.metax import get_metax_client
-import siptools_research.utils.database
 
 PAS_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-pas"
+IDA_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-ida"
 
 
 def _timestamp():
@@ -72,23 +73,25 @@ class Dataset:
         """
         if self._metadata["data_catalog"] == PAS_DATA_CATALOG_IDENTIFIER:
             # Dataset was originally created to PAS data catalog.
-            identifier = self._metadata["preservation"]["id"]
+            identifier = self._metadata["persistent_identifier"]
 
-        elif (
-            ida_id := self._metadata["preservation"]["dataset_version"][
-                "persistent_identifier"
-            ]
-        ) is not None:
-            # Dataset was created in IDA catalog, and it has been copied
-            # to PAS data catalog. The preferred identifier of the PAS
-            # version of the dataset will be used as SIP identifier.
-            identifier = ida_id
+        elif self._metadata["data_catalog"] == IDA_DATA_CATALOG_IDENTIFIER:
+
+            if (ida_id := self._metadata["preservation"]["dataset_version"]
+                    ["persistent_identifier"]) is not None:
+                # Dataset was created in IDA catalog, and it has been
+                # copied to PAS data catalog. The preferred identifier
+                # of the PAS version of the dataset will be used as SIP
+                # identifier.
+                identifier = ida_id
+            else:
+                # Dataset has not yet been copied to PAS data catalog.
+                error = ("The dataset has not been copied to PAS data"
+                         "catalog, so DOI does not exist.")
+                raise ValueError(error)
         else:
-            # Dataset has not yet been copied to PAS data catalog.
-            raise ValueError(
-                "The dataset has not been copied to PAS data"
-                "catalog, so DOI does not exist."
-            )
+            error = f"Unknown data catalog: {self._metadata['data_catalog']}"
+            raise ValueError(error)
 
         return identifier
 

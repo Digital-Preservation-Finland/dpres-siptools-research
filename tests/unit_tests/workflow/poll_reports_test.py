@@ -31,6 +31,7 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
     """
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
+    doi = dataset["research_dataset"]["preferred_identifier"]
 
     #Mock metax
     requests_mock.get(f"/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true",
@@ -47,7 +48,7 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
                             "html": "foo?type=html",
                             "xml": "foo?type=xml"
                         },
-                        "id": dataset['preservation_identifier'],
+                        "id": doi,
                         "date": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
                         "status": status
                     }
@@ -73,8 +74,9 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
     # Ingest reports appeared
     ingest_report_path \
         = workspace / "preservation" / "ingest-reports" / status
-    assert (ingest_report_path / f"{dataset['preservation_identifier']}.xml").read_text() == "<hello world/>"
-    assert (ingest_report_path / f"{dataset['preservation_identifier']}.html").read_text() == "<html>hello world</html>"
+    assert (ingest_report_path / f"{doi}.xml").read_text() == "<hello world/>"
+    assert (ingest_report_path / f"{doi}.html").read_text() \
+        == "<html>hello world</html>"
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -91,6 +93,7 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
 
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
+    doi = dataset["research_dataset"]["preferred_identifier"]
 
     #Mock metax
     requests_mock.get(
@@ -99,23 +102,24 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
     )
 
     #Mock DPS
-    requests_mock.get('https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest',
-                      json={
-                          "data": {
-                            "results": [
-                            {
-                                "download": {
-                                "html": "foo?type=html",
-                                "xml": "foo?type=xml"
-                            },
-                            "id": dataset['preservation_identifier'],
-                            "date": (datetime.now(timezone.utc)-timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%SZ'),
-                            "status": 'accepted'
-                      }
-                    ]
-                }
+    requests_mock.get(
+        "https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest",
+        json={
+            "data": {
+                "results": [
+                    {
+                        "download": {
+                            "html": "foo?type=html",
+                            "xml": "foo?type=xml"
+                        },
+                        "id": doi,
+                        "date": (datetime.now(timezone.utc)-timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                        "status": 'accepted'
+                    }
+                ]
             }
-        )
+        }
+    )
 
     task = GetValidationReports(dataset_id=workspace.name, config=config)
     assert not task.complete()
@@ -128,6 +132,6 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
 
     ingest_report_path \
         = workspace / "preservation" / "ingest-reports"
-    assert not (ingest_report_path / 'accepted' / f"{dataset['preservation_identifier']}.xml").exists()
-    assert not (ingest_report_path / 'accepted' / f"{dataset['preservation_identifier']}.html").exists()
+    assert not (ingest_report_path / "accepted" / f"{doi}.xml").exists()
+    assert not (ingest_report_path / "accepted" / f"{doi}.html").exists()
     assert not ingest_report_path.exists()

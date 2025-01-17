@@ -41,11 +41,11 @@ BASE_DATASET = {
     "data_catalog": {
         "identifier": "urn:nbn:fi:att:data-catalog-pas"
     },
-    "preservation_identifier": "doi:test",
     "contract": {
         "identifier": "contract_identifier"
     },
     "research_dataset": {
+        "preferred_identifier": "doi:test",
         "files": [
             {
                 "details": {

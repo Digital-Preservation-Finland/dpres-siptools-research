@@ -1,4 +1,5 @@
 """Tests for :mod:`siptools_research.dataset` module."""
+import copy
 import datetime
 
 import pytest
@@ -6,42 +7,96 @@ from requests_mock import ANY
 
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import WorkflowExistsError
+from tests.metax_data.datasetsV3 import BASE_DATASET
 
 
 @pytest.mark.parametrize(
-    'metadata',
+    ("metadata", "v2_metadata"),
     [
         # Pottumonttu dataset
-        {
-            'data_catalog': {
-                'identifier': 'urn:nbn:fi:att:data-catalog-pas'
+        (
+            # Metax v3
+            {
+                "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
+                # Pottumonttu datasets are created in PAS data-catalog,
+                # so there is only one version of pottumonttu dataset.
+                # Therefore, the persistent identifier is the DOI which
+                # should be used as SIP identifier.
+                # NOTE: In future there will be separate data-catalog
+                # for pottumonttu files: TPASPKT-749
+                "persistent_identifier": "correct-id"
             },
-            'preservation_identifier': 'correct-id',
-        },
+            # Metax v2
+            {
+                "data_catalog": {
+                    "identifier": "urn:nbn:fi:att:data-catalog-pas"
+                },
+                "research_dataset": {
+                    "preferred_identifier": "correct-id"
+                },
+                # In pottumonttu datasets
+                # `research_dataset.preferred_identifier` and
+                # `preservation_identifier` always have the same value,
+                # so both could be used as SIP identifier.
+                "preservation_identifier": "correct-id-but-not-used",
+            },
+        ),
         # Ida dataset
-        {
-            'data_catalog': {
-                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+        (
+            # Metax v3
+            {
+                "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+                "preservation": {
+                    "id": None,  # TODO: this should not be required
+                    "state": -1,
+                    "description": None,
+                    "reason_description": None,
+                    "dataset_version": {
+                        "id": None, #uuid
+                        # This is the DOI of the PAS version of the
+                        # dataset, which should, i.e. the identitier of
+                        # the SIP
+                        "persistent_identifier": "correct-id",
+                        "preservation_state": -1
+                    },
+                    "contract": "contract_identifier",
+                }
             },
-            'identifier': 'wrong-id',
-            'preservation_dataset_version': {
-                'preferred_identifier': 'correct-id'
-            }
-        },
+            # Metax v2
+            {
+                "data_catalog": {
+                    "identifier": "urn:nbn:fi:att:data-catalog-ida"
+                },
+                "identifier": "wrong-id",
+                "preservation_dataset_version": {
+                    "preferred_identifier": "correct-id"
+                }
+            },
+        )
     ]
 )
-def test_sip_identifier(config, requests_mock, metadata):
+def test_sip_identifier(config, requests_mock, metadata, v2_metadata):
     """Test that dataset returns correct sip_identifier.
 
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     :param metadata: The metadata of dataset from Metax
     """
-    requests_mock.get('/rest/v2/datasets/identifier', json=metadata)
-    requests_mock.get('/rest/v2/datasets/wrong-id?include_user_metadata=true&file_details=true', json={})
-    requests_mock.get('/rest/v2/datasets/wrong-id/files', json={})
-    dataset = Dataset('identifier', config=config)
-    assert dataset.sip_identifier == 'correct-id'
+    # Mock Metax API V3
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset.update(metadata)
+    requests_mock.get(
+        "/v3/datasets/identifier?include_nulls=True",
+        json=dataset
+    )
+
+    # Mock Metax API V2
+    requests_mock.get("/rest/v2/datasets/identifier", json=v2_metadata)
+    requests_mock.get("/rest/v2/datasets/wrong-id", json={})
+    requests_mock.get("/rest/v2/datasets/wrong-id/files", json={})
+
+    dataset = Dataset("identifier", config=config)
+    assert dataset.sip_identifier == "correct-id"
 
 
 def test_no_sip_identifier(config, requests_mock):
@@ -50,6 +105,12 @@ def test_no_sip_identifier(config, requests_mock):
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     """
+    # Mock Metax API v3
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-ida"
+    requests_mock.get( "/v3/datasets/identifier", json=dataset)
+
+    # Mock Metax API v2
     requests_mock.get(
         '/rest/v2/datasets/identifier',
         json={
@@ -58,8 +119,36 @@ def test_no_sip_identifier(config, requests_mock):
             }
         }
     )
+
     dataset = Dataset('identifier', config=config)
     with pytest.raises(ValueError, match='DOI does not exist'):
+        # pylint: disable=pointless-statement
+        dataset.sip_identifier
+
+
+def test_unknown_data_catalog(config, requests_mock):
+    """Test that exception is raised if data catalog is unknown.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    """
+    # Mock Metax API v3
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-unknown"
+    requests_mock.get( "/v3/datasets/identifier", json=dataset)
+
+    # Mock Metax API v2
+    requests_mock.get(
+        '/rest/v2/datasets/identifier',
+        json={
+            'data_catalog': {
+                'identifier': 'urn:nbn:fi:att:data-catalog-unknown'
+            }
+        }
+    )
+
+    dataset = Dataset("identifier", config=config)
+    with pytest.raises(ValueError, match="Unknown data catalog"):
         # pylint: disable=pointless-statement
         dataset.sip_identifier
 
