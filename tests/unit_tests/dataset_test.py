@@ -154,69 +154,131 @@ def test_unknown_data_catalog(config, requests_mock):
 
 
 @pytest.mark.parametrize(
-    'metadata',
+    ("metadata", "v2_metadata"),
     [
         # Pottumonttu dataset
-        {
-            'data_catalog': {
-                'identifier': 'urn:nbn:fi:att:data-catalog-pas'
+        (
+            # Metax v3
+            {
+                "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
+                "preservation": {
+                    "state": "correct-state",
+                    "description": None,
+                    "reason_description": None,
+                    "dataset_version": {
+                        "id": None,
+                        "persistent_identifier": None,
+                        "preservation_state": -1,
+                    },
+                    "contract": "contract_identifier",
+                },
             },
-            'preservation_state': 'correct-state',
-            "research_dataset": {
-                "files": [
-                    {
-                        "details": {
-                            "project_identifier": "foo"
+            # Metax v2
+            {
+                'data_catalog': {
+                    'identifier': 'urn:nbn:fi:att:data-catalog-pas'
+                },
+                'preservation_state': 'correct-state',
+                "research_dataset": {
+                    "files": [
+                        {
+                            "details": {
+                                "project_identifier": "foo"
+                            }
                         }
-                    }
-                ]
-            }
-        },
+                    ]
+                }
+            },
+        ),
         # Ida dataset that has not been copied to PAS data catalog
-        {
-            'data_catalog': {
-                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+        (
+            # Metax v3
+            {
+                "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+                "preservation": {
+                    "state": "correct-state",
+                    "description": None,
+                    "reason_description": None,
+                    "dataset_version": {
+                        "id": None,
+                        "persistent_identifier": None,
+                        "preservation_state": -1,
+                    },
+                    "contract": "contract_identifier",
+                },
             },
-            'preservation_state': 'correct-state',
-            "research_dataset": {
-                "files": [
-                    {
-                        "details": {
-                            "project_identifier": "foo"
+            # Metax v2
+            {
+                'data_catalog': {
+                    'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+                },
+                'preservation_state': 'correct-state',
+                "research_dataset": {
+                    "files": [
+                        {
+                            "details": {
+                                "project_identifier": "foo"
+                            }
                         }
-                    }
-                ]
-            }
-        },
+                    ]
+                }
+            },
+        ),
         # Ida dataset that has been copied to PAS data catalog
-        {
-            'data_catalog': {
-                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+        (
+            # Metax v3
+            {
+                "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+                "preservation": {
+                    "state": "wrong-state",
+                    "description": None,
+                    "reason_description": None,
+                    "dataset_version": {
+                        "id": "pas-version-id",
+                        "persistent_identifier": "pas-version-doi",
+                        "preservation_state": "correct-state",
+                    },
+                    "contract": "contract_identifier",
+                },
             },
-            'identifier': 'wrong-state',
-            'preservation_dataset_version': {
-                'preservation_state': 'correct-state'
-            },
-            "research_dataset": {
-                "files": [
-                    {
-                        "details": {
-                            "project_identifier": "foo"
+            # Metax v2
+            {
+                'data_catalog': {
+                    'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+                },
+                'identifier': 'wrong-state',
+                'preservation_dataset_version': {
+                    'preservation_state': 'correct-state'
+                },
+                "research_dataset": {
+                    "files": [
+                        {
+                            "details": {
+                                "project_identifier": "foo"
+                            }
                         }
-                    }
-                ]
-            }
-        }
+                    ]
+                }
+            },
+        ),
     ]
 )
-def test_preservation_state(config, requests_mock, metadata):
+def test_preservation_state(config, requests_mock, metadata, v2_metadata):
     """Test that dataset returns correct preservation state.
 
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     :param metadata: The metadata of dataset from Metax
+    :param v2_metadata: The metadata of dataset from Metax API v2
     """
-    requests_mock.get('/rest/v2/datasets/identifier', json=metadata)
+    # Mock Metax API V3
+    dataset=copy.deepcopy(BASE_DATASET)
+    dataset.update(metadata)
+    requests_mock.get('/v3/datasets/identifier', json=dataset)
+
+    # Mock Metax API V2
+    requests_mock.get('/rest/v2/datasets/identifier', json=v2_metadata)
+
     dataset = Dataset('identifier', config=config)
     assert dataset.preservation_state == 'correct-state'
 
