@@ -5,11 +5,13 @@ import shutil
 
 import pytest
 
+import tests.metax_data.datasetsV3
+import tests.metax_data.filesV3
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.file_validator import validate_files
 from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import SEG_Y_FILE, TIFF_FILE, TXT_FILE
-from tests.utils import add_metax_v2_dataset
+from tests.utils import add_metax_dataset, add_metax_v2_dataset
 
 
 def test_validate_files(config, requests_mock, tmp_path):
@@ -21,7 +23,16 @@ def test_validate_files(config, requests_mock, tmp_path):
     :param requests_mock: Mocker object
     :param tmp_path: Temporary directory
     """
-    # Mock metax
+    # Mock metax API V3
+    file1 = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    file1["id"] = "pid:urn:textfile1"
+    file1["pathname"] = "/path/to/file1"
+    file2 = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    file2["id"] = "pid:urn:textfile2"
+    file2["pathname"] = "/path/to/file2"
+    add_metax_dataset(requests_mock=requests_mock, files=[file1, file2])
+
+    # Mock metax API V2
     file1 = copy.deepcopy(TXT_FILE)
     file1['identifier'] = 'pid:urn:textfile1'
     file1['file_path'] = '/path/to/file1'
@@ -56,8 +67,14 @@ def test_validate_invalid_files(config, requests_mock, tmp_path):
     :param requests_mock: Mocker object
     :param tmp_path: Temporary directory
     """
-    # Mock metax. Create a dataset that contains one file. The mimetype
-    # of the file is text/plain.
+    # Mock Metax API V3. Create a dataset that contains one file. The
+    # mimetype of the file is text/plain.
+    add_metax_dataset(
+        requests_mock=requests_mock,
+        files=[copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)]
+    )
+
+    # Mock Metax API V2
     add_metax_v2_dataset(
         requests_mock=requests_mock,
         dataset=copy.deepcopy(BASE_DATASET),
@@ -85,8 +102,14 @@ def test_validate_bitlevel_file(config, requests_mock, tmp_path):
     :param requests_mock: Mocker object
     :param tmp_path: Temporary directory
     """
-    # Mock metax. Create a dataset that contains one file. The mimetype
-    # of the file is application/x.fi-dpres.segy.
+    # Mock Metax API V3. Create a dataset that contains one file. The
+    # mimetype of the file is application/x.fi-dpres.segy.
+    add_metax_dataset(
+        requests_mock=requests_mock,
+        files=[copy.deepcopy(tests.metax_data.filesV3.SEG_Y_FILE)]
+    )
+
+    # Mock Metax API V2.
     add_metax_v2_dataset(
         requests_mock=requests_mock,
         dataset=copy.deepcopy(BASE_DATASET),
@@ -113,8 +136,14 @@ def test_validate_wrong_mimetype(config, requests_mock, tmp_path):
     :param requests_mock: Mocker object
     :param tmp_path: Temporary directory
     """
-    # Mock metax. Create a dataset that contains one file. The mimetype
-    # of the file is image/tiff.
+    # Mock Metax API V3. Create a dataset that contains one file. The
+    # mimetype of the file is image/tiff.
+    add_metax_dataset(
+        requests_mock=requests_mock,
+        files=[copy.deepcopy(tests.metax_data.filesV3.TIFF_FILE)]
+    )
+
+    # Mock Metax API v2
     add_metax_v2_dataset(
         requests_mock=requests_mock,
         dataset=copy.deepcopy(BASE_DATASET),

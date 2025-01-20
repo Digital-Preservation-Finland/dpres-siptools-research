@@ -6,8 +6,65 @@ import uuid
 import lxml.etree
 
 import tests.metax_data.contracts
+import tests.metax_data.contractsV3
 import tests.metax_data.datasets
+import tests.metax_data.datasetsV3
 import tests.metax_data.files
+import tests.metax_data.filesV3
+
+
+def add_metax_dataset(
+        requests_mock,
+        dataset=None,
+        datacite=tests.metax_data.datasets.BASE_DATACITE,
+        files=None,
+        contract=tests.metax_data.contractsV3.BASE_CONTRACT,
+):
+    """Mock responses of Metax APIs.
+
+    Mocks datasets API, files API, contracts API, and directories API
+    using requests-mock.
+
+    Information about files and contract are inserted to dataset
+    metadata. Metax directories API is mocked based on file paths and
+    parent directories of provided file metadata. Technical metadata for
+    audio, video, image etc. files is NOT mocked. The identifiers in
+    provided resource dicts are used in mocked URLs.
+
+    :param requests_mock: Mocker object used for creating responses
+    :param dataset: dataset metadata dict
+    :param datacite: dataset metadata in datacite XML format
+    :param files: list of file metadata dicts
+    :param contract: contract metadata dict
+    """
+    if dataset is None:
+        dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+
+    if files is None:
+        files = {}
+
+    # Add contract to dataset
+    dataset["preservation"]["contract"] = contract["id"]
+
+    # Mock Metax files API
+    for file in files:
+        requests_mock.get(f"/v3/files/{file['id']}", json=file)
+        requests_mock.patch(f"/v3/files/{file['id']}", json=file)
+
+    # Mock Metax datasets API
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
+    requests_mock.patch(f"/v3/datasets/{dataset['id']}", json=dataset)
+    requests_mock.get(
+        f"/v3/datasets/{dataset['id']}?dataset_format=datacite",
+        content=lxml.etree.tostring(datacite)
+    )
+    requests_mock.get(
+        f"/v3/datasets/{dataset['id']}/files",
+        json={"next": None, "results": files}
+    )
+
+    # Mock Metax contracts API
+    requests_mock.get("/v3/contracts/{}".format(contract["id"]), json=contract)
 
 
 def add_metax_v2_dataset(
@@ -89,12 +146,11 @@ def add_metax_v2_dataset(
 
 
 def add_mock_ida_download(requests_mock, dataset_id, filename, content):
-    """
-    Mock IDA requests for downloading a file from IDA
-    """
-    # In reality the returned token would have the dataset id and file path
-    # encoded in it. For mocking purposes any random string that can be used to
-    # connect the authorize and download requests together is good enough.
+    """Mock IDA requests for downloading a file from IDA."""
+    # In reality the returned token would have the dataset id and file
+    # path encoded in it. For mocking purposes any random string that
+    # can be used to connect the authorize and download requests
+    # together is good enough.
     token = str(uuid.uuid4())
     requests_mock.post(
         "https://download.localhost:4431/authorize",
