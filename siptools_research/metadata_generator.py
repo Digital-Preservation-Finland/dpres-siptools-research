@@ -93,7 +93,7 @@ def generate_metadata(
 
         # Check that user defined metadata is not ignored by
         # file-scraper
-        # TODO: This is necessary until TPASPKT-381 is resolved
+        # TODO: This is necessary until TPASPKT-1418 is resolved
         for scraper_metadata, user_metadata in compare_file_chars:
             for key, value in user_metadata.items():
                 if value is None:

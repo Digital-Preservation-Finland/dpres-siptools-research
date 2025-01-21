@@ -290,6 +290,17 @@ SEG_Y_FILE_METADATA = {
     }
 }
 
+BASE_CHARACTERISTICS = {
+    "file_format_version": {
+        "file_format": None,
+        "format_version": None,
+    },
+    "encoding": None,
+    "csv_delimiter": None,
+    "csv_record_separator": None,
+    "csv_quoting_char": None,
+    "csv_has_header": None,
+}
 BASE_FILE = {
     "id": "pid:urn:identifier",
     "pathname": "/path/to/file",
@@ -297,15 +308,9 @@ BASE_FILE = {
     "size": 100,
     "storage_service": "ida",
     "checksum": "md5:58284d6cdd8deaffe082d063580a9df3",
-    "csc_project": "test_project"
-}
-
-BASE_CHARACTERISTICS = {
-    "encoding": None,
-    "csv_delimiter": None,
-    "csv_record_separator": None,
-    "csv_quoting_char": None,
-    "csv_has_header": None,
+    "csc_project": "test_project",
+    "characteristics": BASE_CHARACTERISTICS,
+    "characteristics_extension": None,
 }
 
 TXT_FILE = deepcopy(BASE_FILE)
