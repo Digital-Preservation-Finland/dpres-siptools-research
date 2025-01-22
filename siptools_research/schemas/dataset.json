@@ -32,6 +32,7 @@
                     }
                 },
                 "then": {
+                    "required": ["lifecycle_event"],
                     "properties": {
                         "lifecycle_event": {
                         "title": "Lifecycle event",

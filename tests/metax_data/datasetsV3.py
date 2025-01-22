@@ -3,26 +3,35 @@ import lxml.etree
 
 BASE_DATACITE = lxml.etree.parse('tests/data/datacite_sample.xml')
 
+# TODO: It Looks like we only need to support life-cycle-events, so
+# support for preservation_events could be removed. See TPASPKT-1434.
 BASE_PROVENANCE = {
     "preservation_event": {
         "pref_label": {
             "en": "creation"
         }
     },
+    "lifecycle_event": None,
     "temporal": {
-        "end_date": "2014-12-31T08:19:58Z",
+        "temporal_coverage": None,  # Is this used somewhere?
+        "end_date": "2014-12-31T08:19:58Z",  # Is this used somewhere?
         "start_date": "2014-01-01T08:19:58Z"
     },
     "description": {
         "en": "Description of provenance"
     },
-    'event_outcome': {
+    "event_outcome": {
         "url":
         "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/success",
+        "pref_label": {
+            "en": "Success"
+        }
     },
-    'outcome_description': {
+    "outcome_description": {
         "en": "outcome_description"
-    }
+    },
+    "title": None,
+    "is_associated_with": [],  # TODO: is this used somewhere?
 }
 
 QVAIN_PROVENANCE = {
@@ -33,7 +42,14 @@ QVAIN_PROVENANCE = {
         "pref_label": {
             "en": "creation"
         }
-    }
+    },
+    "description": None,
+    "spatial": None,
+    "temporal": None,
+    "preservation_event": None,
+    "event_outcome": None,
+    "outcome_description": None,
+    "is_associated_with": [],  # TODO: is this used somewhere?
 }
 
 BASE_DATASET = {

@@ -5,7 +5,6 @@ import shutil
 
 import pytest
 
-import tests.metax_data.datasetsV3
 import tests.metax_data.filesV3
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.file_validator import validate_files

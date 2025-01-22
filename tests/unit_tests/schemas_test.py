@@ -76,6 +76,50 @@ def test_validate_dataset_metadata_with_provenance(provenance):
     ) is None
 
 
+@pytest.mark.parametrize(
+    (
+        "provenance",
+        "error_message",
+    ),
+    [
+        # Every event should contain at least "lifecycle_event" or
+        # "preservation_event" object
+        (
+            [{}],
+            "'lifecycle_event' is a required property",
+        ),
+        # "preservation_event" and "lifecycle_event" objects should have
+        # "pref_label"
+        (
+            [{"preservation_event": {}}],
+            "'pref_label' is a required property",
+        ),
+        (
+            [{"lifecycle_event": {}}],
+            "'pref_label' is a required property",
+        ),
+    ]
+)
+def test_validate_metadata_with_invalid_provenance(provenance, error_message):
+    """Test validation of invalid provenance events.
+
+    :param provenance: List of provenance events in dataset metadata
+    :param error_message: Expected error message
+    :returns: ``None``
+    """
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["provenance"] = provenance
+
+    # Validation of invalid dataset should raise error
+    with pytest.raises(jsonschema.ValidationError) as error:
+        assert not jsonschema.validate(
+            dataset,
+            siptools_research.schemas.DATASET_METADATA_SCHEMA
+        )
+
+    assert error.value.message == error_message
+
+
 def test_validate_invalid_dataset_metadata():
     """Test validation of invalid dataset metadata.
 
