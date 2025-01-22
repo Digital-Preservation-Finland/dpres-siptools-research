@@ -1,28 +1,16 @@
 """Dataset metadata validation tools."""
-
 import copy
 import os
 
-import lxml
-import lxml.isoschematron
-from metax_access import DataciteGenerationError
-from siptools_research.metax import get_metax_client
-
 import jsonschema
+
 import siptools_research.schemas
 from siptools_research.exceptions import (
     InvalidDatasetMetadataError,
     InvalidFileMetadataError,
 )
+from siptools_research.metax import get_metax_client
 from siptools_research.utils import mimetypes
-
-DATACITE_SCHEMA = (
-    "/etc/xml/dpres-xml-schemas/schema_catalogs"
-    "/schemas_external/datacite/4.1/metadata.xsd"
-)
-
-
-DATACITE_VALIDATION_ERROR = "Datacite metadata is invalid: %s"
 
 
 def validate_metadata(
@@ -43,16 +31,10 @@ def validate_metadata(
     metax_client = get_metax_client(config)
     # Get dataset metadata from Metax
     dataset_metadata = metax_client.get_dataset(dataset_id)
-    # TODO: Replace JSON Schema files with proper Metax V3
-    # schemas once those are available. See CSCMETAXREWORK-409.
-    # Validate dataset metadata
     _validate_dataset_metadata(dataset_metadata, dummy_doi=dummy_doi)
 
     # Validate file metadata for each file in dataset files
     _validate_file_metadata(dataset_metadata, metax_client)
-
-    # Validate datacite provided by Metax
-    _validate_datacite(dataset_id, metax_client, dummy_doi=dummy_doi)
 
     return True
 
@@ -146,28 +128,6 @@ def _validate_file_metadata(dataset, metax_client):
                 f"The file path of file {file_identifier} is invalid:"
                 f" {file_path}"
             )
-
-
-def _validate_datacite(dataset_id, metax_client, dummy_doi="false"):
-    """Validate datacite.
-
-    :param dataset_id: dataset identifier
-    :param metax_client: metax_access.Metax instance
-    :returns: ``None``
-    """
-    try:
-        datacite = metax_client.get_datacite(dataset_id, dummy_doi=dummy_doi)
-    except DataciteGenerationError as exception:
-        raise InvalidDatasetMetadataError(str(exception)) from exception
-
-    datacite_etree = lxml.etree.fromstring(datacite)
-    schema = lxml.etree.XMLSchema(lxml.etree.parse(DATACITE_SCHEMA))
-    if schema.validate(datacite_etree) is False:
-        # pylint: disable=not-an-iterable
-        errors = [error.message for error in schema.error_log]
-        raise InvalidDatasetMetadataError(
-            DATACITE_VALIDATION_ERROR % (_format_error_list(errors))
-        )
 
 
 def _format_error_list(errors):

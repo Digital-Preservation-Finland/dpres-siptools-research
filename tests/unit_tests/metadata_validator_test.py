@@ -1,5 +1,4 @@
 """Tests for :mod:`siptools_research.metadata_validator` module."""
-import contextlib
 import copy
 
 import lxml.etree
@@ -8,7 +7,6 @@ from requests.exceptions import HTTPError
 
 import siptools_research
 import tests.utils
-from siptools_research import metadata_validator
 from siptools_research.exceptions import (
     InvalidDatasetMetadataError,
     InvalidFileMetadataError,
@@ -32,16 +30,6 @@ from tests.metax_data.files import (
     TXT_FILE,
     VIDEO_FILE,
 )
-
-
-@contextlib.contextmanager
-def does_not_raise():
-    """Yield nothing.
-
-    This is a dummy context manager that complements pytest.raises when
-    no error is expected.
-    """
-    yield
 
 
 def get_invalid_datacite():
@@ -174,7 +162,6 @@ def test_validate_metadata_missing_file(config, requests_mock):
         validate_metadata('dataset_identifier', config)
 
 
-# pylint: disable=invalid-name
 def test_validate_metadata_invalid(config, requests_mock):
     """Test validate_metadata.
 
@@ -213,7 +200,6 @@ def test_validate_metadata_invalid(config, requests_mock):
         )
     ]
 )
-# pylint: disable=invalid-name
 def test_validate_invalid_file_type(config, file_characteristics, version_info,
                                     requests_mock):
     """Test validate_metadata.
@@ -243,7 +229,6 @@ def test_validate_invalid_file_type(config, file_characteristics, version_info,
         validate_metadata('dataset_identifier', config)
 
 
-# pylint: disable=invalid-name
 def test_validate_metadata_invalid_file_path(config, requests_mock):
     """Test validate_metadata.
 
@@ -261,86 +246,6 @@ def test_validate_metadata_invalid_file_path(config, requests_mock):
     expected_error = ("The file path of file pid:urn:identifier is invalid: "
                       "../../file_in_invalid_path")
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier', config)
-
-
-# pylint: disable=invalid-name
-def test_validate_metadata_invalid_datacite(config, requests_mock):
-    """Test validate_metadata.
-
-    Function should raise exception with correct error message for
-    invalid datacite where required attribute identifier is missing.
-
-    :param config: Configuration file
-    :param requests_mock: Mocker object
-    """
-    dataset_file = copy.deepcopy(TXT_FILE)
-    tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
-    requests_mock.get(
-        "/rest/v2/datasets/dataset_identifier?dataset_format=datacite",
-        content=get_invalid_datacite()
-    )
-
-    # Try to validate invalid dataset
-    with pytest.raises(InvalidDatasetMetadataError) as exception_info:
-        validate_metadata('dataset_identifier', config)
-
-    # Check error message
-    assert str(exception_info.value).startswith(
-        "Datacite metadata is invalid: Element "
-        "'{http://datacite.org/schema/kernel-4}resource': Missing child "
-        "element(s)."
-    )
-
-
-# pylint: disable=invalid-name
-def test_validate_metadata_corrupted_datacite(config, requests_mock):
-    """Test validate_metadata.
-
-    Function should raise exception  if datacite XML is corrupted.
-
-    :param config: Configuration file
-    :param requests_mock: Mocker object
-    """
-    dataset_file = copy.deepcopy(TXT_FILE)
-    tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
-    requests_mock.get(
-        "/rest/v2/datasets/dataset_identifier?dataset_format=datacite",
-        text="<resource\n"
-    )
-
-    # Try to validate invalid dataset
-    expected_error \
-        = "Couldn't find end of Start Tag resource line 1, line 2, column 1"
-    with pytest.raises(Exception, match=expected_error):
-        validate_metadata('dataset_identifier', config)
-
-
-# pylint: disable=invalid-name
-def test_validate_metadata_datacite_bad_request(config, requests_mock):
-    """Test validate_metadata.
-
-    Function should raise exception with correct error message if Metax
-    fails to generate datacite for dataset, for example when `publisher`
-    attribute is missing.
-
-    :param config: Configuration file
-    :param requests_mock: Mocker object
-    """
-    dataset_file = copy.deepcopy(TXT_FILE)
-    tests.utils.add_metax_v2_dataset(requests_mock, files=[dataset_file])
-
-    # Mock datacite request response. Mocked response has status code
-    # 400, and response body contains error information.
-    requests_mock.get(
-        "/rest/v2/datasets/dataset_identifier?dataset_format=datacite",
-        json={"detail": "Bad request"},
-        status_code=400
-    )
-
-    # Try to validate invalid dataset
-    expected_error = "Datacite generation failed: Bad request"
-    with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
         validate_metadata('dataset_identifier', config)
 
 
@@ -390,7 +295,6 @@ def test_validate_file_metadata(config, requests_mock):
     assert files_adapter.call_count == 1
 
 
-# pylint: disable=invalid-name
 def test_validate_file_metadata_invalid_metadata(config, requests_mock):
     """Test ``_validate_file_metadata``.
 
@@ -419,35 +323,6 @@ def test_validate_file_metadata_invalid_metadata(config, requests_mock):
             },
             client,
         )
-
-
-def test_validate_datacite(config, requests_mock):
-    """Test _validate_datacite.
-
-    Function should raises exception with readable error message when
-    datacite XML contains multiple errors.
-
-    :param config: Configuration file
-    :param requests_mock: Mocker object
-    """
-    # Init metax client
-    metax_client = get_metax_client(config)
-
-    requests_mock.get(
-        "/rest/v2/datasets/dataset_identifier?dataset_format=datacite",
-        content=get_very_invalid_datacite()
-    )
-
-    # Try to validate datacite
-    expected_error = "Datacite metadata is invalid:"
-    # pylint: disable=protected-access
-    with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        metadata_validator._validate_datacite(
-            'dataset_identifier',
-            metax_client
-        )
-
-# pylint: disable=invalid-name
 
 
 def test_validate_metadata_http_error_raised(config, requests_mock):
