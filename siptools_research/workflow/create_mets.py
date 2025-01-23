@@ -186,7 +186,6 @@ class CreateMets(WorkflowTask):
             sip_file.generate_technical_metadata(
                 csv_has_header=fc.get("csv_has_header"),
                 file_format=fc['file_format_version']["file_format"],
-                file_created_date=fc.get("file_created"),
                 checksum_algorithm=checksum_algo_conversion[
                     file_["checksum"].split(':')[0]
                     ],

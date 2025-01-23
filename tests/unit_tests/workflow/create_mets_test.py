@@ -573,11 +573,6 @@ def test_create_techmd(workspace, requests_mock):
         "//premis:messageDigest",
         namespaces=NAMESPACES
     )[0].text == f'{TIFF_FILE["checksum"]["value"]}'
-    assert premis_object_element.xpath(
-        "//premis:dateCreatedByApplication",
-        namespaces=NAMESPACES
-    )[0].text == TIFF_FILE["file_characteristics"]["file_created"]
-
 
 
 @pytest.mark.parametrize(
