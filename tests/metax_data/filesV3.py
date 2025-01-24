@@ -92,42 +92,6 @@ TIFF_FILE_METADATA = {
     "checksum": "md5:3cf7c3b90f5a52b2f817a1c5b3bfbc52"
 }
 
-HTML_FILE_METADATA = {
-    "characteristics": {
-        "file_format_version": {
-            "file_format": "text/html",
-            "format_version": "5.0"
-        },
-        "encoding": "UTF-8",
-    },
-    "characteristics_extension": {
-        "streams": {
-            0: {
-                "mimetype": "text/html",
-                "stream_type": "text"
-            }
-        }
-    }
-}
-
-XML_FILE_METADATA = {
-    "characteristics": {
-        "file_format_version": {
-            "file_format": "text/xml",
-            "format_version": "1.0"
-        },
-        "encoding": "UTF-8",
-    },
-    "characteristics_extension": {
-        "streams": {
-            0: {
-                "mimetype": "text/xml",
-                "stream_type": "text"
-            }
-        }
-    }
-}
-
 MKV_FILE_METADATA = {
     "characteristics": {
         "file_format_version": {
