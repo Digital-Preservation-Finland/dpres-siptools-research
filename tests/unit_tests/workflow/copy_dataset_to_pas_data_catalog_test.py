@@ -1,4 +1,6 @@
 """Unit tests for CopyToPasDataCatalog task."""
+import copy
+
 import pytest
 from metax_access import (
     DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
@@ -7,17 +9,29 @@ from metax_access import (
 )
 
 from siptools_research.workflow import copy_dataset_to_pas_data_catalog
+from tests.metax_data.datasetsV3 import BASE_DATASET
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_copy_ida_dataset(config, workspace, requests_mock):
+def test_copy_ida_dataset(config, workspace, requests_mock, request):
     """Test copying Ida dataset to PAS data catalog.
 
     :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
+    :param request: Pytest CLI arguments
     """
-    # Mock Metax
+    # Mock Metax API V3
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["id"] = "original-version-id"
+    dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-ida"
+    dataset["preservation"]["state"] = DS_STATE_METADATA_CONFIRMED
+    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+    metax_mock = requests_mock.patch(
+        "/v3/datasets/original-version-id/preservation"
+    )
+
+    # Mock Metax API V2
     requests_mock.get(
         f'/rest/v2/datasets/{workspace.name}',
         json={
@@ -37,7 +51,7 @@ def test_copy_ida_dataset(config, workspace, requests_mock):
                 }
         }
     )
-    metax_mock = requests_mock.patch('/rest/v2/datasets/original-version-id')
+    metax_v2_mock = requests_mock.patch('/rest/v2/datasets/original-version-id')
 
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
@@ -48,12 +62,19 @@ def test_copy_ida_dataset(config, workspace, requests_mock):
     task.run()
     assert task.complete()
 
-    assert metax_mock.called_once
-    assert metax_mock.last_request.json() == {
-        'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
-        'preservation_description':
-        'Packaging dataset'
-    }
+    if request.config.getoption("--v3"):
+        assert metax_mock.called_once
+        assert metax_mock.last_request.json() == {
+            "state": DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+            "description": {"en": "Packaging dataset"}
+        }
+    else:
+        assert metax_v2_mock.called_once
+        assert metax_v2_mock.last_request.json() == {
+            'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+            'preservation_description':
+            'Packaging dataset'
+        }
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -64,7 +85,20 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
     """
-    # Mock Metax
+    # Mock Metax API V3
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["id"] = "original-version-id"
+    dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-ida"
+    dataset["preservation"]["state"] = DS_STATE_INITIALIZED
+    dataset["preservation"]["dataset_version"]["id"] = "pas-version-id"
+    dataset["preservation"]["dataset_version"]["preservation_state"]\
+        =  DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
+    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+    metax_mock = requests_mock.patch(
+        "/v3/datasets/original-version-id/preservation"
+    )
+
+    # Mock Metax V2
     requests_mock.get(
         f'/rest/v2/datasets/{workspace.name}',
         json={
@@ -79,7 +113,7 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
             'preservation_state': DS_STATE_INITIALIZED
         }
     )
-    metax_mock = requests_mock.patch(f'/rest/v2/datasets/{workspace.name}')
+    metax_v2_mock = requests_mock.patch(f'/rest/v2/datasets/{workspace.name}')
 
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
@@ -91,10 +125,11 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
     assert task.complete()
 
     assert not metax_mock.called
+    assert not metax_v2_mock.called
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_copy_pas_dataset(config, workspace, requests_mock):
+def test_copy_pas_dataset(config, workspace, requests_mock, request):
     """Test running task for pottumounttu dataset.
 
     The dataset was originally created in PAS catalog. So it is not
@@ -103,8 +138,19 @@ def test_copy_pas_dataset(config, workspace, requests_mock):
     :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
+    :param request: Pytest CLI arguments
     """
-    # Mock Metax
+    # Mock Metax API V3
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["id"] = "original-version-id"
+    dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-pas"
+    dataset["preservation"]["state"] = DS_STATE_METADATA_CONFIRMED
+    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+    metax_mock = requests_mock.patch(
+        "/v3/datasets/original-version-id/preservation"
+    )
+
+    # Mock Metax V2
     requests_mock.get(
         f'/rest/v2/datasets/{workspace.name}',
         json={
@@ -124,7 +170,7 @@ def test_copy_pas_dataset(config, workspace, requests_mock):
                 }
         }
     )
-    metax_mock = requests_mock.patch('/rest/v2/datasets/original-version-id')
+    metax_v2_mock = requests_mock.patch('/rest/v2/datasets/original-version-id')
 
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
@@ -135,11 +181,17 @@ def test_copy_pas_dataset(config, workspace, requests_mock):
     task.run()
     assert task.complete()
 
-    assert metax_mock.last_request.json() == {
-        'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
-        'preservation_description':
-        'Packaging dataset'
-    }
+    if request.config.getoption("--v3"):
+        assert metax_mock.last_request.json() == {
+            "state": DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+            "description": {"en": "Packaging dataset"}
+        }
+    else:
+        assert metax_v2_mock.last_request.json() == {
+            'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+            'preservation_description':
+            'Packaging dataset'
+        }
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -154,6 +206,17 @@ def test_pas_dataset_already_copied(config, workspace, requests_mock):
     :param workspace: Temporary workspace directory
     :param requests_mock: HTTP request mocker
     """
+    # Mock Metax API V3
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["id"] = "original-version-id"
+    dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-pas"
+    dataset["preservation"]["state"] \
+        = DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
+    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+    metax_mock = requests_mock.patch(
+        "/v3/datasets/original-version-id/preservation"
+    )
+
     # Mock Metax
     requests_mock.get(
         f'/rest/v2/datasets/{workspace.name}',
@@ -165,7 +228,7 @@ def test_pas_dataset_already_copied(config, workspace, requests_mock):
             'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
         }
     )
-    metax_mock = requests_mock.patch(f'/rest/v2/datasets/{workspace.name}')
+    metax_v2_mock = requests_mock.patch(f'/rest/v2/datasets/{workspace.name}')
 
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
@@ -177,3 +240,4 @@ def test_pas_dataset_already_copied(config, workspace, requests_mock):
     assert task.complete()
 
     assert not metax_mock.called
+    assert not metax_v2_mock.called
