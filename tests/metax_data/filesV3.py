@@ -19,10 +19,20 @@ CSV_FILE_METADATA = {
         "streams": {
             0: {
                 "mimetype": "text/csv",
-                "stream_type": "text"
-            }
-        }
-    }
+                "stream_type": "text",
+                "first_line": ['a', 'b', '"c"'],
+                "charset": "UTF-8",
+                "delimiter": ";",
+                "separator": "CR+LF",
+                "quotechar": "'",
+           }
+        },
+        "info": {},
+        "mimetype": "text/csv",
+        "version": "(:unap)",
+        "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": "md5:4495863617f91b43dda27ffccc8b3455"
 }
 
 TXT_FILE_METADATA = {
@@ -37,10 +47,16 @@ TXT_FILE_METADATA = {
         "streams": {
             0: {
                 "mimetype": "text/plain",
+                "charset": "UTF-8",
                 "stream_type": "text"
-            }
-        }
-    }
+            },
+        },
+        "info": {},
+        "mimetype": "text/plain",
+        "version": "(:unap)",
+        "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": "md5:d3b07384d113edec49eaa6238ad5ff00"
 }
 
 TIFF_FILE_METADATA = {
@@ -67,8 +83,13 @@ TIFF_FILE_METADATA = {
                 "samples_per_pixel": "3",
                 "compression": "no"
             }
-        }
-    }
+        },
+        "info": {},
+        "mimetype": "image/tiff",
+        "version": "6.0",
+        "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": "md5:3cf7c3b90f5a52b2f817a1c5b3bfbc52"
 }
 
 HTML_FILE_METADATA = {
@@ -182,8 +203,13 @@ MKV_FILE_METADATA = {
                 "data_rate": "(:unav)",
                 "codec_creator_app": "Lavf57.71.100"
             }
-        }
-    }
+        },
+        "info": {},
+        "mimetype": "video/x-matroska",
+        "version": "4",
+        "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": "md5:2189cab6a4f7573afc8171381f83e135"
 }
 
 AUDIO_FILE_METADATA = {
@@ -212,8 +238,13 @@ AUDIO_FILE_METADATA = {
                 'stream_type': 'audio',
                 'version': '(:unap)'
             }
-        }
-    }
+        },
+        "info": {},
+        "mimetype": "audio/x-wav",
+        "version": "(:unap)",
+        "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": "md5:2b1a74ecc1fa89f182e42bca7719c555"
 }
 
 PDF_FILE_METADATA = {
@@ -231,8 +262,13 @@ PDF_FILE_METADATA = {
                 "mimetype": "application/pdf",
                 "stream_type": "binary"
             }
-        }
-    }
+        },
+        "info": {},
+        "mimetype": "application/pdf",
+        "version": "A-3b",
+        "grade": "fi-dpres-recommended-file-format"
+    },
+    "checksum": "md5:5db57524e33bbf53c13d256234b92fbd"
 }
 
 VIDEO_FILE_METADATA = {
@@ -267,8 +303,13 @@ VIDEO_FILE_METADATA = {
                 "codec_creator_app": "(:unav)",
                 "codec_creator_app_version": "(:unav)"
             }
-        }
-    }
+        },
+        "info": {},
+        "mimetype": "video/dv",
+        "version": "(:unap)",
+        "grade": "fi-dpres-acceptable-file-format"
+    },
+    "checksum": "md5:646912efe14a049ceb9f3a6f741d7b66"
 }
 
 SEG_Y_FILE_METADATA = {
@@ -286,8 +327,13 @@ SEG_Y_FILE_METADATA = {
                 "mimetype": "application/x.fi-dpres.segy",
                 "stream_type": "binary"
             }
-        }
-    }
+        },
+        "info": {},
+        "mimetype": "application/x.fi-dpres.segy",
+        "version": "1.0",
+        "grade": "fi-dpres-bit-level-file-format"
+    },
+    "checksum": "md5:c5edc06ea17769fd38c5f6014f29b5f3"
 }
 
 BASE_CHARACTERISTICS = {
