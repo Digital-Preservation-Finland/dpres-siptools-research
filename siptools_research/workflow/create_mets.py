@@ -202,9 +202,10 @@ class CreateMets(WorkflowTask):
         use_category_files = defaultdict(list)
         for file in files_metadata:
 
-            use_category_object \
-                = file.get("dataset_metadata", {}).get("use_category")
+            use_category_object = file["dataset_metadata"]["use_category"]
             if not use_category_object:
+                # Use category is not defined for this file, so the file
+                # is not added to logical structure map
                 continue
 
             use_category = get_localized_value(

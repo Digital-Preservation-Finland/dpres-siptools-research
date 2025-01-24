@@ -85,5 +85,5 @@ BASE_DATASET = {
     "field_of_science": [],
     "provenance": [],
     "metadata_owner": None,
-    "data_catalog": None
+    "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
 }

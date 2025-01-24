@@ -4,14 +4,16 @@ import copy
 import lxml.etree
 import pytest
 
+import tests.metax_data.datasetsV3
+import tests.metax_data.filesV3
 import tests.utils
 from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.workflow.create_mets import CreateMets
 from tests.metax_data.datasets import (
     BASE_DATACITE,
-    BASE_DATASET,
-    BASE_PROVENANCE,
-    QVAIN_PROVENANCE,
+    BASE_DATASET as V2_BASE_DATASET,
+    BASE_PROVENANCE as V2_BASE_PROVENANCE,
+    QVAIN_PROVENANCE as V2_QVAIN_PROVENANCE,
 )
 from tests.metax_data.files import CSV_FILE, TIFF_FILE, TXT_FILE
 
@@ -47,13 +49,25 @@ def test_create_mets(config, workspace, requests_mock, data_catalog, objid):
     * the task is complete when METS has been created.
     * METS root element and METS header contain correct information.
 
+    :param config: Configuration file
     :param workspace: Temporary directory fixture
     :param requests_mock: Mocker object
     :param data_catalog: Data catalog identifier of dataset
     :param objid: Identifier expected to be used as OBJID
     """
-    # Mock metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    # Mock Metax API V3
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    files = [copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)]
+    dataset["id"] = workspace.name
+    dataset["data_catalog"] = data_catalog
+    dataset["persistent_identifier"] =  "doi:test"
+    dataset["preservation"]["dataset_version"]["persistent_identifier"] \
+        = "doi:pas-version-id"
+    dataset["preservation"]["contract"]= "contract-identifier"
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
+
+    # Mock Metax API V2
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     files = [copy.deepcopy(TXT_FILE)]
     dataset['identifier'] = workspace.name
     dataset['data_catalog']['identifier'] = data_catalog
@@ -113,11 +127,18 @@ def test_idempotence(config, workspace, requests_mock):
     identical, excluding random identifiers and dates that are generated
     during the process.
 
+    :param config: Configuration file
     :param workspace: Temporary directory fixture
     :param requests_mock: Mocker object
     """
-    # Mock metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    # Mock metax API V3
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    files = [copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)]
+    dataset["id"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
+
+    # Mock metax API V2
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     files = [copy.deepcopy(TXT_FILE)]
     dataset['identifier'] = workspace.name
     tests.utils.add_metax_v2_dataset(
@@ -152,33 +173,58 @@ def test_idempotence(config, workspace, requests_mock):
     assert mets1.stat().st_size == mets2.stat().st_size
 
 
-METADATA_MODIFICATION_PROVENANCE = copy.deepcopy(BASE_PROVENANCE)
+METADATA_MODIFICATION_PROVENANCE \
+    = copy.deepcopy(tests.metax_data.datasetsV3.BASE_PROVENANCE)
 METADATA_MODIFICATION_PROVENANCE["preservation_event"]["pref_label"]["en"]\
     = "metadata modification"
-ANOTHER_BASE_PROVENANCE = copy.deepcopy(BASE_PROVENANCE)
+ANOTHER_BASE_PROVENANCE \
+    = copy.deepcopy(tests.metax_data.datasetsV3.BASE_PROVENANCE)
 ANOTHER_BASE_PROVENANCE["description"]["en"] = "another description"
+V2_METADATA_MODIFICATION_PROVENANCE = copy.deepcopy(V2_BASE_PROVENANCE)
+V2_METADATA_MODIFICATION_PROVENANCE["preservation_event"]["pref_label"]["en"]\
+    = "metadata modification"
+V2_ANOTHER_BASE_PROVENANCE = copy.deepcopy(V2_BASE_PROVENANCE)
+V2_ANOTHER_BASE_PROVENANCE["description"]["en"] = "another description"
 
 
 @pytest.mark.usefixtures("testmongoclient")
 @pytest.mark.parametrize(
-    "provenance_data",
+    ("provenance_data", "v2_provenance_data"),
     [
         # 0 events
-        [],
+        (
+            [],
+            [],
+        ),
         # 1 event
-        [BASE_PROVENANCE],
-        # multiple events
-        [BASE_PROVENANCE, METADATA_MODIFICATION_PROVENANCE],
-        # Two provenence events with same event type
-        [BASE_PROVENANCE, ANOTHER_BASE_PROVENANCE],
-        # provenance event made in Qvain
-        [QVAIN_PROVENANCE],
+        (
+            [tests.metax_data.datasetsV3.BASE_PROVENANCE],
+            [V2_BASE_PROVENANCE],
+        ),
+        # multiple preservation events
+        (
+            [tests.metax_data.datasetsV3.BASE_PROVENANCE,
+             METADATA_MODIFICATION_PROVENANCE],
+            [V2_BASE_PROVENANCE, V2_METADATA_MODIFICATION_PROVENANCE],
+        ),
+        # Two preservation events with same event type
+        (
+            [tests.metax_data.datasetsV3.BASE_PROVENANCE,
+             ANOTHER_BASE_PROVENANCE],
+            [V2_BASE_PROVENANCE, V2_ANOTHER_BASE_PROVENANCE],
+        ),
+        # A lifecycle event
+        (
+            [tests.metax_data.datasetsV3.QVAIN_PROVENANCE],
+            [V2_QVAIN_PROVENANCE],
+        ),
     ]
 )
 def test_multiple_provenance_events(config,
                                     workspace,
                                     requests_mock,
-                                    provenance_data):
+                                    provenance_data,
+                                    v2_provenance_data):
     """Test creating PREMIS metadata for multiple provenance events.
 
     Creates METS document dataset that has multiple provenance events.
@@ -188,17 +234,37 @@ def test_multiple_provenance_events(config,
     * The PREMIS event metadata is referenced in physical structure map
     * The PREMIS event metadata is referenced in logical structure map
 
+    :param config: Configuration file
     :param workspace: Testpath fixture
     :param requests_mock: HTTP request mocker
-    :param provenance_data: List of provenance events in dataset
+    :param provenance_data: List of provenance events in Metax API V3
+    :param v2_provenance_data: List of provenance events in Metax API V2
     """
-    # Mock metax. Create a dataset with provenance events.
-    dataset = copy.deepcopy(BASE_DATASET)
+    # Mock metax API V3. Create a dataset with provenance events.
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    dataset["provenance"] = provenance_data
+    # Add use category to a file to ensure that logical structuremap is
+    # created. Note that "dataset_metadata" should really be included in
+    # file metadata only when metadata is requested from
+    # /v3/datasets/files/ API, but `add_metax_dataset` function will use
+    # the same dictionary to mock /v3/files/ API!
+    file = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    file["dataset_metadata"] = {
+            "use_category": {
+                "id": None,
+                "pref_label": {
+                    "en": "dummy-use-category"
+                }
+            }
+        }
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
+
+    # Mock metax API V2
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     dataset['identifier'] = workspace.name
     # Add use category to a file to ensure that logical structuremap is
     # created
-
-    # V3 does not support saving the files use category from research dataset
     dataset["research_dataset"]["files"] = [
         {
             "identifier": "pid:urn:identifier",
@@ -211,7 +277,7 @@ def test_multiple_provenance_events(config,
         }
     ]
     if provenance_data:
-        dataset['research_dataset']['provenance'] = provenance_data
+        dataset['research_dataset']['provenance'] = v2_provenance_data
     tests.utils.add_metax_v2_dataset(
         requests_mock,
         dataset=dataset,
@@ -230,7 +296,7 @@ def test_multiple_provenance_events(config,
     mets = lxml.etree.parse(str(workspace / "preservation" / "mets.xml"))
     provenance_ids = []
     for provenance in provenance_data:
-        if "preservation_event" in provenance:
+        if provenance["preservation_event"] is not None:
             event_type = provenance["preservation_event"]["pref_label"]["en"]
             event_detail = provenance["description"]["en"]
         else:
@@ -274,10 +340,18 @@ def test_multiple_provenance_events(config,
 
 
 @pytest.mark.parametrize(
-    'provenance_data', [BASE_PROVENANCE, QVAIN_PROVENANCE]
+    ("provenance_data", "v2_provenance_data"),
+    [
+        (
+            tests.metax_data.datasetsV3.BASE_PROVENANCE, V2_BASE_PROVENANCE,
+        ),
+        (
+            tests.metax_data.datasetsV3.QVAIN_PROVENANCE, V2_QVAIN_PROVENANCE,
+        ),
+    ]
 )
 def test_premis_event_metadata(
-    config, workspace, requests_mock, provenance_data
+    config, workspace, requests_mock, provenance_data, v2_provenance_data
 ):
     """Test creating PREMIS events for provenance metadata.
 
@@ -286,15 +360,26 @@ def test_premis_event_metadata(
     Tests that PREMIS event metadata created for provenance event
     contains correct information.
 
+    :param config: Configuration file
     :param workspace: Temporary directory
     :param requests_mock: HTTP request mocker
-    :param provenance_data: The data used for creating provenance events
+    :param provenance_data: Provenance events in Metax API V3
+    :param v2_provenance_data: Provenance events in Metax API V2
     """
-    # Mock metax. Create a dataset with one provenance event
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['identifier'] = workspace.name
+    # Mock Metax API V3. Create a dataset with one provenance event
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    dataset["provenance"] = [provenance_data]
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[tests.metax_data.filesV3.TXT_FILE]
+    )
 
-    dataset["research_dataset"]["provenance"] = [provenance_data]
+    # Mock metax API V2
+    dataset = copy.deepcopy(V2_BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    dataset["research_dataset"]["provenance"] = [v2_provenance_data]
     tests.utils.add_metax_v2_dataset(
         requests_mock, dataset=dataset,
         files=[TXT_FILE]
@@ -309,7 +394,7 @@ def test_premis_event_metadata(
     CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Find the digiprovMD element of provenance event from METS document
-    if 'description' in provenance_data:
+    if provenance_data["description"]:
         expected_event_detail = provenance_data['description']['en']
     else:
         expected_event_detail = provenance_data['title']['en']
@@ -332,7 +417,7 @@ def test_premis_event_metadata(
         namespaces=NAMESPACES
     )
 
-    if "temporal" in provenance_data:
+    if provenance_data["temporal"]:
         assert elements[0].text == "2014-01-01T08:19:58Z"
     else:
         assert elements[0].text == "OPEN"
@@ -343,11 +428,11 @@ def test_premis_event_metadata(
         'mets:mdWrap/mets:xmlData/premis:event/premis:eventDetail',
         namespaces=NAMESPACES
     )
-    if "title" in provenance_data and "description" in provenance_data:
+    if provenance_data["title"] and provenance_data["description"]:
         assert elements[0].text == "Title: Description of provenance"
-    elif "title" in provenance_data:
+    elif provenance_data["title"]:
         assert elements[0].text == "Title"
-    elif "description" in provenance_data:
+    elif provenance_data["description"]:
         assert elements[0].text == "Description of provenance"
     else:
         error = "Invalid provenance, there is no title or description"
@@ -358,7 +443,7 @@ def test_premis_event_metadata(
         'mets:mdWrap/mets:xmlData/premis:event'
         '/premis:eventOutcomeInformation/premis:eventOutcome',
         namespaces=NAMESPACES)
-    if "event_outcome" in provenance_data:
+    if provenance_data["event_outcome"]:
         assert elements[0].text == "success"
     else:
         assert elements[0].text == "(:unav)"
@@ -370,7 +455,7 @@ def test_premis_event_metadata(
         '/premis:eventOutcomeDetailNote',
         namespaces=NAMESPACES
     )
-    if "outcome_description" in provenance_data:
+    if provenance_data["outcome_description"]:
         assert elements[0].text == "outcome_description"
     else:
         assert elements == []
@@ -402,6 +487,7 @@ def test_premis_event_outcome(config, workspace, requests_mock,
     Checks that expected eventOutcome value is written to PREMIS event
     metadata.
 
+    :param config: Configuration file
     :param workspace: Temporary directory
     :param requests_mock: HTTP request mocker
     :param event_outcome_identifier: event outcome identifier in Metax
@@ -409,10 +495,21 @@ def test_premis_event_outcome(config, workspace, requests_mock,
     :param expected_event_outcome: event outcome value that should be
                                    written to METS
     """
-    # Mock metax. Create a dataset with one provenance event
-    dataset = copy.deepcopy(BASE_DATASET)
+    # Mock metax API V3. Create a dataset with one provenance event
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    provenance = copy.deepcopy(tests.metax_data.datasetsV3.BASE_PROVENANCE)
+    provenance["event_outcome"]["url"] = event_outcome_identifier
+    dataset["provenance"] = [provenance]
+    tests.utils.add_metax_dataset(
+        requests_mock, dataset=dataset,
+        files=[tests.metax_data.filesV3.TXT_FILE]
+    )
+
+    # Mock metax API V2
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     dataset['identifier'] = workspace.name
-    provenance = copy.deepcopy(BASE_PROVENANCE)
+    provenance = copy.deepcopy(V2_BASE_PROVENANCE)
     provenance["event_outcome"]["identifier"] = event_outcome_identifier
     dataset["research_dataset"]["provenance"] = [provenance]
     tests.utils.add_metax_v2_dataset(
@@ -452,11 +549,28 @@ def test_createdescriptivemetadata(config, workspace, requests_mock):
     * datacite XML is imported to dmdSec of METS
     * dmdSec is referenced in both structure maps
 
+    :param config: Configuration file
     :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
     """
-    # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    # Mock Metax API V3
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    # Add use category to a file to ensure that logical structuremap is
+    # created
+    file=copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    file["dataset_metadata"] = {
+            "use_category": {
+                "id": None,
+                "pref_label": {
+                    "en": "dummy-use-category"
+                }
+            }
+        }
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
+
+    # Mock Metax API V2
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     dataset['identifier'] = workspace.name
     # Add use category to a file to ensure that logical structuremap is
     # created
@@ -532,11 +646,21 @@ def test_create_techmd(config, workspace, requests_mock):
     checksum algorithm and creation date) from Metax is used to create
     PREMIS object.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     """
-    # Mock metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    # Mock metax API V3
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[tests.metax_data.filesV3.TIFF_FILE]
+    )
+
+    # Mock metax API V2
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     dataset['identifier'] = workspace.name
     tests.utils.add_metax_v2_dataset(
         requests_mock,
@@ -577,17 +701,18 @@ def test_create_techmd(config, workspace, requests_mock):
 
 
 @pytest.mark.parametrize(
-    ("checksum_algorithm", "encoding"),
+    ("metax_checksum_algorithm", "mets_checksum_algorithm", "encoding"),
     [
         # These probably are the defaults
-        ("MD5", "UTF-8"),
+        ("md5", "MD5", "UTF-8"),
         # and these are not
-        ("SHA-256", "ISO-8859-15")
+        ("sha256", "SHA-256", "ISO-8859-15")
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
 def test_user_defined_techmd(config, workspace, requests_mock,
-                             checksum_algorithm, encoding):
+                             metax_checksum_algorithm, mets_checksum_algorithm,
+                             encoding):
     """Test using user defined values.
 
     Creates METS for a dataset that contains one text file with
@@ -596,20 +721,38 @@ def test_user_defined_techmd(config, workspace, requests_mock,
     Tests that the user defined values from Metax metadata are used
     instead of the default values of siptools-ng.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
-    :param checksum_algorithm: Checksum algorithm to file medatada
-    :param encoding: File encoding to file medatada
+    :param metax_checksum_algorithm: The predefined checksum algorithm
+        in Metax
+    :param mets_checksum_algorithm: Checksum algorithm that should be
+        written to METS document
+    :param encoding: File encoding in Metax. The same value should be
+        used in METS document.
     """
-    # Mock metax
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['identifier'] = workspace.name
+    # Mock metax API V3
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    file = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    file["characteristics"]["encoding"] = encoding
+    file["characteristics_extension"]["streams"][0]["charset"] = encoding
+    file["checksum"] = f"{metax_checksum_algorithm}:1234"
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[file]
+    )
 
+    # Mock metax API V2
+    dataset = copy.deepcopy(V2_BASE_DATASET)
+    dataset['identifier'] = workspace.name
     file = copy.deepcopy(TXT_FILE)
     file["file_characteristics"]["encoding"] = encoding
     file["file_characteristics_extension"]["streams"][0]["charset"] \
         = encoding
-    file["checksum"]["algorithm"] = checksum_algorithm
+    # Metax API V2 uses the same algorithm names as METS
+    file["checksum"]["algorithm"] = mets_checksum_algorithm
     tests.utils.add_metax_v2_dataset(
         requests_mock,
         dataset=dataset,
@@ -637,11 +780,11 @@ def test_user_defined_techmd(config, workspace, requests_mock,
     assert premis_object_element.xpath(
         "//premis:messageDigestAlgorithm",
         namespaces=NAMESPACES
-    )[0].text == checksum_algorithm
+    )[0].text == mets_checksum_algorithm
 
 
 @pytest.mark.parametrize(
-    'has_header,expected_field_definition',
+    ("has_header", "expected_field_definition"),
     [
         # If csv does not have header, default field definition
         # 'header1' will be used
@@ -664,14 +807,22 @@ def test_create_techmd_csv(config, workspace, requests_mock, has_header,
       create PREMIS object
     * CSV specific metadata from Metax is used to create ADDML metadata
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     :param has_header: Does the csv has header?
     :param expected_field_definition: Expected definition of the first
                                       field of CSV file
     """
-    # Mock metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    # Mock metax API V3
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    file = copy.deepcopy(tests.metax_data.filesV3.CSV_FILE)
+    file["characteristics"]["csv_has_header"] = has_header
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
+
+    # Mock metax API V2
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     dataset['identifier'] = workspace.name
     file = copy.deepcopy(CSV_FILE)
     file['file_characteristics']['csv_has_header'] = has_header
@@ -722,18 +873,31 @@ def test_create_filesec_and_structmap(config, workspace, requests_mock):
     * The files are added to fileSec
     * PYSICAL structMap contains expected information
 
+    :param config: Configuration file
     :param workspace: Temporary workspace fixture
     :param requests_mock: HTTP request mocker
     """
-    # Create dataset that contains three text files
-    files = []
+    # Mock Metax API V3. Create dataset that contains three text files.
+    files = [copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+             for i in range(3)]
+    files[0]["pathname"] = "/file1"
+    files[1]["pathname"] = "/file2"
+    files[2]["pathname"] = "/subdirectory/file3"
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    tests.utils.add_metax_dataset(
+        requests_mock=requests_mock,
+        dataset=dataset,
+        files=files
+    )
+
+    # Mock Metax API V2
     files = [copy.deepcopy(TXT_FILE) for i in range(3)]
     files[0]["file_path"] = "/file1"
     files[1]["file_path"] = "/file2"
     files[2]["file_path"] = "/subdirectory/file3"
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     dataset["identifier"] = workspace.name
-    # Add provenance events to dataset
     tests.utils.add_metax_v2_dataset(
         requests_mock=requests_mock,
         dataset=dataset,
@@ -785,10 +949,42 @@ def test_create_logical_structmap(config, workspace, requests_mock):
     Creates METS for a dataset that contains two files and tests that
     logical structure map contains correct information.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     """
-    # Create a dataset that contains three files
+    # Mock Metax API V3. Create a dataset that contains three files. Two
+    # of the files will have an use category, one does not.
+    files = [copy.deepcopy(tests.metax_data.filesV3.TXT_FILE),
+             copy.deepcopy(tests.metax_data.filesV3.TXT_FILE),
+             copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)]
+    files[0]["id"] = "fileid1"
+    files[0]["pathname"] = "files/file1"
+    files[0]["dataset_metadata"] = {
+            "use_category": {
+                "id": None,
+                "pref_label": {
+                    "en": "dummy-use-category"
+                }
+            }
+        }
+    files[1]["id"] = "fileid2"
+    files[1]["pathname"] = "files/file2"
+    files[1]["dataset_metadata"] = {
+            "use_category": {
+                "id": None,
+                "pref_label": {
+                    "en": "dummy-use-category"
+                }
+            }
+        }
+    files[2]["id"] = "fileid3"
+    files[2]["pathname"] = "files/file3"
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
+
+    # Mock Metax API V2
     files = [copy.deepcopy(TXT_FILE),
              copy.deepcopy(TXT_FILE),
              copy.deepcopy(TXT_FILE)]
@@ -798,10 +994,8 @@ def test_create_logical_structmap(config, workspace, requests_mock):
     files[1]['file_path'] = 'files/file2'
     files[2]['identifier'] = 'fileid3'
     files[2]['file_path'] = 'files/file3'
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     dataset['identifier'] = workspace.name
-
-    # Add use category to two of the files
     dataset["research_dataset"]["files"] = [
         {
             "identifier": files[0]['identifier'],
@@ -822,8 +1016,6 @@ def test_create_logical_structmap(config, workspace, requests_mock):
             }
         }
     ]
-
-    # Add dataset to Metax mock
     tests.utils.add_metax_v2_dataset(
         requests_mock, dataset=dataset, files=files
     )
@@ -870,15 +1062,21 @@ def test_empty_logical_structuremap(config, workspace, requests_mock):
     Creates METS for a dataset that contains files, but use category is
     not defined any of them. Logical structuremap should not be created.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     """
-    # Create a dataset that contains three files
-    file = copy.deepcopy(TXT_FILE)
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['identifier'] = workspace.name
+    # Mock Metax API V3. Create a dataset that contains one file. Use
+    # category is not defined.
+    file = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
 
-    # Add dataset to Metax mock
+    # Mock Metax API V2.
+    file = copy.deepcopy(TXT_FILE)
+    dataset = copy.deepcopy(V2_BASE_DATASET)
+    dataset['identifier'] = workspace.name
     tests.utils.add_metax_v2_dataset(
         requests_mock, dataset=dataset, files=[file]
     )
@@ -921,11 +1119,21 @@ def test_file_characteristics_conflict(config, workspace, requests_mock, key):
     file_characteristics. Exception should be raised while creating
     METS.
     """
+    # Mock Metax API V3. Create a conflict between file_characteristics
+    # and file_characteristics_extension.
+    file = copy.deepcopy(tests.metax_data.filesV3.CSV_FILE)
+    if key in ("file_format", "format_version"):
+        file["characteristics"]["file_format_version"][key] = "foo"
+    else:
+        file["characteristics"][key] = "foo"
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
+
+    # Mock Metax API V2
     file = copy.deepcopy(CSV_FILE)
-    # Create a conflict between file_characteristics and
-    # file_characteristics_extension
     file["file_characteristics"][key] = "foo"
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(V2_BASE_DATASET)
     dataset['identifier'] = workspace.name
     tests.utils.add_metax_v2_dataset(
         requests_mock, dataset=dataset, files=[file]

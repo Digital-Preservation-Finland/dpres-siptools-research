@@ -55,7 +55,7 @@ def add_metax_dataset(
     requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
     requests_mock.patch(f"/v3/datasets/{dataset['id']}", json=dataset)
     requests_mock.get(
-        f"/v3/datasets/{dataset['id']}?dataset_format=datacite",
+        f"/v3/datasets/{dataset['id']}/metadata-download?format=datacite",
         content=lxml.etree.tostring(datacite)
     )
     requests_mock.get(
