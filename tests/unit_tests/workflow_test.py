@@ -18,22 +18,28 @@ import siptools_research.workflow.create_mets
 import tests.metax_data.contracts
 import tests.utils
 from siptools_research.config import Configuration
-from tests.metax_data.files import PAS_STORAGE_SERVICE
+from tests.metax_data.files import PAS_STORAGE_SERVICE as V2_PAS_STORAGE_SERVICE
+from tests.metax_data.filesV3 import PAS_STORAGE_SERVICE
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
-PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
-PAS_STORAGE_TXT_FILE["file_storage"]["identifier"] = PAS_STORAGE_SERVICE
-XML_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
-XML_FILE["file_path"] = "mets.xml"
-SIG_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
-SIG_FILE["file_path"] = "signature.sig"
-TIFF_FILE = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
-MKV_FILE = copy.deepcopy(tests.metax_data.files.MKV_FILE)
-SEG_Y_FILE = copy.deepcopy(tests.metax_data.files.SEG_Y_FILE)
-DATASET_WITH_PROVENANCE \
-    = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
-DATASET_WITH_PROVENANCE["research_dataset"]["provenance"] \
-    = [tests.metax_data.datasets.BASE_PROVENANCE]
+PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+PAS_STORAGE_TXT_FILE["storage_service"] = PAS_STORAGE_SERVICE
+V2_PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+V2_PAS_STORAGE_TXT_FILE["file_storage"]["identifier"] = V2_PAS_STORAGE_SERVICE
+XML_FILE = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+XML_FILE["pathname"] = "mets.xml"
+V2_XML_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+V2_XML_FILE["file_path"] = "mets.xml"
+SIG_FILE = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+SIG_FILE["pathname"] = "signature.sig"
+V2_SIG_FILE = copy.deepcopy(tests.metax_data.files.TXT_FILE)
+V2_SIG_FILE["file_path"] = "signature.sig"
+TIFF_FILE = copy.deepcopy(tests.metax_data.filesV3.TIFF_FILE)
+V2_TIFF_FILE = copy.deepcopy(tests.metax_data.files.TIFF_FILE)
+MKV_FILE = copy.deepcopy(tests.metax_data.filesV3.MKV_FILE)
+V2_MKV_FILE = copy.deepcopy(tests.metax_data.files.MKV_FILE)
+SEG_Y_FILE = copy.deepcopy(tests.metax_data.filesV3.SEG_Y_FILE)
+V2_SEG_Y_FILE = copy.deepcopy(tests.metax_data.files.SEG_Y_FILE)
 
 SCHEMATRONS = []
 SCHEMATRON_FILES = [
@@ -115,20 +121,30 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
                         contains Task to be tested
     :param task: Task class name
     :param requests_mock: HTTP request mocker
-    :param mocker: Pytest-mock mocker
-    :returns: ``None``
     """
     # Create transfer directory to PAS
     (sftp_dir / "transfer").mkdir(parents=True, exist_ok=True)
 
+    # Mock Metax API V3
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    dataset["persistent_identifier"] = "doi:test"
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[tests.metax_data.filesV3.TXT_FILE]
+    )
+
+    # Mock Metax API V2
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
     dataset["identifier"] = workspace.name
-
     tests.utils.add_metax_v2_dataset(
         requests_mock,
         dataset=dataset,
         files=[tests.metax_data.files.TXT_FILE]
     )
+
+    # Mock Ida
     tests.utils.add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id=workspace.name,
@@ -136,11 +152,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
         content=b"foo\n"
     )
 
-    #Mock metax
-    requests_mock.get(f"/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true",
-                      json = dataset)
-
-    #Mock DPS
+    # Mock DPS
     requests_mock.get(
         "https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest",
         json={
@@ -213,106 +225,100 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
 
 @pytest.mark.usefixtures("testmongoclient", "mock_luigi_config_path")
 @pytest.mark.parametrize(
-    ('dataset', 'files'),
+    "files",
     [
         # Dataset with one text file
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
-                {
-                    'metadata': tests.metax_data.files.TXT_FILE,
-                    'path': 'tests/data/sample_files/text_plain_UTF-8'
-                }
-            ]
-        ),
+        [
+            {
+                'metadata': tests.metax_data.filesV3.TXT_FILE,
+                'v2_metadata': tests.metax_data.files.TXT_FILE,
+                'path': 'tests/data/sample_files/text_plain_UTF-8'
+            }
+        ],
         # Dataset with a file in upload-rest-api
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
-                {
-                    'metadata': PAS_STORAGE_TXT_FILE,
-                    'path': 'tests/data/sample_files/text_plain_UTF-8'
-                }
-            ]
-        ),
+        [
+            {
+                'metadata': PAS_STORAGE_TXT_FILE,
+                'v2_metadata': V2_PAS_STORAGE_TXT_FILE,
+                'path': 'tests/data/sample_files/text_plain_UTF-8'
+            }
+        ],
         # Dataset with a file named "mets.xml"
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
-                {
-                    'metadata': XML_FILE,
-                    'path': 'tests/data/sample_files/text_plain_UTF-8'
-                }
-            ]
-        ),
+        [
+            {
+                'metadata': XML_FILE,
+                'v2_metadata': V2_XML_FILE,
+                'path': 'tests/data/sample_files/text_plain_UTF-8'
+            }
+        ],
         # Dataset with a file named "signature.sig"
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
-                {
-                    'metadata': SIG_FILE,
-                    'path': 'tests/data/sample_files/text_plain_UTF-8'
-                }
-            ]
-        ),
+        [
+            {
+                'metadata': SIG_FILE,
+                'v2_metadata': V2_SIG_FILE,
+                'path': 'tests/data/sample_files/text_plain_UTF-8'
+            }
+        ],
         # Dataset with different file formats producing different
         # metadata
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
-                # text (charset metadata)
-                {
-                    'metadata': tests.metax_data.files.TXT_FILE,
-                    'path': 'tests/data/sample_files/text_plain_UTF-8'
-                },
-                # CSV (ADDML)
-                {
-                    'metadata': tests.metax_data.files.CSV_FILE,
-                    'path': 'tests/data/sample_files/text_csv.csv'
-                },
-                # image (MIX)
-                {
-                    'metadata': TIFF_FILE,
-                    'path': 'tests/data/sample_files/valid_tiff.tiff'
-                },
-                # audio (AudioMD)
-                {
-                    'metadata': tests.metax_data.files.AUDIO_FILE,
-                    'path': 'tests/data/sample_files/audio_x-wav.wav'
-                },
-                # video (VideoMD)
-                {
-                    'metadata': tests.metax_data.files.VIDEO_FILE,
-                    'path': 'tests/data/sample_files/video_dv.dv'
-                },
-                # video container with video and audio (VideoMD and
-                # AudioMD)
-                {
-                    'metadata': MKV_FILE,
-                    'path': 'tests/data/sample_files/video_ffv1.mkv'
-                },
-                # other (no extra metadata)
-                {
-                    'metadata': tests.metax_data.files.PDF_FILE,
-                    'path': 'tests/data/sample_files/application_pdf.pdf'
-                }
-            ]
-        ),
+        [
+            # text (charset metadata)
+            {
+                'metadata': tests.metax_data.filesV3.TXT_FILE,
+                'v2_metadata': tests.metax_data.files.TXT_FILE,
+                'path': 'tests/data/sample_files/text_plain_UTF-8'
+            },
+            # CSV (ADDML)
+            {
+                'metadata': tests.metax_data.filesV3.CSV_FILE,
+                'v2_metadata': tests.metax_data.files.CSV_FILE,
+                'path': 'tests/data/sample_files/text_csv.csv'
+            },
+            # image (MIX)
+            {
+                'metadata': TIFF_FILE,
+                'v2_metadata': V2_TIFF_FILE,
+                'path': 'tests/data/sample_files/valid_tiff.tiff'
+            },
+            # audio (AudioMD)
+            {
+                'metadata': tests.metax_data.filesV3.AUDIO_FILE,
+                'v2_metadata': tests.metax_data.files.AUDIO_FILE,
+                'path': 'tests/data/sample_files/audio_x-wav.wav'
+            },
+            # video (VideoMD)
+            {
+                'metadata': tests.metax_data.filesV3.VIDEO_FILE,
+                'v2_metadata': tests.metax_data.files.VIDEO_FILE,
+                'path': 'tests/data/sample_files/video_dv.dv'
+            },
+            # video container with video and audio (VideoMD and
+            # AudioMD)
+            {
+                'metadata': MKV_FILE,
+                'v2_metadata': V2_MKV_FILE,
+                'path': 'tests/data/sample_files/video_ffv1.mkv'
+            },
+            # other (no extra metadata)
+            {
+                'metadata': tests.metax_data.filesV3.PDF_FILE,
+                'v2_metadata': tests.metax_data.files.PDF_FILE,
+                'path': 'tests/data/sample_files/application_pdf.pdf'
+            }
+        ],
         # Dataset with a file that goes to bit-level preservation
-        (
-            tests.metax_data.datasets.BASE_DATASET,
-            [
-                {
-                    'metadata': SEG_Y_FILE,
-                    'path': (
-                        'tests/data/sample_files/invalid_1.0_ascii_header.sgy'
-                    )
-                }
-            ]
-        )
+        [
+            {
+                'metadata': SEG_Y_FILE,
+                'v2_metadata': V2_SEG_Y_FILE,
+                'path': (
+                    'tests/data/sample_files/invalid_1.0_ascii_header.sgy'
+                )
+            }
+        ],
     ]
 )
-def test_mets_creation(config, tmp_path, workspace, requests_mock, dataset,
+def test_mets_creation(config, tmp_path, workspace, requests_mock,
                        files, upload_projects_path):
     """Test SIP validity.
 
@@ -326,29 +332,36 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock, dataset,
     :param tmp_path: temporary directory
     :param workspace: temporary workspace directory
     :param requests_mock: Mocker object
-    :param dataset: dataset metadata
-    :param files: list of file metadata objects
+    :param files: list of files to be added to dataset
     """
-    # Mock Metax
-    dataset = copy.deepcopy(dataset)
-    dataset['identifier'] = workspace.name
-    tests.utils.add_metax_v2_dataset(
+    # Mock Metax API V3
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    tests.utils.add_metax_dataset(
         requests_mock,
         dataset=dataset,
         files=[file['metadata'] for file in files]
     )
 
+    # Mock Metax API V2
+    dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)
+    dataset['identifier'] = workspace.name
+    tests.utils.add_metax_v2_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[file['v2_metadata'] for file in files]
+    )
+
     # Mock file download sources
     for file in files:
-        if file['metadata']['file_storage']['identifier'] \
-                == PAS_STORAGE_SERVICE:
+        if file['metadata']['storage_service'] == PAS_STORAGE_SERVICE:
             # Mock upload-rest-api
             file_storage_path = (upload_projects_path / "project_id"
-                                 / file["metadata"]["identifier"])
+                                 / file["metadata"]["id"])
             FileEntry(
                 id=str(file_storage_path),
                 checksum="2eeecd72c567401e6988624b179d0b14",
-                identifier=file["metadata"]["identifier"]
+                identifier=file["metadata"]["id"]
             ).save()
             file_storage_path.parent.mkdir()
             shutil.copy(file['path'], file_storage_path)
@@ -358,7 +371,7 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock, dataset,
                 tests.utils.add_mock_ida_download(
                     requests_mock=requests_mock,
                     dataset_id=workspace.name,
-                    filename=file['metadata']["file_path"],
+                    filename=file['metadata']["pathname"],
                     content=open_file.read()
                 )
 
@@ -391,6 +404,6 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock, dataset,
     for file in files:
         file_in_sip = (
             tmp_path / "extracted_sip" / "dataset_files"
-            / file["metadata"]["file_path"].strip('/')
+            / file["metadata"]["pathname"].strip('/')
         )
         assert filecmp.cmp(file_in_sip, file['path'])

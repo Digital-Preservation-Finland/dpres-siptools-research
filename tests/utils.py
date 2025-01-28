@@ -50,10 +50,13 @@ def add_metax_dataset(
     for file in files:
         requests_mock.get(f"/v3/files/{file['id']}", json=file)
         requests_mock.patch(f"/v3/files/{file['id']}", json=file)
+        requests_mock.patch(f"/v3/files/{file['id']}/characteristics",
+                            json=file)
 
     # Mock Metax datasets API
     requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
-    requests_mock.patch(f"/v3/datasets/{dataset['id']}", json=dataset)
+    requests_mock.patch(f"/v3/datasets/{dataset['id']}/preservation",
+                        json=dataset)
     requests_mock.get(
         f"/v3/datasets/{dataset['id']}/metadata-download?format=datacite",
         content=lxml.etree.tostring(datacite)
