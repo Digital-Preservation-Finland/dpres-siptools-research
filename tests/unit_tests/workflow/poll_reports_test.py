@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from siptools_research.workflow.poll_reports import GetValidationReports
+import tests.metax_data.datasetsV3
 from tests.metax_data.datasets import BASE_DATASET
 
 
@@ -29,11 +30,16 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
     :param requests_mock: Mocker object
     :param status: SIP's status in DPS.
     """
+    # Mock metax API V3
+    doi = "doi:test"
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    dataset["persistent_identifier"] = doi
+    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+
+    # Mock metax API V2
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    doi = dataset["research_dataset"]["preferred_identifier"]
-
-    #Mock metax
     requests_mock.get(f"/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true",
                       json = dataset)
 
@@ -90,10 +96,16 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
     :param workspace: Temporary directory fixture
     :param requests_mock: Mocker object
     """
+    # Mock metax API V3
+    doi = "doi:test"
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    dataset["persistent_identifier"] = doi
+    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
 
+    # Mock Metax API V2
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
-    doi = dataset["research_dataset"]["preferred_identifier"]
 
     #Mock metax
     requests_mock.get(
