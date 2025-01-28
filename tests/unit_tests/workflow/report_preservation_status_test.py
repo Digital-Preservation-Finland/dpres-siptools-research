@@ -1,17 +1,33 @@
 """Unit tests for ReportPreservationStatus task."""
+import copy
 
 import pytest
 
+import tests.metax_data.datasetsV3
 from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
 
 
 @pytest.mark.parametrize(
-    ("dataset_metadata", "patched_dataset_id"),
+    ("dataset_metadata", "v2_dataset_metadata", "patched_dataset_id"),
     [
         # Ida dataset has been copied to PAS catalog. The preservation
         # state of the dataset in PAS catalog should be updated.
         (
+            {
+                "id": "original-version-id",
+                "preservation": {
+                    "state": 0,
+                    "description": None,
+                    "reason_description": None,
+                    "contract": None,
+                    "dataset_version": {
+                        "id": "pas-version-id",
+                        "persistent_identifier": None,
+                        "preservation_state": 0
+                    }
+                },
+            },
             {
                 'identifier': 'original-version-id',
                 'preservation_dataset_version': {
@@ -34,6 +50,20 @@ from siptools_research.workflow import report_preservation_status
         # only one version of the dataset exists.
         (
             {
+                "id": "original-version-id",
+                "preservation": {
+                    "state": 0,
+                    "description": None,
+                    "reason_description": None,
+                    "contract": None,
+                    "dataset_version": {
+                        "id": None,
+                        "persistent_identifier": None,
+                        "preservation_state": 0
+                    }
+                },
+            },
+            {
                 'identifier': "original-version-id",
                 "preservation_identifier": "doi:test",
                 "research_dataset": {
@@ -52,7 +82,8 @@ from siptools_research.workflow import report_preservation_status
 )
 @pytest.mark.usefixtures('testmongoclient')
 def test_reportpreservationstatus(config, workspace, requests_mock,
-                                  dataset_metadata, patched_dataset_id):
+                                  dataset_metadata, v2_dataset_metadata,
+                                  patched_dataset_id, request):
     """Test reporting status of accepted SIP.
 
     Creates new ''ingest-reports/accepted'' directory in local workspace
@@ -64,22 +95,34 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     :param workspace: Temporary directory fixture
     :param requests_mock: HTTP request mocker
     :param dataset_metadata: Dataset metadata in Metax
+    :param v2_dataset_metadata: Dataset metadata in Metax API V2
     :param patched_dataset_id: Dataset identifier that should be used
                                when preservation state is updated.
     :returns: ``None``
     """
-    # Mock Metax
-    requests_mock.get(
-        f'/rest/v2/datasets/{workspace.name}',
-        json=dataset_metadata
-    )
-    metax_mock = requests_mock.patch(f'/rest/v2/datasets/{patched_dataset_id}')
+    if request.config.getoption("--v3"):
+        # Mock Metax API V3
+        dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+        dataset.update(dataset_metadata)
+        requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+        metax_mock = requests_mock.patch(
+            f"/v3/datasets/{patched_dataset_id}/preservation"
+        )
+
+    else:
+        # Mock Metax API V2
+        requests_mock.get(
+            f'/rest/v2/datasets/{workspace.name}',
+            json=v2_dataset_metadata
+        )
+        metax_mock \
+            = requests_mock.patch(f'/rest/v2/datasets/{patched_dataset_id}')
 
     # Create directory with name of the workspace to the local
     # workspace directory, so that the ReportPreservationStatus thinks
     # that validation has completed.
     ingest_report = (workspace / "preservation" / "ingest-reports" / "accepted"
-                     / f"{dataset_metadata['preservation_identifier']}.xml")
+                     / "doi:test.xml")
     ingest_report.parent.mkdir(parents=True, exist_ok=True)
     ingest_report.write_text('foo')
 
