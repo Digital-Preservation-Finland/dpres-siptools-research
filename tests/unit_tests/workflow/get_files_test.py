@@ -9,9 +9,15 @@ from siptools_research.exceptions import (
     MissingFileError,
 )
 from siptools_research.workflow import get_files
+import tests.metax_data.datasetsV3
+import tests.metax_data.filesV3
 from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import PAS_STORAGE_SERVICE, TXT_FILE
-from tests.utils import add_metax_v2_dataset, add_mock_ida_download
+from tests.utils import (
+    add_metax_dataset,
+    add_metax_v2_dataset,
+    add_mock_ida_download
+)
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -26,7 +32,20 @@ def test_getfiles(config, workspace, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    # Mock metax. Create a dataset that contains two text files.
+    # Mock Metax API V3. Create a dataset that contains two text files.
+    files = [copy.deepcopy(tests.metax_data.filesV3.TXT_FILE),
+             copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)]
+    files[0]["id"] = "pid:urn:1"
+    files[0]["pathname"] = "/path/to/file1"
+    files[0]["checksum"] = "md5:d3b07384d113edec49eaa6238ad5ff00"
+    files[1]["id"] = "pid:urn:2"
+    files[1]["pathname"] = "/path/to/file2"
+    files[1]["checksum"] = "md5:c157a79031e1c40f85931829bc5fc552"
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=files)
+
+    # Mock Metax API V2
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['identifier'] = 'pid:urn:1'
     files[0]['file_path'] = '/path/to/file1'
@@ -84,7 +103,13 @@ def test_file_cache(config, workspace, requests_mock):
     :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
     """
-    # Mock metax. Create a dataset that contains a text file.
+    # Mock Metax API V3. Create a dataset that contains a text file.
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset,
+                      files=[tests.metax_data.filesV3.TXT_FILE])
+
+    # Mock Metax API V2
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
     add_metax_v2_dataset(requests_mock, dataset=dataset, files=[TXT_FILE])
@@ -129,7 +154,17 @@ def test_missing_ida_files(config, workspace, requests_mock):
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
     """
-    # Mock metax. Create a dataset that contains two text files.
+    # Mock Metax API V3. Create a dataset that contains two text files.
+    files = [copy.deepcopy(tests.metax_data.filesV3.TXT_FILE),
+             copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)]
+    files[0]["pathname"] = "/path/to/file1"
+    files[1]["id"] = "pid:urn:not-found-in-ida"
+    files[1]["pathname"] = "/path/to/file2"
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=files)
+
+    # Mock Metax API V2
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['file_path'] = '/path/to/file1'
     files[1]['identifier'] = 'pid:urn:not-found-in-ida'
@@ -185,7 +220,20 @@ def test_missing_local_files(config, workspace, requests_mock,
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: requests_mock mocker
     """
-    # Mock metax
+    # Mock Metax API V3
+    files = [copy.deepcopy(tests.metax_data.filesV3.TXT_FILE),
+             copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)]
+    files[0]["id"] = "pid:urn:get_files_1_local"
+    files[0]["storage_service"] = tests.metax_data.filesV3.PAS_STORAGE_SERVICE
+    files[0]["pathname"] = "/path/to/file1"
+    files[1]["id"] = "pid:urn:does_not_exist_local"
+    files[1]["storage_service"] = tests.metax_data.filesV3.PAS_STORAGE_SERVICE
+    files[1]["pathname"] = "/path/to/file4"
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=files)
+
+    # Mock metax API V2
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['identifier'] = 'pid:urn:get_files_1_local'
     files[0]['file_storage']['identifier'] = PAS_STORAGE_SERVICE
@@ -244,21 +292,25 @@ def test_forbidden_relative_path(config, workspace, requests_mock, path):
     """Test that files can not be saved outside the workspace.
 
     Saving files outside the workspace by using relative file paths in
-    Metax should not be possible. The tested path would be downloaded to
-    `<packaging_root>/workspaces/<workspace>/dataset_files/../../file1`
-    which equals to `<packaging_root>/workspaces/file1`, if the path was
-    not validated.
+    Metax should not be possible.
 
     :param config: Configuration file
     :param workspace: Temporary workspace fixture
     :param requests_mock: Request mocker
     :param path: sample file path
     """
-    # Mock metax
+    # Mock Metax API V3
+    file = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
+    file["pathname"] = path
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=[file])
+
+    # Mock Metax API V2
     files = [
         {
             "file_path": path,
-            "identifier": "pid:urn:1",
+            "identifier": "pid:urn:identifier",
             "file_storage": {
                 "identifier": "urn:nbn:fi:att:file-storage-ida"
             }
@@ -275,7 +327,7 @@ def test_forbidden_relative_path(config, workspace, requests_mock, path):
     with pytest.raises(InvalidFileMetadataError) as exception_info:
         task.run()
     assert str(exception_info.value) == \
-        f'The file path of file pid:urn:1 is invalid: {path}'
+        f'The file path of file pid:urn:identifier is invalid: {path}'
 
     # Check that file is not saved in workspace root i.e. workspace root
     # contains only the workspace directory
@@ -296,12 +348,19 @@ def test_allowed_relative_paths(config, workspace, requests_mock, path):
     :param requests_mock: Request mocker
     :param path: sample file path
     """
-    # Mock Ida and Metax
-    requests_mock.get('https://ida.test/files/pid:urn:1/download')
+    # Mock Metax API V3
+    file = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
+    file["pathname"] = path
+    file["checksum"] = "md5:d3b07384d113edec49eaa6238ad5ff00"
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset, files=[file])
+
+    # Mock Metax API V2
     files = [
         {
             "file_path": path,
-            "identifier": "pid:urn:1",
+            "identifier": "pid:urn:identifier",
             "file_storage": {
                 "identifier": "urn:nbn:fi:att:file-storage-ida"
             },
@@ -314,6 +373,9 @@ def test_allowed_relative_paths(config, workspace, requests_mock, path):
     dataset = copy.deepcopy(BASE_DATASET)
     dataset['identifier'] = workspace.name
     add_metax_v2_dataset(requests_mock, dataset=dataset, files=files)
+
+    # Mock Ida
+    requests_mock.get('https://ida.test/files/pid:urn:identifier/download')
     add_mock_ida_download(
         requests_mock=requests_mock,
         dataset_id=workspace.name,
