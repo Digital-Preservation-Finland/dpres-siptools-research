@@ -10,6 +10,7 @@ from requests.exceptions import HTTPError
 
 import tests.metax_data.datasets
 import tests.metax_data.files
+import tests.metax_data.reference_data
 import tests.utils
 from siptools_research.exceptions import (
     InvalidFileError,
@@ -33,6 +34,8 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
     file_metadata = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
     file_metadata["pathname"] = "textfile"
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
     patch_characteristics_mock \
         = requests_mock.patch("/v3/files/pid:urn:identifier/characteristics",
                               json={})
@@ -60,7 +63,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
         file_characteristics = patch_characteristics_mock.last_request.json()
         assert file_characteristics == {
             "file_format_version": {
-                "file_format": "text/plain"
+                "url": "url-for-txt"
             },
             "encoding": "UTF-8"
         }
@@ -112,6 +115,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
 @pytest.mark.parametrize(
     (
         "path",
+        "expected_url",
         "expected_file_format",
         "expected_format_version",
         "expected_encoding",
@@ -121,6 +125,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
         # Text file should have encoding, but not format_version
         (
             "tests/data/sample_files/text_plain_UTF-8",
+            "url-for-txt",
             "text/plain",
             None,
             "UTF-8",
@@ -128,6 +133,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
         ),
         (
             "tests/data/sample_files/image_png.png",
+            "url-for-png",
             "image/png",
             "1.2",
             None,
@@ -135,6 +141,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
         ),
         (
             "tests/data/sample_files/image_tiff_large.tif",
+            "url-for-tif",
             "image/tiff",
             "6.0",
             None,
@@ -144,6 +151,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
         # specs
         (
             "tests/data/sample_files/audio_x-wav.wav",
+            "url-for-wav",
             "audio/x-wav",
             None,
             None,
@@ -152,6 +160,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
         # The first stream of matroska file should be container
         (
             "tests/data/sample_files/video_ffv1.mkv",
+            "url-for-mkv",
             "video/x-matroska",
             "4",
             None,
@@ -161,6 +170,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
         # are detected correctly
         (
             "tests/data/sample_files/opendocument_text.odt",
+            "url-for-odt",
             "application/vnd.oasis.opendocument.text",
             "1.2",
             None,
@@ -168,6 +178,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
         ),
         (
             "tests/data/sample_files/opendocument_formula.odf",
+            "url-for-odf",
             "application/vnd.oasis.opendocument.formula",
             "1.2",
             None,
@@ -175,7 +186,7 @@ def test_generate_metadata(config, requests_mock, tmp_path, request):
         )
     ]
 )
-def test_file_format_detection(config, requests_mock, path,
+def test_file_format_detection(config, requests_mock, path, expected_url,
                                expected_file_format, expected_format_version,
                                expected_encoding, expected_stream_type,
                                tmp_path, request):
@@ -187,6 +198,7 @@ def test_file_format_detection(config, requests_mock, path,
     :param config: Configuration file
     :param requests_mock: Mocker object
     :param path: path to the file for which the metadata is created
+    :param expected_url: Expected file_format_version url
     :param expected_file_format: Expected file format
     :param expected_format_version: Expected file format version
     :param expected_encoding: Expected file encoding
@@ -206,6 +218,8 @@ def test_file_format_detection(config, requests_mock, path,
     )
     patch_file_mock = requests_mock.patch("/v3/files/pid:urn:identifier",
                                           json={})
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
     # create mocked dataset in Metax API V2
     file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
@@ -229,11 +243,8 @@ def test_file_format_detection(config, requests_mock, path,
         # Check that expected file characteristics were sent to Metax
         # API V3
         characteristics = patch_characteristics_mock.last_request.json()
-        assert characteristics["file_format_version"]["file_format"] \
-            == expected_file_format
-        assert characteristics["file_format_version"].get("format_version") \
-            == expected_format_version
-        assert characteristics.get("encoding") == expected_encoding
+        assert characteristics["file_format_version"]["url"] \
+            == expected_url
 
         # Check that expected file characteristics extension was sent to
         # Metax API V3
@@ -277,6 +288,8 @@ def test_generate_metadata_video_streams(config, requests_mock, tmp_path,
                         json={})
     file_http_mock = requests_mock.patch("/v3/files/pid:urn:identifier",
                                          json={})
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
     # Mock Metax API V2
     tests.utils.add_metax_v2_dataset(
@@ -333,6 +346,8 @@ def test_generate_metadata_unrecognized(config, requests_mock, tmp_path):
         requests_mock,
         files=[tests.metax_data.filesV3.BASE_FILE]
     )
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
     # create mocked dataset in Metax V2
     tests.utils.add_metax_v2_dataset(
@@ -374,6 +389,8 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path,
     patch_characteristics_mock \
         = requests_mock.patch("/v3/files/pid:urn:identifier/characteristics",
                               json={})
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
     # Mock Metax API V2
     file_metadata = copy.deepcopy(tests.metax_data.files.BASE_FILE)
@@ -397,7 +414,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path,
         assert json == {
             # missing keys are added
             "file_format_version":{
-                "file_format": "text/plain",
+                "url": "url-for-txt",
             },
             # user defined value is not overwritten
             "encoding": "user_defined",
@@ -460,7 +477,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path,
                 "csv_quoting_char": "z"
             },
             {
-                "file_format_version": {"file_format": "text/csv"},
+                "file_format_version": {"url": "url-for-csv"},
                 "encoding": "UTF-8",
                 "csv_delimiter": "x",
                 "csv_record_separator": "y",
@@ -487,7 +504,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path,
                 "file_format": "text/csv"
             },
             {
-                "file_format_version": {"file_format": "text/csv"},
+                "file_format_version": {"url": "url-for-csv"},
                 "encoding": "UTF-8",
                 "csv_delimiter": ";",
                 "csv_record_separator": "\r\n",
@@ -514,7 +531,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path,
                 "file_format": "text/plain"
             },
             {
-                "file_format_version": {"file_format": "text/plain"},
+                "file_format_version": {"url": "url-for-txt"},
                 "encoding": "UTF-8",
             },
             {
@@ -561,6 +578,8 @@ def test_generate_metadata_csv(
         "/v3/files/pid:urn:identifier/characteristics",
         json={}
     )
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
     # Mock Metax API V2
     file = copy.deepcopy(tests.metax_data.files.BASE_FILE)
@@ -588,8 +607,6 @@ def test_generate_metadata_csv(
         # metadata as file_characteristics
         stream = (patch_file_mock.last_request.json()
                   ['characteristics_extension']["streams"]["0"])
-        assert file_characteristics["file_format_version"]["file_format"] \
-            == stream["mimetype"]
         assert file_characteristics.get("csv_delimiter") \
             == stream.get("delimiter")
         assert file_characteristics.get("csv_record_separator") \
@@ -617,17 +634,49 @@ def test_generate_metadata_csv(
 
 
 @pytest.mark.parametrize(
-    ("key", "value"),
+    ("key", "value", "detected_value", "filepath"),
     [
-        ("file_format_version", {"file_format": "image/tiff"}),
-        ("file_format_version", {"format_version": "foo"}),
-        ("csv_record_separator", "foo"),
-        ("csv_delimiter", "foo"),
-        ("csv_quoting_char", "foo"),
+        (
+            # TODO: This is a special case. See TPASPKT-1418.
+            "file_format_version",
+            {"file_format": "image/tiff"},
+            "application/vnd.oasis.opendocument.text",
+            "tests/data/sample_files/opendocument_text.odt",
+        ),
+        (
+            # Metax does not "foo" as format_version so this not a
+            # realistic test case.
+            "file_format_version",
+            {"format_version": "foo"},
+            "(:unap)",
+            "tests/data/sample_files/text_plain_UTF-8",
+        ),
+        (
+            "csv_record_separator",
+            "foo",
+            None,
+            "tests/data/sample_files/text_plain_UTF-8",
+        ),
+        (
+            "csv_delimiter",
+            "foo",
+            None,
+            "tests/data/sample_files/text_plain_UTF-8",
+        ),
+        (
+            "csv_quoting_char",
+            "foo",
+            None,
+            "tests/data/sample_files/text_plain_UTF-8",
+        ),
         # NOTE: file-scraper does not ignore user defined encoding even
         # if it does not make any sense. So the following test case
         # would fail:
-        # ("encoding": "foo")
+        # (
+        #     "encoding",
+        #     "foo",
+        #     "tests/data/sample_files/text_plain_UTF-8"
+        # )
     ]
 )
 # TODO: Why does file-scraper generate metadata that conflicts with
@@ -635,7 +684,8 @@ def test_generate_metadata_csv(
 # file-scraper, so this test would not be necessary. See TPASPKT-1418
 # for more information.
 def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
-                                           key, value):
+                                           key, value, detected_value,
+                                           filepath):
     """Test that user defined metadata is not overwritten.
 
     Exception should be raised if metadata generated by file-scraper
@@ -646,6 +696,8 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
     :param tmp_path: Temporary directory
     :param key: key to be modified in file_characteristics
     :param value: value for the key
+    :param detected_value: The conflicting value detected by Scraper
+    :param filepath: Sample file to be scraped
     """
     # Mock Metax API V3
     file = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
@@ -654,6 +706,8 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
     else:
         file["characteristics"][key] = value
     tests.utils.add_metax_dataset(requests_mock, files=[file])
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
     # Mock Metax API V2
     file = copy.deepcopy(tests.metax_data.files.TXT_FILE)
@@ -664,14 +718,14 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
 
     tmp_file_path = tmp_path / 'path/to/file'
     tmp_file_path.parent.mkdir(parents=True)
-    tmp_file_path.write_text("foo")
+    shutil.copy(filepath, tmp_file_path)
 
     with pytest.raises(InvalidFileMetadataError) as exception_info:
         generate_metadata('dataset_identifier', tmp_path, config)
 
-    assert str(exception_info.value).startswith(
-        "File scraper detects a different "
-    )
+    assert str(exception_info.value)\
+        == f"File scraper detects a different {key}: {detected_value}"
+
     assert exception_info.value.files == ["pid:urn:identifier"]
 
 
@@ -686,6 +740,8 @@ def test_generate_metadata_dataset_not_found(config, requests_mock, tmp_path):
     """
     # Mock Metax API V3
     requests_mock.get("/v3/datasets/foobar/files", status_code=404)
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
     # Mock Metax API V2
     requests_mock.get("/rest/v2/datasets/foobar/files", status_code=404)
@@ -705,6 +761,8 @@ def test_generate_metadata_httperror(config, requests_mock, tmp_path):
     requests_mock.get("/v3/datasets/foobar/files",
                       status_code=500,
                       reason="Fake error")
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
     # Mock Metax API V2
     requests_mock.get("/rest/v2/datasets/foobar/files",

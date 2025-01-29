@@ -5,6 +5,7 @@ import pytest
 from metax_access.metax import DS_STATE_TECHNICAL_METADATA_GENERATED
 
 import tests.metax_data
+import tests.metax_data.reference_data
 import tests.utils
 from siptools_research.workflow import generate_metadata
 
@@ -26,6 +27,8 @@ def test_generatemetadata(config, workspace, requests_mock, request):
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset_metadata,
                                   files=[textfile_metadata])
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
     patch_characteristics = requests_mock.patch(
         "/v3/files/pid:urn:identifier/characteristics"
     )
@@ -60,7 +63,7 @@ def test_generatemetadata(config, workspace, requests_mock, request):
         # The text file should be detected, and technical metadata should be
         # posted to Metax API V3
         metadata = patch_characteristics.last_request.json()
-        assert metadata["file_format_version"]["file_format"] == "text/plain"
+        assert metadata["file_format_version"]["url"] == "url-for-txt"
         assert metadata["encoding"] == "UTF-8"
         # The dataset preservation state should be updated
         assert patch_dataset.called_once

@@ -3,8 +3,10 @@ import file_scraper
 import file_scraper.scraper
 from metax_access.response import MetaxFileCharacteristics
 
-from siptools_research.exceptions import (InvalidFileError,
-                                          InvalidFileMetadataError)
+from siptools_research.exceptions import (
+    InvalidFileError,
+    InvalidFileMetadataError,
+)
 from siptools_research.metax import get_metax_client
 
 
@@ -26,6 +28,9 @@ def generate_metadata(
     :returns: ``None``
     """
     metax_client = get_metax_client(config)
+
+    if metax_client.api_version == "v3":
+        reference_data = metax_client.get_file_format_versions()
 
     for file_metadata in metax_client.get_dataset_files(dataset_id):
         original_file_characteristics = file_metadata.get(
@@ -52,64 +57,110 @@ def generate_metadata(
         )
         scraper.scrape(check_wellformed=False)
 
+        # TODO: We probably should check all metadata that is required
+        # for packaging, but we can not check all fields in
+        # scraper.streams, because some of them will be "(:unav)" and it
+        # seems to be OK (or is there a bug in file-scraper,
+        # siptools-ng, or sample files of this repository?)
+        if "(:unav)" in (scraper.mimetype, scraper.version):
+            error = "File format was not recognized"
+            raise InvalidFileError(error, [file_metadata["id"]])
+
+        # Patching file_format_version works differently in Metax API V2
+        # and Metax API V3
+        if metax_client.api_version == "v3":
+            # Find the correct url from reference data
+            file_format_version = None
+            for entry in reference_data:
+                # Empty string as version seems to mean "(:unap)"
+                entry_format_version \
+                    = entry["format_version"] or file_scraper.defaults.UNAP
+                if entry["file_format"] == scraper.mimetype \
+                        and entry_format_version == scraper.version:
+                    file_format_version = {"url": entry["url"]}
+            if not file_format_version:
+                error = (f"Detected file_format: '{scraper.mimetype}' and "
+                         f"format_version: '{scraper.version}' are not "
+                         "supported.")
+                raise InvalidFileError(error, [file_metadata["id"]])
+        else:
+            # TODO: Remove this when Metax API V2 support is not needed
+            # anymore
+            file_format_version = {
+                "file_format": scraper.mimetype,
+            }
+            if scraper.version != file_scraper.defaults.UNAP:
+                file_format_version["format_version"] = scraper.version
+
         # Create new file_characteristics based on scraping results
         scraper_file_characteristics: MetaxFileCharacteristics = {
-            "file_format_version": {
-                "file_format": scraper.mimetype,
-                "format_version": scraper.version
-            },
+            "file_format_version": file_format_version,
             "encoding": scraper.streams[0].get("charset"),
-            # TODO: ensure that user-defined csv paramters are not
-            # overwritten!
+            # TODO: ensure that user-defined csv parameters (especially
+            # csv_has_header) are not overwritten!
             "csv_delimiter": scraper.streams[0].get("delimiter"),
             "csv_record_separator": scraper.streams[0].get("separator"),
             "csv_quoting_char": scraper.streams[0].get("quotechar"),
         }
 
-        compare_file_chars = [
-            (
-                scraper_file_characteristics["file_format_version"],
-                {
-                    "file_format": mimetype,
-                    "format_version": version
-                }
-            ),
-            (
-                scraper_file_characteristics,
-                {
-                    "encoding": charset,
-                    "csv_delimiter": delimiter,
-                    "csv_record_separator": separator,
-                    "csv_quoting_char": quotechar
-                }
-            )
-        ]
-
         # Check that user defined metadata is not ignored by
         # file-scraper
         # TODO: This is necessary until TPASPKT-1418 is resolved
-        for scraper_metadata, user_metadata in compare_file_chars:
-            for key, value in user_metadata.items():
-                if value is None:
-                    continue
-                if scraper_metadata[key] != value:
-                    error_message = f"File scraper detects a different {key}"
-                    raise InvalidFileMetadataError(error_message,
-                                                   [file_metadata["id"]])
+        compare_file_chars = [
+            (
+                "file_format",
+                scraper.mimetype,
+                mimetype,
+            ),
+            (
+                "format_version",
+                scraper.version,
+                version,
+            ),
+            (
+                "encoding",
+                scraper_file_characteristics["encoding"],
+                charset,
+            ),
+            (
+                "csv_delimiter",
+                scraper_file_characteristics["csv_delimiter"],
+                delimiter,
+            ),
+            (
+                "csv_record_separator",
+                scraper_file_characteristics["csv_record_separator"],
+                separator,
+            ),
+            (
+                "csv_quoting_char",
+                scraper_file_characteristics["csv_quoting_char"],
+                quotechar,
+            )
+        ]
+        for key, scraper_metadata, user_metadata in compare_file_chars:
+            if user_metadata and scraper_metadata != user_metadata:
+                error = (f"File scraper detects a different {key}: "
+                         f"{scraper_metadata}")
+                raise InvalidFileMetadataError(error, [file_metadata["id"]])
 
-            if "(:unav)" in scraper_metadata.values():
-                raise InvalidFileError(
-                    "File format was not recognized",
-                    [file_metadata["id"]]
-                )
+        # Remove "(:unap)" and None values from
+        # scraper_file_characteristics
+        scraper_file_characteristics = {
+            key: value
+            for key, value
+            in scraper_file_characteristics.items()
+            if value not in (file_scraper.defaults.UNAP, None)
+        }
 
-            # Remove "(:unap)" and None values from scraper metadata
-            keys_to_remove = [
-                key for key, value in scraper_metadata.items()
-                if value in (file_scraper.defaults.UNAP, None)
-            ]
-            for key in keys_to_remove:
-                del scraper_metadata[key]
+        # Remove "(:unap)" and None values from file_format_version
+        # TODO: This only required for Metax API V2
+        scraper_file_characteristics["file_format_version"] = {
+            key: value
+            for key, value
+            in scraper_file_characteristics["file_format_version"].items()
+            if value not in (file_scraper.defaults.UNAP, None)
+        }
 
         # Scraper output will be saved to file_characteristics_extension
         # for later use
