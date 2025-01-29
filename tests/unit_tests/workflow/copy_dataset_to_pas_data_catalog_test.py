@@ -90,9 +90,11 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
     dataset["id"] = "original-version-id"
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-ida"
     dataset["preservation"]["state"] = DS_STATE_INITIALIZED
-    dataset["preservation"]["dataset_version"]["id"] = "pas-version-id"
-    dataset["preservation"]["dataset_version"]["preservation_state"]\
-        =  DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
+    dataset["preservation"]["dataset_version"] = {
+        "id": "pas-version-id",
+        "persistent_identifier": None,
+        "preservation_state": DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+    }
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
     metax_mock = requests_mock.patch(
         "/v3/datasets/original-version-id/preservation"

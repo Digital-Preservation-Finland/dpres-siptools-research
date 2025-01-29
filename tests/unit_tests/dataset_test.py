@@ -165,11 +165,6 @@ def test_unknown_data_catalog(config, requests_mock):
                     "state": "correct-state",
                     "description": None,
                     "reason_description": None,
-                    "dataset_version": {
-                        "id": None,
-                        "persistent_identifier": None,
-                        "preservation_state": -1,
-                    },
                     "contract": "contract_identifier",
                 },
             },

@@ -61,9 +61,12 @@ def test_create_mets(config, workspace, requests_mock, data_catalog, objid):
     dataset["id"] = workspace.name
     dataset["data_catalog"] = data_catalog
     dataset["persistent_identifier"] =  "doi:test"
-    dataset["preservation"]["dataset_version"]["persistent_identifier"] \
-        = "doi:pas-version-id"
-    dataset["preservation"]["contract"]= "contract-identifier"
+    if data_catalog == "urn:nbn:fi:att:data-catalog-ida":
+        dataset["preservation"]["dataset_version"] = {
+            "persistent_identifier": "doi:pas-version-id",
+            "id": None,
+            "preservation_state": None,
+        }
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Mock Metax API V2

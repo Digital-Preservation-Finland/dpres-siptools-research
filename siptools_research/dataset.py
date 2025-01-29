@@ -101,8 +101,7 @@ class Dataset:
         if (
             self._metadata["preservation"]["dataset_version"][
                 "preservation_state"
-            ]
-            != -1
+            ] not in (-1, None)
         ):
             return self._metadata["preservation"]["dataset_version"][
                 "preservation_state"

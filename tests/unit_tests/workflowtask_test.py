@@ -400,7 +400,11 @@ def test_set_preservation_state_of_pas_version(config, requests_mock, request):
     # Mock metax API V3
     json = copy.deepcopy(BASE_DATASET)
     json["id"] = "original-id"
-    json["preservation"]["dataset_version"]["id"] = "pas-version-id"
+    json["preservation"]["dataset_version"] = {
+        "id": "pas-version-id",
+        "persistent_identifier": None,
+        "preservation_state": None,
+    }
     requests_mock.get("/v3/datasets/original-id", json=json)
     patch_preservation \
         = requests_mock.patch("/v3/datasets/pas-version-id/preservation")
