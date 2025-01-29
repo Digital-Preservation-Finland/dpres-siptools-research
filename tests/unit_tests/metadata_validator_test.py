@@ -388,6 +388,8 @@ def test_validate_file_metadata_invalid_metadata(config, requests_mock):
     """
     # Mock Metax V3 API
     file_metadata = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
+    file_metadata["characteristics"]["file_format_version"] \
+        = {"file_format": None, "format_version": None}
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
 
     # Mock Metax V2 API

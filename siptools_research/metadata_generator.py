@@ -37,13 +37,11 @@ def generate_metadata(
 
         # Detect file using scraper. Use metadata defined by user.
         file_path = root_directory / file_["pathname"].strip("/")
-        mimetype = original_file_characteristics.get(
-            "file_format_version", {}
-        ).get("file_format")
+        file_format_version \
+            = original_file_characteristics.get("file_format_version") or {}
+        mimetype = file_format_version.get("file_format")
+        version = file_format_version.get("format_version")
         charset = original_file_characteristics.get("encoding")
-        version = original_file_characteristics.get(
-            "file_format_version", {}
-        ).get("format_version")
         delimiter = original_file_characteristics.get("csv_delimiter")
         separator = original_file_characteristics.get("csv_record_separator")
         quotechar = original_file_characteristics.get("csv_quoting_char")

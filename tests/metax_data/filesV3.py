@@ -301,10 +301,7 @@ SEG_Y_FILE_METADATA = {
 }
 
 BASE_CHARACTERISTICS = {
-    "file_format_version": {
-        "file_format": None,
-        "format_version": None,
-    },
+    "file_format_version": None,
     "encoding": None,
     "csv_delimiter": None,
     "csv_record_separator": None,
