@@ -48,7 +48,6 @@ def add_metax_dataset(
 
     # Mock Metax files API
     for file in files:
-        requests_mock.get(f"/v3/files/{file['id']}", json=file)
         requests_mock.patch(f"/v3/files/{file['id']}", json=file)
         requests_mock.patch(f"/v3/files/{file['id']}/characteristics",
                             json=file)

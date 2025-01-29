@@ -27,16 +27,12 @@ def generate_metadata(
     """
     metax_client = get_metax_client(config)
 
-    for file_ in metax_client.get_dataset_files(dataset_id):
-        # Get file information from Metax
-        file_id = file_["id"]
-        # TODO: Could we fetch metadata of all files at once?
-        file_metadata = metax_client.get_file(file_id)
+    for file_metadata in metax_client.get_dataset_files(dataset_id):
         original_file_characteristics = file_metadata.get(
             "characteristics") or {}
 
         # Detect file using scraper. Use metadata defined by user.
-        file_path = root_directory / file_["pathname"].strip("/")
+        file_path = root_directory / file_metadata["pathname"].strip("/")
         file_format_version \
             = original_file_characteristics.get("file_format_version") or {}
         mimetype = file_format_version.get("file_format")
@@ -98,12 +94,13 @@ def generate_metadata(
                     continue
                 if scraper_metadata[key] != value:
                     error_message = f"File scraper detects a different {key}"
-                    raise InvalidFileMetadataError(error_message, [file_id])
+                    raise InvalidFileMetadataError(error_message,
+                                                   [file_metadata["id"]])
 
             if "(:unav)" in scraper_metadata.values():
                 raise InvalidFileError(
                     "File format was not recognized",
-                    [file_id]
+                    [file_metadata["id"]]
                 )
 
             # Remove "(:unap)" and None values from scraper metadata
@@ -125,7 +122,7 @@ def generate_metadata(
         }
 
         metax_client.patch_file_characteristics(
-            file_id,
+            file_metadata["id"],
             {
                 "characteristics": scraper_file_characteristics,
                 "characteristics_extension": file_characteristics_extension
