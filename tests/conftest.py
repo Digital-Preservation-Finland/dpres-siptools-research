@@ -80,7 +80,7 @@ def config(request, tmp_path):
     with config_.open('w') as file:
         parser.write(file)
 
-    return config_
+    return str(config_)
 
 
 @pytest.fixture(autouse=True)

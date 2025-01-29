@@ -42,7 +42,7 @@ def test_download_file(config, tmp_path, requests_mock, request_verified):
         "fd_download_service_ssl_verification",
         str(request_verified)
     )
-    with config.open('w') as file:
+    with open(config, "w") as file:
         parser.write(file)
 
     # Mock ida
