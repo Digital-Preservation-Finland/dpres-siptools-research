@@ -193,14 +193,14 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     luigi.build(
         [task_class(
             dataset_id=workspace.name,
-            config=mock_ssh_config
+            config=str(mock_ssh_config)
         )],
         local_scheduler=True
     )
     luigi.build(
         [task_class(
             dataset_id=workspace.name,
-            config=mock_ssh_config
+            config=str(mock_ssh_config)
         )],
         local_scheduler=True
     )

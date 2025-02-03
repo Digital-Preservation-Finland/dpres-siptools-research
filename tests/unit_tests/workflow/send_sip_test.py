@@ -28,7 +28,7 @@ def test_send_sip(workspace, mock_ssh_config, sftp_dir):
     transfer_dir.mkdir()
 
     # Init and run task
-    task = SendSIPToDP(dataset_id=workspace.name, config=mock_ssh_config)
+    task = SendSIPToDP(dataset_id=workspace.name, config=str(mock_ssh_config))
     task.run()
     assert task.complete()
 
