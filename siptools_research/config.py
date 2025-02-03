@@ -24,7 +24,6 @@ DEFAULTS = {
     'dp_user': 'tpas',
     'dp_ssh_key': '~/.ssh/id_rsa_tpas_pouta',
     'sip_sign_key': '~/sip_sign_pas.pem',
-    'pas_storage_id': 'urn:nbn:fi:att:file-storage-pas',
     'access_rest_api_host': "https://access.localhost",
     'access_rest_api_user': "organisaatio1",
     'access_rest_api_password': "csc123",
