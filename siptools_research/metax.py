@@ -8,9 +8,11 @@ def get_metax_client(config):
     """Initialize Metax client."""
     config_object = Configuration(config)
     return Metax(
-        config_object.get('metax_url'),
-        config_object.get('metax_user'),
-        config_object.get('metax_password'),
-        verify=config_object.getboolean('metax_ssl_verification'),
-        api_version=config_object.get('metax_api_version'),
+        config_object.get("metax_url"),
+        user=config_object.get("metax_user"),
+        # TODO: Password is only required for Metax API V2 support
+        password=config_object.get("metax_password"),
+        token=config_object.get("metax_token"),
+        verify=config_object.getboolean("metax_ssl_verification"),
+        api_version=config_object.get("metax_api_version"),
     )

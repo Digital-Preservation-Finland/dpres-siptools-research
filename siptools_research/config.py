@@ -11,7 +11,8 @@ DEFAULTS = {
     'mongodb_collection': 'workflow',
     'metax_url': 'https://metax-test.csc.fi',
     'metax_user': 'tpas',
-    'metax_password': '',
+    'metax_password': '',  # TODO: Only for Metax API V2 support
+    'metax_token': '',
     'metax_ssl_verification': 'True',
     'metax_api_version': 'v2',
     'fd_download_service_authorize_url':
