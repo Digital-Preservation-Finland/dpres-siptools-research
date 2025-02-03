@@ -135,28 +135,28 @@ class CreateMets(WorkflowTask):
             fc_extension = file_["characteristics_extension"]
             for value1, value2 in [
                     (
-                        fc['file_format_version']["file_format"],
-                        fc_extension["streams"]['0']["mimetype"]
+                        fc["file_format_version"]["file_format"],
+                        fc_extension["streams"]["0"]["mimetype"]
                     ),
                     (
-                        fc.get("encoding"),
-                        fc_extension["streams"]['0'].get("charset")
+                        fc["encoding"],
+                        fc_extension["streams"]["0"].get("charset")
                     ),
                     (
-                        fc['file_format_version'].get("format_version"),
+                        fc["file_format_version"]["format_version"],
                         fc_extension["version"]
                     ),
                     (
-                        fc.get("csv_delimiter"),
-                        fc_extension["streams"]['0'].get("delimiter")
+                        fc["csv_delimiter"],
+                        fc_extension["streams"]["0"].get("delimiter")
                     ),
                     (
-                        fc.get("csv_record_separator"),
-                        fc_extension["streams"]['0'].get("separator")
+                        fc["csv_record_separator"],
+                        fc_extension["streams"]["0"].get("separator")
                     ),
                     (
-                        fc.get("csv_quoting_char"),
-                        fc_extension["streams"]['0'].get("quotechar")
+                        fc["csv_quoting_char"],
+                        fc_extension["streams"]["0"].get("quotechar")
                     ),
             ]:
                 if value1 and value1 != value2:
