@@ -12,7 +12,13 @@ def get_metax_client(config):
         user=config_object.get("metax_user"),
         # TODO: Password is only required for Metax API V2 support
         password=config_object.get("metax_password"),
-        token=config_object.get("metax_token"),
+        token=(
+            # Only use tokens for V3. Tokens are not supported
+            # for V2.
+            config_object.get("metax_token")
+            if config_object.get("metax_api_version") == "v2"
+            else None
+        ),
         verify=config_object.getboolean("metax_ssl_verification"),
         api_version=config_object.get("metax_api_version"),
     )
