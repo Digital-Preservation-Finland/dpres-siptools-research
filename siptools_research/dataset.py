@@ -126,6 +126,11 @@ class Dataset:
             preserved_dataset_id, state, description
         )
 
+    def copy_to_pas_datacatalog(self):
+        """Copy dataset to PAS data catalog."""
+        if self._metadata["data_catalog"] != PAS_DATA_CATALOG_IDENTIFIER:
+            self._metax_client.copy_dataset_to_pas_catalog(self.identifier)
+
     @property
     def target(self):
         """Target of the workflow."""

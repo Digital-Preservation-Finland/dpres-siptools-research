@@ -64,6 +64,7 @@ def add_metax_dataset(
         f"/v3/datasets/{dataset['id']}/files",
         json={"next": None, "results": files}
     )
+    requests_mock.post(f"/v3/datasets/{dataset['id']}/create-preservation-version")
 
     # Mock Metax contracts API
     requests_mock.get("/v3/contracts/{}".format(contract["id"]), json=contract)

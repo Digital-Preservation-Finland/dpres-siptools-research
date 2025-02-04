@@ -2,9 +2,11 @@
 
 from luigi import LocalTarget
 from metax_access import DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
-from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.validate_metadata import ValidateMetadata
+
+from siptools_research.config import Configuration
 from siptools_research.workflow.validate_files import ValidateFiles
+from siptools_research.workflow.validate_metadata import ValidateMetadata
+from siptools_research.workflowtask import WorkflowTask
 
 
 class CopyToPasDataCatalog(WorkflowTask):
@@ -63,6 +65,10 @@ class CopyToPasDataCatalog(WorkflowTask):
                 DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
                 'Packaging dataset'
             )
+            # TODO: Remove the if-clause when Metax API V2 support is
+            # not needed anymore
+            if Configuration(self.config).get("metax_api_version") == "v3":
+                self.dataset.copy_to_pas_datacatalog()
 
         with self.output().open('w') as output:
             output.write('Dataset id=' + self.dataset_id)

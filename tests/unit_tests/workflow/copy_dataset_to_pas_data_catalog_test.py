@@ -23,22 +23,26 @@ def test_copy_ida_dataset(config, workspace, requests_mock, request):
     """
     # Mock Metax API V3
     dataset = copy.deepcopy(BASE_DATASET)
-    dataset["id"] = "original-version-id"
+    original_version_id = workspace.name
+    dataset["id"] = original_version_id
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-ida"
     dataset["preservation"]["state"] = DS_STATE_METADATA_CONFIRMED
-    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
-    metax_mock = requests_mock.patch(
-        "/v3/datasets/original-version-id/preservation"
+    requests_mock.get(f"/v3/datasets/{original_version_id}", json=dataset)
+    mock_preservation = requests_mock.patch(
+        f"/v3/datasets/{original_version_id}/preservation"
+    )
+    mock_create_preservation_version = requests_mock.post(
+        f"/v3/datasets/{original_version_id}/create-preservation-version"
     )
 
     # Mock Metax API V2
     requests_mock.get(
-        f'/rest/v2/datasets/{workspace.name}',
+        f'/rest/v2/datasets/{original_version_id}',
         json={
             'data_catalog': {
                 'identifier': "urn:nbn:fi:att:data-catalog-ida"
             },
-            'identifier': 'original-version-id',
+            'identifier': original_version_id,
             'preservation_state': DS_STATE_METADATA_CONFIRMED,
             "research_dataset": {
                     "files": [
@@ -51,11 +55,11 @@ def test_copy_ida_dataset(config, workspace, requests_mock, request):
                 }
         }
     )
-    metax_v2_mock = requests_mock.patch('/rest/v2/datasets/original-version-id')
+    metax_v2_mock = requests_mock.patch(f'/rest/v2/datasets/{original_version_id}')
 
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
-        dataset_id=workspace.name,
+        dataset_id=original_version_id,
         config=config
     )
     assert not task.complete()
@@ -63,11 +67,14 @@ def test_copy_ida_dataset(config, workspace, requests_mock, request):
     assert task.complete()
 
     if request.config.getoption("--v3"):
-        assert metax_mock.called_once
-        assert metax_mock.last_request.json() == {
+        # Preservation state should be set
+        assert mock_preservation.called_once
+        assert mock_preservation.last_request.json() == {
             "state": DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
             "description": {"en": "Packaging dataset"}
         }
+        # The PAS datacatalog version should be created
+        assert mock_create_preservation_version.called_once
     else:
         assert metax_v2_mock.called_once
         assert metax_v2_mock.last_request.json() == {
@@ -144,12 +151,13 @@ def test_copy_pas_dataset(config, workspace, requests_mock, request):
     """
     # Mock Metax API V3
     dataset = copy.deepcopy(BASE_DATASET)
-    dataset["id"] = "original-version-id"
+    original_version_id = workspace.name
+    dataset["id"] = original_version_id
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-pas"
     dataset["preservation"]["state"] = DS_STATE_METADATA_CONFIRMED
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
     metax_mock = requests_mock.patch(
-        "/v3/datasets/original-version-id/preservation"
+        f"/v3/datasets/{original_version_id}/preservation"
     )
 
     # Mock Metax V2
@@ -159,7 +167,7 @@ def test_copy_pas_dataset(config, workspace, requests_mock, request):
             'data_catalog': {
                 'identifier': "urn:nbn:fi:att:data-catalog-pas"
             },
-            'identifier': 'original-version-id',
+            'identifier': original_version_id,
             'preservation_state': DS_STATE_METADATA_CONFIRMED,
             "research_dataset": {
                     "files": [
@@ -172,7 +180,7 @@ def test_copy_pas_dataset(config, workspace, requests_mock, request):
                 }
         }
     )
-    metax_v2_mock = requests_mock.patch('/rest/v2/datasets/original-version-id')
+    metax_v2_mock = requests_mock.patch(f'/rest/v2/datasets/{original_version_id}')
 
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
