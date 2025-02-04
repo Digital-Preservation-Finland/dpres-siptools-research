@@ -30,7 +30,15 @@ def generate_metadata(
     metax_client = get_metax_client(config)
 
     if metax_client.api_version == "v3":
-        reference_data = metax_client.get_file_format_versions()
+        # Map file_format and format_version to url
+        reference_data = {
+            (
+                entry["file_format"],
+                # Empty string as format_version seems to mean "(:unap)"
+                entry["format_version"] or file_scraper.defaults.UNAP
+            ): entry["url"]
+            for entry in metax_client.get_file_format_versions()
+        }
 
     for file_metadata in metax_client.get_dataset_files(dataset_id):
         original_file_characteristics = file_metadata.get(
@@ -69,20 +77,16 @@ def generate_metadata(
         # Patching file_format_version works differently in Metax API V2
         # and Metax API V3
         if metax_client.api_version == "v3":
-            # Find the correct url from reference data
-            file_format_version = None
-            for entry in reference_data:
-                # Empty string as version seems to mean "(:unap)"
-                entry_format_version \
-                    = entry["format_version"] or file_scraper.defaults.UNAP
-                if entry["file_format"] == scraper.mimetype \
-                        and entry_format_version == scraper.version:
-                    file_format_version = {"url": entry["url"]}
-            if not file_format_version:
-                error = (f"Detected file_format: '{scraper.mimetype}' and "
-                         f"format_version: '{scraper.version}' are not "
-                         "supported.")
-                raise InvalidFileError(error, [file_metadata["id"]])
+            try:
+                file_format_version = {
+                    "url": reference_data[(scraper.mimetype, scraper.version)]
+                }
+            except KeyError as error:
+                message = (f"Detected file_format: '{scraper.mimetype}' and "
+                           f"format_version: '{scraper.version}' are not "
+                           "supported.")
+                raise InvalidFileError(message,
+                                       [file_metadata["id"]]) from error
         else:
             # TODO: Remove this when Metax API V2 support is not needed
             # anymore
