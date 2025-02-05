@@ -16,7 +16,7 @@ def get_metax_client(config):
             # Only use tokens for V3. Tokens are not supported
             # for V2.
             config_object.get("metax_token")
-            if config_object.get("metax_api_version") == "v2"
+            if config_object.get("metax_api_version") == "v3"
             else None
         ),
         verify=config_object.getboolean("metax_ssl_verification"),
