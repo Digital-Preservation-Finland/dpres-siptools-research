@@ -64,7 +64,7 @@ def test_create_mets(config, workspace, requests_mock, data_catalog, objid):
     if data_catalog == "urn:nbn:fi:att:data-catalog-ida":
         dataset["preservation"]["dataset_version"] = {
             "persistent_identifier": "doi:pas-version-id",
-            "id": None,
+            "id": "pas-version-id",
             "preservation_state": None,
         }
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=files)
@@ -76,7 +76,10 @@ def test_create_mets(config, workspace, requests_mock, data_catalog, objid):
     dataset['data_catalog']['identifier'] = data_catalog
     dataset["research_dataset"]["preferred_identifier"] =  "doi:test"
     dataset['preservation_dataset_version'] \
-        = {'preferred_identifier': 'doi:pas-version-id'}
+        = {
+            'identifier': 'pas-version-id',
+            'preferred_identifier': 'doi:pas-version-id'
+        }
     tests.utils.add_metax_v2_dataset(
         requests_mock, dataset=dataset, files=files
     )

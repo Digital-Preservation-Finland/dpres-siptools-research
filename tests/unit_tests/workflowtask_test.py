@@ -403,7 +403,7 @@ def test_set_preservation_state_of_pas_version(config, requests_mock, request):
     json["preservation"]["dataset_version"] = {
         "id": "pas-version-id",
         "persistent_identifier": None,
-        "preservation_state": None,
+        "preservation_state": 0,
     }
     requests_mock.get("/v3/datasets/original-id", json=json)
     patch_preservation \

@@ -114,9 +114,10 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
             'data_catalog': {
                 'identifier': "urn:nbn:fi:att:data-catalog-ida"
             },
-            'preservation_identifier': 'original-version-id',
+            'preservation_identifier': 'original-version-pid',
             'preservation_dataset_version': {
-                'preferred_identifier': 'pas-version-id',
+                'identifier': 'pas-version-id',
+                'preferred_identifier': 'pas-version-pid',
                 'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
             },
             'preservation_state': DS_STATE_INITIALIZED

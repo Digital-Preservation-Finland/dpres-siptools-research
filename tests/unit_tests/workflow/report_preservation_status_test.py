@@ -135,7 +135,20 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     task.run()
     assert task.complete()
 
-    assert metax_mock.called_once
+    if request.config.getoption("--v3"):
+        assert len(metax_mock.request_history) == 2
+        # The dataset should be marked preserved
+        assert metax_mock.request_history[0].json() == {
+            "pas_package_created": True
+        }
+        # The preservation state should be updated
+        assert metax_mock.request_history[1].json() == {
+            "state": 120,
+            "description": {"en": "In digital preservation"}
+        }
+    else:
+        assert metax_mock.called_once
+
 
 
 @pytest.mark.usefixtures('testmongoclient')

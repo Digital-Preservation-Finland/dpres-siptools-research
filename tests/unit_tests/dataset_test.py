@@ -47,12 +47,11 @@ from tests.metax_data.datasetsV3 import BASE_DATASET
             {
                 "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
                 "preservation": {
-                    "id": None,  # TODO: this should not be required
                     "state": -1,
                     "description": None,
                     "reason_description": None,
                     "dataset_version": {
-                        "id": None, #uuid
+                        "id": "pas-version-uuid",
                         # This is the DOI of the PAS version of the
                         # dataset, which should, i.e. the identitier of
                         # the SIP
@@ -69,6 +68,7 @@ from tests.metax_data.datasetsV3 import BASE_DATASET
                 },
                 "identifier": "wrong-id",
                 "preservation_dataset_version": {
+                    "identifier": "pas-version-uuid",
                     "preferred_identifier": "correct-id"
                 }
             },
@@ -242,6 +242,7 @@ def test_unknown_data_catalog(config, requests_mock):
                     'identifier': 'urn:nbn:fi:att:data-catalog-ida'
                 },
                 'preservation_dataset_version': {
+                    'identifier': 'pas-version-id',
                     'preservation_state': 'correct-state'
                 },
                 "research_dataset": {

@@ -1,12 +1,15 @@
 """Task that reports preservation status after SIP ingestion."""
 
 from pathlib import Path
+
 from luigi import LocalTarget
 from metax_access import DS_STATE_IN_DIGITAL_PRESERVATION
-from siptools_research.workflowtask import WorkflowTask
+
+from siptools_research.config import Configuration
+from siptools_research.exceptions import InvalidSIPError
 from siptools_research.workflow.poll_reports import GetValidationReports
 from siptools_research.workflow.send_sip import SendSIPToDP
-from siptools_research.exceptions import InvalidSIPError
+from siptools_research.workflowtask import WorkflowTask
 
 
 class ReportPreservationStatus(WorkflowTask):
@@ -60,7 +63,6 @@ class ReportPreservationStatus(WorkflowTask):
 
         :returns: ``None``
         """
-
         # List of all matching paths ValidateSIP found
         ingest_report_paths = [
             str(path) for path in Path(self.input()[0].path).rglob('*.xml')
@@ -74,17 +76,25 @@ class ReportPreservationStatus(WorkflowTask):
 
         # 'accepted' or 'rejected'?
         if 'accepted' in ingest_report_paths[0]:
+
+            if Configuration(self.config).get("metax_api_version") == "v3":
+                # Mark the dataset as preserved
+                self.dataset.mark_preserved()
+
             # Set the preservation state of this dataset
             self.dataset.set_preservation_state(
                 DS_STATE_IN_DIGITAL_PRESERVATION,
                 'Accepted to preservation'
             )
+
             with self.output().open('w') as output:
                 output.write('Dataset id=' + self.dataset_id)
+
         elif 'rejected' in ingest_report_paths[0]:
             # Raise exception that informs event handler that dataset
             # did not pass validation
             raise InvalidSIPError("SIP was rejected")
+
         else:
             raise ValueError(
                 f'Report was found in incorrect path: {ingest_report_paths[0]}'

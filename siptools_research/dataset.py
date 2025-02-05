@@ -65,6 +65,11 @@ class Dataset:
         return self._cached_metadata
 
     @property
+    def _has_been_copied_to_pas_datacatalog(self):
+        return self._metadata["preservation"]["dataset_version"]["id"]\
+            is not None
+
+    @property
     def sip_identifier(self):
         """The SIP identifier of the dataset.
 
@@ -77,13 +82,13 @@ class Dataset:
 
         elif self._metadata["data_catalog"] == IDA_DATA_CATALOG_IDENTIFIER:
 
-            if (ida_id := self._metadata["preservation"]["dataset_version"]
-                    ["persistent_identifier"]) is not None:
+            if self._has_been_copied_to_pas_datacatalog:
                 # Dataset was created in IDA catalog, and it has been
                 # copied to PAS data catalog. The preferred identifier
                 # of the PAS version of the dataset will be used as SIP
                 # identifier.
-                identifier = ida_id
+                identifier = (self._metadata["preservation"]["dataset_version"]
+                              ["persistent_identifier"])
             else:
                 # Dataset has not yet been copied to PAS data catalog.
                 error = ("The dataset has not been copied to PAS data"
@@ -98,11 +103,7 @@ class Dataset:
     @property
     def preservation_state(self):
         """Preservation state of the dataset."""
-        if (
-            self._metadata["preservation"]["dataset_version"][
-                "preservation_state"
-            ] not in (-1, None)
-        ):
+        if self._has_been_copied_to_pas_datacatalog:
             return self._metadata["preservation"]["dataset_version"][
                 "preservation_state"
             ]
@@ -115,8 +116,7 @@ class Dataset:
         If dataset has been copied to PAS data catalog, the preservation
         state of the PAS version is set.
         """
-        if self._metadata["preservation"][
-                "dataset_version"]["id"] is not None:
+        if self._has_been_copied_to_pas_datacatalog:
             preserved_dataset_id = self._metadata["preservation"][
                 "dataset_version"]["id"]
         else:
@@ -125,6 +125,23 @@ class Dataset:
         self._metax_client.set_preservation_state(
             preserved_dataset_id, state, description
         )
+
+    def mark_preserved(self):
+        """Mark dataset preserved.
+
+        Sets `pas_package_created` value to True, so other services know
+        that the dataset is in digital preservation.
+
+        If dataset has been copied to PAS data catalog, the value is
+        updated in PAS version, not in the original version.
+        """
+        if self._has_been_copied_to_pas_datacatalog:
+            preserved_dataset_id = self._metadata["preservation"][
+                "dataset_version"]["id"]
+        else:
+            preserved_dataset_id = self._metadata["id"]
+
+        self._metax_client.set_pas_package_created(preserved_dataset_id)
 
     def copy_to_pas_datacatalog(self):
         """Copy dataset to PAS data catalog."""
