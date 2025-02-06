@@ -15,7 +15,7 @@ from upload_rest_api.models.file_entry import FileEntry
 
 import siptools_research.workflow.compress
 import siptools_research.workflow.create_mets
-import tests.metax_data.contracts
+import tests.metax_data.reference_data
 import tests.utils
 from siptools_research.config import Configuration
 from tests.metax_data.files import PAS_STORAGE_SERVICE as V2_PAS_STORAGE_SERVICE
@@ -136,6 +136,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     )
     requests_mock.get("/v3/reference-data/file-format-versions",
                       json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
+    requests_mock.post("/v3/files/patch-many")
 
     # Mock Metax API V2
     dataset = copy.deepcopy(tests.metax_data.datasets.BASE_DATASET)

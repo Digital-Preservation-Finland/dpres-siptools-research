@@ -80,11 +80,13 @@ class ReportPreservationStatus(WorkflowTask):
             if Configuration(self.config).get("metax_api_version") == "v3":
                 # Mark the dataset as preserved
                 self.dataset.mark_preserved()
+                # Unlock the dataset
+                self.dataset.unlock()
 
             # Set the preservation state of this dataset
             self.dataset.set_preservation_state(
                 DS_STATE_IN_DIGITAL_PRESERVATION,
-                'Accepted to preservation'
+                'In digital preservation'
             )
 
             with self.output().open('w') as output:

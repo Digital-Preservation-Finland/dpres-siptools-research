@@ -143,6 +143,10 @@ class Dataset:
 
         self._metax_client.set_pas_package_created(preserved_dataset_id)
 
+    def unlock(self):
+        """Unlock dataset."""
+        self._metax_client.unlock_dataset(self.identifier)
+
     def copy_to_pas_datacatalog(self):
         """Copy dataset to PAS data catalog."""
         if self._metadata["data_catalog"] != PAS_DATA_CATALOG_IDENTIFIER:

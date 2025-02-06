@@ -1,5 +1,6 @@
 """Unit tests for ReportPreservationStatus task."""
 import copy
+import re
 
 import pytest
 
@@ -105,9 +106,14 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
         dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
         dataset.update(dataset_metadata)
         requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
-        metax_mock = requests_mock.patch(
-            f"/v3/datasets/{patched_dataset_id}/preservation"
-        )
+        requests_mock.get(f"/v3/datasets/{workspace.name}/files",
+                          json={"next": None, "results": []})
+        # This is required because unlocking the dataset currently
+        # unlocks also all files of the dataset. In future, Metax might
+        # unlock the files automatically.
+        requests_mock.post("/v3/files/patch-many")
+        matcher = re.compile("/v3/datasets/.*/preservation")
+        metax_mock = requests_mock.patch(matcher, json={})
 
     else:
         # Mock Metax API V2
@@ -136,13 +142,20 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     assert task.complete()
 
     if request.config.getoption("--v3"):
-        assert len(metax_mock.request_history) == 2
+        assert len(metax_mock.request_history) == 3
         # The dataset should be marked preserved
+        assert patched_dataset_id in metax_mock.request_history[0].url
         assert metax_mock.request_history[0].json() == {
             "pas_package_created": True
         }
-        # The preservation state should be updated
+        # The original dataset should be unlocked
+        assert workspace.name in metax_mock.request_history[1].url
         assert metax_mock.request_history[1].json() == {
+            "pas_process_running": False
+        }
+        # The preservation state should be updated
+        assert patched_dataset_id in metax_mock.request_history[2].url
+        assert metax_mock.request_history[2].json() == {
             "state": 120,
             "description": {"en": "In digital preservation"}
         }
@@ -228,7 +241,5 @@ def test_reportpreservationstatus_rejected_int_error(config, workspace):
     assert not task.complete()
 
     # Running task should raise exception
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError, match="Expected 1 ingest report, found 2"):
         task.run()
-
-    assert str(exc.value) == "Expected 1 ingest report, found 2"
