@@ -611,7 +611,7 @@ def test_createdescriptivemetadata(config, workspace, requests_mock):
     dmdsec = mets.xpath('/mets:mets//mets:dmdSec', namespaces=NAMESPACES)[0]
     mdwrap = dmdsec.xpath('mets:mdWrap', namespaces=NAMESPACES)
     assert mdwrap[0].attrib["OTHERMDTYPE"] == "DATACITE"
-    assert mdwrap[0].attrib["MDTYPEVERSION"] == "4.1"
+    assert mdwrap[0].attrib["MDTYPEVERSION"] == "4.3"
     mets_datacite = mdwrap[0].xpath('mets:xmlData/datacite:resource',
                                     namespaces=NAMESPACES)[0]
 
