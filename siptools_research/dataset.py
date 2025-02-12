@@ -149,7 +149,8 @@ class Dataset:
 
     def copy_to_pas_datacatalog(self):
         """Copy dataset to PAS data catalog."""
-        if self._metadata["data_catalog"] != PAS_DATA_CATALOG_IDENTIFIER:
+        if self._metadata["data_catalog"] != PAS_DATA_CATALOG_IDENTIFIER \
+                and not self._has_been_copied_to_pas_datacatalog:
             self._metax_client.copy_dataset_to_pas_catalog(self.identifier)
 
     @property

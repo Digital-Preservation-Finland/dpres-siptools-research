@@ -85,7 +85,7 @@ def test_copy_ida_dataset(config, workspace, requests_mock, request):
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_ida_dataset_already_copied(config, workspace, requests_mock):
+def test_ida_dataset_already_copied(config, workspace, requests_mock, request):
     """Test running task when dataset has already been copied.
 
     :param config: Configuration file
@@ -102,13 +102,11 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
         "persistent_identifier": None,
         "preservation_state": DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
     }
-    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
-    metax_mock = requests_mock.patch(
-        "/v3/datasets/original-version-id/preservation"
-    )
+    get_dataset = requests_mock.get(f"/v3/datasets/{workspace.name}",
+                                    json=dataset)
 
     # Mock Metax V2
-    requests_mock.get(
+    v2_get_dataset = requests_mock.get(
         f'/rest/v2/datasets/{workspace.name}',
         json={
             'data_catalog': {
@@ -123,7 +121,6 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
             'preservation_state': DS_STATE_INITIALIZED
         }
     )
-    metax_v2_mock = requests_mock.patch(f'/rest/v2/datasets/{workspace.name}')
 
     # Init and run task
     task = copy_dataset_to_pas_data_catalog.CopyToPasDataCatalog(
@@ -134,8 +131,12 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
     task.run()
     assert task.complete()
 
-    assert not metax_mock.called
-    assert not metax_v2_mock.called
+    # Only one get request should be sent. No PATCHing or POSTing.
+    assert len(requests_mock.request_history) == 1
+    if request.config.getoption("--v3"):
+        assert get_dataset.called_once
+    else:
+        assert v2_get_dataset.called_once
 
 
 @pytest.mark.usefixtures('testmongoclient')
