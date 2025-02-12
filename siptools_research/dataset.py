@@ -153,6 +153,10 @@ class Dataset:
                 and not self._has_been_copied_to_pas_datacatalog:
             self._metax_client.copy_dataset_to_pas_catalog(self.identifier)
 
+    def get_datacite(self) -> bytes:
+        """Get Datacite document for dataset's PAS data catalog copy"""
+        return self._metax_client.get_datacite(self.pas_dataset_id)
+
     @property
     def pas_dataset_id(self):
         """Dataset identifier of the dataset using the PAS data catalog.

@@ -70,7 +70,8 @@ class CreateMets(WorkflowTask):
         contract_identifier = metadata.get('preservation', {})["contract"]
         contract_metadata = metax_client.get_contract(contract_identifier)
         files_metadata = metax_client.get_dataset_files(self.dataset_id)
-        datacite = metax_client.get_datacite(self.dataset_id)
+
+        datacite = self.dataset.get_datacite()
 
         # Create METS
         mets = METS(

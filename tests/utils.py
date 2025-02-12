@@ -56,8 +56,13 @@ def add_metax_dataset(
     requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
     requests_mock.patch(f"/v3/datasets/{dataset['id']}/preservation",
                         json=dataset)
+
+    pas_dataset_id = (
+        dataset.get('preservation', {}).get('dataset_version', {}).get('id')
+        or dataset['id']
+    )
     requests_mock.get(
-        f"/v3/datasets/{dataset['id']}/metadata-download?format=datacite",
+        f"/v3/datasets/{pas_dataset_id}/metadata-download?format=datacite",
         content=lxml.etree.tostring(datacite)
     )
     requests_mock.get(
@@ -132,8 +137,13 @@ def add_metax_v2_dataset(
         "/rest/v2/datasets/{}".format(dataset['identifier']),
         json=dataset
     )
+
+    pas_dataset_id = (
+        dataset.get('preservation_dataset_version', {}).get('identifier')
+        or dataset['identifier']
+    )
     requests_mock.get(
-        "/rest/v2/datasets/{}?dataset_format=datacite".format(dataset['identifier']),
+        "/rest/v2/datasets/{}?dataset_format=datacite".format(pas_dataset_id),
         content=lxml.etree.tostring(datacite)
     )
     requests_mock.get(
