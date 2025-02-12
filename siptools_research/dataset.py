@@ -154,6 +154,19 @@ class Dataset:
             self._metax_client.copy_dataset_to_pas_catalog(self.identifier)
 
     @property
+    def pas_dataset_id(self):
+        """Dataset identifier of the dataset using the PAS data catalog.
+
+        If the dataset was created in IDA, this is the same as the copy
+        created using :meth:`copy_to_pas_datacatalog`. If not, this is the
+        dataset identifier itself.
+        """
+        return (
+            self._metadata["preservation"]["dataset_version"]["id"]
+            or self._metadata["id"]
+        )
+
+    @property
     def target(self):
         """Target of the workflow."""
         if "target" in self._document:
