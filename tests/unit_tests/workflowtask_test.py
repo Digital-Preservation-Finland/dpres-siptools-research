@@ -24,7 +24,7 @@ from siptools_research.exceptions import (
 )
 from siptools_research.metax import get_metax_client
 from siptools_research.workflowtask import WorkflowTask
-from tests.metax_data.datasetsV3 import BASE_DATASET
+from tests.metax_data.datasets import BASE_DATASET
 
 
 # pylint: disable=too-few-public-methods

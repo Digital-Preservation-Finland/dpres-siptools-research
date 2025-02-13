@@ -15,6 +15,7 @@ from siptools_research.exceptions import (
     InvalidFileMetadataError,
 )
 from siptools_research.metadata_generator import generate_metadata
+from tests.metax_data.files import BASE_FILE, TXT_FILE
 
 
 def test_generate_metadata(config, requests_mock, tmp_path):
@@ -28,7 +29,7 @@ def test_generate_metadata(config, requests_mock, tmp_path):
     :param tmp_path: Temporary path
     """
     # create mocked dataset in Metax
-    file_metadata = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
+    file_metadata = copy.deepcopy(BASE_FILE)
     file_metadata["pathname"] = "textfile"
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
     requests_mock.get("/v3/reference-data/file-format-versions",
@@ -172,7 +173,7 @@ def test_file_format_detection(config, requests_mock, path, expected_url,
     :param tmp_path: Temporary directory
     """
     # create mocked dataset in Metax
-    file_metadata = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
+    file_metadata = copy.deepcopy(BASE_FILE)
     file_path = Path('/path/to') / Path(path).name
     file_metadata['pathname'] = str(file_path)
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
@@ -219,10 +220,7 @@ def test_generate_metadata_video_streams(config, requests_mock, tmp_path):
     :param tmp_path: Temporary directory
     """
     # Mock Metax
-    tests.utils.add_metax_dataset(
-        requests_mock,
-        files=[tests.metax_data.filesV3.BASE_FILE]
-    )
+    tests.utils.add_metax_dataset(requests_mock, files=[BASE_FILE])
     requests_mock.patch("/v3/files/pid:urn:identifier/characteristics",
                         json={})
     file_http_mock = requests_mock.patch("/v3/files/pid:urn:identifier",
@@ -269,10 +267,7 @@ def test_generate_metadata_unrecognized(config, requests_mock, tmp_path):
     :param tmp_path: Temporary directory
     """
     # create mocked dataset in Metax
-    tests.utils.add_metax_dataset(
-        requests_mock,
-        files=[tests.metax_data.filesV3.BASE_FILE]
-    )
+    tests.utils.add_metax_dataset(requests_mock, files=[BASE_FILE])
     requests_mock.get("/v3/reference-data/file-format-versions",
                       json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
@@ -300,7 +295,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
     :param tmp_path: Temporary directory
     """
     # Mock Metax
-    file_metadata = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
+    file_metadata = copy.deepcopy(BASE_FILE)
     file_metadata["characteristics"]["encoding"] = "user_defined"
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
     patch_file_mock = requests_mock.patch("/v3/files/pid:urn:identifier",
@@ -418,7 +413,7 @@ def test_generate_metadata_csv(
         should be posted to Metax when metadata is generated
     """
     # Mock Metax
-    file = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
+    file = copy.deepcopy(BASE_FILE)
     file["characteristics"].update(predefined_file_characteristics)
     tests.utils.add_metax_dataset(requests_mock, files=[file])
     patch_file_mock = requests_mock.patch(
@@ -528,7 +523,7 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
     :param filepath: Sample file to be scraped
     """
     # Mock Metax
-    file = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    file = copy.deepcopy(TXT_FILE)
 
     # Update the predefined value in file characteristics
     obj=file["characteristics"]

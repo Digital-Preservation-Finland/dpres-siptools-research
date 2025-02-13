@@ -9,7 +9,7 @@ from metax_access import (
 )
 
 from siptools_research.workflow import copy_dataset_to_pas_data_catalog
-from tests.metax_data.datasetsV3 import BASE_DATASET
+from tests.metax_data.datasets import BASE_DATASET
 
 
 @pytest.mark.usefixtures('testmongoclient')

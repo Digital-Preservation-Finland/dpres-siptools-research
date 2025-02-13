@@ -5,12 +5,12 @@ import jsonschema
 import pytest
 
 import siptools_research.schemas
-from tests.metax_data.datasetsV3 import (
+from tests.metax_data.datasets import (
     BASE_DATASET,
     BASE_PROVENANCE,
     QVAIN_PROVENANCE,
 )
-from tests.metax_data.filesV3 import (
+from tests.metax_data.files import (
     AUDIO_FILE,
     CSV_FILE,
     MKV_FILE,

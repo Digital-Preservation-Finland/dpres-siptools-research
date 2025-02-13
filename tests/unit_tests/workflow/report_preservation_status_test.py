@@ -4,9 +4,9 @@ import re
 
 import pytest
 
-import tests.metax_data.datasetsV3
 from siptools_research.exceptions import InvalidDatasetError
 from siptools_research.workflow import report_preservation_status
+from tests.metax_data.datasets import BASE_DATASET
 
 
 @pytest.mark.parametrize(
@@ -70,7 +70,7 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
                                when preservation state is updated.
     """
     # Mock Metax
-    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset.update(dataset_metadata)
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
     requests_mock.get(f"/v3/datasets/{workspace.name}/files",

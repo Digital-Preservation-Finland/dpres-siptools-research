@@ -6,7 +6,7 @@ import pytest
 
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import WorkflowExistsError
-from tests.metax_data.datasetsV3 import BASE_DATASET
+from tests.metax_data.datasets import BASE_DATASET
 
 
 @pytest.mark.parametrize(

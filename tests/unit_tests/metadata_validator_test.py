@@ -13,9 +13,22 @@ from siptools_research.exceptions import (
 )
 from siptools_research.metadata_validator import validate_metadata
 from siptools_research.metax import get_metax_client
-from tests.metax_data.datasetsV3 import BASE_DATACITE
-from tests.metax_data.datasetsV3 import BASE_DATASET as BASE_DATASETV3
-import tests.metax_data.filesV3
+from tests.metax_data.datasets import (
+    BASE_DATACITE,
+    BASE_DATASET,
+    BASE_PROVENANCE,
+    QVAIN_PROVENANCE,
+)
+from tests.metax_data.files import (
+    AUDIO_FILE,
+    BASE_FILE,
+    CSV_FILE,
+    MKV_FILE,
+    PDF_FILE,
+    TIFF_FILE,
+    TXT_FILE,
+    VIDEO_FILE,
+)
 
 
 def get_invalid_datacite():
@@ -49,13 +62,13 @@ def get_very_invalid_datacite():
 @pytest.mark.parametrize(
     "file_metadata",
     [
-        tests.metax_data.filesV3.TXT_FILE,
-        tests.metax_data.filesV3.CSV_FILE,
-        tests.metax_data.filesV3.TIFF_FILE,
-        tests.metax_data.filesV3.MKV_FILE,
-        tests.metax_data.filesV3.PDF_FILE,
-        tests.metax_data.filesV3.AUDIO_FILE,
-        tests.metax_data.filesV3.VIDEO_FILE,
+        TXT_FILE,
+        CSV_FILE,
+        TIFF_FILE,
+        MKV_FILE,
+        PDF_FILE,
+        AUDIO_FILE,
+        VIDEO_FILE,
     ]
 )
 def test_validate_metadata(config, requests_mock, file_metadata):
@@ -76,13 +89,13 @@ def test_validate_metadata(config, requests_mock, file_metadata):
         # No provenance
         [],
         # One life cycle event
-        [tests.metax_data.datasetsV3.QVAIN_PROVENANCE],
+        [QVAIN_PROVENANCE],
         # One preservation event
-        [tests.metax_data.datasetsV3.BASE_PROVENANCE],
+        [BASE_PROVENANCE],
         # Two events of same type
         [
-            tests.metax_data.datasetsV3.BASE_PROVENANCE,
-            tests.metax_data.datasetsV3.BASE_PROVENANCE
+            BASE_PROVENANCE,
+            BASE_PROVENANCE
         ],
     ]
 )
@@ -94,12 +107,12 @@ def test_validate_metadata_with_provenance(config, requests_mock, provenance):
     :param provenance: List of provenance events in dataset metadata
     """
     # Mock Metax
-    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["provenance"] = provenance
     tests.utils.add_metax_dataset(
         requests_mock,
         dataset=dataset,
-        files=[tests.metax_data.filesV3.TXT_FILE]
+        files=[TXT_FILE]
     )
 
     assert validate_metadata('dataset_identifier', config)
@@ -112,8 +125,7 @@ def test_validate_metadata_multiple_files(config, requests_mock):
     :param requests_mock: Mocker object
     """
     # Mock Metax
-    files = [copy.deepcopy(tests.metax_data.filesV3.TXT_FILE),
-             copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)]
+    files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['identifier'] = "pid:urn:1"
     files[1]['identifier'] = "pid:urn:2"
     tests.utils.add_metax_dataset(requests_mock, files=files)
@@ -149,7 +161,7 @@ def test_validate_metadata_invalid(config, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["preservation"]["contract"] = None
     requests_mock.get("/v3/datasets/dataset_identifier", json=dataset)
 
@@ -169,7 +181,7 @@ def test_validate_metadata_invalid_file_path(config, requests_mock):
     :param requests_mock: Mocker object
     """
     # Mock Metax
-    invalid_file = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    invalid_file = copy.deepcopy(TXT_FILE)
     invalid_file["pathname"] = "../../file_in_invalid_path"
     tests.utils.add_metax_dataset(requests_mock, files=[invalid_file])
 
@@ -190,13 +202,12 @@ def test_validate_file_metadata(config, requests_mock):
     :param config: Configuration file
     :param requests_mock: Mocker object
     """
-    dataset = copy.deepcopy(BASE_DATASETV3)
-    dataset['directories'] = [{'identifier': 'root_dir'}]
+    dataset = copy.deepcopy(BASE_DATASET)
 
     # Mock Metax
-    file_1 = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    file_1 = copy.deepcopy(TXT_FILE)
     file_1['id'] = 'file_identifier1'
-    file_2 = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+    file_2 = copy.deepcopy(TXT_FILE)
     file_2['id'] = 'file_identifier2'
     files_adapter = requests_mock.get(
         "/v3/datasets/dataset_identifier/files",

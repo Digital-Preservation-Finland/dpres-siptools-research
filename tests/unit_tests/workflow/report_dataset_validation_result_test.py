@@ -2,8 +2,8 @@
 import pytest
 from metax_access.metax import DS_STATE_METADATA_CONFIRMED
 
-import tests.metax_data
 from siptools_research.workflow import report_dataset_validation_result
+from tests.metax_data.datasets import BASE_DATASET
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -15,7 +15,7 @@ def test_reportdatasetvalidationresult(config, workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = tests.metax_data.datasetsV3.BASE_DATASET
+    dataset = BASE_DATASET
     dataset["id"] = workspace.name
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
     patch_dataset \

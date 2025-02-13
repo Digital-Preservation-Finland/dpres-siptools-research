@@ -4,10 +4,11 @@ import copy
 import pytest
 from metax_access.metax import DS_STATE_TECHNICAL_METADATA_GENERATED
 
-import tests.metax_data
 import tests.metax_data.reference_data
 import tests.utils
 from siptools_research.workflow import generate_metadata
+from tests.metax_data.datasets import BASE_DATASET
+from tests.metax_data.files import TXT_FILE
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -20,8 +21,8 @@ def test_generatemetadata(config, workspace, requests_mock):
     """
     # Mock Metax. Create a dataset that contains one text file
     # which is available in Ida.
-    textfile_metadata = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
-    dataset_metadata = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    textfile_metadata = copy.deepcopy(TXT_FILE)
+    dataset_metadata = copy.deepcopy(BASE_DATASET)
     dataset_metadata["id"] = workspace.name
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset_metadata,

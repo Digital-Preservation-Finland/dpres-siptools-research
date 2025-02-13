@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from siptools_research.workflow.poll_reports import GetValidationReports
-import tests.metax_data.datasetsV3
+from tests.metax_data.datasets import BASE_DATASET
 
 
 @pytest.mark.parametrize(
@@ -31,7 +31,7 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
     """
     # Mock Metax
     doi = "doi:test"
-    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["id"] = workspace.name
     dataset["persistent_identifier"] = doi
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
@@ -91,7 +91,7 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
     """
     # Mock Metax
     doi = "doi:test"
-    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["id"] = workspace.name
     dataset["persistent_identifier"] = doi
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)

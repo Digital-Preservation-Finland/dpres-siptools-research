@@ -6,6 +6,11 @@ import pytest
 import tests.utils
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.workflow import validate_files
+from tests.metax_data.datasets import BASE_DATASET
+from tests.metax_data.files import (
+    TIFF_FILE,
+    TXT_FILE,
+)
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -17,8 +22,8 @@ def test_validatefiles(config, workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    textfile = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
-    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    textfile = copy.deepcopy(TXT_FILE)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["id"] = workspace.name
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset,
@@ -50,8 +55,8 @@ def test_validatefiles_invalid(config, workspace, requests_mock):
     """
     # Mock Metax. Create a dataset that contains one file which has
     # metadata of image file but content of a text file.
-    tifffile = copy.deepcopy(tests.metax_data.filesV3.TIFF_FILE)
-    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    tifffile = copy.deepcopy(TIFF_FILE)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["id"] = workspace.name
     tests.utils.add_metax_dataset(requests_mock,
                                   dataset=dataset,

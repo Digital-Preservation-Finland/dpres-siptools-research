@@ -18,18 +18,26 @@ import siptools_research.workflow.create_mets
 import tests.metax_data.reference_data
 import tests.utils
 from siptools_research.config import Configuration
-from tests.metax_data.filesV3 import PAS_STORAGE_SERVICE
+from tests.metax_data.datasets import BASE_DATASET
+from tests.metax_data.files import (
+    AUDIO_FILE,
+    CSV_FILE,
+    MKV_FILE,
+    PAS_STORAGE_SERVICE,
+    PDF_FILE,
+    SEG_Y_FILE,
+    TIFF_FILE,
+    TXT_FILE,
+    VIDEO_FILE,
+)
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
-PAS_STORAGE_TXT_FILE = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+PAS_STORAGE_TXT_FILE = copy.deepcopy(TXT_FILE)
 PAS_STORAGE_TXT_FILE["storage_service"] = PAS_STORAGE_SERVICE
-XML_FILE = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
-XML_FILE["pathname"] = "mets.xml"
-SIG_FILE = copy.deepcopy(tests.metax_data.filesV3.TXT_FILE)
+METS_FILE = copy.deepcopy(TXT_FILE)
+METS_FILE["pathname"] = "mets.xml"
+SIG_FILE = copy.deepcopy(TXT_FILE)
 SIG_FILE["pathname"] = "signature.sig"
-TIFF_FILE = copy.deepcopy(tests.metax_data.filesV3.TIFF_FILE)
-MKV_FILE = copy.deepcopy(tests.metax_data.filesV3.MKV_FILE)
-SEG_Y_FILE = copy.deepcopy(tests.metax_data.filesV3.SEG_Y_FILE)
 
 SCHEMATRONS = []
 SCHEMATRON_FILES = [
@@ -116,13 +124,13 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     (sftp_dir / "transfer").mkdir(parents=True, exist_ok=True)
 
     # Mock Metax
-    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["id"] = workspace.name
     dataset["persistent_identifier"] = "doi:test"
     tests.utils.add_metax_dataset(
         requests_mock,
         dataset=dataset,
-        files=[tests.metax_data.filesV3.TXT_FILE]
+        files=[TXT_FILE]
     )
     requests_mock.get("/v3/reference-data/file-format-versions",
                       json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
@@ -213,7 +221,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
         # Dataset with one text file
         [
             {
-                'metadata': tests.metax_data.filesV3.TXT_FILE,
+                'metadata': TXT_FILE,
                 'path': 'tests/data/sample_files/text_plain_UTF-8'
             }
         ],
@@ -227,7 +235,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
         # Dataset with a file named "mets.xml"
         [
             {
-                'metadata': XML_FILE,
+                'metadata': METS_FILE,
                 'path': 'tests/data/sample_files/text_plain_UTF-8'
             }
         ],
@@ -243,12 +251,12 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
         [
             # text (charset metadata)
             {
-                'metadata': tests.metax_data.filesV3.TXT_FILE,
+                'metadata': TXT_FILE,
                 'path': 'tests/data/sample_files/text_plain_UTF-8'
             },
             # CSV (ADDML)
             {
-                'metadata': tests.metax_data.filesV3.CSV_FILE,
+                'metadata': CSV_FILE,
                 'path': 'tests/data/sample_files/text_csv.csv'
             },
             # image (MIX)
@@ -258,12 +266,12 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
             },
             # audio (AudioMD)
             {
-                'metadata': tests.metax_data.filesV3.AUDIO_FILE,
+                'metadata': AUDIO_FILE,
                 'path': 'tests/data/sample_files/audio_x-wav.wav'
             },
             # video (VideoMD)
             {
-                'metadata': tests.metax_data.filesV3.VIDEO_FILE,
+                'metadata': VIDEO_FILE,
                 'path': 'tests/data/sample_files/video_dv.dv'
             },
             # video container with video and audio (VideoMD and
@@ -274,7 +282,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
             },
             # other (no extra metadata)
             {
-                'metadata': tests.metax_data.filesV3.PDF_FILE,
+                'metadata': PDF_FILE,
                 'path': 'tests/data/sample_files/application_pdf.pdf'
             }
         ],
@@ -306,7 +314,7 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
     :param files: list of files to be added to dataset
     """
     # Mock Metax
-    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset = copy.deepcopy(BASE_DATASET)
     dataset["id"] = workspace.name
     tests.utils.add_metax_dataset(
         requests_mock,
