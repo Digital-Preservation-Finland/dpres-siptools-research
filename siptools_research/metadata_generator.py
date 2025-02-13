@@ -29,16 +29,15 @@ def generate_metadata(
     """
     metax_client = get_metax_client(config)
 
-    if metax_client.api_version == "v3":
-        # Map file_format and format_version to url
-        reference_data = {
-            (
-                entry["file_format"],
-                # Empty string as format_version seems to mean "(:unap)"
-                entry["format_version"] or file_scraper.defaults.UNAP
-            ): entry["url"]
-            for entry in metax_client.get_file_format_versions()
-        }
+    # Map file_format and format_version to url
+    reference_data = {
+        (
+            entry["file_format"],
+            # Empty string as format_version seems to mean "(:unap)"
+            entry["format_version"] or file_scraper.defaults.UNAP
+        ): entry["url"]
+        for entry in metax_client.get_file_format_versions()
+    }
 
     for file_metadata in metax_client.get_dataset_files(dataset_id):
         original_file_characteristics = file_metadata.get(
@@ -74,34 +73,19 @@ def generate_metadata(
             error = "File format was not recognized"
             raise InvalidFileError(error, [file_metadata["id"]])
 
-        # Patching file_format_version works differently in Metax API V2
-        # and Metax API V3
-        if metax_client.api_version == "v3":
-            try:
-                file_format_version = {
-                    "url": reference_data[(scraper.mimetype, scraper.version)]
-                }
-            except KeyError as error:
-                message = (f"Detected file_format: '{scraper.mimetype}' and "
-                           f"format_version: '{scraper.version}' are not "
-                           "supported.")
-                raise InvalidFileError(message,
-                                       [file_metadata["id"]]) from error
-        else:
-            # TODO: Remove this when Metax API V2 support is not needed
-            # anymore
-            file_format_version = {
-                "file_format": scraper.mimetype,
-            }
-            if scraper.version != file_scraper.defaults.UNAP:
-                file_format_version["format_version"] = scraper.version
+        try:
+            url = reference_data[(scraper.mimetype, scraper.version)]
+        except KeyError as error:
+            message = (f"Detected file_format: '{scraper.mimetype}' and "
+                       f"format_version: '{scraper.version}' are not "
+                       "supported.")
+            raise InvalidFileError(message,
+                                   [file_metadata["id"]]) from error
 
         # Create new file_characteristics based on scraping results
         scraper_file_characteristics: MetaxFileCharacteristics = {
-            "file_format_version": file_format_version,
+            "file_format_version": {"url": url},
             "encoding": scraper.streams[0].get("charset"),
-            # TODO: ensure that user-defined csv parameters (especially
-            # csv_has_header) are not overwritten!
             "csv_delimiter": scraper.streams[0].get("delimiter"),
             "csv_record_separator": scraper.streams[0].get("separator"),
             "csv_quoting_char": scraper.streams[0].get("quotechar"),
@@ -154,15 +138,6 @@ def generate_metadata(
             key: value
             for key, value
             in scraper_file_characteristics.items()
-            if value not in (file_scraper.defaults.UNAP, None)
-        }
-
-        # Remove "(:unap)" and None values from file_format_version
-        # TODO: This only required for Metax API V2
-        scraper_file_characteristics["file_format_version"] = {
-            key: value
-            for key, value
-            in scraper_file_characteristics["file_format_version"].items()
             if value not in (file_scraper.defaults.UNAP, None)
         }
 

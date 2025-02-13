@@ -10,7 +10,7 @@ from siptools_research.workflow import report_preservation_status
 
 
 @pytest.mark.parametrize(
-    ("dataset_metadata", "v2_dataset_metadata", "patched_dataset_id"),
+    ("dataset_metadata", "patched_dataset_id"),
     [
         # Ida dataset has been copied to PAS catalog. The preservation
         # state of the dataset in PAS catalog should be updated.
@@ -28,22 +28,6 @@ from siptools_research.workflow import report_preservation_status
                         "preservation_state": 0
                     }
                 },
-            },
-            {
-                'identifier': 'original-version-id',
-                'preservation_dataset_version': {
-                    'identifier': 'pas-version-id'
-                },
-                "preservation_identifier": "doi:test",
-                "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
             },
             "pas-version-id"
         ),
@@ -64,27 +48,13 @@ from siptools_research.workflow import report_preservation_status
                     }
                 },
             },
-            {
-                'identifier': "original-version-id",
-                "preservation_identifier": "doi:test",
-                "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-            },
             'original-version-id'
         )
     ]
 )
 @pytest.mark.usefixtures('testmongoclient')
 def test_reportpreservationstatus(config, workspace, requests_mock,
-                                  dataset_metadata, v2_dataset_metadata,
-                                  patched_dataset_id, request):
+                                  dataset_metadata, patched_dataset_id):
     """Test reporting status of accepted SIP.
 
     Creates new ''ingest-reports/accepted'' directory in local workspace
@@ -96,33 +66,21 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     :param workspace: Temporary directory fixture
     :param requests_mock: HTTP request mocker
     :param dataset_metadata: Dataset metadata in Metax
-    :param v2_dataset_metadata: Dataset metadata in Metax API V2
     :param patched_dataset_id: Dataset identifier that should be used
                                when preservation state is updated.
-    :returns: ``None``
     """
-    if request.config.getoption("--v3"):
-        # Mock Metax API V3
-        dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
-        dataset.update(dataset_metadata)
-        requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
-        requests_mock.get(f"/v3/datasets/{workspace.name}/files",
-                          json={"next": None, "results": []})
-        # This is required because unlocking the dataset currently
-        # unlocks also all files of the dataset. In future, Metax might
-        # unlock the files automatically.
-        requests_mock.post("/v3/files/patch-many")
-        matcher = re.compile("/v3/datasets/.*/preservation")
-        metax_mock = requests_mock.patch(matcher, json={})
-
-    else:
-        # Mock Metax API V2
-        requests_mock.get(
-            f'/rest/v2/datasets/{workspace.name}',
-            json=v2_dataset_metadata
-        )
-        metax_mock \
-            = requests_mock.patch(f'/rest/v2/datasets/{patched_dataset_id}')
+    # Mock Metax
+    dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
+    dataset.update(dataset_metadata)
+    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+    requests_mock.get(f"/v3/datasets/{workspace.name}/files",
+                      json={"next": None, "results": []})
+    # This is required because unlocking the dataset currently
+    # unlocks also all files of the dataset. In future, Metax might
+    # unlock the files automatically.
+    requests_mock.post("/v3/files/patch-many")
+    matcher = re.compile("/v3/datasets/.*/preservation")
+    metax_mock = requests_mock.patch(matcher, json={})
 
     # Create directory with name of the workspace to the local
     # workspace directory, so that the ReportPreservationStatus thinks
@@ -141,31 +99,27 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     task.run()
     assert task.complete()
 
-    if request.config.getoption("--v3"):
-        assert len(metax_mock.request_history) == 3
-        # The dataset should be marked preserved
-        assert patched_dataset_id in metax_mock.request_history[0].url
-        assert metax_mock.request_history[0].json() == {
-            "pas_package_created": True
-        }
-        # The original dataset should be unlocked
-        assert workspace.name in metax_mock.request_history[1].url
-        assert metax_mock.request_history[1].json() == {
-            "pas_process_running": False
-        }
-        # The preservation state should be updated
-        assert patched_dataset_id in metax_mock.request_history[2].url
-        assert metax_mock.request_history[2].json() == {
-            "state": 120,
-            "description": {"en": "In digital preservation"}
-        }
-    else:
-        assert metax_mock.called_once
-
+    assert len(metax_mock.request_history) == 3
+    # The dataset should be marked preserved
+    assert patched_dataset_id in metax_mock.request_history[0].url
+    assert metax_mock.request_history[0].json() == {
+        "pas_package_created": True
+    }
+    # The original dataset should be unlocked
+    assert workspace.name in metax_mock.request_history[1].url
+    assert metax_mock.request_history[1].json() == {
+        "pas_process_running": False
+    }
+    # The preservation state should be updated
+    assert patched_dataset_id in metax_mock.request_history[2].url
+    assert metax_mock.request_history[2].json() == {
+        "state": 120,
+        "description": {"en": "In digital preservation"}
+    }
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_reportpreservationstatus_rejected(config, workspace, requests_mock):
+def test_reportpreservationstatus_rejected(config, workspace):
     """Test reporting status of rejected SIP.
 
     Creates new directory with a report file to "rejected" directory.
@@ -176,16 +130,6 @@ def test_reportpreservationstatus_rejected(config, workspace, requests_mock):
     :param workspace: Temporary worpspace directory
     :param requests_mock: HTTP request mocker
     """
-    # Mock metax
-    requests_mock.get(
-        f'/rest/v2/datasets/{workspace.name}',
-        json={
-            'data_catalog': {'identifier': 'urn:nbn:fi:att:data-catalog-pas'},
-            'identifier': 'foobar',
-            "preservation_identifier": "doi:test"
-        }
-    )
-
     ingest_report = (workspace / "preservation" / "ingest-reports" / "rejected"
                      / "doi:test.xml")
     ingest_report.parent.mkdir(parents=True, exist_ok=True)

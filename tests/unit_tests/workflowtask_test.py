@@ -323,7 +323,7 @@ def test_run_failing_task(config, workspace):
 )
 @pytest.mark.usefixtures('testmongoclient')
 def test_invalid_dataset_error(config, workspace, requests_mock, task,
-                               expected_state, expected_description, request):
+                               expected_state, expected_description):
     """Test event handler of WorkflowTask.
 
     Event handler should report preservation state to Metax if
@@ -337,10 +337,8 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
                            Metax
     :param expected_description: Preservation description that should
                                  be reported to Metax
-    :param request: Pytest CLI arguments
-    :returns: ``None``
     """
-    # Mock metax API V3
+    # Mock metax
     json=copy.deepcopy(BASE_DATASET)
     json["id"] = workspace.name
     json["preservation"]["state"] = DS_STATE_GENERATING_METADATA
@@ -349,45 +347,22 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
         f"/v3/datasets/{workspace.name}/preservation"
     )
 
-    # Mock metax API V2
-    requests_mock.get(
-        f'/rest/v2/datasets/{workspace.name}',
-        json={
-            'identifier': 'test123',
-            'preservation_state': DS_STATE_GENERATING_METADATA,
-            "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-        }
-    )
-    patch_v2_dataset_api = requests_mock.patch('/rest/v2/datasets/test123')
-
     # Run the task
     luigi.build(
         [task(workspace.name, config=config)],
         local_scheduler=True
     )
 
-    if request.config.getoption("--v3"):
-        # Check that expected preservation state was set to Metax API V3
-        assert patch_preservation.called_once
-        assert patch_preservation.last_request.json() == {
-            "state": expected_state,
-            "description": {"en": expected_description}
-        }
-    else:
-        # Check that expected preservation state was set to Metax API V2
-        assert patch_v2_dataset_api.called_once
+    # Check that expected preservation state was set to Metax
+    assert patch_preservation.called_once
+    assert patch_preservation.last_request.json() == {
+        "state": expected_state,
+        "description": {"en": expected_description}
+    }
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_set_preservation_state_of_pas_version(config, requests_mock, request):
+def test_set_preservation_state_of_pas_version(config, requests_mock):
     """Test that preservation state of correct dataset version is set.
 
     If the dataset has been copied to PAS data catalog, the preservation
@@ -395,9 +370,8 @@ def test_set_preservation_state_of_pas_version(config, requests_mock, request):
 
     :param config: Configuration file
     :param requests_mock: Mocker object
-    :param request: Pytest CLI arguments
     """
-    # Mock metax API V3
+    # Mock metax
     json = copy.deepcopy(BASE_DATASET)
     json["id"] = "original-id"
     json["preservation"]["dataset_version"] = {
@@ -409,59 +383,25 @@ def test_set_preservation_state_of_pas_version(config, requests_mock, request):
     patch_preservation \
         = requests_mock.patch("/v3/datasets/pas-version-id/preservation")
 
-    # Mock metax V2
-    requests_mock.get(
-        '/rest/v2/datasets/original-id',
-        json={
-            "identifier": "original-id",
-            "preservation_dataset_version": {
-                "identifier": "pas-version-id",
-                "preservation_state": DS_STATE_GENERATING_METADATA
-            },
-            "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-        }
-    )
-    patch_v2_dataset_api = requests_mock.patch('/rest/v2/datasets/pas-version-id')
-
     # Run the task
     luigi.build(
         [InvalidDatasetTask(dataset_id="original-id", config=config)],
         local_scheduler=True
     )
 
-    # The preservation state of PAS version of the dataset should be
-    # set
-    if request.config.getoption("--v3"):
-        # Metax API V3
-        assert patch_preservation.called_once
-        assert patch_preservation.last_request.json() == {
-            "state": DS_STATE_INVALID_METADATA,
-            "description":{
-                "en": "An error occurred while running a test task: "
-                "InvalidDatasetError: Dataset is invalid"
-            }
+    # The preservation state of PAS version of the dataset should be set
+    assert patch_preservation.called_once
+    assert patch_preservation.last_request.json() == {
+        "state": DS_STATE_INVALID_METADATA,
+        "description":{
+            "en": "An error occurred while running a test task: "
+            "InvalidDatasetError: Dataset is invalid"
         }
-    else:
-        # Metax API V2
-        assert patch_v2_dataset_api.called_once
-        assert patch_v2_dataset_api.last_request.json() == {
-            'preservation_state': DS_STATE_INVALID_METADATA,
-            'preservation_description': ('An error occurred while running a '
-                                         'test task: InvalidDatasetError: '
-                                         'Dataset is invalid')
-        }
+    }
 
 
 @pytest.mark.usefixtures('testmongoclient')
-def test_packaging_failed(config, workspace, requests_mock, request):
+def test_packaging_failed(config, workspace, requests_mock):
     """Test failure during packaging.
 
     If packaging fails because dataset is invalid, preservation state
@@ -471,9 +411,8 @@ def test_packaging_failed(config, workspace, requests_mock, request):
     :param config: Configuration file
     :param workspace: Temporary workspace directory
     :param requests_mock: Mocker object
-    :param request: Pytest CLI arguments
     """
-    # Mock metax API V3
+    # Mock Metax
     json=copy.deepcopy(BASE_DATASET)
     json["id"] = workspace.name
     # DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION means that packaging has
@@ -484,48 +423,20 @@ def test_packaging_failed(config, workspace, requests_mock, request):
         f"/v3/datasets/{workspace.name}/preservation"
     )
 
-    # Mock metax API V2
-    requests_mock.get(
-        f'/rest/v2/datasets/{workspace.name}',
-        json={
-            'identifier': 'test123',
-            'preservation_state': DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
-            "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-        }
-    )
-    patch_v2_dataset_api = requests_mock.patch('/rest/v2/datasets/test123')
-
     # Run InvalidDatasetTask
     luigi.build(
         [InvalidDatasetTask(workspace.name, config=config)],
         local_scheduler=True
     )
 
-    if request.config.getoption("--v3"):
-        assert patch_preservation.called_once
-        assert patch_preservation.last_request.json() == {
-            "state": DS_STATE_PACKAGING_FAILED,
-            "description": {
-                "en": "An error occurred while running a test task: "
-                "InvalidDatasetError: Dataset is invalid"
-            }
+    assert patch_preservation.called_once
+    assert patch_preservation.last_request.json() == {
+        "state": DS_STATE_PACKAGING_FAILED,
+        "description": {
+            "en": "An error occurred while running a test task: "
+            "InvalidDatasetError: Dataset is invalid"
         }
-    else:
-        assert patch_v2_dataset_api.called_once
-        assert patch_v2_dataset_api.last_request.json() == {
-            'preservation_state': DS_STATE_PACKAGING_FAILED,
-            'preservation_description': ('An error occurred while running a '
-                                         'test task: InvalidDatasetError: '
-                                         'Dataset is invalid')
-        }
+    }
 
 
 @pytest.mark.usefixtures('testmongoclient')
@@ -537,14 +448,8 @@ def test_logging(config, workspace, requests_mock, caplog):
     :param requests_mock HTTP request mocker
     :param caplog: Captured log messages
     """
-    # Mock Metax API V3
+    # Mock Metax
     requests_mock.get("/v3/datasets/1",
-                      status_code=403,
-                      reason="Access denied",
-                      text="No rights to view dataset")
-
-    # Mock Metax API V2
-    requests_mock.get("/rest/v2/datasets/1",
                       status_code=403,
                       reason="Access denied",
                       text="No rights to view dataset")

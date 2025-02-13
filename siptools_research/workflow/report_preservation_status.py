@@ -5,7 +5,6 @@ from pathlib import Path
 from luigi import LocalTarget
 from metax_access import DS_STATE_IN_DIGITAL_PRESERVATION
 
-from siptools_research.config import Configuration
 from siptools_research.exceptions import InvalidSIPError
 from siptools_research.workflow.poll_reports import GetValidationReports
 from siptools_research.workflow.send_sip import SendSIPToDP
@@ -77,11 +76,10 @@ class ReportPreservationStatus(WorkflowTask):
         # 'accepted' or 'rejected'?
         if 'accepted' in ingest_report_paths[0]:
 
-            if Configuration(self.config).get("metax_api_version") == "v3":
-                # Mark the dataset as preserved
-                self.dataset.mark_preserved()
-                # Unlock the dataset
-                self.dataset.unlock()
+            # Mark the dataset as preserved
+            self.dataset.mark_preserved()
+            # Unlock the dataset
+            self.dataset.unlock()
 
             # Set the preservation state of this dataset
             self.dataset.set_preservation_state(

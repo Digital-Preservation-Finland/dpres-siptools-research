@@ -41,8 +41,6 @@ def validate_metadata(
 def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
     """Validate dataset metadata.
 
-    Validates dataset metadata from /rest/v2/datasets/<dataset_id>
-
     :param dataset_metadata: dataset metadata dictionary
     :returns: ``None``
     """
@@ -59,11 +57,10 @@ def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
 
 
 def _validate_file_metadata(dataset, metax_client):
-    """Validate file metadata found from /rest/v2/datasets/<dataset_id>/files.
+    """Validate file metadata.
 
     :param dataset: dataset
     :param metax_client: metax_access.Metax instance
-    :param conf: siptools_research Configuration object
     :returns: ``None``
     """
     dataset_files = metax_client.get_dataset_files(dataset["id"])

@@ -34,7 +34,6 @@ install:
 
 test:
 	${PYTHON} -m pytest tests/unit_tests -svvv --junitxml=junit.xml
-	${PYTHON} -m pytest tests/unit_tests -svvv --junitxml=junit_metax-api-v3.xml --v3
 
 coverage:
 	${PYTHON} -m pytest tests \

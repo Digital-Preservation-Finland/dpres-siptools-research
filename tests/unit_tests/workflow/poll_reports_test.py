@@ -7,7 +7,6 @@ import pytest
 
 from siptools_research.workflow.poll_reports import GetValidationReports
 import tests.metax_data.datasetsV3
-from tests.metax_data.datasets import BASE_DATASET
 
 
 @pytest.mark.parametrize(
@@ -30,18 +29,12 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
     :param requests_mock: Mocker object
     :param status: SIP's status in DPS.
     """
-    # Mock metax API V3
+    # Mock Metax
     doi = "doi:test"
     dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
     dataset["id"] = workspace.name
     dataset["persistent_identifier"] = doi
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
-
-    # Mock metax API V2
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['identifier'] = workspace.name
-    requests_mock.get(f"/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true",
-                      json = dataset)
 
     #Mock DPS
     requests_mock.get(
@@ -73,7 +66,7 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
     assert not task.complete()
 
     # Task is run when the input file is created.
-    file_content = f'Dataset id={dataset["identifier"]},{(datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()}'
+    file_content = f'Dataset id={dataset["id"]},{(datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()}'
     Path(task.input().path).write_text(file_content)
     assert task.complete()
 
@@ -96,24 +89,14 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
     :param workspace: Temporary directory fixture
     :param requests_mock: Mocker object
     """
-    # Mock metax API V3
+    # Mock Metax
     doi = "doi:test"
     dataset = copy.deepcopy(tests.metax_data.datasetsV3.BASE_DATASET)
     dataset["id"] = workspace.name
     dataset["persistent_identifier"] = doi
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
 
-    # Mock Metax API V2
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset['identifier'] = workspace.name
-
-    #Mock metax
-    requests_mock.get(
-        f"/rest/v2/datasets/{workspace.name}?include_user_metadata=true&file_details=true",
-        json = dataset
-    )
-
-    #Mock DPS
+    # Mock DPS
     requests_mock.get(
         "https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest",
         json={
@@ -138,7 +121,7 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
 
     # This should complete the task but because DPS entries are older than SIP
     # task is not completed and the files are not created.
-    file_content = f'Dataset id={dataset["identifier"]},{datetime.now(timezone.utc).isoformat()}'
+    file_content = f'Dataset id={dataset["id"]},{datetime.now(timezone.utc).isoformat()}'
     Path(task.input().path).write_text(file_content)
     assert not task.complete()
 

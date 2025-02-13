@@ -3,7 +3,6 @@ import copy
 import datetime
 
 import pytest
-from requests_mock import ANY
 
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import WorkflowExistsError
@@ -11,89 +10,50 @@ from tests.metax_data.datasetsV3 import BASE_DATASET
 
 
 @pytest.mark.parametrize(
-    ("metadata", "v2_metadata"),
+    "metadata",
     [
         # Pottumonttu dataset
-        (
-            # Metax v3
-            {
-                "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
-                # Pottumonttu datasets are created in PAS data-catalog,
-                # so there is only one version of pottumonttu dataset.
-                # Therefore, the persistent identifier is the DOI which
-                # should be used as SIP identifier.
-                # NOTE: In future there will be separate data-catalog
-                # for pottumonttu files: TPASPKT-749
-                "persistent_identifier": "correct-id"
-            },
-            # Metax v2
-            {
-                "data_catalog": {
-                    "identifier": "urn:nbn:fi:att:data-catalog-pas"
-                },
-                "research_dataset": {
-                    "preferred_identifier": "correct-id"
-                },
-                # In pottumonttu datasets
-                # `research_dataset.preferred_identifier` and
-                # `preservation_identifier` always have the same value,
-                # so both could be used as SIP identifier.
-                "preservation_identifier": "correct-id-but-not-used",
-            },
-        ),
+        {
+            "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
+            # Pottumonttu datasets are created in PAS data-catalog, so
+            # there is only one version of pottumonttu dataset.
+            # Therefore, the persistent identifier is the DOI which
+            # should be used as SIP identifier. NOTE: In future there
+            # will be separate data-catalog for pottumonttu datasets:
+            # TPASPKT-749
+            "persistent_identifier": "correct-id"
+        },
         # Ida dataset
-        (
-            # Metax v3
-            {
-                "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
-                "preservation": {
-                    "state": -1,
-                    "description": None,
-                    "reason_description": None,
-                    "dataset_version": {
-                        "id": "pas-version-uuid",
-                        # This is the DOI of the PAS version of the
-                        # dataset, which should, i.e. the identitier of
-                        # the SIP
-                        "persistent_identifier": "correct-id",
-                        "preservation_state": -1
-                    },
-                    "contract": "contract_identifier",
-                }
-            },
-            # Metax v2
-            {
-                "data_catalog": {
-                    "identifier": "urn:nbn:fi:att:data-catalog-ida"
+        {
+            "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+            "preservation": {
+                "state": -1,
+                "description": None,
+                "reason_description": None,
+                "dataset_version": {
+                    "id": "pas-version-uuid",
+                    # This is the DOI of the PAS version of the
+                    # dataset, which should, i.e. the identitier of
+                    # the SIP
+                    "persistent_identifier": "correct-id",
+                    "preservation_state": -1
                 },
-                "identifier": "wrong-id",
-                "preservation_dataset_version": {
-                    "identifier": "pas-version-uuid",
-                    "preferred_identifier": "correct-id"
-                }
-            },
-        )
+                "contract": "contract_identifier",
+            }
+        },
     ]
 )
-def test_sip_identifier(config, requests_mock, metadata, v2_metadata):
+def test_sip_identifier(config, requests_mock, metadata):
     """Test that dataset returns correct sip_identifier.
 
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     :param metadata: The metadata of dataset from Metax
     """
-    # Mock Metax API V3
+    # Mock Metax
     dataset = copy.deepcopy(BASE_DATASET)
     dataset.update(metadata)
-    requests_mock.get(
-        "/v3/datasets/identifier?include_nulls=True",
-        json=dataset
-    )
-
-    # Mock Metax API V2
-    requests_mock.get("/rest/v2/datasets/identifier", json=v2_metadata)
-    requests_mock.get("/rest/v2/datasets/wrong-id", json={})
-    requests_mock.get("/rest/v2/datasets/wrong-id/files", json={})
+    requests_mock.get("/v3/datasets/identifier", json=dataset)
 
     dataset = Dataset("identifier", config=config)
     assert dataset.sip_identifier == "correct-id"
@@ -105,20 +65,10 @@ def test_no_sip_identifier(config, requests_mock):
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     """
-    # Mock Metax API v3
+    # Mock Metax
     dataset = copy.deepcopy(BASE_DATASET)
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-ida"
     requests_mock.get( "/v3/datasets/identifier", json=dataset)
-
-    # Mock Metax API v2
-    requests_mock.get(
-        '/rest/v2/datasets/identifier',
-        json={
-            'data_catalog': {
-                'identifier': 'urn:nbn:fi:att:data-catalog-ida'
-            }
-        }
-    )
 
     dataset = Dataset('identifier', config=config)
     with pytest.raises(ValueError, match='DOI does not exist'):
@@ -132,20 +82,10 @@ def test_unknown_data_catalog(config, requests_mock):
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     """
-    # Mock Metax API v3
+    # Mock Metax
     dataset = copy.deepcopy(BASE_DATASET)
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-unknown"
     requests_mock.get( "/v3/datasets/identifier", json=dataset)
-
-    # Mock Metax API v2
-    requests_mock.get(
-        '/rest/v2/datasets/identifier',
-        json={
-            'data_catalog': {
-                'identifier': 'urn:nbn:fi:att:data-catalog-unknown'
-            }
-        }
-    )
 
     dataset = Dataset("identifier", config=config)
     with pytest.raises(ValueError, match="Unknown data catalog"):
@@ -154,259 +94,126 @@ def test_unknown_data_catalog(config, requests_mock):
 
 
 @pytest.mark.parametrize(
-    ("metadata", "v2_metadata"),
+    "metadata",
     [
         # Pottumonttu dataset
-        (
-            # Metax v3
-            {
-                "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
-                "preservation": {
-                    "state": "correct-state",
-                    "description": None,
-                    "reason_description": None,
-                    "contract": "contract_identifier",
-                },
+        {
+            "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
+            "preservation": {
+                "state": "correct-state",
+                "description": None,
+                "reason_description": None,
+                "contract": "contract_identifier",
             },
-            # Metax v2
-            {
-                'data_catalog': {
-                    'identifier': 'urn:nbn:fi:att:data-catalog-pas'
-                },
-                'preservation_state': 'correct-state',
-                "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-            },
-        ),
+        },
         # Ida dataset that has not been copied to PAS data catalog
-        (
-            # Metax v3
-            {
-                "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
-                "preservation": {
-                    "state": "correct-state",
-                    "description": None,
-                    "reason_description": None,
-                    "dataset_version": {
-                        "id": None,
-                        "persistent_identifier": None,
-                        "preservation_state": -1,
-                    },
-                    "contract": "contract_identifier",
+        {
+            "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+            "preservation": {
+                "state": "correct-state",
+                "description": None,
+                "reason_description": None,
+                "dataset_version": {
+                    "id": None,
+                    "persistent_identifier": None,
+                    "preservation_state": -1,
                 },
+                "contract": "contract_identifier",
             },
-            # Metax v2
-            {
-                'data_catalog': {
-                    'identifier': 'urn:nbn:fi:att:data-catalog-ida'
-                },
-                'preservation_state': 'correct-state',
-                "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-            },
-        ),
+        },
         # Ida dataset that has been copied to PAS data catalog
-        (
-            # Metax v3
-            {
-                "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
-                "preservation": {
-                    "state": "wrong-state",
-                    "description": None,
-                    "reason_description": None,
-                    "dataset_version": {
-                        "id": "pas-version-id",
-                        "persistent_identifier": "pas-version-doi",
-                        "preservation_state": "correct-state",
-                    },
-                    "contract": "contract_identifier",
+        {
+            "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+            "preservation": {
+                "state": "wrong-state",
+                "description": None,
+                "reason_description": None,
+                "dataset_version": {
+                    "id": "pas-version-id",
+                    "persistent_identifier": "pas-version-doi",
+                    "preservation_state": "correct-state",
                 },
+                "contract": "contract_identifier",
             },
-            # Metax v2
-            {
-                'data_catalog': {
-                    'identifier': 'urn:nbn:fi:att:data-catalog-ida'
-                },
-                'preservation_dataset_version': {
-                    'identifier': 'pas-version-id',
-                    'preservation_state': 'correct-state'
-                },
-                "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-            },
-        ),
+        },
     ]
 )
-def test_preservation_state(config, requests_mock, metadata, v2_metadata):
+def test_preservation_state(config, requests_mock, metadata):
     """Test that dataset returns correct preservation state.
 
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     :param metadata: The metadata of dataset from Metax
-    :param v2_metadata: The metadata of dataset from Metax API v2
     """
-    # Mock Metax API V3
+    # Mock Metax
     dataset=copy.deepcopy(BASE_DATASET)
     dataset.update(metadata)
     requests_mock.get('/v3/datasets/identifier', json=dataset)
-
-    # Mock Metax API V2
-    requests_mock.get('/rest/v2/datasets/identifier', json=v2_metadata)
 
     dataset = Dataset('identifier', config=config)
     assert dataset.preservation_state == 'correct-state'
 
 
 @pytest.mark.parametrize(
-    ("metadata", "v2_metadata"),
+    "metadata",
     [
         # Pottumonttu dataset
-        (
-            # Metax API V3
-            {
-                "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
-                "id": "correct-id",
-            },
-            # Metax API V2
-            {
-                'data_catalog': {
-                    'identifier': 'urn:nbn:fi:att:data-catalog-pas'
-                },
-                'identifier': 'correct-id',
-                "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-            },
-        ),
+        {
+            "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
+            "id": "correct-id",
+        },
         # Ida dataset that has not been copied to PAS data catalog
-        (
-            # Metax API V3
-            {
-                "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
-                "id": "correct-id",
-            },
-            # Metax API V2
-            {
-                'data_catalog': {
-                    'identifier': 'urn:nbn:fi:att:data-catalog-ida'
-                },
-                'identifier': 'correct-id',
-                "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-            },
-        ),
+        {
+            "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+            "id": "correct-id",
+            "preservation": {
+                "dataset_version": None,
+                "state": 0,
+                "description": None,
+                "reason_description": None,
+                "contract": None,
+            }
+        },
         # Ida dataset that has been copied to PAS data catalog
-        (
-            # Metax API V3
-            {
-                "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
-                "id": "correct-id",
-            },
-            # Metax API V2
-            {
-                'data_catalog': {
-                    'identifier': 'urn:nbn:fi:att:data-catalog-ida'
+        {
+            "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
+            "id": "wrong-id",
+            "preservation": {
+                "dataset_version": {
+                    "id": "correct-id",
+                    "persistent_identifier": None,
+                    "preservation_state": 0
                 },
-                'identifier': 'wrong-id',
-                'preservation_dataset_version': {
-                    'identifier': 'correct-id'
-                },
-                "research_dataset": {
-                    "files": [
-                        {
-                            "details": {
-                                "project_identifier": "foo"
-                            }
-                        }
-                    ]
-                }
-            },
-        ),
+                "state": 0,
+                "description": None,
+                "reason_description": None,
+                "contract": None,
+            }
+        },
     ]
 )
-def test_set_preservation_state(config, requests_mock, metadata, v2_metadata,
-                                request):
+def test_set_preservation_state(config, requests_mock, metadata):
     """Test set_preservation_state method.
 
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
-    :param metadata: The metadata of dataset from Metax API V3
-    :param v2_metadata: The metadata of dataset from Metax API V2
-    :param request: Pytest CLI arguments
+    :param metadata: The metadata of dataset from Metax
     """
-    # Mock metax API V3
+    # Mock Metax
     dataset=copy.deepcopy(BASE_DATASET)
     dataset.update(metadata)
-    requests_mock.get('/v3/datasets/identifier', json=dataset)
+    requests_mock.get("/v3/datasets/identifier", json=dataset)
+    mocked_patch = requests_mock.patch("/v3/datasets/correct-id/preservation")
 
-    # Mock metax API V2
-    requests_mock.get('/rest/v2/datasets/identifier', json=v2_metadata)
+    dataset = Dataset("identifier", config=config)
+    dataset.set_preservation_state("foo", "bar")
 
-    # Mock any patch request
-    mocked_patch = requests_mock.patch(ANY)
-
-    dataset = Dataset('identifier', config=config)
-    dataset.set_preservation_state('foo', 'bar')
-
-    if request.config.getoption("--v3"):
-        # Metax API V3
-        # Check that preservation state of correct dataset was set
-        assert mocked_patch.last_request.url \
-            == ("https://metax.localhost/v3/datasets/correct-id/preservation"
-                "?include_nulls=True")
-
-        # Check that the request contains correct message
-        assert mocked_patch.last_request.json() == {
-            "state": "foo",
-            "description": {"en": "bar"}
-        }
-
-    else:
-        # Metax API V2
-        # Check that preservation state of correct dataset was set
-        assert mocked_patch.last_request.url in (
-            "https://metax.localhost/rest/v2/datasets/correct-id",
-        )
-
-        # Check that the request contains correct message
-        assert mocked_patch.last_request.json() == {
-            'preservation_state': 'foo',
-            'preservation_description': 'bar'
-        }
+    # Check that the request contains correct message
+    assert mocked_patch.called_once
+    assert mocked_patch.last_request.json() == {
+        "state": "foo",
+        "description": {"en": "bar"}
+    }
 
 
 def test_workspace_paths(config, workspace):
