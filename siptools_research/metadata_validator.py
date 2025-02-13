@@ -10,7 +10,6 @@ from siptools_research.exceptions import (
     InvalidFileMetadataError,
 )
 from siptools_research.metax import get_metax_client
-from siptools_research.utils import mimetypes
 
 
 def validate_metadata(
@@ -59,33 +58,6 @@ def _validate_dataset_metadata(dataset_metadata, dummy_doi="false"):
         raise InvalidDatasetMetadataError(str(exc)) from exc
 
 
-def _check_mimetype(file_metadata):
-    """Check that file format is supported.
-
-    :param file_metadata: file metadata dictionary
-    :returns: ``None``
-    """
-    file_format = file_metadata["characteristics"]["file_format_version"][
-        "file_format"
-    ]
-    format_version = file_metadata["characteristics"][
-            "file_format_version"
-        ]["format_version"]
-    if format_version is None:
-        format_version = ""
-
-    if not mimetypes.is_supported(file_format, format_version):
-        message = (
-            f"Validation error in file {file_metadata['pathname']}: "
-            f"Incorrect file format: {file_format}"
-        )
-
-        if format_version:
-            message += f", version {format_version}"
-
-        raise InvalidFileMetadataError(message)
-
-
 def _validate_file_metadata(dataset, metax_client):
     """Validate file metadata found from /rest/v2/datasets/<dataset_id>/files.
 
@@ -118,9 +90,6 @@ def _validate_file_metadata(dataset, metax_client):
                 f"Validation error in metadata of {file_path}: {str(exc)}"
             ) from exc
 
-        # Check that mimetype is supported
-        _check_mimetype(file_metadata)
-
         # Check that file path does not point outside SIP
         normalised_path = os.path.normpath(file_path.strip("/"))
         if normalised_path.startswith(".."):
@@ -128,21 +97,3 @@ def _validate_file_metadata(dataset, metax_client):
                 f"The file path of file {file_identifier} is invalid:"
                 f" {file_path}"
             )
-
-
-def _format_error_list(errors):
-    """Format list of errors as one error message.
-
-    :param errors: list of strings
-    :returns: error message string
-    """
-    if len(errors) == 1:
-        message = errors[0]
-    elif len(errors) > 1:
-        message = "The following errors were detected:\n"
-        for error in enumerate(errors, 1):
-            message += f"\n{error[0]}. {error[1]}"
-    else:
-        raise TypeError("Can not format empty list")
-
-    return message

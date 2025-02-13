@@ -238,61 +238,6 @@ def test_validate_metadata_invalid(config, requests_mock):
         validate_metadata('dataset_identifier', config)
 
 
-@pytest.mark.parametrize(
-    ('file_characteristics',
-     'version_info'),
-    [
-        (
-            {
-                'file_format': 'application/unsupported',
-                'format_version': '1.0'
-            },
-            ", version 1.0"),
-        (
-            {
-                'file_format': 'application/unsupported',
-                'format_version': None
-            },
-            "",
-        )
-    ]
-)
-def test_validate_invalid_file_type(config, file_characteristics, version_info,
-                                    requests_mock):
-    """Test validate_metadata.
-
-    Function should raise exception with correct error message for
-    unsupported file type.
-
-    :param config: Configuration file
-    :param file_characteristics: file characteristics dict in file
-                                 metadata
-    :param version_info: expected version information in exception
-                         message
-    :param requests_mock: Mocker object
-    :returns: ``None``
-    """
-    # Mock Metax API V3
-    unsupported_file = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
-    unsupported_file["characteristics"]["file_format_version"] \
-        = file_characteristics
-    tests.utils.add_metax_dataset(requests_mock, files=[unsupported_file])
-
-    # Mock Metax API V2
-    unsupported_file = copy.deepcopy(BASE_FILE)
-    unsupported_file['file_characteristics'] = file_characteristics
-    tests.utils.add_metax_v2_dataset(requests_mock, files=[unsupported_file])
-
-    # Try to validate dataset with a file that has an unsupported
-    # file_format
-    expected_error = (
-        "Validation error in file /path/to/file: Incorrect file format: "
-        f"application/unsupported{version_info}"
-    )
-    with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier', config)
-
-
 def test_validate_metadata_invalid_file_path(config, requests_mock):
     """Test validate_metadata.
 
@@ -376,43 +321,6 @@ def test_validate_file_metadata(config, requests_mock, request):
                                                                  client)
 
     assert files_adapter.call_count == 1
-
-
-def test_validate_file_metadata_invalid_metadata(config, requests_mock):
-    """Test ``_validate_file_metadata``.
-
-    Function should raise exceptions with descriptive error messages.
-
-    :param config: Configuration file
-    :param requests_mock: Mocker object
-    """
-    # Mock Metax V3 API
-    file_metadata = copy.deepcopy(tests.metax_data.filesV3.BASE_FILE)
-    file_metadata["characteristics"]["file_format_version"] \
-        = {"file_format": None, "format_version": None}
-    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-
-    # Mock Metax V2 API
-    file_metadata = copy.deepcopy(BASE_FILE)
-    file_metadata['file_characteristics'] = {
-        "title": "A Great File"
-    }
-    tests.utils.add_metax_v2_dataset(requests_mock, files=[file_metadata])
-
-    # Init metax client
-    client = get_metax_client(config)
-
-    expected_error = (
-        "Validation error in file /path/to/file: Incorrect file format: None"
-    )
-    with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        # pylint: disable=protected-access
-        siptools_research.metadata_validator._validate_file_metadata(
-            {
-                'id': 'dataset_identifier'
-            },
-            client,
-        )
 
 
 def test_validate_metadata_http_error_raised(config, requests_mock):
