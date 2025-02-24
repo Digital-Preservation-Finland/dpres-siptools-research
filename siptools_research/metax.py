@@ -11,5 +11,4 @@ def get_metax_client(config):
         url=config_object.get("metax_url"),
         token=config_object.get("metax_token"),
         verify=config_object.getboolean("metax_ssl_verification"),
-        api_version=config_object.get("metax_api_version"),
     )

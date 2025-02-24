@@ -12,7 +12,6 @@ DEFAULTS = {
     'metax_url': 'https://metax-test.csc.fi',
     'metax_token': '',
     'metax_ssl_verification': 'True',
-    'metax_api_version': 'v3',
     'fd_download_service_authorize_url':
         'https://download.fd-test.csc.fi:4431',
     'fd_download_service_url': 'https://download.fd-test.csc.fi:4430',
