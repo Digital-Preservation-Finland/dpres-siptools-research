@@ -32,13 +32,18 @@ def validate_files(dataset_id, root_directory,
             raise ValueError("Trying to validate file that does not "
                              "exist, or is not a file.")
 
+        characteristics = file["characteristics"]
+
         scraper = Scraper(
             filename=str(filepath),
-            mimetype=file["characteristics"].get(
+            mimetype=characteristics.get(
                 'file_format_version', {}).get("file_format"),
-            charset=file["characteristics"].get("encoding"),
-            version=file["characteristics"].get(
-                'file_format_version', {}).get("format_version")
+            charset=characteristics.get("encoding"),
+            version=characteristics.get(
+                'file_format_version', {}).get("format_version"),
+            delimiter=characteristics.get("csv_delimiter"),
+            separator=characteristics.get("csv_record_separator"),
+            quotechar=characteristics.get("csv_quoting_char")
         )
         scraper.scrape(check_wellformed=True)
 

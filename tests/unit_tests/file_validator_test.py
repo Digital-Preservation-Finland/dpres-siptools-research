@@ -7,7 +7,7 @@ import pytest
 
 from siptools_research.exceptions import InvalidFileError
 from siptools_research.file_validator import validate_files
-from tests.metax_data.files import SEG_Y_FILE, TIFF_FILE, TXT_FILE
+from tests.metax_data.files import SEG_Y_FILE, TIFF_FILE, TXT_FILE, CSV_FILE
 from tests.utils import add_metax_dataset
 
 
@@ -123,3 +123,32 @@ def test_validate_wrong_mimetype(config, requests_mock, tmp_path):
 
     assert str(exception_info.value) == "1 files are not well-formed"
     assert exception_info.value.files == ['pid:urn:identifier_tiff']
+
+
+def test_validate_csv_file(config, requests_mock, tmp_path):
+    """Test validating a CSV text file with external CSV metadata
+
+    File validator should detect missing end quote and raise exception
+
+    :param config: Configuration file
+    :param requests_mock: Mocker object
+    :param tmp_path: Temporary directory
+    """
+    add_metax_dataset(
+        requests_mock=requests_mock,
+        files=[copy.deepcopy(CSV_FILE)]
+    )
+
+    filepath = tmp_path / "path/to/file.csv"
+    filepath.parent.mkdir(parents=True)
+    filepath.write_text(
+        "'a';'b';'c'\n"
+        "'1';'2';'3'\n"
+        "'3a';'4b';'5c"  # Missing end quote
+    )
+
+    with pytest.raises(InvalidFileError) as exception_info:
+        validate_files("dataset_identifier", tmp_path, config)
+
+    assert str(exception_info.value) == "1 files are not well-formed"
+    assert exception_info.value.files == ['pid:urn:identifier_csv']
