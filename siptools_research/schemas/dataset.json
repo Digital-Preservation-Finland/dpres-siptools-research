@@ -24,17 +24,9 @@
             "type": "array",
             "minItems": 0,
             "items": {
-                "if": {
-                    "properties": {
-                        "preservation_event": {
-                            "type": "null"
-                        }
-                    }
-                },
-                "then": {
-                    "required": ["lifecycle_event"],
-                    "properties": {
-                        "lifecycle_event": {
+                "required": ["lifecycle_event"],
+                "properties": {
+                    "lifecycle_event": {
                         "title": "Lifecycle event",
                         "description": "Digital lifecycle event",
                         "type": "object",
@@ -47,27 +39,8 @@
                             }
                         }
                     }
-                    }
-                },
-                "else": {
-                    "properties": {
-                        "preservation_event": {
-                        "title": "Preservation event",
-                        "description": "The digital provenance event",
-                        "type": "object",
-                        "required": ["pref_label"],
-                        "properties": {
-                            "pref_label": {
-                                "title": "Preferred label",
-                                "description": "The type of digital provenance event in multiple languages. The type in the default language of the dataset is used as value of premis:eventType element.",
-                                "type": "object"
-                            }
-                        }
-                    }
-                    }
                 }
             }
         }
-
     }
 }

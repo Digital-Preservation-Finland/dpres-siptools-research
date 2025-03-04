@@ -91,12 +91,7 @@
         },
         "provenance": [
             {
-                "preservation_event": {
-                    "identifier": "http://uri.suomi.fi/codelist/fairdata/preservation_event/code/upd",
-                    "pref_label": {
-                        "en": "creation"
-                    }
-                },
+                "preservation_event": None,
                 "temporal": {
                     "end_date": "2014-12-31T08:19:58Z",
                     "start_date": "2014-01-01T08:19:58Z"

@@ -82,17 +82,10 @@ def test_validate_dataset_metadata_with_provenance(provenance):
         "error_message",
     ),
     [
-        # Every event should contain at least "lifecycle_event" or
-        # "preservation_event" object
+        # Every event should contain at least "lifecycle_event" object
         (
             [{}],
             "'lifecycle_event' is a required property",
-        ),
-        # "preservation_event" and "lifecycle_event" objects should have
-        # "pref_label"
-        (
-            [{"preservation_event": {}}],
-            "'pref_label' is a required property",
         ),
         (
             [{"lifecycle_event": {}}],

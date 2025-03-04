@@ -159,8 +159,8 @@ def test_idempotence(config, workspace, requests_mock):
 
 
 METADATA_MODIFICATION_PROVENANCE = copy.deepcopy(BASE_PROVENANCE)
-METADATA_MODIFICATION_PROVENANCE["preservation_event"]["pref_label"]["en"]\
-    = "metadata modification"
+METADATA_MODIFICATION_PROVENANCE["lifecycle_event"]["pref_label"]["en"]\
+    = "transferred"
 ANOTHER_BASE_PROVENANCE = copy.deepcopy(BASE_PROVENANCE)
 ANOTHER_BASE_PROVENANCE["description"]["en"] = "another description"
 
@@ -231,12 +231,12 @@ def test_multiple_provenance_events(config,
     mets = lxml.etree.parse(str(workspace / "preservation" / "mets.xml"))
     provenance_ids = []
     for provenance in provenance_data:
-        if provenance["preservation_event"] is not None:
-            event_type = provenance["preservation_event"]["pref_label"]["en"]
+        event_type = provenance["lifecycle_event"]["pref_label"]["en"]
+        try:
             event_detail = provenance["description"]["en"]
-        else:
-            event_type = provenance["lifecycle_event"]["pref_label"]["en"]
+        except TypeError:
             event_detail = provenance["title"]["en"]
+
         digiprovmd = mets.xpath(
             f"//*[premis:eventType='{event_type}'"
             f" and premis:eventDetail='{event_detail}']"
@@ -331,7 +331,7 @@ def test_premis_event_metadata(
         'mets:mdWrap/mets:xmlData/premis:event/premis:eventType',
         namespaces=NAMESPACES
     )
-    assert elements[0].text == "creation"
+    assert elements[0].text == "generated"
 
     elements = digiprovmd.xpath(
         'mets:mdWrap/mets:xmlData/premis:event/premis:eventDateTime',

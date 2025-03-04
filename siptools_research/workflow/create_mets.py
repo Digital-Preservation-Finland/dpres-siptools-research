@@ -243,29 +243,20 @@ class CreateMets(WorkflowTask):
         dataset_languages = get_dataset_languages(metadata)
         provenances = metadata["provenance"]
         for provenance in provenances:
-            # Although it shouldn't happen, theoretically both
-            # 'preservation_event' and 'lifecycle_event' could exist in
-            # the same provenance metadata. 'preservation_event' is used
-            # as the overriding value if both exist.
-            if provenance["preservation_event"] is not None:
-                event_type = get_localized_value(
-                    provenance["preservation_event"]["pref_label"],
-                    languages=dataset_languages
-                )
-            elif provenance["lifecycle_event"] is not None:
-                event_type = get_localized_value(
-                    provenance["lifecycle_event"]["pref_label"],
-                    languages=dataset_languages
-                )
-            else:
+            if provenance["lifecycle_event"] is None:
                 # TODO: Invalid metadata should be found in metadata
                 # validation. So it should be unnecessary to raise
                 # InvalidDatasetMetadataError here!
                 raise InvalidDatasetMetadataError(
                     "Provenance metadata does not have key "
-                    "'preservation_event' or 'lifecycle_event'. "
+                    "'lifecycle_event'. "
                     f"Invalid provenance: {provenance}"
                 )
+
+            event_type = get_localized_value(
+                provenance["lifecycle_event"]["pref_label"],
+                languages=dataset_languages
+            )
 
             try:
                 event_datetime = provenance["temporal"]["start_date"]
