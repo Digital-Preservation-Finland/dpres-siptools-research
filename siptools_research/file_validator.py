@@ -1,11 +1,10 @@
 """File validation tools."""
+from file_scraper.defaults import BIT_LEVEL, BIT_LEVEL_WITH_RECOMMENDED
 from file_scraper.scraper import Scraper
-from file_scraper.defaults import (
-    BIT_LEVEL_WITH_RECOMMENDED,
-    BIT_LEVEL
-)
-from siptools_research.metax import get_metax_client
+
 from siptools_research.exceptions import InvalidFileError
+from siptools_research.metax import (CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL,
+                                     get_metax_client)
 
 
 def validate_files(dataset_id, root_directory,
@@ -34,6 +33,11 @@ def validate_files(dataset_id, root_directory,
 
         characteristics = file["characteristics"]
 
+        # Map Metax V3 record separator to file-scraper format
+        separator = CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[
+            characteristics.get("csv_record_separator")
+        ]
+
         scraper = Scraper(
             filename=str(filepath),
             mimetype=characteristics.get(
@@ -42,8 +46,8 @@ def validate_files(dataset_id, root_directory,
             version=characteristics.get(
                 'file_format_version', {}).get("format_version"),
             delimiter=characteristics.get("csv_delimiter"),
-            separator=characteristics.get("csv_record_separator"),
-            quotechar=characteristics.get("csv_quoting_char")
+            quotechar=characteristics.get("csv_quoting_char"),
+            separator=separator
         )
         scraper.scrape(check_wellformed=True)
 

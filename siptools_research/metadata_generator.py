@@ -3,11 +3,11 @@ import file_scraper
 import file_scraper.scraper
 from metax_access.response import MetaxFileCharacteristics
 
-from siptools_research.exceptions import (
-    InvalidFileError,
-    InvalidFileMetadataError,
-)
-from siptools_research.metax import get_metax_client
+from siptools_research.exceptions import (InvalidFileError,
+                                          InvalidFileMetadataError)
+from siptools_research.metax import (CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL,
+                                     CSV_RECORD_SEPARATOR_LITERAL_TO_ENUM,
+                                     get_metax_client)
 
 
 def generate_metadata(
@@ -59,7 +59,7 @@ def generate_metadata(
             charset=charset,
             version=version,
             delimiter=delimiter,
-            separator=separator,
+            separator=CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[separator],
             quotechar=quotechar,
         )
         scraper.scrape(check_wellformed=False)
@@ -118,7 +118,7 @@ def generate_metadata(
             (
                 "csv_record_separator",
                 scraper_file_characteristics["csv_record_separator"],
-                separator,
+                CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[separator],
             ),
             (
                 "csv_quoting_char",
@@ -131,6 +131,13 @@ def generate_metadata(
                 error = (f"File scraper detects a different {key}: "
                          f"{scraper_metadata}")
                 raise InvalidFileMetadataError(error, [file_metadata["id"]])
+
+        # Map 'csv_record_separator' to the enum value expected by Metax V3
+        scraper_file_characteristics["csv_record_separator"] = (
+            CSV_RECORD_SEPARATOR_LITERAL_TO_ENUM[
+                scraper_file_characteristics["csv_record_separator"]
+            ]
+        )
 
         # Remove "(:unap)" and None values from
         # scraper_file_characteristics

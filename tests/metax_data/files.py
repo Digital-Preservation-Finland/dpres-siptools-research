@@ -11,7 +11,7 @@ CSV_FILE_METADATA = {
         },
         "encoding": "UTF-8",
         "csv_delimiter": ";",
-        "csv_record_separator": "CR+LF",
+        "csv_record_separator": "CRLF",
         "csv_quoting_char": "'",
         "csv_has_header": False,
     },
@@ -23,7 +23,7 @@ CSV_FILE_METADATA = {
                 "first_line": ['a', 'b', '"c"'],
                 "charset": "UTF-8",
                 "delimiter": ";",
-                "separator": "CR+LF",
+                "separator": "\r\n",
                 "quotechar": "'",
            }
         },

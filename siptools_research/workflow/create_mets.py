@@ -2,23 +2,24 @@
 from collections import defaultdict
 
 import luigi.format
+import siptools_ng.sip
 from luigi import LocalTarget
-from mets_builder import (METS, MetsProfile, StructuralMap, AgentType,
-                          AgentRole, StructuralMapDiv)
+from mets_builder import (METS, AgentRole, AgentType, MetsProfile,
+                          StructuralMap, StructuralMapDiv)
 from mets_builder.metadata import (DigitalProvenanceEventMetadata,
                                    ImportedMetadata)
 from siptools_ng.file import File
-import siptools_ng.sip
 
 from siptools_research.exceptions import (InvalidDatasetMetadataError,
                                           InvalidFileMetadataError)
-from siptools_research.metax import get_metax_client
+from siptools_research.metax import (CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL,
+                                     get_metax_client)
 from siptools_research.utils.locale import (get_dataset_languages,
                                             get_localized_value)
-from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.copy_dataset_to_pas_data_catalog\
-    import CopyToPasDataCatalog
+from siptools_research.workflow.copy_dataset_to_pas_data_catalog import \
+    CopyToPasDataCatalog
 from siptools_research.workflow.get_files import GetFiles
+from siptools_research.workflowtask import WorkflowTask
 
 # Map event_outcome URI to a valid event outcome
 EVENT_OUTCOME = {
@@ -152,7 +153,9 @@ class CreateMets(WorkflowTask):
                         fc_extension["streams"]["0"].get("delimiter")
                     ),
                     (
-                        fc["csv_record_separator"],
+                        CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[
+                            fc["csv_record_separator"]
+                        ],
                         fc_extension["streams"]["0"].get("separator")
                     ),
                     (

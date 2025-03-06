@@ -351,14 +351,14 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
                 },
                 "encoding": "UTF-8",
                 "csv_delimiter": "x",
-                "csv_record_separator": "y",
+                "csv_record_separator": "LF",
                 "csv_quoting_char": "z"
             },
             {
                 "file_format_version": {"url": "url-for-csv"},
                 "encoding": "UTF-8",
                 "csv_delimiter": "x",
-                "csv_record_separator": "y",
+                "csv_record_separator": "LF",
                 "csv_quoting_char": "z"
             },
         ),
@@ -375,7 +375,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
                 "file_format_version": {"url": "url-for-csv"},
                 "encoding": "UTF-8",
                 "csv_delimiter": ";",
-                "csv_record_separator": "\r\n",
+                "csv_record_separator": "CRLF",
                 "csv_quoting_char": "'"
             },
         ),
@@ -445,10 +445,18 @@ def test_generate_metadata_csv(
               ['characteristics_extension']["streams"]["0"])
     assert file_characteristics.get("csv_delimiter") \
         == stream.get("delimiter")
-    assert file_characteristics.get("csv_record_separator") \
-        == stream.get("separator")
+
     assert file_characteristics.get("csv_quoting_char") \
         == stream.get("quotechar")
+
+    # The 'csv_record_separator'
+    # in 'file_characteristics' (NOT 'file_characteristics_extension')
+    # has to adhere to Metax V3's enum
+    char_separator = file_characteristics.get("csv_record_separator")
+    if char_separator:
+        char_separator = char_separator.replace("CR", "\r").replace("LF", "\n")
+
+    assert char_separator == stream.get("separator")
 
 
 @pytest.mark.parametrize(
@@ -475,7 +483,7 @@ def test_generate_metadata_csv(
         ),
         (
             ["csv_record_separator"],
-            "foo",
+            "CR",
             None,
             "tests/data/sample_files/text_plain_UTF-8",
         ),

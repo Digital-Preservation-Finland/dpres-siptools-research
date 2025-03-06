@@ -709,7 +709,10 @@ def test_create_techmd_csv(config, workspace, requests_mock, has_header,
     # Check that addml metadata contains expected information
     assert mets.xpath("//addml:recordSeparator",
                       namespaces=NAMESPACES)[0].text \
-        == file["characteristics"]["csv_record_separator"]
+        == (
+            file["characteristics"]["csv_record_separator"]
+            .replace("CR", "\r").replace("LF", "\n")
+        )
     assert mets.xpath("//addml:fieldSeparatingChar",
                       namespaces=NAMESPACES)[0].text \
         == file["characteristics"]["csv_delimiter"]
@@ -924,8 +927,11 @@ def test_file_characteristics_conflict(config, workspace, requests_mock, key):
     file = copy.deepcopy(CSV_FILE)
     if key in ("file_format", "format_version"):
         file["characteristics"]["file_format_version"][key] = "foo"
+    elif key == "csv_record_separator":
+        file["characteristics"]["csv_record_separator"] = "CR"
     else:
         file["characteristics"][key] = "foo"
+
     dataset = copy.deepcopy(BASE_DATASET)
     dataset["id"] = workspace.name
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset, files=[file])
