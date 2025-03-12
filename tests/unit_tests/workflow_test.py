@@ -331,7 +331,7 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
             FileEntry(
                 id=str(file_storage_path),
                 checksum="2eeecd72c567401e6988624b179d0b14",
-                identifier=file["metadata"]["id"]
+                identifier=file["metadata"]["storage_identifier"]
             ).save()
             file_storage_path.parent.mkdir()
             shutil.copy(file['path'], file_storage_path)

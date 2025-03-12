@@ -34,7 +34,7 @@ def _link_local_file(file_metadata, path):
     :param path: Path where file is downloaded
     :param conf: Configuration object
     """
-    identifier = file_metadata["id"]
+    identifier = file_metadata["storage_identifier"]
     try:
         filepath = FileEntry.objects.get(identifier=identifier).path
     except FileEntry.DoesNotExist:

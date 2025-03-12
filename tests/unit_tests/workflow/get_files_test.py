@@ -188,10 +188,12 @@ def test_missing_local_files(config, workspace, requests_mock,
     """
     # Mock Metax
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
-    files[0]["id"] = "pid:urn:get_files_1_local"
+    files[0]["id"] = 'file_id_1'
+    files[0]["storage_identifier"] = "pid:urn:get_files_1_local"
     files[0]["storage_service"] = PAS_STORAGE_SERVICE
     files[0]["pathname"] = "/path/to/file1"
-    files[1]["id"] = "pid:urn:does_not_exist_local"
+    files[1]["id"] = 'file_id_2'
+    files[1]["storage_identifier"] = "pid:urn:does_not_exist_local"
     files[1]["storage_service"] = PAS_STORAGE_SERVICE
     files[1]["pathname"] = "/path/to/file4"
     dataset = copy.deepcopy(BASE_DATASET)
@@ -235,7 +237,7 @@ def test_missing_local_files(config, workspace, requests_mock,
 
     # But the first file should be cached
     assert [path.name for path in (workspace / 'file_cache').iterdir()] \
-        == ['pid:urn:get_files_1_local']
+        == ['file_id_1']
 
 
 @pytest.mark.parametrize('path', ["../../file1",

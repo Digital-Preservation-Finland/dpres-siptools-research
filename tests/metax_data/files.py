@@ -310,6 +310,7 @@ BASE_CHARACTERISTICS = {
 }
 BASE_FILE = {
     "id": "pid:urn:identifier",
+    "storage_identifier": "urn:uuid:identifier",
     "pathname": "/path/to/file",
     "filename": "file",
     "size": 100,
