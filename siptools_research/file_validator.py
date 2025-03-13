@@ -33,31 +33,43 @@ def validate_files(dataset_id, root_directory,
 
         characteristics = file["characteristics"]
 
+        # If this file is linked to a PAS compatible file, it must mean
+        # this file is a bit-level file.
+        is_linked_bitlevel = bool(file["pas_compatible_file"])
+
         # Map Metax V3 record separator to file-scraper format
         separator = CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[
             characteristics.get("csv_record_separator")
         ]
 
+        file_format_version = \
+            characteristics.get("file_format_version", {}) or {}
         scraper = Scraper(
             filename=str(filepath),
-            mimetype=characteristics.get(
-                'file_format_version', {}).get("file_format"),
+            mimetype=file_format_version.get("file_format"),
             charset=characteristics.get("encoding"),
-            version=characteristics.get(
-                'file_format_version', {}).get("format_version"),
+            version=file_format_version.get("format_version"),
             delimiter=characteristics.get("csv_delimiter"),
             quotechar=characteristics.get("csv_quoting_char"),
             separator=separator
         )
         scraper.scrape(check_wellformed=True)
 
-        if scraper.well_formed is True:
+        allowed_grades = [BIT_LEVEL_WITH_RECOMMENDED, BIT_LEVEL]
+
+        if is_linked_bitlevel:
+            # File is a bit-level file with a DPRES compatible counterpart.
+            # 'ValidateMetadata' ensures that both must be included in the same
+            # dataset, so allow this file through, even if it could be complete
+            # garbage for all we know. ;)
+            pass
+
+        elif scraper.well_formed is True:
             # File is valid
             pass
 
         elif scraper.well_formed is None \
-                and scraper.grade() \
-                in [BIT_LEVEL_WITH_RECOMMENDED, BIT_LEVEL]:
+                and scraper.grade() in allowed_grades:
             # File was not validated, but it will be preserved only bit
             # level, so it is ok
             pass

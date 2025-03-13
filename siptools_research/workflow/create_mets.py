@@ -135,6 +135,7 @@ class CreateMets(WorkflowTask):
             source_filepath = (self.dataset.metadata_generation_workspace
                                / "dataset_files" / filepath)
             sip_filepath = "dataset_files/" + filepath
+            is_linked_bitlevel = bool(file_["pas_compatible_file"])
 
             # Check for conflicts between file_characteristics and
             # file_characteristics_extension
@@ -142,34 +143,45 @@ class CreateMets(WorkflowTask):
             # been resolved
             fc = file_["characteristics"]
             fc_extension = file_["characteristics_extension"]
-            for value1, value2 in [
+
+            metadata_pairs = [
+                (
+                    fc["encoding"],
+                    fc_extension["streams"]["0"].get("charset")
+                ),
+                (
+                    fc["csv_delimiter"],
+                    fc_extension["streams"]["0"].get("delimiter")
+                ),
+                (
+                    CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[
+                        fc["csv_record_separator"]
+                    ],
+                    fc_extension["streams"]["0"].get("separator")
+                ),
+                (
+                    fc["csv_quoting_char"],
+                    fc_extension["streams"]["0"].get("quotechar")
+                ),
+            ]
+
+            # Do not check for file format version if the file is a bit-level
+            # file with a DPRES compatible counterpart.
+            # In such scenarios we'll accept pretty much anything for the
+            # bit-level file, even files we cannot identify.
+            if not is_linked_bitlevel:
+                metadata_pairs += [
                     (
                         fc["file_format_version"]["file_format"],
                         fc_extension["streams"]["0"]["mimetype"]
                     ),
                     (
-                        fc["encoding"],
-                        fc_extension["streams"]["0"].get("charset")
-                    ),
-                    (
                         fc["file_format_version"]["format_version"],
                         fc_extension["version"]
                     ),
-                    (
-                        fc["csv_delimiter"],
-                        fc_extension["streams"]["0"].get("delimiter")
-                    ),
-                    (
-                        CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[
-                            fc["csv_record_separator"]
-                        ],
-                        fc_extension["streams"]["0"].get("separator")
-                    ),
-                    (
-                        fc["csv_quoting_char"],
-                        fc_extension["streams"]["0"].get("quotechar")
-                    ),
-            ]:
+                ]
+
+            for value1, value2 in metadata_pairs:
                 if value1 and value1 != value2:
                     raise InvalidFileMetadataError(
                         "File characteristics have changed after"
@@ -194,9 +206,10 @@ class CreateMets(WorkflowTask):
                 'md5': 'MD5'
             }
             checksum_value = file_["checksum"].split(':')[-1]
+            file_format_version = fc["file_format_version"] or {}
             sip_file.generate_technical_metadata(
                 csv_has_header=fc.get("csv_has_header"),
-                file_format=fc['file_format_version']["file_format"],
+                file_format=file_format_version.get("file_format"),
                 checksum_algorithm=checksum_algo_conversion[
                     file_["checksum"].split(':')[0]
                     ],

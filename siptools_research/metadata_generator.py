@@ -40,6 +40,11 @@ def generate_metadata(
     }
 
     for file_metadata in metax_client.get_dataset_files(dataset_id):
+        # If this file is linked to a PAS compatible file, it must mean
+        # this file is a bit-level file. If so, be lenient during
+        # file metadata generation and allow scraping failures to pass.
+        is_linked_bitlevel = bool(file_metadata["pas_compatible_file"])
+
         original_file_characteristics = file_metadata.get(
             "characteristics") or {}
 
@@ -64,32 +69,40 @@ def generate_metadata(
         )
         scraper.scrape(check_wellformed=False)
 
-        # TODO: We probably should check all metadata that is required
-        # for packaging, but we can not check all fields in
-        # scraper.streams, because some of them will be "(:unav)" and it
-        # seems to be OK (or is there a bug in file-scraper,
-        # siptools-ng, or sample files of this repository?)
-        if "(:unav)" in (scraper.mimetype, scraper.version):
-            error = "File format was not recognized"
-            raise InvalidFileError(error, [file_metadata["id"]])
-
-        try:
-            url = reference_data[(scraper.mimetype, scraper.version)]
-        except KeyError as error:
-            message = (f"Detected file_format: '{scraper.mimetype}' and "
-                       f"format_version: '{scraper.version}' are not "
-                       "supported.")
-            raise InvalidFileError(message,
-                                   [file_metadata["id"]]) from error
-
-        # Create new file_characteristics based on scraping results
         scraper_file_characteristics: MetaxFileCharacteristics = {
-            "file_format_version": {"url": url},
+            "file_format_version": None,
             "encoding": scraper.streams[0].get("charset"),
             "csv_delimiter": scraper.streams[0].get("delimiter"),
             "csv_record_separator": scraper.streams[0].get("separator"),
             "csv_quoting_char": scraper.streams[0].get("quotechar"),
         }
+
+        is_unrecognized = \
+            "(:unav)" in (scraper.mimetype, scraper.version)
+        if is_unrecognized and not is_linked_bitlevel:
+            # TODO: We probably should check all metadata that is required
+            # for packaging, but we can not check all fields in
+            # scraper.streams, because some of them will be "(:unav)" and it
+            # seems to be OK (or is there a bug in file-scraper,
+            # siptools-ng, or sample files of this repository?)
+            error = "File format was not recognized"
+            raise InvalidFileError(error, [file_metadata["id"]])
+
+        try:
+            url = reference_data[(scraper.mimetype, scraper.version)]
+            scraper_file_characteristics["file_format_version"] = {
+                "url": url
+            }
+        except KeyError as error:
+            # Bit-level file formats don't need to be recognized by Metax V3;
+            # we will store possible file format metadata in
+            # 'file_characteristics_extension'.
+            if not is_linked_bitlevel:
+                message = (f"Detected file_format: '{scraper.mimetype}' and "
+                           f"format_version: '{scraper.version}' are not "
+                           "supported.")
+                raise InvalidFileError(message,
+                                       [file_metadata["id"]]) from error
 
         # Check that user defined metadata is not ignored by
         # file-scraper

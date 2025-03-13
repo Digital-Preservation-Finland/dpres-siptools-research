@@ -283,6 +283,58 @@ def test_generate_metadata_unrecognized(config, requests_mock, tmp_path):
     assert exception_info.value.files == ['pid:urn:identifier']
 
 
+def test_generate_bitlevel_file_errors_ignored(
+        config, requests_mock, tmp_path):
+    """
+    Test metadata generation for a bit-level file that is linked to a DPRES
+    compatible file.
+
+    Since the bit-level file is linked to a DPRES compatible file, ensure
+    that the workflow is more lenient on the file and will let it pass
+    despite not being listed in Metax's list of file format versions.
+    """
+    # Test file is linked to a DPRES compatbile file
+    binary_file = BASE_FILE | {
+        "file_format_version": None,  # File format cannot be detected
+        "pas_compatible_file": "nonexistent_file"
+    }
+
+    # Mock Metax
+    tests.utils.add_metax_dataset(requests_mock, files=[binary_file])
+    file_char_patch_mock = requests_mock.patch(
+        "/v3/files/pid:urn:identifier/characteristics",
+        json={}
+    )
+    file_patch_mock = requests_mock.patch(
+        "/v3/files/pid:urn:identifier", json={}
+    )
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
+
+    # Copy video file to temporary path
+    tmp_file_path = tmp_path / "path/to/file"
+    tmp_file_path.parent.mkdir(parents=True)
+    shutil.copy(
+        'tests/data/sample_files/random_data.bin', tmp_file_path
+    )
+
+    generate_metadata('dataset_identifier', tmp_path, config)
+
+    file_char = file_char_patch_mock.last_request.json()
+    file_char_ext = file_patch_mock.last_request.json()[
+        'characteristics_extension'
+    ]
+
+    # 'characteristics' is empty, as the file format is not supported as-is
+    assert file_char == {}
+
+    # file-scraper's technical metadata is still stored under '_extension'.
+    # 'application/octet-stream' is apparently file-scraper's default answer
+    # for file formats it cannot detect?
+    assert file_char_ext["streams"]["0"]["mimetype"] \
+        == "application/octet-stream"
+
+
 def test_generate_metadata_predefined(config, requests_mock, tmp_path):
     """Test generate_metadata.
 
