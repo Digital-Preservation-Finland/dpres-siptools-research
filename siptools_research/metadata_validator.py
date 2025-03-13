@@ -5,10 +5,9 @@ import os
 import jsonschema
 
 import siptools_research.schemas
-from siptools_research.exceptions import (
-    InvalidDatasetMetadataError,
-    InvalidFileMetadataError,
-)
+from siptools_research.exceptions import (InvalidDatasetFileError,
+                                          InvalidDatasetMetadataError,
+                                          InvalidFileMetadataError)
 from siptools_research.metax import get_metax_client
 
 
@@ -68,6 +67,11 @@ def _validate_file_metadata(dataset, metax_client):
         raise InvalidDatasetMetadataError(
             "Dataset must contain at least one file"
         )
+
+    # Validate that every DPRES compatible and bit-level file pair
+    # is included in the dataset
+    _validate_file_dpres_links(dataset_files)
+
     for file_metadata in dataset_files:
         file_identifier = file_metadata["id"]
         file_path = file_metadata["pathname"]
@@ -94,3 +98,57 @@ def _validate_file_metadata(dataset, metax_client):
                 f"The file path of file {file_identifier} is invalid:"
                 f" {file_path}"
             )
+
+
+def _validate_file_dpres_links(dataset_files):
+    """
+    Validate that dataset files contain every DPRES & non DPRES compatible file
+    pair if any exist
+
+    :param dataset_files: List of datasets
+
+    :raises InvalidDatasetFileError: If any linked files are missing their
+        DPRES and/or bit-level counterparts
+    """
+    dpres2non_dpres_file_id = {}
+    non_dpres2dpres_file_id = {}
+
+    # Create DPRES compatibility links
+    for file in dataset_files:
+        if id_ := file["non_pas_compatible_file"]:
+            non_dpres2dpres_file_id[id_] = file["id"]
+
+        if id_ := file["pas_compatible_file"]:
+            dpres2non_dpres_file_id[id_] = file["id"]
+
+    lone_non_dpres_ids = [
+        id_ for id_ in dpres2non_dpres_file_id.values()
+        if id_ not in non_dpres2dpres_file_id
+    ]
+
+    lone_dpres_ids = [
+        id_ for id_ in non_dpres2dpres_file_id.values()
+        if id_ not in dpres2non_dpres_file_id
+    ]
+
+    if lone_dpres_ids or lone_non_dpres_ids:
+        error = "File linkings for DPRES compatible files are incomplete. "
+        all_lone_ids = lone_non_dpres_ids + lone_dpres_ids
+
+        if lone_dpres_ids and not lone_non_dpres_ids:
+            error += (
+                "Dataset contains DPRES compatible files without "
+                "bit-level counterparts."
+            )
+        elif not lone_dpres_ids and lone_non_dpres_ids:
+            error += (
+                "Dataset contains bit-level files without "
+                "DPRES compatible counterparts."
+            )
+        else:
+            error += (
+                "Dataset contains both bit-level and DPRES compatible "
+                "files without DPRES compatible / bit-level counterparts."
+            )
+
+        raise InvalidDatasetFileError(error, all_lone_ids)

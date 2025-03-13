@@ -7,17 +7,9 @@ import pytest
 import tests.utils
 from siptools_research.exceptions import InvalidFileMetadataError
 from siptools_research.workflow.create_mets import CreateMets
-from tests.metax_data.datasets import (
-    BASE_DATACITE,
-    BASE_DATASET,
-    BASE_PROVENANCE,
-    FULL_PROVENANCE,
-)
-from tests.metax_data.files import (
-    CSV_FILE,
-    TIFF_FILE,
-    TXT_FILE,
-)
+from tests.metax_data.datasets import (BASE_DATACITE, BASE_DATASET,
+                                       BASE_PROVENANCE, FULL_PROVENANCE)
+from tests.metax_data.files import CSV_FILE, SEG_Y_FILE, TIFF_FILE, TXT_FILE
 
 NAMESPACES = {
     "mets": "http://www.loc.gov/METS/",
@@ -695,6 +687,81 @@ def test_create_techmd_csv(config, workspace, requests_mock, has_header,
         == file["characteristics"]["csv_quoting_char"]
     assert mets.xpath("//addml:fieldDefinition/@name",
                       namespaces=NAMESPACES)[0] == expected_field_definition
+
+
+@pytest.mark.usefixtures('testmongoclient')
+def test_create_file_link(config, workspace, requests_mock):
+    """
+    Test creating a METS for a dataset with two files: one PAS compatible
+    and one bit-level file
+
+    Tests that a correct PREMIS event is created and linked.
+
+    :param config: Configuration file
+    :param workspace: Temporary workspace fixture
+    :param requests_mock: HTTP request mocker
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["id"] = workspace.name
+
+    tiff_file = TIFF_FILE | {"non_pas_compatible_file": SEG_Y_FILE["id"]}
+    seg_y_file = SEG_Y_FILE | {"pas_compatible_file": TIFF_FILE["id"]}
+
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[tiff_file, seg_y_file]
+    )
+
+    # Create workspace that already contains the dataset files
+    dataset_files_parent = workspace / "metadata_generation"
+    for file_ in (tiff_file, seg_y_file):
+        path = (
+            dataset_files_parent
+            / "dataset_files" / file_["pathname"].strip("/")
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+
+    # Init and run task
+    CreateMets(dataset_id=workspace.name, config=config).run()
+
+    mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
+
+    # Ensure the normalization event exists and that it links to the source
+    # (SEG-Y) and outcome file (TIFF) specifically
+    normalize_event = next(
+        elem for elem
+        in mets.xpath("//premis:event", namespaces=NAMESPACES)
+        if "has been normalized." in elem.xpath(
+            ".//premis:eventOutcomeDetailNote", namespaces=NAMESPACES
+        )[0].text
+    )
+    outcome_file_id = normalize_event.xpath(
+        ".//premis:linkingObjectIdentifier"
+        "[premis:linkingObjectRole[text()='outcome']]"
+        "/premis:linkingObjectIdentifierValue",
+        namespaces=NAMESPACES
+    )[0].text
+    source_file_id = normalize_event.xpath(
+        ".//premis:linkingObjectIdentifier"
+        "[premis:linkingObjectRole[text()='source']]"
+        "/premis:linkingObjectIdentifierValue",
+        namespaces=NAMESPACES
+    )[0].text
+
+    # Ensure the linked PREMIS objects have the expected file type
+    assert mets.xpath(
+        f"//premis:objectIdentifierValue[text()='{outcome_file_id}']"
+        "/../..//premis:formatName[text()='image/tiff']",
+        namespaces=NAMESPACES
+    )
+    assert mets.xpath(
+        f"//premis:objectIdentifierValue[text()='{source_file_id}']"
+        "/../..//premis:formatName[text()='application/x.fi-dpres.segy']",
+        namespaces=NAMESPACES
+    )
 
 
 @pytest.mark.usefixtures('testmongoclient')

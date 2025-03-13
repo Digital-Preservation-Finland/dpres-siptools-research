@@ -8,6 +8,7 @@ from requests.exceptions import HTTPError
 import siptools_research
 import tests.utils
 from siptools_research.exceptions import (
+    InvalidDatasetFileError,
     InvalidDatasetMetadataError,
     InvalidFileMetadataError,
 )
@@ -22,6 +23,7 @@ from tests.metax_data.files import (
     TIFF_FILE,
     TXT_FILE,
     VIDEO_FILE,
+    SEG_Y_FILE,
 )
 
 
@@ -154,6 +156,88 @@ def test_validate_file_metadata(config, requests_mock):
                                                                  client)
 
     assert files_adapter.call_count == 1
+
+
+@pytest.mark.usefixtures('testmongoclient')
+@pytest.mark.parametrize(
+    "files,expected_error,expected_error_file_ids",
+    [
+        (
+            [TIFF_FILE | {"non_pas_compatible_file": SEG_Y_FILE["id"]}],
+            "Dataset contains DPRES compatible files without bit-level "
+            "counterparts.",
+            [TIFF_FILE["id"]]
+        ),
+        (
+            [SEG_Y_FILE | {"pas_compatible_file": TIFF_FILE["id"]}],
+            "Dataset contains bit-level files without DPRES compatible "
+            "counterparts.",
+            [SEG_Y_FILE["id"]],
+        ),
+        (
+            [
+                SEG_Y_FILE | {"pas_compatible_file": TIFF_FILE["id"]},
+                TXT_FILE | {"non_pas_compatible_file": CSV_FILE["id"]}
+            ],
+            "Dataset contains both bit-level and DPRES compatible files "
+            "without DPRES compatible / bit-level counterparts.",
+            [
+                SEG_Y_FILE["id"], TXT_FILE["id"]
+            ]
+        )
+    ]
+)
+def test_detect_missing_file_link(
+        config, workspace, requests_mock, files,
+        expected_error, expected_error_file_ids):
+    """
+    Test creating a METS for a dataset with one file that is marked as
+    DPRES compatible but is missing its bit-level counterpart.
+
+    Ensure an exception is raised.
+
+    :param config: Configuration file
+    :param workspace: Temporary workspace fixture
+    :param requests_mock: HTTP request mocker
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(BASE_DATASET)
+    dataset["id"] = workspace.name
+
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=files
+    )
+
+    # Create workspace that already contains the dataset files
+    dataset_files_parent = workspace / "metadata_generation"
+    for file_ in files:
+        path = (
+            dataset_files_parent
+            / "dataset_files" / file_["pathname"].strip("/")
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+
+    # Create workspace that already contains the dataset files
+    dataset_files_parent = workspace / "metadata_generation"
+    path = (
+        dataset_files_parent
+        / "dataset_files" / TIFF_FILE["pathname"].strip("/")
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch()
+
+    # Init and run task
+    with pytest.raises(InvalidDatasetFileError) as exc:
+        siptools_research.metadata_validator.validate_metadata(
+            dataset_id=dataset["id"],
+            config=config
+        )
+
+    assert expected_error in str(exc.value)
+    assert expected_error_file_ids == exc.value.files
 
 
 def test_validate_metadata_http_error_raised(config, requests_mock):

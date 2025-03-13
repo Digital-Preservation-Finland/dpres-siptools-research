@@ -123,6 +123,13 @@ class CreateMets(WorkflowTask):
 
     def _create_files(self, files_metadata):
         sip_files = []
+
+        # Track PAS compatible to non PAS compatible file linkings.
+        # For any pair, both of the files have to exist on the SIP.
+        dpres2non_dpres_file_id = {}
+        non_dpres2dpres_file_id = {}
+        id2sip_file = {}
+
         for file_ in files_metadata:
             filepath = file_['pathname'].strip('/')
             source_filepath = (self.dataset.metadata_generation_workspace
@@ -196,9 +203,79 @@ class CreateMets(WorkflowTask):
                 checksum=checksum_value,
                 scraper_result=file_["characteristics_extension"]
             )
+
+            # Create DPRES compatibility links
+            if id_ := file_["non_pas_compatible_file"]:
+                non_dpres2dpres_file_id[id_] = file_["id"]
+
+            if id_ := file_["pas_compatible_file"]:
+                dpres2non_dpres_file_id[id_] = file_["id"]
+
+            id2sip_file[file_["id"]] = sip_file
+
             sip_files.append(sip_file)
 
+        self._link_files(
+            id2sip_file=id2sip_file,
+            dpres2non_dpres_file_id=dpres2non_dpres_file_id,
+            non_dpres2dpres_file_id=non_dpres2dpres_file_id
+        )
+
         return sip_files
+
+    def _link_files(
+            self,
+            id2sip_file,
+            dpres2non_dpres_file_id, non_dpres2dpres_file_id):
+        """
+        Link DPRES compatible and non-DPRES compatible (i.e. bit-level) files
+        together
+        """
+        for dpres_id, non_dpres_id in dpres2non_dpres_file_id.items():
+            bitlevel_file = id2sip_file[non_dpres_id]
+            dpres_file = id2sip_file[dpres_id]
+
+            bitlevel_file.digital_object.use = \
+                "fi-dpres-no-file-format-validation"
+
+            bitlevel_file_techmd = next(
+                metadata for metadata in bitlevel_file.metadata
+                if metadata.metadata_type.value == "technical"
+                and metadata.metadata_format.value == "PREMIS:OBJECT"
+            )
+            dpres_file_techmd = next(
+                metadata for metadata in dpres_file.metadata
+                if metadata.metadata_type.value == "technical"
+                and metadata.metadata_format.value == "PREMIS:OBJECT"
+            )
+
+            event = DigitalProvenanceEventMetadata(
+                event_type="normalization",
+                detail="Normalization of digital object",
+                outcome="success",
+                outcome_detail=(
+                    "Source file format has been normalized. "
+                    "Outcome object has been created as a result."
+                )
+            )
+            event.link_object_metadata(
+                bitlevel_file_techmd,
+                object_role="source"
+            )
+            event.link_object_metadata(
+                dpres_file_techmd,
+                object_role="outcome"
+            )
+
+            # FIXME: mets-builder currently has broken behavior and will
+            # also add the linked metadata from 'event' to both files
+            # if 'File.add_metadata' is used. This linked metadata includes the
+            # technical metadata from the other file.
+            #
+            # This method of adding metadata is undocumented but should work
+            # to avoid the issue until it's fixed.
+            dpres_file.digital_object.metadata.add(event)
+            bitlevel_file.digital_object.metadata.add(event)
 
     def _create_logical_structmap(self, files, metadata, files_metadata):
 
