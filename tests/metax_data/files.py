@@ -319,6 +319,8 @@ BASE_FILE = {
     "csc_project": "test_project",
     "characteristics": BASE_CHARACTERISTICS,
     "characteristics_extension": None,
+    "pas_compatible_file": None,
+    "non_pas_compatible_file": None,
 }
 
 TXT_FILE = deepcopy(BASE_FILE)
