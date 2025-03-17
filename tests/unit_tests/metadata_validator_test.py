@@ -13,10 +13,7 @@ from siptools_research.exceptions import (
 )
 from siptools_research.metadata_validator import validate_metadata
 from siptools_research.metax import get_metax_client
-from tests.metax_data.datasets import (
-    BASE_DATACITE,
-    BASE_DATASET,
-)
+from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import (
     AUDIO_FILE,
     CSV_FILE,
@@ -26,34 +23,6 @@ from tests.metax_data.files import (
     TXT_FILE,
     VIDEO_FILE,
 )
-
-
-def get_invalid_datacite():
-    """Create invalid datacite.
-
-    :returns: Datacite as string
-    """
-    root = copy.deepcopy(BASE_DATACITE)
-    element = root.xpath(
-        '/ns:resource/ns:identifier',
-        namespaces={'ns': "http://datacite.org/schema/kernel-4"}
-    )
-    element[0].getparent().remove(element[0])
-    return lxml.etree.tostring(root, pretty_print=True)
-
-
-def get_very_invalid_datacite():
-    """Create very invalid datacite.
-
-    :returns: Datacite as string
-    """
-    root = copy.deepcopy(BASE_DATACITE)
-    element = root.xpath(
-        '/ns:resource/ns:resourceType',
-        namespaces={'ns': "http://datacite.org/schema/kernel-4"}
-    )
-    element[0].attrib['resourceTypeGeneral'] = 'INVALID_RESOURCE_TYPE'
-    return lxml.etree.tostring(root, pretty_print=True)
 
 
 @pytest.mark.parametrize(
