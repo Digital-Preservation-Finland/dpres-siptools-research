@@ -16,12 +16,9 @@ from siptools_research.metax import get_metax_client
 from tests.metax_data.datasets import (
     BASE_DATACITE,
     BASE_DATASET,
-    BASE_PROVENANCE,
-    QVAIN_PROVENANCE,
 )
 from tests.metax_data.files import (
     AUDIO_FILE,
-    BASE_FILE,
     CSV_FILE,
     MKV_FILE,
     PDF_FILE,
@@ -80,41 +77,6 @@ def test_validate_metadata(config, requests_mock, file_metadata):
         Metax
     """
     tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-    assert validate_metadata('dataset_identifier', config)
-
-
-@pytest.mark.parametrize(
-    "provenance",
-    [
-        # No provenance
-        [],
-        # One life cycle event
-        [QVAIN_PROVENANCE],
-        # One preservation event
-        [BASE_PROVENANCE],
-        # Two events of same type
-        [
-            BASE_PROVENANCE,
-            BASE_PROVENANCE
-        ],
-    ]
-)
-def test_validate_metadata_with_provenance(config, requests_mock, provenance):
-    """Test validation of dataset metadata with provenance events.
-
-    :param config: Configuration file
-    :param requests_mock: Mocker object
-    :param provenance: List of provenance events in dataset metadata
-    """
-    # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
-    dataset["provenance"] = provenance
-    tests.utils.add_metax_dataset(
-        requests_mock,
-        dataset=dataset,
-        files=[TXT_FILE]
-    )
-
     assert validate_metadata('dataset_identifier', config)
 
 

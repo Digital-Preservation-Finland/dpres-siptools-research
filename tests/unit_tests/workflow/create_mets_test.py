@@ -11,7 +11,7 @@ from tests.metax_data.datasets import (
     BASE_DATACITE,
     BASE_DATASET,
     BASE_PROVENANCE,
-    QVAIN_PROVENANCE,
+    FULL_PROVENANCE,
 )
 from tests.metax_data.files import (
     CSV_FILE,
@@ -158,13 +158,6 @@ def test_idempotence(config, workspace, requests_mock):
     assert mets1.stat().st_size == mets2.stat().st_size
 
 
-METADATA_MODIFICATION_PROVENANCE = copy.deepcopy(BASE_PROVENANCE)
-METADATA_MODIFICATION_PROVENANCE["lifecycle_event"]["pref_label"]["en"]\
-    = "transferred"
-ANOTHER_BASE_PROVENANCE = copy.deepcopy(BASE_PROVENANCE)
-ANOTHER_BASE_PROVENANCE["description"]["en"] = "another description"
-
-
 @pytest.mark.usefixtures("testmongoclient")
 @pytest.mark.parametrize(
     "provenance_data",
@@ -173,12 +166,9 @@ ANOTHER_BASE_PROVENANCE["description"]["en"] = "another description"
         [],
         # 1 event
         [BASE_PROVENANCE],
-        # multiple preservation events
-        [BASE_PROVENANCE, METADATA_MODIFICATION_PROVENANCE],
-        # Two preservation events with same event type
-        [BASE_PROVENANCE, ANOTHER_BASE_PROVENANCE],
-        # A lifecycle event
-        [QVAIN_PROVENANCE],
+        # multiple preservation events. Note that two identical events
+        # would be considered as the same event.
+        [BASE_PROVENANCE, FULL_PROVENANCE],
     ]
 )
 def test_multiple_provenance_events(config,
@@ -229,39 +219,31 @@ def test_multiple_provenance_events(config,
 
     # Find identifiers of provenance events from METS
     mets = lxml.etree.parse(str(workspace / "preservation" / "mets.xml"))
-    provenance_ids = []
-    for provenance in provenance_data:
-        event_type = provenance["lifecycle_event"]["pref_label"]["en"]
-        try:
-            event_detail = provenance["description"]["en"]
-        except TypeError:
-            event_detail = provenance["title"]["en"]
-
-        digiprovmd = mets.xpath(
-            f"//*[premis:eventType='{event_type}'"
-            f" and premis:eventDetail='{event_detail}']"
-            "/ancestor::mets:digiprovMD",
-            namespaces=NAMESPACES)
-        assert len(digiprovmd) == 1
-        provenance_ids.append(digiprovmd[0].attrib["ID"])
+    digiprovmds = mets.xpath(
+        "//*[premis:eventType='generated']/ancestor::mets:digiprovMD",
+        namespaces=NAMESPACES
+    )
+    # One digiprovMD per provenance should be found
+    assert len(digiprovmds) == len(provenance_data)
+    provenance_ids = [digiprovmd.attrib["ID"] for digiprovmd in digiprovmds]
 
     # PREMIS events should be refenced in physical structure map
     physical_structmap = mets.xpath(
-        '/mets:mets/mets:structMap[@TYPE="PHYSICAL"]',
+        "/mets:mets/mets:structMap[@TYPE='PHYSICAL']",
         namespaces=NAMESPACES
     )[0]
     physical_structmap_references \
-        = physical_structmap.xpath('mets:div/@ADMID', namespaces=NAMESPACES)[0]
+        = physical_structmap.xpath("mets:div/@ADMID", namespaces=NAMESPACES)[0]
     for provenance_id in provenance_ids:
         assert provenance_id in physical_structmap_references
 
     # PREMIS events should be refenced in logical structure map
     logical_structmap = mets.xpath(
-        '/mets:mets/mets:structMap[@TYPE="Fairdata-logical"]',
+        "/mets:mets/mets:structMap[@TYPE='Fairdata-logical']",
         namespaces=NAMESPACES
     )[0]
     logical_structmap_reference_list = logical_structmap.xpath(
-        'mets:div/@ADMID',
+        "mets:div/@ADMID",
         namespaces=NAMESPACES
     )
     if logical_structmap_reference_list:
@@ -275,26 +257,45 @@ def test_multiple_provenance_events(config,
 
 
 @pytest.mark.parametrize(
-    "provenance_data",
+    ("provenance_data", "expected_result"),
     [
-        BASE_PROVENANCE,
-        QVAIN_PROVENANCE
+        (
+            FULL_PROVENANCE,
+            {
+                "eventDetail":
+                "Title of provenance: Description of provenance",
+                "eventDateTime": "2014-01-01T08:19:58Z",
+                "eventOutcome": "success",
+                "eventOutcomeDetailNote": "outcome_description"
+            }
+        ),
+        (
+            BASE_PROVENANCE,
+            {
+                "eventDetail": "Title of provenance",
+                "eventDateTime": "OPEN",
+                "eventOutcome": "(:unav)",
+                "eventOutcomeDetailNote": None
+            }
+        )
     ]
 )
 def test_premis_event_metadata(
-    config, workspace, requests_mock, provenance_data
+    config, workspace, requests_mock, provenance_data, expected_result
 ):
     """Test creating PREMIS events for provenance metadata.
 
-    Creates METS for dataset that has provenance event.
+    Creates METS for dataset that has a provenance event.
 
-    Tests that PREMIS event metadata created for provenance event
+    Tests that PREMIS event metadata created for the provenance event
     contains correct information.
 
     :param config: Configuration file
     :param workspace: Temporary directory
     :param requests_mock: HTTP request mocker
     :param provenance_data: Provenance events in Metax
+    :param expected_result: PREMIS event values that should be written
+        to METS
     """
     # Mock Metax
     dataset = copy.deepcopy(BASE_DATASET)
@@ -315,71 +316,39 @@ def test_premis_event_metadata(
     CreateMets(dataset_id=workspace.name, config=config).run()
 
     # Find the digiprovMD element of provenance event from METS document
-    if provenance_data["description"]:
-        expected_event_detail = provenance_data['description']['en']
-    else:
-        expected_event_detail = provenance_data['title']['en']
-    mets = lxml.etree.parse(str(workspace / 'preservation' / 'mets.xml'))
+    mets = lxml.etree.parse(str(workspace / "preservation" / "mets.xml"))
     digiprovmd = mets.xpath(
-        f"//*[premis:eventDetail='{expected_event_detail}']"
-        "/ancestor::mets:digiprovMD",
+        "//*[premis:eventType='generated']/ancestor::mets:digiprovMD",
         namespaces=NAMESPACES
     )[0]
 
     # Check that created PREMIS event contains correct information
-    elements = digiprovmd.xpath(
-        'mets:mdWrap/mets:xmlData/premis:event/premis:eventType',
+    assert digiprovmd.xpath(
+        "mets:mdWrap/mets:xmlData/premis:event/premis:eventDetail",
         namespaces=NAMESPACES
-    )
-    assert elements[0].text == "generated"
-
-    elements = digiprovmd.xpath(
-        'mets:mdWrap/mets:xmlData/premis:event/premis:eventDateTime',
+    )[0].text == expected_result["eventDetail"]
+    assert digiprovmd.xpath(
+        "mets:mdWrap/mets:xmlData/premis:event/premis:eventDateTime",
         namespaces=NAMESPACES
-    )
-
-    if provenance_data["temporal"]:
-        assert elements[0].text == "2014-01-01T08:19:58Z"
-    else:
-        assert elements[0].text == "OPEN"
-
-    # Title and description should be formatted together as "title:
-    # description" or just as is if the other one does not exist
-    elements = digiprovmd.xpath(
-        'mets:mdWrap/mets:xmlData/premis:event/premis:eventDetail',
+    )[0].text == expected_result["eventDateTime"]
+    assert digiprovmd.xpath(
+        "mets:mdWrap/mets:xmlData/premis:event"
+        "/premis:eventOutcomeInformation/premis:eventOutcome",
         namespaces=NAMESPACES
-    )
-    if provenance_data["title"] and provenance_data["description"]:
-        assert elements[0].text == "Title: Description of provenance"
-    elif provenance_data["title"]:
-        assert elements[0].text == "Title"
-    elif provenance_data["description"]:
-        assert elements[0].text == "Description of provenance"
-    else:
-        error = "Invalid provenance, there is no title or description"
-        raise AssertionError(error)
-
-    # Outcome should be "(:unav)" if missing
-    elements = digiprovmd.xpath(
-        'mets:mdWrap/mets:xmlData/premis:event'
-        '/premis:eventOutcomeInformation/premis:eventOutcome',
-        namespaces=NAMESPACES)
-    if provenance_data["event_outcome"]:
-        assert elements[0].text == "success"
-    else:
-        assert elements[0].text == "(:unav)"
+    )[0].text == expected_result["eventOutcome"]
 
     # Outcome description is optional
-    elements = digiprovmd.xpath(
-        'mets:mdWrap/mets:xmlData/premis:event'
-        '/premis:eventOutcomeInformation/premis:eventOutcomeDetail'
-        '/premis:eventOutcomeDetailNote',
+    event_outcome_detail_notes = digiprovmd.xpath(
+        "mets:mdWrap/mets:xmlData/premis:event"
+        "/premis:eventOutcomeInformation/premis:eventOutcomeDetail"
+        "/premis:eventOutcomeDetailNote",
         namespaces=NAMESPACES
     )
-    if provenance_data["outcome_description"]:
-        assert elements[0].text == "outcome_description"
+    if expected_result["eventOutcomeDetailNote"]:
+        assert event_outcome_detail_notes[0].text \
+            == expected_result["eventOutcomeDetailNote"]
     else:
-        assert elements == []
+        assert event_outcome_detail_notes == []
 
 
 @pytest.mark.parametrize(
@@ -420,7 +389,12 @@ def test_premis_event_outcome(config, workspace, requests_mock,
     dataset = copy.deepcopy(BASE_DATASET)
     dataset["id"] = workspace.name
     provenance = copy.deepcopy(BASE_PROVENANCE)
-    provenance["event_outcome"]["url"] = event_outcome_identifier
+    provenance["event_outcome"] = {
+        "url": event_outcome_identifier,
+        "pref_label": {
+            "en": "whatever"
+        },
+    }
     dataset["provenance"] = [provenance]
     tests.utils.add_metax_dataset(
         requests_mock, dataset=dataset,
@@ -438,13 +412,13 @@ def test_premis_event_outcome(config, workspace, requests_mock,
     # Check that correct event outcome is written to METS
     mets = lxml.etree.parse(str(workspace / 'preservation' / 'mets.xml'))
     digiprovmd = mets.xpath(
-        "//*[premis:eventDetail='Description of provenance']"
+        "//*[premis:eventType='generated']"
         "/ancestor::mets:digiprovMD",
         namespaces=NAMESPACES
     )[0]
     outcome = digiprovmd.xpath(
-        'mets:mdWrap/mets:xmlData/premis:event'
-        '/premis:eventOutcomeInformation/premis:eventOutcome',
+        "mets:mdWrap/mets:xmlData/premis:event"
+        "/premis:eventOutcomeInformation/premis:eventOutcome",
         namespaces=NAMESPACES)
     assert outcome[0].text == expected_event_outcome
 

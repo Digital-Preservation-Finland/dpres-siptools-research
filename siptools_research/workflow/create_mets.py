@@ -266,26 +266,17 @@ class CreateMets(WorkflowTask):
             except TypeError:
                 event_datetime = 'OPEN'
 
-            # Add provenance title and description to eventDetail
-            # element text, if present. If both are present, format as
-            # "title: description". Our JSON schema validates that at
-            # least one is present.
-            event_detail_items = []
-            if provenance["title"] is not None:
-                event_detail_items.append(
-                    get_localized_value(
-                        provenance["title"],
-                        languages=dataset_languages
-                    )
-                )
+            # eventDetail is build from provenance title and optional
+            # provenance description
+            event_detail = get_localized_value(
+                provenance["title"],
+                languages=dataset_languages
+            )
             if provenance["description"] is not None:
-                event_detail_items.append(
-                    get_localized_value(
-                        provenance["description"],
-                        languages=dataset_languages
-                    )
+                event_detail += ": " + get_localized_value(
+                    provenance["description"],
+                    languages=dataset_languages
                 )
-            event_detail = ": ".join(event_detail_items)
 
             if provenance["event_outcome"] is not None:
                 uri = provenance["event_outcome"]["url"]

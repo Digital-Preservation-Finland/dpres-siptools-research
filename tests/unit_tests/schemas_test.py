@@ -8,7 +8,7 @@ import siptools_research.schemas
 from tests.metax_data.datasets import (
     BASE_DATASET,
     BASE_PROVENANCE,
-    QVAIN_PROVENANCE,
+    FULL_PROVENANCE,
 )
 from tests.metax_data.files import (
     AUDIO_FILE,
@@ -51,15 +51,18 @@ SAMPLE_FILES = [
 @pytest.mark.parametrize(
     "provenance",
     [
-        # One provenance events
+        # Minimal provenance
         [BASE_PROVENANCE],
+        # Full provenance
+        [FULL_PROVENANCE],
         # Multiple provenance events
+        [BASE_PROVENANCE, FULL_PROVENANCE],
+        # Multiple identical provenance events
         [BASE_PROVENANCE, BASE_PROVENANCE],
         # Empty list of provenance events
         [],
-        # Provenance made in Qvain
-        [QVAIN_PROVENANCE]
-    ])
+    ]
+)
 def test_validate_dataset_metadata_with_provenance(provenance):
     """Test validation of valid dataset with provenance metadata.
 
@@ -67,7 +70,7 @@ def test_validate_dataset_metadata_with_provenance(provenance):
     :returns: ``None``
     """
     dataset_metadata = copy.deepcopy(BASE_DATASET)
-    dataset_metadata['provenance'] = provenance
+    dataset_metadata["provenance"] = provenance
 
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
