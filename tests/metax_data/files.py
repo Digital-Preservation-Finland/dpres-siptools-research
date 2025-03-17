@@ -380,5 +380,5 @@ SEG_Y_FILE.update(SEG_Y_FILE_METADATA)
 SEG_Y_CHARACTERISTICS = deepcopy(BASE_CHARACTERISTICS)
 SEG_Y_CHARACTERISTICS.update(SEG_Y_FILE["characteristics"])
 SEG_Y_FILE["characteristics"] = SEG_Y_CHARACTERISTICS
-SEG_Y_FILE["id"] += ".sgy"
+SEG_Y_FILE["id"] += "_sgy"
 SEG_Y_FILE["pathname"] += ".sgy"
