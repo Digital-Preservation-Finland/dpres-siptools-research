@@ -75,13 +75,6 @@ Enable systemd timer that starts/restarts all incomplete and enabled workflows f
    systemctl enable siptools_research.timer
    systemctl start siptools_research.timer
 
-Testing
--------
-
-Run unit tests::
-
-   make test
-
 
 Building
 --------

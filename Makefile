@@ -32,17 +32,6 @@ install:
 	# Use Python setuptools
 	python3 ./setup.py install -O1 --prefix="${PREFIX}" --root="${DESTDIR}" --record=INSTALLED_FILES
 
-test:
-	${PYTHON} -m pytest tests/unit_tests -svvv --junitxml=junit.xml
-
-coverage:
-	${PYTHON} -m pytest tests \
-	    --cov=siptools_research --cov-report=html \
-	    --ignore tests/integration_tests/
-	coverage report -m
-	coverage html
-	coverage xml
-
 clean: clean-rpm
 	find . -iname '*.pyc' -type f -delete
 	find . -iname '__pycache__' -exec rm -rf '{}' \; | true
@@ -50,5 +39,4 @@ clean: clean-rpm
 
 clean-rpm:
 	rm -rf rpmbuild
-	rm -rf doc/build doc/modules
 
