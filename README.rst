@@ -82,16 +82,6 @@ Run unit tests::
 
    make test
 
-or run one of the integration tests::
-
-   py.test -v tests/integration_tests/workflow_test.py
-
-.. Note ::
-    validate_sip_test.py uses cloud-user account to log into preservation
-    server. Thus the SSH private key of the cloud-user should be found in
-    current user's `~/.ssh/pouta-key.pem` file. The test sets the dataset state
-    as rejected/accepted to simulate the behavior of the preservation server.
-
 
 Building
 --------
