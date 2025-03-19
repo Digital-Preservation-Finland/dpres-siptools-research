@@ -1,7 +1,7 @@
-"""Tests for :mod:`siptools_research.utils.locale` module."""
+"""Tests for :mod:`siptools_research.locale` module."""
 import pytest
 
-from siptools_research.utils.locale import (
+from siptools_research.locale import (
     get_dataset_languages,
     get_localized_value,
 )

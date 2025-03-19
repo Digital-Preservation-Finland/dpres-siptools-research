@@ -1,9 +1,9 @@
-"""Tests for :mod:`siptools_research.utils.download` module."""
+"""Tests for :mod:`siptools_research.download` module."""
 import configparser
 
 import pytest
 
-from siptools_research.utils.download import (
+from siptools_research.download import (
     FileAccessError,
     FileNotAvailableError,
     download_file,

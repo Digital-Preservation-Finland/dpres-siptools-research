@@ -5,7 +5,7 @@ import enum
 import shutil
 from pathlib import Path
 
-import siptools_research.utils.database
+import siptools_research.database
 from siptools_research.config import Configuration
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.metax import get_metax_client
@@ -41,7 +41,7 @@ class Dataset:
         self._cached_document = document
         self._cached_metadata = None
         self.conf = Configuration(config)
-        self.database = siptools_research.utils.database.Database(config)
+        self.database = siptools_research.database.Database(config)
         self._metax_client = get_metax_client(config)
 
     @property
@@ -349,7 +349,7 @@ def find_datasets(
     if identifier is not None:
         search["_id"] = identifier
 
-    database = siptools_research.utils.database.Database(config)
+    database = siptools_research.database.Database(config)
     return list(
         Dataset(document["_id"], document=document, config=config)
         for document in database.find(search)

@@ -1,7 +1,7 @@
-"""Tests for :mod:`siptools_research.utils.database` module."""
+"""Tests for :mod:`siptools_research.database` module."""
 import pytest
 
-from siptools_research.utils.database import Database
+from siptools_research.database import Database
 
 
 @pytest.mark.usefixtures('testmongoclient')

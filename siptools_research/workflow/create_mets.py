@@ -14,8 +14,8 @@ from siptools_research.exceptions import (InvalidDatasetMetadataError,
                                           InvalidFileMetadataError)
 from siptools_research.metax import (CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL,
                                      get_metax_client)
-from siptools_research.utils.locale import (get_dataset_languages,
-                                            get_localized_value)
+from siptools_research.locale import (get_dataset_languages,
+                                      get_localized_value)
 from siptools_research.workflow.copy_dataset_to_pas_data_catalog import \
     CopyToPasDataCatalog
 from siptools_research.workflow.get_files import GetFiles

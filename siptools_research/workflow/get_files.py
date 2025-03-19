@@ -6,8 +6,8 @@ import luigi
 from siptools_research.exceptions import (InvalidFileMetadataError,
                                           MissingFileError)
 from siptools_research.metax import get_metax_client
-from siptools_research.utils.download import (download_file,
-                                              FileNotAvailableError)
+from siptools_research.download import (download_file,
+                                        FileNotAvailableError)
 from siptools_research.workflowtask import WorkflowTask
 
 
