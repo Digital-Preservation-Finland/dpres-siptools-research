@@ -188,7 +188,7 @@ def test_validate_file_metadata(config, requests_mock):
     ]
 )
 def test_detect_missing_file_link(
-        config, workspace, requests_mock, files,
+        config, requests_mock, files,
         expected_error, expected_error_file_ids):
     """
     Test creating a METS for a dataset with one file that is marked as
@@ -197,37 +197,16 @@ def test_detect_missing_file_link(
     Ensure an exception is raised.
 
     :param config: Configuration file
-    :param workspace: Temporary workspace fixture
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
     dataset = copy.deepcopy(BASE_DATASET)
-    dataset["id"] = workspace.name
 
     tests.utils.add_metax_dataset(
         requests_mock,
         dataset=dataset,
         files=files
     )
-
-    # Create workspace that already contains the dataset files
-    dataset_files_parent = workspace / "metadata_generation"
-    for file_ in files:
-        path = (
-            dataset_files_parent
-            / "dataset_files" / file_["pathname"].strip("/")
-        )
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.touch()
-
-    # Create workspace that already contains the dataset files
-    dataset_files_parent = workspace / "metadata_generation"
-    path = (
-        dataset_files_parent
-        / "dataset_files" / TIFF_FILE["pathname"].strip("/")
-    )
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.touch()
 
     # Init and run task
     with pytest.raises(InvalidDatasetFileError) as exc:
@@ -238,6 +217,50 @@ def test_detect_missing_file_link(
 
     assert expected_error in str(exc.value)
     assert expected_error_file_ids == exc.value.files
+
+
+@pytest.mark.parametrize(
+    "is_linked_bitlevel", [True, False]
+)
+def test_validate_file_metadata_missing_file_format(
+        config, requests_mock, is_linked_bitlevel):
+    """
+    Test that file format version is required unless the file is a bit-level
+    file linked to a DPRES compatible file
+    """
+    dataset = copy.deepcopy(BASE_DATASET)
+
+    file = copy.deepcopy(TXT_FILE)
+    file["characteristics"]["file_format_version"] = None
+
+    file_b = copy.deepcopy(CSV_FILE)
+
+    if is_linked_bitlevel:
+        file["pas_compatible_file"] = file_b["id"]
+        file_b["non_pas_compatible_file"] = file["id"]
+
+    requests_mock.get(
+        "/v3/datasets/dataset_identifier/files",
+        json={"next": None, "results": [file, file_b]}
+    )
+
+    # Init metax client
+    metax = get_metax_client(config)
+
+    if not is_linked_bitlevel:
+        with pytest.raises(InvalidFileMetadataError) as exc:
+            siptools_research.metadata_validator._validate_file_metadata(
+                dataset=dataset,
+                metax_client=metax
+            )
+
+        assert "Non bit-level file must have `file_format_version` set" \
+            in str(exc.value)
+    else:
+        siptools_research.metadata_validator._validate_file_metadata(
+            dataset=dataset,
+            metax_client=metax
+        )
 
 
 def test_validate_metadata_http_error_raised(config, requests_mock):

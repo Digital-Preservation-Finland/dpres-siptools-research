@@ -75,12 +75,21 @@ def _validate_file_metadata(dataset, metax_client):
     for file_metadata in dataset_files:
         file_identifier = file_metadata["id"]
         file_path = file_metadata["pathname"]
+        is_linked_bitlevel = bool(file_metadata["pas_compatible_file"])
 
         # Validate metadata against JSON schema. The schema contains
         # properties introduced in JSON schema draft 7. Using
         # Draft7Validator ensures that older validators that do not
         # support draft 7 are not used, in which case part of the schema
         # would be ignored without any warning.
+
+        characteristics = file_metadata["characteristics"] or {}
+        file_format_version = characteristics.get("file_format_version")
+        if not file_format_version and not is_linked_bitlevel:
+            raise InvalidFileMetadataError(
+                f"Non bit-level file must have `file_format_version` set: "
+                f"{file_path}"
+            )
 
         try:
             jsonschema.Draft7Validator(
