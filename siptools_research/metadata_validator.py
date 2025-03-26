@@ -3,6 +3,8 @@ import copy
 import os
 
 import jsonschema
+from file_scraper.defaults import (BIT_LEVEL_WITH_RECOMMENDED, RECOMMENDED,
+                                   UNACCEPTABLE)
 
 import siptools_research.schemas
 from siptools_research.exceptions import (InvalidDatasetFileError,
@@ -75,7 +77,11 @@ def _validate_file_metadata(dataset, metax_client):
     for file_metadata in dataset_files:
         file_identifier = file_metadata["id"]
         file_path = file_metadata["pathname"]
+
         is_linked_bitlevel = bool(file_metadata["pas_compatible_file"])
+        is_linked_pas_compatible = bool(
+            file_metadata["non_pas_compatible_file"]
+        )
 
         # Validate metadata against JSON schema. The schema contains
         # properties introduced in JSON schema draft 7. Using
@@ -84,6 +90,7 @@ def _validate_file_metadata(dataset, metax_client):
         # would be ignored without any warning.
 
         characteristics = file_metadata["characteristics"] or {}
+        char_ext = file_metadata["characteristics_extension"] or {}
         file_format_version = characteristics.get("file_format_version")
         if not file_format_version and not is_linked_bitlevel:
             raise InvalidFileMetadataError(
@@ -106,6 +113,26 @@ def _validate_file_metadata(dataset, metax_client):
             raise InvalidFileMetadataError(
                 f"The file path of file {file_identifier} is invalid:"
                 f" {file_path}"
+            )
+
+        # Check that files with "bit-level-with-recommended" or "unacceptable"
+        # grade have a PAS compatible file
+        is_incomplete_bitlevel = (
+            char_ext["grade"] in (BIT_LEVEL_WITH_RECOMMENDED, UNACCEPTABLE)
+            and not is_linked_bitlevel
+        )
+        if is_incomplete_bitlevel:
+            raise InvalidFileMetadataError(
+                f"File {file_identifier} with '{char_ext['grade']}' "
+                f"grade is not linked to a PAS compatible file"
+            )
+
+        # Check that PAS compatible file has a good enough grade
+        if is_linked_pas_compatible and char_ext["grade"] != RECOMMENDED:
+            raise InvalidFileMetadataError(
+                f"File {file_identifier} with grade '{char_ext['grade']}' "
+                f"marked as PAS compatible does not have the required "
+                f"'{RECOMMENDED}' grade"
             )
 
 

@@ -3,6 +3,9 @@ import copy
 
 import lxml.etree
 import pytest
+from file_scraper.defaults import (ACCEPTABLE, BIT_LEVEL,
+                                   BIT_LEVEL_WITH_RECOMMENDED, RECOMMENDED,
+                                   UNACCEPTABLE)
 from requests.exceptions import HTTPError
 
 import siptools_research
@@ -10,7 +13,7 @@ import tests.utils
 from siptools_research.exceptions import (
     InvalidDatasetFileError,
     InvalidDatasetMetadataError,
-    InvalidFileMetadataError,
+    InvalidFileMetadataError
 )
 from siptools_research.metadata_validator import validate_metadata
 from siptools_research.metax import get_metax_client
@@ -20,10 +23,10 @@ from tests.metax_data.files import (
     CSV_FILE,
     MKV_FILE,
     PDF_FILE,
+    SEG_Y_FILE,
     TIFF_FILE,
     TXT_FILE,
-    VIDEO_FILE,
-    SEG_Y_FILE,
+    VIDEO_FILE
 )
 
 
@@ -260,6 +263,105 @@ def test_validate_file_metadata_missing_file_format(
         siptools_research.metadata_validator._validate_file_metadata(
             dataset=dataset,
             metax_client=metax
+        )
+
+
+@pytest.mark.parametrize(
+    "file,grade,expected_error",
+    [
+        (
+            # Recommended is fine by itself
+            {}, RECOMMENDED, None
+        ),
+        (
+            # Acceptable is acceptable
+            {}, ACCEPTABLE, None
+        ),
+        (
+            # Bit-level file is fine as itself
+            {}, BIT_LEVEL, None
+        ),
+        (
+            # Bit-level with recommended requires a PAS compatible file
+            {}, BIT_LEVEL_WITH_RECOMMENDED,
+            "is not linked to a PAS compatible file"
+        ),
+        (
+            {"pas_compatible_file": "pas-compatible-file-id"},
+            BIT_LEVEL_WITH_RECOMMENDED, None
+        ),
+        (
+            {}, UNACCEPTABLE, "is not linked to a PAS compatible file"
+        ),
+        (
+            {"pas_compatible_file": "pas-compatible-file-id"},
+            UNACCEPTABLE, None
+        ),
+        (
+            # Acceptable file cannot present itself as PAS compatible
+            {"non_pas_compatible_file": "non-pas-compatible-file-id"},
+            ACCEPTABLE,
+            "does not have the required 'fi-dpres-recommended-file-format' "
+            "grade"
+        ),
+        (
+            # Unacceptable file is not considered PAS compatible despite
+            # possible link
+            {"non_pas_compatible_file": "non-pas-compatible-file-id"},
+            UNACCEPTABLE,
+            "is not linked to a PAS compatible file"
+        )
+    ]
+)
+def test_validate_file_grades_and_links(
+        config, requests_mock, file, grade, expected_error):
+    """
+    Validate files with different PAS compatible file links and grades
+    and ensure wrong combinations fail the validation
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(BASE_DATASET)
+
+    files = []
+
+    file = copy.deepcopy(TXT_FILE) | file
+    file["characteristics_extension"]["grade"] = grade
+
+    files.append(file)
+
+    # Also create the PAS/non-PAS compatible counterpart if it was defined
+    if file.get("pas_compatible_file"):
+        pas_file = TXT_FILE | {
+            "id": file["pas_compatible_file"],
+            "non_pas_compatible_file": file["id"]
+        }
+        files.append(pas_file)
+    if file.get("non_pas_compatible_file"):
+        non_pas_file = TXT_FILE | {
+            "id": file["non_pas_compatible_file"],
+            "pas_compatible_file": file["id"]
+        }
+        files.append(non_pas_file)
+
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=files
+    )
+
+    # Init and run task
+    if expected_error:
+        with pytest.raises(InvalidDatasetFileError) as exc:
+            siptools_research.metadata_validator.validate_metadata(
+                dataset_id=dataset["id"],
+                config=config
+            )
+
+        assert expected_error in str(exc.value)
+    else:
+        siptools_research.metadata_validator.validate_metadata(
+            dataset_id=dataset["id"],
+            config=config
         )
 
 
