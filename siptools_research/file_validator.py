@@ -1,5 +1,5 @@
 """File validation tools."""
-from file_scraper.defaults import BIT_LEVEL, BIT_LEVEL_WITH_RECOMMENDED
+from file_scraper.defaults import BIT_LEVEL
 from file_scraper.scraper import Scraper
 
 from siptools_research.exceptions import InvalidFileError
@@ -55,8 +55,6 @@ def validate_files(dataset_id, root_directory,
         )
         scraper.scrape(check_wellformed=True)
 
-        allowed_grades = [BIT_LEVEL_WITH_RECOMMENDED, BIT_LEVEL]
-
         if is_linked_bitlevel:
             # File is a bit-level file with a DPRES compatible counterpart.
             # 'ValidateMetadata' ensures that both must be included in the same
@@ -69,7 +67,7 @@ def validate_files(dataset_id, root_directory,
             pass
 
         elif scraper.well_formed is None \
-                and scraper.grade() in allowed_grades:
+                and scraper.grade() == BIT_LEVEL:
             # File was not validated, but it will be preserved only bit
             # level, so it is ok
             pass
