@@ -35,7 +35,15 @@ def validate_files(dataset_id, root_directory,
 
         # If this file is linked to a PAS compatible file, it must mean
         # this file is a bit-level file.
-        is_linked_bitlevel = bool(file["pas_compatible_file"])
+        is_linked_bitlevel = file["pas_compatible_file"]
+
+        if is_linked_bitlevel:
+            # Bit-level files linked to a PAS compatible files don't need
+            # to be scraped a second time with the well-formedness check.
+            # 'ValidateMetadata' ensures that both must be included in the same
+            # dataset, so allow this file through, even if it could be complete
+            # garbage for all we know. ;)
+            continue
 
         # Map Metax V3 record separator to file-scraper format
         separator = CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[
@@ -55,14 +63,7 @@ def validate_files(dataset_id, root_directory,
         )
         scraper.scrape(check_wellformed=True)
 
-        if is_linked_bitlevel:
-            # File is a bit-level file with a DPRES compatible counterpart.
-            # 'ValidateMetadata' ensures that both must be included in the same
-            # dataset, so allow this file through, even if it could be complete
-            # garbage for all we know. ;)
-            pass
-
-        elif scraper.well_formed is True:
+        if scraper.well_formed is True:
             # File is valid
             pass
 
