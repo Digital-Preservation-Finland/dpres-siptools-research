@@ -1,6 +1,6 @@
 """Install siptools-research package."""
-from setuptools import setup, find_packages
 
+from setuptools import setup, find_packages
 
 def main():
     """Install siptools-research."""
@@ -22,12 +22,15 @@ def main():
             "iso-639",
             "python-dateutil",
             "click",
+            "flask",
+            "flask-cors",
         ],
         entry_points={
             'console_scripts': [
                 'siptools-research = siptools_research.__main__:main'
             ]
-        }
+        },
+        tests_require=['pytest']
     )
 
 

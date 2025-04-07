@@ -14,6 +14,7 @@ import urllib3
 from click.testing import CliRunner
 
 import siptools_research.config
+from research_rest_api.app import create_app
 from siptools_research.__main__ import Context, cli
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
@@ -209,3 +210,30 @@ def cli_runner():
         return result
 
     return wrapper
+
+
+# TODO: Use the name argument for pytest.fixture decorator to solve the
+# funcarg-shadowing-fixture problem, when support for pytest version 2.x
+# is not required anymore (the name argument was introduced in pytest
+# version 3.0).
+@pytest.fixture(scope="function")
+def app(config):
+    """Create web app and Mock Metax HTTP responses.
+
+    :returns: An instance of the REST API web app.
+    """
+    # Create app and change the default config file path
+    app_ = create_app()
+    app_.config.update(
+        CONF=config
+    )
+    app_.config["TESTING"] = True
+
+    # Create temporary directories
+    conf = siptools_research.config.Configuration(config)
+    cache_dir = os.path.join(conf.get("packaging_root"), "file_cache")
+    os.mkdir(cache_dir)
+    tmp_dir = os.path.join(conf.get("packaging_root"), "tmp")
+    os.mkdir(tmp_dir)
+
+    return app_

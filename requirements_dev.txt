@@ -15,6 +15,7 @@ PyYAML<6.0
 mongomock
 xmltodict
 mock-ssh-server
+pytest-mock
 
 git+https://gitlab.ci.csc.fi/dpres/mets.git@develop#egg=mets
 git+https://gitlab.ci.csc.fi/dpres/xml-helpers.git@develop#egg=xml_helpers
@@ -45,11 +46,16 @@ pymongo==3.6.1 ; python_version == '3.6' # version available on centos7
 pymongo ; python_version > '3.6'
 requests==2.14.2 ; python_version == '3.6'
 requests ; python_version > '3.6'
+flask==1.1.2 ; python_version == '3.6'
+flask ; python_version > '3.6'
+Werkzeug==1.0.1 ; python_version == '3.6'
+Werkzeug ; python_version > '3.6'
 paramiko
 jsonschema==3.2.0 ; python_version == '3.6'
 jsonschema ; python_version > '3.6'
 iso-639
 python-dateutil
+flask_cors
 
 
 # TODO: docutils is required by python-daemon. Can be removed when this issue:

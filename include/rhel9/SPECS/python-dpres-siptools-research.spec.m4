@@ -40,6 +40,7 @@ BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist setuptools_scm}
 BuildRequires:  %{py3_dist wheel}
 BuildRequires:  %{py3_dist xmltodict}
+BuildRequires:  %{py3_dist upload_rest_api}
 
 %global _description %{expand:
 Digital Preservation Packaging Service for Research datasets
