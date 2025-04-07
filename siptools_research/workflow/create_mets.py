@@ -280,15 +280,8 @@ class CreateMets(WorkflowTask):
                 object_role="outcome"
             )
 
-            # FIXME: mets-builder currently has broken behavior and will
-            # also add the linked metadata from 'event' to both files
-            # if 'File.add_metadata' is used. This linked metadata includes the
-            # technical metadata from the other file.
-            #
-            # This method of adding metadata is undocumented but should work
-            # to avoid the issue until it's fixed.
-            dpres_file.digital_object.metadata.add(event)
-            bitlevel_file.digital_object.metadata.add(event)
+            dpres_file.add_metadata([event])
+            bitlevel_file.add_metadata([event])
 
     def _create_logical_structmap(self, files, metadata, files_metadata):
 
