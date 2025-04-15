@@ -67,7 +67,10 @@ def test_validate_invalid_files(config, requests_mock, tmp_path):
         validate_files( "dataset_identifier", tmp_path, config)
 
     assert str(exception_info.value) == "1 files are not well-formed"
-    assert exception_info.value.files == ['pid:urn:identifier']
+    assert any(
+        file for file in exception_info.value.files
+        if file["id"] == "pid:urn:identifier"
+    )
 
 
 def test_validate_bitlevel_file(config, requests_mock, tmp_path):
@@ -122,7 +125,10 @@ def test_validate_wrong_mimetype(config, requests_mock, tmp_path):
         validate_files("dataset_identifier", tmp_path, config)
 
     assert str(exception_info.value) == "1 files are not well-formed"
-    assert exception_info.value.files == ['pid:urn:identifier_tiff']
+    assert any(
+        file for file in exception_info.value.files
+        if file["id"] == "pid:urn:identifier_tiff"
+    )
 
 
 def test_validate_csv_file(config, requests_mock, tmp_path):
@@ -151,4 +157,7 @@ def test_validate_csv_file(config, requests_mock, tmp_path):
         validate_files("dataset_identifier", tmp_path, config)
 
     assert str(exception_info.value) == "1 files are not well-formed"
-    assert exception_info.value.files == ['pid:urn:identifier_csv']
+    assert any(
+        file for file in exception_info.value.files
+        if file["id"] == "pid:urn:identifier_csv"
+    )

@@ -8,7 +8,7 @@ class InvalidDatasetError(Exception):
 class InvalidDatasetFileError(InvalidDatasetError):
     """Exception raised when dataset contains invalid files."""
 
-    def __init__(self, message, files=None):
+    def __init__(self, message, files):
         """Initialize exception.
 
         :param message: Error message

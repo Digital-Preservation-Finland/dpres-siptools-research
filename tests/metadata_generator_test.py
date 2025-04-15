@@ -280,7 +280,10 @@ def test_generate_metadata_unrecognized(config, requests_mock, tmp_path):
         generate_metadata('dataset_identifier', tmp_path, config)
 
     assert str(exception_info.value) == 'File format was not recognized'
-    assert exception_info.value.files == ['pid:urn:identifier']
+    assert next(
+        file for file in exception_info.value.files
+        if file["id"] == 'pid:urn:identifier'
+    )
 
 
 def test_generate_bitlevel_file_errors_ignored(
@@ -605,7 +608,10 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
     assert str(exception_info.value)\
         == f"File scraper detects a different {keys[-1]}: {detected_value}"
 
-    assert exception_info.value.files == ["pid:urn:identifier"]
+    assert next(
+        file for file in exception_info.value.files
+        if file["id"] == 'pid:urn:identifier'
+    )
 
 
 def test_generate_metadata_dataset_not_found(config, requests_mock, tmp_path):

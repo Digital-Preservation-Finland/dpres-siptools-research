@@ -75,7 +75,7 @@ def validate_files(dataset_id, root_directory,
 
         else:
             # File is invalid or could not be validated
-            invalid_files.append(file["id"])
+            invalid_files.append(file)
 
     if invalid_files:
         raise InvalidFileError(

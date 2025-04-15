@@ -110,7 +110,7 @@ class InvalidFileMetadataTask(FailingTask):
         :returns:  ``None``
         """
         error = "Invalid file encoding"
-        raise InvalidFileMetadataError(error)
+        raise InvalidFileMetadataError(error, files=[{"id": "foo"}])
 
 
 class InvalidContractMetadataTask(FailingTask):
@@ -134,7 +134,7 @@ class MissingFileTask(FailingTask):
         :returns:  ``None``
         """
         error = "A file was not found in Ida"
-        raise MissingFileError(error)
+        raise MissingFileError(error, files=[{"id": "foo"}])
 
 
 class InvalidFileTask(FailingTask):
@@ -146,7 +146,7 @@ class InvalidFileTask(FailingTask):
         :returns:  ``None``
         """
         error = "A file is not well-formed"
-        raise InvalidFileError(error)
+        raise InvalidFileError(error, files=[{"id": "foo"}])
 
 
 class InvalidSIPTask(FailingTask):

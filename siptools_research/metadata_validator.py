@@ -95,7 +95,8 @@ def _validate_file_metadata(dataset, metax_client):
         if not file_format_version and not is_linked_bitlevel:
             raise InvalidFileMetadataError(
                 f"Non bit-level file must have `file_format_version` set: "
-                f"{file_path}"
+                f"{file_path}",
+                files=[file_metadata]
             )
 
         try:
@@ -104,7 +105,8 @@ def _validate_file_metadata(dataset, metax_client):
             ).validate(file_metadata)
         except jsonschema.ValidationError as exc:
             raise InvalidFileMetadataError(
-                f"Validation error in metadata of {file_path}: {str(exc)}"
+                f"Validation error in metadata of {file_path}: {str(exc)}",
+                files=[file_metadata]
             ) from exc
 
         # Check that file path does not point outside SIP
@@ -112,7 +114,8 @@ def _validate_file_metadata(dataset, metax_client):
         if normalised_path.startswith(".."):
             raise InvalidFileMetadataError(
                 f"The file path of file {file_identifier} is invalid:"
-                f" {file_path}"
+                f" {file_path}",
+                files=[file_metadata]
             )
 
         # Check that files with "bit-level-with-recommended" or "unacceptable"
@@ -124,7 +127,8 @@ def _validate_file_metadata(dataset, metax_client):
         if is_incomplete_bitlevel:
             raise InvalidFileMetadataError(
                 f"File {file_identifier} with '{char_ext['grade']}' "
-                f"grade is not linked to a PAS compatible file"
+                f"grade is not linked to a PAS compatible file",
+                files=[file_metadata]
             )
 
         # Check that PAS compatible file has a good enough grade
@@ -132,7 +136,8 @@ def _validate_file_metadata(dataset, metax_client):
             raise InvalidFileMetadataError(
                 f"File {file_identifier} with grade '{char_ext['grade']}' "
                 f"marked as PAS compatible does not have the required "
-                f"'{RECOMMENDED}' grade"
+                f"'{RECOMMENDED}' grade",
+                files=[file_metadata]
             )
 
 
@@ -187,4 +192,9 @@ def _validate_file_dpres_links(dataset_files):
                 "files without DPRES compatible / bit-level counterparts."
             )
 
-        raise InvalidDatasetFileError(error, all_lone_ids)
+        lone_files = [
+            file_ for file_ in dataset_files
+            if file_["id"] in all_lone_ids
+        ]
+
+        raise InvalidDatasetFileError(error, files=lone_files)

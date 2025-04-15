@@ -185,7 +185,8 @@ class CreateMets(WorkflowTask):
                 if value1 and value1 != value2:
                     raise InvalidFileMetadataError(
                         "File characteristics have changed after"
-                        " metadata generation"
+                        " metadata generation",
+                        files=[file_]
                     )
 
             # Transform string keys to integer keys in "streams"

@@ -86,7 +86,7 @@ def generate_metadata(
             # seems to be OK (or is there a bug in file-scraper,
             # siptools-ng, or sample files of this repository?)
             error = "File format was not recognized"
-            raise InvalidFileError(error, [file_metadata["id"]])
+            raise InvalidFileError(error, [file_metadata])
 
         try:
             url = reference_data[(scraper.mimetype, scraper.version)]
@@ -101,8 +101,7 @@ def generate_metadata(
                 message = (f"Detected file_format: '{scraper.mimetype}' and "
                            f"format_version: '{scraper.version}' are not "
                            "supported.")
-                raise InvalidFileError(message,
-                                       [file_metadata["id"]]) from error
+                raise InvalidFileError(message, [file_metadata]) from error
 
         # Check that user defined metadata is not ignored by
         # file-scraper
@@ -143,7 +142,7 @@ def generate_metadata(
             if user_metadata and scraper_metadata != user_metadata:
                 error = (f"File scraper detects a different {key}: "
                          f"{scraper_metadata}")
-                raise InvalidFileMetadataError(error, [file_metadata["id"]])
+                raise InvalidFileMetadataError(error, [file_metadata])
 
         # Map 'csv_record_separator' to the enum value expected by Metax V3
         scraper_file_characteristics["csv_record_separator"] = (
