@@ -24,6 +24,7 @@ def main():
             "click",
             "flask",
             "flask-cors",
+            "mongoengine"
         ],
         entry_points={
             'console_scripts': [

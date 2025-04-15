@@ -77,12 +77,30 @@ def config(tmp_path):
 
 
 @pytest.fixture(autouse=True)
-def mock_upload_conf():
-    """Mock upload-rest-api database connection."""
+def mock_mongoengine(monkeypatch):
+    """Mock upload-rest-api and siptools-research database connections."""
     mongoengine.disconnect()
     mongoengine.connect("upload", host="mongodb://localhost",
                         tz_aware=True,
                         mongo_client_class=mongomock.MongoClient)
+
+    def mock_connect_mongoengine(config_path):
+        mongoengine.register_connection(
+            host="mongodb://localhost",
+            alias="siptools_research",
+            tz_aware=True,
+            mongo_client_class=mongomock.MongoClient
+        )
+
+    mongoengine.disconnect(alias="siptools_research")
+
+    # TODO: Monkey patching is tiresome and needs to be performed everywhere.
+    # We should just move to using MongoBox as with pretty much every
+    # DPRES project at this point.
+    monkeypatch.setattr(
+        "siptools_research.database.connect_mongoengine",
+        mock_connect_mongoengine
+    )
 
 
 @pytest.fixture(scope="function")

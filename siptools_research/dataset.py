@@ -9,6 +9,8 @@ import siptools_research.database
 from siptools_research.config import Configuration
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.metax import get_metax_client
+from siptools_research.database import connect_mongoengine
+
 
 PAS_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-pas"
 IDA_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-ida"
@@ -43,6 +45,9 @@ class Dataset:
         self.conf = Configuration(config)
         self.database = siptools_research.database.Database(config)
         self._metax_client = get_metax_client(config)
+
+        # Connect the workflow error database
+        connect_mongoengine(config)
 
     @property
     def _document(self):

@@ -57,6 +57,7 @@ Requires: %{py3_dist dpres-siptools-ng}
 Requires: %{py3_dist metax_access}
 Requires: %{py3_dist upload_rest_api}
 Requires: %{py3_dist dpres_access_rest_api_client}
+Requires: %{py3_dist mongoengine}
 
 %description -n python3-dpres-siptools-research %_description
 
