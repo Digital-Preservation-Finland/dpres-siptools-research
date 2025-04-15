@@ -16,3 +16,5 @@ sign_key
 build/
 INSTALLED_FILES
 *.egg-info/
+.eggs/
+dist/
