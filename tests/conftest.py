@@ -16,6 +16,7 @@ from click.testing import CliRunner
 import siptools_research.config
 from research_rest_api.app import create_app
 from siptools_research.__main__ import Context, cli
+from siptools_research.models.file_error import FileError
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -101,6 +102,13 @@ def mock_mongoengine(monkeypatch):
         "siptools_research.database.connect_mongoengine",
         mock_connect_mongoengine
     )
+
+    mock_connect_mongoengine("foo")
+
+    yield
+
+    # Delete existing entries after test
+    FileError.objects.delete()
 
 
 @pytest.fixture(scope="function")
