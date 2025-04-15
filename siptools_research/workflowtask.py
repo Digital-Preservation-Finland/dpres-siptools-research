@@ -1,11 +1,13 @@
 """Base task classes for the workflow tasks."""
 import luigi
-from metax_access import (DS_STATE_INVALID_METADATA,
-                          DS_STATE_PACKAGING_FAILED,
+from metax_access import (DS_STATE_INVALID_METADATA, DS_STATE_PACKAGING_FAILED,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE)
 
 from siptools_research.dataset import Dataset
-from siptools_research.exceptions import InvalidSIPError, InvalidDatasetError
+from siptools_research.exceptions import (InvalidDatasetError,
+                                          InvalidDatasetFileError,
+                                          InvalidSIPError)
+from siptools_research.models.file_error import FileError
 
 
 class WorkflowTask(luigi.Task):
@@ -132,6 +134,30 @@ def report_task_failure(task, exception):
             new_preservation_state,
             _get_description(task, exception)
         )
+
+        # Save file-related errors if any were included in the exception
+        if isinstance(exception, InvalidDatasetFileError):
+            dataset_id = \
+                task.dataset.identifier if exception.is_dataset_error else None
+
+            file_ids = [file["id"] for file in exception.files]
+
+            # Delete any existing errors, if any
+            FileError.objects.filter(
+                file_id__in=file_ids, dataset_id=dataset_id
+            ).delete()
+
+            # Bulk insert errors
+            FileError.objects.insert([
+                FileError(
+                    file_id=file["id"],
+                    storage_identifier=file["storage_identifier"],
+                    storage_service=file["storage_service"],
+                    dataset_id=dataset_id,
+                    errors=[str(exception)]
+                ) for file in exception.files
+            ])
+
         # Disable workflow
         task.dataset.disable()
 

@@ -16,6 +16,7 @@ from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import (
     InvalidContractMetadataError,
     InvalidDatasetError,
+    InvalidDatasetFileError,
     InvalidDatasetMetadataError,
     InvalidFileError,
     InvalidFileMetadataError,
@@ -24,6 +25,7 @@ from siptools_research.exceptions import (
 )
 from siptools_research.metax import get_metax_client
 from siptools_research.workflowtask import WorkflowTask
+from siptools_research.models.file_error import FileError
 from tests.metax_data.datasets import BASE_DATASET
 
 
@@ -359,6 +361,140 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
         "state": expected_state,
         "description": {"en": expected_description}
     }
+
+
+@pytest.mark.usefixtures("testmongoclient")
+def test_file_error_saved_fields(config, workspace, requests_mock):
+    """
+    Test that workflow file error database will be updated when a task
+    fails due to a file-related error and that all fields exist
+    """
+    class TestTask(FailingTask):
+        def run(self):
+            raise InvalidDatasetFileError(
+                "Failed to reticulate splines",
+                files=[
+                    {
+                        "id": "file-id",
+                        "storage_identifier": "storage-id",
+                        "storage_service": "pas"
+                    }
+                ]
+            )
+
+    # Mock metax
+    json=copy.deepcopy(BASE_DATASET)
+    json["id"] = workspace.name
+    json["preservation"]["state"] = DS_STATE_GENERATING_METADATA
+    requests_mock.get(f"/v3/datasets/{workspace.name}", json=json)
+    requests_mock.patch(
+        f"/v3/datasets/{workspace.name}/preservation"
+    )
+
+    luigi.build(
+        [TestTask(dataset_id=workspace.name, config=config)],
+        local_scheduler=True
+    )
+
+    assert FileError.objects.count() == 1
+
+    file_error = FileError.objects.all()[0]
+
+    assert file_error.file_id == "file-id"
+    assert file_error.storage_identifier == "storage-id"
+    assert file_error.storage_service.value == "pas"
+    assert file_error.dataset_id is None
+    assert file_error.created_at.isoformat()  # 'created_at' is a date
+
+
+@pytest.mark.parametrize(
+    "exception,expected_file_errors",
+    [
+        (
+            InvalidDatasetFileError(
+                "Failed to reticulate splines",
+                files=[
+                    {
+                        "id": "file-id",
+                        "storage_identifier": "storage-id",
+                        "storage_service": "pas"
+                    }
+                ]
+            ),
+            [
+                {
+                    "file_id": "file-id",
+                    "storage_identifier": "storage-id",
+                    "storage_service": "pas",
+                    "dataset_id": None,
+                    "errors": ["Failed to reticulate splines"]
+                }
+            ]
+        ),
+        (
+            InvalidDatasetFileError(
+                "Failed to reticulate splines",
+                files=[
+                    {
+                        "id": "file-id-1",
+                        "storage_identifier": "storage-id-1",
+                        "storage_service": "pas"
+                    },
+                    {
+                        "id": "file-id-2",
+                        "storage_identifier": "storage-id-2",
+                        "storage_service": "ida"
+                    }
+                ],
+                is_dataset_error=True
+            ),
+            [
+                {
+                    "file_id": "file-id-1",
+                    "storage_identifier": "storage-id-1",
+                    "storage_service": "pas",
+                    "dataset_id": "dataset-id",
+                    "errors": ["Failed to reticulate splines"]
+                },
+                {
+                    "file_id": "file-id-2",
+                    "storage_identifier": "storage-id-2",
+                    "storage_service": "ida",
+                    "dataset_id": "dataset-id",
+                    "errors": ["Failed to reticulate splines"]
+                }
+            ]
+        )
+    ]
+)
+@pytest.mark.usefixtures("testmongoclient")
+def test_file_error_saved(
+        config, workspace, requests_mock, exception, expected_file_errors):
+    """
+    Test that workflow file error database will be updated when a task
+    fails due to a file-related error
+    """
+    class TestTask(FailingTask):
+        def run(self):
+            raise exception
+
+    # Mock metax
+    json=copy.deepcopy(BASE_DATASET)
+    json["id"] = "dataset-id"
+    json["preservation"]["state"] = DS_STATE_GENERATING_METADATA
+    requests_mock.get("/v3/datasets/dataset-id", json=json)
+    requests_mock.patch(
+        "/v3/datasets/dataset-id/preservation"
+    )
+
+    luigi.build(
+        [TestTask(dataset_id="dataset-id", config=config)],
+        local_scheduler=True
+    )
+
+    # Ensure the correct file error was written into the database
+    for error in expected_file_errors:
+        assert FileError.objects.filter(**error).count() == 1
 
 
 @pytest.mark.usefixtures('testmongoclient')
