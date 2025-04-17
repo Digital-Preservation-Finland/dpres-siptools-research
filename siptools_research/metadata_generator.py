@@ -8,6 +8,8 @@ from siptools_research.exceptions import (InvalidFileError,
 from siptools_research.metax import (CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL,
                                      CSV_RECORD_SEPARATOR_LITERAL_TO_ENUM,
                                      get_metax_client)
+from siptools_research.models.file_error import FileError
+from siptools_research.database import connect_mongoengine
 
 
 def generate_metadata(
@@ -39,7 +41,16 @@ def generate_metadata(
         for entry in metax_client.get_file_format_versions()
     }
 
-    for file_metadata in metax_client.get_dataset_files(dataset_id):
+    dataset_files = metax_client.get_dataset_files(dataset_id)
+
+    # Clear any existing file errors
+    connect_mongoengine(config)
+    FileError.objects.filter(
+        file_id__in=[file["id"] for file in dataset_files],
+        dataset_id__in=(None, dataset_id)
+    ).delete()
+
+    for file_metadata in dataset_files:
         # If this file is linked to a PAS compatible file, it must mean
         # this file is a bit-level file. If so, be lenient during
         # file metadata generation and allow scraping failures to pass.
