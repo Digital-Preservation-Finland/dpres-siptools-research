@@ -81,7 +81,7 @@ usermod -aG %{user_group} %{user_name}
 
 %install
 %pyproject_install
-%pyproject_save_files siptools_research
+%pyproject_save_files siptools_research research_rest_api
 
 # Copy files to /etc with correct permissions
 install -D -m 0644 include/etc/siptools_research.conf %{buildroot}%{_sysconfdir}/siptools_research.conf
