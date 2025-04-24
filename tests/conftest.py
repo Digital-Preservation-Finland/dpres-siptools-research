@@ -102,6 +102,18 @@ def mock_mongoengine(monkeypatch):
         "siptools_research.database.connect_mongoengine",
         mock_connect_mongoengine
     )
+    monkeypatch.setattr(
+        "siptools_research.dataset.connect_mongoengine",
+        mock_connect_mongoengine
+    )
+    monkeypatch.setattr(
+        "siptools_research.metadata_generator.connect_mongoengine",
+        mock_connect_mongoengine
+    )
+    monkeypatch.setattr(
+        "research_rest_api.app.connect_mongoengine",
+        mock_connect_mongoengine
+    )
 
     mock_connect_mongoengine("foo")
 
