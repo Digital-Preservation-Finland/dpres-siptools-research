@@ -193,7 +193,7 @@ def test_multiple_provenance_events(config,
     file = copy.deepcopy(TXT_FILE)
     file["dataset_metadata"] = {
             "use_category": {
-                "id": None,
+                "url": None,
                 "pref_label": {
                     "en": "dummy-use-category"
                 }
@@ -437,7 +437,7 @@ def test_createdescriptivemetadata(config, workspace, requests_mock):
     file=copy.deepcopy(TXT_FILE)
     file["dataset_metadata"] = {
             "use_category": {
-                "id": None,
+                "url": "url/to/dummy-use-category",
                 "pref_label": {
                     "en": "dummy-use-category"
                 }
@@ -850,7 +850,7 @@ def test_create_logical_structmap(config, workspace, requests_mock):
     files[0]["pathname"] = "files/file1"
     files[0]["dataset_metadata"] = {
             "use_category": {
-                "id": None,
+                "url": "url/to/dummy-use-category",
                 "pref_label": {
                     "en": "dummy-use-category"
                 }
@@ -860,7 +860,7 @@ def test_create_logical_structmap(config, workspace, requests_mock):
     files[1]["pathname"] = "files/file2"
     files[1]["dataset_metadata"] = {
             "use_category": {
-                "id": None,
+                "url": "url/to/dummy-use-category",
                 "pref_label": {
                     "en": "dummy-use-category"
                 }
