@@ -220,6 +220,7 @@ def test_detect_missing_file_link(
 
     assert expected_error in str(exc.value)
     assert expected_error_file_ids == [file["id"] for file in exc.value.files]
+    assert exc.value.is_dataset_error
 
 
 @pytest.mark.parametrize(
