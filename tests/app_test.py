@@ -38,27 +38,26 @@ def client(app):
         yield client
 
 
-def test_index(app):
+def test_index(client):
     """Test the application index page.
 
     :param app: Flask application
     """
-    with app.test_client() as client:
-        response = client.get("/")
+    response = client.get("/")
 
     assert response.status_code == 400
 
 
-def test_dataset_preserve(mocker, app):
+def test_dataset_preserve(mocker, app, client):
     """Test preserving dataset.
 
     :param mocker: pytest-mock mocker
     :param app: Flask application
+    :param client: Flask test client
     """
     mock_function = mocker.patch("siptools_research.preserve_dataset")
 
-    with app.test_client() as client:
-        response = client.post("/dataset/1/preserve")
+    response = client.post("/dataset/1/preserve")
     assert response.status_code == 202
 
     mock_function.assert_called_with(
@@ -71,16 +70,16 @@ def test_dataset_preserve(mocker, app):
     }
 
 
-def test_dataset_generate_metadata(mocker, app):
+def test_dataset_generate_metadata(mocker, app, client):
     """Test the generating metadata.
 
     :param mocker: pytest-mock mocker
     :param app: Flask application
+    :param client: Flask test client
     """
     mock_function = mocker.patch("siptools_research.generate_metadata")
 
-    with app.test_client() as client:
-        response = client.post("/dataset/1/generate-metadata")
+    response = client.post("/dataset/1/generate-metadata")
     assert response.status_code == 202
 
     mock_function.assert_called_with(
@@ -93,19 +92,16 @@ def test_dataset_generate_metadata(mocker, app):
     }
 
 
-def test_validate_dataset(mocker, app):
+def test_validate_dataset(mocker, app, client):
     """Test validating files and metadata.
 
     :param mocker: pytest-mock mocker
     :param app: Flask application
-    :param expected_response: The response that should be shown to the
-                              user
-    :param error: An error that occurs in dpres_siptools
+    :param client: Flask test client
     """
     mock_function = mocker.patch("siptools_research.validate_dataset")
 
-    with app.test_client() as client:
-        response = client.post("/dataset/1/validate")
+    response = client.post("/dataset/1/validate")
     assert response.status_code == 202
 
     mock_function.assert_called_with(
