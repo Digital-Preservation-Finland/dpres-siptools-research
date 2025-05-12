@@ -5,12 +5,14 @@ import enum
 import shutil
 from pathlib import Path
 
+from metax_access import DS_STATE_INITIALIZED
+
 import siptools_research.database
 from siptools_research.config import Configuration
+from siptools_research.database import connect_mongoengine
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.metax import get_metax_client
-from siptools_research.database import connect_mongoengine
-
+from siptools_research.models.file_error import FileError
 
 PAS_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-pas"
 IDA_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-ida"
@@ -115,6 +117,10 @@ class Dataset:
         else:
             return self._metadata["preservation"]["state"]
 
+    def set_preservation_reason(self, reason: str):
+        """Set preservation reason description of the dataset."""
+        self._metax_client.set_preservation_reason(self.pas_dataset_id, reason)
+
     def set_preservation_state(self, state, description):
         """Set preservation state of the dataset.
 
@@ -151,6 +157,16 @@ class Dataset:
     def unlock(self):
         """Unlock dataset."""
         self._metax_client.unlock_dataset(self.identifier)
+
+        dataset_files = self._metax_client.get_dataset_files(self.identifier)
+
+        # Delete generic file errors and those related to this dataset.
+        # User is able to change metadata once the dataset and its files are
+        # unlocked, which would make the errors invalid.
+        FileError.objects.filter(
+            file_id__in=[file["id"] for file in dataset_files],
+            dataset_id__in=(None, self.identifier)
+        ).delete()
 
     def copy_to_pas_datacatalog(self):
         """Copy dataset to PAS data catalog."""
@@ -329,6 +345,23 @@ class Dataset:
         self.preservation_workspace.mkdir(parents=True)
 
         self._set_target(Target.PRESERVATION)
+
+    def reset(self, description: str, reason_description: str) -> None:
+        """Reset dataset.
+
+        This sets its state to INITIALIZED and removes any existing file
+        errors.
+        """
+        if self.enabled:
+            raise WorkflowExistsError(
+                "Active workflow already exists for this dataset."
+            )
+
+        self.set_preservation_state(DS_STATE_INITIALIZED, description)
+        self.set_preservation_reason(reason_description)
+
+        # Unlock dataset
+        self.unlock()
 
 
 def find_datasets(

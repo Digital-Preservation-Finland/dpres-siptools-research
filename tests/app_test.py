@@ -92,6 +92,37 @@ def test_dataset_generate_metadata(mocker, app, client):
     }
 
 
+def test_dataset_reset(mocker, app, client):
+    """Test resetting the dataset.
+
+    :param mocker: pytest-mock mocker
+    :param app: Flask application
+    :param client: Flask test client
+    """
+    mock_function = mocker.patch("siptools_research.reset_dataset")
+
+    response = client.post(
+        "/dataset/1/reset",
+        data={
+            "description": "Reset by user",
+            "reason_description": "File was incorrect"
+        }
+    )
+    assert response.status_code == 200
+
+    mock_function.assert_called_with(
+        "1",
+        description="Reset by user",
+        reason_description="File was incorrect",
+        config=app.config.get("CONF")
+    )
+
+    assert response.json == {
+        "dataset_id": "1",
+        "status": "dataset has been reset"
+    }
+
+
 def test_validate_dataset(mocker, app, client):
     """Test validating files and metadata.
 

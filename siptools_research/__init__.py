@@ -30,3 +30,21 @@ def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
     :returns: ``None``
     """
     Dataset(identifier=dataset_id, config=config).preserve()
+
+
+def reset_dataset(
+        dataset_id: str,
+        description: str,
+        reason_description: str,
+        config: str = '/etc/siptools_research.conf') -> None:
+    """Reset dataset.
+
+    :param dataset_id: Dataset identifier
+    :param description: Preservation description to set on Metax
+    :param reason_description: Preservation reason description to set on Metax
+    :param config: Path to configuration file
+    """
+    Dataset(identifier=dataset_id, config=config).reset(
+        description=description,
+        reason_description=reason_description
+    )

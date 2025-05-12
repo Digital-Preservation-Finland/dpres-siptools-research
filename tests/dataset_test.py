@@ -3,10 +3,13 @@ import copy
 import datetime
 
 import pytest
+from metax_access import DS_STATE_INITIALIZED
 
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import WorkflowExistsError
+from siptools_research.models.file_error import FileError
 from tests.metax_data.datasets import BASE_DATASET
+from tests.metax_data.files import BASE_FILE
 
 
 @pytest.mark.parametrize(
@@ -445,6 +448,87 @@ def test_restart_preserve_dataset(config):
 
     # Preservation workspace should be cleaned
     assert not any(dataset.preservation_workspace.iterdir())
+
+
+@pytest.mark.usefixtures("testmongoclient")
+def test_reset_dataset(requests_mock, config):
+    """Test dataset reset function.
+
+    Tests that `reset` updates Metax state, unlocks the dataset
+    and removes any existing file errors
+
+    :param config: Configuration file
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(BASE_DATASET)
+    requests_mock.get("/v3/datasets/dataset_identifier", json=dataset)
+
+    preservation_patch = requests_mock.patch(
+        "/v3/datasets/dataset_identifier/preservation", json={}
+    )
+    requests_mock.get(
+        "/v3/datasets/dataset_identifier/files",
+        json={
+            "results": [
+                BASE_FILE | {
+                    "id": f"file-id-{i}",
+                    "storage-identifier": f"storage-identifier-{i}"
+                } for i in range(1, 3)  # Files 1 and 2
+            ],
+            "next": None,
+            "previous": None
+        }
+    )
+    requests_mock.post("/v3/files/patch-many")
+
+    FileError.objects.insert([
+        FileError(
+            file_id="file-id-1",
+            storage_identifier="storage-identifier-1",
+            storage_service="pas",
+            dataset_id=None
+        ),
+        FileError(
+            file_id="file-id-2",
+            storage_identifier="storage-identifier-2",
+            storage_service="pas",
+            dataset_id="dataset_identifier"
+        ),
+        # This one won't be deleted
+        FileError(
+            file_id="file-id-3",
+            storage_identifier="storage-identifier-3",
+            storage_service="pas",
+        )
+    ])
+
+    Dataset('dataset_identifier', config=config).reset(
+        description="Reset by user",
+        reason_description="Why this dataset was reset"
+    )
+
+    # Preservation state set to INITIALIZED and dataset is unlocked
+    assert any(
+        req for req in preservation_patch.request_history
+        if req.json().get("state", None) == DS_STATE_INITIALIZED
+    )
+    assert any(
+        req for req in preservation_patch.request_history
+        if req.json().get("pas_process_running", None) is False
+    )
+    assert any(
+        req for req in preservation_patch.request_history
+        if req.json().get("description", {}).get("en") == "Reset by user"
+    )
+    assert any(
+        req for req in preservation_patch.request_history
+        if req.json().get("reason_description", None) == \
+            "Why this dataset was reset"
+    )
+
+    # File errors for the two files are removed
+    assert FileError.objects.count() == 1
+    assert FileError.objects.all()[0].file_id == "file-id-3"
 
 
 @pytest.mark.usefixtures("testmongoclient")

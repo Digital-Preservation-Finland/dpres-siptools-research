@@ -77,6 +77,29 @@ def create_app():
 
         return response
 
+    @app.route('/dataset/<dataset_id>/reset', methods=['POST'])
+    def reset(dataset_id: str):
+        """Reset dataset.
+
+        :returns: HTTP response
+        """
+        description = request.form["description"]
+        reason_description = request.form["reason_description"]
+
+        siptools_research.reset_dataset(
+            dataset_id,
+            description=description,
+            reason_description=reason_description,
+            config=app.config.get('CONF')
+        )
+
+        response = jsonify({
+            'dataset_id': dataset_id,
+            'status': 'dataset has been reset'
+        })
+
+        return response
+
     @app.route(
         '/file-errors',
         # 'GET' only accepts 8 KB of query parameters, which would limit
