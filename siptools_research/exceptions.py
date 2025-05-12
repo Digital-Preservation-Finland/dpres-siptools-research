@@ -8,14 +8,18 @@ class InvalidDatasetError(Exception):
 class InvalidDatasetFileError(InvalidDatasetError):
     """Exception raised when dataset contains invalid files."""
 
-    def __init__(self, message, files):
+    def __init__(self, message, files, is_dataset_error=False):
         """Initialize exception.
 
         :param message: Error message
         :param files: List of invalid files
+        :param is_dataset_error: Whether the error is due to the dataset.
+            Default is False as most errors are
+            expected to be caused by invalid file metadata only.
         """
         super().__init__(message)
         self.files = files
+        self.is_dataset_error = is_dataset_error
 
 
 class InvalidSIPError(InvalidDatasetError):
