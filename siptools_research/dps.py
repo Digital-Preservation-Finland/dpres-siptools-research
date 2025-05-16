@@ -1,7 +1,7 @@
 """Digital Preservation Service client."""
 import configparser
 
-from dpres_access_rest_api_client import AccessClient
+from dpres_rest_api_client import AccessClient
 from siptools_research.config import Configuration
 
 
