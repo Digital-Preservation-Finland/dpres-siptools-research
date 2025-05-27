@@ -7,6 +7,7 @@ import configparser
 DEFAULTS = {
     'packaging_root': '/var/spool/siptools-research',
     'mongodb_host': 'localhost',
+    'mongodb_port': '27017',
     'mongodb_database': 'siptools-research',
     'mongodb_collection': 'workflow',
     'metax_url': 'https://metax-test.csc.fi',
