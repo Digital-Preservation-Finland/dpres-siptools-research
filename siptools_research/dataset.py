@@ -46,7 +46,6 @@ class Dataset:
         self.identifier = identifier
         self._cached_metadata = None
         self.conf = Configuration(config)
-        self.database = siptools_research.database.Database(config)
         self._metax_client = get_metax_client(config)
 
         connect_mongoengine(config)
