@@ -12,6 +12,8 @@ from siptools_research.config import Configuration
 from siptools_research.database import connect_mongoengine
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.metax import get_metax_client
+from siptools_research.models.dataset_entry import (DatasetWorkflowEntry,
+                                                    TaskEntry)
 from siptools_research.models.file_error import FileError
 
 PAS_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-pas"
@@ -42,24 +44,22 @@ class Dataset:
     ):
         """Initialize dataset."""
         self.identifier = identifier
-        self._cached_document = document
         self._cached_metadata = None
         self.conf = Configuration(config)
         self.database = siptools_research.database.Database(config)
         self._metax_client = get_metax_client(config)
 
-        # Connect the workflow error database
         connect_mongoengine(config)
 
-    @property
-    def _document(self):
-        """Document in database."""
-        if self._cached_document is None:
-            self._cached_document = (
-                self.database.get_document(self.identifier) or {}
-            )
-
-        return self._cached_document
+        self._document = document
+        if self._document is None:
+            try:
+                self._document = \
+                    DatasetWorkflowEntry.objects.get(id=self.identifier)
+            except DatasetWorkflowEntry.DoesNotExist:
+                self._document = DatasetWorkflowEntry(
+                    id=self.identifier
+                )
 
     @property
     def _metadata(self):
@@ -194,7 +194,7 @@ class Dataset:
     @property
     def target(self):
         """Target of the workflow."""
-        if "target" in self._document:
+        if self._document.target:
             target = Target(self._document["target"])
         else:
             target = None
@@ -228,19 +228,17 @@ class Dataset:
     @property
     def enabled(self):
         """Check if dataset has active workflow."""
-        return self._document.get("enabled", False)
+        return self._document.enabled
 
     def disable(self):
         """Disable workflow."""
-        self._cached_document = self.database.update_document(
-            self.identifier, {"enabled": False}
-        )
+        self._document.enabled = False
+        self._document.save()
 
     def enable(self):
         """Enable workflow."""
-        self._cached_document = self.database.update_document(
-            self.identifier, {"enabled": True}
-        )
+        self._document.enabled = True
+        self._document.save()
 
     # TODO: These task logs are not required anymore for anything else
     # than debugging purposes. Is anyone really using them, or could
@@ -254,21 +252,16 @@ class Dataset:
         :param messages: Information about the task
         :returns: ``None``
         """
-        self._cached_document = self.database.update_document(
-            self.identifier,
-            {
-                "workflow_tasks."
-                + task_name: {
-                    "timestamp": _timestamp(),
-                    "messages": message,
-                    "result": result,
-                }
-            },
+        self._document.workflow_tasks[task_name] = TaskEntry(
+            timestamp=_timestamp(),
+            messages=message,
+            result=result
         )
+        self._document.save()
 
     def get_tasks(self):
         """Get dictionary of events."""
-        return self._document.get("workflow_tasks", {})
+        return self._document.workflow_tasks
 
     def get_task_timestamp(self, task_name):
         """Read task timestamp for a task.
@@ -285,9 +278,9 @@ class Dataset:
 
         param Target target: The target of the workflow
         """
-        self._cached_document = self.database.update_document(
-            self.identifier, {"target": target.value, "enabled": True}
-        )
+        self._document.target = target.value
+        self._document.enabled = True
+        self._document.save()
 
     def generate_metadata(self):
         """Generate dataset metadata.
@@ -385,12 +378,11 @@ def find_datasets(
     if target is not None:
         search["target"] = target
     if identifier is not None:
-        search["_id"] = identifier
+        search["id"] = identifier
 
-    database = siptools_research.database.Database(config)
     return list(
-        Dataset(document["_id"], document=document, config=config)
-        for document in database.find(search)
+        Dataset(document["id"], document=document, config=config)
+        for document in DatasetWorkflowEntry.objects.filter(**search)
     )
 
 

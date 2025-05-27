@@ -16,6 +16,8 @@ from click.testing import CliRunner
 import siptools_research.config
 from research_rest_api.app import create_app
 from siptools_research.__main__ import Context, cli
+from siptools_research.database import connect_mongoengine
+from siptools_research.models.dataset_entry import DatasetWorkflowEntry
 from siptools_research.models.file_error import FileError
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
@@ -98,22 +100,20 @@ def mock_mongoengine(monkeypatch):
     # TODO: Monkey patching is tiresome and needs to be performed everywhere.
     # We should just move to using MongoBox as with pretty much every
     # DPRES project at this point.
-    monkeypatch.setattr(
+    db_imports = [
         "siptools_research.database.connect_mongoengine",
-        mock_connect_mongoengine
-    )
-    monkeypatch.setattr(
         "siptools_research.dataset.connect_mongoengine",
-        mock_connect_mongoengine
-    )
-    monkeypatch.setattr(
+        "siptools_research.workflow_init.connect_mongoengine",
+        "siptools_research.__main__.connect_mongoengine",
         "siptools_research.metadata_generator.connect_mongoengine",
-        mock_connect_mongoengine
-    )
-    monkeypatch.setattr(
-        "research_rest_api.app.connect_mongoengine",
-        mock_connect_mongoengine
-    )
+        "research_rest_api.app.connect_mongoengine"
+    ]
+
+    for db_import_path in db_imports:
+        monkeypatch.setattr(
+            db_import_path,
+            mock_connect_mongoengine
+        )
 
     mock_connect_mongoengine("foo")
 
@@ -121,6 +121,7 @@ def mock_mongoengine(monkeypatch):
 
     # Delete existing entries after test
     FileError.objects.delete()
+    DatasetWorkflowEntry.objects.delete()
 
 
 @pytest.fixture(scope="function")
@@ -255,16 +256,17 @@ def cli_runner():
 # is not required anymore (the name argument was introduced in pytest
 # version 3.0).
 @pytest.fixture(scope="function")
-def app(config):
+def app(config, monkeypatch):
     """Create web app and Mock Metax HTTP responses.
 
     :returns: An instance of the REST API web app.
     """
+    monkeypatch.setattr(
+        "research_rest_api.app.SIPTOOLS_RESEARCH_CONFIG", config
+    )
+
     # Create app and change the default config file path
     app_ = create_app()
-    app_.config.update(
-        CONF=config
-    )
     app_.config["TESTING"] = True
 
     # Create temporary directories
@@ -273,5 +275,8 @@ def app(config):
     os.mkdir(cache_dir)
     tmp_dir = os.path.join(conf.get("packaging_root"), "tmp")
     os.mkdir(tmp_dir)
+
+    # Reconnect to MongoDB database
+    connect_mongoengine(config)
 
     return app_

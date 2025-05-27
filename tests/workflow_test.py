@@ -18,18 +18,11 @@ import siptools_research.workflow.create_mets
 import tests.metax_data.reference_data
 import tests.utils
 from siptools_research.config import Configuration
+from siptools_research.models.dataset_entry import DatasetWorkflowEntry
 from tests.metax_data.datasets import BASE_DATASET
-from tests.metax_data.files import (
-    AUDIO_FILE,
-    CSV_FILE,
-    MKV_FILE,
-    PAS_STORAGE_SERVICE,
-    PDF_FILE,
-    SEG_Y_FILE,
-    TIFF_FILE,
-    TXT_FILE,
-    VIDEO_FILE,
-)
+from tests.metax_data.files import (AUDIO_FILE, CSV_FILE, MKV_FILE,
+                                    PAS_STORAGE_SERVICE, PDF_FILE, SEG_Y_FILE,
+                                    TIFF_FILE, TXT_FILE, VIDEO_FILE)
 
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
 PAS_STORAGE_TXT_FILE = copy.deepcopy(TXT_FILE)
@@ -194,12 +187,10 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
         local_scheduler=True
     )
 
-    collection = (mongoclient[conf.get('mongodb_database')]
-                  [conf.get('mongodb_collection')])
-    document = collection.find_one()
+    entry = DatasetWorkflowEntry.objects.all()[0]
 
     # Check 'result' field
-    assert document['workflow_tasks'][task]['result'] == 'success'
+    assert entry.workflow_tasks[task].result == 'success'
 
     # The workspace root directory should contain only metadata
     # generation workspace, validation workspace, preservation

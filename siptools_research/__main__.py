@@ -14,6 +14,7 @@ import click
 import pprint
 
 from siptools_research.dataset import find_datasets
+from siptools_research.database import connect_mongoengine
 
 
 def _get_dataset(dataset_id, config):
@@ -55,6 +56,8 @@ def cli(ctx, config):
     CLI main entrypoint
     """
     ctx.config = config
+
+    connect_mongoengine(config)
 
 
 @cli.group()
@@ -125,9 +128,13 @@ def workflow_status(ctx, dataset_id):
     """Show status for dataset workflow"""
     dataset = _get_dataset(dataset_id, config=ctx.config)
     if dataset:
-        click.echo(
-            pprint.pformat(dataset._document)
-        )
+        dataset_dict = dataset._document.to_mongo().to_dict()
+
+        # Convert any timestamps to ISO 8601 timestamps before printing
+        for task in dataset_dict["workflow_tasks"].values():
+            task["timestamp"] = task["timestamp"].isoformat()
+
+        click.echo(pprint.pformat(dataset_dict))
     else:
         click.echo(click.style("Dataset not found!", fg="red"))
 
