@@ -2,7 +2,6 @@
 import logging
 
 from flask import Flask, abort, current_app, jsonify, request
-from flask_cors import CORS
 from metax_access import ResourceNotAvailableError
 
 import siptools_research
@@ -21,9 +20,6 @@ def create_app():
     """
     app = Flask(__name__)
     app.config['CONF'] = "/etc/siptools_research.conf"
-
-    CORS(app, resources={r"/*": {"origins": "*"}},
-         supports_credentials=True)
 
     connect_mongoengine(app.config['CONF'])
 

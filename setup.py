@@ -23,7 +23,6 @@ def main():
             "python-dateutil",
             "click",
             "flask",
-            "flask-cors",
             "mongoengine"
         ],
         entry_points={

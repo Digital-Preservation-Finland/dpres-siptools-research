@@ -55,7 +55,6 @@ jsonschema==3.2.0 ; python_version == '3.6'
 jsonschema ; python_version > '3.6'
 iso-639
 python-dateutil
-flask_cors
 
 
 # TODO: docutils is required by python-daemon. Can be removed when this issue:
