@@ -12,6 +12,9 @@ logging.basicConfig(level=logging.ERROR)
 LOGGER = logging.getLogger(__name__)
 
 
+SIPTOOLS_RESEARCH_CONFIG = "/etc/siptools_research.conf"
+
+
 def create_app():
     """Configure and return a Flask application instance.
 
@@ -19,7 +22,7 @@ def create_app():
 
     """
     app = Flask(__name__)
-    app.config['CONF'] = "/etc/siptools_research.conf"
+    app.config['CONF'] = SIPTOOLS_RESEARCH_CONFIG
 
     connect_mongoengine(app.config['CONF'])
 
