@@ -6,7 +6,6 @@ from siptools_research.workflow import report_dataset_validation_result
 from tests.metax_data.datasets import BASE_DATASET
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_reportdatasetvalidationresult(config, workspace, requests_mock):
     """Test reporting dataset validation result.
 

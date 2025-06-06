@@ -12,7 +12,7 @@ jsonschema2rst
 # https://github.com/inspirehep/jsonschema2rst/issues/13
 # for more information
 PyYAML<6.0
-mongomock
+mongobox @ git+https://github.com/theorm/mongobox@aba4175ed4fd60ea1259be7aa49102a06f488b1c
 xmltodict
 mock-ssh-server
 pytest-mock

@@ -52,7 +52,6 @@ from tests.metax_data.datasets import BASE_DATASET
         )
     ]
 )
-@pytest.mark.usefixtures('testmongoclient')
 def test_reportpreservationstatus(config, workspace, requests_mock,
                                   dataset_metadata, patched_dataset_id):
     """Test reporting status of accepted SIP.
@@ -118,7 +117,6 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     }
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_reportpreservationstatus_rejected(config, workspace):
     """Test reporting status of rejected SIP.
 
@@ -150,7 +148,6 @@ def test_reportpreservationstatus_rejected(config, workspace):
     assert not task.complete()
 
 
-@pytest.mark.usefixtures('testmongoclient')
 # pylint: disable=invalid-name
 def test_reportpreservationstatus_rejected_int_error(config, workspace):
     """Test handling conflicting ingest reports.

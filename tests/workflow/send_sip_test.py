@@ -8,7 +8,6 @@ import pytest
 from siptools_research.workflow.send_sip import SendSIPToDP
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_send_sip(workspace, mock_ssh_config, sftp_dir):
     """Test the SendSipToDP task.
 

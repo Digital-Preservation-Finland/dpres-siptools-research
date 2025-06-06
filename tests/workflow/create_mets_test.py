@@ -33,7 +33,6 @@ NAMESPACES = {
         ('urn:nbn:fi:att:data-catalog-pas', 'doi:test')
     ]
 )
-@pytest.mark.usefixtures('testmongoclient')
 def test_create_mets(config, workspace, requests_mock, data_catalog, objid):
     """Test the workflow task CreateMets.
 
@@ -150,7 +149,6 @@ def test_idempotence(config, workspace, requests_mock):
     assert mets1.stat().st_size == mets2.stat().st_size
 
 
-@pytest.mark.usefixtures("testmongoclient")
 @pytest.mark.parametrize(
     "provenance_data",
     [
@@ -415,7 +413,6 @@ def test_premis_event_outcome(config, workspace, requests_mock,
     assert outcome[0].text == expected_event_outcome
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_createdescriptivemetadata(config, workspace, requests_mock):
     """Test descriptive metadata creation.
 
@@ -491,7 +488,6 @@ def test_createdescriptivemetadata(config, workspace, requests_mock):
     assert structmap_div.attrib["DMDID"] == dmdsec.attrib["ID"]
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_create_techmd(config, workspace, requests_mock):
     """Test technical metadata creation.
 
@@ -557,7 +553,6 @@ def test_create_techmd(config, workspace, requests_mock):
         ("sha256", "SHA-256", "ISO-8859-15")
     ]
 )
-@pytest.mark.usefixtures('testmongoclient')
 def test_user_defined_techmd(config, workspace, requests_mock,
                              metax_checksum_algorithm, mets_checksum_algorithm,
                              encoding):
@@ -627,7 +622,6 @@ def test_user_defined_techmd(config, workspace, requests_mock,
         (True, 'a'),
     ]
 )
-@pytest.mark.usefixtures('testmongoclient')
 def test_create_techmd_csv(config, workspace, requests_mock, has_header,
                            expected_field_definition):
     """Test that technical metadata is created correctly for csv files.
@@ -689,7 +683,6 @@ def test_create_techmd_csv(config, workspace, requests_mock, has_header,
                       namespaces=NAMESPACES)[0] == expected_field_definition
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_create_file_link(config, workspace, requests_mock):
     """
     Test creating a METS for a dataset with two files: one PAS compatible
@@ -764,7 +757,6 @@ def test_create_file_link(config, workspace, requests_mock):
     )
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_create_filesec_and_structmap(config, workspace, requests_mock):
     """Test fileSec and physical structure map creation.
 
@@ -830,7 +822,6 @@ def test_create_filesec_and_structmap(config, workspace, requests_mock):
     assert len(structmap.xpath('*//mets:fptr', namespaces=NAMESPACES)) == 3
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_create_logical_structmap(config, workspace, requests_mock):
     """Test creating logical structure map.
 
@@ -907,7 +898,6 @@ def test_create_logical_structmap(config, workspace, requests_mock):
     )) == 2
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_empty_logical_structuremap(config, workspace, requests_mock):
     """Test that empty logical structuremap is not created.
 

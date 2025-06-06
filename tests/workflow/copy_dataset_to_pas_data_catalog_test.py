@@ -12,7 +12,6 @@ from siptools_research.workflow import copy_dataset_to_pas_data_catalog
 from tests.metax_data.datasets import BASE_DATASET
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_copy_ida_dataset(config, workspace, requests_mock):
     """Test copying Ida dataset to PAS data catalog.
 
@@ -53,7 +52,6 @@ def test_copy_ida_dataset(config, workspace, requests_mock):
     assert mock_create_preservation_version.called_once
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_ida_dataset_already_copied(config, workspace, requests_mock):
     """Test running task when dataset has already been copied.
 
@@ -88,7 +86,6 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
     assert get_dataset.called_once
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_copy_pas_dataset(config, workspace, requests_mock):
     """Test running task for pottumounttu dataset.
 
@@ -125,7 +122,6 @@ def test_copy_pas_dataset(config, workspace, requests_mock):
     }
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_pas_dataset_already_copied(config, workspace, requests_mock):
     """Test copying PAS dataset to PAS data catalog.
 

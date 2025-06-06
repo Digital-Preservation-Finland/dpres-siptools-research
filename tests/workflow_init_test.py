@@ -12,7 +12,6 @@ from siptools_research.workflow.report_dataset_validation_result import \
     ReportDatasetValidationResult
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_initworkflows(config):
     """Test InitWorkflows task.
 
@@ -38,7 +37,6 @@ def test_initworkflows(config):
         == {'dataset1', 'dataset3'}
 
 
-@pytest.mark.usefixtures("testmongoclient")
 @pytest.mark.parametrize(
     ("target", "target_task"),
     [

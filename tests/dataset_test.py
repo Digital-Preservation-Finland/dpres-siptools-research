@@ -239,7 +239,6 @@ def test_workspace_paths(config, workspace):
         == workspace / 'preservation'
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_enable_disable(config):
     """Test enabling and disabling workflow.
 
@@ -258,7 +257,6 @@ def test_enable_disable(config):
     assert dataset.enabled is False
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_task_log(config):
     """Test logging tasks and reading the log.
 
@@ -288,7 +286,6 @@ def test_task_log(config):
     assert len(find_datasets(config=config)) == 1
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_generate_metadata(config):
     """Test generate_metadata function.
 
@@ -310,7 +307,6 @@ def test_generate_metadata(config):
     assert dataset.metadata_generation_workspace.exists()
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_restart_generate_metadata(config):
     """Test restarting metadata generation.
 
@@ -336,7 +332,6 @@ def test_restart_generate_metadata(config):
     assert not dataset.preservation_workspace.exists()
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_validate_dataset(config):
     """Test validate_dataset function.
 
@@ -358,7 +353,6 @@ def test_validate_dataset(config):
     assert dataset.validation_workspace.exists()
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_restart_validate_metadata(config):
     """Test restarting validation.
 
@@ -392,7 +386,6 @@ def test_restart_validate_metadata(config):
     assert not dataset.preservation_workspace.exists()
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_preserve_dataset(config):
     """Test preserve_dataset function.
 
@@ -414,7 +407,6 @@ def test_preserve_dataset(config):
     assert dataset.preservation_workspace.exists()
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_restart_preserve_dataset(config):
     """Test restarting preservation.
 
@@ -450,7 +442,6 @@ def test_restart_preserve_dataset(config):
     assert not any(dataset.preservation_workspace.iterdir())
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_reset_dataset(requests_mock, config):
     """Test dataset reset function.
 
@@ -531,7 +522,6 @@ def test_reset_dataset(requests_mock, config):
     assert FileError.objects.all()[0].file_id == "file-id-3"
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_workflow_conflict(config):
     """Test starting another workflow for dataset.
 
@@ -583,7 +573,6 @@ def test_workflow_conflict(config):
         ({"target": "preservation", "enabled": True}, ["ds5"]),
     ]
 )
-@pytest.mark.usefixtures("testmongoclient")
 def test_find_datasets(config, kwargs, expected_datasets):
     """Test find_datasets function.
 

@@ -16,7 +16,6 @@ from tests.metax_data.datasets import BASE_DATASET
         ('accepted')
     ]
 )
-@pytest.mark.usefixtures('testmongoclient')
 def test_getvalidationreports(config, workspace, requests_mock, status):
     """Initializes GetValidationReports task with the input files of the task.
 
@@ -78,7 +77,6 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
         == "<html>hello world</html>"
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_sip(
         config, workspace, requests_mock
 ):

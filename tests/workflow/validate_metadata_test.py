@@ -11,7 +11,6 @@ from tests.metax_data.files import TXT_FILE
 from tests.utils import add_metax_dataset
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_validatemetadata(config, workspace, requests_mock):
     """Test ValidateMetadata class.
 
@@ -47,7 +46,6 @@ def test_validatemetadata(config, workspace, requests_mock):
     assert task.complete()
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_invalid_metadata(config, workspace, requests_mock):
     """Test ValidateMetadata class.
 

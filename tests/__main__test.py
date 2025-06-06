@@ -4,7 +4,6 @@ import pytest
 from siptools_research.dataset import Dataset
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_main_status_match(config, cli_runner):
     """Test that dataset workflow information is printed correctly.
 
@@ -59,7 +58,6 @@ def test_main_status_match(config, cli_runner):
     assert create_provenance["result"] == "failure"
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_main_list(config, cli_runner):
     """Test that list of datasets is printed correctly.
 
@@ -78,7 +76,6 @@ def test_main_list(config, cli_runner):
         assert f"aineisto_{i}" in result.output
 
 
-@pytest.mark.usefixtures("testmongoclient")
 @pytest.mark.parametrize(
     "command",
     [
@@ -99,7 +96,6 @@ def test_main_status_no_match(config, cli_runner, command):
     assert "Dataset not found" in result.output
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_main_disabled(config, cli_runner):
     """Test that the disable and enable commands set the correct dataset as
     disabled and enabled respectively.

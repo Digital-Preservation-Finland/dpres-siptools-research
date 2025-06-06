@@ -7,11 +7,10 @@ from pathlib import Path
 
 import luigi.configuration
 import mongoengine
-import mongomock
-import pymongo
 import pytest
 import urllib3
 from click.testing import CliRunner
+from mongobox import MongoBox
 
 import siptools_research.config
 from research_rest_api.app import create_app
@@ -36,7 +35,7 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
 @pytest.fixture(autouse=True)
-def config(tmp_path):
+def config(test_mongo, tmp_path):
     """Create temporary config file.
 
     A temporary packaging root directory is created, and configuration
@@ -71,6 +70,10 @@ def config(tmp_path):
         "siptools_research", "access_rest_api_ssl_verification", "False"
     )
 
+    # Use test MongoDB database
+    parser.set("siptools_research", "mongodb_host", "localhost")
+    parser.set("siptools_research", "mongodb_port", str(test_mongo.PORT))
+
     # Write configuration to temporary file
     config_ = tmp_path / "siptools_research.conf"
     with config_.open('w') as file:
@@ -79,69 +82,49 @@ def config(tmp_path):
     return str(config_)
 
 
-@pytest.fixture(autouse=True)
-def mock_mongoengine(monkeypatch):
-    """Mock upload-rest-api and siptools-research database connections."""
-    mongoengine.disconnect()
-    mongoengine.connect("upload", host="mongodb://localhost",
-                        tz_aware=True,
-                        mongo_client_class=mongomock.MongoClient)
+@pytest.yield_fixture(autouse=True, scope="session")
+def test_mongo():
+    """
+    Initialize MongoDB test instance and return MongoDB client instance for
+    the database
+    """
+    box = MongoBox()
+    box.start()
 
-    def mock_connect_mongoengine(config_path):
-        mongoengine.register_connection(
-            host="mongodb://localhost",
-            alias="siptools_research",
-            tz_aware=True,
-            mongo_client_class=mongomock.MongoClient
-        )
+    client = box.client()
+    client.PORT = box.port
 
-    mongoengine.disconnect(alias="siptools_research")
+    yield client
 
-    # TODO: Monkey patching is tiresome and needs to be performed everywhere.
-    # We should just move to using MongoBox as with pretty much every
-    # DPRES project at this point.
-    db_imports = [
-        "siptools_research.database.connect_mongoengine",
-        "siptools_research.dataset.connect_mongoengine",
-        "siptools_research.workflow_init.connect_mongoengine",
-        "siptools_research.__main__.connect_mongoengine",
-        "siptools_research.metadata_generator.connect_mongoengine",
-        "research_rest_api.app.connect_mongoengine"
-    ]
+    box.stop()
 
-    for db_import_path in db_imports:
-        monkeypatch.setattr(
-            db_import_path,
-            mock_connect_mongoengine
-        )
 
-    mock_connect_mongoengine("foo")
-
+@pytest.fixture(scope="function", autouse=True)
+def mongo_cleanup(test_mongo, monkeypatch):
+    """
+    Clear the database before each test
+    """
+    test_mongo.drop_database("siptools-research")
     yield
 
-    # Delete existing entries after test
-    FileError.objects.delete()
-    DatasetWorkflowEntry.objects.delete()
 
-
-@pytest.fixture(scope="function")
-def testmongoclient(monkeypatch):
-    """Monkeypatch pymongo.MongoClient class.
-
-    An instance of mongomock.MongoClient is created in beginning of
-    test. Whenever pymongo.MongoClient() is called during the test, the
-    already initialized mongomoc.MongoClient is used instead.
-
-    :param monkeypatch: pytest `monkeypatch` fixture
-    :returns: ``None``
+@pytest.fixture(scope="function", autouse=True)
+def upload_database(test_mongo):
     """
-    mongoclient = mongomock.MongoClient()
-    # pylint: disable=unused-argument
-
-    def mock_mongoclient(*args, **kwargs):
-        """Return already initialized mongomock.MongoClient."""
-        return mongoclient
-    monkeypatch.setattr(pymongo, 'MongoClient', mock_mongoclient)
+    Connect to upload-rest-api database
+    """
+    # TODO: upload-rest-api connects implicitly when the model class is
+    # imported instead of siptools-research which connects explicitly
+    # with a function call. It also doesn't have an explicit DB alias,
+    # defaulting to 'default' instead.
+    #
+    # upload-rest-api should be updated to work similarly to siptools-research
+    # to reduce confusion.
+    mongoengine.disconnect()
+    mongoengine.connect(
+        "upload", host=f"mongodb://localhost:{test_mongo.PORT}",
+        tz_aware=True
+    )
 
 
 @pytest.fixture(scope="function")

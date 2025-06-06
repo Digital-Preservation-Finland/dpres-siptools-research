@@ -181,7 +181,7 @@ class MetaxTask(WorkflowTask):
         metax_client.get_dataset('1')
 
 
-@pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
+@pytest.mark.usefixtures('mock_luigi_config_path')
 def test_run_workflowtask(config, workspace):
     """Test WorkflowTask execution.
 
@@ -219,7 +219,7 @@ def test_run_workflowtask(config, workspace):
     assert len(find_datasets(config=config)) == 1
 
 
-@pytest.mark.usefixtures('mock_luigi_config_path', 'testmongoclient')
+@pytest.mark.usefixtures('mock_luigi_config_path')
 def test_run_workflow_target_task(config, workspace):
     """Test running target task of the workflow.
 
@@ -249,7 +249,6 @@ def test_run_workflow_target_task(config, workspace):
     assert not dataset.enabled
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_run_failing_task(config, workspace):
     """Test running task that fails.
 
@@ -323,7 +322,6 @@ def test_run_failing_task(config, workspace):
         ),
     ]
 )
-@pytest.mark.usefixtures('testmongoclient')
 def test_invalid_dataset_error(config, workspace, requests_mock, task,
                                expected_state, expected_description):
     """Test event handler of WorkflowTask.
@@ -363,7 +361,6 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
     }
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_file_error_saved_fields(config, workspace, requests_mock):
     """
     Test that workflow file error database will be updated when a task
@@ -467,7 +464,6 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
         )
     ]
 )
-@pytest.mark.usefixtures("testmongoclient")
 def test_file_error_saved(
         config, workspace, requests_mock, exception, expected_file_errors):
     """
@@ -497,7 +493,6 @@ def test_file_error_saved(
         assert FileError.objects.filter(**error).count() == 1
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_set_preservation_state_of_pas_version(config, requests_mock):
     """Test that preservation state of correct dataset version is set.
 
@@ -536,7 +531,6 @@ def test_set_preservation_state_of_pas_version(config, requests_mock):
     }
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_packaging_failed(config, workspace, requests_mock):
     """Test failure during packaging.
 
@@ -575,7 +569,6 @@ def test_packaging_failed(config, workspace, requests_mock):
     }
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_logging(config, workspace, requests_mock, caplog):
     """Test logging failed HTTP responses.
 

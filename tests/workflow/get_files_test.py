@@ -21,7 +21,6 @@ from tests.utils import (
 )
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_getfiles(config, workspace, requests_mock):
     """Tests for ``GetFiles`` task for IDA and local files.
 
@@ -74,7 +73,6 @@ def test_getfiles(config, workspace, requests_mock):
     assert (dataset_files_dir / "file2").read_text() == "bar\n"
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_file_cache(config, workspace, requests_mock):
     """Test that files are downloaded only once.
 
@@ -119,7 +117,6 @@ def test_file_cache(config, workspace, requests_mock):
     assert not mock_download.called
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_missing_ida_files(config, workspace, requests_mock):
     """Test task when a file can not be found from Ida.
 
@@ -174,7 +171,6 @@ def test_missing_ida_files(config, workspace, requests_mock):
         == ['pid:urn:identifier']
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_missing_local_files(config, workspace, requests_mock,
                              upload_projects_path):
     """Test task when a local file is not available.

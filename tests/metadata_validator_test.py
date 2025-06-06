@@ -161,7 +161,6 @@ def test_validate_file_metadata(config, requests_mock):
     assert files_adapter.call_count == 1
 
 
-@pytest.mark.usefixtures('testmongoclient')
 @pytest.mark.parametrize(
     "files,expected_error,expected_error_file_ids",
     [

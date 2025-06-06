@@ -17,7 +17,6 @@ import siptools_research.workflow.compress
 import siptools_research.workflow.create_mets
 import tests.metax_data.reference_data
 import tests.utils
-from siptools_research.config import Configuration
 from siptools_research.models.dataset_entry import DatasetWorkflowEntry
 from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import (AUDIO_FILE, CSV_FILE, MKV_FILE,
@@ -95,7 +94,7 @@ def _get_schematrons():
         #("poll_reports", "GetValidationReports"),
     ]
 )
-@pytest.mark.usefixtures("testmongoclient", "mock_luigi_config_path")
+@pytest.mark.usefixtures("mock_luigi_config_path")
 def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
                   sftp_dir):
     """Test workflow dependency tree.
@@ -161,11 +160,6 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=html',
                       content=b'<hello world/>')
 
-
-    # Init pymongo client
-    conf = Configuration(mock_ssh_config)
-    mongoclient = pymongo.MongoClient(host=conf.get('mongodb_host'))
-
     module = importlib.import_module('siptools_research.workflow.'
                                      + module_name)
     task_class = getattr(module, task)
@@ -205,7 +199,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
                                            'file_cache'})
 
 
-@pytest.mark.usefixtures("testmongoclient", "mock_luigi_config_path")
+@pytest.mark.usefixtures("mock_luigi_config_path")
 @pytest.mark.parametrize(
     "files",
     [
@@ -319,6 +313,7 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
             # Mock upload-rest-api
             file_storage_path = (upload_projects_path / "project_id"
                                  / file["metadata"]["id"])
+
             FileEntry(
                 id=str(file_storage_path),
                 checksum="2eeecd72c567401e6988624b179d0b14",

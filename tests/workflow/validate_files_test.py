@@ -13,7 +13,6 @@ from tests.metax_data.files import (
 )
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_validatefiles(config, workspace, requests_mock):
     """Test file validation.
 
@@ -43,7 +42,6 @@ def test_validatefiles(config, workspace, requests_mock):
     assert task.complete()
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_validatefiles_invalid(config, workspace, requests_mock):
     """Test file validation for invalid file.
 

@@ -11,7 +11,6 @@ from tests.metax_data.datasets import BASE_DATASET
 from tests.metax_data.files import TXT_FILE
 
 
-@pytest.mark.usefixtures('testmongoclient')
 def test_generatemetadata(config, workspace, requests_mock):
     """Test metadata generation.
 

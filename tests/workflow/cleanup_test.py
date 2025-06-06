@@ -4,7 +4,6 @@ import pytest
 from siptools_research.workflow.cleanup import Cleanup
 
 
-@pytest.mark.usefixtures("testmongoclient")
 def test_cleanup(config, workspace):
     """Test that task.run() removes the workspace.
 
