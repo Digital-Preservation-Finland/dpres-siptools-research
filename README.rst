@@ -11,6 +11,8 @@ Requirements
 Installation and usage requires Python 3.9 or newer.
 The software is tested with Python 3.9 on AlmaLinux 9 release.
 
+Packaging service requires MongoDB daemon running on default port (27017) and Luigi scheduler runnig on default port (8082).
+
 Installation using RPM packages (preferred)
 -------------------------------------------
 
@@ -23,9 +25,13 @@ After the repository has been added, the package can be installed by running the
 
     sudo dnf install python3-dpres-siptools-research
 
-
 Usage
 -----
+
+Enable systemd timer that starts/restarts all incomplete and enabled workflows found in database::
+
+   systemctl enable siptools_research.timer
+   systemctl start siptools_research.timer
 
 To package and preserve dataset 1234, for example, run::
 
@@ -52,7 +58,7 @@ Install required RPM packages
 
    dnf config-manager --set-enabled crb
    dnf install https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm
-   dnf install gcc python3-devel swig python3-file-scraper-full dpres-xml-schemas libmediainfo jhove
+   dnf install gcc python3-devel swig python3-file-scraper-full dpres-xml-schemas libmediainfo jhove mongodb-org-server
 
 Create a virtual environment::
 
@@ -70,11 +76,6 @@ Install the required software with commands::
 
 To deactivate the virtual environment, run ``deactivate``. To reactivate it, run the ``source`` command above.
 
-Packaging service requires MongoDB daemon running on default port (27017) and Luigi scheduler runnig on default port (8082).
-Enable systemd timer that starts/restarts all incomplete and enabled workflows found in database::
-
-   systemctl enable siptools_research.timer
-   systemctl start siptools_research.timer
 
 
 Building
