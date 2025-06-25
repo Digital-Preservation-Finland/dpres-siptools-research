@@ -9,7 +9,7 @@ from file_scraper.defaults import (ACCEPTABLE, BIT_LEVEL,
 from requests.exceptions import HTTPError
 
 import siptools_research
-import tests.utils
+from tests.utils import add_metax_dataset
 from siptools_research.exceptions import (
     InvalidDatasetFileError,
     InvalidDatasetMetadataError,
@@ -17,7 +17,7 @@ from siptools_research.exceptions import (
 )
 from siptools_research.metadata_validator import validate_metadata
 from siptools_research.metax import get_metax_client
-from tests.metax_data.datasets import BASE_DATASET
+from metax_access.template_data import DATASET
 from tests.metax_data.files import (
     AUDIO_FILE,
     CSV_FILE,
@@ -50,8 +50,8 @@ def test_validate_metadata(config, requests_mock, file_metadata):
     :param file_metadata: Metadata of file included in dataset in
         Metax
     """
-    tests.utils.add_metax_dataset(requests_mock, files=[file_metadata])
-    assert validate_metadata('dataset_identifier', config)
+    dataset = add_metax_dataset(requests_mock, files=[file_metadata])
+    assert validate_metadata(dataset['id'], config)
 
 
 def test_validate_metadata_multiple_files(config, requests_mock):
@@ -64,9 +64,9 @@ def test_validate_metadata_multiple_files(config, requests_mock):
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
     files[0]['identifier'] = "pid:urn:1"
     files[1]['identifier'] = "pid:urn:2"
-    tests.utils.add_metax_dataset(requests_mock, files=files)
+    dataset = add_metax_dataset(requests_mock, files=files)
 
-    assert validate_metadata('dataset_identifier', config)
+    assert validate_metadata(dataset['id'], config)
 
 
 def test_validate_metadata_missing_file(config, requests_mock):
@@ -79,12 +79,12 @@ def test_validate_metadata_missing_file(config, requests_mock):
     :param requests_mock: Mocker object
     :returns: ``None``
     """
-    tests.utils.add_metax_dataset(requests_mock)
+    dataset = add_metax_dataset(requests_mock)
 
     expected_error = "Dataset must contain at least one file"
 
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier', config)
+        validate_metadata(dataset['id'], config)
 
 
 def test_validate_metadata_invalid(config, requests_mock):
@@ -97,14 +97,14 @@ def test_validate_metadata_invalid(config, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["preservation"]["contract"] = None
-    requests_mock.get("/v3/datasets/dataset_identifier", json=dataset)
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
 
     # Try to validate invalid dataset
     expected_error = "None is not of type 'string'"
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier', config)
+        validate_metadata(dataset['id'], config)
 
 
 def test_validate_metadata_invalid_file_path(config, requests_mock):
@@ -119,13 +119,13 @@ def test_validate_metadata_invalid_file_path(config, requests_mock):
     # Mock Metax
     invalid_file = copy.deepcopy(TXT_FILE)
     invalid_file["pathname"] = "../../file_in_invalid_path"
-    tests.utils.add_metax_dataset(requests_mock, files=[invalid_file])
+    dataset = add_metax_dataset(requests_mock, files=[invalid_file])
 
     # Try to validate invalid dataset
     expected_error = ("The file path of file pid:urn:identifier is invalid: "
                       "../../file_in_invalid_path")
     with pytest.raises(InvalidFileMetadataError, match=expected_error):
-        validate_metadata('dataset_identifier', config)
+        validate_metadata(dataset['id'], config)
 
 
 def test_validate_file_metadata(config, requests_mock):
@@ -138,7 +138,7 @@ def test_validate_file_metadata(config, requests_mock):
     :param config: Configuration file
     :param requests_mock: Mocker object
     """
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
 
     # Mock Metax
     file_1 = copy.deepcopy(TXT_FILE)
@@ -146,7 +146,7 @@ def test_validate_file_metadata(config, requests_mock):
     file_2 = copy.deepcopy(TXT_FILE)
     file_2['id'] = 'file_identifier2'
     files_adapter = requests_mock.get(
-        "/v3/datasets/dataset_identifier/files",
+        f"/v3/datasets/{dataset['id']}/files",
         json={"next": None, "results": [file_1, file_2]},
         status_code=200
     )
@@ -202,9 +202,9 @@ def test_detect_missing_file_link(
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
 
-    tests.utils.add_metax_dataset(
+    dataset = add_metax_dataset(
         requests_mock,
         dataset=dataset,
         files=files
@@ -231,7 +231,7 @@ def test_validate_file_metadata_missing_file_format(
     Test that file format version is required unless the file is a bit-level
     file linked to a DPRES compatible file
     """
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
 
     file = copy.deepcopy(TXT_FILE)
     file["characteristics"]["file_format_version"] = None
@@ -243,7 +243,7 @@ def test_validate_file_metadata_missing_file_format(
         file_b["non_pas_compatible_file"] = file["id"]
 
     requests_mock.get(
-        "/v3/datasets/dataset_identifier/files",
+        f"/v3/datasets/{dataset['id']}/files",
         json={"next": None, "results": [file, file_b]}
     )
 
@@ -320,7 +320,7 @@ def test_validate_file_grades_and_links(
     and ensure wrong combinations fail the validation
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
 
     files = []
 
@@ -343,7 +343,7 @@ def test_validate_file_grades_and_links(
         }
         files.append(non_pas_file)
 
-    tests.utils.add_metax_dataset(
+    dataset = add_metax_dataset(
         requests_mock,
         dataset=dataset,
         files=files
@@ -374,13 +374,13 @@ def test_validate_metadata_http_error_raised(config, requests_mock):
     :param requests_mock: Mocker object
     """
     # Mock Metax
-    tests.utils.add_metax_dataset(requests_mock)
+    dataset = add_metax_dataset(requests_mock)
     requests_mock.get(
-        "/v3/datasets/dataset_identifier/files",
+        f"/v3/datasets/{dataset['id']}/files",
         status_code=500,
         reason="Something not to be shown to user"
     )
 
     expected_error = '500 Server Error: Something not to be shown to user'
     with pytest.raises(HTTPError, match=expected_error):
-        validate_metadata('dataset_identifier', config)
+        validate_metadata(dataset['id'], config)

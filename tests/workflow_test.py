@@ -14,11 +14,10 @@ from lxml.isoschematron import Schematron
 from upload_rest_api.models.file_entry import FileEntry
 
 import siptools_research.workflow.compress
-import siptools_research.workflow.create_mets
 import tests.metax_data.reference_data
 import tests.utils
 from siptools_research.models.dataset_entry import DatasetWorkflowEntry
-from tests.metax_data.datasets import BASE_DATASET
+from metax_access.template_data import DATASET
 from tests.metax_data.files import (AUDIO_FILE, CSV_FILE, MKV_FILE,
                                     PAS_STORAGE_SERVICE, PDF_FILE, SEG_Y_FILE,
                                     TIFF_FILE, TXT_FILE, VIDEO_FILE)
@@ -116,7 +115,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     (sftp_dir / "transfer").mkdir(parents=True, exist_ok=True)
 
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["id"] = workspace.name
     dataset["persistent_identifier"] = "doi:test"
     tests.utils.add_metax_dataset(
@@ -165,7 +164,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     task_class = getattr(module, task)
 
     # The workflow is run twice because GetValidationReports in poll_reports.py
-    #  is an external task and triggers only with the second run.
+    # is an external task and triggers only with the second run.
     luigi.build(
         [task_class(
             dataset_id=workspace.name,
@@ -299,7 +298,7 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
     :param files: list of files to be added to dataset
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["id"] = workspace.name
     tests.utils.add_metax_dataset(
         requests_mock,

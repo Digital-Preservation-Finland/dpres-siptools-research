@@ -9,7 +9,7 @@ from metax_access import (
 )
 
 from siptools_research.workflow import copy_dataset_to_pas_data_catalog
-from tests.metax_data.datasets import BASE_DATASET
+from metax_access.template_data import DATASET
 
 
 def test_copy_ida_dataset(config, workspace, requests_mock):
@@ -20,7 +20,7 @@ def test_copy_ida_dataset(config, workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     original_version_id = workspace.name
     dataset["id"] = original_version_id
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-ida"
@@ -60,7 +60,7 @@ def test_ida_dataset_already_copied(config, workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["id"] = "original-version-id"
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-ida"
     dataset["preservation"]["state"] = DS_STATE_INITIALIZED
@@ -97,7 +97,7 @@ def test_copy_pas_dataset(config, workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     original_version_id = workspace.name
     dataset["id"] = original_version_id
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-pas"
@@ -134,7 +134,7 @@ def test_pas_dataset_already_copied(config, workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["id"] = "original-version-id"
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-pas"
     dataset["preservation"]["state"] \

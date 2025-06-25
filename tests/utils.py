@@ -5,8 +5,8 @@ import uuid
 
 import lxml.etree
 
-from tests.metax_data.contracts import BASE_CONTRACT
-from tests.metax_data.datasets import BASE_DATACITE, BASE_DATASET
+from metax_access.template_data import CONTRACT, DATASET
+from tests.metax_data.datasets import BASE_DATACITE
 
 
 def add_metax_dataset(
@@ -14,7 +14,7 @@ def add_metax_dataset(
         dataset=None,
         datacite=BASE_DATACITE,
         files=None,
-        contract=BASE_CONTRACT,
+        contract=CONTRACT,
 ):
     """Mock responses of Metax APIs.
 
@@ -34,7 +34,7 @@ def add_metax_dataset(
     :param contract: contract metadata dict
     """
     if dataset is None:
-        dataset = copy.deepcopy(BASE_DATASET)
+        dataset = copy.deepcopy(DATASET)
 
     if files is None:
         files = {}
@@ -69,6 +69,8 @@ def add_metax_dataset(
 
     # Mock Metax contracts API
     requests_mock.get("/v3/contracts/{}".format(contract["id"]), json=contract)
+
+    return dataset
 
 
 def add_mock_ida_download(requests_mock, dataset_id, filename, content):

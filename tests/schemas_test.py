@@ -5,8 +5,8 @@ import jsonschema
 import pytest
 
 import siptools_research.schemas
+from metax_access.template_data import DATASET
 from tests.metax_data.datasets import (
-    BASE_DATASET,
     BASE_PROVENANCE,
     FULL_PROVENANCE,
 )
@@ -69,7 +69,7 @@ def test_validate_dataset_metadata_with_provenance(provenance):
     :param provenance: Value of "provenance" key in metadata.
     :returns: ``None``
     """
-    dataset_metadata = copy.deepcopy(BASE_DATASET)
+    dataset_metadata = copy.deepcopy(DATASET)
     dataset_metadata["provenance"] = provenance
 
     # Validation of valid dataset should return 'None'
@@ -103,7 +103,7 @@ def test_validate_metadata_with_invalid_provenance(provenance, error_message):
     :param error_message: Expected error message
     :returns: ``None``
     """
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["provenance"] = provenance
 
     # Validation of invalid dataset should raise error
@@ -125,7 +125,7 @@ def test_validate_invalid_dataset_metadata():
     """
     # Create invalid metadata by deleting required key from valid
     # dataset
-    invalid_dataset_metadata = copy.deepcopy(BASE_DATASET)
+    invalid_dataset_metadata = copy.deepcopy(DATASET)
     del invalid_dataset_metadata["preservation"]["contract"]
 
     # Validation of invalid dataset should raise error
@@ -241,7 +241,7 @@ def test_validate_dataset_with_files():
 
     :returns: ``None``
     """
-    valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
+    valid_dataset_metadata = copy.deepcopy(DATASET)
     valid_dataset_metadata['files'] = SAMPLE_FILES
 
     # Validation of valid dataset should return 'None'
@@ -260,7 +260,7 @@ def test_validate_dataset_without_files():
 
     :returns: ``None``
     """
-    valid_dataset_metadata = copy.deepcopy(BASE_DATASET)
+    valid_dataset_metadata = copy.deepcopy(DATASET)
     # Validation of valid dataset should return 'None'
     assert jsonschema.validate(
         valid_dataset_metadata,

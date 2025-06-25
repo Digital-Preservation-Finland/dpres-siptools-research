@@ -3,7 +3,7 @@ import pytest
 from metax_access.metax import DS_STATE_METADATA_CONFIRMED
 
 from siptools_research.workflow import report_dataset_validation_result
-from tests.metax_data.datasets import BASE_DATASET
+from metax_access.template_data import DATASET
 
 
 def test_reportdatasetvalidationresult(config, workspace, requests_mock):
@@ -14,7 +14,7 @@ def test_reportdatasetvalidationresult(config, workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = BASE_DATASET
+    dataset = DATASET
     dataset["id"] = workspace.name
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
     patch_dataset \

@@ -1,5 +1,6 @@
 """Sample Metax file metadata."""
 from copy import deepcopy
+from metax_access.template_data import FILE
 
 PAS_STORAGE_SERVICE = "pas"
 
@@ -300,86 +301,63 @@ SEG_Y_FILE_METADATA = {
     "checksum": "md5:c5edc06ea17769fd38c5f6014f29b5f3"
 }
 
-BASE_CHARACTERISTICS = {
-    "file_format_version": None,
-    "encoding": None,
-    "csv_delimiter": None,
-    "csv_record_separator": None,
-    "csv_quoting_char": None,
-    "csv_has_header": None,
-}
-BASE_FILE = {
-    "id": "pid:urn:identifier",
-    "storage_identifier": "urn:uuid:identifier",
-    "pathname": "/path/to/file",
-    "filename": "file",
-    "size": 100,
-    "storage_service": "ida",
-    "checksum": "md5:58284d6cdd8deaffe082d063580a9df3",
-    "csc_project": "test_project",
-    "characteristics": BASE_CHARACTERISTICS,
-    "characteristics_extension": None,
-    "pas_compatible_file": None,
-    "non_pas_compatible_file": None,
-}
-
-TXT_FILE = deepcopy(BASE_FILE)
+TXT_FILE = deepcopy(FILE)
 TXT_FILE.update(TXT_FILE_METADATA)
-TXT_CHARACTERISTICS = deepcopy(BASE_CHARACTERISTICS)
+TXT_CHARACTERISTICS = deepcopy(FILE['characteristics'])
 TXT_CHARACTERISTICS.update(TXT_FILE["characteristics"])
 TXT_FILE["characteristics"] = TXT_CHARACTERISTICS
 
-TIFF_FILE = deepcopy(BASE_FILE)
+TIFF_FILE = deepcopy(FILE)
 TIFF_FILE.update(TIFF_FILE_METADATA)
-TIFF_CHARACTERISTICS = deepcopy(BASE_CHARACTERISTICS)
+TIFF_CHARACTERISTICS = deepcopy(FILE['characteristics'])
 TIFF_CHARACTERISTICS.update(TIFF_FILE["characteristics"])
 TIFF_FILE["characteristics"] = TIFF_CHARACTERISTICS
 TIFF_FILE["id"] += "_tiff"
 TIFF_FILE["pathname"] += ".tiff"
 
-CSV_FILE = deepcopy(BASE_FILE)
+CSV_FILE = deepcopy(FILE)
 CSV_FILE.update(CSV_FILE_METADATA)
-CSV_CHARACTERISTICS = deepcopy(BASE_CHARACTERISTICS)
+CSV_CHARACTERISTICS = deepcopy(FILE['characteristics'])
 CSV_CHARACTERISTICS.update(CSV_FILE["characteristics"])
 CSV_FILE["characteristics"] = CSV_CHARACTERISTICS
 CSV_FILE["id"] += "_csv"
 CSV_FILE["pathname"] += ".csv"
 
-MKV_FILE = deepcopy(BASE_FILE)
+MKV_FILE = deepcopy(FILE)
 MKV_FILE.update(MKV_FILE_METADATA)
-MKV_CHARACTERISTICS = deepcopy(BASE_CHARACTERISTICS)
+MKV_CHARACTERISTICS = deepcopy(FILE['characteristics'])
 MKV_CHARACTERISTICS.update(MKV_FILE["characteristics"])
 MKV_FILE["characteristics"] = MKV_CHARACTERISTICS
 MKV_FILE["id"] += "_mkv"
 MKV_FILE["pathname"] += ".mkv"
 
-AUDIO_FILE = deepcopy(BASE_FILE)
+AUDIO_FILE = deepcopy(FILE)
 AUDIO_FILE.update(AUDIO_FILE_METADATA)
-AUDIO_CHARACTERISTICS = deepcopy(BASE_CHARACTERISTICS)
+AUDIO_CHARACTERISTICS = deepcopy(FILE['characteristics'])
 AUDIO_CHARACTERISTICS.update(AUDIO_FILE["characteristics"])
 AUDIO_FILE["characteristics"] = AUDIO_CHARACTERISTICS
 AUDIO_FILE["id"] += "_wav"
 AUDIO_FILE["pathname"] += ".wav"
 
-PDF_FILE = deepcopy(BASE_FILE)
+PDF_FILE = deepcopy(FILE)
 PDF_FILE.update(PDF_FILE_METADATA)
-PDF_CHARACTERISTICS = deepcopy(BASE_CHARACTERISTICS)
+PDF_CHARACTERISTICS = deepcopy(FILE['characteristics'])
 PDF_CHARACTERISTICS.update(PDF_FILE["characteristics"])
 PDF_FILE["characteristics"] = PDF_CHARACTERISTICS
 PDF_FILE["id"] += "_pdf"
 PDF_FILE["pathname"] += ".pdf"
 
-VIDEO_FILE = deepcopy(BASE_FILE)
+VIDEO_FILE = deepcopy(FILE)
 VIDEO_FILE.update(VIDEO_FILE_METADATA)
-VIDEO_CHARACTERISTICS = deepcopy(BASE_CHARACTERISTICS)
+VIDEO_CHARACTERISTICS = deepcopy(FILE['characteristics'])
 VIDEO_CHARACTERISTICS.update(VIDEO_FILE["characteristics"])
 VIDEO_FILE["characteristics"] = VIDEO_CHARACTERISTICS
 VIDEO_FILE["id"] += "_dv"
 VIDEO_FILE["pathname"] += ".dv"
 
-SEG_Y_FILE = deepcopy(BASE_FILE)
+SEG_Y_FILE = deepcopy(FILE)
 SEG_Y_FILE.update(SEG_Y_FILE_METADATA)
-SEG_Y_CHARACTERISTICS = deepcopy(BASE_CHARACTERISTICS)
+SEG_Y_CHARACTERISTICS = deepcopy(FILE['characteristics'])
 SEG_Y_CHARACTERISTICS.update(SEG_Y_FILE["characteristics"])
 SEG_Y_FILE["characteristics"] = SEG_Y_CHARACTERISTICS
 SEG_Y_FILE["id"] += "_sgy"

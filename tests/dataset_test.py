@@ -8,8 +8,7 @@ from metax_access import DS_STATE_INITIALIZED
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.models.file_error import FileError
-from tests.metax_data.datasets import BASE_DATASET
-from tests.metax_data.files import BASE_FILE
+from metax_access.template_data import DATASET, FILE
 
 
 @pytest.mark.parametrize(
@@ -54,11 +53,11 @@ def test_sip_identifier(config, requests_mock, metadata):
     :param metadata: The metadata of dataset from Metax
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset.update(metadata)
-    requests_mock.get("/v3/datasets/identifier", json=dataset)
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
 
-    dataset = Dataset("identifier", config=config)
+    dataset = Dataset(dataset['id'], config=config)
     assert dataset.sip_identifier == "correct-id"
 
 
@@ -69,11 +68,10 @@ def test_no_sip_identifier(config, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-ida"
-    requests_mock.get( "/v3/datasets/identifier", json=dataset)
-
-    dataset = Dataset('identifier', config=config)
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
+    dataset = Dataset(dataset['id'], config=config)
     with pytest.raises(ValueError, match='DOI does not exist'):
         # pylint: disable=pointless-statement
         dataset.sip_identifier
@@ -86,7 +84,7 @@ def test_unknown_data_catalog(config, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-unknown"
     requests_mock.get( "/v3/datasets/identifier", json=dataset)
 
@@ -149,7 +147,7 @@ def test_preservation_state(config, requests_mock, metadata):
     :param metadata: The metadata of dataset from Metax
     """
     # Mock Metax
-    dataset=copy.deepcopy(BASE_DATASET)
+    dataset=copy.deepcopy(DATASET)
     dataset.update(metadata)
     requests_mock.get('/v3/datasets/identifier', json=dataset)
 
@@ -203,7 +201,7 @@ def test_set_preservation_state(config, requests_mock, metadata):
     :param metadata: The metadata of dataset from Metax
     """
     # Mock Metax
-    dataset=copy.deepcopy(BASE_DATASET)
+    dataset=copy.deepcopy(DATASET)
     dataset.update(metadata)
     requests_mock.get("/v3/datasets/identifier", json=dataset)
     mocked_patch = requests_mock.patch("/v3/datasets/correct-id/preservation")
@@ -451,17 +449,17 @@ def test_reset_dataset(requests_mock, config):
     :param config: Configuration file
     """
     # Mock Metax
-    dataset = copy.deepcopy(BASE_DATASET)
-    requests_mock.get("/v3/datasets/dataset_identifier", json=dataset)
+    dataset = copy.deepcopy(DATASET)
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
 
     preservation_patch = requests_mock.patch(
-        "/v3/datasets/dataset_identifier/preservation", json={}
+        f"/v3/datasets/{dataset['id']}/preservation", json={}
     )
     requests_mock.get(
-        "/v3/datasets/dataset_identifier/files",
+        f"/v3/datasets/{dataset['id']}/files",
         json={
             "results": [
-                BASE_FILE | {
+                FILE | {
                     "id": f"file-id-{i}",
                     "storage-identifier": f"storage-identifier-{i}"
                 } for i in range(1, 3)  # Files 1 and 2
@@ -483,7 +481,7 @@ def test_reset_dataset(requests_mock, config):
             file_id="file-id-2",
             storage_identifier="storage-identifier-2",
             storage_service="pas",
-            dataset_id="dataset_identifier"
+            dataset_id=dataset['id']
         ),
         # This one won't be deleted
         FileError(
@@ -493,7 +491,7 @@ def test_reset_dataset(requests_mock, config):
         )
     ])
 
-    Dataset('dataset_identifier', config=config).reset(
+    Dataset(dataset['id'], config=config).reset(
         description="Reset by user",
         reason_description="Why this dataset was reset"
     )

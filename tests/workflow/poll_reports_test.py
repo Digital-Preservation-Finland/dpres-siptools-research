@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from siptools_research.workflow.poll_reports import GetValidationReports
-from tests.metax_data.datasets import BASE_DATASET
+from metax_access.template_data import DATASET
 
 
 @pytest.mark.parametrize(
@@ -30,14 +30,15 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
     """
     # Mock Metax
     doi = "doi:test"
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["id"] = workspace.name
     dataset["persistent_identifier"] = doi
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+    contract_id = dataset['preservation']['contract']
 
     #Mock DPS
     requests_mock.get(
-        "https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest",
+        f"https://access.localhost/api/2.0/{contract_id}/ingest/report/doi%3Atest",
         json={
             "data": {
                 "results": [
@@ -55,9 +56,9 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
         }
     )
 
-    requests_mock.get('https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest/doi%3Atest?type=xml',
+    requests_mock.get(f'https://access.localhost/api/2.0/{contract_id}/ingest/report/doi%3Atest/doi%3Atest?type=xml',
                       content=b'<hello world/>')
-    requests_mock.get('https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest/doi%3Atest?type=html',
+    requests_mock.get(f'https://access.localhost/api/2.0/{contract_id}/ingest/report/doi%3Atest/doi%3Atest?type=html',
                       content=b'<html>hello world</html>')
 
     # Init task
@@ -89,14 +90,15 @@ def test_getvalidationreports_is_not_completed_if_ingest_reports_are_older_than_
     """
     # Mock Metax
     doi = "doi:test"
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["id"] = workspace.name
     dataset["persistent_identifier"] = doi
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+    contract_id = dataset['preservation']['contract']
 
     # Mock DPS
     requests_mock.get(
-        "https://access.localhost/api/2.0/contract_identifier/ingest/report/doi%3Atest",
+        f"https://access.localhost/api/2.0/{contract_id}/ingest/report/doi%3Atest",
         json={
             "data": {
                 "results": [

@@ -27,7 +27,7 @@ def test_validate_files(config, requests_mock, tmp_path):
     file2 = copy.deepcopy(TXT_FILE)
     file2["id"] = "pid:urn:textfile2"
     file2["pathname"] = "/path/to/file2"
-    add_metax_dataset(requests_mock=requests_mock, files=[file1, file2])
+    dataset = add_metax_dataset(requests_mock=requests_mock, files=[file1, file2])
 
     # Create valid files in temporary directory
     path1 = tmp_path / "path/to/file1"
@@ -38,7 +38,7 @@ def test_validate_files(config, requests_mock, tmp_path):
 
     # Validator should return `None`, and exceptions should not be
     # raised.
-    assert validate_files("dataset_identifier", tmp_path, config) is None
+    assert validate_files(dataset['id'], tmp_path, config) is None
 
 
 def test_validate_invalid_files(config, requests_mock, tmp_path):
@@ -53,7 +53,7 @@ def test_validate_invalid_files(config, requests_mock, tmp_path):
     """
     # Mock Metax. Create a dataset that contains one file. The mimetype
     # of the file is text/plain.
-    add_metax_dataset(
+    dataset = add_metax_dataset(
         requests_mock=requests_mock,
         files=[copy.deepcopy(TXT_FILE)]
     )
@@ -64,7 +64,7 @@ def test_validate_invalid_files(config, requests_mock, tmp_path):
     filepath.write_text("")
 
     with pytest.raises(InvalidFileError) as exception_info:
-        validate_files( "dataset_identifier", tmp_path, config)
+        validate_files(dataset['id'], tmp_path, config)
 
     assert str(exception_info.value) == "1 files are not well-formed"
     assert any(
@@ -84,7 +84,7 @@ def test_validate_bitlevel_file(config, requests_mock, tmp_path):
     """
     # Mock Metax. Create a dataset that contains one file. The mimetype
     # of the file is application/x.fi-dpres.segy.
-    add_metax_dataset(
+    dataset = add_metax_dataset(
         requests_mock=requests_mock,
         files=[copy.deepcopy(SEG_Y_FILE)]
     )
@@ -97,7 +97,7 @@ def test_validate_bitlevel_file(config, requests_mock, tmp_path):
 
     # Validator should return `None`, and exceptions should not be
     # raised.
-    assert validate_files("dataset_identifier", tmp_path, config) is None
+    assert validate_files(dataset['id'], tmp_path, config) is None
 
 
 def test_validate_wrong_mimetype(config, requests_mock, tmp_path):
@@ -111,7 +111,7 @@ def test_validate_wrong_mimetype(config, requests_mock, tmp_path):
     """
     # Mock Metax. Create a dataset that contains one file. The mimetype
     # of the file is image/tiff.
-    add_metax_dataset(
+    dataset = add_metax_dataset(
         requests_mock=requests_mock,
         files=[copy.deepcopy(TIFF_FILE)]
     )
@@ -122,7 +122,7 @@ def test_validate_wrong_mimetype(config, requests_mock, tmp_path):
     filepath.write_text('foo')
 
     with pytest.raises(InvalidFileError) as exception_info:
-        validate_files("dataset_identifier", tmp_path, config)
+        validate_files(dataset['id'], tmp_path, config)
 
     assert str(exception_info.value) == "1 files are not well-formed"
     assert any(
@@ -140,7 +140,7 @@ def test_validate_csv_file(config, requests_mock, tmp_path):
     :param requests_mock: Mocker object
     :param tmp_path: Temporary directory
     """
-    add_metax_dataset(
+    dataset = add_metax_dataset(
         requests_mock=requests_mock,
         files=[copy.deepcopy(CSV_FILE)]
     )
@@ -154,7 +154,7 @@ def test_validate_csv_file(config, requests_mock, tmp_path):
     )
 
     with pytest.raises(InvalidFileError) as exception_info:
-        validate_files("dataset_identifier", tmp_path, config)
+        validate_files(dataset['id'], tmp_path, config)
 
     assert str(exception_info.value) == "1 files are not well-formed"
     assert any(

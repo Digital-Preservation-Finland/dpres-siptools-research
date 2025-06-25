@@ -6,7 +6,7 @@ import pytest
 
 from siptools_research.exceptions import InvalidDatasetMetadataError
 from siptools_research.workflow.validate_metadata import ValidateMetadata
-from tests.metax_data.datasets import BASE_DATASET
+from metax_access.template_data import DATASET
 from tests.metax_data.files import TXT_FILE
 from tests.utils import add_metax_dataset
 
@@ -28,7 +28,7 @@ def test_validatemetadata(config, workspace, requests_mock):
     file2 = copy.deepcopy(TXT_FILE)
     file2["id"] = "identifier2"
     file2["pathname"] = "/"
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["id"] = workspace.name
     add_metax_dataset(
         requests_mock=requests_mock,
@@ -58,7 +58,7 @@ def test_invalid_metadata(config, workspace, requests_mock):
     """
     # Mock Metax. Remove "contract" from dataset metadata to create an
     # invalid dataset.
-    dataset = copy.deepcopy(BASE_DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset["id"] = workspace.name
     dataset["preservation"]["contract"] = None
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)

@@ -7,7 +7,6 @@ from pathlib import Path
 
 from metax_access import DS_STATE_INITIALIZED
 
-import siptools_research.database
 from siptools_research.config import Configuration
 from siptools_research.database import connect_mongoengine
 from siptools_research.exceptions import WorkflowExistsError

@@ -26,7 +26,7 @@ from siptools_research.exceptions import (
 from siptools_research.metax import get_metax_client
 from siptools_research.workflowtask import WorkflowTask
 from siptools_research.models.file_error import FileError
-from tests.metax_data.datasets import BASE_DATASET
+from metax_access.template_data import DATASET
 
 
 # pylint: disable=too-few-public-methods
@@ -339,7 +339,7 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
                                  be reported to Metax
     """
     # Mock metax
-    json=copy.deepcopy(BASE_DATASET)
+    json=copy.deepcopy(DATASET)
     json["id"] = workspace.name
     json["preservation"]["state"] = DS_STATE_GENERATING_METADATA
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=json)
@@ -380,7 +380,7 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
             )
 
     # Mock metax
-    json=copy.deepcopy(BASE_DATASET)
+    json=copy.deepcopy(DATASET)
     json["id"] = workspace.name
     json["preservation"]["state"] = DS_STATE_GENERATING_METADATA
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=json)
@@ -475,7 +475,7 @@ def test_file_error_saved(
             raise exception
 
     # Mock metax
-    json=copy.deepcopy(BASE_DATASET)
+    json=copy.deepcopy(DATASET)
     json["id"] = "dataset-id"
     json["preservation"]["state"] = DS_STATE_GENERATING_METADATA
     requests_mock.get("/v3/datasets/dataset-id", json=json)
@@ -503,7 +503,7 @@ def test_set_preservation_state_of_pas_version(config, requests_mock):
     :param requests_mock: Mocker object
     """
     # Mock metax
-    json = copy.deepcopy(BASE_DATASET)
+    json = copy.deepcopy(DATASET)
     json["id"] = "original-id"
     json["preservation"]["dataset_version"] = {
         "id": "pas-version-id",
@@ -543,7 +543,7 @@ def test_packaging_failed(config, workspace, requests_mock):
     :param requests_mock: Mocker object
     """
     # Mock Metax
-    json=copy.deepcopy(BASE_DATASET)
+    json=copy.deepcopy(DATASET)
     json["id"] = workspace.name
     # DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION means that packaging has
     # started
