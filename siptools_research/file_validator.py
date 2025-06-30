@@ -47,18 +47,18 @@ def validate_files(dataset_id, root_directory,
 
         # Map Metax V3 record separator to file-scraper format
         separator = CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[
-            characteristics.get("csv_record_separator")
+            characteristics["csv_record_separator"]
         ]
 
         file_format_version = \
-            characteristics.get("file_format_version", {}) or {}
+            characteristics["file_format_version"]
         scraper = Scraper(
             filename=str(filepath),
-            mimetype=file_format_version.get("file_format"),
-            charset=characteristics.get("encoding"),
-            version=file_format_version.get("format_version"),
-            delimiter=characteristics.get("csv_delimiter"),
-            quotechar=characteristics.get("csv_quoting_char"),
+            mimetype=file_format_version["file_format"],
+            charset=characteristics["encoding"],
+            version=file_format_version["format_version"],
+            delimiter=characteristics["csv_delimiter"],
+            quotechar=characteristics["csv_quoting_char"],
             separator=separator
         )
         scraper.scrape(check_wellformed=True)

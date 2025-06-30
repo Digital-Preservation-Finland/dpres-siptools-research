@@ -89,9 +89,9 @@ def _validate_file_metadata(dataset, metax_client):
         # support draft 7 are not used, in which case part of the schema
         # would be ignored without any warning.
 
-        characteristics = file_metadata["characteristics"] or {}
+        characteristics = file_metadata["characteristics"]
         char_ext = file_metadata["characteristics_extension"] or {}
-        file_format_version = characteristics.get("file_format_version")
+        file_format_version = characteristics["file_format_version"]['file_format']
         if not file_format_version and not is_linked_bitlevel:
             raise InvalidFileMetadataError(
                 f"Non bit-level file must have `file_format_version` set: "

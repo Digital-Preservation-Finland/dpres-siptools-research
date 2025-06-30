@@ -56,19 +56,18 @@ def generate_metadata(
         # file metadata generation and allow scraping failures to pass.
         is_linked_bitlevel = bool(file_metadata["pas_compatible_file"])
 
-        original_file_characteristics = file_metadata.get(
-            "characteristics") or {}
+        original_file_characteristics = file_metadata["characteristics"]
 
         # Detect file using scraper. Use metadata defined by user.
         file_path = root_directory / file_metadata["pathname"].strip("/")
         file_format_version \
-            = original_file_characteristics.get("file_format_version") or {}
-        mimetype = file_format_version.get("file_format")
-        version = file_format_version.get("format_version")
-        charset = original_file_characteristics.get("encoding")
-        delimiter = original_file_characteristics.get("csv_delimiter")
-        separator = original_file_characteristics.get("csv_record_separator")
-        quotechar = original_file_characteristics.get("csv_quoting_char")
+            = original_file_characteristics["file_format_version"]
+        mimetype = file_format_version["file_format"]
+        version = file_format_version["format_version"]
+        charset = original_file_characteristics["encoding"]
+        delimiter = original_file_characteristics["csv_delimiter"]
+        separator = original_file_characteristics["csv_record_separator"]
+        quotechar = original_file_characteristics["csv_quoting_char"]
         scraper = file_scraper.scraper.Scraper(
             str(file_path),
             mimetype=mimetype,

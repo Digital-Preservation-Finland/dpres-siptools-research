@@ -12,7 +12,7 @@
                 "file_format_version" :{
                 "title" : "File Format Version",
                 "description": "data from file format version",
-                "type": ["object", "null"],
+                "type": "object",
                 "required": ["file_format"]},
                 "properties": {
                     "file_format": {
