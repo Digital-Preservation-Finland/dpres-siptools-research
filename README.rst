@@ -50,7 +50,7 @@ Installation using Python Virtualenv for development purposes
 
 Install required RPM packages
 
-* gcc, swig, python3-devel are required to install M2Crypto
+* gcc, swig, python3-devel and openssl-devel are required to install M2Crypto
 * CRB repository is required to install swig
 * dpres-xml-schemas is required for testing XML validation
 * python3-file-scraper-full is required for testing file type detection
@@ -58,7 +58,7 @@ Install required RPM packages
 
    dnf config-manager --set-enabled crb
    dnf install https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm
-   dnf install gcc python3-devel swig python3-file-scraper-full dpres-xml-schemas libmediainfo jhove mongodb-org-server
+   dnf install gcc python3-devel openssl-devel swig python3-file-scraper-full dpres-xml-schemas libmediainfo jhove mongodb-org-server
 
 Create a virtual environment::
 
