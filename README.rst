@@ -91,11 +91,6 @@ Build RPM::
 
    make rpm
 
-Documentation for modules is automatically generated from docstrings using `Sphinx <https://www.sphinx-doc.org/en/master/>`_. Generate documentation::
-
-   make doc
-
-
 Packaging service REST API
 ==========================
 
