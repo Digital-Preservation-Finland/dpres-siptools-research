@@ -4,7 +4,6 @@ coverage
 pytest-cov
 pytest-mock
 requests_mock
-Sphinx
 mongobox @ git+https://github.com/theorm/mongobox@aba4175ed4fd60ea1259be7aa49102a06f488b1c
 xmltodict
 mock-ssh-server
