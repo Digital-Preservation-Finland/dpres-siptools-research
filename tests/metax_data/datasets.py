@@ -18,13 +18,13 @@ BASE_PROVENANCE = {
     "temporal": None,
     "event_outcome": None,
     "outcome_description": None,
-    "is_associated_with": [],  # TODO: is this used somewhere? visible in fronend
+    "is_associated_with": [],  # TODO: is this used somewhere?
 }
 
 FULL_PROVENANCE = copy.deepcopy(BASE_PROVENANCE)
 FULL_PROVENANCE["temporal"] = {
-        "temporal_coverage": None,  # Is this used somewhere? visible in frontend
-        "end_date": "2014-12-31T08:19:58Z",  # Is this used somewhere? visible in frontend
+        "temporal_coverage": None,  # Is this used somewhere?
+        "end_date": "2014-12-31T08:19:58Z",  # Is this used somewhere?
         "start_date": "2014-01-01T08:19:58Z"
 }
 FULL_PROVENANCE["description"] = {"en": "Description of provenance"}
