@@ -3,13 +3,14 @@ import file_scraper
 import file_scraper.scraper
 from metax_access.response import MetaxFileCharacteristics
 
+from siptools_research.database import connect_mongoengine
 from siptools_research.exceptions import (InvalidFileError,
-                                          InvalidFileMetadataError)
+                                          InvalidFileMetadataError,
+                                          file_error_collector)
 from siptools_research.metax import (CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL,
                                      CSV_RECORD_SEPARATOR_LITERAL_TO_ENUM,
                                      get_metax_client)
 from siptools_research.models.file_error import FileError
-from siptools_research.database import connect_mongoengine
 
 
 def generate_metadata(
@@ -50,140 +51,149 @@ def generate_metadata(
         dataset_id__in=(None, dataset_id)
     ).delete()
 
-    for file_metadata in dataset_files:
-        # If this file is linked to a PAS compatible file, it must mean
-        # this file is a bit-level file. If so, be lenient during
-        # file metadata generation and allow scraping failures to pass.
-        is_linked_bitlevel = bool(file_metadata["pas_compatible_file"])
+    with file_error_collector() as collect_error:
+        for file_metadata in dataset_files:
+            # If this file is linked to a PAS compatible file, it must mean
+            # this file is a bit-level file. If so, be lenient during
+            # file metadata generation and allow scraping failures to pass.
+            is_linked_bitlevel = bool(file_metadata["pas_compatible_file"])
 
-        original_file_characteristics = file_metadata["characteristics"]
+            original_file_characteristics = file_metadata["characteristics"]
 
-        # Detect file using scraper. Use metadata defined by user.
-        file_path = root_directory / file_metadata["pathname"].strip("/")
-        file_format_version \
-            = original_file_characteristics["file_format_version"]
-        mimetype = file_format_version["file_format"]
-        version = file_format_version["format_version"]
-        charset = original_file_characteristics["encoding"]
-        delimiter = original_file_characteristics["csv_delimiter"]
-        separator = original_file_characteristics["csv_record_separator"]
-        quotechar = original_file_characteristics["csv_quoting_char"]
-        scraper = file_scraper.scraper.Scraper(
-            str(file_path),
-            mimetype=mimetype,
-            charset=charset,
-            version=version,
-            delimiter=delimiter,
-            separator=CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[separator],
-            quotechar=quotechar,
-        )
-        scraper.scrape(check_wellformed=False)
-
-        scraper_file_characteristics: MetaxFileCharacteristics = {
-            "file_format_version": None,
-            "encoding": scraper.streams[0].get("charset"),
-            "csv_delimiter": scraper.streams[0].get("delimiter"),
-            "csv_record_separator": scraper.streams[0].get("separator"),
-            "csv_quoting_char": scraper.streams[0].get("quotechar"),
-        }
-
-        is_unrecognized = \
-            "(:unav)" in (scraper.mimetype, scraper.version)
-        if is_unrecognized and not is_linked_bitlevel:
-            # TODO: We probably should check all metadata that is required
-            # for packaging, but we can not check all fields in
-            # scraper.streams, because some of them will be "(:unav)" and it
-            # seems to be OK (or is there a bug in file-scraper,
-            # siptools-ng, or sample files of this repository?)
-            error = "File format was not recognized"
-            raise InvalidFileError(error, [file_metadata])
-
-        try:
-            url = reference_data[(scraper.mimetype, scraper.version)]
-            scraper_file_characteristics["file_format_version"] = {
-                "url": url
-            }
-        except KeyError as error:
-            # Bit-level file formats don't need to be recognized by Metax V3;
-            # we will store possible file format metadata in
-            # 'file_characteristics_extension'.
-            if not is_linked_bitlevel:
-                message = (f"Detected file_format: '{scraper.mimetype}' and "
-                           f"format_version: '{scraper.version}' are not "
-                           "supported.")
-                raise InvalidFileError(message, [file_metadata]) from error
-
-        # Check that user defined metadata is not ignored by
-        # file-scraper
-        # TODO: This is necessary until TPASPKT-1418 is resolved
-        compare_file_chars = [
-            (
-                "file_format",
-                scraper.mimetype,
-                mimetype,
-            ),
-            (
-                "format_version",
-                scraper.version,
-                version,
-            ),
-            (
-                "encoding",
-                scraper_file_characteristics["encoding"],
-                charset,
-            ),
-            (
-                "csv_delimiter",
-                scraper_file_characteristics["csv_delimiter"],
-                delimiter,
-            ),
-            (
-                "csv_record_separator",
-                scraper_file_characteristics["csv_record_separator"],
-                CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[separator],
-            ),
-            (
-                "csv_quoting_char",
-                scraper_file_characteristics["csv_quoting_char"],
-                quotechar,
+            # Detect file using scraper. Use metadata defined by user.
+            file_path = root_directory / file_metadata["pathname"].strip("/")
+            file_format_version \
+                = original_file_characteristics["file_format_version"]
+            mimetype = file_format_version["file_format"]
+            version = file_format_version["format_version"]
+            charset = original_file_characteristics["encoding"]
+            delimiter = original_file_characteristics["csv_delimiter"]
+            separator = original_file_characteristics["csv_record_separator"]
+            quotechar = original_file_characteristics["csv_quoting_char"]
+            scraper = file_scraper.scraper.Scraper(
+                str(file_path),
+                mimetype=mimetype,
+                charset=charset,
+                version=version,
+                delimiter=delimiter,
+                separator=CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[separator],
+                quotechar=quotechar,
             )
-        ]
-        for key, scraper_metadata, user_metadata in compare_file_chars:
-            if user_metadata and scraper_metadata != user_metadata:
-                error = (f"File scraper detects a different {key}: "
-                         f"{scraper_metadata}")
-                raise InvalidFileMetadataError(error, [file_metadata])
+            scraper.scrape(check_wellformed=False)
 
-        # Map 'csv_record_separator' to the enum value expected by Metax V3
-        scraper_file_characteristics["csv_record_separator"] = (
-            CSV_RECORD_SEPARATOR_LITERAL_TO_ENUM[
-                scraper_file_characteristics["csv_record_separator"]
+            scraper_file_characteristics: MetaxFileCharacteristics = {
+                "file_format_version": None,
+                "encoding": scraper.streams[0].get("charset"),
+                "csv_delimiter": scraper.streams[0].get("delimiter"),
+                "csv_record_separator": scraper.streams[0].get("separator"),
+                "csv_quoting_char": scraper.streams[0].get("quotechar"),
+            }
+
+            is_unrecognized = \
+                "(:unav)" in (scraper.mimetype, scraper.version)
+            if is_unrecognized and not is_linked_bitlevel:
+                # TODO: We probably should check all metadata that is required
+                # for packaging, but we can not check all fields in
+                # scraper.streams, because some of them will be "(:unav)" and it
+                # seems to be OK (or is there a bug in file-scraper,
+                # siptools-ng, or sample files of this repository?)
+                error = "File format was not recognized"
+                collect_error(InvalidFileError(error, [file_metadata]))
+                continue
+
+            try:
+                url = reference_data[(scraper.mimetype, scraper.version)]
+                scraper_file_characteristics["file_format_version"] = {
+                    "url": url
+                }
+            except KeyError as error:
+                # Bit-level file formats don't need to be recognized by Metax
+                # V3; we will store possible file format metadata in
+                # 'file_characteristics_extension'.
+                if not is_linked_bitlevel:
+                    message = (
+                        f"Detected file_format: '{scraper.mimetype}' and "
+                        f"format_version: '{scraper.version}' are not "
+                        "supported."
+                    )
+                    collect_error(
+                        InvalidFileError(message, [file_metadata])
+                    )
+                    continue
+
+            # Check that user defined metadata is not ignored by
+            # file-scraper
+            # TODO: This is necessary until TPASPKT-1418 is resolved
+            compare_file_chars = [
+                (
+                    "file_format",
+                    scraper.mimetype,
+                    mimetype,
+                ),
+                (
+                    "format_version",
+                    scraper.version,
+                    version,
+                ),
+                (
+                    "encoding",
+                    scraper_file_characteristics["encoding"],
+                    charset,
+                ),
+                (
+                    "csv_delimiter",
+                    scraper_file_characteristics["csv_delimiter"],
+                    delimiter,
+                ),
+                (
+                    "csv_record_separator",
+                    scraper_file_characteristics["csv_record_separator"],
+                    CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL[separator],
+                ),
+                (
+                    "csv_quoting_char",
+                    scraper_file_characteristics["csv_quoting_char"],
+                    quotechar,
+                )
             ]
-        )
+            for key, scraper_metadata, user_metadata in compare_file_chars:
+                if user_metadata and scraper_metadata != user_metadata:
+                    error = (f"File scraper detects a different {key}: "
+                             f"{scraper_metadata}")
+                    collect_error(
+                        InvalidFileMetadataError(error, [file_metadata])
+                    )
 
-        # Remove "(:unap)" and None values from
-        # scraper_file_characteristics
-        scraper_file_characteristics = {
-            key: value
-            for key, value
-            in scraper_file_characteristics.items()
-            if value not in (file_scraper.defaults.UNAP, None)
-        }
+            # Map 'csv_record_separator' to the enum value expected by Metax V3
+            scraper_file_characteristics["csv_record_separator"] = (
+                CSV_RECORD_SEPARATOR_LITERAL_TO_ENUM[
+                    scraper_file_characteristics["csv_record_separator"]
+                ]
+            )
 
-        # Scraper output will be saved to file_characteristics_extension
-        # for later use
-        file_characteristics_extension = {
-            "streams": scraper.streams,
-            "info": scraper.info,
-            "mimetype": scraper.mimetype,
-            "version": scraper.version,
-            "grade": scraper.grade(),
-        }
+            # Remove "(:unap)" and None values from
+            # scraper_file_characteristics
+            scraper_file_characteristics = {
+                key: value
+                for key, value
+                in scraper_file_characteristics.items()
+                if value not in (file_scraper.defaults.UNAP, None)
+            }
 
-        metax_client.patch_file_characteristics(
-            file_metadata["id"],
-            {
-                "characteristics": scraper_file_characteristics,
-                "characteristics_extension": file_characteristics_extension
-             }
-        )
+            # Scraper output will be saved to file_characteristics_extension
+            # for later use
+            file_characteristics_extension = {
+                "streams": scraper.streams,
+                "info": scraper.info,
+                "mimetype": scraper.mimetype,
+                "version": scraper.version,
+                "grade": scraper.grade(),
+            }
+
+            metax_client.patch_file_characteristics(
+                file_metadata["id"],
+                {
+                    "characteristics": scraper_file_characteristics,
+                    "characteristics_extension": file_characteristics_extension
+                 }
+            )

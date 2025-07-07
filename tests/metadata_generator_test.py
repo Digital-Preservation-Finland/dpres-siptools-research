@@ -11,6 +11,7 @@ from requests.exceptions import HTTPError
 import tests.metax_data.reference_data
 from tests.utils import add_metax_dataset
 from siptools_research.exceptions import (
+    BulkInvalidDatasetFileError,
     InvalidFileError,
     InvalidFileMetadataError,
 )
@@ -276,12 +277,15 @@ def test_generate_metadata_unrecognized(config, requests_mock, tmp_path):
     tmp_file_path.parent.mkdir(parents=True)
     tmp_file_path.write_text("")
 
-    with pytest.raises(InvalidFileError) as exception_info:
+    with pytest.raises(BulkInvalidDatasetFileError) as exception_info:
         generate_metadata(dataset['id'], tmp_path, config)
 
-    assert str(exception_info.value) == 'File format was not recognized'
+    assert len(exception_info.value.file_errors) == 1
+    file_error = exception_info.value.file_errors[0]
+
+    assert str(file_error) == 'File format was not recognized'
     assert next(
-        file for file in exception_info.value.files
+        file for file in file_error.files
         if file["id"] == 'pid:urn:identifier'
     )
 
@@ -602,14 +606,17 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
     tmp_file_path.parent.mkdir(parents=True)
     shutil.copy(filepath, tmp_file_path)
 
-    with pytest.raises(InvalidFileMetadataError) as exception_info:
+    with pytest.raises(BulkInvalidDatasetFileError) as exception_info:
         generate_metadata(dataset['id'], tmp_path, config)
 
-    assert str(exception_info.value)\
-        == f"File scraper detects a different {keys[-1]}: {detected_value}"
+    file_error = next(
+        error for error in exception_info.value.file_errors
+        if str(error) == \
+            f"File scraper detects a different {keys[-1]}: {detected_value}"
+    )
 
     assert next(
-        file for file in exception_info.value.files
+        file for file in file_error.files
         if file["id"] == 'pid:urn:identifier'
     )
 
