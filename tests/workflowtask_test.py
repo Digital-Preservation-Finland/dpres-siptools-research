@@ -14,6 +14,7 @@ from metax_access import (
 
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import (
+    BulkInvalidDatasetFileError,
     InvalidContractMetadataError,
     InvalidDatasetError,
     InvalidDatasetFileError,
@@ -460,6 +461,80 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
                     "dataset_id": "dataset-id",
                     "errors": ["Failed to reticulate splines"]
                 }
+            ]
+        ),
+        (
+            # Bulk file error
+            BulkInvalidDatasetFileError(
+                message="3 errors found",
+                file_errors=[
+                    InvalidDatasetFileError(
+                        "Failed to reticulate splines",
+                        files=[
+                            {
+                                "id": f"file-id-{i}",
+                                "storage_identifier": f"storage-id-{i}",
+                                "storage_service": "pas"
+                            } for i in range(1, 3)
+                        ],
+                        is_dataset_error=True
+                    ),
+                    InvalidDatasetFileError(
+                        "PC LOAD LETTER",
+                        files=[
+                            {
+                                "id": f"file-id-{i}",
+                                "storage_identifier": f"storage-id-{i}",
+                                "storage_service": "pas"
+                            } for i in range(3, 5)
+                        ],
+                        is_dataset_error=False
+                    ),
+                    InvalidDatasetFileError(
+                        "Error for the first file",
+                        files=[
+                            {
+                                "id": "file-id-1",
+                                "storage_identifier": "storage-id-1",
+                                "storage_service": "pas"
+                            }
+                        ],
+                        is_dataset_error=True
+                    )
+                ]
+            ),
+            [
+                {
+                    "file_id": "file-id-1",
+                    "storage_identifier": "storage-id-1",
+                    "storage_service": "pas",
+                    "dataset_id": "dataset-id",
+                    "errors": [
+                        "Failed to reticulate splines",
+                        "Error for the first file"
+                    ]
+                },
+                {
+                    "file_id": "file-id-2",
+                    "storage_identifier": "storage-id-2",
+                    "storage_service": "pas",
+                    "dataset_id": "dataset-id",
+                    "errors": ["Failed to reticulate splines"]
+                },
+                {
+                    "file_id": "file-id-3",
+                    "storage_identifier": "storage-id-3",
+                    "storage_service": "pas",
+                    "dataset_id": None,
+                    "errors": ["PC LOAD LETTER"]
+                },
+                {
+                    "file_id": "file-id-4",
+                    "storage_identifier": "storage-id-4",
+                    "storage_service": "pas",
+                    "dataset_id": None,
+                    "errors": ["PC LOAD LETTER"]
+                },
             ]
         )
     ]

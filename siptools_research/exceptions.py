@@ -68,3 +68,16 @@ class MissingFileError(InvalidDatasetFileError):
 
 class WorkflowExistsError(Exception):
     """Exception raised when conflicting workflow exists."""
+
+
+class BulkInvalidDatasetFileError(InvalidDatasetError):
+    """Exception consisting of multiple file errors"""
+    def __init__(
+            self, message: str, file_errors: list[InvalidDatasetFileError]):
+        """Initialize exception.
+
+        :param file_errors: Error message
+        """
+        super().__init__(message)
+
+        self.file_errors = file_errors

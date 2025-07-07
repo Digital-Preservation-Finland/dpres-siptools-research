@@ -1,10 +1,13 @@
 """Base task classes for the workflow tasks."""
+from collections import defaultdict
+
 import luigi
 from metax_access import (DS_STATE_INVALID_METADATA, DS_STATE_PACKAGING_FAILED,
                           DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE)
 
 from siptools_research.dataset import Dataset
-from siptools_research.exceptions import (InvalidDatasetError,
+from siptools_research.exceptions import (BulkInvalidDatasetFileError,
+                                          InvalidDatasetError,
                                           InvalidDatasetFileError,
                                           InvalidSIPError)
 from siptools_research.models.file_error import FileError
@@ -135,31 +138,90 @@ def report_task_failure(task, exception):
             _get_description(task, exception)
         )
 
-        # Save file-related errors if any were included in the exception
         if isinstance(exception, InvalidDatasetFileError):
-            dataset_id = \
-                task.dataset.identifier if exception.is_dataset_error else None
+            exception = BulkInvalidDatasetFileError(
+                message=str(exception),
+                file_errors=[exception]
+            )
 
-            file_ids = [file["id"] for file in exception.files]
-
-            # Delete any existing errors, if any
-            FileError.objects.filter(
-                file_id__in=file_ids, dataset_id=dataset_id
-            ).delete()
-
-            # Bulk insert errors
-            FileError.objects.insert([
-                FileError(
-                    file_id=file["id"],
-                    storage_identifier=file["storage_identifier"],
-                    storage_service=file["storage_service"],
-                    dataset_id=dataset_id,
-                    errors=[str(exception)]
-                ) for file in exception.files
-            ])
+        # Save file-related errors if any were included in the exception
+        if isinstance(exception, BulkInvalidDatasetFileError):
+            _update_db_errors(task, exception)
 
         # Disable workflow
         task.dataset.disable()
+
+
+def _update_db_errors(
+        task: WorkflowTask, bulk_exception: BulkInvalidDatasetFileError):
+    """
+    Update file errors in the database
+    
+    :param task: The current workflow task
+    :param bulk_exception: Bulk exception containing one or more file error
+                           exceptions
+    """
+    file_id2data = {}
+    file_id2non_dataset_errors = defaultdict(list)
+    file_id2dataset_errors = defaultdict(list)
+
+    # Collect all errors into two sets:
+    # non-dataset related errors and dataset related errors
+    for file_error in bulk_exception.file_errors:
+        dataset_id = (
+            task.dataset.identifier
+            if file_error.is_dataset_error else None
+        )
+        message = str(file_error)
+
+        file_ids = []
+
+        for file in file_error.files:
+            file_id = file["id"]
+
+            file_ids.append(file_id)
+            file_id2data[file_id] = file
+
+            if dataset_id:
+                file_id2dataset_errors[file_id] += [message]
+            else:
+                file_id2non_dataset_errors[file_id] += [message]
+
+
+    # Clear existing errors
+    if file_id2non_dataset_errors:
+        FileError.objects.filter(
+            file_id__in=list(file_id2non_dataset_errors.keys()),
+            dataset_id=None
+        ).delete()
+
+    if file_id2dataset_errors:
+        FileError.objects.filter(
+            file_id__in=list(file_id2dataset_errors.keys()),
+            dataset_id=task.dataset.identifier
+        )
+
+    # Insert new errors
+    new_file_errors = [
+        FileError(
+            file_id=file_id,
+            storage_identifier=file_id2data[file_id]["storage_identifier"],
+            storage_service=file_id2data[file_id]["storage_service"],
+            dataset_id=task.dataset.identifier,
+            errors=errors
+        ) for file_id, errors in file_id2dataset_errors.items()
+    ]
+    new_file_errors += [
+        FileError(
+            file_id=file_id,
+            storage_identifier=file_id2data[file_id]["storage_identifier"],
+            storage_service=file_id2data[file_id]["storage_service"],
+            dataset_id=None,
+            errors=errors
+        ) for file_id, errors in file_id2non_dataset_errors.items()
+    ]
+
+    FileError.objects.insert(new_file_errors)
 
 
 def _get_description(task, exception):
