@@ -5,9 +5,10 @@ import shutil
 
 import pytest
 
-from siptools_research.exceptions import InvalidFileError
+from siptools_research.exceptions import (BulkInvalidDatasetFileError,
+                                          InvalidFileError)
 from siptools_research.file_validator import validate_files
-from tests.metax_data.files import SEG_Y_FILE, TIFF_FILE, TXT_FILE, CSV_FILE
+from tests.metax_data.files import CSV_FILE, SEG_Y_FILE, TIFF_FILE, TXT_FILE
 from tests.utils import add_metax_dataset
 
 
@@ -63,12 +64,13 @@ def test_validate_invalid_files(config, requests_mock, tmp_path):
     filepath.parent.mkdir(parents=True)
     filepath.write_text("")
 
-    with pytest.raises(InvalidFileError) as exception_info:
+    with pytest.raises(BulkInvalidDatasetFileError) as exception_info:
         validate_files(dataset['id'], tmp_path, config)
 
-    assert str(exception_info.value) == "1 files are not well-formed"
+    assert isinstance(exception_info.value.file_errors[0], InvalidFileError)
+    assert str(exception_info.value) == "File is not well-formed"
     assert any(
-        file for file in exception_info.value.files
+        file for file in exception_info.value.file_errors[0].files
         if file["id"] == "pid:urn:identifier"
     )
 
@@ -121,12 +123,13 @@ def test_validate_wrong_mimetype(config, requests_mock, tmp_path):
     filepath.parent.mkdir(parents=True)
     filepath.write_text('foo')
 
-    with pytest.raises(InvalidFileError) as exception_info:
+    with pytest.raises(BulkInvalidDatasetFileError) as exception_info:
         validate_files(dataset['id'], tmp_path, config)
 
-    assert str(exception_info.value) == "1 files are not well-formed"
+    assert isinstance(exception_info.value.file_errors[0], InvalidFileError)
+    assert str(exception_info.value) == "File is not well-formed"
     assert any(
-        file for file in exception_info.value.files
+        file for file in exception_info.value.file_errors[0].files
         if file["id"] == "pid:urn:identifier_tiff"
     )
 
@@ -153,11 +156,12 @@ def test_validate_csv_file(config, requests_mock, tmp_path):
         "'3a';'4b';'5c"  # Missing end quote
     )
 
-    with pytest.raises(InvalidFileError) as exception_info:
+    with pytest.raises(BulkInvalidDatasetFileError) as exception_info:
         validate_files(dataset['id'], tmp_path, config)
 
-    assert str(exception_info.value) == "1 files are not well-formed"
+    assert isinstance(exception_info.value.file_errors[0], InvalidFileError)
+    assert str(exception_info.value) == "File is not well-formed"
     assert any(
-        file for file in exception_info.value.files
+        file for file in exception_info.value.file_errors[0].files
         if file["id"] == "pid:urn:identifier_csv"
     )

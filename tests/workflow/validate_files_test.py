@@ -2,15 +2,13 @@
 import copy
 
 import pytest
+from metax_access.template_data import DATASET
 
 import tests.utils
-from siptools_research.exceptions import InvalidFileError
+from siptools_research.exceptions import (BulkInvalidDatasetFileError,
+                                          InvalidFileError)
 from siptools_research.workflow import validate_files
-from metax_access.template_data import DATASET
-from tests.metax_data.files import (
-    TIFF_FILE,
-    TXT_FILE,
-)
+from tests.metax_data.files import TIFF_FILE, TXT_FILE
 
 
 def test_validatefiles(config, workspace, requests_mock):
@@ -70,6 +68,7 @@ def test_validatefiles_invalid(config, workspace, requests_mock):
         dataset_id=workspace.name,
         config=config,
     )
-    with pytest.raises(InvalidFileError, match='1 files are not well-formed'):
+    with pytest.raises(
+            BulkInvalidDatasetFileError, match='File is not well-formed'):
         task.run()
     assert not task.complete()
