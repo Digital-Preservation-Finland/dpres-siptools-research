@@ -11,6 +11,7 @@ from requests.exceptions import HTTPError
 import siptools_research
 from tests.utils import add_metax_dataset
 from siptools_research.exceptions import (
+    BulkInvalidDatasetFileError,
     InvalidDatasetFileError,
     InvalidDatasetMetadataError,
     InvalidFileMetadataError
@@ -124,8 +125,11 @@ def test_validate_metadata_invalid_file_path(config, requests_mock):
     # Try to validate invalid dataset
     expected_error = ("The file path of file pid:urn:identifier is invalid: "
                       "../../file_in_invalid_path")
-    with pytest.raises(InvalidFileMetadataError, match=expected_error):
+    with pytest.raises(BulkInvalidDatasetFileError, match=expected_error) \
+            as exc:
         validate_metadata(dataset['id'], config)
+
+    assert isinstance(exc.value.file_errors[0], InvalidFileMetadataError)
 
 
 def test_validate_file_metadata(config, requests_mock):
@@ -251,12 +255,13 @@ def test_validate_file_metadata_missing_file_format(
     metax = get_metax_client(config)
 
     if not is_linked_bitlevel:
-        with pytest.raises(InvalidFileMetadataError) as exc:
+        with pytest.raises(BulkInvalidDatasetFileError) as exc:
             siptools_research.metadata_validator._validate_file_metadata(
                 dataset=dataset,
                 metax_client=metax
             )
 
+        assert isinstance(exc.value.file_errors[0], InvalidFileMetadataError)
         assert "Non bit-level file must have `file_format_version` set" \
             in str(exc.value)
     else:
@@ -351,12 +356,13 @@ def test_validate_file_grades_and_links(
 
     # Init and run task
     if expected_error:
-        with pytest.raises(InvalidDatasetFileError) as exc:
+        with pytest.raises(BulkInvalidDatasetFileError) as exc:
             siptools_research.metadata_validator.validate_metadata(
                 dataset_id=dataset["id"],
                 config=config
             )
 
+        assert isinstance(exc.value.file_errors[0], InvalidDatasetFileError)
         assert expected_error in str(exc.value)
     else:
         siptools_research.metadata_validator.validate_metadata(

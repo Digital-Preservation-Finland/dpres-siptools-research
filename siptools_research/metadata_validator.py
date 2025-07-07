@@ -9,7 +9,8 @@ from file_scraper.defaults import (BIT_LEVEL_WITH_RECOMMENDED, RECOMMENDED,
 import siptools_research.schemas
 from siptools_research.exceptions import (InvalidDatasetFileError,
                                           InvalidDatasetMetadataError,
-                                          InvalidFileMetadataError)
+                                          InvalidFileMetadataError,
+                                          file_error_collector)
 from siptools_research.metax import get_metax_client
 
 
@@ -74,71 +75,104 @@ def _validate_file_metadata(dataset, metax_client):
     # is included in the dataset
     _validate_file_dpres_links(dataset_files, dataset_id=dataset["id"])
 
-    for file_metadata in dataset_files:
-        file_identifier = file_metadata["id"]
-        file_path = file_metadata["pathname"]
+    with file_error_collector() as collect_error:
+        for file_metadata in dataset_files:
+            file_identifier = file_metadata["id"]
+            file_path = file_metadata["pathname"]
 
-        is_linked_bitlevel = bool(file_metadata["pas_compatible_file"])
-        is_linked_pas_compatible = bool(
-            file_metadata["non_pas_compatible_file"]
-        )
-
-        # Validate metadata against JSON schema. The schema contains
-        # properties introduced in JSON schema draft 7. Using
-        # Draft7Validator ensures that older validators that do not
-        # support draft 7 are not used, in which case part of the schema
-        # would be ignored without any warning.
-
-        characteristics = file_metadata["characteristics"]
-        char_ext = file_metadata["characteristics_extension"] or {}
-        file_format_version = characteristics["file_format_version"]['file_format']
-        if not file_format_version and not is_linked_bitlevel:
-            raise InvalidFileMetadataError(
-                f"Non bit-level file must have `file_format_version` set: "
-                f"{file_path}",
-                files=[file_metadata]
+            is_linked_bitlevel = bool(file_metadata["pas_compatible_file"])
+            is_linked_pas_compatible = bool(
+                file_metadata["non_pas_compatible_file"]
             )
 
-        try:
-            jsonschema.Draft7Validator(
-                siptools_research.schemas.FILE_METADATA_SCHEMA
-            ).validate(file_metadata)
-        except jsonschema.ValidationError as exc:
-            raise InvalidFileMetadataError(
-                f"Validation error in metadata of {file_path}: {str(exc)}",
-                files=[file_metadata]
-            ) from exc
+            # Validate metadata against JSON schema. The schema contains
+            # properties introduced in JSON schema draft 7. Using
+            # Draft7Validator ensures that older validators that do not
+            # support draft 7 are not used, in which case part of the schema
+            # would be ignored without any warning.
 
-        # Check that file path does not point outside SIP
-        normalised_path = os.path.normpath(file_path.strip("/"))
-        if normalised_path.startswith(".."):
-            raise InvalidFileMetadataError(
-                f"The file path of file {file_identifier} is invalid:"
-                f" {file_path}",
-                files=[file_metadata]
-            )
+            characteristics = file_metadata["characteristics"]
+            char_ext = file_metadata["characteristics_extension"] or {}
+            file_format_version = \
+                characteristics["file_format_version"]['file_format']
+            if not file_format_version and not is_linked_bitlevel:
+                collect_error(
+                    InvalidFileMetadataError(
+                        f"Non bit-level file must have `file_format_version` "
+                        f"set: {file_path}",
+                        files=[file_metadata]
+                    )
+                )
 
-        # Check that files with "bit-level-with-recommended" or "unacceptable"
-        # grade have a PAS compatible file
-        is_incomplete_bitlevel = (
-            char_ext["grade"] in (BIT_LEVEL_WITH_RECOMMENDED, UNACCEPTABLE)
-            and not is_linked_bitlevel
-        )
-        if is_incomplete_bitlevel:
-            raise InvalidFileMetadataError(
-                f"File {file_identifier} with '{char_ext['grade']}' "
-                f"grade is not linked to a PAS compatible file",
-                files=[file_metadata]
-            )
+            # Validate metadata against JSON schema. The schema contains
+            # properties introduced in JSON schema draft 7. Using
+            # Draft7Validator ensures that older validators that do not
+            # support draft 7 are not used, in which case part of the schema
+            # would be ignored without any warning.
 
-        # Check that PAS compatible file has a good enough grade
-        if is_linked_pas_compatible and char_ext["grade"] != RECOMMENDED:
-            raise InvalidFileMetadataError(
-                f"File {file_identifier} with grade '{char_ext['grade']}' "
-                f"marked as PAS compatible does not have the required "
-                f"'{RECOMMENDED}' grade",
-                files=[file_metadata]
+            characteristics = file_metadata["characteristics"] or {}
+            char_ext = file_metadata["characteristics_extension"] or {}
+            file_format_version = characteristics.get("file_format_version")
+            if not file_format_version and not is_linked_bitlevel:
+                collect_error(
+                    InvalidFileMetadataError(
+                        f"Non bit-level file must have `file_format_version` "
+                        f"set: {file_path}",
+                        files=[file_metadata]
+                    )
+                )
+
+            try:
+                jsonschema.Draft7Validator(
+                    siptools_research.schemas.FILE_METADATA_SCHEMA
+                ).validate(file_metadata)
+            except jsonschema.ValidationError as exc:
+                collect_error(
+                    InvalidFileMetadataError(
+                        f"Validation error in metadata of "
+                        f"{file_path}: {str(exc)}",
+                        files=[file_metadata]
+                    )
+                )
+
+            # Check that file path does not point outside SIP
+            normalised_path = os.path.normpath(file_path.strip("/"))
+            if normalised_path.startswith(".."):
+                collect_error(
+                    InvalidFileMetadataError(
+                        f"The file path of file {file_identifier} is invalid:"
+                        f" {file_path}",
+                        files=[file_metadata]
+                    )
+                )
+
+            # Check that files with "bit-level-with-recommended" or
+            # "unacceptable" grade have a PAS compatible file
+            is_incomplete_bitlevel = (
+                char_ext["grade"] in (BIT_LEVEL_WITH_RECOMMENDED, UNACCEPTABLE)
+                and not is_linked_bitlevel
             )
+            if is_incomplete_bitlevel:
+                collect_error(
+                    InvalidFileMetadataError(
+                        f"File {file_identifier} with '{char_ext['grade']}' "
+                        f"grade is not linked to a PAS compatible file",
+                        files=[file_metadata]
+                    )
+                )
+                continue
+
+            # Check that PAS compatible file has a good enough grade
+            if is_linked_pas_compatible and char_ext["grade"] != RECOMMENDED:
+                collect_error(
+                    InvalidFileMetadataError(
+                        f"File {file_identifier} with "
+                        f"grade '{char_ext['grade']}' marked as PAS "
+                        f"compatible does not have the required "
+                        f"'{RECOMMENDED}' grade",
+                        files=[file_metadata]
+                    )
+                )
 
 
 def _validate_file_dpres_links(dataset_files: list[dict], dataset_id: str):
