@@ -4,6 +4,7 @@ import sys
 import uuid
 from configparser import ConfigParser
 from pathlib import Path
+from io import StringIO
 
 import luigi.configuration
 import mongoengine
@@ -34,8 +35,38 @@ PROJECT_ROOT_PATH = os.path.abspath(
 sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
+@pytest.fixture()
+def luigi_config_fx(monkeypatch):
+    """Write temporary configuration file for Luigi and force it to read it"""
+
+    import luigi.configuration
+
+    def _create_buffer(config_str):
+        """Return StringIO buffer for given config_str"""
+        config_str = '\n'.join(
+            [x.strip() for x in config_str.strip().splitlines()])
+        return StringIO(config_str)
+
+    def _get_parser(_file):
+        """Return LuigiConfigParser for given _file object"""
+        parser = luigi.configuration.LuigiConfigParser()
+        parser.readfp(_file)
+        return parser
+
+    def _set_config(config_str):
+
+        parser = _get_parser(_create_buffer(config_str))
+
+        monkeypatch.setattr(
+            luigi.configuration.LuigiConfigParser, '_config_paths', [])
+        monkeypatch.setattr(
+            luigi.configuration.LuigiConfigParser, '_instance', parser)
+
+    return _set_config
+
+
 @pytest.fixture(autouse=True)
-def config(test_mongo, tmp_path):
+def config(test_mongo, tmp_path, luigi_config_fx):
     """Create temporary config file.
 
     A temporary packaging root directory is created, and configuration
@@ -48,6 +79,9 @@ def config(test_mongo, tmp_path):
     # Create temporary packaging root directory
     pkg_root = tmp_path / "packaging"
     pkg_root.mkdir()
+
+    # Load empty Luigi configuration
+    luigi_config_fx("")
 
     # Read sample config
     parser = ConfigParser()
