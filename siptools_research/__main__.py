@@ -40,7 +40,7 @@ def _get_datasets(enabled, disabled, config):
 
 class Context:
     """Context class for the Click application"""
-    config: str = None
+    config: str = ""
 
 
 @click.group()
