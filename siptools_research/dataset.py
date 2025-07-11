@@ -18,6 +18,8 @@ from siptools_research.models.file_error import FileError
 PAS_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-pas"
 IDA_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-ida"
 
+WORKFLOW_ERROR_STRING = "Active workflow already exists for this dataset."
+
 
 def _timestamp():
     """Return time now.
@@ -286,9 +288,7 @@ class Dataset:
         :returns: ``None``
         """
         if self.enabled:
-            raise WorkflowExistsError(
-                "Active workflow already exists for this dataset."
-            )
+            raise WorkflowExistsError(WORKFLOW_ERROR_STRING)
 
         # Clear the workspaces
         for path in [
@@ -308,9 +308,7 @@ class Dataset:
         :returns: ``None``
         """
         if self.enabled:
-            raise WorkflowExistsError(
-                "Active workflow already exists for this dataset."
-            )
+            raise WorkflowExistsError(WORKFLOW_ERROR_STRING)
 
         # Clear the workspaces
         for path in [self.validation_workspace, self.preservation_workspace]:
@@ -326,9 +324,7 @@ class Dataset:
         :returns: ``None``
         """
         if self.enabled:
-            raise WorkflowExistsError(
-                "Active workflow already exists for this dataset."
-            )
+            raise WorkflowExistsError(WORKFLOW_ERROR_STRING)
 
         # Clear the preservation workspace
         _delete_directory(self.preservation_workspace)
@@ -344,9 +340,7 @@ class Dataset:
         errors.
         """
         if self.enabled:
-            raise WorkflowExistsError(
-                "Active workflow already exists for this dataset."
-            )
+            raise WorkflowExistsError(WORKFLOW_ERROR_STRING)
 
         self.set_preservation_state(DS_STATE_INITIALIZED, description)
         self.set_preservation_reason(reason_description)

@@ -1,8 +1,9 @@
 """Digital preservation packaging service for research datasets."""
 from siptools_research.dataset import Dataset
 
+DEFAULT_CONFIG = '/etc/siptools_research.conf'
 
-def generate_metadata(dataset_id, config='/etc/siptools_research.conf'):
+def generate_metadata(dataset_id, config=DEFAULT_CONFIG):
     """Generate dataset metadata.
 
     :param dataset_id: identifier of dataset
@@ -12,7 +13,7 @@ def generate_metadata(dataset_id, config='/etc/siptools_research.conf'):
     Dataset(identifier=dataset_id, config=config).generate_metadata()
 
 
-def validate_dataset(dataset_id, config='/etc/siptools_research.conf'):
+def validate_dataset(dataset_id, config=DEFAULT_CONFIG):
     """Validate metadata and files of dataset.
 
     :param dataset_id: identifier of dataset
@@ -22,7 +23,7 @@ def validate_dataset(dataset_id, config='/etc/siptools_research.conf'):
     Dataset(identifier=dataset_id, config=config).validate()
 
 
-def preserve_dataset(dataset_id, config='/etc/siptools_research.conf'):
+def preserve_dataset(dataset_id, config=DEFAULT_CONFIG):
     """Preserve dataset.
 
     :param dataset_id: identifier of dataset
@@ -36,7 +37,7 @@ def reset_dataset(
         dataset_id: str,
         description: str,
         reason_description: str,
-        config: str = '/etc/siptools_research.conf') -> None:
+        config: str = DEFAULT_CONFIG) -> None:
     """Reset dataset.
 
     :param dataset_id: Dataset identifier
