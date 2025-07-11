@@ -73,7 +73,7 @@ def _validate_file_metadata(dataset, metax_client):
 
     # Validate that every DPRES compatible and bit-level file pair
     # is included in the dataset
-    _validate_file_dpres_links(dataset_files, dataset_id=dataset["id"])
+    _validate_file_dpres_links(dataset_files)
 
     with file_error_collector() as collect_error:
         for file_metadata in dataset_files:
@@ -175,13 +175,12 @@ def _validate_file_metadata(dataset, metax_client):
                 )
 
 
-def _validate_file_dpres_links(dataset_files: list[dict], dataset_id: str):
+def _validate_file_dpres_links(dataset_files: list[dict]):
     """
     Validate that dataset files contain every DPRES & non DPRES compatible file
     pair if any exist
 
     :param dataset_files: List of datasets
-    :param dataset_id: Dataset identifier containing the files
 
     :raises InvalidDatasetFileError: If any linked files are missing their
         DPRES and/or bit-level counterparts
