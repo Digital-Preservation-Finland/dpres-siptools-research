@@ -1,6 +1,7 @@
 """Generates metadata required to create SIP."""
 import file_scraper
 import file_scraper.scraper
+from metax_access import Metax
 from metax_access.response import MetaxFileCharacteristics
 
 from siptools_research.database import connect_mongoengine
@@ -11,11 +12,14 @@ from siptools_research.metax import (CSV_RECORD_SEPARATOR_ENUM_TO_LITERAL,
                                      CSV_RECORD_SEPARATOR_LITERAL_TO_ENUM,
                                      get_metax_client)
 from siptools_research.models.file_error import FileError
+from pathlib import Path
 
 
 def generate_metadata(
-    dataset_id, root_directory, config="/etc/siptools_research.conf"
-):
+        dataset_id: str,
+        root_directory: Path,
+        config: str = "/etc/siptools_research.conf"
+) -> None:
     """Generate dataset metadata.
 
     Generates metadata required for creating SIP:
@@ -33,14 +37,7 @@ def generate_metadata(
     metax_client = get_metax_client(config)
 
     # Map file_format and format_version to url
-    reference_data = {
-        (
-            entry["file_format"],
-            # Empty string as format_version seems to mean "(:unap)"
-            entry["format_version"] or file_scraper.defaults.UNAP
-        ): entry["url"]
-        for entry in metax_client.get_file_format_versions()
-    }
+    reference_data = collect_reference_data(metax_client)
 
     dataset_files = metax_client.get_dataset_files(dataset_id)
 
@@ -51,6 +48,7 @@ def generate_metadata(
         dataset_id__in=(None, dataset_id)
     ).delete()
 
+    # dataset_files metax_client reference_data root_directory
     with file_error_collector() as collect_error:
         for file_metadata in dataset_files:
             # If this file is linked to a PAS compatible file, it must mean
@@ -94,8 +92,8 @@ def generate_metadata(
             if is_unrecognized and not is_linked_bitlevel:
                 # TODO: We probably should check all metadata that is required
                 # for packaging, but we can not check all fields in
-                # scraper.streams, because some of them will be "(:unav)" and it
-                # seems to be OK (or is there a bug in file-scraper,
+                # scraper.streams, because some of them will be "(:unav)" and
+                # it seems to be OK (or is there a bug in file-scraper,
                 # siptools-ng, or sample files of this repository?)
                 error = "File format was not recognized"
                 collect_error(InvalidFileError(error, [file_metadata]))
@@ -106,7 +104,7 @@ def generate_metadata(
                 scraper_file_characteristics["file_format_version"] = {
                     "url": url
                 }
-            except KeyError as error:
+            except KeyError:
                 # Bit-level file formats don't need to be recognized by Metax
                 # V3; we will store possible file format metadata in
                 # 'file_characteristics_extension'.
@@ -197,3 +195,23 @@ def generate_metadata(
                     "characteristics_extension": file_characteristics_extension
                  }
             )
+
+
+def collect_reference_data(metax_client: Metax) -> dict:
+    """
+    Map file_format and format_version to url
+
+    param metax_client: metax client object
+    return: reference_data dict
+    """
+
+    reference_data = {
+        (
+            entry["file_format"],
+            # Empty string as format_version seems to mean "(:unap)"
+            entry["format_version"] or file_scraper.defaults.UNAP
+        ): entry["url"]
+        for entry in metax_client.get_file_format_versions()
+    }
+
+    return reference_data
