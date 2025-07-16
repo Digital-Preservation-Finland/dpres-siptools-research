@@ -48,7 +48,6 @@ def generate_metadata(
         dataset_id__in=(None, dataset_id)
     ).delete()
 
-    # dataset_files metax_client reference_data root_directory
     with file_error_collector() as collect_error:
         for file_metadata in dataset_files:
             # If this file is linked to a PAS compatible file, it must mean
