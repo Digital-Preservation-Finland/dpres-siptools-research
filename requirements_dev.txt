@@ -20,6 +20,8 @@ git+https://gitlab.ci.csc.fi/dpres/dpres-signature.git@develop#egg=dpres_signatu
 
 # Install requirements
 git+https://gitlab.ci.csc.fi/dpres/file-scraper.git@develop#egg=file_scraper
+# file-scraper requires dpx-validator
+git+https://gitlab.ci.csc.fi/dpres/dpx-validator.git@develop
 git+https://gitlab.ci.csc.fi/dpres/dpres-siptools-ng.git@develop#eggs=dpres_siptools_ng
 git+https://gitlab.ci.csc.fi/dpres/dpres-mets-builder.git@develop#egg=dpres_mets_builder
 git+https://gitlab.ci.csc.fi/dpres/metax-access.git@develop#egg=metax_access
