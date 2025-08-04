@@ -76,6 +76,10 @@ class MissingFileError(InvalidDatasetFileError):
 class WorkflowExistsError(Exception):
     """Exception raised when conflicting workflow exists."""
 
+    def __init__(self, message: str = None):
+        default_message = "Active workflow already exists for this dataset."
+        super().__init__(message or default_message)
+
 
 class BulkInvalidDatasetFileError(InvalidDatasetError):
     """Exception consisting of multiple file errors"""
