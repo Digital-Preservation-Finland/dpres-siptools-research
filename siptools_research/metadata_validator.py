@@ -26,7 +26,7 @@ def validate_metadata(
     dataset_id: str,
     config: str | os.PathLike = "/etc/siptools_research.conf",
     dummy_doi: bool = False,
-):
+) -> bool:
     """
     Helper function for using the MetadataValidator object. The function
     creates a MetadataValidator object and validates data with it.
@@ -54,7 +54,7 @@ class MetadataValidator:
         dataset_id: str,
         config: str | os.PathLike = "/etc/siptoos_research.conf",
         dummy_doi: bool = False,
-    ):
+    ) -> None:
         """
         Construction method.
 
@@ -68,7 +68,7 @@ class MetadataValidator:
         self.config = config
         self.dummy_doi = dummy_doi
 
-    def validate(self):
+    def validate(self) -> bool:
         """
         Validate dataset.
 
@@ -90,7 +90,7 @@ class MetadataValidator:
 
         return True
 
-    def _validate_dataset_metadata(self):
+    def _validate_dataset_metadata(self) -> None:
         """
         Validate dataset metadata against the schema. Raises
         `InvalidDatasetMetadataError` if dataset metadata is invalid.
@@ -108,7 +108,7 @@ class MetadataValidator:
         except jsonschema.ValidationError as exc:
             raise InvalidDatasetMetadataError(str(exc)) from exc
 
-    def _validate_file_metadata(self):
+    def _validate_file_metadata(self) -> None:
         """
         Validate file metadata. Raises `InvalidDatasetMetadataError` if the
         dataset do not contain any files.
@@ -154,7 +154,7 @@ class MetadataValidator:
                 self._check_file_path()
                 self._check_grade()
 
-    def _check_file_format_version(self):
+    def _check_file_format_version(self) -> None:
         """
         Check that non bit-level file has a file format version and collect an
         error if it doesn't have it.
@@ -172,7 +172,7 @@ class MetadataValidator:
                 )
             )
 
-    def _check_draft7validator(self):
+    def _check_draft7validator(self) -> None:
         """
         Validate file metadata with `jsonschema.Draft7Validator`. If the check
         fails, collect the error.
@@ -191,7 +191,7 @@ class MetadataValidator:
                 )
             )
 
-    def _check_file_path(self):
+    def _check_file_path(self) -> None:
         """
         Check that file path does not point outside SIP. If the check fails,
         collect the error.
@@ -206,7 +206,7 @@ class MetadataValidator:
                 )
             )
 
-    def _check_grade(self):
+    def _check_grade(self) -> None:
         """
         Check that files with `BIT_LEVEL_WITH_RECOMMENDED` or
         `UNACCEPTABLE` grade have a PAS compatible file. Collect the error.
@@ -244,7 +244,7 @@ class MetadataValidator:
                     )
                 )
 
-    def _validate_file_dpres_links(self):
+    def _validate_file_dpres_links(self) -> None:
         """
         Validate that dataset files contain every DPRES & non DPRES compatible
         file pair if any exist. Raises InvalidDatasetFileError:
