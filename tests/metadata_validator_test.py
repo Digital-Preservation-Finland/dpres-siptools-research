@@ -16,7 +16,10 @@ from siptools_research.exceptions import (
     InvalidDatasetMetadataError,
     InvalidFileMetadataError
 )
-from siptools_research.metadata_validator import validate_metadata
+from siptools_research.metadata_validator import (
+    validate_metadata,
+    MetadataValidator
+)
 from siptools_research.metax import get_metax_client
 from metax_access.template_data import DATASET
 from tests.metax_data.files import (
@@ -158,9 +161,16 @@ def test_validate_file_metadata(config, requests_mock):
     # Init metax client
     client = get_metax_client(config)
 
-    # pylint: disable=protected-access
-    siptools_research.metadata_validator._validate_file_metadata(dataset,
-                                                                 client)
+    # Init MetadataValidator
+    # In this test, the object's initialization values are irrelevant;
+    # they are not used in the _validate_file_metadata function.
+    validator_obj = MetadataValidator("", "", "")
+
+    # Set test data
+    validator_obj.dataset_metadata = dataset
+    validator_obj.metax_client = client
+
+    validator_obj._validate_file_metadata()
 
     assert files_adapter.call_count == 1
 
@@ -254,21 +264,24 @@ def test_validate_file_metadata_missing_file_format(
     # Init metax client
     metax = get_metax_client(config)
 
+    # Init MetadataValidator
+    # In this test, the object's initialization values are irrelevant;
+    # they are not used in the _validate_file_metadata function.
+    validator_obj = MetadataValidator("", "", "")
+
+    # Set test data
+    validator_obj.dataset_metadata = dataset
+    validator_obj.metax_client = metax
+
     if not is_linked_bitlevel:
         with pytest.raises(BulkInvalidDatasetFileError) as exc:
-            siptools_research.metadata_validator._validate_file_metadata(
-                dataset=dataset,
-                metax_client=metax
-            )
+            validator_obj._validate_file_metadata()
 
         assert isinstance(exc.value.file_errors[0], InvalidFileMetadataError)
         assert "Non bit-level file must have `file_format_version` set" \
             in str(exc.value)
     else:
-        siptools_research.metadata_validator._validate_file_metadata(
-            dataset=dataset,
-            metax_client=metax
-        )
+        validator_obj._validate_file_metadata()
 
 
 @pytest.mark.parametrize(
