@@ -20,7 +20,6 @@ from siptools_research.metadata_validator import (
     validate_metadata,
     MetadataValidator
 )
-from siptools_research.metax import get_metax_client
 from metax_access.template_data import DATASET
 from tests.metax_data.files import (
     AUDIO_FILE,
@@ -55,7 +54,7 @@ def test_validate_metadata(config, requests_mock, file_metadata):
         Metax
     """
     dataset = add_metax_dataset(requests_mock, files=[file_metadata])
-    assert validate_metadata(dataset['id'], config)
+    validate_metadata(dataset['id'], config)
 
 
 def test_validate_metadata_multiple_files(config, requests_mock):
@@ -70,7 +69,7 @@ def test_validate_metadata_multiple_files(config, requests_mock):
     files[1]['identifier'] = "pid:urn:2"
     dataset = add_metax_dataset(requests_mock, files=files)
 
-    assert validate_metadata(dataset['id'], config)
+    validate_metadata(dataset['id'], config)
 
 
 def test_validate_metadata_missing_file(config, requests_mock):
@@ -158,19 +157,16 @@ def test_validate_file_metadata(config, requests_mock):
         status_code=200
     )
 
-    # Init metax client
-    client = get_metax_client(config)
-
     # Init MetadataValidator
-    # In this test, the object's initialization values are irrelevant;
-    # they are not used in the _validate_file_metadata function.
-    validator_obj = MetadataValidator("", "", "")
+    validator_obj = MetadataValidator(dataset_id="", config=config,
+                                      dummy_doi=False)
 
     # Set test data
-    validator_obj.dataset_metadata = dataset
-    validator_obj.metax_client = client
+    files = validator_obj.metax_client.get_dataset_files(
+            dataset["id"]
+    )
 
-    validator_obj._validate_file_metadata()
+    validator_obj._validate_file_metadata(files)
 
     assert files_adapter.call_count == 1
 
@@ -261,27 +257,24 @@ def test_validate_file_metadata_missing_file_format(
         json={"next": None, "results": [file, file_b]}
     )
 
-    # Init metax client
-    metax = get_metax_client(config)
-
     # Init MetadataValidator
-    # In this test, the object's initialization values are irrelevant;
-    # they are not used in the _validate_file_metadata function.
-    validator_obj = MetadataValidator("", "", "")
+    validator_obj = MetadataValidator(dataset_id="", config=config,
+                                      dummy_doi=False)
 
     # Set test data
-    validator_obj.dataset_metadata = dataset
-    validator_obj.metax_client = metax
+    files = validator_obj.metax_client.get_dataset_files(
+            dataset["id"]
+    )
 
     if not is_linked_bitlevel:
         with pytest.raises(BulkInvalidDatasetFileError) as exc:
-            validator_obj._validate_file_metadata()
+            validator_obj._validate_file_metadata(files)
 
         assert isinstance(exc.value.file_errors[0], InvalidFileMetadataError)
         assert "Non bit-level file must have `file_format_version` set" \
             in str(exc.value)
     else:
-        validator_obj._validate_file_metadata()
+        validator_obj._validate_file_metadata(files)
 
 
 @pytest.mark.parametrize(

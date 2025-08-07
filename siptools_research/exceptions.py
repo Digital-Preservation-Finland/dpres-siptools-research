@@ -1,8 +1,10 @@
 """Packaging service exceptions."""
 
+from __future__ import annotations
 import contextlib
-
 from typing import Iterator, Callable
+
+from metax_access.response import MetaxFile
 
 
 MAX_FILE_ERROR_COUNT = 500
@@ -18,7 +20,7 @@ class InvalidDatasetFileError(InvalidDatasetError):
     def __init__(
             self,
             message: str,
-            files: list[dict],
+            files: list[dict] | list[MetaxFile],
             is_dataset_error: bool = False):
         """Initialize exception.
 
