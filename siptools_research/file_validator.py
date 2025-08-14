@@ -24,13 +24,7 @@ def validate_files(dataset_id, root_directory,
         for file in metax_client.get_dataset_files(dataset_id):
 
             filepath = root_directory / file["pathname"].strip('/')
-            if not filepath.is_file():
-                # Scraper won't raise exception if file is missing, so it is
-                # better to raise exception here to avoid misleading error
-                # messages.
-                raise ValueError("Trying to validate file that does not "
-                                 "exist, or is not a file.")
-
+            
             characteristics = file["characteristics"]
 
             # If this file is linked to a PAS compatible file, it must mean
