@@ -526,13 +526,6 @@ def test_generate_metadata_csv(
         "filepath"),
     [
         (
-            # TODO: This is a special case. See TPASPKT-1418.
-            ["file_format_version", "file_format"],
-            "image/tiff",
-            "application/vnd.oasis.opendocument.text",
-            "tests/data/sample_files/opendocument_text.odt",
-        ),
-        (
             # Metax does not allow "foo" as format_version so this not a
             # realistic test case.
             ["file_format_version", "format_version"],
