@@ -92,7 +92,7 @@ def list_datasets(ctx, enabled, disabled, show_target):
             else:
                 click.echo(dataset.identifier)
     else:
-        dataset_not_found_error()
+        dataset_not_found_echo()
 
 
 @dataset.command("disable", help="Disable dataset workflow")
@@ -105,7 +105,7 @@ def disable_workflow(ctx, dataset_id):
         dataset.disable()
         click.echo(f"Workflow of dataset {dataset.identifier} disabled")
     else:
-        dataset_not_found_error()
+        dataset_not_found_echo()
 
 
 @dataset.command("enable", help="Enable dataset workflow")
@@ -118,7 +118,7 @@ def enable_workflow(ctx, dataset_id):
         dataset.enable()
         click.echo(f"Workflow of dataset {dataset.identifier} enabled")
     else:
-        dataset_not_found_error()
+        dataset_not_found_echo()
 
 
 @dataset.command("status", help="Show dataset workflow status")
@@ -136,10 +136,10 @@ def workflow_status(ctx, dataset_id):
 
         click.echo(pprint.pformat(dataset_dict))
     else:
-        dataset_not_found_error()
+        dataset_not_found_echo()
 
 
-def dataset_not_found_error():
+def dataset_not_found_echo():
     click.echo(click.style("Dataset not found!", fg="red"))
 
 
