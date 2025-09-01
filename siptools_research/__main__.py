@@ -140,6 +140,9 @@ def workflow_status(ctx, dataset_id):
 
 
 def dataset_not_found_echo():
+    """
+    Helper function for common click output.
+    """
     click.echo(click.style("Dataset not found!", fg="red"))
 
 
