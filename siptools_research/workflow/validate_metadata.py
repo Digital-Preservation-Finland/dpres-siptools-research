@@ -1,7 +1,7 @@
 """Luigi task that validates metadata provided by Metax."""
 from luigi import LocalTarget
 
-from siptools_research.metadata_validator import validate_metadata
+from siptools_research.metadata_validator import MetadataValidator
 from siptools_research.workflowtask import WorkflowTask
 
 
@@ -34,7 +34,7 @@ class ValidateMetadata(WorkflowTask):
         :returns: ``None``
         """
         # Validate dataset metadata
-        validate_metadata(self.dataset_id, self.config)
+        MetadataValidator(self.dataset_id, self.config).validate()
 
         with self.output().open('w') as log:
             log.write('Dataset id=' + self.dataset_id)

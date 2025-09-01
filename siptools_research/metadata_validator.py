@@ -23,22 +23,6 @@ from siptools_research.exceptions import (
 from siptools_research.metax import get_metax_client
 
 
-def validate_metadata(
-    dataset_id: str,
-    config: str | os.PathLike = "/etc/siptools_research.conf",
-    dummy_doi: bool = False,
-) -> None:
-    """
-    Helper function for using the MetadataValidator object.
-
-    :param dataset_id: Dataset identifier
-    :param config: Configuration file path
-    :param dummy_doi: True if dummy preservation identifier is to be used
-    """
-    validator = MetadataValidator(dataset_id, config, dummy_doi)
-    validator.validate()
-
-
 class MetadataValidator:
     """
     Class for metadata validation. Validates data with the `validate` method.

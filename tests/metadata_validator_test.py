@@ -16,10 +16,7 @@ from siptools_research.exceptions import (
     InvalidDatasetMetadataError,
     InvalidFileMetadataError
 )
-from siptools_research.metadata_validator import (
-    validate_metadata,
-    MetadataValidator
-)
+from siptools_research.metadata_validator import MetadataValidator
 from metax_access.template_data import DATASET
 from tests.metax_data.files import (
     AUDIO_FILE,
@@ -54,7 +51,7 @@ def test_validate_metadata(config, requests_mock, file_metadata):
         Metax
     """
     dataset = add_metax_dataset(requests_mock, files=[file_metadata])
-    validate_metadata(dataset['id'], config)
+    MetadataValidator(dataset['id'], config).validate()
 
 
 def test_validate_metadata_multiple_files(config, requests_mock):
@@ -69,7 +66,7 @@ def test_validate_metadata_multiple_files(config, requests_mock):
     files[1]['identifier'] = "pid:urn:2"
     dataset = add_metax_dataset(requests_mock, files=files)
 
-    validate_metadata(dataset['id'], config)
+    MetadataValidator(dataset['id'], config).validate()
 
 
 def test_validate_metadata_missing_file(config, requests_mock):
@@ -87,7 +84,7 @@ def test_validate_metadata_missing_file(config, requests_mock):
     expected_error = "Dataset must contain at least one file"
 
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        validate_metadata(dataset['id'], config)
+        MetadataValidator(dataset['id'], config).validate()
 
 
 def test_validate_metadata_invalid(config, requests_mock):
@@ -107,7 +104,7 @@ def test_validate_metadata_invalid(config, requests_mock):
     # Try to validate invalid dataset
     expected_error = "None is not of type 'string'"
     with pytest.raises(InvalidDatasetMetadataError, match=expected_error):
-        validate_metadata(dataset['id'], config)
+        MetadataValidator(dataset['id'], config).validate()
 
 
 def test_validate_metadata_invalid_file_path(config, requests_mock):
@@ -129,7 +126,7 @@ def test_validate_metadata_invalid_file_path(config, requests_mock):
                       "../../file_in_invalid_path")
     with pytest.raises(BulkInvalidDatasetFileError, match=expected_error) \
             as exc:
-        validate_metadata(dataset['id'], config)
+        MetadataValidator(dataset['id'], config).validate()
 
     assert isinstance(exc.value.file_errors[0], InvalidFileMetadataError)
 
@@ -222,10 +219,7 @@ def test_detect_missing_file_link(
 
     # Init and run task
     with pytest.raises(InvalidDatasetFileError) as exc:
-        siptools_research.metadata_validator.validate_metadata(
-            dataset_id=dataset["id"],
-            config=config
-        )
+        MetadataValidator(dataset["id"], config).validate()
 
     assert expected_error in str(exc.value)
     assert expected_error_file_ids == [file["id"] for file in exc.value.files]
@@ -363,18 +357,12 @@ def test_validate_file_grades_and_links(
     # Init and run task
     if expected_error:
         with pytest.raises(BulkInvalidDatasetFileError) as exc:
-            siptools_research.metadata_validator.validate_metadata(
-                dataset_id=dataset["id"],
-                config=config
-            )
+            MetadataValidator(dataset["id"], config).validate()
 
         assert isinstance(exc.value.file_errors[0], InvalidDatasetFileError)
         assert expected_error in str(exc.value)
     else:
-        siptools_research.metadata_validator.validate_metadata(
-            dataset_id=dataset["id"],
-            config=config
-        )
+        MetadataValidator(dataset["id"], config).validate()
 
 
 def test_validate_metadata_http_error_raised(config, requests_mock):
@@ -395,4 +383,4 @@ def test_validate_metadata_http_error_raised(config, requests_mock):
 
     expected_error = '500 Server Error: Something not to be shown to user'
     with pytest.raises(HTTPError, match=expected_error):
-        validate_metadata(dataset['id'], config)
+        MetadataValidator(dataset['id'], config).validate()
