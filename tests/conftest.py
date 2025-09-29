@@ -13,7 +13,7 @@ from click.testing import CliRunner
 from mongobox import MongoBox
 
 import siptools_research.config
-from research_rest_api.app import create_app
+from siptools_research.app import create_app
 from siptools_research.__main__ import Context, cli
 from siptools_research.database import connect_mongoengine
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
@@ -264,7 +264,7 @@ def app(config, monkeypatch):
     :returns: An instance of the REST API web app.
     """
     monkeypatch.setattr(
-        "research_rest_api.app.SIPTOOLS_RESEARCH_CONFIG", config
+        "siptools_research.app.SIPTOOLS_RESEARCH_CONFIG", config
     )
 
     # Create app and change the default config file path

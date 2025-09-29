@@ -1,4 +1,4 @@
-"""Tests for ``research_rest_api.app`` module."""
+"""Tests for ``siptools_research.app`` module."""
 import flask
 import pytest
 from metax_access import ResourceNotAvailableError
