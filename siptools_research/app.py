@@ -4,7 +4,7 @@ import logging
 from flask import Flask, abort, current_app, jsonify, request
 from metax_access import ResourceNotAvailableError
 
-import siptools_research
+from siptools_research.dataset import Dataset
 from siptools_research.database import connect_mongoengine
 from siptools_research.models.file_error import FileError
 
@@ -32,9 +32,8 @@ def create_app():
 
         :returns: HTTP Response
         """
-        siptools_research.validate_dataset(
-            dataset_id, app.config.get('CONF')
-        )
+        Dataset(identifier=dataset_id,
+                config=app.config.get("CONF")).validate()
 
         response = jsonify({'dataset_id': dataset_id,
                             'status': 'validating dataset'})
@@ -48,11 +47,8 @@ def create_app():
 
         :returns: HTTP Response
         """
-        # Trigger dataset preservation using function provided by
-        # siptools_research package.
-        siptools_research.preserve_dataset(
-            dataset_id, app.config.get('CONF')
-        )
+        Dataset(identifier=dataset_id,
+                config=app.config.get("CONF")).preserve()
 
         response = jsonify({'dataset_id': dataset_id,
                             'status': 'preserving'})
@@ -66,9 +62,8 @@ def create_app():
 
         :returns: HTTP Response
         """
-        siptools_research.generate_metadata(
-            dataset_id, app.config.get('CONF')
-        )
+        Dataset(identifier=dataset_id,
+                config=app.config.get("CONF")).generate_metadata()
 
         response = jsonify({'dataset_id': dataset_id,
                             'status': 'generating metadata'})
@@ -85,11 +80,9 @@ def create_app():
         description = request.form["description"]
         reason_description = request.form["reason_description"]
 
-        siptools_research.reset_dataset(
-            dataset_id,
+        Dataset(identifier=dataset_id, config=app.config.get("CONF")).reset(
             description=description,
-            reason_description=reason_description,
-            config=app.config.get('CONF')
+            reason_description=reason_description
         )
 
         response = jsonify({

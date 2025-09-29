@@ -3,7 +3,9 @@ import flask
 import pytest
 from metax_access import ResourceNotAvailableError
 
+from siptools_research.dataset import Dataset
 from siptools_research.models.file_error import FileError
+import tests.utils
 
 
 @pytest.fixture()
@@ -48,98 +50,85 @@ def test_index(client):
     assert response.status_code == 400
 
 
-def test_dataset_preserve(mocker, app, client):
+def test_dataset_preserve(client, config):
     """Test preserving dataset.
 
-    :param mocker: pytest-mock mocker
-    :param app: Flask application
     :param client: Flask test client
+    :param config: Configuration file
     """
-    mock_function = mocker.patch("siptools_research.preserve_dataset")
-
     response = client.post("/dataset/1/preserve")
     assert response.status_code == 202
-
-    mock_function.assert_called_with(
-        "1", app.config.get("CONF")
-    )
-
     assert response.json == {
         "dataset_id": "1",
         "status": "preserving"
     }
 
+    dataset = Dataset("1", config=config)
+    assert dataset.enabled is True
+    assert dataset.target.value == "preservation"
 
-def test_dataset_generate_metadata(mocker, app, client):
+
+def test_dataset_generate_metadata(client, config):
     """Test the generating metadata.
 
-    :param mocker: pytest-mock mocker
-    :param app: Flask application
     :param client: Flask test client
+    :param config: Configuration file
     """
-    mock_function = mocker.patch("siptools_research.generate_metadata")
-
     response = client.post("/dataset/1/generate-metadata")
     assert response.status_code == 202
-
-    mock_function.assert_called_with(
-        "1", app.config.get("CONF")
-    )
-
     assert response.json == {
         "dataset_id": "1",
         "status": "generating metadata"
     }
 
+    dataset = Dataset("1", config=config)
+    assert dataset.enabled is True
+    assert dataset.target.value == "metadata_generation"
 
-def test_dataset_reset(mocker, app, client):
+
+def test_dataset_reset(client, requests_mock):
     """Test resetting the dataset.
 
-    :param mocker: pytest-mock mocker
-    :param app: Flask application
     :param client: Flask test client
+    :param requests_mock: HTTP Request mocker
     """
-    mock_function = mocker.patch("siptools_research.reset_dataset")
+    # Mock Metax
+    tests.utils.add_metax_dataset(requests_mock)
+    patch_many = requests_mock.post("/v3/files/patch-many")
 
     response = client.post(
-        "/dataset/1/reset",
+        "/dataset/test_dataset_id/reset",
         data={
             "description": "Reset by user",
             "reason_description": "File was incorrect"
         }
     )
     assert response.status_code == 200
-
-    mock_function.assert_called_with(
-        "1",
-        description="Reset by user",
-        reason_description="File was incorrect",
-        config=app.config.get("CONF")
-    )
-
     assert response.json == {
-        "dataset_id": "1",
+        "dataset_id": "test_dataset_id",
         "status": "dataset has been reset"
     }
 
+    # Dataset does not contain any files, so empty list of files should
+    # be patched
+    assert patch_many.called_once
+    assert patch_many.last_request.json() == []
 
-def test_validate_dataset(mocker, app, client):
+
+
+def test_validate_dataset(client, config):
     """Test validating files and metadata.
 
-    :param mocker: pytest-mock mocker
-    :param app: Flask application
     :param client: Flask test client
+    :param config: Configuration file
     """
-    mock_function = mocker.patch("siptools_research.validate_dataset")
-
     response = client.post("/dataset/1/validate")
     assert response.status_code == 202
-
-    mock_function.assert_called_with(
-        "1", app.config.get("CONF")
-    )
-
     assert response.json == {"dataset_id": "1", "status": "validating dataset"}
+
+    dataset = Dataset("1", config=config)
+    assert dataset.enabled
+    assert dataset.target.value == "validation"
 
 
 @pytest.mark.parametrize(
