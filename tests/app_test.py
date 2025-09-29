@@ -31,9 +31,9 @@ def default_file_errors(app):
     return file_errors
 
 
-
 @pytest.fixture()
 def client(app):
+    """Create a test client."""
     with app.test_client() as client:
         yield client
 
@@ -240,8 +240,8 @@ def test_retrieve_file_errors(client):
         ),
         (
             {
-                "storage_identifiers": \
-                    "storage-identifier-id-1,storage-identifier-id-5"
+                "storage_identifiers":
+                "storage-identifier-id-1,storage-identifier-id-5"
             },
             ["file-id-1", "file-id-5"]
         ),

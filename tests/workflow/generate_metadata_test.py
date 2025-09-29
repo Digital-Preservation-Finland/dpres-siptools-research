@@ -1,7 +1,6 @@
 """Unit tests for GenerateMetadata task."""
 import copy
 
-import pytest
 from metax_access.metax import DS_STATE_TECHNICAL_METADATA_GENERATED
 
 import tests.metax_data.reference_data

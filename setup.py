@@ -2,6 +2,7 @@
 
 from setuptools import setup, find_packages
 
+
 def main():
     """Install siptools-research."""
     setup(

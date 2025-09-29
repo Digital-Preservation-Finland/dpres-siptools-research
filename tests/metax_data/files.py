@@ -26,7 +26,7 @@ CSV_FILE_METADATA = {
                 "delimiter": ";",
                 "separator": "\r\n",
                 "quotechar": "'",
-           }
+            }
         },
         "info": {},
         "mimetype": "text/csv",
@@ -182,7 +182,7 @@ AUDIO_FILE_METADATA = {
         "file_format_version": {
             "file_format": "audio/x-wav",
             "format_version": None
-       },
+        },
     },
     "characteristics_extension": {
         "streams": {

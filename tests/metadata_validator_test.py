@@ -1,14 +1,12 @@
 """Tests for :mod:`siptools_research.metadata_validator` module."""
 import copy
 
-import lxml.etree
 import pytest
 from file_scraper.defaults import (ACCEPTABLE, BIT_LEVEL,
                                    BIT_LEVEL_WITH_RECOMMENDED, RECOMMENDED,
                                    UNACCEPTABLE)
 from requests.exceptions import HTTPError
 
-import siptools_research
 from tests.utils import add_metax_dataset
 from siptools_research.exceptions import (
     BulkInvalidDatasetFileError,

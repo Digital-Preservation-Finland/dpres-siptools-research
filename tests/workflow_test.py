@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 
 import luigi
 import lxml.etree
-import pymongo
 import pytest
 from lxml.isoschematron import Schematron
 from upload_rest_api.models.file_entry import FileEntry
@@ -90,7 +89,12 @@ def _get_schematrons():
         ("sign", "SignSIP"),
         ("validate_files", "ValidateFiles"),
         ("validate_metadata", "ValidateMetadata"),
-        #("poll_reports", "GetValidationReports"),
+        # TODO: GetValidationReports can not be tested like other tasks,
+        # because this tets assumes that timestamp is added to database
+        # once the task has finished, which currently is not true for
+        # GetValidationReports task. See TPASPKT-435 for more
+        # information. Therefore, this test case is disabled.
+        # ("poll_reports", "GetValidationReports"),
     ]
 )
 @pytest.mark.usefixtures("mock_luigi_config_path")

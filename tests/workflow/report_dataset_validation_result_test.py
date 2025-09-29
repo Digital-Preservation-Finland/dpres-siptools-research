@@ -1,5 +1,4 @@
 """Unit tests for ReportDatasetValidationResult task."""
-import pytest
 from metax_access.metax import DS_STATE_METADATA_CONFIRMED
 
 from siptools_research.workflow import report_dataset_validation_result

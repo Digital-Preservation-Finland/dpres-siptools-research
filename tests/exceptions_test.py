@@ -1,4 +1,4 @@
-"""Tests for `file_error_collector`"""
+"""Tests for `file_error_collector`."""
 
 import pytest
 
@@ -13,7 +13,7 @@ def test_file_error_collector():
     """
     validation_complete = False
     with pytest.raises(BulkInvalidDatasetFileError) as exc, \
-        file_error_collector(max_count=500) as collect_error:
+            file_error_collector(max_count=500) as collect_error:
         # Fake 499 files all having errors. This does not reach
         # the max count, which means the entire block will be executed
         # to completion.
@@ -39,7 +39,7 @@ def test_file_error_collector_max_count_reached():
     """
     validation_complete = False
     with pytest.raises(BulkInvalidDatasetFileError) as exc, \
-        file_error_collector(max_count=500) as collect_error:
+            file_error_collector(max_count=500) as collect_error:
         # Fake one million files having 3 errors each. Because of the error
         # limit of 500, only 500 will be iterated and 1498 errors collected.
         for i in range(0, 1_000_000):

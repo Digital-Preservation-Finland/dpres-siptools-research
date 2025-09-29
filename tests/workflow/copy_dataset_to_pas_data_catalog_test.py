@@ -1,7 +1,6 @@
 """Unit tests for CopyToPasDataCatalog task."""
 import copy
 
-import pytest
 from metax_access import (
     DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
     DS_STATE_INITIALIZED,

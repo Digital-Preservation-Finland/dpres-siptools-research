@@ -3,8 +3,6 @@ import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-import pytest
-
 from siptools_research.workflow.send_sip import SendSIPToDP
 
 
@@ -41,4 +39,3 @@ def test_send_sip(workspace, mock_ssh_config, sftp_dir):
     assert sip_to_dp_str
     sip_to_dp_date = datetime.fromisoformat(sip_to_dp_str)
     assert sip_to_dp_date.date() == datetime.now(timezone.utc).date()
-

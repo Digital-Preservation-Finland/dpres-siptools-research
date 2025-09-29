@@ -156,7 +156,7 @@ def _update_db_errors(
         task: WorkflowTask, bulk_exception: BulkInvalidDatasetFileError):
     """
     Update file errors in the database
-    
+
     :param task: The current workflow task
     :param bulk_exception: Bulk exception containing one or more file error
                            exceptions
@@ -186,7 +186,6 @@ def _update_db_errors(
                 file_id2dataset_errors[file_id] += [message]
             else:
                 file_id2non_dataset_errors[file_id] += [message]
-
 
     # Clear existing errors
     if file_id2non_dataset_errors:

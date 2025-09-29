@@ -3,6 +3,7 @@ from siptools_research.dataset import Dataset
 
 DEFAULT_CONFIG = '/etc/siptools_research.conf'
 
+
 def generate_metadata(dataset_id, config=DEFAULT_CONFIG):
     """Generate dataset metadata.
 

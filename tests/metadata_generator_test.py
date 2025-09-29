@@ -10,11 +10,7 @@ from requests.exceptions import HTTPError
 
 import tests.metax_data.reference_data
 from tests.utils import add_metax_dataset
-from siptools_research.exceptions import (
-    BulkInvalidDatasetFileError,
-    InvalidFileError,
-    InvalidFileMetadataError,
-)
+from siptools_research.exceptions import BulkInvalidDatasetFileError
 from siptools_research.metadata_generator import generate_metadata
 from tests.metax_data.files import FILE, TXT_FILE
 
@@ -75,7 +71,7 @@ def test_generate_metadata(config, requests_mock, tmp_path):
     # should not be empty
     assert file_char_ext["info"]
     assert file_char_ext["mimetype"] == "text/plain"
-    assert file_char_ext["version"] ==  "(:unap)"
+    assert file_char_ext["version"] == "(:unap)"
     assert file_char_ext["grade"] == "fi-dpres-recommended-file-format"
 
 
@@ -84,8 +80,6 @@ def test_generate_metadata(config, requests_mock, tmp_path):
         "path",
         "expected_url",
         "expected_file_format",
-        "expected_format_version",
-        "expected_encoding",
         "expected_stream_type"
     ),
     [
@@ -94,24 +88,18 @@ def test_generate_metadata(config, requests_mock, tmp_path):
             "tests/data/sample_files/text_plain_UTF-8",
             "url-for-txt",
             "text/plain",
-            None,
-            "UTF-8",
             "text",
         ),
         (
             "tests/data/sample_files/image_png.png",
             "url-for-png",
             "image/png",
-            "1.2",
-            None,
             "image",
         ),
         (
             "tests/data/sample_files/image_tiff_large.tif",
             "url-for-tif",
             "image/tiff",
-            "6.0",
-            None,
             "image",
         ),
         # WAV file should not have container stream according to DPS
@@ -120,8 +108,6 @@ def test_generate_metadata(config, requests_mock, tmp_path):
             "tests/data/sample_files/audio_x-wav.wav",
             "url-for-wav",
             "audio/x-wav",
-            None,
-            None,
             "audio",
         ),
         # The first stream of matroska file should be container
@@ -129,8 +115,6 @@ def test_generate_metadata(config, requests_mock, tmp_path):
             "tests/data/sample_files/video_ffv1.mkv",
             "url-for-mkv",
             "video/x-matroska",
-            "4",
-            None,
             "videocontainer",
         ),
         # Ensure that problematic ODF formats (especially ODF Formula)
@@ -139,23 +123,18 @@ def test_generate_metadata(config, requests_mock, tmp_path):
             "tests/data/sample_files/opendocument_text.odt",
             "url-for-odt",
             "application/vnd.oasis.opendocument.text",
-            "1.2",
-            None,
             "binary",
         ),
         (
             "tests/data/sample_files/opendocument_formula.odf",
             "url-for-odf",
             "application/vnd.oasis.opendocument.formula",
-            "1.2",
-            None,
             "binary",
         )
     ]
 )
 def test_file_format_detection(config, requests_mock, path, expected_url,
-                               expected_file_format, expected_format_version,
-                               expected_encoding, expected_stream_type,
+                               expected_file_format, expected_stream_type,
                                tmp_path):
     """Test file format detection.
 
@@ -167,8 +146,6 @@ def test_file_format_detection(config, requests_mock, path, expected_url,
     :param path: path to the file for which the metadata is created
     :param expected_url: Expected file_format_version url
     :param expected_file_format: Expected file format
-    :param expected_format_version: Expected file format version
-    :param expected_encoding: Expected file encoding
     :param expected_stream_type: Expected type of first stream in
                                  file_characteristics_extension
     :param tmp_path: Temporary directory
@@ -358,7 +335,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
     file_metadata["characteristics"]["encoding"] = "user_defined"
     dataset = add_metax_dataset(requests_mock, files=[file_metadata])
     patch_file_mock = requests_mock.patch("/v3/files/pid:urn:identifier",
-                                         json={})
+                                          json={})
     patch_characteristics_mock \
         = requests_mock.patch("/v3/files/pid:urn:identifier/characteristics",
                               json={})
@@ -376,7 +353,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
     json = patch_characteristics_mock.last_request.json()
     assert json == {
         # missing keys are added
-        "file_format_version":{
+        "file_format_version": {
             "url": "url-for-txt",
         },
         # user defined value is not overwritten
@@ -398,7 +375,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
 
 
 @pytest.mark.parametrize(
-    ( "predefined_file_characteristics", "expected_file_characteristics"),
+    ("predefined_file_characteristics", "expected_file_characteristics"),
     [
         (
             # User has predefined all parameters. Predefined parameters
@@ -586,9 +563,9 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
     file = copy.deepcopy(TXT_FILE)
 
     # Update the predefined value in file characteristics
-    obj=file["characteristics"]
+    obj = file["characteristics"]
     for key in keys[:-1]:
-        obj=obj[key]
+        obj = obj[key]
     obj[keys[-1]] = predefined_value
 
     dataset = add_metax_dataset(requests_mock, files=[file])
@@ -604,8 +581,8 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
 
     file_error = next(
         error for error in exception_info.value.file_errors
-        if str(error) == \
-            f"File scraper detects a different {keys[-1]}: {detected_value}"
+        if str(error)
+        == f"File scraper detects a different {keys[-1]}: {detected_value}"
     )
 
     assert next(

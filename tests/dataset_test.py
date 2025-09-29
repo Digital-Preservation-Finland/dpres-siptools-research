@@ -86,7 +86,7 @@ def test_unknown_data_catalog(config, requests_mock):
     # Mock Metax
     dataset = copy.deepcopy(DATASET)
     dataset["data_catalog"] = "urn:nbn:fi:att:data-catalog-unknown"
-    requests_mock.get( "/v3/datasets/identifier", json=dataset)
+    requests_mock.get("/v3/datasets/identifier", json=dataset)
 
     dataset = Dataset("identifier", config=config)
     with pytest.raises(ValueError, match="Unknown data catalog"):
@@ -147,7 +147,7 @@ def test_preservation_state(config, requests_mock, metadata):
     :param metadata: The metadata of dataset from Metax
     """
     # Mock Metax
-    dataset=copy.deepcopy(DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset.update(metadata)
     requests_mock.get('/v3/datasets/identifier', json=dataset)
 
@@ -201,7 +201,7 @@ def test_set_preservation_state(config, requests_mock, metadata):
     :param metadata: The metadata of dataset from Metax
     """
     # Mock Metax
-    dataset=copy.deepcopy(DATASET)
+    dataset = copy.deepcopy(DATASET)
     dataset.update(metadata)
     requests_mock.get("/v3/datasets/identifier", json=dataset)
     mocked_patch = requests_mock.patch("/v3/datasets/correct-id/preservation")
@@ -511,8 +511,8 @@ def test_reset_dataset(requests_mock, config):
     )
     assert any(
         req for req in preservation_patch.request_history
-        if req.json().get("reason_description", None) == \
-            "Why this dataset was reset"
+        if req.json().get("reason_description", None)
+        == "Why this dataset was reset"
     )
 
     # File errors for the two files are removed

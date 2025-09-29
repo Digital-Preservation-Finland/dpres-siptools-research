@@ -5,8 +5,7 @@ import pytest
 from metax_access.template_data import DATASET
 
 import tests.utils
-from siptools_research.exceptions import (BulkInvalidDatasetFileError,
-                                          InvalidFileError)
+from siptools_research.exceptions import BulkInvalidDatasetFileError
 from siptools_research.workflow import validate_files
 from tests.metax_data.files import TIFF_FILE, TXT_FILE
 

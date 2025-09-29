@@ -24,7 +24,7 @@ def validate_files(dataset_id, root_directory,
         for file in metax_client.get_dataset_files(dataset_id):
 
             filepath = root_directory / file["pathname"].strip('/')
-            
+
             characteristics = file["characteristics"]
 
             # If this file is linked to a PAS compatible file, it must mean

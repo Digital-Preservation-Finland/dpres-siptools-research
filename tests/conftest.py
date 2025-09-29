@@ -10,6 +10,7 @@ import luigi.configuration
 import mongoengine
 import pytest
 import urllib3
+from upload_rest_api.config import CONFIG
 from click.testing import CliRunner
 from mongobox import MongoBox
 
@@ -17,8 +18,6 @@ import siptools_research.config
 from research_rest_api.app import create_app
 from siptools_research.__main__ import Context, cli
 from siptools_research.database import connect_mongoengine
-from siptools_research.models.dataset_entry import DatasetWorkflowEntry
-from siptools_research.models.file_error import FileError
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -38,8 +37,6 @@ sys.path.insert(0, PROJECT_ROOT_PATH)
 @pytest.fixture()
 def luigi_config_fx(monkeypatch):
     """Write temporary configuration file for Luigi and force it to read it"""
-
-    import luigi.configuration
 
     def _create_buffer(config_str):
         """Return StringIO buffer for given config_str"""
@@ -134,7 +131,7 @@ def test_mongo():
 
 
 @pytest.fixture(scope="function", autouse=True)
-def mongo_cleanup(test_mongo, monkeypatch):
+def mongo_cleanup(test_mongo):
     """
     Clear the database before each test
     """
@@ -168,7 +165,6 @@ def upload_projects_path(tmp_path, monkeypatch):
     # Mock upload-rest-api configuration
     path = tmp_path / "upload_projects"
     path.mkdir()
-    from upload_rest_api.config import CONFIG
     monkeypatch.setitem(CONFIG, 'UPLOAD_PROJECTS_PATH', path)
     return path
 

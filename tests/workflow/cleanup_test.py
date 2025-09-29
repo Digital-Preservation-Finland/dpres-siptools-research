@@ -1,6 +1,4 @@
 """Tests for :mod:`siptools_research.workflow.cleanup` module."""
-import pytest
-
 from siptools_research.workflow.cleanup import Cleanup
 
 

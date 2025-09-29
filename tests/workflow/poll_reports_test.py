@@ -36,7 +36,7 @@ def test_getvalidationreports(config, workspace, requests_mock, status):
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
     contract_id = dataset['preservation']['contract']
 
-    #Mock DPS
+    # Mock DPS
     requests_mock.get(
         f"https://access.localhost/api/2.0/{contract_id}/ingest/report/doi%3Atest",
         json={

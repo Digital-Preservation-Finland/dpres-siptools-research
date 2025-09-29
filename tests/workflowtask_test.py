@@ -340,7 +340,7 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
                                  be reported to Metax
     """
     # Mock metax
-    json=copy.deepcopy(DATASET)
+    json = copy.deepcopy(DATASET)
     json["id"] = workspace.name
     json["preservation"]["state"] = DS_STATE_GENERATING_METADATA
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=json)
@@ -381,7 +381,7 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
             )
 
     # Mock metax
-    json=copy.deepcopy(DATASET)
+    json = copy.deepcopy(DATASET)
     json["id"] = workspace.name
     json["preservation"]["state"] = DS_STATE_GENERATING_METADATA
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=json)
@@ -550,7 +550,7 @@ def test_file_error_saved(
             raise exception
 
     # Mock metax
-    json=copy.deepcopy(DATASET)
+    json = copy.deepcopy(DATASET)
     json["id"] = "dataset-id"
     json["preservation"]["state"] = DS_STATE_GENERATING_METADATA
     requests_mock.get("/v3/datasets/dataset-id", json=json)
@@ -599,7 +599,7 @@ def test_set_preservation_state_of_pas_version(config, requests_mock):
     assert patch_preservation.called_once
     assert patch_preservation.last_request.json() == {
         "state": DS_STATE_INVALID_METADATA,
-        "description":{
+        "description": {
             "en": "An error occurred while running a test task: "
             "InvalidDatasetError: Dataset is invalid"
         }
@@ -618,7 +618,7 @@ def test_packaging_failed(config, workspace, requests_mock):
     :param requests_mock: Mocker object
     """
     # Mock Metax
-    json=copy.deepcopy(DATASET)
+    json = copy.deepcopy(DATASET)
     json["id"] = workspace.name
     # DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION means that packaging has
     # started

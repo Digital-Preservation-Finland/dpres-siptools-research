@@ -56,7 +56,7 @@ def test_create_mets(config, workspace, requests_mock, data_catalog, objid):
 
     dataset["id"] = workspace.name
     dataset["data_catalog"] = data_catalog
-    dataset["persistent_identifier"] =  "doi:test"
+    dataset["persistent_identifier"] = "doi:test"
     if data_catalog == "urn:nbn:fi:att:data-catalog-ida":
         dataset["preservation"]["dataset_version"] = {
             "persistent_identifier": "doi:pas-version-id",
@@ -435,7 +435,7 @@ def test_createdescriptivemetadata(config, workspace, requests_mock):
     dataset["id"] = workspace.name
     # Add use category to a file to ensure that logical structuremap is
     # created
-    file=copy.deepcopy(TXT_FILE)
+    file = copy.deepcopy(TXT_FILE)
     file["dataset_metadata"] = {
             "use_category": {
                 "url": "url/to/dummy-use-category",
@@ -480,14 +480,14 @@ def test_createdescriptivemetadata(config, workspace, requests_mock):
     # Check that descriptive metadata is referenced in PHYSICAL
     # structmap
     structmap = mets.xpath("//mets:structMap[@TYPE='PHYSICAL']",
-                                    namespaces=NAMESPACES)[0]
+                           namespaces=NAMESPACES)[0]
     structmap_div = structmap.xpath("mets:div", namespaces=NAMESPACES)[0]
     assert structmap_div.attrib["DMDID"] == dmdsec.attrib["ID"]
 
     # Check that descriptive metadata is referenced in Fairdata-logical
     # structmap
     structmap = mets.xpath("//mets:structMap[@TYPE='Fairdata-logical']",
-                                    namespaces=NAMESPACES)[0]
+                           namespaces=NAMESPACES)[0]
     structmap_div = structmap.xpath("mets:div", namespaces=NAMESPACES)[0]
     assert structmap_div.attrib["DMDID"] == dmdsec.attrib["ID"]
 
@@ -975,5 +975,3 @@ def test_file_characteristics_conflict(config, workspace, requests_mock, key):
     with pytest.raises(InvalidFileMetadataError,
                        match="File characteristics have changed"):
         CreateMets(dataset_id=workspace.name, config=config).run()
-
-

@@ -1,7 +1,6 @@
 """Generates metadata required to create SIP."""
 import file_scraper
 import file_scraper.scraper
-from metax_access import Metax
 from metax_access.response import MetaxFileCharacteristics
 
 from siptools_research.database import connect_mongoengine
