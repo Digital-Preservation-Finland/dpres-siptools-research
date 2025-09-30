@@ -23,8 +23,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SSH_KEY_PATH = Path("tests/data/ssh/test_ssh_key")
 
 
-@pytest.fixture
-def luigi_config_fx(monkeypatch):
+@pytest.fixture(name="luigi_config_fx")
+def _luigi_config_fx(monkeypatch):
     """Mock luigi configuration parser.
 
     Writes temporary configuration file for Luigi and force it to read
@@ -57,8 +57,8 @@ def luigi_config_fx(monkeypatch):
     return _set_config
 
 
-@pytest.fixture(autouse=True)
-def config(test_mongo, tmp_path, luigi_config_fx):
+@pytest.fixture(autouse=True, name="config")
+def _config(test_mongo, tmp_path, luigi_config_fx):
     """Create temporary config file and mock Luigi configuration.
 
     A temporary packaging root directory is created, and configuration
@@ -109,8 +109,8 @@ def config(test_mongo, tmp_path, luigi_config_fx):
     return str(config_)
 
 
-@pytest.fixture(autouse=True, scope="session")
-def test_mongo():
+@pytest.fixture(autouse=True, scope="session", name="test_mongo")
+def _test_mongo():
     """
     Initialize MongoDB test instance and return MongoDB client instance for
     the database
@@ -185,15 +185,15 @@ def workspace(config):
     return workspace_
 
 
-@pytest.fixture
-def sftp_dir(tmpdir):
+@pytest.fixture(name="sftp_dir")
+def _sftp_dir(tmpdir):
     """Local directory that corresponds to the DPS' SFTP server."""
     sftp_dir_ = tmpdir.mkdir("sftp_server")
     return Path(str(sftp_dir_))
 
 
-@pytest.fixture
-def sftp_server(sftp_dir, monkeypatch):
+@pytest.fixture(name="sftp_server")
+def _sftp_server(sftp_dir, monkeypatch):
     """Return a directory in the test SFTP filesystem."""
     users = {
         "tpas": SSH_KEY_PATH
@@ -245,10 +245,6 @@ def cli_runner():
     return wrapper
 
 
-# TODO: Use the name argument for pytest.fixture decorator to solve the
-# funcarg-shadowing-fixture problem, when support for pytest version 2.x
-# is not required anymore (the name argument was introduced in pytest
-# version 3.0).
 @pytest.fixture
 def app(config, monkeypatch):
     """Create web app and Mock Metax HTTP responses.
