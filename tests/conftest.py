@@ -23,7 +23,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 SSH_KEY_PATH = Path("tests/data/ssh/test_ssh_key")
 
 
-@pytest.fixture()
+@pytest.fixture
 def luigi_config_fx(monkeypatch):
     """Mock luigi configuration parser.
 
@@ -126,16 +126,16 @@ def test_mongo():
     box.stop()
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def mongo_cleanup(test_mongo):
     """
     Clear the database before each test
     """
     test_mongo.drop_database("siptools-research")
-    yield
+    return
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def upload_database(test_mongo):
     """
     Connect to upload-rest-api database
@@ -154,7 +154,7 @@ def upload_database(test_mongo):
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 # TODO: This hack can be removed when TPASPKT-516 is resolved
 def upload_projects_path(tmp_path, monkeypatch):
     """Configure UPLOAD_PROJECTS_PATH for upload-rest-api."""
@@ -165,7 +165,7 @@ def upload_projects_path(tmp_path, monkeypatch):
     return path
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 # pylint: disable=redefined-outer-name
 def workspace(config):
     """Create a temporary workspace directory.
@@ -185,14 +185,14 @@ def workspace(config):
     return workspace_
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def sftp_dir(tmpdir):
     """Local directory that corresponds to the DPS' SFTP server."""
     sftp_dir_ = tmpdir.mkdir("sftp_server")
-    yield Path(str(sftp_dir_))
+    return Path(str(sftp_dir_))
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def sftp_server(sftp_dir, monkeypatch):
     """Return a directory in the test SFTP filesystem."""
     users = {
@@ -205,7 +205,7 @@ def sftp_server(sftp_dir, monkeypatch):
         yield server
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def mock_ssh_config(tmpdir, config, sftp_server):
     """Create modified configuration file to use mocked DPS SFTP server
     instead of a real instance.
@@ -224,7 +224,7 @@ def mock_ssh_config(tmpdir, config, sftp_server):
     return mocked_ssh_config
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def cli_runner():
     """
     Run the CLI entrypoint using the provided arguments and return the
@@ -249,7 +249,7 @@ def cli_runner():
 # funcarg-shadowing-fixture problem, when support for pytest version 2.x
 # is not required anymore (the name argument was introduced in pytest
 # version 3.0).
-@pytest.fixture(scope="function")
+@pytest.fixture
 def app(config, monkeypatch):
     """Create web app and Mock Metax HTTP responses.
 
