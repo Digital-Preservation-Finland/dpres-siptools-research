@@ -42,7 +42,7 @@ def luigi_config_fx(monkeypatch):
     def _get_parser(_file):
         """Return LuigiConfigParser for given _file object"""
         parser = luigi.configuration.LuigiConfigParser()
-        parser.readfp(_file)
+        parser.read_file(_file)
         return parser
 
     def _set_config(config_str):
