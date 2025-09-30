@@ -182,7 +182,6 @@ class MetaxTask(WorkflowTask):
         metax_client.get_dataset('1')
 
 
-@pytest.mark.usefixtures('mock_luigi_config_path')
 def test_run_workflowtask(config, workspace):
     """Test WorkflowTask execution.
 
@@ -220,7 +219,6 @@ def test_run_workflowtask(config, workspace):
     assert len(find_datasets(config=config)) == 1
 
 
-@pytest.mark.usefixtures('mock_luigi_config_path')
 def test_run_workflow_target_task(config, workspace):
     """Test running target task of the workflow.
 

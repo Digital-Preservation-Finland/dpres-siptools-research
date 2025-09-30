@@ -25,7 +25,13 @@ SSH_KEY_PATH = Path("tests/data/ssh/test_ssh_key")
 
 @pytest.fixture()
 def luigi_config_fx(monkeypatch):
-    """Write temporary configuration file for Luigi and force it to read it"""
+    """Mock luigi configuration parser.
+
+    Writes temporary configuration file for Luigi and force it to read
+    it. Note that the default luigi configuration file
+    (/etc/luigi/luigi.cfg), will be read during tests anyway, because it
+    is read when luigi is imported.
+    """
 
     def _create_buffer(config_str):
         """Return StringIO buffer for given config_str"""
@@ -53,10 +59,11 @@ def luigi_config_fx(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def config(test_mongo, tmp_path, luigi_config_fx):
-    """Create temporary config file.
+    """Create temporary config file and mock Luigi configuration.
 
     A temporary packaging root directory is created, and configuration
-    is modified to use it.
+    is modified to use it. Also, luigi configuration file is mocked to
+    prevent luigi from reading /etc/luigi/luigi.cfg.
 
     :param request: pytest CLI arguments.
     :param tmp_path: Temporary path where packaging root directory is
@@ -176,21 +183,6 @@ def workspace(config):
     workspace_.mkdir()
     (workspace_ / "preservation").mkdir()
     return workspace_
-
-
-@pytest.fixture(scope="function")
-def mock_luigi_config_path(monkeypatch):
-    """Patch luigi config file.
-
-    Replace system luigi configuration file (/etc/luigi/luigi.cfg) with
-    local sample config file.
-
-    :param monkeypatch: pytest `monkeypatch` fixture
-    :returns: ``None``
-    """
-    monkeypatch.setattr(luigi.configuration.LuigiConfigParser,
-                        '_config_paths',
-                        ['tests/data/configuration_files/luigi.cfg'])
 
 
 @pytest.yield_fixture(scope="function")

@@ -97,7 +97,6 @@ def _get_schematrons():
         # ("poll_reports", "GetValidationReports"),
     ]
 )
-@pytest.mark.usefixtures("mock_luigi_config_path")
 def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
                   sftp_dir):
     """Test workflow dependency tree.
@@ -202,7 +201,6 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
                                            'file_cache'})
 
 
-@pytest.mark.usefixtures("mock_luigi_config_path")
 @pytest.mark.parametrize(
     "files",
     [
