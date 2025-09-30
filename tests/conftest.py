@@ -1,6 +1,5 @@
 """Configure py.test default values and functionality."""
 import os
-import sys
 import uuid
 from configparser import ConfigParser
 from pathlib import Path
@@ -26,12 +25,6 @@ SSH_KEY_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "data", "ssh", "test_ssh_key"
 )
-
-# Prefer modules from source directory rather than from site-python
-PROJECT_ROOT_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..')
-)
-sys.path.insert(0, PROJECT_ROOT_PATH)
 
 
 @pytest.fixture()
