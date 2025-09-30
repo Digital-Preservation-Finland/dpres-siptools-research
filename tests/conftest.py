@@ -1,5 +1,4 @@
 """Configure py.test default values and functionality."""
-import os
 import uuid
 from configparser import ConfigParser
 from pathlib import Path
@@ -21,10 +20,7 @@ from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-SSH_KEY_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "data", "ssh", "test_ssh_key"
-)
+SSH_KEY_PATH = Path("tests/data/ssh/test_ssh_key")
 
 
 @pytest.fixture()
@@ -228,7 +224,7 @@ def mock_ssh_config(tmpdir, config, sftp_server):
     parser.read(config)
     parser.set("siptools_research", "dp_host", "127.0.0.1")
     parser.set("siptools_research", "dp_port", str(sftp_server.port))
-    parser.set("siptools_research", "dp_ssh_key", SSH_KEY_PATH)
+    parser.set("siptools_research", "dp_ssh_key", str(SSH_KEY_PATH))
     mocked_ssh_config = tmpdir / "siptools_research_mock_ssh.conf"
     with mocked_ssh_config.open('w') as file:
         parser.write(file)
@@ -277,10 +273,10 @@ def app(config, monkeypatch):
 
     # Create temporary directories
     conf = siptools_research.config.Configuration(config)
-    cache_dir = os.path.join(conf.get("packaging_root"), "file_cache")
-    os.mkdir(cache_dir)
-    tmp_dir = os.path.join(conf.get("packaging_root"), "tmp")
-    os.mkdir(tmp_dir)
+    cache_dir = Path(conf.get("packaging_root")) / "file_cache"
+    cache_dir.mkdir()
+    tmp_dir = Path(conf.get("packaging_root")) / "tmp"
+    tmp_dir.mkdir()
 
     # Reconnect to MongoDB database
     connect_mongoengine(config)
