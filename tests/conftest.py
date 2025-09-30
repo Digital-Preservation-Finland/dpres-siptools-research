@@ -109,7 +109,7 @@ def config(test_mongo, tmp_path, luigi_config_fx):
     return str(config_)
 
 
-@pytest.yield_fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="session")
 def test_mongo():
     """
     Initialize MongoDB test instance and return MongoDB client instance for
@@ -185,14 +185,14 @@ def workspace(config):
     return workspace_
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def sftp_dir(tmpdir):
     """Local directory that corresponds to the DPS' SFTP server."""
     sftp_dir_ = tmpdir.mkdir("sftp_server")
     yield Path(str(sftp_dir_))
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def sftp_server(sftp_dir, monkeypatch):
     """Return a directory in the test SFTP filesystem."""
     users = {
