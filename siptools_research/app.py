@@ -1,5 +1,6 @@
 """Application instance factory."""
 import logging
+import os
 
 from flask import Flask, abort, current_app, jsonify, request
 from metax_access import ResourceNotAvailableError
@@ -12,7 +13,7 @@ logging.basicConfig(level=logging.ERROR)
 LOGGER = logging.getLogger(__name__)
 
 
-SIPTOOLS_RESEARCH_CONFIG = "/etc/siptools_research.conf"
+SIPTOOLS_RESEARCH_CONF = "/etc/siptools_research.conf"
 
 
 def create_app():
@@ -22,9 +23,11 @@ def create_app():
 
     """
     app = Flask(__name__)
-    app.config['CONF'] = SIPTOOLS_RESEARCH_CONFIG
 
-    connect_mongoengine(app.config['CONF'])
+    app.config["SIPTOOLS_RESEARCH_CONF"] = os.getenv("SIPTOOLS_RESEARCH_CONF",
+                                                     SIPTOOLS_RESEARCH_CONF)
+
+    connect_mongoengine(app.config['SIPTOOLS_RESEARCH_CONF'])
 
     @app.route('/dataset/<dataset_id>/validate', methods=['POST'])
     def validate_dataset(dataset_id):
@@ -33,7 +36,7 @@ def create_app():
         :returns: HTTP Response
         """
         Dataset(identifier=dataset_id,
-                config=app.config.get("CONF")).validate()
+                config=app.config.get("SIPTOOLS_RESEARCH_CONF")).validate()
 
         response = jsonify({'dataset_id': dataset_id,
                             'status': 'validating dataset'})
@@ -48,7 +51,7 @@ def create_app():
         :returns: HTTP Response
         """
         Dataset(identifier=dataset_id,
-                config=app.config.get("CONF")).preserve()
+                config=app.config.get("SIPTOOLS_RESEARCH_CONF")).preserve()
 
         response = jsonify({'dataset_id': dataset_id,
                             'status': 'preserving'})
@@ -62,8 +65,10 @@ def create_app():
 
         :returns: HTTP Response
         """
-        Dataset(identifier=dataset_id,
-                config=app.config.get("CONF")).generate_metadata()
+        Dataset(
+            identifier=dataset_id,
+            config=app.config.get("SIPTOOLS_RESEARCH_CONF")
+        ).generate_metadata()
 
         response = jsonify({'dataset_id': dataset_id,
                             'status': 'generating metadata'})
@@ -80,7 +85,10 @@ def create_app():
         description = request.form["description"]
         reason_description = request.form["reason_description"]
 
-        Dataset(identifier=dataset_id, config=app.config.get("CONF")).reset(
+        Dataset(
+            identifier=dataset_id,
+            config=app.config.get("SIPTOOLS_RESEARCH_CONF")
+        ).reset(
             description=description,
             reason_description=reason_description
         )
