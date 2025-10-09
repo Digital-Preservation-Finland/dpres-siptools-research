@@ -2,7 +2,7 @@
 import logging
 import os
 
-from flask import Flask, abort, current_app, jsonify, request
+from flask import Flask, abort, current_app, jsonify, request, Blueprint
 from metax_access import ResourceNotAvailableError
 
 from siptools_research.dataset import Dataset
@@ -26,79 +26,9 @@ def create_app():
 
     app.config["SIPTOOLS_RESEARCH_CONF"] = os.getenv("SIPTOOLS_RESEARCH_CONF",
                                                      SIPTOOLS_RESEARCH_CONF)
+    app.register_blueprint(dataset, url_prefix="/dataset")
 
     connect_mongoengine(app.config['SIPTOOLS_RESEARCH_CONF'])
-
-    @app.route('/dataset/<dataset_id>/validate', methods=['POST'])
-    def validate_dataset(dataset_id):
-        """Validate dataset metadata and files.
-
-        :returns: HTTP Response
-        """
-        Dataset(identifier=dataset_id,
-                config=app.config.get("SIPTOOLS_RESEARCH_CONF")).validate()
-
-        response = jsonify({'dataset_id': dataset_id,
-                            'status': 'validating dataset'})
-        response.status_code = 202
-
-        return response
-
-    @app.route('/dataset/<dataset_id>/preserve', methods=['POST'])
-    def preserve(dataset_id):
-        """Trigger preservation workflow for dataset.
-
-        :returns: HTTP Response
-        """
-        Dataset(identifier=dataset_id,
-                config=app.config.get("SIPTOOLS_RESEARCH_CONF")).preserve()
-
-        response = jsonify({'dataset_id': dataset_id,
-                            'status': 'preserving'})
-        response.status_code = 202
-
-        return response
-
-    @app.route('/dataset/<dataset_id>/generate-metadata', methods=['POST'])
-    def generate_metadata(dataset_id):
-        """Generate technical metadata and store it to Metax.
-
-        :returns: HTTP Response
-        """
-        Dataset(
-            identifier=dataset_id,
-            config=app.config.get("SIPTOOLS_RESEARCH_CONF")
-        ).generate_metadata()
-
-        response = jsonify({'dataset_id': dataset_id,
-                            'status': 'generating metadata'})
-        response.status_code = 202
-
-        return response
-
-    @app.route('/dataset/<dataset_id>/reset', methods=['POST'])
-    def reset(dataset_id: str):
-        """Reset dataset.
-
-        :returns: HTTP response
-        """
-        description = request.form["description"]
-        reason_description = request.form["reason_description"]
-
-        Dataset(
-            identifier=dataset_id,
-            config=app.config.get("SIPTOOLS_RESEARCH_CONF")
-        ).reset(
-            description=description,
-            reason_description=reason_description
-        )
-
-        response = jsonify({
-            'dataset_id': dataset_id,
-            'status': 'dataset has been reset'
-        })
-
-        return response
 
     @app.route(
         '/file-errors',
@@ -195,3 +125,83 @@ def create_app():
         return response
 
     return app
+
+
+dataset = Blueprint("dataset", "dataset")
+
+
+@dataset.route('/<dataset_id>/validate', methods=['POST'])
+def validate_dataset(dataset_id):
+    """Validate dataset metadata and files.
+
+    :returns: HTTP Response
+    """
+    Dataset(identifier=dataset_id,
+            config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")).validate()
+
+    response = jsonify({'dataset_id': dataset_id,
+                        'status': 'validating dataset'})
+    response.status_code = 202
+
+    return response
+
+
+@dataset.route('/<dataset_id>/preserve', methods=['POST'])
+def preserve(dataset_id):
+    """Trigger preservation workflow for dataset.
+
+    :returns: HTTP Response
+    """
+    Dataset(identifier=dataset_id,
+            config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")).preserve()
+
+    response = jsonify({'dataset_id': dataset_id,
+                        'status': 'preserving'})
+    response.status_code = 202
+
+    return response
+
+
+@dataset.route('/<dataset_id>/generate-metadata', methods=['POST'])
+def generate_metadata(dataset_id):
+    """Generate technical metadata and store it to Metax.
+
+    :returns: HTTP Response
+    """
+    Dataset(
+        identifier=dataset_id,
+        config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
+    ).generate_metadata()
+
+    response = jsonify({'dataset_id': dataset_id,
+                        'status': 'generating metadata'})
+    response.status_code = 202
+
+    return response
+
+
+@dataset.route('/<dataset_id>/reset', methods=['POST'])
+def reset(dataset_id: str):
+    """Reset dataset.
+
+    :returns: HTTP response
+    """
+    description = request.form["description"]
+    reason_description = request.form["reason_description"]
+
+    Dataset(
+        identifier=dataset_id,
+        config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
+    ).reset(
+        description=description,
+        reason_description=reason_description
+    )
+
+    response = jsonify({
+        'dataset_id': dataset_id,
+        'status': 'dataset has been reset'
+    })
+
+    return response
+
+
