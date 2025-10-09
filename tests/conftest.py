@@ -270,3 +270,10 @@ def app(config, monkeypatch):
     connect_mongoengine(config)
 
     return app_
+
+
+@pytest.fixture
+def client(app):
+    """Create a Flask test client."""
+    with app.test_client() as client:
+        yield client

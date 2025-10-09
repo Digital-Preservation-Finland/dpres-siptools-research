@@ -4,13 +4,6 @@ import pytest
 from metax_access import ResourceNotAvailableError
 
 
-@pytest.fixture()
-def client(app):
-    """Create a test client."""
-    with app.test_client() as client:
-        yield client
-
-
 def test_index(client):
     """Test the application index page.
 

@@ -29,12 +29,6 @@ def default_file_errors():
     return file_errors
 
 
-@pytest.fixture
-def client(app):
-    with app.test_client() as client:
-        yield client
-
-
 @pytest.mark.usefixtures("default_file_errors")
 def test_retrieve_file_errors(client):
     """

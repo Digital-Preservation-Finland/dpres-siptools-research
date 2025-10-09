@@ -1,15 +1,6 @@
 """Tests for ``siptools_research.api.dataset`` module."""
-import pytest
-
 from siptools_research.dataset import Dataset
 import tests.utils
-
-
-@pytest.fixture
-def client(app):
-    """Create a test client."""
-    with app.test_client() as client:
-        yield client
 
 
 def test_dataset_preserve(client, config):
