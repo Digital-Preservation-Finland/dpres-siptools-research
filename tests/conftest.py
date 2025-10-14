@@ -251,9 +251,7 @@ def app(config, monkeypatch):
 
     :returns: An instance of the REST API web app.
     """
-    monkeypatch.setattr(
-        "siptools_research.app.SIPTOOLS_RESEARCH_CONF", config
-    )
+    monkeypatch.setenv("SIPTOOLS_RESEARCH_CONF", str(config))
 
     # Create app and change the default config file path
     app_ = create_app()
