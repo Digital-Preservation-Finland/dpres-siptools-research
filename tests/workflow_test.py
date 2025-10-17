@@ -21,6 +21,7 @@ from tests.metax_data.files import (AUDIO_FILE, CSV_FILE, MKV_FILE,
                                     PAS_STORAGE_SERVICE, PDF_FILE, SEG_Y_FILE,
                                     TIFF_FILE, TXT_FILE, VIDEO_FILE)
 
+DPRES_XML_SCHEMAS_CATALOG = "/etc/xml/dpres-xml-schemas/schema_catalogs/catalog_main.xml"
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
 PAS_STORAGE_TXT_FILE = copy.deepcopy(TXT_FILE)
 PAS_STORAGE_TXT_FILE["storage_service"] = PAS_STORAGE_SERVICE
@@ -284,7 +285,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     ]
 )
 def test_mets_creation(config, tmp_path, workspace, requests_mock,
-                       files, upload_projects_path):
+                       monkeypatch, files, upload_projects_path):
     """Test SIP validity.
 
     Run CompressSIP task (and all tasks it requires) and check that:
@@ -297,6 +298,7 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
     :param tmp_path: temporary directory
     :param workspace: temporary workspace directory
     :param requests_mock: Mocker object
+    :param monkeypatch: Monkeypatch object
     :param files: list of files to be added to dataset
     """
     # Mock Metax
@@ -350,6 +352,7 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
     mets = lxml.etree.parse(str(tmp_path / 'extracted_sip' / 'mets.xml'))
 
     # Validate mets.xml against schema
+    monkeypatch.setenv("XML_CATALOG_FILES", DPRES_XML_SCHEMAS_CATALOG)
     schema = lxml.etree.XMLSchema(lxml.etree.parse(METS_XSD))
     assert schema.validate(mets)
 
