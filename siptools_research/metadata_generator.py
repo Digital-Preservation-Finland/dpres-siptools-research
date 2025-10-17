@@ -126,7 +126,9 @@ def generate_metadata(
 
             # Check that user defined metadata is not ignored by
             # file-scraper
-            # TODO: This is necessary until TPASPKT-1418 is resolved
+            # TODO: This is necessary until file-scraper does not ignore
+            # predefined metadata (See for example TPASPKT-1418 and
+            # TPASPKT-1576)
             compare_file_chars = [
                 (
                     "file_format",
