@@ -41,6 +41,7 @@ from metax_access.template_data import DATASET, FILE
                     "preservation_state": -1
                 },
                 "contract": "contract_identifier",
+                "pas_package_created": None,
             }
         },
     ]
@@ -105,6 +106,7 @@ def test_unknown_data_catalog(config, requests_mock):
                 "description": None,
                 "reason_description": None,
                 "contract": "contract_identifier",
+                "pas_package_created": None,
             },
         },
         # Ida dataset that has not been copied to PAS data catalog
@@ -120,6 +122,7 @@ def test_unknown_data_catalog(config, requests_mock):
                     "preservation_state": -1,
                 },
                 "contract": "contract_identifier",
+                "pas_package_created": None,
             },
         },
         # Ida dataset that has been copied to PAS data catalog
@@ -135,6 +138,7 @@ def test_unknown_data_catalog(config, requests_mock):
                     "preservation_state": "correct-state",
                 },
                 "contract": "contract_identifier",
+                "pas_package_created": None,
             },
         },
     ]
@@ -173,6 +177,7 @@ def test_preservation_state(config, requests_mock, metadata):
                 "description": None,
                 "reason_description": None,
                 "contract": None,
+                "pas_package_created": None,
             }
         },
         # Ida dataset that has been copied to PAS data catalog
@@ -189,6 +194,7 @@ def test_preservation_state(config, requests_mock, metadata):
                 "description": None,
                 "reason_description": None,
                 "contract": None,
+                "pas_package_created": None,
             }
         },
     ]

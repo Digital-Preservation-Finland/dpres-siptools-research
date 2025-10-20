@@ -26,7 +26,8 @@ from metax_access.template_data import DATASET
                         "id": "pas-version-id",
                         "persistent_identifier": None,
                         "preservation_state": 0
-                    }
+                    },
+                    "pas_package_created": None,
                 },
             },
             "pas-version-id"
@@ -45,7 +46,8 @@ from metax_access.template_data import DATASET
                         "id": None,
                         "persistent_identifier": None,
                         "preservation_state": 0
-                    }
+                    },
+                    "pas_package_created": None,
                 },
             },
             'original-version-id'
