@@ -15,7 +15,6 @@ from metax_access import (
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import (
     BulkInvalidDatasetFileError,
-    InvalidContractMetadataError,
     InvalidDatasetError,
     InvalidDatasetFileError,
     InvalidDatasetMetadataError,
@@ -114,18 +113,6 @@ class InvalidFileMetadataTask(FailingTask):
         """
         error = "Invalid file encoding"
         raise InvalidFileMetadataError(error, files=[{"id": "foo"}])
-
-
-class InvalidContractMetadataTask(FailingTask):
-    """Test class that raises InvalidContractMetadataError."""
-
-    def run(self):
-        """Raise InvalidContractMetadataError.
-
-        :returns: ``None``
-        """
-        error = "Missing organization identifier"
-        raise InvalidContractMetadataError(error)
 
 
 class MissingFileTask(FailingTask):
@@ -294,12 +281,6 @@ def test_run_failing_task(config, workspace):
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidFileMetadataError: Invalid file encoding'
-        ),
-        (
-            InvalidContractMetadataTask,
-            DS_STATE_INVALID_METADATA,
-            'An error occurred while running a test task: '
-            'InvalidContractMetadataError: Missing organization identifier'
         ),
         (
             InvalidFileTask,

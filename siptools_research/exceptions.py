@@ -59,14 +59,6 @@ class InvalidFileMetadataError(InvalidDatasetFileError):
     """
 
 
-class InvalidContractMetadataError(InvalidDatasetError):
-    """Exception raised when dataset metadata is invalid.
-
-    SIP can not be created for dataset due to missing or invalid
-    metadata.
-    """
-
-
 class InvalidFileError(InvalidDatasetFileError):
     """Exception raised when some files in dataset are invalid."""
 
