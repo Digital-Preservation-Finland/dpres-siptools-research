@@ -4,11 +4,12 @@ import datetime
 
 import pytest
 from metax_access import DS_STATE_INITIALIZED
+from metax_access.template_data import DATASET, FILE
 
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import WorkflowExistsError
 from siptools_research.models.file_error import FileError
-from metax_access.template_data import DATASET, FILE
+from tests.utils import add_metax_dataset
 
 
 @pytest.mark.parametrize(
@@ -290,36 +291,43 @@ def test_task_log(config):
     assert len(find_datasets(config=config)) == 1
 
 
-def test_generate_metadata(config):
+def test_generate_metadata(config, requests_mock):
     """Test generate_metadata function.
 
     Tests that `generate_metadata` sets correct target for workflow of
     the dataset, and creates metadata generation workspace.
 
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
-    Dataset('dataset1', config=config).generate_metadata()
+    # Mock Metax
+    add_metax_dataset(requests_mock)
+
+    Dataset("test_dataset_id", config=config).generate_metadata()
 
     # Check that dataset was added to database.
     active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     dataset = active_datasets[0]
-    assert dataset.identifier == 'dataset1'
+    assert dataset.identifier == "test_dataset_id"
     assert dataset.target.value == 'metadata_generation'
 
     # Metadata generation workspace should be created
     assert dataset.metadata_generation_workspace.exists()
 
 
-def test_restart_generate_metadata(config):
+def test_restart_generate_metadata(config, requests_mock):
     """Test restarting metadata generation.
 
     When metadata generation is restarted, previous workspaces should be
     cleared.
 
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
-    dataset = Dataset('dataset1', config=config)
+    # Mock Metax
+    add_metax_dataset(requests_mock)
+    dataset = Dataset("test_dataset_id", config=config)
 
     # Create preservation workspaces
     dataset.metadata_generation_workspace.mkdir(parents=True)
@@ -452,6 +460,7 @@ def test_reset_dataset(requests_mock, config):
     Tests that `reset` updates Metax state, unlocks the dataset
     and removes any existing file errors
 
+    :param requests_mock: HTTP request mocker
     :param config: Configuration file
     """
     # Mock Metax
@@ -577,16 +586,23 @@ def test_workflow_conflict(config):
         ({"target": "preservation", "enabled": True}, ["ds5"]),
     ]
 )
-def test_find_datasets(config, kwargs, expected_datasets):
+def test_find_datasets(config, requests_mock, kwargs, expected_datasets):
     """Test find_datasets function.
 
     Check that find_datasets finds correct datasets.
 
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     :param kwargs: Keyword arguments to be used
     :param expected_datasets: Identifiers of datasets that should be
                               found
     """
+    # Mock Metax
+    for dataset_id in ["ds1", "ds2", "ds3", "ds4", "ds5", "ds6"]:
+        metadata = copy.deepcopy(DATASET)
+        metadata["id"] = dataset_id
+        add_metax_dataset(requests_mock=requests_mock, dataset=metadata)
+
     # Add some datasets to database
     ds1 = Dataset('ds1', config=config)
     ds1.generate_metadata()

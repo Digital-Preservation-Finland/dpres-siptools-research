@@ -5,11 +5,18 @@ import enum
 import shutil
 from pathlib import Path
 
-from metax_access import DS_STATE_INITIALIZED
+from metax_access import (
+    DS_STATE_INITIALIZED,
+    DS_STATE_GENERATING_METADATA,
+)
 
 from siptools_research.config import Configuration
 from siptools_research.database import connect_mongoengine
-from siptools_research.exceptions import WorkflowExistsError
+from siptools_research.exceptions import (
+    AlreadyPreservedError,
+    CopiedToPasDataCatalogError,
+    WorkflowExistsError,
+)
 from siptools_research.metax import get_metax_client
 from siptools_research.models.dataset_entry import (DatasetWorkflowEntry,
                                                     TaskEntry)
@@ -152,6 +159,11 @@ class Dataset:
 
         self._metax_client.set_pas_package_created(preserved_dataset_id)
 
+    @property
+    def _is_preserved(self):
+        """Check if dataset already is in DPS."""
+        return self._metadata["preservation"]["pas_package_created"]
+
     def unlock(self):
         """Unlock dataset."""
         self._metax_client.unlock_dataset(self.identifier)
@@ -286,7 +298,18 @@ class Dataset:
         :returns: ``None``
         """
         if self.enabled:
-            raise WorkflowExistsError()
+            raise WorkflowExistsError
+
+        if self._has_been_copied_to_pas_datacatalog:
+            raise CopiedToPasDataCatalogError
+
+        if self._is_preserved:
+            raise AlreadyPreservedError
+
+        self.set_preservation_state(
+            DS_STATE_GENERATING_METADATA,
+            "File identification started by user",
+        )
 
         # Clear the workspaces
         for path in [

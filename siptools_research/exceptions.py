@@ -67,13 +67,32 @@ class MissingFileError(InvalidDatasetFileError):
     """Exception raised when some files are not available."""
 
 
-class WorkflowExistsError(Exception):
-    """Exception raised when conflicting workflow exists."""
+class ActionNotAllowedError(Exception):
+    """Exception raised when action is not allowed for the dataset."""
 
-    def __init__(
-        self, message: str = "Active workflow already exists for this dataset."
-    ) -> None:
-        super().__init__(message)
+    _default_message = "Action not allowed for unknown reason"
+
+    def __init__(self, message: str | None = None) -> None:
+        """Initialize the exception with an optional custom message."""
+        super().__init__(message or self._default_message)
+
+
+class WorkflowExistsError(ActionNotAllowedError):
+    """Raised when conflicting workflow exists."""
+
+    _default_message = "Active workflow already exists for this dataset"
+
+
+class AlreadyPreservedError(ActionNotAllowedError):
+    """Raised when dataset already is in preservation."""
+
+    _default_message = "Dataset is already preserved."
+
+
+class CopiedToPasDataCatalogError(ActionNotAllowedError):
+    """Raised when dataset has been copied to PAS data catalog."""
+
+    _default_message = "Dataset has already been copied to PAS data catalog."
 
 
 class BulkInvalidDatasetFileError(InvalidDatasetError):

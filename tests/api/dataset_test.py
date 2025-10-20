@@ -1,6 +1,6 @@
 """Tests for ``siptools_research.api.dataset`` module."""
-from siptools_research.dataset import Dataset
 import tests.utils
+from siptools_research.dataset import Dataset
 
 
 def test_dataset_preserve(client, config):
@@ -21,20 +21,24 @@ def test_dataset_preserve(client, config):
     assert dataset.target.value == "preservation"
 
 
-def test_dataset_generate_metadata(client, config):
+def test_dataset_generate_metadata(client, config, requests_mock):
     """Test the generating metadata.
 
     :param client: Flask test client
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
-    response = client.post("/dataset/1/generate-metadata")
+    # Mock Metax
+    tests.utils.add_metax_dataset(requests_mock)
+
+    response = client.post("/dataset/test_dataset_id/generate-metadata")
     assert response.status_code == 202
     assert response.json == {
-        "dataset_id": "1",
+        "dataset_id": "test_dataset_id",
         "status": "generating metadata"
     }
 
-    dataset = Dataset("1", config=config)
+    dataset = Dataset("test_dataset_id", config=config)
     assert dataset.enabled is True
     assert dataset.target.value == "metadata_generation"
 
