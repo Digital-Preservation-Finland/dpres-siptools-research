@@ -8,6 +8,7 @@ from pathlib import Path
 from metax_access import (
     DS_STATE_INITIALIZED,
     DS_STATE_GENERATING_METADATA,
+    DS_STATE_VALIDATING_METADATA,
 )
 
 from siptools_research.config import Configuration
@@ -333,6 +334,11 @@ class Dataset:
 
         if self._is_preserved:
             raise AlreadyPreservedError
+
+        self.set_preservation_state(
+            DS_STATE_VALIDATING_METADATA,
+            "Proposed for preservation by user"
+        )
 
         # Clear the workspaces
         for path in [self.validation_workspace, self.preservation_workspace]:
