@@ -7,7 +7,10 @@ from metax_access import DS_STATE_INITIALIZED
 from metax_access.template_data import DATASET, FILE
 
 from siptools_research.dataset import Dataset, find_datasets
-from siptools_research.exceptions import WorkflowExistsError
+from siptools_research.exceptions import (
+    AlreadyPreservedError,
+    WorkflowExistsError,
+)
 from siptools_research.models.file_error import FileError
 from tests.utils import add_metax_dataset
 
@@ -344,36 +347,44 @@ def test_restart_generate_metadata(config, requests_mock):
     assert not dataset.preservation_workspace.exists()
 
 
-def test_validate_dataset(config):
+def test_validate_dataset(config, requests_mock):
     """Test validate_dataset function.
 
     Tests that `validate_dataset` sets correct target for workflow of
     the dataset, and creates validation workspace.
 
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
-    Dataset('dataset1', config=config).validate()
+    # Mock metax
+    add_metax_dataset(requests_mock)
+
+    Dataset("test_dataset_id", config=config).validate()
 
     # Check that dataset was added to database.
     active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     dataset = active_datasets[0]
-    assert dataset.identifier == 'dataset1'
+    assert dataset.identifier == "test_dataset_id"
     assert dataset.target.value == 'validation'
 
     # Validation workspace should be created
     assert dataset.validation_workspace.exists()
 
 
-def test_restart_validate_metadata(config):
+def test_restart_validate_metadata(config, requests_mock):
     """Test restarting validation.
 
     When validation is restarted, previous validation and preservation
     workspaces should be cleared.
 
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
-    dataset = Dataset('dataset1', config=config)
+    # Mock metax
+    add_metax_dataset(requests_mock)
+
+    dataset = Dataset("test_dataset_id", config=config)
 
     # Create workspaces
     dataset.metadata_generation_workspace.mkdir(parents=True)
@@ -398,36 +409,44 @@ def test_restart_validate_metadata(config):
     assert not dataset.preservation_workspace.exists()
 
 
-def test_preserve_dataset(config):
+def test_preserve_dataset(config, requests_mock):
     """Test preserve_dataset function.
 
     Tests that `prserve_dataset` sets correct target for workflow of
     the dataset, and creates preservation workspace.
 
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
-    Dataset('dataset1', config=config).preserve()
+    # Mock metax
+    add_metax_dataset(requests_mock)
+
+    Dataset("test_dataset_id", config=config).preserve()
 
     # Check that dataset was added to database.
     active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     dataset = active_datasets[0]
-    assert dataset.identifier == 'dataset1'
+    assert dataset.identifier == "test_dataset_id"
     assert dataset.target.value == 'preservation'
 
     # Preservation workspace should be created
     assert dataset.preservation_workspace.exists()
 
 
-def test_restart_preserve_dataset(config):
+def test_restart_preserve_dataset(config, requests_mock):
     """Test restarting preservation.
 
     When preservation is restarted, previous preservation workspace
     should be cleared.
 
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
-    dataset = Dataset('dataset1', config=config)
+    # Mock metax
+    add_metax_dataset(requests_mock)
+
+    dataset = Dataset("test_dataset_id", config=config)
 
     # Create workspaces
     dataset.metadata_generation_workspace.mkdir(parents=True)
@@ -535,16 +554,20 @@ def test_reset_dataset(requests_mock, config):
     assert FileError.objects.all()[0].file_id == "file-id-3"
 
 
-def test_workflow_conflict(config):
+def test_workflow_conflict(config, requests_mock):
     """Test starting another workflow for dataset.
 
     Tests that new workflows can not be started when dataset
     already has an active workflow.
 
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
+    # Mock metax
+    add_metax_dataset(requests_mock)
+
     # Add a sample workflow to database
-    dataset = Dataset("dataset1", config=config)
+    dataset = Dataset("test_dataset_id", config=config)
     dataset.validate()
 
     # Try to start another workflow
@@ -556,7 +579,7 @@ def test_workflow_conflict(config):
     active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     assert active_datasets[0].target.value == 'validation'
-    assert active_datasets[0].identifier == 'dataset1'
+    assert active_datasets[0].identifier == "test_dataset_id"
 
     # New workflow can be started when the previous workflow is
     # disabled
@@ -568,7 +591,39 @@ def test_workflow_conflict(config):
     active_datasets = find_datasets(enabled=True, config=config)
     assert len(active_datasets) == 1
     assert active_datasets[0].target.value == 'preservation'
-    assert active_datasets[0].identifier == 'dataset1'
+    assert active_datasets[0].identifier == "test_dataset_id"
+
+
+@pytest.mark.parametrize(
+    ["method_name", "arguments"],
+    [
+        ("generate_metadata", ()),
+        ("validate", ()),
+        ("preserve", ()),
+        ("reset", ("foo", "bar")),
+    ]
+)
+def test_already_preserved(config, requests_mock, method_name, arguments):
+    """Test that preserved dataset can not be preserved again.
+
+    Initializing any workflow for dataset that has already been
+    preserved is not allowed. Exception should be raised.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    :param method_name: Name of the method that will be tested
+    :param arguments: Arguments for the method
+    """
+    # Mock Metax. Create a dataset that is already in preservation.
+    dataset_metadata = copy.deepcopy(DATASET)
+    dataset_metadata["preservation"]["pas_package_created"] = True
+    add_metax_dataset(requests_mock, dataset=dataset_metadata)
+
+    dataset = Dataset("test_dataset_id", config=config)
+    method = getattr(dataset, method_name)
+
+    with pytest.raises(AlreadyPreservedError):
+        method(*arguments)
 
 
 @pytest.mark.parametrize(

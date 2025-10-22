@@ -11,6 +11,7 @@ from metax_access import (
     DS_STATE_PACKAGING_FAILED,
     DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
 )
+from metax_access.template_data import DATASET
 
 from siptools_research.dataset import Dataset, find_datasets
 from siptools_research.exceptions import (
@@ -24,9 +25,9 @@ from siptools_research.exceptions import (
     MissingFileError,
 )
 from siptools_research.metax import get_metax_client
-from siptools_research.workflowtask import WorkflowTask
 from siptools_research.models.file_error import FileError
-from metax_access.template_data import DATASET
+from siptools_research.workflowtask import WorkflowTask
+import tests.utils
 
 
 # pylint: disable=too-few-public-methods
@@ -169,15 +170,21 @@ class MetaxTask(WorkflowTask):
         metax_client.get_dataset('1')
 
 
-def test_run_workflowtask(config, workspace):
+def test_run_workflowtask(config, workspace, requests_mock):
     """Test WorkflowTask execution.
 
     Executes a DummyTask, checks that output file is created, checks
     that new task is added to task log.
 
+    :param config: Configuration file
     :param workspace: temporary directory
-    :returns: ``None``
+    :param request_mock: HTTP request mocker
     """
+    # Mock Metax
+    dataset_metadata = copy.deepcopy(DATASET)
+    dataset_metadata["id"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset_metadata)
+
     # Add a workflow to database
     dataset = Dataset(workspace.name, config=config)
     dataset.preserve()
@@ -206,7 +213,7 @@ def test_run_workflowtask(config, workspace):
     assert len(find_datasets(config=config)) == 1
 
 
-def test_run_workflow_target_task(config, workspace):
+def test_run_workflow_target_task(config, workspace, requests_mock):
     """Test running target task of the workflow.
 
     Create a workflow with DummyTask as target Task. Check that workflow
@@ -214,7 +221,13 @@ def test_run_workflow_target_task(config, workspace):
 
     :param config: Configuration file
     :param workspace: temporary directory
+    :param request_mock: HTTP request mocker
     """
+    # Mock Metax
+    dataset_metadata = copy.deepcopy(DATASET)
+    dataset_metadata["id"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset_metadata)
+
     # Add workflow to database
     Dataset(workspace.name, config=config).preserve()
 

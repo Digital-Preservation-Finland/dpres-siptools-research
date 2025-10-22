@@ -329,7 +329,10 @@ class Dataset:
         :returns: ``None``
         """
         if self.enabled:
-            raise WorkflowExistsError()
+            raise WorkflowExistsError
+
+        if self._is_preserved:
+            raise AlreadyPreservedError
 
         # Clear the workspaces
         for path in [self.validation_workspace, self.preservation_workspace]:
@@ -345,7 +348,10 @@ class Dataset:
         :returns: ``None``
         """
         if self.enabled:
-            raise WorkflowExistsError()
+            raise WorkflowExistsError
+
+        if self._is_preserved:
+            raise AlreadyPreservedError
 
         # Clear the preservation workspace
         _delete_directory(self.preservation_workspace)
@@ -361,7 +367,10 @@ class Dataset:
         errors.
         """
         if self.enabled:
-            raise WorkflowExistsError()
+            raise WorkflowExistsError
+
+        if self._is_preserved:
+            raise AlreadyPreservedError
 
         self.set_preservation_state(DS_STATE_INITIALIZED, description)
         self.set_preservation_reason(reason_description)

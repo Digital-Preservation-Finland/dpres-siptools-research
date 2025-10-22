@@ -1,4 +1,7 @@
 """Tests for :mod:`siptools_research.workflow_init` module."""
+import copy
+
+from metax_access.template_data import DATASET
 import pytest
 
 from siptools_research.dataset import (
@@ -10,9 +13,10 @@ from siptools_research.workflow.generate_metadata import GenerateMetadata
 from siptools_research.workflow_init import InitWorkflows
 from siptools_research.workflow.report_dataset_validation_result import \
     ReportDatasetValidationResult
+import tests.utils
 
 
-def test_initworkflows(config):
+def test_initworkflows(config, requests_mock):
     """Test InitWorkflows task.
 
     Add few sample workflows to database and test that
@@ -20,7 +24,14 @@ def test_initworkflows(config):
     for each incomplete workflow in database.
 
     :param config: Configuration file
+    :param requests_mock: HTTP request mocker
     """
+    # Mock metax
+    for dataset_id in ["dataset1", "dataset2", "dataset3"]:
+        dataset = copy.deepcopy(DATASET)
+        dataset["id"] = dataset_id
+        tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
+
     # Add sample workflows to database
     Dataset('dataset1', config=config).preserve()
     dataset_2 = Dataset('dataset2', config=config)
