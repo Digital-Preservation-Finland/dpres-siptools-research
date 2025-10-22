@@ -9,6 +9,7 @@ from metax_access import (
     DS_STATE_INITIALIZED,
     DS_STATE_GENERATING_METADATA,
     DS_STATE_VALIDATING_METADATA,
+    DS_STATE_IN_PACKAGING_SERVICE,
 )
 
 from siptools_research.config import Configuration
@@ -358,6 +359,11 @@ class Dataset:
 
         if self._is_preserved:
             raise AlreadyPreservedError
+
+        self.set_preservation_state(
+            DS_STATE_IN_PACKAGING_SERVICE,
+            "Packaging dataset",
+        )
 
         # Clear the preservation workspace
         _delete_directory(self.preservation_workspace)
