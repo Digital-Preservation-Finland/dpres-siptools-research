@@ -360,6 +360,9 @@ class Dataset:
         if self._is_preserved:
             raise AlreadyPreservedError
 
+        # TODO: ensure that user has confirmed metadata, before dataset
+        # is preserved
+
         self.set_preservation_state(
             DS_STATE_IN_PACKAGING_SERVICE,
             "Packaging dataset",
@@ -380,6 +383,9 @@ class Dataset:
         """
         if self.enabled:
             raise WorkflowExistsError
+
+        if self._has_been_copied_to_pas_datacatalog:
+            raise CopiedToPasDataCatalogError
 
         if self._is_preserved:
             raise AlreadyPreservedError
