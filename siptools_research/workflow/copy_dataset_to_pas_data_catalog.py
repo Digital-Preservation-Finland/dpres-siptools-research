@@ -1,7 +1,6 @@
 """Task that copies dataset metadata to PAS data catalog."""
 
 from luigi import LocalTarget
-from metax_access import DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
 
 from siptools_research.workflow.validate_files import ValidateFiles
 from siptools_research.workflow.validate_metadata import ValidateMetadata
@@ -10,13 +9,6 @@ from siptools_research.workflowtask import WorkflowTask
 
 class CopyToPasDataCatalog(WorkflowTask):
     """Task that copies dataset metadata to PAS data catalog.
-
-    This task sets preservation status of dataset to
-    DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION. If the dataset is in IDA
-    data catalog, Metax copies the dataset to PAS data catalog. The
-    preservation state of the original dataset will be set to
-    DS_STATE_INITIALIZED. If the dataset already is in PAS data catalog,
-    this task only sets the preservation state.
 
     A false target `copy-to-pas-data-catalog.finished` is
     created into workspace directory to notify luigi (and dependent
@@ -53,18 +45,6 @@ class CopyToPasDataCatalog(WorkflowTask):
 
         :returns: ``None``
         """
-        if self.dataset.preservation_state \
-                < DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION:
-            # TODO: The preservation description will be shown to user
-            # in management interface, so potentially confusing messages
-            # should be avoided. Note that DS_STATE_IN_PACKAGING_SERVICE
-            # would be more logical at this point, but Metax does not
-            # allow setting the preservation state higher than 80.
-            self.dataset.set_preservation_state(
-                DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
-                'Packaging dataset'
-            )
-
         self.dataset.copy_to_pas_datacatalog()
 
         with self.output().open('w') as output:

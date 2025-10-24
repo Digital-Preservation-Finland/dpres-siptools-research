@@ -5,7 +5,7 @@ import luigi
 import pytest
 import requests
 from metax_access import (
-    DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION,
+    DS_STATE_IN_PACKAGING_SERVICE,
     DS_STATE_GENERATING_METADATA,
     DS_STATE_INVALID_METADATA,
     DS_STATE_PACKAGING_FAILED,
@@ -612,9 +612,8 @@ def test_packaging_failed(config, workspace, requests_mock):
     # Mock Metax
     json = copy.deepcopy(DATASET)
     json["id"] = workspace.name
-    # DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION means that packaging has
-    # started
-    json["preservation"]["state"] = DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION
+    # DS_STATE_IN_PACKAGING_SERVICE means that packaging has started
+    json["preservation"]["state"] = DS_STATE_IN_PACKAGING_SERVICE
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=json)
     patch_preservation = requests_mock.patch(
         f"/v3/datasets/{workspace.name}/preservation"

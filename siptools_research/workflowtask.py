@@ -2,8 +2,12 @@
 from collections import defaultdict
 
 import luigi
-from metax_access import (DS_STATE_INVALID_METADATA, DS_STATE_PACKAGING_FAILED,
-                          DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE)
+from metax_access import (
+    DS_STATE_IN_PACKAGING_SERVICE,
+    DS_STATE_INVALID_METADATA,
+    DS_STATE_PACKAGING_FAILED,
+    DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
+)
 
 from siptools_research.dataset import Dataset
 from siptools_research.exceptions import (BulkInvalidDatasetFileError,
@@ -117,14 +121,11 @@ def report_task_failure(task, exception):
         if isinstance(exception, InvalidSIPError):
             new_preservation_state \
                 = DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE
-        elif task.dataset.preservation_state >= 80:
-            # TODO: DS_STATE_INVALID_METADATA can not be used if current
-            # preservation state is higher than
-            # DS_STATE_ACCEPTED_TO_DIGITAL_PRESERVATION, i.e. when
-            # packaging has been started. Therefore,
-            # DS_STATE_PACKAGING_FAILED is used even if the failure was
-            # caused by invalid metadata. This can be removed if Metax
-            # allows DS_STATE_INVALID_METADATA!
+        elif task.dataset.preservation_state >= DS_STATE_IN_PACKAGING_SERVICE:
+            # TODO: For historical reasons, DS_STATE_PACKAGING_FAILED is
+            # used when packaging fails, even if the failure was caused
+            # by invalid metadata. But DS_STATE_INVALID_METADATA
+            # probably could be used as well.
             new_preservation_state = DS_STATE_PACKAGING_FAILED
         else:
             # Also invalid or missing files could be reason for failure,
