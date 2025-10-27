@@ -1,4 +1,6 @@
 """Tests for ``siptools_research.api.dataset`` module."""
+from metax_access import DS_STATE_REJECTED_BY_USER
+
 import tests.utils
 from siptools_research.dataset import Dataset
 
@@ -94,3 +96,31 @@ def test_validate_dataset(client, config, requests_mock):
     dataset = Dataset("test_dataset_id", config=config)
     assert dataset.enabled
     assert dataset.target.value == "validation"
+
+
+def test_dataset_reject(client, requests_mock):
+    """Test rejecting the dataset.
+
+    :param client: Flask test client
+    :param requests_mock: HTTP Request mocker
+    """
+    # Mock Metax
+    tests.utils.add_metax_dataset(requests_mock)
+    preservation_patch = requests_mock.patch(
+        "/v3/datasets/test_dataset_id/preservation", json={}
+    )
+
+    response = client.post(
+        "/dataset/test_dataset_id/reject",
+    )
+    assert response.status_code == 200
+    assert response.json == {
+        "dataset_id": "test_dataset_id",
+        "status": "dataset has been rejected"
+    }
+
+    assert preservation_patch.called_once
+    assert preservation_patch.last_request.json() == {
+        "state": DS_STATE_REJECTED_BY_USER,
+        "description": {"en": "Rejected by user"}
+    }

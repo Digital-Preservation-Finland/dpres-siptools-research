@@ -79,3 +79,21 @@ def reset(dataset_id: str):
     })
 
     return response
+
+
+@dataset.route("/<dataset_id>/reject", methods=["POST"])
+def reject(dataset_id: str):
+    """Reject dataset.
+
+    :param dataset_id: Identifier of dataset
+    :returns: HTTP response
+    """
+    Dataset(
+        identifier=dataset_id,
+        config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
+    ).reject()
+
+    return jsonify({
+        "dataset_id": dataset_id,
+        "status": "dataset has been rejected"
+    })

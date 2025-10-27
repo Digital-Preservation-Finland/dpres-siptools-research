@@ -3,7 +3,10 @@ import copy
 import datetime
 
 import pytest
-from metax_access import DS_STATE_INITIALIZED
+from metax_access import (
+    DS_STATE_REJECTED_BY_USER,
+    DS_STATE_INITIALIZED,
+)
 from metax_access.template_data import DATASET, FILE
 
 from siptools_research.dataset import Dataset, find_datasets
@@ -552,6 +555,31 @@ def test_reset_dataset(requests_mock, config):
     # File errors for the two files are removed
     assert FileError.objects.count() == 1
     assert FileError.objects.all()[0].file_id == "file-id-3"
+
+
+def test_reject_dataset(requests_mock, config):
+    """Test reject method of Dataset.
+
+    Tests that that preservation state is updated.
+
+    :param requests_mock: HTTP request mocker
+    :param config: Configuration file
+    """
+    # Mock Metax
+    add_metax_dataset(requests_mock)
+    preservation_patch = requests_mock.patch(
+        f"/v3/datasets/test_dataset_id/preservation", json={}
+    )
+
+    dataset = Dataset("test_dataset_id", config=config)
+    dataset.reject()
+
+    # Preservation state should be set
+    assert preservation_patch.called_once
+    assert preservation_patch.last_request.json() == {
+        "state": DS_STATE_REJECTED_BY_USER,
+        "description": {"en": "Rejected by user"}
+    }
 
 
 def test_workflow_conflict(config, requests_mock):

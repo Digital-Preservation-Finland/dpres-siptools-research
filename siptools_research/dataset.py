@@ -10,6 +10,7 @@ from metax_access import (
     DS_STATE_GENERATING_METADATA,
     DS_STATE_VALIDATING_METADATA,
     DS_STATE_IN_PACKAGING_SERVICE,
+    DS_STATE_REJECTED_BY_USER,
 )
 
 from siptools_research.config import Configuration
@@ -395,6 +396,20 @@ class Dataset:
 
         # Unlock dataset
         self.unlock()
+
+    def reject(self) -> None:
+        """Reject dataset.
+
+        Sets preservation status to DS_STATE_REJECTED_BY_USER.
+        """
+        if self.enabled:
+            raise WorkflowExistsError
+
+        if self._is_preserved:
+            raise AlreadyPreservedError
+
+        self.set_preservation_state(DS_STATE_REJECTED_BY_USER,
+                                    "Rejected by user")
 
 
 def find_datasets(
