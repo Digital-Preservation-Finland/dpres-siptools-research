@@ -4,6 +4,7 @@ import datetime
 
 import pytest
 from metax_access import (
+    DS_STATE_METADATA_CONFIRMED,
     DS_STATE_REJECTED_BY_USER,
     DS_STATE_INITIALIZED,
 )
@@ -474,6 +475,30 @@ def test_restart_preserve_dataset(config, requests_mock):
 
     # Preservation workspace should be cleaned
     assert not any(dataset.preservation_workspace.iterdir())
+
+
+def test_confirm_dataset(requests_mock, config):
+    """Test confirming dataset metadata.
+
+    Tests that preservation state is updated when dataset metadata is
+    confirmed.
+
+    :param requests_mock: HTTP request mocker
+    :param config: Configuration file
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
+    patch_preservation = requests_mock.patch(
+        f"/v3/datasets/{dataset['id']}/preservation", json={}
+    )
+
+    Dataset(dataset["id"], config=config).confirm()
+
+    assert patch_preservation.last_request.json() == {
+        "state": DS_STATE_METADATA_CONFIRMED,
+        "description": {"en": "Metadata confirmed by user"}
+    }
 
 
 def test_reset_dataset(requests_mock, config):

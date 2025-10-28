@@ -56,6 +56,24 @@ def generate_metadata(dataset_id):
     return response
 
 
+@dataset.route("/<dataset_id>/confirm", methods=["POST"])
+def confirm(dataset_id: str):
+    """Confirm dataset.
+
+    :param dataset_id: Identifier of dataset
+    :returns: HTTP response
+    """
+    Dataset(
+        identifier=dataset_id,
+        config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
+    ).confirm()
+
+    return jsonify({
+        "dataset_id": dataset_id,
+        "status": "dataset metadata has been confirmed"
+    })
+
+
 @dataset.route('/<dataset_id>/reset', methods=['POST'])
 def reset(dataset_id: str):
     """Reset dataset.

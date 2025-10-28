@@ -1,5 +1,8 @@
 """Tests for ``siptools_research.api.dataset`` module."""
-from metax_access import DS_STATE_REJECTED_BY_USER
+from metax_access import (
+    DS_STATE_METADATA_CONFIRMED,
+    DS_STATE_REJECTED_BY_USER,
+)
 
 import tests.utils
 from siptools_research.dataset import Dataset
@@ -47,6 +50,31 @@ def test_dataset_generate_metadata(client, config, requests_mock):
     dataset = Dataset("test_dataset_id", config=config)
     assert dataset.enabled is True
     assert dataset.target.value == "metadata_generation"
+
+
+def test_dataset_confirm(client, requests_mock):
+    """Test confirming dataset.
+
+    :param client: Flask test client
+    :param requests_mock: HTTP Request mocker
+    """
+    # Mock Metax
+    tests.utils.add_metax_dataset(requests_mock)
+    preservation_patch = requests_mock.patch(
+        "/v3/datasets/test_dataset_id/preservation", json={}
+    )
+
+    response = client.post("/dataset/test_dataset_id/confirm")
+    assert response.status_code == 200
+    assert response.json == {
+        "dataset_id": "test_dataset_id",
+        "status": "dataset metadata has been confirmed"
+    }
+
+    assert preservation_patch.last_request.json() == {
+        "state": DS_STATE_METADATA_CONFIRMED,
+        "description": {"en": "Metadata confirmed by user"}
+    }
 
 
 def test_dataset_reset(client, requests_mock):

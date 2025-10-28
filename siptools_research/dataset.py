@@ -8,6 +8,7 @@ from pathlib import Path
 from metax_access import (
     DS_STATE_INITIALIZED,
     DS_STATE_GENERATING_METADATA,
+    DS_STATE_METADATA_CONFIRMED,
     DS_STATE_VALIDATING_METADATA,
     DS_STATE_IN_PACKAGING_SERVICE,
     DS_STATE_REJECTED_BY_USER,
@@ -375,6 +376,22 @@ class Dataset:
         self.preservation_workspace.mkdir(parents=True)
 
         self._set_target(Target.PRESERVATION)
+
+    def confirm(self) -> None:
+        """Confirm dataset metadata."""
+        # TODO: Confirmation should not be allowed if metadata has not
+        # been generated.
+
+        # Confirming metadata of dataset is pointless, if dataset is
+        # already preserved
+        if self._is_preserved:
+            raise AlreadyPreservedError
+
+        # TODO: Resetting dataset or restarting metadata generation
+        # should undo the confirmation.
+        self.set_preservation_state(
+            DS_STATE_METADATA_CONFIRMED, "Metadata confirmed by user"
+        )
 
     def reset(self, description: str, reason_description: str) -> None:
         """Reset dataset.
