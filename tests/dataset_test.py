@@ -4,9 +4,12 @@ import datetime
 
 import pytest
 from metax_access import (
+    DS_STATE_GENERATING_METADATA,
+    DS_STATE_INITIALIZED,
+    DS_STATE_IN_PACKAGING_SERVICE,
     DS_STATE_METADATA_CONFIRMED,
     DS_STATE_REJECTED_BY_USER,
-    DS_STATE_INITIALIZED,
+    DS_STATE_VALIDATING_METADATA,
 )
 from metax_access.template_data import DATASET, FILE
 
@@ -301,14 +304,20 @@ def test_task_log(config):
 def test_generate_metadata(config, requests_mock):
     """Test generate_metadata function.
 
-    Tests that `generate_metadata` sets correct target for workflow of
-    the dataset, and creates metadata generation workspace.
+    Tests that `generate_metadata`
+
+    * sets correct target for workflow of the dataset
+    * creates metadata generation workspace.
+    * sets preservation state
 
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
     add_metax_dataset(requests_mock)
+    patch_preservation = requests_mock.patch(
+        "/v3/datasets/test_dataset_id/preservation", json={}
+    )
 
     Dataset("test_dataset_id", config=config).generate_metadata()
 
@@ -321,6 +330,12 @@ def test_generate_metadata(config, requests_mock):
 
     # Metadata generation workspace should be created
     assert dataset.metadata_generation_workspace.exists()
+
+    # Preservation state should be set
+    assert patch_preservation.last_request.json() == {
+        "state": DS_STATE_GENERATING_METADATA,
+        "description": {"en": "File identification started by user"}
+    }
 
 
 def test_restart_generate_metadata(config, requests_mock):
@@ -354,14 +369,20 @@ def test_restart_generate_metadata(config, requests_mock):
 def test_validate_dataset(config, requests_mock):
     """Test validate_dataset function.
 
-    Tests that `validate_dataset` sets correct target for workflow of
-    the dataset, and creates validation workspace.
+    Tests that `validate_dataset`
+
+    * sets correct target for workflow of the dataset
+    * creates validation workspace
+    * sets preservation state
 
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     """
     # Mock metax
     add_metax_dataset(requests_mock)
+    patch_preservation = requests_mock.patch(
+        "/v3/datasets/test_dataset_id/preservation", json={}
+    )
 
     Dataset("test_dataset_id", config=config).validate()
 
@@ -374,6 +395,12 @@ def test_validate_dataset(config, requests_mock):
 
     # Validation workspace should be created
     assert dataset.validation_workspace.exists()
+
+    # Preservation state should be set
+    assert patch_preservation.last_request.json() == {
+        "state": DS_STATE_VALIDATING_METADATA,
+        "description": {"en": "Proposed for preservation by user"}
+    }
 
 
 def test_restart_validate_metadata(config, requests_mock):
@@ -416,14 +443,20 @@ def test_restart_validate_metadata(config, requests_mock):
 def test_preserve_dataset(config, requests_mock):
     """Test preserve_dataset function.
 
-    Tests that `prserve_dataset` sets correct target for workflow of
-    the dataset, and creates preservation workspace.
+    Tests that `prserve_dataset`
+
+    * sets correct target for workflow of the dataset
+    * creates preservation workspace
+    * sets preservation state
 
     :param config: Configuration file
     :param requests_mock: HTTP request mocker
     """
     # Mock metax
     add_metax_dataset(requests_mock)
+    patch_preservation = requests_mock.patch(
+        "/v3/datasets/test_dataset_id/preservation", json={}
+    )
 
     Dataset("test_dataset_id", config=config).preserve()
 
@@ -436,6 +469,12 @@ def test_preserve_dataset(config, requests_mock):
 
     # Preservation workspace should be created
     assert dataset.preservation_workspace.exists()
+
+    # Preservation state should be set
+    assert patch_preservation.last_request.json() == {
+        "state": DS_STATE_IN_PACKAGING_SERVICE,
+        "description": {"en": "Packaging dataset"}
+    }
 
 
 def test_restart_preserve_dataset(config, requests_mock):
