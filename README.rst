@@ -92,7 +92,7 @@ Once some workflows have been activated, all enabled workflows can be manually s
 
     luigi --local-scheduler --module siptools_research.workflow_init InitWorkflows --config include/etc/siptools_research.conf
 
-To start workflows automatically, run the command for example using crontab or systemd timer. For production, use the [systemd timer](include/etc/siptools_research.conf) shipped with the RPM.
+To start workflows automatically, run the command for example using crontab or systemd timer. For production, use the `systemd timer <include/rhel9/SOURCES/siptools-research.timer>`_ shipped with the RPM.
 
 CLI
 ^^^
