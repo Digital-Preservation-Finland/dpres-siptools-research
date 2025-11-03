@@ -1,4 +1,4 @@
-"""Test the :mod:`siptools_research.workflow.get_files` module."""
+"""Test the :mod:`siptools_research.tasks.get_files` module."""
 import copy
 
 import pytest
@@ -8,7 +8,7 @@ from siptools_research.exceptions import (
     InvalidFileMetadataError,
     MissingFileError,
 )
-from siptools_research.workflow import get_files
+from siptools_research.tasks import get_files
 from metax_access.template_data import DATASET, FILE
 from tests.metax_data.files import (
     PAS_STORAGE_SERVICE,

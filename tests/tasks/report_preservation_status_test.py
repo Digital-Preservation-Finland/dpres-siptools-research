@@ -5,7 +5,7 @@ import re
 import pytest
 
 from siptools_research.exceptions import InvalidDatasetError
-from siptools_research.workflow import report_preservation_status
+from siptools_research.tasks import report_preservation_status
 from metax_access.template_data import DATASET
 
 

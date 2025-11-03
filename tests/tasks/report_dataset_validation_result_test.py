@@ -1,7 +1,7 @@
 """Unit tests for ReportDatasetValidationResult task."""
 from metax_access.metax import DS_STATE_DATASET_VALIDATED
 
-from siptools_research.workflow import report_dataset_validation_result
+from siptools_research.tasks import report_dataset_validation_result
 from metax_access.template_data import DATASET
 
 

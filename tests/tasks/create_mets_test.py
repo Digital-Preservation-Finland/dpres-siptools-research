@@ -1,4 +1,4 @@
-"""Tests for module :mod:`siptools_research.workflow.create_mets`."""
+"""Tests for module :mod:`siptools_research.tasks.create_mets`."""
 import copy
 
 import lxml.etree
@@ -6,7 +6,7 @@ import pytest
 
 import tests.utils
 from siptools_research.exceptions import InvalidFileMetadataError
-from siptools_research.workflow.create_mets import CreateMets
+from siptools_research.tasks.create_mets import CreateMets
 from tests.metax_data.datasets import (BASE_DATACITE, BASE_PROVENANCE,
                                        FULL_PROVENANCE)
 from metax_access.template_data import DATASET, CONTRACT

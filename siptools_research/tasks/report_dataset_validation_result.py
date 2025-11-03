@@ -4,8 +4,8 @@ from luigi import LocalTarget
 from metax_access import DS_STATE_DATASET_VALIDATED
 
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.validate_metadata import ValidateMetadata
-from siptools_research.workflow.validate_files import ValidateFiles
+from siptools_research.tasks.validate_metadata import ValidateMetadata
+from siptools_research.tasks.validate_files import ValidateFiles
 
 
 class ReportDatasetValidationResult(WorkflowTask):

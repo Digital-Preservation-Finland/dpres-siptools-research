@@ -5,7 +5,7 @@ from luigi import LocalTarget
 
 from siptools_research.file_validator import validate_files
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.get_files import GetFiles
+from siptools_research.tasks.get_files import GetFiles
 
 
 class ValidateFiles(WorkflowTask):

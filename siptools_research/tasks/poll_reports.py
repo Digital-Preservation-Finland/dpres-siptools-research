@@ -6,7 +6,7 @@ from luigi import LocalTarget
 
 from siptools_research.dps import get_dps
 from siptools_research.metax import get_metax_client
-from siptools_research.workflow.send_sip import SendSIPToDP
+from siptools_research.tasks.send_sip import SendSIPToDP
 from siptools_research.workflowtask import WorkflowExternalTask
 
 

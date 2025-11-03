@@ -4,9 +4,9 @@ import luigi
 from siptools_research.dataset import find_datasets, Target
 
 from siptools_research.database import connect_mongoengine
-from siptools_research.workflow.cleanup import Cleanup
-from siptools_research.workflow.generate_metadata import GenerateMetadata
-from siptools_research.workflow.report_dataset_validation_result\
+from siptools_research.tasks.cleanup import Cleanup
+from siptools_research.tasks.generate_metadata import GenerateMetadata
+from siptools_research.tasks.report_dataset_validation_result\
     import ReportDatasetValidationResult
 
 TARGET_TASKS = {

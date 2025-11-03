@@ -1,11 +1,11 @@
-"""Tests for :mod:`siptools_research.workflow.validate_metadata`."""
+"""Tests for :mod:`siptools_research.tasks.validate_metadata`."""
 
 import copy
 
 import pytest
 
 from siptools_research.exceptions import InvalidDatasetMetadataError
-from siptools_research.workflow.validate_metadata import ValidateMetadata
+from siptools_research.tasks.validate_metadata import ValidateMetadata
 from metax_access.template_data import DATASET
 from tests.metax_data.files import TXT_FILE
 from tests.utils import add_metax_dataset

@@ -7,7 +7,7 @@ from metax_access import DS_STATE_TECHNICAL_METADATA_GENERATED
 
 from siptools_research.metadata_generator import generate_metadata
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.get_files import GetFiles
+from siptools_research.tasks.get_files import GetFiles
 
 
 class GenerateMetadata(WorkflowTask):

@@ -6,7 +6,7 @@ import luigi
 from datetime import datetime, timezone
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.compress import CompressSIP
+from siptools_research.tasks.compress import CompressSIP
 
 
 class SendSIPToDP(WorkflowTask):

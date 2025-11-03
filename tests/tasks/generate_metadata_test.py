@@ -5,7 +5,7 @@ from metax_access.metax import DS_STATE_TECHNICAL_METADATA_GENERATED
 
 import tests.metax_data.reference_data
 import tests.utils
-from siptools_research.workflow import generate_metadata
+from siptools_research.tasks import generate_metadata
 from metax_access.template_data import DATASET
 from tests.metax_data.files import TXT_FILE
 

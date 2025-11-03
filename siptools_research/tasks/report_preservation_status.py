@@ -6,8 +6,8 @@ from luigi import LocalTarget
 from metax_access import DS_STATE_IN_DIGITAL_PRESERVATION
 
 from siptools_research.exceptions import InvalidSIPError
-from siptools_research.workflow.poll_reports import GetValidationReports
-from siptools_research.workflow.send_sip import SendSIPToDP
+from siptools_research.tasks.poll_reports import GetValidationReports
+from siptools_research.tasks.send_sip import SendSIPToDP
 from siptools_research.workflowtask import WorkflowTask
 
 

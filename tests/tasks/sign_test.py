@@ -1,8 +1,8 @@
-"""Test the :mod:`siptools_research.workflow.sign` module."""
+"""Test the :mod:`siptools_research.tasks.sign` module."""
 
 import shutil
 
-from siptools_research.workflow import sign
+from siptools_research.tasks import sign
 
 
 def test_signsip(config, workspace):

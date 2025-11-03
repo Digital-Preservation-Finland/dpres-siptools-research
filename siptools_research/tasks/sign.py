@@ -6,7 +6,7 @@ import dpres_signature.signature
 
 from siptools_research.config import Configuration
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.create_mets import CreateMets
+from siptools_research.tasks.create_mets import CreateMets
 
 
 class SignSIP(WorkflowTask):

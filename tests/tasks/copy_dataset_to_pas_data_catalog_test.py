@@ -7,7 +7,7 @@ from metax_access import (
     DS_STATE_DATASET_VALIDATED,
 )
 
-from siptools_research.workflow import copy_dataset_to_pas_data_catalog
+from siptools_research.tasks import copy_dataset_to_pas_data_catalog
 from metax_access.template_data import DATASET
 
 

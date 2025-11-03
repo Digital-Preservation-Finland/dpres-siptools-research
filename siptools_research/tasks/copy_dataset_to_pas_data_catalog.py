@@ -2,8 +2,8 @@
 
 from luigi import LocalTarget
 
-from siptools_research.workflow.validate_files import ValidateFiles
-from siptools_research.workflow.validate_metadata import ValidateMetadata
+from siptools_research.tasks.validate_files import ValidateFiles
+from siptools_research.tasks.validate_metadata import ValidateMetadata
 from siptools_research.workflowtask import WorkflowTask
 
 

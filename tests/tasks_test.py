@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`siptools_research.workflow` package."""
+"""Unit tests for :mod:`siptools_research.tasks` package."""
 import copy
 import filecmp
 import importlib
@@ -12,7 +12,7 @@ import pytest
 from lxml.isoschematron import Schematron
 from upload_rest_api.models.file_entry import FileEntry
 
-import siptools_research.workflow.compress
+import siptools_research.tasks.compress
 import tests.metax_data.reference_data
 import tests.utils
 from siptools_research.models.dataset_entry import DatasetWorkflowEntry
@@ -110,7 +110,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     mongodb, paramiko.SSHClient and RemoteAnyTarget are mocked.
 
     :param workspace: temporary workspace directory
-    :param module_name: submodule of siptools_research.workflow that
+    :param module_name: submodule of siptools_research.tasks that
                         contains Task to be tested
     :param task: Task class name
     :param requests_mock: HTTP request mocker
@@ -163,7 +163,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=html',
                       content=b'<hello world/>')
 
-    module = importlib.import_module('siptools_research.workflow.'
+    module = importlib.import_module('siptools_research.tasks.'
                                      + module_name)
     task_class = getattr(module, task)
 
@@ -335,7 +335,7 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
                 )
 
     assert luigi.build(
-        [siptools_research.workflow.compress.CompressSIP(
+        [siptools_research.tasks.compress.CompressSIP(
             dataset_id=workspace.name,
             config=config
         )],

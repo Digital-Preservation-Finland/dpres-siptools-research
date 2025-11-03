@@ -1,11 +1,11 @@
-"""Unit tests for :mod:`siptools_research.workflow.validate_sip`."""
+"""Unit tests for :mod:`siptools_research.tasks.validate_sip`."""
 import copy
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
-from siptools_research.workflow.poll_reports import GetValidationReports
+from siptools_research.tasks.poll_reports import GetValidationReports
 from metax_access.template_data import DATASET
 
 

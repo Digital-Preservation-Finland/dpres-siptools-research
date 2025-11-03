@@ -3,9 +3,9 @@
 import tarfile
 import luigi
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.create_mets import CreateMets
-from siptools_research.workflow.get_files import GetFiles
-from siptools_research.workflow.sign import SignSIP
+from siptools_research.tasks.create_mets import CreateMets
+from siptools_research.tasks.get_files import GetFiles
+from siptools_research.tasks.sign import SignSIP
 
 
 class CompressSIP(WorkflowTask):

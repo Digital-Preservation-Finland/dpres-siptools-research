@@ -2,7 +2,7 @@
 import shutil
 
 from siptools_research.workflowtask import WorkflowTask
-from siptools_research.workflow.report_preservation_status \
+from siptools_research.tasks.report_preservation_status \
     import ReportPreservationStatus
 
 

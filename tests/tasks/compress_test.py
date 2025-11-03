@@ -1,8 +1,8 @@
-"""Tests for :mod:`siptools_research.workflow.compress` module."""
+"""Tests for :mod:`siptools_research.tasks.compress` module."""
 import shutil
 import tarfile
 
-from siptools_research.workflow.compress import CompressSIP
+from siptools_research.tasks.compress import CompressSIP
 
 
 def test_compresssip(config, workspace, tmp_path):

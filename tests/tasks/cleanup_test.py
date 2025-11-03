@@ -1,5 +1,5 @@
-"""Tests for :mod:`siptools_research.workflow.cleanup` module."""
-from siptools_research.workflow.cleanup import Cleanup
+"""Tests for :mod:`siptools_research.tasks.cleanup` module."""
+from siptools_research.tasks.cleanup import Cleanup
 
 
 def test_cleanup(config, workspace):

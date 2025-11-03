@@ -1,9 +1,9 @@
-"""Unit tests for :mod:`siptools_research.workflow.send_sip` module."""
+"""Unit tests for :mod:`siptools_research.tasks.send_sip` module."""
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
-from siptools_research.workflow.send_sip import SendSIPToDP
+from siptools_research.tasks.send_sip import SendSIPToDP
 
 
 def test_send_sip(workspace, mock_ssh_config, sftp_dir):
