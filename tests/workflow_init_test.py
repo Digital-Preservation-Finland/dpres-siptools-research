@@ -1,19 +1,17 @@
 """Tests for :mod:`siptools_research.workflow_init` module."""
 import copy
 
-from metax_access.template_data import DATASET
 import pytest
+from metax_access.template_data import DATASET
 
-from siptools_research.dataset import (
-    Dataset,
-    Target,
-)
+import tests.utils
 from siptools_research.tasks.cleanup import Cleanup
 from siptools_research.tasks.generate_metadata import GenerateMetadata
+from siptools_research.tasks.report_dataset_validation_result import (
+    ReportDatasetValidationResult,
+)
 from siptools_research.workflow_init import InitWorkflows
-from siptools_research.tasks.report_dataset_validation_result import \
-    ReportDatasetValidationResult
-import tests.utils
+from siptools_research.workflow import Target, Workflow
 
 
 def test_initworkflows(config, requests_mock):
@@ -33,11 +31,11 @@ def test_initworkflows(config, requests_mock):
         tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Add sample workflows to database
-    Dataset('dataset1', config=config).preserve()
-    dataset_2 = Dataset('dataset2', config=config)
+    Workflow("dataset1", config=config).preserve()
+    dataset_2 = Workflow("dataset2", config=config)
     dataset_2.preserve()
     dataset_2.disable()
-    Dataset('dataset3', config=config).preserve()
+    Workflow("dataset3", config=config).preserve()
 
     # Get list of tasks required by InitWorkflows task
     task = InitWorkflows(config=config)
@@ -67,10 +65,10 @@ def test_init_correct_task(config, target, target_task):
                         InitWorkflows
     """
     # Add a workflow to database
-    dataset = Dataset('dataset1', config=config)
+    workflow = Workflow("dataset1", config=config)
     # pylint: disable=protected-access
-    dataset._set_target(Target(target))
-    dataset.enable()
+    workflow._set_target(Target(target))
+    workflow.enable()
 
     task = InitWorkflows(config=config)
     required_tasks = list(task.requires())
@@ -78,6 +76,3 @@ def test_init_correct_task(config, target, target_task):
     # Check that the expected Task is required
     assert len(required_tasks) == 1
     assert isinstance(required_tasks[0], target_task)
-
-    # The required task should be the "target task"
-    assert required_tasks[0].is_target_task

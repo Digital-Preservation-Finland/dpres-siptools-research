@@ -60,7 +60,7 @@ class CreateMets(WorkflowTask):
 
     def output(self):
         return LocalTarget(
-            str(self.dataset.preservation_workspace / 'mets.xml'),
+            str(self.workspace.preservation / 'mets.xml'),
             format=luigi.format.Nop
         )
 
@@ -132,8 +132,9 @@ class CreateMets(WorkflowTask):
 
         for file_ in files_metadata:
             filepath = file_['pathname'].strip('/')
-            source_filepath = (self.dataset.metadata_generation_workspace
-                               / "dataset_files" / filepath)
+            source_filepath = (
+                self.workspace.metadata_generation / "dataset_files" / filepath
+            )
             sip_filepath = "dataset_files/" + filepath
             is_linked_bitlevel = bool(file_["pas_compatible_file"])
 

@@ -47,7 +47,7 @@ class ReportPreservationStatus(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            str(self.dataset.preservation_workspace
+            str(self.workspace.preservation
                 / 'report-preservation-status.finished')
         )
 

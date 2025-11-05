@@ -1,29 +1,14 @@
 """Dataset class."""
 
 import datetime
-import enum
-import shutil
-from pathlib import Path
-
-from metax_access import (
-    DS_STATE_INITIALIZED,
-    DS_STATE_GENERATING_METADATA,
-    DS_STATE_METADATA_CONFIRMED,
-    DS_STATE_VALIDATING_METADATA,
-    DS_STATE_IN_PACKAGING_SERVICE,
-    DS_STATE_REJECTED_BY_USER,
-)
 
 from siptools_research.config import Configuration
 from siptools_research.database import connect_mongoengine
-from siptools_research.exceptions import (
-    AlreadyPreservedError,
-    CopiedToPasDataCatalogError,
-    WorkflowExistsError,
-)
 from siptools_research.metax import get_metax_client
-from siptools_research.models.dataset_entry import (DatasetWorkflowEntry,
-                                                    TaskEntry)
+from siptools_research.models.dataset_entry import (
+    DatasetEntry,
+    TaskEntry,
+)
 from siptools_research.models.file_error import FileError
 
 PAS_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-pas"
@@ -36,14 +21,6 @@ def _timestamp():
     :returns: ISO 8601 string
     """
     return datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-
-class Target(enum.Enum):
-    """Target of a workflow."""
-
-    METADATA_GENERATION = "metadata_generation"
-    VALIDATION = "validation"
-    PRESERVATION = "preservation"
 
 
 class Dataset:
@@ -64,9 +41,9 @@ class Dataset:
         if self._document is None:
             try:
                 self._document = \
-                    DatasetWorkflowEntry.objects.get(id=self.identifier)
-            except DatasetWorkflowEntry.DoesNotExist:
-                self._document = DatasetWorkflowEntry(
+                    DatasetEntry.objects.get(id=self.identifier)
+            except DatasetEntry.DoesNotExist:
+                self._document = DatasetEntry(
                     id=self.identifier
                 )
 
@@ -205,55 +182,6 @@ class Dataset:
             or self._metadata["id"]
         )
 
-    @property
-    def target(self):
-        """Target of the workflow."""
-        if self._document.target:
-            target = Target(self._document["target"])
-        else:
-            target = None
-
-        return target
-
-    @property
-    def workspace_root(self):
-        """Root workspace directory."""
-        packaging_root = self.conf.get("packaging_root")
-        # Currently packaging_root contains only the workspace
-        # directories, but it might have other purposes in future, so
-        # workspaces are created in "workspaces" subdirectory.
-        return Path(packaging_root) / "workspaces" / self.identifier
-
-    @property
-    def metadata_generation_workspace(self):
-        """Return metadata generation workspace directory."""
-        return self.workspace_root / Target.METADATA_GENERATION.value
-
-    @property
-    def validation_workspace(self):
-        """Return validation workspace directory."""
-        return self.workspace_root / Target.VALIDATION.value
-
-    @property
-    def preservation_workspace(self):
-        """Return preservation workspace directory."""
-        return self.workspace_root / Target.PRESERVATION.value
-
-    @property
-    def enabled(self):
-        """Check if dataset has active workflow."""
-        return self._document.enabled
-
-    def disable(self):
-        """Disable workflow."""
-        self._document.enabled = False
-        self._document.save()
-
-    def enable(self):
-        """Enable workflow."""
-        self._document.enabled = True
-        self._document.save()
-
     # TODO: These task logs are not required anymore for anything else
     # than debugging purposes. Is anyone really using them, or could
     # they be removed? The luigi logs contain more or less the same
@@ -272,185 +200,3 @@ class Dataset:
             result=result
         )
         self._document.save()
-
-    def _set_target(self, target):
-        """Set target of workflow.
-
-        param Target target: The target of the workflow
-        """
-        self._document.target = target.value
-        self._document.enabled = True
-        self._document.save()
-
-    def generate_metadata(self):
-        """Generate dataset metadata.
-
-        :returns: ``None``
-        """
-        if self.enabled:
-            raise WorkflowExistsError
-
-        if self._has_been_copied_to_pas_datacatalog:
-            raise CopiedToPasDataCatalogError
-
-        if self._is_preserved:
-            raise AlreadyPreservedError
-
-        self.set_preservation_state(
-            DS_STATE_GENERATING_METADATA,
-            "File identification started by user",
-        )
-
-        # Clear the workspaces
-        for path in [
-            self.metadata_generation_workspace,
-            self.validation_workspace,
-            self.preservation_workspace,
-        ]:
-            _delete_directory(path)
-
-        self.metadata_generation_workspace.mkdir(parents=True)
-
-        self._set_target(Target.METADATA_GENERATION)
-
-    def validate(self):
-        """Validate metadata and files of dataset.
-
-        :returns: ``None``
-        """
-        if self.enabled:
-            raise WorkflowExistsError
-
-        if self._is_preserved:
-            raise AlreadyPreservedError
-
-        self.set_preservation_state(
-            DS_STATE_VALIDATING_METADATA,
-            "Proposed for preservation by user"
-        )
-
-        # Clear the workspaces
-        for path in [self.validation_workspace, self.preservation_workspace]:
-            _delete_directory(path)
-
-        self.validation_workspace.mkdir(parents=True)
-
-        self._set_target(Target.VALIDATION)
-
-    def preserve(self):
-        """Preserve dataset.
-
-        :returns: ``None``
-        """
-        if self.enabled:
-            raise WorkflowExistsError
-
-        if self._is_preserved:
-            raise AlreadyPreservedError
-
-        # TODO: ensure that user has confirmed metadata, before dataset
-        # is preserved
-
-        self.set_preservation_state(
-            DS_STATE_IN_PACKAGING_SERVICE,
-            "Packaging dataset",
-        )
-
-        # Clear the preservation workspace
-        _delete_directory(self.preservation_workspace)
-
-        self.preservation_workspace.mkdir(parents=True)
-
-        self._set_target(Target.PRESERVATION)
-
-    def confirm(self) -> None:
-        """Confirm dataset metadata."""
-        # TODO: Confirmation should not be allowed if metadata has not
-        # been generated.
-
-        # Confirming metadata of dataset is pointless, if dataset is
-        # already preserved
-        if self._is_preserved:
-            raise AlreadyPreservedError
-
-        # TODO: Resetting dataset or restarting metadata generation
-        # should undo the confirmation.
-        self.set_preservation_state(
-            DS_STATE_METADATA_CONFIRMED, "Metadata confirmed by user"
-        )
-
-    def reset(self, description: str, reason_description: str) -> None:
-        """Reset dataset.
-
-        This sets its state to INITIALIZED and removes any existing file
-        errors.
-        """
-        if self.enabled:
-            raise WorkflowExistsError
-
-        if self._has_been_copied_to_pas_datacatalog:
-            raise CopiedToPasDataCatalogError
-
-        if self._is_preserved:
-            raise AlreadyPreservedError
-
-        self.set_preservation_state(DS_STATE_INITIALIZED, description)
-        self.set_preservation_reason(reason_description)
-
-        # Unlock dataset
-        self.unlock()
-
-    def reject(self) -> None:
-        """Reject dataset.
-
-        Sets preservation status to DS_STATE_REJECTED_BY_USER.
-        """
-        if self.enabled:
-            raise WorkflowExistsError
-
-        if self._is_preserved:
-            raise AlreadyPreservedError
-
-        self.set_preservation_state(DS_STATE_REJECTED_BY_USER,
-                                    "Rejected by user")
-
-
-def find_datasets(
-    enabled=None,
-    target=None,
-    identifier=None,
-    config="/etc/siptools_research.conf",
-):
-    """Find datasets by search criteria.
-
-    :param bool enabled: If `True`, show only enabled datasets, if
-                         `False`, show only disabled datasets.
-    :param str target: Show only datasets with this target
-    :param str identifier: Show only dataset with this identifier
-    :param str config: Path to configuration file
-    :returns: List of matching datasets
-    """
-    search = {}
-    if enabled is not None:
-        search["enabled"] = enabled
-    if target is not None:
-        search["target"] = target
-    if identifier is not None:
-        search["id"] = identifier
-
-    return list(
-        Dataset(document["id"], document=document, config=config)
-        for document in DatasetWorkflowEntry.objects.filter(**search)
-    )
-
-
-def _delete_directory(path):
-    """Delete directory if it exists.
-
-    :param path: Directory path
-    """
-    try:
-        shutil.rmtree(path)
-    except FileNotFoundError:
-        # Previous workspace does not exist
-        pass

@@ -13,19 +13,20 @@ and::
 import click
 import pprint
 
-from siptools_research.dataset import find_datasets
+from siptools_research.dataset import Dataset
+from siptools_research.workflow import find_workflows
 from siptools_research.database import connect_mongoengine
 
 
-def _get_dataset(dataset_id, config):
-    """Get a dataset by identifier."""
-    datasets = find_datasets(identifier=dataset_id, config=config)
+def _get_workflow(dataset_id, config):
+    """Get a workflow by identifier."""
+    workflows = find_workflows(identifier=dataset_id, config=config)
 
-    return datasets[0] if datasets else None
+    return workflows[0] if workflows else None
 
 
-def _get_datasets(enabled, disabled, config):
-    """Find datasets with filters."""
+def _get_workflows(enabled, disabled, config):
+    """Find workflows with filters."""
     if disabled:
         enabled = False
     elif enabled:
@@ -33,9 +34,9 @@ def _get_datasets(enabled, disabled, config):
     else:
         enabled = None
 
-    datasets = find_datasets(enabled=enabled, config=config)
+    workflows = find_workflows(enabled=enabled, config=config)
 
-    return datasets
+    return workflows
 
 
 class Context:
@@ -77,20 +78,20 @@ def list_datasets(ctx, enabled, disabled, show_target):
             "'enabled' and 'disabled' are mutually exclusive"
         )
 
-    datasets = _get_datasets(
+    workflows = _get_workflows(
         enabled=enabled, disabled=disabled, config=ctx.config
     )
-    if datasets:
-        for dataset in datasets:
+    if workflows:
+        for workflow in workflows:
             if show_target:
                 try:
-                    target = dataset.target.value
+                    target = workflow.target.value
                 except AttributeError:
                     target = "None"
 
-                click.echo(f"{dataset.identifier} (target: {target})")
+                click.echo(f"{workflow.dataset.identifier} (target: {target})")
             else:
-                click.echo(dataset.identifier)
+                click.echo(workflow.dataset.identifier)
     else:
         dataset_not_found_echo()
 
@@ -100,10 +101,12 @@ def list_datasets(ctx, enabled, disabled, show_target):
 @click.pass_obj
 def disable_workflow(ctx, dataset_id):
     """Disable dataset workflow"""
-    dataset = _get_dataset(dataset_id, config=ctx.config)
-    if dataset:
-        dataset.disable()
-        click.echo(f"Workflow of dataset {dataset.identifier} disabled")
+    workflow = _get_workflow(dataset_id, config=ctx.config)
+    if workflow:
+        workflow.disable()
+        click.echo(
+            f"Workflow of dataset {workflow.dataset.identifier} disabled"
+        )
     else:
         dataset_not_found_echo()
 
@@ -113,10 +116,12 @@ def disable_workflow(ctx, dataset_id):
 @click.pass_obj
 def enable_workflow(ctx, dataset_id):
     """Enable dataset workflow"""
-    dataset = _get_dataset(dataset_id, config=ctx.config)
-    if dataset:
-        dataset.enable()
-        click.echo(f"Workflow of dataset {dataset.identifier} enabled")
+    workflow = _get_workflow(dataset_id, config=ctx.config)
+    if workflow:
+        workflow.enable()
+        click.echo(
+            f"Workflow of dataset {workflow.dataset.identifier} enabled"
+        )
     else:
         dataset_not_found_echo()
 
@@ -126,15 +131,22 @@ def enable_workflow(ctx, dataset_id):
 @click.pass_obj
 def workflow_status(ctx, dataset_id):
     """Show status for dataset workflow"""
-    dataset = _get_dataset(dataset_id, config=ctx.config)
-    if dataset:
-        dataset_dict = dataset._document.to_mongo().to_dict()
+    workflow = _get_workflow(dataset_id, config=ctx.config)
+    if workflow:
+        workflow_dict = workflow._document.to_mongo().to_dict()
 
-        # Convert any timestamps to ISO 8601 timestamps before printing
+        # TODO: Remove or fix this
+        dataset_dict = Dataset(
+            dataset_id,
+            config=ctx.config
+        )._document.to_mongo().to_dict()
         for task in dataset_dict["workflow_tasks"].values():
+            # Convert any timestamps to ISO 8601 timestamps before printing
             task["timestamp"] = task["timestamp"].isoformat()
 
-        click.echo(pprint.pformat(dataset_dict))
+        workflow_dict["workflow_tasks"] = dataset_dict["workflow_tasks"]
+
+        click.echo(pprint.pformat(workflow_dict))
     else:
         dataset_not_found_echo()
 

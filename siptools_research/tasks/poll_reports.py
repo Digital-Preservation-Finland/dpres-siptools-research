@@ -42,12 +42,12 @@ class GetValidationReports(WorkflowExternalTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            str(self.dataset.preservation_workspace / "ingest-reports")
+            str(self.workspace.preservation / "ingest-reports")
         )
 
     def complete(self):
 
-        if (self.dataset.preservation_workspace / "ingest-reports").exists():
+        if (self.workspace.preservation / "ingest-reports").exists():
             # Task is already completed as the ingest report folder
             # exists
             return True

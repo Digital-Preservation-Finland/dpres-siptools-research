@@ -22,8 +22,9 @@ class ValidateMetadata(WorkflowTask):
         :returns: `<workspace>/validation/validate-metadata.finished`
         :rtype: LocalTarget
         """
-        return LocalTarget(str(self.dataset.validation_workspace
-                               / 'validate-metadata.finished'))
+        return LocalTarget(
+            str(self.workspace.validation / 'validate-metadata.finished')
+        )
 
     def run(self):
         """Validate dataset metadata.

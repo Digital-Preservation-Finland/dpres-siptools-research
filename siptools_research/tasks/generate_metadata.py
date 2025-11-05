@@ -29,7 +29,7 @@ class GenerateMetadata(WorkflowTask):
 
     def output(self):
         return LocalTarget(
-            str(self.dataset.metadata_generation_workspace
+            str(self.workspace.metadata_generation
                 / 'generate-metadata.finished'),
         )
 

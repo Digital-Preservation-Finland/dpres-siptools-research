@@ -5,7 +5,7 @@ from metax_access import (
 )
 
 import tests.utils
-from siptools_research.dataset import Dataset
+from siptools_research.workflow import Workflow
 
 
 def test_dataset_preserve(client, config, requests_mock):
@@ -25,9 +25,9 @@ def test_dataset_preserve(client, config, requests_mock):
         "status": "preserving"
     }
 
-    dataset = Dataset("test_dataset_id", config=config)
-    assert dataset.enabled is True
-    assert dataset.target.value == "preservation"
+    workflow = Workflow("test_dataset_id", config=config)
+    assert workflow.enabled is True
+    assert workflow.target.value == "preservation"
 
 
 def test_dataset_generate_metadata(client, config, requests_mock):
@@ -47,9 +47,9 @@ def test_dataset_generate_metadata(client, config, requests_mock):
         "status": "generating metadata"
     }
 
-    dataset = Dataset("test_dataset_id", config=config)
-    assert dataset.enabled is True
-    assert dataset.target.value == "metadata_generation"
+    workflow = Workflow("test_dataset_id", config=config)
+    assert workflow.enabled is True
+    assert workflow.target.value == "metadata_generation"
 
 
 def test_dataset_confirm(client, requests_mock):
@@ -121,9 +121,9 @@ def test_validate_dataset(client, config, requests_mock):
     assert response.json == {"dataset_id": "test_dataset_id",
                              "status": "validating dataset"}
 
-    dataset = Dataset("test_dataset_id", config=config)
-    assert dataset.enabled
-    assert dataset.target.value == "validation"
+    workflow = Workflow("test_dataset_id", config=config)
+    assert workflow.enabled
+    assert workflow.target.value == "validation"
 
 
 def test_dataset_reject(client, requests_mock):

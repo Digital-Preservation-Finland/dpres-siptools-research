@@ -13,7 +13,7 @@ from metax_access import (
 )
 from metax_access.template_data import DATASET
 
-from siptools_research.dataset import Dataset, find_datasets
+from siptools_research.dataset import Dataset
 from siptools_research.exceptions import (
     BulkInvalidDatasetFileError,
     InvalidDatasetError,
@@ -23,6 +23,7 @@ from siptools_research.exceptions import (
 from siptools_research.metax import get_metax_client
 from siptools_research.models.file_error import FileError
 from siptools_research.workflowtask import WorkflowTask
+from siptools_research.workflow import Workflow, find_workflows
 import tests.utils
 
 
@@ -46,7 +47,7 @@ class DummyTask(WorkflowTask):
         :returns: local target: `<workspace>/preservation/output_file`
         """
         return luigi.LocalTarget(
-            str(self.dataset.preservation_workspace / 'output_file')
+            str(self.workspace.preservation/ 'output_file')
         )
 
     def run(self):
@@ -134,8 +135,8 @@ def test_run_workflowtask(config, workspace, requests_mock):
     tests.utils.add_metax_dataset(requests_mock, dataset=dataset_metadata)
 
     # Add a workflow to database
-    dataset = Dataset(workspace.name, config=config)
-    dataset.preserve()
+    workflow = Workflow(workspace.name, config=config)
+    workflow.preserve()
 
     # Run DummyTask
     luigi.build(
@@ -155,45 +156,10 @@ def test_run_workflowtask(config, workspace, requests_mock):
     assert tasks['DummyTask']['result'] == 'success'
 
     # Workflow should not be disabled
-    assert dataset.enabled
+    assert workflow.enabled
 
     # Check that there is no extra workflows in database
-    assert len(find_datasets(config=config)) == 1
-
-
-def test_run_workflow_target_task(config, workspace, requests_mock):
-    """Test running target task of the workflow.
-
-    Create a workflow with DummyTask as target Task. Check that workflow
-    is disabled after executing the task.
-
-    :param config: Configuration file
-    :param workspace: temporary directory
-    :param request_mock: HTTP request mocker
-    """
-    # Mock Metax
-    dataset_metadata = copy.deepcopy(DATASET)
-    dataset_metadata["id"] = workspace.name
-    tests.utils.add_metax_dataset(requests_mock, dataset=dataset_metadata)
-
-    # Add workflow to database
-    Dataset(workspace.name, config=config).preserve()
-
-    # Run DummyTask
-    luigi.build(
-        [DummyTask(workspace.name,
-                   config=config,
-                   is_target_task=True)],
-        local_scheduler=True
-    )
-
-    # Check that new task is added to task log
-    dataset = Dataset(workspace.name, config=config)
-    tasks = dataset._document.workflow_tasks
-    assert tasks['DummyTask']['result'] == 'success'
-
-    # Workflow should be disabled
-    assert not dataset.enabled
+    assert len(find_workflows(config=config)) == 1
 
 
 def test_run_failing_task(config, workspace):
@@ -266,9 +232,6 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
         f"/v3/datasets/{workspace.name}/preservation"
     )
 
-    # Enable dataset
-    Dataset(workspace.name, config=config).enable()
-
     # Run the task
     luigi.build(
         [task(workspace.name, config=config)],
@@ -281,9 +244,6 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
         "state": expected_state,
         "description": {"en": expected_description}
     }
-
-    # Dataset should be disabled
-    assert Dataset(workspace.name, config=config).enabled is False
 
 
 def test_file_error_saved_fields(config, workspace, requests_mock):

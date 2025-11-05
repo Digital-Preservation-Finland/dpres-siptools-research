@@ -35,7 +35,7 @@ class SignSIP(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            str(self.dataset.preservation_workspace / "signature.sig"),
+            str(self.workspace.preservation / "signature.sig"),
             format=luigi.format.Nop
         )
 
@@ -45,7 +45,7 @@ class SignSIP(WorkflowTask):
         :returns: ``None``
         """
         signature = dpres_signature.signature.create_signature(
-            self.dataset.preservation_workspace,
+            self.workspace.preservation,
             Configuration(self.config).get("sip_sign_key"),
             ['mets.xml']
         )

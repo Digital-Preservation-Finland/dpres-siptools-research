@@ -25,7 +25,7 @@ class ValidateFiles(WorkflowTask):
 
     def output(self):
         return LocalTarget(
-            str(self.dataset.validation_workspace / 'validate-files.finished')
+            str(self.workspace.validation / 'validate-files.finished')
         )
 
     def run(self):

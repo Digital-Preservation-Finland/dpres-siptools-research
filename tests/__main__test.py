@@ -6,6 +6,7 @@ from metax_access.template_data import DATASET
 
 import tests.utils
 from siptools_research.dataset import Dataset
+from siptools_research.workflow import Workflow
 
 
 def test_main_status_match(config, cli_runner, requests_mock):
@@ -20,8 +21,9 @@ def test_main_status_match(config, cli_runner, requests_mock):
 
     # Add a single workflow document and a couple of workflow tasks to
     # the db
+    workflow = Workflow("test_dataset_id", config=config)
+    workflow.preserve()
     dataset = Dataset("test_dataset_id", config=config)
-    dataset.preserve()
     dataset.log_task(
         "CreateWorkspace",
         "success",
@@ -80,8 +82,8 @@ def test_main_list(config, cli_runner, requests_mock):
         tests.utils.add_metax_dataset(requests_mock, dataset=dataset_metadata)
 
         # Add workflow
-        dataset = Dataset(f"aineisto_{i}", config=config)
-        dataset.preserve()
+        workflow = Workflow(f"aineisto_{i}", config=config)
+        workflow.preserve()
 
     result = cli_runner([
         "--config", config, "dataset", "list"
@@ -123,7 +125,7 @@ def test_main_disabled(config, cli_runner, requests_mock):
     tests.utils.add_metax_dataset(requests_mock)
 
     # Add a single workflow document to the db
-    Dataset("test_dataset_id", config=config).preserve()
+    Workflow("test_dataset_id", config=config).preserve()
 
     # Disable the dataset using CLI
     result = cli_runner([
@@ -131,7 +133,7 @@ def test_main_disabled(config, cli_runner, requests_mock):
         "dataset", "disable", "test_dataset_id"
     ])
 
-    assert not Dataset("test_dataset_id", config=config).enabled
+    assert not Workflow("test_dataset_id", config=config).enabled
     assert "Workflow of dataset test_dataset_id disable" in result.output
 
     # Enable the dataset using CLI
@@ -140,5 +142,5 @@ def test_main_disabled(config, cli_runner, requests_mock):
         "dataset", "enable", "test_dataset_id"
     ])
 
-    assert Dataset("test_dataset_id", config=config).enabled
+    assert Workflow("test_dataset_id", config=config).enabled
     assert "Workflow of dataset test_dataset_id enabled" in result.output

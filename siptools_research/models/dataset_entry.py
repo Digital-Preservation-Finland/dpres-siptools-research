@@ -1,9 +1,14 @@
-"""Model for file errors"""
+"""Model for file errors."""
 import datetime
 
-from mongoengine import (BooleanField, DateTimeField, Document,
-                         EmbeddedDocument, EmbeddedDocumentField,
-                         MapField, StringField)
+from mongoengine import (
+    DateTimeField,
+    Document,
+    EmbeddedDocument,
+    EmbeddedDocumentField,
+    MapField,
+    StringField,
+)
 
 
 class TaskEntry(EmbeddedDocument):
@@ -18,24 +23,14 @@ class TaskEntry(EmbeddedDocument):
     result = StringField()
 
 
-class DatasetWorkflowEntry(Document):
+class DatasetEntry(Document):
     id = StringField(db_field="_id", primary_key=True)
     """Dataset identifier"""
-
-    enabled = BooleanField(default=False)
-
-    target = StringField()
 
     workflow_tasks = MapField(EmbeddedDocumentField(TaskEntry))
     """'Task name' -> 'task entry' mapping"""
 
     meta = {
-        "collection": "workflow",  # For backwards compatibility
+        "collection": "dataset",
         "db_alias": "siptools_research",
-
-        # Stop MongoEngine from complaining about extra fields 'status',
-        # 'disabled', 'dataset' and 'completed' that are no longer used by
-        # siptools-research, but might exist in older documents.
-        # TODO: Any outdated documents should be cleaned from databases.
-        "strict": False,
     }

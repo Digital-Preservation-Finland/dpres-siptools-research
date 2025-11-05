@@ -22,7 +22,7 @@ class Cleanup(WorkflowTask):
                                         config=self.config)
 
     def complete(self):
-        return not self.dataset.workspace_root.exists()
+        return not self.workspace.root.exists()
 
     def run(self):
-        shutil.rmtree(self.dataset.workspace_root)
+        shutil.rmtree(self.workspace.root)

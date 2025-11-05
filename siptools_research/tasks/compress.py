@@ -41,8 +41,7 @@ class CompressSIP(WorkflowTask):
         :rtype: LocalTarget
         """
         return luigi.LocalTarget(
-            str(self.dataset.preservation_workspace
-                / self.dataset_id) + '.tar',
+            str(self.workspace.preservation / self.dataset_id) + '.tar',
             format=luigi.format.Nop
         )
 

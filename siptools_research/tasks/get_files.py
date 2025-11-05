@@ -25,14 +25,14 @@ class GetFiles(WorkflowTask):
 
     def output(self):
         return luigi.LocalTarget(
-            str(self.dataset.metadata_generation_workspace / "dataset_files")
+            str(self.workspace.metadata_generation / "dataset_files")
         )
 
     def run(self):
         # Create file cache directory. To avoid unnecessary downloads,
         # files are saved to file cache directory, which is not deleted
         # when any workflow is restarted.
-        file_cache = self.dataset.workspace_root / "file_cache"
+        file_cache = self.workspace.root / "file_cache"
         file_cache.mkdir(exist_ok=True)
 
         # Find file identifiers from Metax dataset metadata.

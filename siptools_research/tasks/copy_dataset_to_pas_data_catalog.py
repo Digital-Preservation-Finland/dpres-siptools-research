@@ -37,7 +37,7 @@ class CopyToPasDataCatalog(WorkflowTask):
                   `copy-dataset-to-pas-data-catalog.finished`
         :rtype: LocalTarget
         """
-        return LocalTarget(str(self.dataset.preservation_workspace
+        return LocalTarget(str(self.workspace.preservation
                                / 'copy-dataset-to-pas-data-catalog.finished'))
 
     def run(self):

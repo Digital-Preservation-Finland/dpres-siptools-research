@@ -15,7 +15,7 @@ from upload_rest_api.models.file_entry import FileEntry
 import siptools_research.tasks.compress
 import tests.metax_data.reference_data
 import tests.utils
-from siptools_research.models.dataset_entry import DatasetWorkflowEntry
+from siptools_research.models.dataset_entry import DatasetEntry
 from metax_access.template_data import DATASET
 from tests.metax_data.files import (AUDIO_FILE, CSV_FILE, MKV_FILE,
                                     PAS_STORAGE_SERVICE, PDF_FILE, SEG_Y_FILE,
@@ -184,9 +184,8 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
         local_scheduler=True
     )
 
-    entry = DatasetWorkflowEntry.objects.all()[0]
-
-    # Check 'result' field
+    # Check that logs were created
+    entry = DatasetEntry.objects.all()[0]
     assert entry.workflow_tasks[task].result == 'success'
 
     # The workspace root directory should contain only metadata

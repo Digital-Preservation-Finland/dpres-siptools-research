@@ -39,7 +39,7 @@ class ReportDatasetValidationResult(WorkflowTask):
         :rtype: LocalTarget
         """
         return LocalTarget(
-            str(self.dataset.validation_workspace
+            str(self.workspace.validation
                 / 'report-dataset-validation-result.finished')
         )
 

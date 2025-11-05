@@ -1,7 +1,7 @@
 """API for managing datasets."""
 from flask import Blueprint, current_app, jsonify, request
 
-from siptools_research.dataset import Dataset
+from siptools_research.workflow import Workflow
 
 dataset = Blueprint("dataset", "dataset")
 
@@ -12,8 +12,8 @@ def validate_dataset(dataset_id):
 
     :returns: HTTP Response
     """
-    Dataset(identifier=dataset_id,
-            config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")).validate()
+    Workflow(dataset_id=dataset_id,
+             config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")).validate()
 
     response = jsonify({'dataset_id': dataset_id,
                         'status': 'validating dataset'})
@@ -28,8 +28,8 @@ def preserve(dataset_id):
 
     :returns: HTTP Response
     """
-    Dataset(identifier=dataset_id,
-            config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")).preserve()
+    Workflow(dataset_id=dataset_id,
+             config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")).preserve()
 
     response = jsonify({'dataset_id': dataset_id,
                         'status': 'preserving'})
@@ -44,8 +44,8 @@ def generate_metadata(dataset_id):
 
     :returns: HTTP Response
     """
-    Dataset(
-        identifier=dataset_id,
+    Workflow(
+        dataset_id=dataset_id,
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
     ).generate_metadata()
 
@@ -63,8 +63,8 @@ def confirm(dataset_id: str):
     :param dataset_id: Identifier of dataset
     :returns: HTTP response
     """
-    Dataset(
-        identifier=dataset_id,
+    Workflow(
+        dataset_id=dataset_id,
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
     ).confirm()
 
@@ -83,8 +83,8 @@ def reset(dataset_id: str):
     description = request.form["description"]
     reason_description = request.form["reason_description"]
 
-    Dataset(
-        identifier=dataset_id,
+    Workflow(
+        dataset_id=dataset_id,
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
     ).reset(
         description=description,
@@ -106,8 +106,8 @@ def reject(dataset_id: str):
     :param dataset_id: Identifier of dataset
     :returns: HTTP response
     """
-    Dataset(
-        identifier=dataset_id,
+    Workflow(
+        dataset_id=dataset_id,
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
     ).reject()
 

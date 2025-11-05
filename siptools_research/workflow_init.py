@@ -1,19 +1,8 @@
 """A wrapper task that starts/restarts all incomplete workflows."""
 import luigi
 
-from siptools_research.dataset import find_datasets, Target
-
 from siptools_research.database import connect_mongoengine
-from siptools_research.tasks.cleanup import Cleanup
-from siptools_research.tasks.generate_metadata import GenerateMetadata
-from siptools_research.tasks.report_dataset_validation_result\
-    import ReportDatasetValidationResult
-
-TARGET_TASKS = {
-    Target.PRESERVATION: Cleanup,
-    Target.METADATA_GENERATION: GenerateMetadata,
-    Target.VALIDATION: ReportDatasetValidationResult
-}
+from siptools_research.workflow import TARGET_TASKS, find_workflows
 
 
 class InitWorkflows(luigi.WrapperTask):
@@ -30,9 +19,8 @@ class InitWorkflows(luigi.WrapperTask):
         # `siptools-research.service`
         connect_mongoengine(self.config)
 
-        for dataset in find_datasets(enabled=True, config=self.config):
-            yield TARGET_TASKS[dataset.target](
-                dataset_id=dataset.identifier,
-                is_target_task=True,
+        for workflow in find_workflows(enabled=True, config=self.config):
+            yield TARGET_TASKS[workflow.target](
+                dataset_id=workflow.dataset.identifier,
                 config=self.config
             )

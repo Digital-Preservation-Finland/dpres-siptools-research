@@ -10,11 +10,14 @@ from metax_access import (
 )
 
 from siptools_research.dataset import Dataset
-from siptools_research.exceptions import (BulkInvalidDatasetFileError,
-                                          InvalidDatasetError,
-                                          InvalidDatasetFileError,
-                                          InvalidSIPError)
+from siptools_research.exceptions import (
+    BulkInvalidDatasetFileError,
+    InvalidDatasetError,
+    InvalidDatasetFileError,
+    InvalidSIPError,
+)
 from siptools_research.models.file_error import FileError
+from siptools_research.workspace import Workspace
 
 
 class WorkflowTask(luigi.Task):
@@ -24,8 +27,6 @@ class WorkflowTask(luigi.Task):
     task has some luigi parameters:
 
     :dataset_id: Dataset identifier.
-    :is_target_task: If the task is "target task" the workflow will be
-                     disabled when the task has run.
     :config: Path to configuration file
 
     A WorkflowTask instance also has `Dataset` object that can be
@@ -33,7 +34,6 @@ class WorkflowTask(luigi.Task):
     """
 
     dataset_id = luigi.Parameter()
-    is_target_task = luigi.BoolParameter(default=False)
     config = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
@@ -44,6 +44,11 @@ class WorkflowTask(luigi.Task):
         """
         super().__init__(*args, **kwargs)
         self.dataset = Dataset(self.dataset_id, config=self.config)
+        self.workspace = Workspace(
+            # TODO: Implement cleaner way to read config file
+            packaging_root = self.dataset.conf.get("packaging_root"),
+            dataset_id = self.dataset.identifier,
+        )
 
 
 class WorkflowExternalTask(luigi.ExternalTask):
@@ -76,6 +81,10 @@ class WorkflowExternalTask(luigi.ExternalTask):
         """
         super().__init__(*args, **kwargs)
         self.dataset = Dataset(self.dataset_id, config=self.config)
+        self.workspace = Workspace(
+            packaging_root = self.dataset.conf.get("packaging_root"),
+            dataset_id = self.dataset.identifier,
+        )
 
 
 @WorkflowTask.event_handler(luigi.Event.SUCCESS)
@@ -83,8 +92,7 @@ def report_task_success(task):
     """Report task success.
 
     This function is triggered after each WorkflowTask is executed
-    succesfully. Adds report of successful task to workflow database. if
-    the Task was the "target task", the workflow is disabled.
+    succesfully. Adds report of successful task to workflow database.
 
     :param task: WorkflowTask object
     :returns: ``None``
@@ -92,9 +100,6 @@ def report_task_success(task):
     task.dataset.log_task(task.__class__.__name__,
                           'success',
                           task.success_message)
-
-    if task.is_target_task:
-        task.dataset.disable()
 
 
 @WorkflowTask.event_handler(luigi.Event.FAILURE)
