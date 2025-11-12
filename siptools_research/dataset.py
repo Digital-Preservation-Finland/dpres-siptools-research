@@ -273,10 +273,6 @@ class Dataset:
         )
         self._document.save()
 
-    def get_tasks(self):
-        """Get dictionary of events."""
-        return self._document.workflow_tasks
-
     def get_task_timestamp(self, task_name):
         """Read task timestamp for a task.
 

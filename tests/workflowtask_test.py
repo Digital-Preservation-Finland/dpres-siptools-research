@@ -200,7 +200,7 @@ def test_run_workflowtask(config, workspace, requests_mock):
         == "Hello world"
 
     dataset = Dataset(workspace.name, config=config)
-    tasks = dataset.get_tasks()
+    tasks = dataset._document.workflow_tasks
     # Check 'messages' field
     assert tasks['DummyTask']['messages'] == 'Test task was successful'
     # Check 'result' field
@@ -241,7 +241,7 @@ def test_run_workflow_target_task(config, workspace, requests_mock):
 
     # Check that new task is added to task log
     dataset = Dataset(workspace.name, config=config)
-    tasks = dataset.get_tasks()
+    tasks = dataset._document.workflow_tasks
     assert tasks['DummyTask']['result'] == 'success'
 
     # Workflow should be disabled
@@ -264,7 +264,7 @@ def test_run_failing_task(config, workspace):
     )
 
     # Check that new task is added to task log
-    tasks = Dataset(workspace.name, config=config).get_tasks()
+    tasks = Dataset(workspace.name, config=config)._document.workflow_tasks
     # Check 'messages' field
     assert tasks['FailingTask']['messages'] \
         == 'An error occurred while running a test task: Shit hit the fan'

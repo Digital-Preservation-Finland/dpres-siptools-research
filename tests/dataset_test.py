@@ -284,7 +284,7 @@ def test_task_log(config):
                      'Everything went better than expected')
 
     # Check that task was added to task log
-    tasks = dataset.get_tasks()
+    tasks = dataset._document.workflow_tasks
     assert tasks['TestTask']['messages'] \
         == 'Everything went better than expected'
     assert tasks['TestTask']['result'] == 'success'
