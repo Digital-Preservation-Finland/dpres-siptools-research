@@ -290,7 +290,7 @@ def test_task_log(config):
     assert tasks['TestTask']['result'] == 'success'
 
     # Check that the timestamp of the task is correct format
-    timestamp = dataset.get_task_timestamp('TestTask')
+    timestamp = dataset._document.workflow_tasks["TestTask"]["timestamp"]
     assert timestamp.endswith("+00:00")
     assert datetime.datetime.strptime(
         timestamp[:-6],  # Remove the UTC offset

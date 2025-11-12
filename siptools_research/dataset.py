@@ -273,16 +273,6 @@ class Dataset:
         )
         self._document.save()
 
-    def get_task_timestamp(self, task_name):
-        """Read task timestamp for a task.
-
-        :param task_name: Name of task
-        :returns: Task timestamp
-        """
-        if not self._document:
-            raise ValueError
-        return self._document["workflow_tasks"][task_name]["timestamp"]
-
     def _set_target(self, target):
         """Set target of workflow.
 
