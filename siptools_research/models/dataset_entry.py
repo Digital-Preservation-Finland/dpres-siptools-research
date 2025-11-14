@@ -6,6 +6,7 @@ from mongoengine import (
     Document,
     EmbeddedDocument,
     EmbeddedDocumentField,
+    ListField,
     MapField,
     StringField,
 )
@@ -29,6 +30,8 @@ class DatasetEntry(Document):
 
     workflow_tasks = MapField(EmbeddedDocumentField(TaskEntry))
     """'Task name' -> 'task entry' mapping"""
+
+    errors = ListField(field=StringField())
 
     meta = {
         "collection": "dataset",

@@ -155,7 +155,7 @@ def report_task_failure(task, exception):
             _update_db_errors(task, exception)
 
         # Disable workflow
-        task.dataset.disable()
+        task.dataset.add_error(str(exception))
 
 
 def _update_db_errors(

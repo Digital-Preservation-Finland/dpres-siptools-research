@@ -182,6 +182,21 @@ class Dataset:
             or self._metadata["id"]
         )
 
+    @property
+    def errors(self):
+        """List errors."""
+        return self._document.errors
+
+    def add_error(self, error):
+        """Add error to dataset."""
+        self._document.errors.append(error)
+        self._document.save()
+
+    def clear_errors(self):
+        """Clear errors."""
+        # TODO: implementation
+        raise NotImplementedError
+
     # TODO: These task logs are not required anymore for anything else
     # than debugging purposes. Is anyone really using them, or could
     # they be removed? The luigi logs contain more or less the same

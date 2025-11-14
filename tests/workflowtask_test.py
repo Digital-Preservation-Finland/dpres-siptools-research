@@ -97,7 +97,7 @@ class InvalidSIPTask(FailingTask):
 
         :returns:  ``None``
         """
-        error = "SIP was rejected in DPS"
+        error = "Dataset is invalid"
         raise InvalidSIPError(error)
 
 
@@ -196,14 +196,14 @@ def test_run_failing_task(config, workspace):
             InvalidDatasetTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
-            'InvalidDatasetError: Dataset is invalid'
+            'InvalidDatasetError: Dataset is invalid',
         ),
         # Special case: InvalidSIPError
         (
             InvalidSIPTask,
             DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
             'An error occurred while running a test task: '
-            'InvalidSIPError: SIP was rejected in DPS'
+            'InvalidSIPError: Dataset is invalid',
         ),
     ]
 )
@@ -244,6 +244,10 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
         "state": expected_state,
         "description": {"en": expected_description}
     }
+
+    # Error should be added to dataset
+    assert Dataset(workspace.name, config=config).errors \
+        == ["Dataset is invalid"]
 
 
 def test_file_error_saved_fields(config, workspace, requests_mock):
