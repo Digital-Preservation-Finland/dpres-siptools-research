@@ -18,11 +18,7 @@ from siptools_research.exceptions import (
     BulkInvalidDatasetFileError,
     InvalidDatasetError,
     InvalidDatasetFileError,
-    InvalidDatasetMetadataError,
-    InvalidFileError,
-    InvalidFileMetadataError,
     InvalidSIPError,
-    MissingFileError,
 )
 from siptools_research.metax import get_metax_client
 from siptools_research.models.file_error import FileError
@@ -90,54 +86,6 @@ class InvalidDatasetTask(FailingTask):
         """
         error = "Dataset is invalid"
         raise InvalidDatasetError(error)
-
-
-class InvalidDatasetMetadataTask(FailingTask):
-    """Test class that raises InvalidDatasetMetadataError."""
-
-    def run(self):
-        """Raise InvalidDatasetMetadataError.
-
-        :returns:  ``None``
-        """
-        error = "Missing some important metadata"
-        raise InvalidDatasetMetadataError(error)
-
-
-class InvalidFileMetadataTask(FailingTask):
-    """Test class that raises InvalidFileMetadataError."""
-
-    def run(self):
-        """Raise InvalidFileMetadataError.
-
-        :returns:  ``None``
-        """
-        error = "Invalid file encoding"
-        raise InvalidFileMetadataError(error, files=[{"id": "foo"}])
-
-
-class MissingFileTask(FailingTask):
-    """Test class that raises MissingFileError."""
-
-    def run(self):
-        """Raise MissingFileError.
-
-        :returns:  ``None``
-        """
-        error = "A file was not found in Ida"
-        raise MissingFileError(error, files=[{"id": "foo"}])
-
-
-class InvalidFileTask(FailingTask):
-    """Test class that raises InvalidFileError."""
-
-    def run(self):
-        """Raise InvalidFileError.
-
-        :returns:  ``None``
-        """
-        error = "A file is not well-formed"
-        raise InvalidFileError(error, files=[{"id": "foo"}])
 
 
 class InvalidSIPTask(FailingTask):
@@ -277,36 +225,14 @@ def test_run_failing_task(config, workspace):
     ('task', 'expected_state', 'expected_description'),
     [
 
+        # Generic InvalidDatasetError
         (
             InvalidDatasetTask,
             DS_STATE_INVALID_METADATA,
             'An error occurred while running a test task: '
             'InvalidDatasetError: Dataset is invalid'
         ),
-        (
-            InvalidDatasetMetadataTask,
-            DS_STATE_INVALID_METADATA,
-            'An error occurred while running a test task: '
-            'InvalidDatasetMetadataError: Missing some important metadata'
-        ),
-        (
-            InvalidFileMetadataTask,
-            DS_STATE_INVALID_METADATA,
-            'An error occurred while running a test task: '
-            'InvalidFileMetadataError: Invalid file encoding'
-        ),
-        (
-            InvalidFileTask,
-            DS_STATE_INVALID_METADATA,
-            'An error occurred while running a test task: '
-            'InvalidFileError: A file is not well-formed'
-        ),
-        (
-            MissingFileTask,
-            DS_STATE_INVALID_METADATA,
-            'An error occurred while running a test task: '
-            'MissingFileError: A file was not found in Ida'
-        ),
+        # Special case: InvalidSIPError
         (
             InvalidSIPTask,
             DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
@@ -340,6 +266,9 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
         f"/v3/datasets/{workspace.name}/preservation"
     )
 
+    # Enable dataset
+    Dataset(workspace.name, config=config).enable()
+
     # Run the task
     luigi.build(
         [task(workspace.name, config=config)],
@@ -352,6 +281,9 @@ def test_invalid_dataset_error(config, workspace, requests_mock, task,
         "state": expected_state,
         "description": {"en": expected_description}
     }
+
+    # Dataset should be disabled
+    assert Dataset(workspace.name, config=config).enabled is False
 
 
 def test_file_error_saved_fields(config, workspace, requests_mock):
