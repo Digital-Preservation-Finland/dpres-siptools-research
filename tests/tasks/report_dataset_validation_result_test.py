@@ -1,8 +1,10 @@
 """Unit tests for ReportDatasetValidationResult task."""
+import copy
+
 from metax_access.metax import DS_STATE_DATASET_VALIDATED
+from metax_access.template_data import DATASET
 
 from siptools_research.tasks import report_dataset_validation_result
-from metax_access.template_data import DATASET
 
 
 def test_reportdatasetvalidationresult(config, workspace, requests_mock):
@@ -13,7 +15,7 @@ def test_reportdatasetvalidationresult(config, workspace, requests_mock):
     :param requests_mock: HTTP request mocker
     """
     # Mock Metax
-    dataset = DATASET
+    dataset = copy.deepcopy(DATASET)
     dataset["id"] = workspace.name
     requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
     patch_dataset \
