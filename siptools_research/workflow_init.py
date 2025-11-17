@@ -20,7 +20,13 @@ class InitWorkflows(luigi.WrapperTask):
         connect_mongoengine(self.config)
 
         for workflow in find_workflows(enabled=True, config=self.config):
-            yield TARGET_TASKS[workflow.target](
+            task = TARGET_TASKS[workflow.target](
                 dataset_id=workflow.dataset.identifier,
                 config=self.config
             )
+
+            # Skip completed workflows
+            if task.complete():
+                continue
+
+            yield task

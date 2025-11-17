@@ -1,5 +1,6 @@
 """Tests for :mod:`siptools_research.workflow_init` module."""
 import copy
+from pathlib import Path
 
 import pytest
 from metax_access.template_data import DATASET
@@ -10,8 +11,11 @@ from siptools_research.tasks.generate_metadata import GenerateMetadata
 from siptools_research.tasks.report_dataset_validation_result import (
     ReportDatasetValidationResult,
 )
+from siptools_research.workflow import (
+    TARGET_TASKS,
+    Workflow,
+)
 from siptools_research.workflow_init import InitWorkflows
-from siptools_research.workflow import Target, Workflow
 
 
 def test_initworkflows(config, requests_mock):
@@ -47,28 +51,32 @@ def test_initworkflows(config, requests_mock):
 
 
 @pytest.mark.parametrize(
-    ("target", "target_task"),
+    ("method", "target_task"),
     [
-        ('preservation', Cleanup),
-        ('validation', ReportDatasetValidationResult),
-        ('metadata_generation', GenerateMetadata),
+        ("preserve", Cleanup),
+        ("validate", ReportDatasetValidationResult),
+        ("generate_metadata", GenerateMetadata),
     ]
 )
-def test_init_correct_task(config, target, target_task):
+def test_init_correct_task(config, requests_mock, method, target_task):
     """Test InitWorkflows requires correct Task.
 
-    Add a workflow to database and check that expected Task is required.
+    Add a workflow to database using one the methods, and check that
+    expected Task is required.
 
     :param config: Configuration file
-    :param target: The target of the workflow that is added to databse
+    :param requests_mock: HTTP request mocker
+    :param method: The name of the method that is used to initialize
+        workflow
     :param target_task: The Task expeceted to be required by
-                        InitWorkflows
+        InitWorkflows
     """
+    # Mock Metax
+    tests.utils.add_metax_dataset(requests_mock)
+
     # Add a workflow to database
-    workflow = Workflow("dataset1", config=config)
-    # pylint: disable=protected-access
-    workflow._set_target(Target(target))
-    workflow.enable()
+    workflow = Workflow("test_dataset_id", config=config)
+    getattr(workflow, method)()
 
     task = InitWorkflows(config=config)
     required_tasks = list(task.requires())
@@ -76,3 +84,35 @@ def test_init_correct_task(config, target, target_task):
     # Check that the expected Task is required
     assert len(required_tasks) == 1
     assert isinstance(required_tasks[0], target_task)
+
+
+def test_complete_workflow(requests_mock, config):
+    """Test that tasks are not required if they are already completed.
+
+    Add a workflow to database. Create a fake output for the target task
+    of the workflow. The workflow should not run, because it has already
+    been completed.
+
+    :param requests_mock: HTTP request mocker
+    :param config: Configuration file
+    """
+    # Mock metax
+    tests.utils.add_metax_dataset(requests_mock)
+
+    # Initialize workflow
+    workflow = Workflow("test_dataset_id", config=config)
+    workflow.generate_metadata()
+
+    # Create fake output for the target task, so it looks like it would
+    # be completed
+    target_task = TARGET_TASKS[workflow.target](
+        dataset_id=workflow.dataset.identifier,
+        config=config
+    )
+    Path(target_task.output().path).write_text("Fake output for the task")
+    assert target_task.complete()  # Just a sanity check
+
+    # Luigi should not run any tasks, i.e. InitWorkflows task should not
+    # require any tasks
+    task = InitWorkflows(config=config)
+    assert list(task.requires()) == []
