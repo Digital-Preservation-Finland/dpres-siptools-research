@@ -6,6 +6,7 @@ import pytest
 from metax_access.template_data import DATASET
 
 import tests.utils
+from siptools_research.dataset import Dataset
 from siptools_research.tasks.cleanup import Cleanup
 from siptools_research.tasks.generate_metadata import GenerateMetadata
 from siptools_research.tasks.report_dataset_validation_result import (
@@ -111,6 +112,32 @@ def test_complete_workflow(requests_mock, config):
     )
     Path(target_task.output().path).write_text("Fake output for the task")
     assert target_task.complete()  # Just a sanity check
+
+    # Luigi should not run any tasks, i.e. InitWorkflows task should not
+    # require any tasks
+    task = InitWorkflows(config=config)
+    assert list(task.requires()) == []
+
+
+def test_invalid_dataset(requests_mock, config):
+    """Test that workflow is not run, if the dataset is invalid.
+
+    Add a workflow to database. Add an error to the datastet. Workflow
+    should not run, because the dataset is invalid.
+
+    :param requests_mock: HTTP request mocker
+    :param config: Configuration file
+    """
+    # Mock metax
+    tests.utils.add_metax_dataset(requests_mock)
+
+    # Initialize workflow
+    workflow = Workflow(dataset_id="test_dataset_id", config=config)
+    workflow.generate_metadata()
+
+    # Add error to dataset
+    Dataset(identifier="test_dataset_id",
+            config=config).add_error("Fake error")
 
     # Luigi should not run any tasks, i.e. InitWorkflows task should not
     # require any tasks

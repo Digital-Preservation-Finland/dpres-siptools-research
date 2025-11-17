@@ -29,4 +29,8 @@ class InitWorkflows(luigi.WrapperTask):
             if task.complete():
                 continue
 
+            # Skip invalid datasets
+            if workflow.dataset.errors:
+                continue
+
             yield task
