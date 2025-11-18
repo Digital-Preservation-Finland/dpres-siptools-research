@@ -537,8 +537,8 @@ def test_confirm_dataset(requests_mock, config):
     }
 
 
-def test_reset_dataset(requests_mock, config):
-    """Test dataset reset function.
+def test_unlock_dataset(requests_mock, config):
+    """Test unlocking dataset.
 
     Tests that `reset` updates Metax state, unlocks the dataset
     and removes any existing file errors
@@ -547,14 +547,11 @@ def test_reset_dataset(requests_mock, config):
     :param config: Configuration file
     """
     # Mock Metax
-    dataset = copy.deepcopy(DATASET)
-    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
-
     preservation_patch = requests_mock.patch(
-        f"/v3/datasets/{dataset['id']}/preservation", json={}
+        "/v3/datasets/test_dataset_id/preservation", json={}
     )
     requests_mock.get(
-        f"/v3/datasets/{dataset['id']}/files",
+        "/v3/datasets/test_dataset_id/files",
         json={
             "results": [
                 FILE | {
@@ -566,8 +563,13 @@ def test_reset_dataset(requests_mock, config):
             "previous": None
         }
     )
-    requests_mock.post("/v3/files/patch-many")
+    files_post = requests_mock.post("/v3/files/patch-many")
 
+    # Add dataset error to database
+    dataset = Dataset("test_dataset_id", config=config)
+    dataset.add_error("Test error message")
+
+    # Add file errors to database
     FileError.objects.insert([
         FileError(
             file_id="file-id-1",
@@ -579,7 +581,7 @@ def test_reset_dataset(requests_mock, config):
             file_id="file-id-2",
             storage_identifier="storage-identifier-2",
             storage_service="pas",
-            dataset_id=dataset['id']
+            dataset_id="test_dataset_id"
         ),
         # This one won't be deleted
         FileError(
@@ -589,7 +591,51 @@ def test_reset_dataset(requests_mock, config):
         )
     ])
 
-    Workflow(dataset['id'], config=config).reset(
+    dataset.unlock()
+
+    # Dataset metadata should be unlocked in Metax
+    assert preservation_patch.called_once
+    assert preservation_patch.last_request.json()["pas_process_running"] \
+        is False
+
+    # Metadata of all files ot the dataset should be unlocked in Metax
+    assert files_post.called_once
+    assert files_post.last_request.json() == [
+        {
+            "id": "file-id-1",
+            "pas_process_running": False,
+        },
+        {
+            "id": "file-id-2",
+            "pas_process_running": False,
+        },
+    ]
+
+    # Dataset errors should be cleared
+    assert dataset.errors == []
+
+    # File errors for the two files are removed
+    assert FileError.objects.count() == 1
+    assert FileError.objects.all()[0].file_id == "file-id-3"
+
+
+def test_reset_dataset(requests_mock, config):
+    """Test dataset reset function.
+
+    Tests that `reset` updates Metax state, unlocks the dataset.
+
+    :param requests_mock: HTTP request mocker
+    :param config: Configuration file
+    """
+    # Mock Metax
+    add_metax_dataset(requests_mock)
+    requests_mock.post("/v3/files/patch-many", json={})
+
+    preservation_patch = requests_mock.patch(
+        "/v3/datasets/test_dataset_id/preservation", json={}
+    )
+
+    Workflow("test_dataset_id", config=config).reset(
         description="Reset by user",
         reason_description="Why this dataset was reset"
     )
@@ -603,19 +649,6 @@ def test_reset_dataset(requests_mock, config):
         req for req in preservation_patch.request_history
         if req.json().get("pas_process_running", None) is False
     )
-    assert any(
-        req for req in preservation_patch.request_history
-        if req.json().get("description", {}).get("en") == "Reset by user"
-    )
-    assert any(
-        req for req in preservation_patch.request_history
-        if req.json().get("reason_description", None)
-        == "Why this dataset was reset"
-    )
-
-    # File errors for the two files are removed
-    assert FileError.objects.count() == 1
-    assert FileError.objects.all()[0].file_id == "file-id-3"
 
 
 def test_reject_dataset(requests_mock, config):

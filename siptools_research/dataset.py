@@ -156,11 +156,16 @@ class Dataset:
         """Unlock dataset."""
         self._metax_client.unlock_dataset(self.identifier)
 
-        dataset_files = self._metax_client.get_dataset_files(self.identifier)
+        # When dataset is unlocked, it can be edited by users.
+        # Therefore, the previously found errors might not exist
+        # anymore.
+        self._document.errors.clear()
+        self._document.save()
 
-        # Delete generic file errors and those related to this dataset.
-        # User is able to change metadata once the dataset and its files are
-        # unlocked, which would make the errors invalid.
+        # Also the file metadata can be edited, and files could be even
+        # removed from dataset. Therefore, also file errors must be
+        # deleted.
+        dataset_files = self._metax_client.get_dataset_files(self.identifier)
         FileError.objects.filter(
             file_id__in=[file["id"] for file in dataset_files],
             dataset_id__in=(None, self.identifier)
@@ -202,11 +207,6 @@ class Dataset:
         """Add error to dataset."""
         self._document.errors.append(error)
         self._document.save()
-
-    def clear_errors(self):
-        """Clear errors."""
-        # TODO: implementation
-        raise NotImplementedError
 
     # TODO: These task logs are not required anymore for anything else
     # than debugging purposes. Is anyone really using them, or could
