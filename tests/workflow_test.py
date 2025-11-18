@@ -62,11 +62,11 @@ def test_enable_disable(config):
 
 
 def test_generate_metadata(config, requests_mock):
-    """Test generate_metadata function.
+    """Test metadata generation.
 
-    Tests that `generate_metadata`
+    Tests that `generate_metadata` method:
 
-    * sets correct target for workflow of the dataset
+    * sets correct target for the workflow
     * creates metadata generation workspace.
     * sets preservation state
 
@@ -127,11 +127,11 @@ def test_restart_generate_metadata(config, requests_mock):
 
 
 def test_validate_dataset(config, requests_mock):
-    """Test validate_dataset function.
+    """Test validation.
 
-    Tests that `validate_dataset`
+    Tests that `validate` method:
 
-    * sets correct target for workflow of the dataset
+    * sets correct target for the workflow
     * creates validation workspace
     * sets preservation state
 
@@ -163,7 +163,7 @@ def test_validate_dataset(config, requests_mock):
     }
 
 
-def test_restart_validate_metadata(config, requests_mock):
+def test_restart_validate(config, requests_mock):
     """Test restarting validation.
 
     When validation is restarted, previous validation and preservation
@@ -200,12 +200,12 @@ def test_restart_validate_metadata(config, requests_mock):
     assert not workflow.workspace.preservation.exists()
 
 
-def test_preserve_dataset(config, requests_mock):
-    """Test preserve_dataset function.
+def test_preserve(config, requests_mock):
+    """Test preservation.
 
-    Tests that `prserve_dataset`
+    Tests that `preserve` method:
 
-    * sets correct target for workflow of the dataset
+    * sets correct target for the workflow
     * creates preservation workspace
     * sets preservation state
 
@@ -237,7 +237,7 @@ def test_preserve_dataset(config, requests_mock):
     }
 
 
-def test_restart_preserve_dataset(config, requests_mock):
+def test_restart_preserve(config, requests_mock):
     """Test restarting preservation.
 
     When preservation is restarted, previous preservation workspace
@@ -276,7 +276,7 @@ def test_restart_preserve_dataset(config, requests_mock):
     assert not any(workflow.workspace.preservation.iterdir())
 
 
-def test_confirm_dataset(requests_mock, config):
+def test_confirm(requests_mock, config):
     """Test confirming dataset metadata.
 
     Tests that preservation state is updated when dataset metadata is
@@ -300,10 +300,11 @@ def test_confirm_dataset(requests_mock, config):
     }
 
 
-def test_reset_dataset(requests_mock, config):
-    """Test dataset reset function.
+def test_reset(requests_mock, config):
+    """Test resetting workflow.
 
-    Tests that `reset` updates Metax state, unlocks the dataset.
+    Tests that dataset metadata in Metax is updated and dataset is
+    unlocked.
 
     :param requests_mock: HTTP request mocker
     :param config: Configuration file
@@ -332,8 +333,8 @@ def test_reset_dataset(requests_mock, config):
     )
 
 
-def test_reject_dataset(requests_mock, config):
-    """Test reject method of Dataset.
+def test_reject(requests_mock, config):
+    """Test rejecting workflow.
 
     Tests that that preservation state is updated.
 
