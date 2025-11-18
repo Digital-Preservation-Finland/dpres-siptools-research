@@ -43,7 +43,11 @@ TARGET_TASKS = {
 
 
 class Workflow:
-    """Class for managing workflows."""
+    """Class for managing workflows.
+
+    Manages workflows related to datasets, and decides which actions are
+    allowed based on the current status of the workflow.
+    """
 
     def __init__(
         self, dataset_id, document=None, config="/etc/siptools_research.conf"
@@ -101,10 +105,7 @@ class Workflow:
         self._document.save()
 
     def generate_metadata(self):
-        """Generate dataset metadata.
-
-        :returns: ``None``
-        """
+        """Initialize metadata generation workflow."""
         if self.enabled:
             raise WorkflowExistsError
 
@@ -132,10 +133,7 @@ class Workflow:
         self._set_target(Target.METADATA_GENERATION)
 
     def validate(self):
-        """Validate metadata and files of dataset.
-
-        :returns: ``None``
-        """
+        """Initialize dataset validation workflow."""
         if self.enabled:
             raise WorkflowExistsError
 
@@ -156,10 +154,7 @@ class Workflow:
         self._set_target(Target.VALIDATION)
 
     def preserve(self):
-        """Preserve dataset.
-
-        :returns: ``None``
-        """
+        """Initialize preservation workflow."""
         if self.enabled:
             raise WorkflowExistsError
 

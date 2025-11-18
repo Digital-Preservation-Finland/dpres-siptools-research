@@ -24,7 +24,13 @@ def _timestamp():
 
 
 class Dataset:
-    """Class for managing workflows of dataset."""
+    """Class that represents a dataset.
+
+    This class manages dataset entry in Metax, and takes care of
+    juggling with different versions the dataset (the original version
+    and the PAS data catalog version). Also stores information about
+    errors found in the dataset.
+    """
 
     def __init__(
         self, identifier, document=None, config="/etc/siptools_research.conf"
@@ -32,6 +38,7 @@ class Dataset:
         """Initialize dataset."""
         self.identifier = identifier
         self._cached_metadata = None
+        # TODO: self.conf seems unnecessary
         self.conf = Configuration(config)
         self._metax_client = get_metax_client(config)
 
@@ -166,7 +173,7 @@ class Dataset:
             self._metax_client.copy_dataset_to_pas_catalog(self.identifier)
 
     def get_datacite(self) -> bytes:
-        """Get Datacite document for dataset's PAS data catalog copy"""
+        """Get Datacite document for dataset's PAS data catalog copy."""
         return self._metax_client.get_datacite(self.pas_dataset_id)
 
     @property
@@ -184,7 +191,11 @@ class Dataset:
 
     @property
     def errors(self):
-        """List errors."""
+        """List errors found in dataset.
+
+        If dataset has any errors, it is invalid and can not be
+        preserved.
+        """
         return self._document.errors
 
     def add_error(self, error):
