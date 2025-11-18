@@ -3,7 +3,6 @@
 import datetime
 
 from siptools_research.config import Configuration
-from siptools_research.database import connect_mongoengine
 from siptools_research.metax import get_metax_client
 from siptools_research.models.dataset_entry import (
     DatasetEntry,
@@ -41,8 +40,6 @@ class Dataset:
         # TODO: self.conf seems unnecessary
         self.conf = Configuration(config)
         self._metax_client = get_metax_client(config)
-
-        connect_mongoengine(config)
 
         self._document = document
         if self._document is None:

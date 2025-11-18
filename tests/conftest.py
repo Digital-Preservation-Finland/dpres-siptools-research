@@ -111,15 +111,18 @@ def _config(test_mongo, tmp_path, luigi_config_fx):
 
 @pytest.fixture(autouse=True, scope="session", name="test_mongo")
 def _test_mongo():
-    """
-    Initialize MongoDB test instance and return MongoDB client instance for
-    the database
+    """Mock MongoDB.
+
+    Initialize MongoDB test instance, register mongoengine connection,
+    and return MongoDB client instance for the database
     """
     box = MongoBox()
     box.start()
 
     client = box.client()
     client.PORT = box.port
+
+    connect_mongoengine(host="localhost", port=box.port)
 
     yield client
 
@@ -263,9 +266,6 @@ def app(config, monkeypatch):
     cache_dir.mkdir()
     tmp_dir = Path(conf.get("packaging_root")) / "tmp"
     tmp_dir.mkdir()
-
-    # Reconnect to MongoDB database
-    connect_mongoengine(config)
 
     return app_
 

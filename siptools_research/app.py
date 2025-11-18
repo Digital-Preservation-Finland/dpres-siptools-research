@@ -7,6 +7,7 @@ from metax_access import ResourceNotAvailableError
 
 import siptools_research.api.dataset
 import siptools_research.api.file_errors
+from siptools_research.config import Configuration
 from siptools_research.database import connect_mongoengine
 
 logging.basicConfig(level=logging.ERROR)
@@ -29,7 +30,11 @@ def create_app():
                            url_prefix="/dataset")
     app.register_blueprint(siptools_research.api.file_errors.file_errors)
 
-    connect_mongoengine(app.config['SIPTOOLS_RESEARCH_CONF'])
+    configuration = Configuration(app.config["SIPTOOLS_RESEARCH_CONF"])
+    connect_mongoengine(
+        host=configuration.get("mongodb_host"),
+        port=configuration.get("mongodb_port"),
+    )
 
     @app.route('/')
     def index():

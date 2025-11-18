@@ -13,6 +13,7 @@ and::
 import click
 import pprint
 
+from siptools_research.config import Configuration
 from siptools_research.dataset import Dataset
 from siptools_research.workflow import find_workflows
 from siptools_research.database import connect_mongoengine
@@ -58,7 +59,11 @@ def cli(ctx, config):
     """
     ctx.config = config
 
-    connect_mongoengine(config)
+    configuration = Configuration(config)
+    connect_mongoengine(
+        host = configuration.get("mongodb_host"),
+        port = configuration.get("mongodb_port"),
+    )
 
 
 @cli.group()

@@ -3,7 +3,6 @@ import file_scraper
 import file_scraper.scraper
 from metax_access.response import MetaxFileCharacteristics
 
-from siptools_research.database import connect_mongoengine
 from siptools_research.exceptions import (InvalidFileError,
                                           InvalidFileMetadataError,
                                           file_error_collector)
@@ -48,7 +47,6 @@ def generate_metadata(
     dataset_files = metax_client.get_dataset_files(dataset_id)
 
     # Clear any existing file errors
-    connect_mongoengine(config)
     FileError.objects.filter(
         file_id__in=[file["id"] for file in dataset_files],
         dataset_id__in=(None, dataset_id)

@@ -2,6 +2,7 @@
 import luigi
 
 from siptools_research.database import connect_mongoengine
+from siptools_research.config import Configuration
 from siptools_research.workflow import TARGET_TASKS, find_workflows
 
 
@@ -17,7 +18,11 @@ class InitWorkflows(luigi.WrapperTask):
         """
         # Connect to database here, since this is the entry point for
         # `siptools-research.service`
-        connect_mongoengine(self.config)
+        configuration = Configuration(self.config)
+        connect_mongoengine(
+            host=configuration.get("mongodb_host"),
+            port=configuration.get("mongodb_port"),
+        )
 
         for workflow in find_workflows(enabled=True, config=self.config):
             task = TARGET_TASKS[workflow.target](
