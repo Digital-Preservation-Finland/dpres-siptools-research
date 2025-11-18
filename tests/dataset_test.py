@@ -724,10 +724,6 @@ def test_already_preserved(config, requests_mock, method_name, arguments):
         ({"enabled": True}, ["ds1", "ds3", "ds5"]),
         # Only disabled  datasets
         ({"enabled": False}, ["ds2", "ds4", "ds6"]),
-        # Dataset that are being preserved
-        ({"target": "preservation"}, ["ds5", "ds6"]),
-        # Enabled datasets that are being preserved
-        ({"target": "preservation", "enabled": True}, ["ds5"]),
     ]
 )
 def test_find_workflows(config, requests_mock, kwargs, expected_datasets):

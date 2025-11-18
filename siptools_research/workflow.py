@@ -242,7 +242,6 @@ def _delete_directory(path):
 
 def find_workflows(
     enabled=None,
-    target=None,
     identifier=None,
     config="/etc/siptools_research.conf",
 ):
@@ -250,7 +249,6 @@ def find_workflows(
 
     :param bool enabled: If `True`, show only enabled workflows, if
                          `False`, show only disabled workflows.
-    :param str target: Show only workflows with this target
     :param str identifier: Show only workflows with this dataset identifier
     :param str config: Path to configuration file
     :returns: List of matching workflows
@@ -258,8 +256,6 @@ def find_workflows(
     search = {}
     if enabled is not None:
         search["enabled"] = enabled
-    if target is not None:
-        search["target"] = target
     if identifier is not None:
         search["id"] = identifier
 
