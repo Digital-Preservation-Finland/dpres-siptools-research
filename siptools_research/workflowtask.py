@@ -9,6 +9,7 @@ from metax_access import (
     DS_STATE_REJECTED_IN_DIGITAL_PRESERVATION_SERVICE,
 )
 
+from siptools_research.config import Configuration
 from siptools_research.dataset import Dataset
 from siptools_research.exceptions import (
     BulkInvalidDatasetFileError,
@@ -45,8 +46,7 @@ class WorkflowTask(luigi.Task):
         super().__init__(*args, **kwargs)
         self.dataset = Dataset(self.dataset_id, config=self.config)
         self.workspace = Workspace(
-            # TODO: Implement cleaner way to read config file
-            packaging_root = self.dataset.conf.get("packaging_root"),
+            packaging_root = Configuration(self.config).get("packaging_root"),
             dataset_id = self.dataset.identifier,
         )
 
@@ -82,7 +82,7 @@ class WorkflowExternalTask(luigi.ExternalTask):
         super().__init__(*args, **kwargs)
         self.dataset = Dataset(self.dataset_id, config=self.config)
         self.workspace = Workspace(
-            packaging_root = self.dataset.conf.get("packaging_root"),
+            packaging_root = Configuration(self.config).get("packaging_root"),
             dataset_id = self.dataset.identifier,
         )
 

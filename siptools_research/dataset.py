@@ -2,7 +2,6 @@
 
 import datetime
 
-from siptools_research.config import Configuration
 from siptools_research.metax import get_metax_client
 from siptools_research.models.dataset_entry import (
     DatasetEntry,
@@ -37,8 +36,6 @@ class Dataset:
         """Initialize dataset."""
         self.identifier = identifier
         self._cached_metadata = None
-        # TODO: self.conf seems unnecessary
-        self.conf = Configuration(config)
         self._metax_client = get_metax_client(config)
 
         self._document = document
