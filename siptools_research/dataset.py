@@ -59,7 +59,7 @@ class Dataset:
         return self._cached_metadata
 
     @property
-    def _has_been_copied_to_pas_datacatalog(self):
+    def has_been_copied_to_pas_datacatalog(self):
         return self._metadata["preservation"]["dataset_version"]["id"]\
             is not None
 
@@ -76,7 +76,7 @@ class Dataset:
 
         elif self._metadata["data_catalog"] == IDA_DATA_CATALOG_IDENTIFIER:
 
-            if self._has_been_copied_to_pas_datacatalog:
+            if self.has_been_copied_to_pas_datacatalog:
                 # Dataset was created in IDA catalog, and it has been
                 # copied to PAS data catalog. The preferred identifier
                 # of the PAS version of the dataset will be used as SIP
@@ -97,12 +97,14 @@ class Dataset:
     @property
     def preservation_state(self):
         """Preservation state of the dataset."""
-        if self._has_been_copied_to_pas_datacatalog:
-            return self._metadata["preservation"]["dataset_version"][
+        if self.has_been_copied_to_pas_datacatalog:
+            state = self._metadata["preservation"]["dataset_version"][
                 "preservation_state"
             ]
         else:
-            return self._metadata["preservation"]["state"]
+            state = self._metadata["preservation"]["state"]
+
+        return state
 
     def set_preservation_reason(self, reason: str):
         """Set preservation reason description of the dataset."""
@@ -114,7 +116,7 @@ class Dataset:
         If dataset has been copied to PAS data catalog, the preservation
         state of the PAS version is set.
         """
-        if self._has_been_copied_to_pas_datacatalog:
+        if self.has_been_copied_to_pas_datacatalog:
             preserved_dataset_id = self._metadata["preservation"][
                 "dataset_version"]["id"]
         else:
@@ -133,7 +135,7 @@ class Dataset:
         If dataset has been copied to PAS data catalog, the value is
         updated in PAS version, not in the original version.
         """
-        if self._has_been_copied_to_pas_datacatalog:
+        if self.has_been_copied_to_pas_datacatalog:
             preserved_dataset_id = self._metadata["preservation"][
                 "dataset_version"]["id"]
         else:
@@ -142,7 +144,7 @@ class Dataset:
         self._metax_client.set_pas_package_created(preserved_dataset_id)
 
     @property
-    def _is_preserved(self):
+    def is_preserved(self):
         """Check if dataset already is in DPS."""
         return self._metadata["preservation"]["pas_package_created"]
 
@@ -168,7 +170,7 @@ class Dataset:
     def copy_to_pas_datacatalog(self):
         """Copy dataset to PAS data catalog."""
         if self._metadata["data_catalog"] != PAS_DATA_CATALOG_IDENTIFIER \
-                and not self._has_been_copied_to_pas_datacatalog:
+                and not self.has_been_copied_to_pas_datacatalog:
             self._metax_client.copy_dataset_to_pas_catalog(self.identifier)
 
     def get_datacite(self) -> bytes:
@@ -180,8 +182,8 @@ class Dataset:
         """Dataset identifier of the dataset using the PAS data catalog.
 
         If the dataset was created in IDA, this is the same as the copy
-        created using :meth:`copy_to_pas_datacatalog`. If not, this is the
-        dataset identifier itself.
+        created using :meth:`copy_to_pas_datacatalog`. If not, this is
+        the dataset identifier itself.
         """
         return (
             self._metadata["preservation"]["dataset_version"]["id"]

@@ -1,4 +1,5 @@
 """Workflow class."""
+import contextlib
 import enum
 import shutil
 
@@ -109,10 +110,10 @@ class Workflow:
         if self.enabled:
             raise WorkflowExistsError
 
-        if self.dataset._has_been_copied_to_pas_datacatalog:
+        if self.dataset.has_been_copied_to_pas_datacatalog:
             raise CopiedToPasDataCatalogError
 
-        if self.dataset._is_preserved:
+        if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
         self.dataset.set_preservation_state(
@@ -137,7 +138,7 @@ class Workflow:
         if self.enabled:
             raise WorkflowExistsError
 
-        if self.dataset._is_preserved:
+        if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
         self.dataset.set_preservation_state(
@@ -158,7 +159,7 @@ class Workflow:
         if self.enabled:
             raise WorkflowExistsError
 
-        if self.dataset._is_preserved:
+        if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
         # TODO: ensure that user has confirmed metadata, before dataset
@@ -183,7 +184,7 @@ class Workflow:
 
         # Confirming metadata of dataset is pointless, if dataset is
         # already preserved
-        if self.dataset._is_preserved:
+        if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
         # TODO: Resetting dataset or restarting metadata generation
@@ -201,10 +202,10 @@ class Workflow:
         if self.enabled:
             raise WorkflowExistsError
 
-        if self.dataset._has_been_copied_to_pas_datacatalog:
+        if self.dataset.has_been_copied_to_pas_datacatalog:
             raise CopiedToPasDataCatalogError
 
-        if self.dataset._is_preserved:
+        if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
         self.dataset.set_preservation_state(DS_STATE_INITIALIZED, description)
@@ -221,7 +222,7 @@ class Workflow:
         if self.enabled:
             raise WorkflowExistsError
 
-        if self.dataset._is_preserved:
+        if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
         self.dataset.set_preservation_state(DS_STATE_REJECTED_BY_USER,
@@ -233,11 +234,8 @@ def _delete_directory(path):
 
     :param path: Directory path
     """
-    try:
+    with contextlib.suppress(FileNotFoundError):
         shutil.rmtree(path)
-    except FileNotFoundError:
-        # Previous workspace does not exist
-        pass
 
 
 def find_workflows(
@@ -259,7 +257,7 @@ def find_workflows(
     if identifier is not None:
         search["id"] = identifier
 
-    return list(
+    return [
         Workflow(document["id"], document=document, config=config)
         for document in WorkflowEntry.objects.filter(**search)
-    )
+    ]

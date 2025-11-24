@@ -344,7 +344,7 @@ def test_reject(requests_mock, config):
     # Mock Metax
     add_metax_dataset(requests_mock)
     preservation_patch = requests_mock.patch(
-        f"/v3/datasets/test_dataset_id/preservation", json={}
+        "/v3/datasets/test_dataset_id/preservation", json={}
     )
 
     workflow = Workflow("test_dataset_id", config=config)
@@ -399,7 +399,7 @@ def test_workflow_conflict(config, requests_mock):
 
 
 @pytest.mark.parametrize(
-    ["method_name", "arguments"],
+    ("method_name", "arguments"),
     [
         ("generate_metadata", ()),
         ("validate", ()),
