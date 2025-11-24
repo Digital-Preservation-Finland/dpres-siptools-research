@@ -12,6 +12,8 @@ class WorkflowEntry(Document):
 
     target = StringField()
 
+    metadata_confirmed = BooleanField(default=False)
+
     meta = {
         "collection": "workflow",
         "db_alias": "siptools_research",

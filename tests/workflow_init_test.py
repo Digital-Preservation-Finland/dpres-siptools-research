@@ -7,6 +7,7 @@ from metax_access.template_data import DATASET
 
 import tests.utils
 from siptools_research.dataset import Dataset
+from siptools_research.models.workflow_entry import WorkflowEntry
 from siptools_research.tasks.cleanup import Cleanup
 from siptools_research.tasks.generate_metadata import GenerateMetadata
 from siptools_research.tasks.report_dataset_validation_result import (
@@ -36,11 +37,11 @@ def test_initworkflows(config, requests_mock):
         tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
 
     # Add sample workflows to database
-    Workflow("dataset1", config=config).preserve()
+    Workflow("dataset1", config=config).generate_metadata()
     dataset_2 = Workflow("dataset2", config=config)
-    dataset_2.preserve()
+    dataset_2.generate_metadata()
     dataset_2.disable()
-    Workflow("dataset3", config=config).preserve()
+    Workflow("dataset3", config=config).generate_metadata()
 
     # Get list of tasks required by InitWorkflows task
     task = InitWorkflows(config=config)
@@ -75,8 +76,13 @@ def test_init_correct_task(config, requests_mock, method, target_task):
     # Mock Metax
     tests.utils.add_metax_dataset(requests_mock)
 
+    # Metadata must be confirmed to allow validation or preservation
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
+
     # Add a workflow to database
-    workflow = Workflow("test_dataset_id", config=config)
+    workflow = Workflow(dataset_id="test_dataset_id", config=config)
     getattr(workflow, method)()
 
     task = InitWorkflows(config=config)

@@ -14,8 +14,10 @@ from metax_access.template_data import DATASET
 
 from siptools_research.exceptions import (
     AlreadyPreservedError,
+    MetadataNotGeneratedError,
     WorkflowExistsError,
 )
+from siptools_research.models.workflow_entry import WorkflowEntry
 from siptools_research.workflow import (
     Workflow,
     find_workflows,
@@ -114,7 +116,13 @@ def test_restart_generate_metadata(config, requests_mock):
     """
     # Mock Metax
     add_metax_dataset(requests_mock)
+
+    # Confirm dataset before restart
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
     workflow = Workflow("test_dataset_id", config=config)
+    assert workflow.metadata_confirmed
 
     # Create preservation workspaces
     workflow.workspace.metadata_generation.mkdir(parents=True)
@@ -129,6 +137,9 @@ def test_restart_generate_metadata(config, requests_mock):
     assert not any(workflow.workspace.metadata_generation.iterdir())
     assert not workflow.workspace.validation.exists()
     assert not workflow.workspace.preservation.exists()
+
+    # Dataset metadata confirmation should be revoked
+    assert workflow.metadata_confirmed is False
 
 
 def test_validate_dataset(config, requests_mock):
@@ -148,6 +159,11 @@ def test_validate_dataset(config, requests_mock):
     patch_preservation = requests_mock.patch(
         "/v3/datasets/test_dataset_id/preservation", json={}
     )
+
+    # Metadata must be confirmed before validation
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
 
     Workflow("test_dataset_id", config=config).validate()
 
@@ -179,6 +195,11 @@ def test_restart_validate(config, requests_mock):
     """
     # Mock metax
     add_metax_dataset(requests_mock)
+
+    # Metadata must be confirmed before validation
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
 
     workflow = Workflow("test_dataset_id", config=config)
 
@@ -223,7 +244,12 @@ def test_preserve(config, requests_mock):
         "/v3/datasets/test_dataset_id/preservation", json={}
     )
 
-    Workflow("test_dataset_id", config=config).preserve()
+    # Metadata must be confirmed before preservation
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
+
+    workflow = Workflow("test_dataset_id", config=config).preserve()
 
     # Check that dataset was added to database.
     active_workflows = find_workflows(enabled=True, config=config)
@@ -254,9 +280,13 @@ def test_restart_preserve(config, requests_mock):
     # Mock metax
     add_metax_dataset(requests_mock)
 
-    workflow = Workflow("test_dataset_id", config=config)
+    # Metadata must be confirmed before preservation
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
 
     # Create workspaces
+    workflow = Workflow("test_dataset_id", config=config)
     workflow.workspace.metadata_generation.mkdir(parents=True)
     (workflow.workspace.metadata_generation / 'test').write_text('foo')
     workflow.workspace.validation.mkdir(parents=True)
@@ -281,11 +311,46 @@ def test_restart_preserve(config, requests_mock):
     assert not any(workflow.workspace.preservation.iterdir())
 
 
-def test_confirm(requests_mock, config):
+def test_confirm(requests_mock, config, workspace):
     """Test confirming dataset metadata.
 
-    Tests that preservation state is updated when dataset metadata is
-    confirmed.
+    :param requests_mock: HTTP request mocker
+    :param config: Configuration file
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
+    patch_preservation = requests_mock.patch(
+        f"/v3/datasets/{dataset['id']}/preservation", json={}
+    )
+
+    # Add a fake output for metadata generation workflow, so it looks
+    # like metadata would be generated
+    output_path = (workspace
+     / "metadata_generation"
+     / "generate-metadata.finished")
+
+    output_path.parent.mkdir()
+    output_path.write_text("foo")
+
+    workflow = Workflow(dataset["id"], config=config)
+    workflow.confirm()
+
+    assert workflow.metadata_confirmed is True
+
+    # TODO: Setting preservation state is not necessary once
+    # TPASPKT-1600 has been resolved.
+    assert patch_preservation.last_request.json() == {
+        "state": DS_STATE_METADATA_CONFIRMED,
+        "description": {"en": "Metadata confirmed by user"}
+    }
+
+
+def test_confirm_metadata_not_generated(requests_mock, config):
+    """Test confirming dataset metadata when metadata is not generated.
+
+    Exception should be raised.
 
     :param requests_mock: HTTP request mocker
     :param config: Configuration file
@@ -293,16 +358,9 @@ def test_confirm(requests_mock, config):
     # Mock Metax
     dataset = copy.deepcopy(DATASET)
     requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
-    patch_preservation = requests_mock.patch(
-        f"/v3/datasets/{dataset['id']}/preservation", json={}
-    )
 
-    Workflow(dataset["id"], config=config).confirm()
-
-    assert patch_preservation.last_request.json() == {
-        "state": DS_STATE_METADATA_CONFIRMED,
-        "description": {"en": "Metadata confirmed by user"}
-    }
+    with pytest.raises(MetadataNotGeneratedError):
+        Workflow(dataset["id"], config=config).confirm()
 
 
 def test_reset(requests_mock, config):
@@ -375,10 +433,14 @@ def test_workflow_conflict(config, requests_mock):
     add_metax_dataset(requests_mock)
 
     # Add a sample workflow to database
-    workflow = Workflow("test_dataset_id", config=config)
-    workflow.validate()
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.enabled = True
+    workflow_entry.target = "metadata_generation"
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
 
     # Try to start another workflow
+    workflow = Workflow("test_dataset_id", config=config)
     with pytest.raises(WorkflowExistsError):
         workflow.preserve()
 
@@ -386,7 +448,7 @@ def test_workflow_conflict(config, requests_mock):
     # should not be changed
     active_workflows = find_workflows(enabled=True, config=config)
     assert len(active_workflows) == 1
-    assert active_workflows[0].target.value == 'validation'
+    assert active_workflows[0].target.value == "metadata_generation"
     assert active_workflows[0].dataset.identifier == "test_dataset_id"
 
     # New workflow can be started when the previous workflow is
@@ -468,13 +530,25 @@ def test_find_workflows(config, requests_mock, kwargs, expected_datasets):
     workflow2 = Workflow('ds2', config=config)
     workflow2.generate_metadata()
     workflow2.disable()
+    workflowentry3 = WorkflowEntry(id="ds3")
+    workflowentry3.metadata_confirmed = True
+    workflowentry3.save()
     workflow3 = Workflow('ds3', config=config)
     workflow3.validate()
+    workflowentry4 = WorkflowEntry(id="ds4")
+    workflowentry4.metadata_confirmed = True
+    workflowentry4.save()
     workflow4 = Workflow('ds4', config=config)
     workflow4.validate()
     workflow4.disable()
+    workflowentry5 = WorkflowEntry(id="ds5")
+    workflowentry5.metadata_confirmed = True
+    workflowentry5.save()
     workflow5 = Workflow('ds5', config=config)
     workflow5.preserve()
+    workflowentry6 = WorkflowEntry(id="ds6")
+    workflowentry6.metadata_confirmed = True
+    workflowentry6.save()
     workflow6 = Workflow('ds6', config=config)
     workflow6.preserve()
     workflow6.disable()

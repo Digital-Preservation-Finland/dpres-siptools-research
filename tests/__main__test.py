@@ -22,7 +22,7 @@ def test_main_status_match(config, cli_runner, requests_mock):
     # Add a single workflow document and a couple of workflow tasks to
     # the db
     workflow = Workflow("test_dataset_id", config=config)
-    workflow.preserve()
+    workflow.generate_metadata()
     dataset = Dataset("test_dataset_id", config=config)
     dataset.log_task(
         "CreateWorkspace",
@@ -52,7 +52,7 @@ def test_main_status_match(config, cli_runner, requests_mock):
     status_data = eval(result.output)
 
     assert status_data["_id"] == "test_dataset_id"
-    assert status_data["target"] == "preservation"
+    assert status_data["target"] == "metadata_generation"
 
     create_workspace = status_data["workflow_tasks"]["CreateWorkspace"]
     assert create_workspace["messages"] == "Workspace directory created"
@@ -83,7 +83,7 @@ def test_main_list(config, cli_runner, requests_mock):
 
         # Add workflow
         workflow = Workflow(f"aineisto_{i}", config=config)
-        workflow.preserve()
+        workflow.generate_metadata()
 
     result = cli_runner([
         "--config", config, "dataset", "list"
@@ -125,7 +125,8 @@ def test_main_disabled(config, cli_runner, requests_mock):
     tests.utils.add_metax_dataset(requests_mock)
 
     # Add a single workflow document to the db
-    Workflow("test_dataset_id", config=config).preserve()
+    workflow = Workflow("test_dataset_id", config=config)
+    workflow.generate_metadata()
 
     # Disable the dataset using CLI
     result = cli_runner([

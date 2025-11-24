@@ -1,10 +1,14 @@
 """Tests for ``siptools_research.api.dataset`` module."""
+import copy
+
 from metax_access import (
     DS_STATE_METADATA_CONFIRMED,
     DS_STATE_REJECTED_BY_USER,
 )
+from metax_access.template_data import DATASET
 
 import tests.utils
+from siptools_research.models.workflow_entry import WorkflowEntry
 from siptools_research.workflow import Workflow
 
 
@@ -17,6 +21,11 @@ def test_dataset_preserve(client, config, requests_mock):
     """
     # Mock Metax
     tests.utils.add_metax_dataset(requests_mock)
+
+    # Metadata must be confirmed before preservation
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
 
     response = client.post("/dataset/test_dataset_id/preserve")
     assert response.status_code == 202
@@ -52,22 +61,33 @@ def test_dataset_generate_metadata(client, config, requests_mock):
     assert workflow.target.value == "metadata_generation"
 
 
-def test_dataset_confirm(client, requests_mock):
+def test_dataset_confirm(client, requests_mock, workspace):
     """Test confirming dataset.
 
     :param client: Flask test client
     :param requests_mock: HTTP Request mocker
+    :param workspace: Temporary workspace directory
     """
     # Mock Metax
-    tests.utils.add_metax_dataset(requests_mock)
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    tests.utils.add_metax_dataset(requests_mock, dataset=dataset)
     preservation_patch = requests_mock.patch(
-        "/v3/datasets/test_dataset_id/preservation", json={}
+        f"/v3/datasets/{workspace.name}/preservation", json={}
     )
 
-    response = client.post("/dataset/test_dataset_id/confirm")
+    # Add a fake output for metadata generation workflow, so it looks
+    # like metadata would be generated
+    output_path = (workspace
+     / "metadata_generation"
+     / "generate-metadata.finished")
+    output_path.parent.mkdir()
+    output_path.write_text("Fake output")
+
+    response = client.post(f"/dataset/{workspace.name}/confirm")
     assert response.status_code == 200
     assert response.json == {
-        "dataset_id": "test_dataset_id",
+        "dataset_id": workspace.name,
         "status": "dataset metadata has been confirmed"
     }
 
@@ -115,6 +135,11 @@ def test_validate_dataset(client, config, requests_mock):
     """
     # Mock Metax
     tests.utils.add_metax_dataset(requests_mock)
+
+    # Metadata must be confirmed before validation
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
 
     response = client.post("/dataset/test_dataset_id/validate")
     assert response.status_code == 202

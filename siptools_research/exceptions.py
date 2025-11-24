@@ -77,6 +77,18 @@ class ActionNotAllowedError(Exception):
         super().__init__(message or self._default_message)
 
 
+class MetadataNotGeneratedError(ActionNotAllowedError):
+    """Raised when metadata has not been generated."""
+
+    _default_message = "Metadata has not been generated."
+
+
+class MetadataNotConfirmedError(ActionNotAllowedError):
+    """Raised when metadata has not been confirmed."""
+
+    _default_message = "Metadata has not been confirmed."
+
+
 class WorkflowExistsError(ActionNotAllowedError):
     """Raised when conflicting workflow exists."""
 

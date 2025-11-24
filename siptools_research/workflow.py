@@ -17,6 +17,8 @@ from siptools_research.dataset import Dataset
 from siptools_research.exceptions import (
     AlreadyPreservedError,
     CopiedToPasDataCatalogError,
+    MetadataNotConfirmedError,
+    MetadataNotGeneratedError,
     WorkflowExistsError,
 )
 from siptools_research.models.workflow_entry import WorkflowEntry
@@ -96,6 +98,11 @@ class Workflow:
         self._document.enabled = True
         self._document.save()
 
+    @property
+    def metadata_confirmed(self):
+        """Whether dataset metadata has been confirmed."""
+        return self._document.metadata_confirmed
+
     def _set_target(self, target):
         """Set target of workflow.
 
@@ -117,6 +124,8 @@ class Workflow:
             raise AlreadyPreservedError
 
         self.dataset.lock()
+
+        self._document.metadata_confirmed = False
 
         self.dataset.set_preservation_state(
             DS_STATE_GENERATING_METADATA,
@@ -143,6 +152,15 @@ class Workflow:
         if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
+        # Metadata does not necessarily has to be confirmed when
+        # validation is started, but in practise the validation workflow
+        # is initialized when user proposes the dataset for
+        # preservation, and therefore metadta must be confirmed when the
+        # dataset generated. Anyway, at least the metadata has to be
+        # generated before it is validated.
+        if not self.metadata_confirmed:
+            raise MetadataNotConfirmedError
+
         self.dataset.set_preservation_state(
             DS_STATE_VALIDATING_METADATA,
             "Proposed for preservation by user"
@@ -164,8 +182,8 @@ class Workflow:
         if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
-        # TODO: ensure that user has confirmed metadata, before dataset
-        # is preserved
+        if not self.metadata_confirmed:
+            raise MetadataNotConfirmedError
 
         self.dataset.set_preservation_state(
             DS_STATE_IN_PACKAGING_SERVICE,
@@ -181,16 +199,23 @@ class Workflow:
 
     def confirm(self) -> None:
         """Confirm dataset metadata."""
-        # TODO: Confirmation should not be allowed if metadata has not
-        # been generated.
+        # Dataset metadata can not be confirmed if has not even been
+        # generated yet
+        metadata_generation_task = TARGET_TASKS[Target.METADATA_GENERATION](
+            dataset_id=self.dataset.identifier,
+            config=self.config,
+        )
+        if not metadata_generation_task.complete():
+            raise MetadataNotGeneratedError
 
         # Confirming metadata of dataset is pointless, if dataset is
         # already preserved
         if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
-        # TODO: Resetting dataset or restarting metadata generation
-        # should undo the confirmation.
+        self._document.metadata_confirmed = True
+        self._document.save()
+
         self.dataset.set_preservation_state(
             DS_STATE_METADATA_CONFIRMED, "Metadata confirmed by user"
         )
@@ -215,6 +240,11 @@ class Workflow:
 
         # Unlock dataset
         self.dataset.unlock()
+
+        # Because the metadata might change, user has to confirm the
+        # metadata again.
+        self._document.metadata_confirmed = False
+        self._document.save()
 
     def reject(self) -> None:
         """Reject dataset.

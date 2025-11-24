@@ -136,7 +136,7 @@ def test_run_workflowtask(config, workspace, requests_mock):
 
     # Add a workflow to database
     workflow = Workflow(workspace.name, config=config)
-    workflow.preserve()
+    workflow.generate_metadata()
 
     # Run DummyTask
     luigi.build(
