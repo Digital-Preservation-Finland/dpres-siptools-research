@@ -129,7 +129,6 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     )
     requests_mock.get("/v3/reference-data/file-format-versions",
                       json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
-    requests_mock.post("/v3/files/patch-many")
 
     # Mock Ida
     tests.utils.add_mock_ida_download(

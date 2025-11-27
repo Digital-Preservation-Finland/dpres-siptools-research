@@ -70,6 +70,10 @@ def add_metax_dataset(
     # Mock Metax contracts API
     requests_mock.get("/v3/contracts/{}".format(contract["id"]), json=contract)
 
+    # Mock patching dataset files. This is used to lock/unlock all files
+    # of the dataset, when the dataset is locked.
+    requests_mock.post("/v3/files/patch-many")
+
     return dataset
 
 

@@ -66,8 +66,9 @@ def test_generate_metadata(config, requests_mock):
 
     Tests that `generate_metadata` method:
 
+    * locks metadata in Metax
     * sets correct target for the workflow
-    * creates metadata generation workspace.
+    * creates metadata generation workspace
     * sets preservation state
 
     :param config: Configuration file
@@ -80,6 +81,10 @@ def test_generate_metadata(config, requests_mock):
     )
 
     Workflow("test_dataset_id", config=config).generate_metadata()
+
+    # Metadata should be locked
+    assert patch_preservation.request_history[0].json() \
+        == {"pas_process_running": True}
 
     # Check that workflow was added to database.
     active_workflows = find_workflows(enabled=True, config=config)
@@ -311,7 +316,6 @@ def test_reset(requests_mock, config):
     """
     # Mock Metax
     add_metax_dataset(requests_mock)
-    requests_mock.post("/v3/files/patch-many", json={})
 
     preservation_patch = requests_mock.patch(
         "/v3/datasets/test_dataset_id/preservation", json={}

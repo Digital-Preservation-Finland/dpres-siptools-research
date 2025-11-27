@@ -116,6 +116,8 @@ class Workflow:
         if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
+        self.dataset.lock()
+
         self.dataset.set_preservation_state(
             DS_STATE_GENERATING_METADATA,
             "File identification started by user",

@@ -148,6 +148,10 @@ class Dataset:
         """Check if dataset already is in DPS."""
         return self._metadata["preservation"]["pas_package_created"]
 
+    def lock(self):
+        """Lock dataset."""
+        self._metax_client.lock_dataset(self.identifier)
+
     def unlock(self):
         """Unlock dataset."""
         self._metax_client.unlock_dataset(self.identifier)
