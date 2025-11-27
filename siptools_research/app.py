@@ -9,6 +9,7 @@ import siptools_research.api.dataset
 import siptools_research.api.file_errors
 from siptools_research.config import Configuration
 from siptools_research.database import connect_mongoengine
+from siptools_research.exceptions import ActionNotAllowedError
 
 logging.basicConfig(level=logging.ERROR)
 LOGGER = logging.getLogger(__name__)
@@ -81,6 +82,13 @@ def create_app():
         """Handle ResourceNotAvailableError."""
         response = jsonify({"code": 404, "error": str(error)})
         response.status_code = 404
+        return response
+
+    @app.errorhandler(ActionNotAllowedError)
+    def action_not_allowed_error(error):
+        """Handle ResourceNotAvailableError."""
+        response = jsonify({"code": 400, "error": str(error)})
+        response.status_code = 400
         return response
 
     return app

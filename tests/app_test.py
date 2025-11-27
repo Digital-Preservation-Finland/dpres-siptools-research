@@ -3,6 +3,8 @@ import flask
 import pytest
 from metax_access import ResourceNotAvailableError
 
+from siptools_research.exceptions import ActionNotAllowedError
+
 
 def test_index(client):
     """Test the application index page.
@@ -83,3 +85,24 @@ def test_metax_error_handler(app, caplog):
     }
 
     assert len(caplog.records) == 0
+
+
+def test_action_not_allowed_error_handler(app):
+    """Test ActionNotAllowedError is handled.
+
+    :param app: Flask application
+    """
+    error_message = "Dataset is not ready for this action!"
+
+    @app.route("/test")
+    def _raise_exception():
+        """Raise exception."""
+        raise ActionNotAllowedError(error_message)
+
+    with app.test_client() as client:
+        response = client.get("/test")
+
+    assert response.json == {
+        "code": 400,
+        "error": error_message
+    }
