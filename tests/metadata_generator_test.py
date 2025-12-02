@@ -260,7 +260,9 @@ def test_generate_metadata_unrecognized(config, requests_mock, tmp_path):
     assert len(exception_info.value.file_errors) == 1
     file_error = exception_info.value.file_errors[0]
 
-    assert str(file_error) == 'File format was not recognized'
+    assert str(file_error) == ("ExtractorNotFound: Proper extractor was"
+                               " not found. The file was not analyzed.")
+
     assert next(
         file for file in file_error.files
         if file["id"] == 'pid:urn:identifier'
@@ -503,15 +505,6 @@ def test_generate_metadata_csv(
         "filepath",
     ),
     [
-        # File-scraper ignores user definend format version (see
-        # TPAPSKT-1539)
-        (
-            "file_format_version",
-            {"file_format": "image/tiff", "format_version": "1.2"},
-            "File scraper detects a different format_version: 6.0",
-            "tests/data/sample_files/valid_tiff.tiff"
-
-        ),
         (
             "csv_record_separator",
             "CR",
@@ -579,6 +572,72 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
     # Check the error message
     assert len(exception_info.value.file_errors) == 1
     assert str(exception_info.value.file_errors[0]) == expected_error
+
+
+@pytest.mark.parametrize(
+    (
+        "predefined_mimetype",
+        "predefined_version",
+        "expected_error",
+    ),
+    [
+        # Wrong mimetype and version
+        (
+            "image/tiff",
+            None,
+            "PilExtractor: Error in analyzing file.",
+        ),
+        # Correct mimetype but wrong version
+        (
+            "application/pdf",
+            "1.3",
+            "The Extractors produced a different version",
+        ),
+    ]
+)
+def test_wrong_predefined_file_format(config, requests_mock, tmp_path,
+                                      predefined_mimetype, predefined_version,
+                                      expected_error):
+    """Test generating metadata with wrong predefined wrong file format.
+
+    Add wrong predefined metadata to a file that is actually PDF A-3b.
+    Wrong mimetype or version should cause exception, because Scraper
+    can not extract all metadata, or it finds conflicting metadata from
+    the file.
+
+    :param config: Configuration file
+    :param requests_mock: Mocker object
+    :param tmp_path: Temporary directory
+    :param predefined_mimetype: Predefined mimetype
+    :param predefined_version: Predefined version
+    :param expected_error: One of the errors that should be found
+    """
+    # Mock Metax. Create file metadata with a predefined value in file
+    # characteristics
+    file = copy.deepcopy(FILE)
+    file["characteristics"]["file_format_version"]["file_format"] \
+        = predefined_mimetype
+    file["characteristics"]["file_format_version"]["format_version"] \
+        = predefined_version
+    dataset = add_metax_dataset(requests_mock, files=[file])
+    requests_mock.get("/v3/reference-data/file-format-versions",
+                      json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
+
+    tmp_file_path = tmp_path / "path/to/file"
+    tmp_file_path.parent.mkdir(parents=True)
+    shutil.copy("tests/data/sample_files/application_pdf.pdf",
+                tmp_file_path)
+
+    with pytest.raises(BulkInvalidDatasetFileError) as exception_info:
+        generate_metadata(dataset["id"], tmp_path, config)
+
+    # There will be many errors. Just check that at least one of the
+    # error messages matches the expected error
+    assert any(
+        expected_error in str(error)
+        for error
+        in exception_info.value.file_errors
+    )
 
 
 def test_generate_metadata_dataset_not_found(config, requests_mock, tmp_path):

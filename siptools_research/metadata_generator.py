@@ -84,6 +84,20 @@ def generate_metadata(
             )
             scraper.scrape(check_wellformed=False)
 
+            # Check that scraping succeed
+            # TODO: Why scraper does not raise Exception?
+            if scraper.well_formed is False and not is_linked_bitlevel:
+                # TODO: There probably should be easier way to get the
+                # error messages from Scraper. It could be implemented
+                # in TPASPKT-1622
+                for info in scraper.info.values():
+                    for error in info["errors"]:
+                        collect_error(InvalidFileError(
+                            f"{info['class']}: {error}",
+                            [file_metadata]
+                        ))
+                continue
+
             scraper_file_characteristics: MetaxFileCharacteristics = {
                 "file_format_version": None,
                 "encoding": scraper.streams[0].get("charset"),
@@ -91,18 +105,6 @@ def generate_metadata(
                 "csv_record_separator": scraper.streams[0].get("separator"),
                 "csv_quoting_char": scraper.streams[0].get("quotechar"),
             }
-
-            is_unrecognized = \
-                "(:unav)" in (scraper.mimetype, scraper.version)
-            if is_unrecognized and not is_linked_bitlevel:
-                # TODO: We probably should check all metadata that is required
-                # for packaging, but we can not check all fields in
-                # scraper.streams, because some of them will be "(:unav)" and
-                # it seems to be OK (or is there a bug in file-scraper,
-                # siptools-ng, or sample files of this repository?)
-                error = "File format was not recognized"
-                collect_error(InvalidFileError(error, [file_metadata]))
-                continue
 
             try:
                 url = reference_data[(scraper.mimetype, scraper.version)]
@@ -127,19 +129,9 @@ def generate_metadata(
             # Check that user defined metadata is not ignored by
             # file-scraper
             # TODO: This is necessary until file-scraper does not ignore
-            # predefined metadata (See for example TPASPKT-1418 and
-            # TPASPKT-1576)
+            # predefined metadata (See TPASPKT-1621). The problem has
+            # already been fixed for file_format and format_version.
             compare_file_chars = [
-                (
-                    "file_format",
-                    scraper.mimetype,
-                    mimetype,
-                ),
-                (
-                    "format_version",
-                    scraper.version,
-                    version,
-                ),
                 (
                     "encoding",
                     scraper_file_characteristics["encoding"],
