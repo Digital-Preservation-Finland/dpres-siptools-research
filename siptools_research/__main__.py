@@ -61,8 +61,8 @@ def cli(ctx, config):
 
     configuration = Configuration(config)
     connect_mongoengine(
-        host = configuration.get("mongodb_host"),
-        port = configuration.get("mongodb_port"),
+        host=configuration.get("mongodb_host"),
+        port=configuration.get("mongodb_port"),
     )
 
 

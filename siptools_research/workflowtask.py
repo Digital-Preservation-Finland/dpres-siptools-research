@@ -46,8 +46,8 @@ class WorkflowTask(luigi.Task):
         super().__init__(*args, **kwargs)
         self.dataset = Dataset(self.dataset_id, config=self.config)
         self.workspace = Workspace(
-            packaging_root = Configuration(self.config).get("packaging_root"),
-            dataset_id = self.dataset.identifier,
+            packaging_root=Configuration(self.config).get("packaging_root"),
+            dataset_id=self.dataset.identifier,
         )
 
 
@@ -82,8 +82,8 @@ class WorkflowExternalTask(luigi.ExternalTask):
         super().__init__(*args, **kwargs)
         self.dataset = Dataset(self.dataset_id, config=self.config)
         self.workspace = Workspace(
-            packaging_root = Configuration(self.config).get("packaging_root"),
-            dataset_id = self.dataset.identifier,
+            packaging_root=Configuration(self.config).get("packaging_root"),
+            dataset_id=self.dataset.identifier,
         )
 
 

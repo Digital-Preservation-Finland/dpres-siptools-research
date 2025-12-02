@@ -12,8 +12,10 @@ def validate_dataset(dataset_id):
 
     :returns: HTTP Response
     """
-    Workflow(dataset_id=dataset_id,
-             config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")).validate()
+    Workflow(
+        dataset_id=dataset_id,
+        config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
+    ).validate()
 
     response = jsonify({'dataset_id': dataset_id,
                         'status': 'validating dataset'})
@@ -28,8 +30,10 @@ def preserve(dataset_id):
 
     :returns: HTTP Response
     """
-    Workflow(dataset_id=dataset_id,
-             config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")).preserve()
+    Workflow(
+        dataset_id=dataset_id,
+        config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
+    ).preserve()
 
     response = jsonify({'dataset_id': dataset_id,
                         'status': 'preserving'})
