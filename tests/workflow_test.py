@@ -63,6 +63,41 @@ def test_enable_disable(config):
     assert workflow.enabled is False
 
 
+def test_active(config, requests_mock, workspace):
+    """Test checking if workflow is active.
+
+    :param config: Configuration file
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset)
+
+    workflow = Workflow(workspace.name, config=config)
+    workflow.generate_metadata()
+
+    # Disabled incomplete workflow
+    workflow.disable()
+    assert workflow.active is False
+
+    # Enabled incomplete workflow
+    workflow.enable()
+    assert workflow.active is True
+
+    # Enabled complete workflow
+    workflow.enable()
+    # Create fake fake output file for the target task
+    output_path = (workspace
+     / "metadata_generation"
+     / "generate-metadata.finished")
+    output_path.write_text("foo")
+    assert workflow.active is False
+
+    # Disabled complete workflow
+    workflow.disable()
+    assert workflow.active is False
+
+
 def test_generate_metadata(config, requests_mock):
     """Test metadata generation.
 

@@ -112,9 +112,26 @@ class Workflow:
         self._document.enabled = True
         self._document.save()
 
+    @property
+    def active(self):
+        """Check if workflow is active.
+
+        The workflow is active if it is enabled and the target task is
+        not complete.
+        """
+        if not self.enabled:
+            return False
+
+        target_task = TARGET_TASKS[self.target](
+            dataset_id=self.dataset.identifier,
+            config=self.config,
+        )
+
+        return not target_task.complete()
+
     def generate_metadata(self):
         """Initialize metadata generation workflow."""
-        if self.enabled:
+        if self.active:
             raise WorkflowExistsError
 
         if self.dataset.has_been_copied_to_pas_datacatalog:
@@ -146,7 +163,7 @@ class Workflow:
 
     def validate(self):
         """Initialize dataset validation workflow."""
-        if self.enabled:
+        if self.active:
             raise WorkflowExistsError
 
         if self.dataset.is_preserved:
@@ -176,7 +193,7 @@ class Workflow:
 
     def preserve(self):
         """Initialize preservation workflow."""
-        if self.enabled:
+        if self.active:
             raise WorkflowExistsError
 
         if self.dataset.is_preserved:
@@ -226,7 +243,7 @@ class Workflow:
         This sets its state to INITIALIZED and removes any existing file
         errors.
         """
-        if self.enabled:
+        if self.active:
             raise WorkflowExistsError
 
         if self.dataset.has_been_copied_to_pas_datacatalog:
@@ -251,7 +268,7 @@ class Workflow:
 
         Sets preservation status to DS_STATE_REJECTED_BY_USER.
         """
-        if self.enabled:
+        if self.active:
             raise WorkflowExistsError
 
         if self.dataset.is_preserved:
