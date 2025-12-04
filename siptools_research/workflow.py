@@ -20,6 +20,7 @@ from siptools_research.exceptions import (
     MetadataNotConfirmedError,
     MetadataNotGeneratedError,
     WorkflowExistsError,
+    NotProposedError,
 )
 from siptools_research.models.workflow_entry import WorkflowEntry
 from siptools_research.tasks.cleanup import Cleanup
@@ -102,6 +103,11 @@ class Workflow:
     def metadata_confirmed(self):
         """Whether dataset metadata has been confirmed."""
         return self._document.metadata_confirmed
+
+    @property
+    def proposed(self):
+        """Whether dataset has been proposed for preservation."""
+        return self._document.proposed
 
     def _set_target(self, target):
         """Set target of workflow.
@@ -255,6 +261,9 @@ class Workflow:
         self.dataset.set_preservation_state(DS_STATE_INITIALIZED, description)
         self.dataset.set_preservation_reason(reason_description)
 
+        self._document.proposed = False
+        self._document.save()
+
         # Unlock dataset
         self.dataset.unlock()
 
@@ -263,16 +272,39 @@ class Workflow:
         self._document.metadata_confirmed = False
         self._document.save()
 
+    def propose(self) -> None:
+        """Propose dataset for preservation."""
+        if self.active:
+            raise WorkflowExistsError
+
+        if self.dataset.is_preserved:
+            raise AlreadyPreservedError
+
+        if not self.metadata_confirmed:
+            raise MetadataNotConfirmedError
+
+        self._document.proposed = True
+        self._document.save()
+
     def reject(self) -> None:
-        """Reject dataset.
+        """Reject proposal for digital preservation.
 
         Sets preservation status to DS_STATE_REJECTED_BY_USER.
         """
         if self.active:
             raise WorkflowExistsError
 
+        if self.dataset.has_been_copied_to_pas_datacatalog:
+            raise CopiedToPasDataCatalogError
+
         if self.dataset.is_preserved:
             raise AlreadyPreservedError
+
+        if not self.proposed:
+            raise NotProposedError
+
+        self._document.proposed = False
+        self._document.save()
 
         self.dataset.set_preservation_state(DS_STATE_REJECTED_BY_USER,
                                             "Rejected by user")

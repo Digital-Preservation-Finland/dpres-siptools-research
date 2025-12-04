@@ -107,6 +107,12 @@ class CopiedToPasDataCatalogError(ActionNotAllowedError):
     _default_message = "Dataset has already been copied to PAS data catalog."
 
 
+class NotProposedError(ActionNotAllowedError):
+    """Raised when dataset is not yet proposed."""
+
+    _default_message = "Dataset has not been proposed for preservation."
+
+
 class BulkInvalidDatasetFileError(InvalidDatasetError):
     """Exception consisting of multiple file errors"""
     def __init__(

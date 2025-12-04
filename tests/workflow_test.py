@@ -401,8 +401,12 @@ def test_confirm_metadata_not_generated(requests_mock, config):
 def test_reset(requests_mock, config):
     """Test resetting workflow.
 
-    Tests that dataset metadata in Metax is updated and dataset is
-    unlocked.
+    Tests that resetting dataset
+
+    * updates preservation state of dataset in Metax
+    * unlocks datataset metadat in Metax
+    * revokes metadata confirmation
+    * cancel proposal to preservation
 
     :param requests_mock: HTTP request mocker
     :param config: Configuration file
@@ -414,7 +418,17 @@ def test_reset(requests_mock, config):
         "/v3/datasets/test_dataset_id/preservation", json={}
     )
 
-    Workflow("test_dataset_id", config=config).reset(
+    # Confirm dataset metadata and propose dataset for preservation
+    # before restart
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.proposed = True
+    workflow_entry.save()
+    workflow = Workflow("test_dataset_id", config=config)
+    assert workflow.metadata_confirmed is True
+    assert workflow.proposed is True
+
+    workflow.reset(
         description="Reset by user",
         reason_description="Why this dataset was reset"
     )
@@ -428,6 +442,36 @@ def test_reset(requests_mock, config):
         req for req in preservation_patch.request_history
         if req.json().get("pas_process_running", None) is False
     )
+
+    # Metadata confirmation should be revoked and  proposal should be
+    # cancelled
+    assert workflow.metadata_confirmed is False
+    assert workflow.proposed is False
+
+
+def test_propose(requests_mock, config):
+    """Test proposing dataset for digital preservation.
+
+    :param requests_mock: HTTP request mocker
+    :param config: Configuration file
+    """
+    # Mock Metax
+    add_metax_dataset(requests_mock)
+
+    preservation_patch = requests_mock.patch(
+        "/v3/datasets/test_dataset_id/preservation", json={}
+    )
+
+    # Metadata must be confirmed before dataset can be proposed for
+    # preservation.
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
+
+    workflow = Workflow("test_dataset_id", config=config)
+    assert workflow.proposed is False
+    workflow.propose()
+    assert workflow.proposed is True
 
 
 def test_reject(requests_mock, config):
@@ -444,8 +488,18 @@ def test_reject(requests_mock, config):
         "/v3/datasets/test_dataset_id/preservation", json={}
     )
 
+    # Dataset must be proposed for preservation before it can be
+    # rejected
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.proposed = True
+    workflow_entry.save()
+
     workflow = Workflow("test_dataset_id", config=config)
+    assert workflow.proposed is True
     workflow.reject()
+
+    # Proposal should be cancelled
+    assert workflow.proposed is False
 
     # Preservation state should be set
     assert preservation_patch.called_once

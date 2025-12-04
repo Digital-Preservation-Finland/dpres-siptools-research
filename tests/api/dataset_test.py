@@ -163,6 +163,12 @@ def test_dataset_reject(client, requests_mock):
         "/v3/datasets/test_dataset_id/preservation", json={}
     )
 
+    # Dataset must be proposed for preservation before it can be
+    # rejected
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.proposed = True
+    workflow_entry.save()
+
     response = client.post(
         "/dataset/test_dataset_id/reject",
     )
