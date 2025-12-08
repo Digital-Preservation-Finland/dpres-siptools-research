@@ -126,8 +126,11 @@ def test_dataset_reset(client, requests_mock):
     assert patch_many.last_request.json() == []
 
 
-def test_validate_dataset(client, config, requests_mock):
-    """Test validating files and metadata.
+def test_propose_dataset(client, config, requests_mock):
+    """Test proposing dataset for preservation.
+
+    When dataset is proposed for preservation, the validation workflow
+    should be initialized.
 
     :param client: Flask test client
     :param config: Configuration file
@@ -141,12 +144,13 @@ def test_validate_dataset(client, config, requests_mock):
     workflow_entry.metadata_confirmed = True
     workflow_entry.save()
 
-    response = client.post("/dataset/test_dataset_id/validate")
+    response = client.post("/dataset/test_dataset_id/propose")
     assert response.status_code == 202
     assert response.json == {"dataset_id": "test_dataset_id",
                              "status": "validating dataset"}
 
     workflow = Workflow("test_dataset_id", config=config)
+    assert workflow.proposed is True
     assert workflow.enabled
     assert workflow.target.value == "validation"
 

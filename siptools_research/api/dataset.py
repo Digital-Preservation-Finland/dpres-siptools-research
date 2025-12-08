@@ -6,12 +6,22 @@ from siptools_research.workflow import Workflow
 dataset = Blueprint("dataset", "dataset")
 
 
-@dataset.route('/<dataset_id>/validate', methods=['POST'])
-def validate_dataset(dataset_id):
-    """Validate dataset metadata and files.
+@dataset.route("/<dataset_id>/propose", methods=["POST"])
+def propose_dataset(dataset_id):
+    """Propose dataset for preservation.
+
+    Once dataset has been proposed for preservation, the user with
+    approve-rights can accept the dataset for preservation. However, the
+    dataset also has to be validated before it can be accepted.
+    Therefore, validation workflow is initialized when dataset proposed
+    for preservation.
 
     :returns: HTTP Response
     """
+    Workflow(
+        dataset_id=dataset_id,
+        config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
+    ).propose()
     Workflow(
         dataset_id=dataset_id,
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
