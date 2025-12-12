@@ -27,11 +27,12 @@ class WorkflowTask(luigi.Task):
     In addition to functionality of normal luigi Task, every workflow
     task has some luigi parameters:
 
-    :dataset_id: Dataset identifier.
+    :dataset_id: Dataset identifier
     :config: Path to configuration file
 
     A WorkflowTask instance also has `Dataset` object that can be
-    accessed via `dataset` attribute.
+    accessed via `dataset` attribute, and `Workspace` object that can be
+    accessed via `workspace` attribute.
     """
 
     dataset_id = luigi.Parameter()
@@ -59,15 +60,12 @@ class WorkflowExternalTask(luigi.ExternalTask):
     methods. In addition to functionality of normal luigi ExternalTask,
     every task has some luigi parameters:
 
-    :dataset_id: Dataset identifier.
+    :dataset_id: Dataset identifier
     :config: Path to configuration file
 
-    WorkflowExternalTask also has some extra instance variables that can
-    be used to identify the task and current workflow, forexample when
-    storing workflow status information to database:
-
-    :sip_creation_path: A path in the workspace in which the SIP is
-                        created
+    A WorkflowExternalTask instance also has `Dataset` object that can
+    be accessed via `dataset` attribute, and `Workspace` object that can
+    be accessed via `workspace` attribute.
     """
 
     dataset_id = luigi.Parameter()
@@ -95,7 +93,6 @@ def report_task_success(task):
     succesfully. Adds report of successful task to workflow database.
 
     :param task: WorkflowTask object
-    :returns: ``None``
     """
     task.dataset.log_task(task.__class__.__name__,
                           'success',
@@ -110,11 +107,11 @@ def report_task_failure(task, exception):
     failed task to workflow database.
 
     If task failed because dataset is invalid, the preservation status
-    of dataset is updated in Metax, and the workflow is disabled.
+    of the dataset is updated in Metax. Error message is added to the
+    dataset to prevent retrying the task.
 
     :param task: WorkflowTask object
     :param exception: Exception that caused failure
-    :returns: ``None``
     """
     task.dataset.log_task(task.__class__.__name__,
                           'failure',
@@ -154,18 +151,18 @@ def report_task_failure(task, exception):
         if isinstance(exception, BulkInvalidDatasetFileError):
             _update_db_errors(task, exception)
 
-        # Disable workflow
+        # Add error to the dataset. The task will not be retried if
+        # there are errors in the dataset.
         task.dataset.add_error(str(exception))
 
 
 def _update_db_errors(
         task: WorkflowTask, bulk_exception: BulkInvalidDatasetFileError):
-    """
-    Update file errors in the database
+    """Update file errors in the database.
 
     :param task: The current workflow task
-    :param bulk_exception: Bulk exception containing one or more file error
-                           exceptions
+    :param bulk_exception: Bulk exception containing one or more file
+        error exceptions
     """
     file_id2data = {}
     file_id2non_dataset_errors = defaultdict(list)
