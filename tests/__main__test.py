@@ -135,7 +135,8 @@ def test_main_disabled(config, cli_runner, requests_mock):
     ])
 
     assert not Workflow("test_dataset_id", config=config).enabled
-    assert "Workflow of dataset test_dataset_id disable" in result.output
+    assert "The Workflow of the dataset test_dataset_id was disabled" \
+        in result.output
 
     # Enable the dataset using CLI
     result = cli_runner([
@@ -144,4 +145,5 @@ def test_main_disabled(config, cli_runner, requests_mock):
     ])
 
     assert Workflow("test_dataset_id", config=config).enabled
-    assert "Workflow of dataset test_dataset_id enabled" in result.output
+    assert "The Workflow of the dataset test_dataset_id was enabled" \
+        in result.output

@@ -110,7 +110,8 @@ def disable_workflow(ctx, dataset_id):
     if workflow:
         workflow.disable()
         click.echo(
-            f"Workflow of dataset {workflow.dataset.identifier} disabled"
+            f"The Workflow of the dataset {workflow.dataset.identifier} was"
+            " disabled"
         )
     else:
         dataset_not_found_echo()
@@ -125,7 +126,8 @@ def enable_workflow(ctx, dataset_id):
     if workflow:
         workflow.enable()
         click.echo(
-            f"Workflow of dataset {workflow.dataset.identifier} enabled"
+            f"The Workflow of the dataset {workflow.dataset.identifier} was "
+            "enabled"
         )
     else:
         dataset_not_found_echo()
