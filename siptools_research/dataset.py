@@ -211,7 +211,8 @@ class Dataset:
     # TODO: These task logs are not required anymore for anything else
     # than debugging purposes. Is anyone really using them, or could
     # they be removed? The luigi logs contain more or less the same
-    # information.
+    # information. And luigi also provides built-in Task history:
+    # https://luigi.readthedocs.io/en/stable/central_scheduler.html#enabling-task-history
     def log_task(self, task_name, result, message):
         """Log workflow event.
 

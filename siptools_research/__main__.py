@@ -140,7 +140,16 @@ def workflow_status(ctx, dataset_id):
     if workflow:
         workflow_dict = workflow._document.to_mongo().to_dict()
 
-        # TODO: Remove or fix this
+        # TODO: These task logs are not required anymore for anything
+        # else than debugging purposes. Is anyone really using them, or
+        # could they be removed? The luigi logs contain more or less the
+        # same information. And luigi also provides built-in Task
+        # history:
+        # https://luigi.readthedocs.io/en/stable/central_scheduler.html#enabling-task-history
+        # If we really keep the task logs, they probably should not be
+        # in Dataset class (single-responsibility principle), and using
+        # them should not require accessing private members of the
+        # class.
         dataset_dict = Dataset(
             dataset_id,
             config=ctx.config
