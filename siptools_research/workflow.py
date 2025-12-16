@@ -1,7 +1,10 @@
 """Workflow class."""
+from __future__ import annotations
+
 import contextlib
 import enum
 import shutil
+from typing import TYPE_CHECKING
 
 from metax_access import (
     DS_STATE_GENERATING_METADATA,
@@ -19,8 +22,8 @@ from siptools_research.exceptions import (
     CopiedToPasDataCatalogError,
     MetadataNotConfirmedError,
     MetadataNotGeneratedError,
-    WorkflowExistsError,
     NotProposedError,
+    WorkflowExistsError,
 )
 from siptools_research.models.workflow_entry import WorkflowEntry
 from siptools_research.tasks.cleanup import Cleanup
@@ -29,6 +32,9 @@ from siptools_research.tasks.report_dataset_validation_result import (
     ReportDatasetValidationResult,
 )
 from siptools_research.workspace import Workspace
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class Target(enum.Enum):
@@ -54,9 +60,17 @@ class Workflow:
     """
 
     def __init__(
-        self, dataset_id, document=None, config="/etc/siptools_research.conf"
-    ):
-        """Initialize workflow."""
+        self,
+        dataset_id: str,
+        document: WorkflowEntry | None = None,
+        config: str = "/etc/siptools_research.conf",
+    ) -> None:
+        """Initialize workflow instance.
+
+        :param dataset_id: Identifier of the dataset
+        :param document: Optional workflow status document
+        :param config: Path to the configuration file
+        """
         self.config = config
         self.dataset = Dataset(dataset_id, config=config)
         configuration = Configuration(config)
@@ -65,8 +79,9 @@ class Workflow:
             dataset_id=self.dataset.identifier,
         )
 
-        self._document = document
-        if self._document is None:
+        if document:
+            self._document = document
+        else:
             try:
                 self._document = WorkflowEntry.objects.get(id=dataset_id)
             except WorkflowEntry.DoesNotExist:
@@ -75,7 +90,7 @@ class Workflow:
                 )
 
     @property
-    def target(self):
+    def target(self) -> Target | None:
         """Target of the workflow."""
         if self._document.target:
             target = Target(self._document["target"])
@@ -85,41 +100,41 @@ class Workflow:
         return target
 
     @property
-    def enabled(self):
+    def enabled(self) -> bool:
         """Check if workflow is enabled."""
         return self._document.enabled
 
-    def disable(self):
+    def disable(self) -> None:
         """Disable workflow."""
         self._document.enabled = False
         self._document.save()
 
-    def enable(self):
+    def enable(self) -> None:
         """Enable workflow."""
         self._document.enabled = True
         self._document.save()
 
     @property
-    def metadata_confirmed(self):
+    def metadata_confirmed(self) -> bool:
         """Whether dataset metadata has been confirmed."""
         return self._document.metadata_confirmed
 
     @property
-    def proposed(self):
+    def proposed(self) -> bool:
         """Whether dataset has been proposed for preservation."""
         return self._document.proposed
 
-    def _set_target(self, target):
+    def _set_target(self, target: Target) -> None:
         """Set target of workflow.
 
-        param Target target: The target of the workflow
+        :param target: The target of the workflow
         """
         self._document.target = target.value
         self._document.enabled = True
         self._document.save()
 
     @property
-    def active(self):
+    def active(self) -> bool:
         """Check if workflow is active.
 
         The workflow is active if it is enabled and the target task is
@@ -135,7 +150,7 @@ class Workflow:
 
         return not target_task.complete()
 
-    def generate_metadata(self):
+    def generate_metadata(self) -> None:
         """Initialize metadata generation workflow."""
         if self.active:
             raise WorkflowExistsError
@@ -167,7 +182,7 @@ class Workflow:
 
         self._set_target(Target.METADATA_GENERATION)
 
-    def validate(self):
+    def validate(self) -> None:
         """Initialize dataset validation workflow."""
         if self.active:
             raise WorkflowExistsError
@@ -197,7 +212,7 @@ class Workflow:
 
         self._set_target(Target.VALIDATION)
 
-    def preserve(self):
+    def preserve(self) -> None:
         """Initialize preservation workflow."""
         if self.active:
             raise WorkflowExistsError
@@ -310,7 +325,7 @@ class Workflow:
                                             "Rejected by user")
 
 
-def _delete_directory(path):
+def _delete_directory(path: Path) -> None:
     """Delete directory if it exists.
 
     :param path: Directory path
@@ -320,17 +335,17 @@ def _delete_directory(path):
 
 
 def find_workflows(
-    enabled=None,
-    identifier=None,
-    config="/etc/siptools_research.conf",
-):
+    *,
+    enabled: bool | None = None,
+    identifier: str | None = None,
+    config: str = "/etc/siptools_research.conf",
+) -> list[Workflow]:
     """Find workflows by search criteria.
 
-    :param bool enabled: If `True`, show only enabled workflows, if
-                         `False`, show only disabled workflows.
-    :param str identifier: Show only workflows with this dataset identifier
-    :param str config: Path to configuration file
-    :returns: List of matching workflows
+    :param enabled: If `True`, show only enabled workflows, if `False`,
+        show only disabled workflows.
+    :param identifier: Show only workflows with this dataset identifier
+    :param config: Path to configuration file
     """
     search = {}
     if enabled is not None:

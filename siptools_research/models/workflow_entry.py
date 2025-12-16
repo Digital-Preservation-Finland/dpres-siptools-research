@@ -8,13 +8,13 @@ class WorkflowEntry(Document):
 
     id = StringField(db_field="_id", primary_key=True)
 
-    enabled = BooleanField(default=False)
+    enabled: bool = BooleanField(default=False)
 
     target = StringField()
 
-    metadata_confirmed = BooleanField(default=False)
+    metadata_confirmed: bool = BooleanField(default=False)
 
-    proposed = BooleanField(default=False)
+    proposed: bool = BooleanField(default=False)
 
     meta = {
         "collection": "workflow",

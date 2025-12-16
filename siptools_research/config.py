@@ -38,7 +38,7 @@ class Configuration:
     config_file = None
     __shared_state = {}
 
-    def __init__(self, config_file):
+    def __init__(self, config_file) -> None:
 
         # Share class state between instances (Borg design pattern)
         self.__dict__ = self.__shared_state
@@ -92,7 +92,7 @@ class Configuration:
         # Set config_file parameter
         self.config_file = config_file
 
-    def get(self, parameter):
+    def get(self, parameter) -> str:
         """Get value for configuration parameter.
 
         :param parameter: parameter
@@ -100,7 +100,7 @@ class Configuration:
         """
         return self._parser.get(self.config_section, parameter)
 
-    def getboolean(self, parameter):
+    def getboolean(self, parameter) -> bool:
         """Get boolean value for configuration parameter.
 
         :param parameter: parameter

@@ -13,7 +13,7 @@ PAS_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-pas"
 IDA_DATA_CATALOG_IDENTIFIER = "urn:nbn:fi:att:data-catalog-ida"
 
 
-def _timestamp():
+def _timestamp() -> str:
     """Return time now.
 
     :returns: ISO 8601 string
@@ -32,7 +32,7 @@ class Dataset:
 
     def __init__(
         self, identifier, document=None, config="/etc/siptools_research.conf"
-    ):
+    ) -> None:
         """Initialize dataset."""
         self.identifier = identifier
         self._cached_metadata = None
@@ -110,7 +110,7 @@ class Dataset:
         """Set preservation reason description of the dataset."""
         self._metax_client.set_preservation_reason(self.pas_dataset_id, reason)
 
-    def set_preservation_state(self, state, description):
+    def set_preservation_state(self, state, description) -> None:
         """Set preservation state of the dataset.
 
         If dataset has been copied to PAS data catalog, the preservation
@@ -148,11 +148,11 @@ class Dataset:
         """Check if dataset already is in DPS."""
         return self._metadata["preservation"]["pas_package_created"]
 
-    def lock(self):
+    def lock(self) -> None:
         """Lock dataset."""
         self._metax_client.lock_dataset(self.identifier)
 
-    def unlock(self):
+    def unlock(self) -> None:
         """Unlock dataset."""
         self._metax_client.unlock_dataset(self.identifier)
 
