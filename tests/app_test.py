@@ -103,6 +103,6 @@ def test_action_not_allowed_error_handler(app):
         response = client.get("/test")
 
     assert response.json == {
-        "code": 400,
+        "code": 409,
         "error": error_message
     }

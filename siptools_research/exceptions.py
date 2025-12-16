@@ -78,37 +78,68 @@ class ActionNotAllowedError(Exception):
 
 
 class MetadataNotGeneratedError(ActionNotAllowedError):
-    """Raised when metadata has not been generated."""
+    """Raised when metadata has not been generated.
+
+    Technical metadata must generated for files so that it can be added
+    to METS.
+    """
 
     _default_message = "Metadata has not been generated."
 
 
 class MetadataNotConfirmedError(ActionNotAllowedError):
-    """Raised when metadata has not been confirmed."""
+    """Raised when metadata has not been confirmed.
+
+    The user must confirm the generated metadata, before it is
+    preserved.
+    """
 
     _default_message = "Metadata has not been confirmed."
 
 
 class WorkflowExistsError(ActionNotAllowedError):
-    """Raised when conflicting workflow exists."""
+    """Raised when conflicting workflow exists.
+
+    If a workflow is already running for a dataset, another workflow may
+    not be started.
+    """
 
     _default_message = "Active workflow already exists for this dataset"
 
 
 class AlreadyPreservedError(ActionNotAllowedError):
-    """Raised when dataset already is in preservation."""
+    """Raised when dataset already is in preservation.
+
+    If a dataset is already in preservation, it can not be preserved
+    again. Note that cumulative dataset might have to be preserved
+    again, but preserving cumulative datasets is not yet supported.
+    """
 
     _default_message = "Dataset is already preserved."
 
 
 class CopiedToPasDataCatalogError(ActionNotAllowedError):
-    """Raised when dataset has been copied to PAS data catalog."""
+    """Raised when dataset has been copied to PAS data catalog.
+
+    During the preservation process of Ida datasets, the dataset
+    metadata is copied from Ida data catalog to PAS data catalog. Once
+    the dataset has been copied, it can not be undone, and therefore the
+    dataset can not be unlocked before it is in preservation.
+
+    TODO: This exception might be unncecessary when preserving dataset
+    in "draft mode" is implemented. See TPASPKT-1167 for more
+    information.
+    """
 
     _default_message = "Dataset has already been copied to PAS data catalog."
 
 
 class NotProposedError(ActionNotAllowedError):
-    """Raised when dataset is not yet proposed."""
+    """Raised when dataset is not yet proposed.
+
+    The dataset must be proposed for preservation before the proposal
+    can be rejected or accepted.
+    """
 
     _default_message = "Dataset has not been proposed for preservation."
 

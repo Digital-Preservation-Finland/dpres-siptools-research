@@ -86,9 +86,9 @@ def create_app():
 
     @app.errorhandler(ActionNotAllowedError)
     def action_not_allowed_error(error):
-        """Handle ResourceNotAvailableError."""
-        response = jsonify({"code": 400, "error": str(error)})
-        response.status_code = 400
+        """Handle ActionNotAllowedError."""
+        response = jsonify({"code": 409, "error": str(error)})
+        response.status_code = 409
         return response
 
     return app
