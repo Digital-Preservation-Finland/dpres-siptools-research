@@ -1,7 +1,7 @@
 """Application instance factory."""
 import os
 
-from flask import Flask, abort, current_app, jsonify
+from flask import Flask, abort, jsonify
 from metax_access import ResourceNotAvailableError
 
 import siptools_research.api.dataset
@@ -61,13 +61,11 @@ def create_app():
         return response
 
     @app.errorhandler(500)
-    def internal_server_error(error):
+    def internal_server_error(_error):
         """Handle the 500 - Internal server error.
 
         :returns: HTTP Response
         """
-        current_app.logger.error(error, exc_info=True)
-
         response = jsonify({"code": 500, "error": "Internal server error"})
         response.status_code = 500
 
