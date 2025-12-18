@@ -1,5 +1,4 @@
 """Application instance factory."""
-import logging
 import os
 
 from flask import Flask, abort, current_app, jsonify
@@ -10,9 +9,6 @@ import siptools_research.api.file_errors
 from siptools_research.config import Configuration
 from siptools_research.database import connect_mongoengine
 from siptools_research.exceptions import ActionNotAllowedError
-
-logging.basicConfig(level=logging.ERROR)
-LOGGER = logging.getLogger(__name__)
 
 
 SIPTOOLS_RESEARCH_CONF = "/etc/siptools_research.conf"
