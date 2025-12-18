@@ -344,7 +344,11 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
     with tarfile.open(workspace
                       / 'preservation'
                       / f'{workspace.name}.tar') as tar:
-        tar.extractall(tmp_path / 'extracted_sip')
+        tar.extractall(
+            tmp_path / 'extracted_sip',
+            # Avoid warnings
+            filter="data",
+        )
 
     # Read mets.xml
     mets = lxml.etree.parse(str(tmp_path / 'extracted_sip' / 'mets.xml'))

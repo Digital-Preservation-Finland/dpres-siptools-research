@@ -38,7 +38,11 @@ def test_compresssip(config, workspace, tmp_path):
     with tarfile.open(
         workspace / "preservation" / f"{workspace.name}.tar"
     ) as tar:
-        tar.extractall(tmp_path / 'extracted_tar')
+        tar.extractall(
+            tmp_path / "extracted_tar",
+            # Avoid warnings
+            filter="data",
+        )
 
     found_files = {
         path.name for path in (tmp_path / "extracted_tar").iterdir()

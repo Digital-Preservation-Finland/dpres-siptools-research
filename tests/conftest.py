@@ -7,7 +7,6 @@ from io import StringIO
 import luigi.configuration
 import mongoengine
 import pytest
-import urllib3
 from upload_rest_api.config import CONFIG
 from click.testing import CliRunner
 from mongobox import MongoBox
@@ -18,7 +17,6 @@ from siptools_research.__main__ import Context, cli
 from siptools_research.database import connect_mongoengine
 from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 SSH_KEY_PATH = Path("tests/data/ssh/test_ssh_key")
 
@@ -87,15 +85,6 @@ def _config(test_mongo, tmp_path, luigi_config_fx):
     parser.set(
         "siptools_research", "sip_sign_key", "tests/data/sip_sign_pas.pem"
     )
-    parser.set(
-        "siptools_research", "metax_ssl_verification", "False"
-    )
-    parser.set(
-        "siptools_research", "fd_download_service_ssl_verification", "False"
-    )
-    parser.set(
-        "siptools_research", "access_rest_api_ssl_verification", "False"
-    )
 
     # Use test MongoDB database
     parser.set("siptools_research", "mongodb_host", "localhost")
@@ -150,10 +139,13 @@ def upload_database(test_mongo):
     #
     # upload-rest-api should be updated to work similarly to siptools-research
     # to reduce confusion.
+    #
+    # Also see TPASPKT-516
     mongoengine.disconnect()
     mongoengine.connect(
         "upload", host=f"mongodb://localhost:{test_mongo.PORT}",
-        tz_aware=True
+        tz_aware=True,
+        uuidRepresentation="standard",  # Added to avoid DeprecationWarnings
     )
 
 

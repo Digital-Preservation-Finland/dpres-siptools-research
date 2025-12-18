@@ -12,5 +12,6 @@ def connect_mongoengine(host, port=27017):
         # This is to prevent MongoClient from being created before a fork,
         # which leads to unexpected behavior.
         connect=False,
-        alias="siptools_research"
+        alias="siptools_research",
+        uuidRepresentation="standard"  # Added to avoid DeprecationWarnings
     )
