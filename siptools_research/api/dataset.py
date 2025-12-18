@@ -27,14 +27,16 @@ def propose_dataset(dataset_id: str) -> Response:
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
     ).validate()
 
-    response = jsonify({'dataset_id': dataset_id,
-                        'status': 'validating dataset'})
+    response = jsonify({
+        "dataset_id": dataset_id,
+        "status": "validating dataset"
+    })
     response.status_code = 202
 
     return response
 
 
-@dataset.route('/<dataset_id>/preserve', methods=['POST'])
+@dataset.route("/<dataset_id>/preserve", methods=["POST"])
 def preserve(dataset_id: str) -> Response:
     """Trigger preservation workflow for dataset.
 
@@ -45,14 +47,16 @@ def preserve(dataset_id: str) -> Response:
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
     ).preserve()
 
-    response = jsonify({'dataset_id': dataset_id,
-                        'status': 'preserving'})
+    response = jsonify({
+        "dataset_id": dataset_id,
+        "status": "preserving"
+    })
     response.status_code = 202
 
     return response
 
 
-@dataset.route('/<dataset_id>/generate-metadata', methods=['POST'])
+@dataset.route("/<dataset_id>/generate-metadata", methods=["POST"])
 def generate_metadata(dataset_id: str) -> Response:
     """Generate technical metadata and store it to Metax.
 
@@ -63,8 +67,10 @@ def generate_metadata(dataset_id: str) -> Response:
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
     ).generate_metadata()
 
-    response = jsonify({'dataset_id': dataset_id,
-                        'status': 'generating metadata'})
+    response = jsonify({
+        "dataset_id": dataset_id,
+        "status": "generating metadata"
+    })
     response.status_code = 202
 
     return response
@@ -87,7 +93,7 @@ def confirm(dataset_id: str) -> Response:
     })
 
 
-@dataset.route('/<dataset_id>/reset', methods=['POST'])
+@dataset.route("/<dataset_id>/reset", methods=["POST"])
 def reset(dataset_id: str) -> Response:
     """Reset dataset.
 
@@ -104,12 +110,10 @@ def reset(dataset_id: str) -> Response:
         reason_description=reason_description
     )
 
-    response = jsonify({
-        'dataset_id': dataset_id,
-        'status': 'dataset has been reset'
+    return jsonify({
+        "dataset_id": dataset_id,
+        "status": "dataset has been reset"
     })
-
-    return response
 
 
 @dataset.route("/<dataset_id>/reject", methods=["POST"])
