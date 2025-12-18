@@ -1,7 +1,7 @@
 """Application instance factory."""
 import os
 
-from flask import Flask, abort, jsonify
+from flask import Flask, Response, abort, jsonify
 from metax_access import ResourceNotAvailableError
 
 import siptools_research.api.dataset
@@ -10,16 +10,11 @@ from siptools_research.config import Configuration
 from siptools_research.database import connect_mongoengine
 from siptools_research.exceptions import ActionNotAllowedError
 
-
 SIPTOOLS_RESEARCH_CONF = "/etc/siptools_research.conf"
 
 
-def create_app():
-    """Configure and return a Flask application instance.
-
-    :returns: Instance of flask.Flask()
-
-    """
+def create_app() -> Flask:
+    """Configure and return a Flask application instance."""
     app = Flask(__name__)
     app.config["SIPTOOLS_RESEARCH_CONF"] = os.getenv("SIPTOOLS_RESEARCH_CONF",
                                                      SIPTOOLS_RESEARCH_CONF)
@@ -34,52 +29,43 @@ def create_app():
     )
 
     @app.route('/')
-    def index():
+    def index() -> None:
         """Return a Bad Request error."""
         abort(400)
 
     @app.errorhandler(404)
-    def page_not_found(error):
-        """Handle the 404 - Not found errors.
-
-        :returns: HTTP Response
-        """
+    def page_not_found(error: Exception) -> Response:
+        """Handle the 404 - Not found errors."""
         response = jsonify({"code": 404, "error": str(error)})
         response.status_code = 404
 
         return response
 
     @app.errorhandler(400)
-    def bad_request(error):
-        """JSON response handler for the 400 - Bad request errors.
-
-        :returns: HTTP Response
-        """
+    def bad_request(error: Exception) -> Response:
+        """JSON response handler for the 400 - Bad request errors."""
         response = jsonify({"code": 400, "error": str(error)})
         response.status_code = 400
 
         return response
 
     @app.errorhandler(500)
-    def internal_server_error(_error):
-        """Handle the 500 - Internal server error.
-
-        :returns: HTTP Response
-        """
+    def internal_server_error(_error: Exception) -> Response:
+        """Handle the 500 - Internal server error."""
         response = jsonify({"code": 500, "error": "Internal server error"})
         response.status_code = 500
 
         return response
 
     @app.errorhandler(ResourceNotAvailableError)
-    def metax_error(error):
+    def metax_error(error: ResourceNotAvailableError) -> Response:
         """Handle ResourceNotAvailableError."""
         response = jsonify({"code": 404, "error": str(error)})
         response.status_code = 404
         return response
 
     @app.errorhandler(ActionNotAllowedError)
-    def action_not_allowed_error(error):
+    def action_not_allowed_error(error: ActionNotAllowedError) -> Response:
         """Handle ActionNotAllowedError."""
         response = jsonify({"code": 409, "error": str(error)})
         response.status_code = 409

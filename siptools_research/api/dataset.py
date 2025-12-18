@@ -1,5 +1,5 @@
 """API for managing datasets."""
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, Response, current_app, jsonify, request
 
 from siptools_research.workflow import Workflow
 
@@ -7,16 +7,16 @@ dataset = Blueprint("dataset", "dataset")
 
 
 @dataset.route("/<dataset_id>/propose", methods=["POST"])
-def propose_dataset(dataset_id):
+def propose_dataset(dataset_id: str) -> Response:
     """Propose dataset for preservation.
 
     Once dataset has been proposed for preservation, the user with
     approve-rights can accept the dataset for preservation. However, the
     dataset also has to be validated before it can be accepted.
-    Therefore, validation workflow is initialized when dataset proposed
-    for preservation.
+    Therefore, validation workflow is initialized when dataset is
+    proposed for preservation.
 
-    :returns: HTTP Response
+    :param dataset_id: Identifier of dataset
     """
     Workflow(
         dataset_id=dataset_id,
@@ -35,10 +35,10 @@ def propose_dataset(dataset_id):
 
 
 @dataset.route('/<dataset_id>/preserve', methods=['POST'])
-def preserve(dataset_id):
+def preserve(dataset_id: str) -> Response:
     """Trigger preservation workflow for dataset.
 
-    :returns: HTTP Response
+    :param dataset_id: Identifier of dataset
     """
     Workflow(
         dataset_id=dataset_id,
@@ -53,10 +53,10 @@ def preserve(dataset_id):
 
 
 @dataset.route('/<dataset_id>/generate-metadata', methods=['POST'])
-def generate_metadata(dataset_id):
+def generate_metadata(dataset_id: str) -> Response:
     """Generate technical metadata and store it to Metax.
 
-    :returns: HTTP Response
+    :param dataset_id: Identifier of dataset
     """
     Workflow(
         dataset_id=dataset_id,
@@ -71,11 +71,10 @@ def generate_metadata(dataset_id):
 
 
 @dataset.route("/<dataset_id>/confirm", methods=["POST"])
-def confirm(dataset_id: str):
+def confirm(dataset_id: str) -> Response:
     """Confirm dataset.
 
     :param dataset_id: Identifier of dataset
-    :returns: HTTP response
     """
     Workflow(
         dataset_id=dataset_id,
@@ -89,10 +88,10 @@ def confirm(dataset_id: str):
 
 
 @dataset.route('/<dataset_id>/reset', methods=['POST'])
-def reset(dataset_id: str):
+def reset(dataset_id: str) -> Response:
     """Reset dataset.
 
-    :returns: HTTP response
+    :param dataset_id: Identifier of dataset
     """
     description = request.form["description"]
     reason_description = request.form["reason_description"]
@@ -114,11 +113,10 @@ def reset(dataset_id: str):
 
 
 @dataset.route("/<dataset_id>/reject", methods=["POST"])
-def reject(dataset_id: str):
+def reject(dataset_id: str) -> Response:
     """Reject dataset.
 
     :param dataset_id: Identifier of dataset
-    :returns: HTTP response
     """
     Workflow(
         dataset_id=dataset_id,

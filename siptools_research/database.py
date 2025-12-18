@@ -1,10 +1,15 @@
 """Mongoengine connection."""
+from __future__ import annotations
 
 from mongoengine import register_connection
 
 
-def connect_mongoengine(host, port=27017):
-    """Register connection to MongoDB."""
+def connect_mongoengine(host: str, port: int | str = 27017) -> None:
+    """Register connection to MongoDB.
+
+    :param host: MongoDB host
+    :param port: MongoDB port
+    """
     register_connection(
         host=f"mongodb://{host}:{port}/siptools-research",
         tz_aware=True,
