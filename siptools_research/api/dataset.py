@@ -1,9 +1,80 @@
 """API for managing datasets."""
-from flask import Blueprint, Response, current_app, jsonify, request
+from flask import Blueprint, Response, current_app, jsonify, request, url_for
 
+from siptools_research.exceptions import ActionNotAllowedError
 from siptools_research.workflow import Workflow
 
 dataset = Blueprint("dataset", "dataset")
+
+
+@dataset.route("/<dataset_id>/status", methods=["GET"])
+def status(dataset_id: str) -> Response:
+    """Check status of dataset.
+
+    :param dataset_id: Identifier of dataset
+    """
+    workflow = Workflow(
+        dataset_id=dataset_id,
+        config=current_app.config.get("SIPTOOLS_RESEARCH_CONF"),
+    )
+    actions = []
+    for action in [
+            {
+                "name": "reset",
+                "endpoint": "dataset.reset",
+                "precondition_method": workflow.require_reset_allowed,
+            },
+            {
+                "name": "generate_metadata",
+                "endpoint": "dataset.generate_metadata",
+                "precondition_method":
+                workflow.require_generate_metadata_allowed,
+            },
+            {
+                "name": "confirm",
+                "endpoint": "dataset.confirm",
+                "precondition_method": workflow.require_confirm_allowed,
+            },
+            {
+                "name": "propose",
+                "endpoint": "dataset.propose_dataset",
+                "precondition_method": workflow.require_propose_allowed,
+            },
+            {
+                "name": "preserve",
+                "endpoint": "dataset.preserve",
+                "precondition_method": workflow.require_preserve_allowed,
+            },
+            {
+                "name": "reject",
+                "endpoint": "dataset.reject",
+                "precondition_method": workflow.require_reject_allowed,
+            },
+    ]:
+        try:
+            action["precondition_method"]()
+            allowed = True
+            reason = None
+        except ActionNotAllowedError as error:
+            allowed = False
+            reason = str(error)
+
+        actions.append({
+            "name": action["name"],
+            "url": url_for(action["endpoint"], dataset_id=dataset_id),
+            "allowed": allowed,
+            "reason": reason,
+        })
+
+    return jsonify({
+        "dataset_id": dataset_id,
+        "enabled": workflow.enabled,
+        "target": None if workflow.target is None else workflow.target.value,
+        "metadata_confirmed": workflow.metadata_confirmed,
+        "proposed": workflow.proposed,
+        "actions": actions,
+        "errors": workflow.dataset.errors,
+    })
 
 
 @dataset.route("/<dataset_id>/propose", methods=["POST"])

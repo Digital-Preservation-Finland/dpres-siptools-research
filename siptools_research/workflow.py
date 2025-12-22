@@ -150,8 +150,12 @@ class Workflow:
 
         return not target_task.complete()
 
-    def generate_metadata(self) -> None:
-        """Initialize metadata generation workflow."""
+    def require_generate_metadata_allowed(self) -> None:
+        """Ensure that metadata generation is allowed.
+
+        Raises ActionNotAllowedError if metadata generation is not
+        allowed for some reason.
+        """
         if self.active:
             raise WorkflowExistsError
 
@@ -160,6 +164,10 @@ class Workflow:
 
         if self.dataset.is_preserved:
             raise AlreadyPreservedError
+
+    def generate_metadata(self) -> None:
+        """Initialize metadata generation workflow."""
+        self.require_generate_metadata_allowed()
 
         self.dataset.lock()
 
@@ -182,8 +190,12 @@ class Workflow:
 
         self._set_target(Target.METADATA_GENERATION)
 
-    def validate(self) -> None:
-        """Initialize dataset validation workflow."""
+    def require_validate_allowed(self) -> None:
+        """Ensure that metadata validation is allowed.
+
+        Raises ActionNotAllowedError if metadata validation is not
+        allowed for some reason.
+        """
         if self.active:
             raise WorkflowExistsError
 
@@ -199,6 +211,13 @@ class Workflow:
         if not self.metadata_confirmed:
             raise MetadataNotConfirmedError
 
+    def validate(self) -> None:
+        """Initialize dataset validation workflow."""
+        # require_validate_allowed is not currently used outside this
+        # class, but it is implemented as separate public method for
+        # consistency.
+        self.require_validate_allowed()
+
         self.dataset.set_preservation_state(
             DS_STATE_VALIDATING_METADATA,
             "Proposed for preservation by user"
@@ -212,8 +231,12 @@ class Workflow:
 
         self._set_target(Target.VALIDATION)
 
-    def preserve(self) -> None:
-        """Initialize preservation workflow."""
+    def require_preserve_allowed(self) -> None:
+        """Ensure that preservation is allowed.
+
+        Raises ActionNotAllowedError if preservation is not allowed for
+        some reason.
+        """
         if self.active:
             raise WorkflowExistsError
 
@@ -222,6 +245,10 @@ class Workflow:
 
         if not self.metadata_confirmed:
             raise MetadataNotConfirmedError
+
+    def preserve(self) -> None:
+        """Initialize preservation workflow."""
+        self.require_preserve_allowed()
 
         self.dataset.set_preservation_state(
             DS_STATE_IN_PACKAGING_SERVICE,
@@ -235,8 +262,12 @@ class Workflow:
 
         self._set_target(Target.PRESERVATION)
 
-    def confirm(self) -> None:
-        """Confirm dataset metadata."""
+    def require_confirm_allowed(self) -> None:
+        """Ensure that confirming metadata is allowed.
+
+        Raises ActionNotAllowedError if confirming metadata is not
+        allowed for some reason.
+        """
         # Dataset metadata can not be confirmed if has not even been
         # generated yet
         metadata_generation_task = TARGET_TASKS[Target.METADATA_GENERATION](
@@ -251,6 +282,10 @@ class Workflow:
         if self.dataset.is_preserved:
             raise AlreadyPreservedError
 
+    def confirm(self) -> None:
+        """Confirm dataset metadata."""
+        self.require_confirm_allowed()
+
         self._document.metadata_confirmed = True
         self._document.save()
 
@@ -258,11 +293,11 @@ class Workflow:
             DS_STATE_METADATA_CONFIRMED, "Metadata confirmed by user"
         )
 
-    def reset(self, description: str, reason_description: str) -> None:
-        """Reset dataset.
+    def require_reset_allowed(self) -> None:
+        """Ensure that reset is allowed.
 
-        This sets its state to INITIALIZED and removes any existing file
-        errors.
+        Raises ActionNotAllowedError if reset is not allowed for some
+        reason.
         """
         if self.active:
             raise WorkflowExistsError
@@ -272,6 +307,14 @@ class Workflow:
 
         if self.dataset.is_preserved:
             raise AlreadyPreservedError
+
+    def reset(self, description: str, reason_description: str) -> None:
+        """Reset dataset.
+
+        This sets its state to INITIALIZED and removes any existing file
+        errors.
+        """
+        self.require_reset_allowed()
 
         self.dataset.set_preservation_state(DS_STATE_INITIALIZED, description)
         self.dataset.set_preservation_reason(reason_description)
@@ -287,8 +330,12 @@ class Workflow:
         self._document.metadata_confirmed = False
         self._document.save()
 
-    def propose(self) -> None:
-        """Propose dataset for preservation."""
+    def require_propose_allowed(self) -> None:
+        """Ensure that proposing dataset for preservation is allowed.
+
+        Raises ActionNotAllowedError if propsing is not allowed for some
+        reason.
+        """
         if self.active:
             raise WorkflowExistsError
 
@@ -298,13 +345,18 @@ class Workflow:
         if not self.metadata_confirmed:
             raise MetadataNotConfirmedError
 
+    def propose(self) -> None:
+        """Propose dataset for preservation."""
+        self.require_propose_allowed()
+
         self._document.proposed = True
         self._document.save()
 
-    def reject(self) -> None:
-        """Reject proposal for digital preservation.
+    def require_reject_allowed(self) -> None:
+        """Ensure that rejecting proposal is allowed.
 
-        Sets preservation status to DS_STATE_REJECTED_BY_USER.
+        Raises ActionNotAllowedError if rejection is not allowed for
+        some reason.
         """
         if self.active:
             raise WorkflowExistsError
@@ -317,6 +369,13 @@ class Workflow:
 
         if not self.proposed:
             raise NotProposedError
+
+    def reject(self) -> None:
+        """Reject proposal for digital preservation.
+
+        Sets preservation status to DS_STATE_REJECTED_BY_USER.
+        """
+        self.require_reject_allowed()
 
         self._document.proposed = False
         self._document.save()

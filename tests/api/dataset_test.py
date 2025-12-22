@@ -12,6 +12,87 @@ from siptools_research.models.workflow_entry import WorkflowEntry
 from siptools_research.workflow import Workflow
 
 
+def test_dataset_status(client, requests_mock, mocker):
+    """Test checking dataset status.
+
+    :param client: Flask test client
+    :param requests_mock: HTTP request mocker
+    :param mocker: MockerFixture object
+    """
+    # Mock Metax
+    tests.utils.add_metax_dataset(requests_mock)
+
+    # Spy the methods that should be called.
+    require_methods_to_be_called = [
+        mocker.spy(Workflow, method)
+        for method in (
+            "require_generate_metadata_allowed",
+            "require_confirm_allowed",
+            "require_propose_allowed",
+            "require_preserve_allowed",
+            "require_reset_allowed",
+            "require_reject_allowed",
+        )
+    ]
+
+    response = client.get("/dataset/test_dataset_id/status")
+    assert response.status_code == 200
+    assert response.json == {
+        "dataset_id": "test_dataset_id",
+        "enabled": False,
+        "target": None,
+        "metadata_confirmed": False,
+        "proposed": False,
+        "errors": [],
+        "actions": [
+            {
+                "name": "reset",
+                "allowed": True,
+                "reason": None,
+                "url": "/dataset/test_dataset_id/reset",
+            },
+            {
+                "name": "generate_metadata",
+                "allowed": True,
+                "reason": None,
+                "url": "/dataset/test_dataset_id/generate-metadata",
+            },
+            {
+                "name": "confirm",
+                "allowed": False,
+                "reason": "Metadata has not been generated.",
+                "url": "/dataset/test_dataset_id/confirm",
+            },
+            {
+                "name": "propose",
+                "allowed": False,
+                "reason": "Metadata has not been confirmed.",
+                "url": "/dataset/test_dataset_id/propose",
+            },
+            {
+                "name": "preserve",
+                "allowed": False,
+                "reason": "Metadata has not been confirmed.",
+                "url": "/dataset/test_dataset_id/preserve",
+            },
+            {
+                "name": "reject",
+                "allowed": False,
+                "reason": "Dataset has not been proposed for preservation.",
+                "url": "/dataset/test_dataset_id/reject",
+            },
+        ]
+    }
+
+    # It would be laborious to test that preconditions are correctly
+    # checked for each action, but at least we can check that all
+    # require_* methods of Workflow class are called once.
+    assert all(
+        method.call_count == 1
+        for method in require_methods_to_be_called
+    )
+
+
 def test_dataset_preserve(client, config, requests_mock):
     """Test preserving dataset.
 
