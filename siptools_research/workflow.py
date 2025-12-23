@@ -17,6 +17,7 @@ from metax_access import (
 from siptools_research.config import Configuration
 from siptools_research.dataset import Dataset
 from siptools_research.exceptions import (
+    AlreadyProposedError,
     AlreadyPreservedError,
     CopiedToPasDataCatalogError,
     MetadataNotConfirmedError,
@@ -289,6 +290,9 @@ class Workflow:
 
         if not self.metadata_confirmed:
             raise MetadataNotConfirmedError
+
+        if self.proposed:
+            raise AlreadyProposedError
 
     def propose(self) -> None:
         """Propose dataset for preservation.

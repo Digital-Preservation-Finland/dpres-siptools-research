@@ -144,6 +144,17 @@ class NotProposedError(ActionNotAllowedError):
     _default_message = "Dataset has not been proposed for preservation."
 
 
+class AlreadyProposedError(ActionNotAllowedError):
+    """Raised when dataset is already proposed preservation.
+
+    Dataset can not be proposed for preservation if it has already been
+    proposed. The previous proposal must be rejected or the dataset
+    resetted.
+    """
+
+    _default_message = "Dataset has already been proposed for preservation."
+
+
 class BulkInvalidDatasetFileError(InvalidDatasetError):
     """Exception consisting of multiple file errors"""
     def __init__(
