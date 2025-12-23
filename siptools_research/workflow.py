@@ -176,47 +176,6 @@ class Workflow:
 
         self._set_target("metadata_generation")
 
-    def require_validate_allowed(self) -> None:
-        """Ensure that metadata validation is allowed.
-
-        Raises ActionNotAllowedError if metadata validation is not
-        allowed for some reason.
-        """
-        if self.active:
-            raise WorkflowExistsError
-
-        if self.dataset.is_preserved:
-            raise AlreadyPreservedError
-
-        # Metadata does not necessarily has to be confirmed when
-        # validation is started, but in practise the validation workflow
-        # is initialized when user proposes the dataset for
-        # preservation, and therefore metadta must be confirmed when the
-        # dataset generated. Anyway, at least the metadata has to be
-        # generated before it is validated.
-        if not self.metadata_confirmed:
-            raise MetadataNotConfirmedError
-
-    def validate(self) -> None:
-        """Initialize dataset validation workflow."""
-        # require_validate_allowed is not currently used outside this
-        # class, but it is implemented as separate public method for
-        # consistency.
-        self.require_validate_allowed()
-
-        self.dataset.set_preservation_state(
-            DS_STATE_VALIDATING_METADATA,
-            "Proposed for preservation by user"
-        )
-
-        # Clear the workspaces
-        for path in [self.workspace.validation, self.workspace.preservation]:
-            _delete_directory(path)
-
-        self.workspace.validation.mkdir(parents=True)
-
-        self._set_target("validation")
-
     def require_preserve_allowed(self) -> None:
         """Ensure that preservation is allowed.
 
@@ -254,6 +213,11 @@ class Workflow:
         Raises ActionNotAllowedError if confirming metadata is not
         allowed for some reason.
         """
+        # Confirming metadata of dataset is pointless, if dataset is
+        # already preserved
+        if self.dataset.is_preserved:
+            raise AlreadyPreservedError
+
         # Dataset metadata can not be confirmed if has not even been
         # generated yet
         metadata_generation_task = TARGET_TASKS["metadata_generation"](
@@ -262,11 +226,6 @@ class Workflow:
         )
         if not metadata_generation_task.complete():
             raise MetadataNotGeneratedError
-
-        # Confirming metadata of dataset is pointless, if dataset is
-        # already preserved
-        if self.dataset.is_preserved:
-            raise AlreadyPreservedError
 
     def confirm(self) -> None:
         """Confirm dataset metadata."""
@@ -332,11 +291,37 @@ class Workflow:
             raise MetadataNotConfirmedError
 
     def propose(self) -> None:
-        """Propose dataset for preservation."""
+        """Propose dataset for preservation.
+
+        Proposing dataset for preservation will automatically start
+        validation workflow.
+        """
         self.require_propose_allowed()
 
         self._document.proposed = True
         self._document.save()
+
+        self.dataset.set_preservation_state(
+            DS_STATE_VALIDATING_METADATA,
+            "Proposed for preservation by user"
+        )
+
+        # Clear the workspaces
+        # NOTE: Mostly for historical reasons (see TPASPKT-998), the
+        # dataset is always validated when the user proposes dataset for
+        # preservation. In some cases it might be unnecessary, for
+        # example if the proposal is rejected, and then dataset is
+        # proposed again without making any changes to the dataset. So
+        # maybe we could check if the dataset has already been
+        # validated when it is proposed for preservation, and implement
+        # a specific endpoint that user can use to restart validation
+        # when needed?
+        for path in [self.workspace.validation, self.workspace.preservation]:
+            _delete_directory(path)
+
+        self.workspace.validation.mkdir(parents=True)
+
+        self._set_target("validation")
 
     def require_reject_allowed(self) -> None:
         """Ensure that rejecting proposal is allowed.

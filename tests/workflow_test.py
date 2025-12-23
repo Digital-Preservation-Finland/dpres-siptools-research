@@ -177,90 +177,6 @@ def test_restart_generate_metadata(config, requests_mock):
     assert workflow.metadata_confirmed is False
 
 
-def test_validate_dataset(config, requests_mock):
-    """Test validation.
-
-    Tests that `validate` method:
-
-    * sets correct target for the workflow
-    * creates validation workspace
-    * sets preservation state
-
-    :param config: Configuration file
-    :param requests_mock: HTTP request mocker
-    """
-    # Mock metax
-    add_metax_dataset(requests_mock)
-    patch_preservation = requests_mock.patch(
-        "/v3/datasets/test_dataset_id/preservation", json={}
-    )
-
-    # Metadata must be confirmed before validation
-    workflow_entry = WorkflowEntry(id="test_dataset_id")
-    workflow_entry.metadata_confirmed = True
-    workflow_entry.save()
-
-    Workflow("test_dataset_id", config=config).validate()
-
-    # Check that dataset was added to database.
-    active_workflows = find_workflows(enabled=True, config=config)
-    assert len(active_workflows) == 1
-    workflow = active_workflows[0]
-    assert workflow.dataset.identifier == "test_dataset_id"
-    assert workflow.target == "validation"
-
-    # Validation workspace should be created
-    assert workflow.workspace.validation.exists()
-
-    # Preservation state should be set
-    assert patch_preservation.last_request.json() == {
-        "state": DS_STATE_VALIDATING_METADATA,
-        "description": {"en": "Proposed for preservation by user"}
-    }
-
-
-def test_restart_validate(config, requests_mock):
-    """Test restarting validation.
-
-    When validation is restarted, previous validation and preservation
-    workspaces should be cleared.
-
-    :param config: Configuration file
-    :param requests_mock: HTTP request mocker
-    """
-    # Mock metax
-    add_metax_dataset(requests_mock)
-
-    # Metadata must be confirmed before validation
-    workflow_entry = WorkflowEntry(id="test_dataset_id")
-    workflow_entry.metadata_confirmed = True
-    workflow_entry.save()
-
-    workflow = Workflow("test_dataset_id", config=config)
-
-    # Create workspaces
-    workflow.workspace.metadata_generation.mkdir(parents=True)
-    (workflow.workspace.metadata_generation/ 'test').write_text('foo')
-    workflow.workspace.validation.mkdir(parents=True)
-    (workflow.workspace.validation / 'test').write_text('bar')
-    workflow.workspace.preservation.mkdir(parents=True)
-
-    # Restart validation
-    workflow.validate()
-
-    # Metadata generation workspace still contain files
-    assert [file.name
-            for file
-            in workflow.workspace.metadata_generation.iterdir()] \
-        == ['test']
-
-    # Validation workspace should be empty
-    assert not any(workflow.workspace.validation.iterdir())
-
-    # Preservation workspace should be removed
-    assert not workflow.workspace.preservation.exists()
-
-
 def test_preserve(config, requests_mock):
     """Test preservation.
 
@@ -452,6 +368,13 @@ def test_reset(requests_mock, config):
 def test_propose(requests_mock, config):
     """Test proposing dataset for digital preservation.
 
+    Tests that `propose` method:
+
+    * sets proposed flag to `True`
+    * sets correct target for the workflow
+    * creates validation workspace
+    * sets preservation state
+
     :param requests_mock: HTTP request mocker
     :param config: Configuration file
     """
@@ -470,8 +393,67 @@ def test_propose(requests_mock, config):
 
     workflow = Workflow("test_dataset_id", config=config)
     assert workflow.proposed is False
+
     workflow.propose()
     assert workflow.proposed is True
+
+    # Check that dataset was added to database.
+    active_workflows = find_workflows(enabled=True, config=config)
+    assert len(active_workflows) == 1
+    workflow = active_workflows[0]
+    assert workflow.dataset.identifier == "test_dataset_id"
+    assert workflow.target == "validation"
+
+    # Validation workspace should be created
+    assert workflow.workspace.validation.exists()
+
+    # Preservation state should be set
+    assert preservation_patch.last_request.json() == {
+        "state": DS_STATE_VALIDATING_METADATA,
+        "description": {"en": "Proposed for preservation by user"}
+    }
+
+
+def test_restart_validate(config, requests_mock):
+    """Test restarting validation.
+
+    When dataset is proposed for preservation, previous validation and
+    preservation workspaces should be cleared.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    """
+    # Mock metax
+    add_metax_dataset(requests_mock)
+
+    # Metadata must be confirmed before validation
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
+
+    workflow = Workflow("test_dataset_id", config=config)
+
+    # Create workspaces
+    workflow.workspace.metadata_generation.mkdir(parents=True)
+    (workflow.workspace.metadata_generation / 'test').write_text('foo')
+    workflow.workspace.validation.mkdir(parents=True)
+    (workflow.workspace.validation / 'test').write_text('bar')
+    workflow.workspace.preservation.mkdir(parents=True)
+
+    # Propose dataset for preservation to restart validation
+    workflow.propose()
+
+    # Metadata generation workspace still contain files
+    assert [file.name
+            for file
+            in workflow.workspace.metadata_generation.iterdir()] \
+        == ['test']
+
+    # Validation workspace should be empty
+    assert not any(workflow.workspace.validation.iterdir())
+
+    # Preservation workspace should be removed
+    assert not workflow.workspace.preservation.exists()
 
 
 def test_reject(requests_mock, config):
@@ -557,9 +539,11 @@ def test_workflow_conflict(config, requests_mock):
     ("method_name", "arguments"),
     [
         ("generate_metadata", ()),
-        ("validate", ()),
         ("preserve", ()),
+        ("confirm", ()),
         ("reset", ("foo", "bar")),
+        ("propose", ()),
+        ("reject", ()),
     ]
 )
 def test_already_preserved(config, requests_mock, method_name, arguments):
@@ -623,12 +607,12 @@ def test_find_workflows(config, requests_mock, kwargs, expected_datasets):
     workflowentry3.metadata_confirmed = True
     workflowentry3.save()
     workflow3 = Workflow('ds3', config=config)
-    workflow3.validate()
+    workflow3.propose()
     workflowentry4 = WorkflowEntry(id="ds4")
     workflowentry4.metadata_confirmed = True
     workflowentry4.save()
     workflow4 = Workflow('ds4', config=config)
-    workflow4.validate()
+    workflow4.propose()
     workflow4.disable()
     workflowentry5 = WorkflowEntry(id="ds5")
     workflowentry5.metadata_confirmed = True

@@ -93,10 +93,6 @@ def propose_dataset(dataset_id: str) -> Response:
         dataset_id=dataset_id,
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
     ).propose()
-    Workflow(
-        dataset_id=dataset_id,
-        config=current_app.config.get("SIPTOOLS_RESEARCH_CONF")
-    ).validate()
 
     response = jsonify({
         "dataset_id": dataset_id,

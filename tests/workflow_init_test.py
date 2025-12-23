@@ -56,7 +56,7 @@ def test_initworkflows(config, requests_mock):
     ("method", "target_task"),
     [
         ("preserve", Cleanup),
-        ("validate", ReportDatasetValidationResult),
+        ("propose", ReportDatasetValidationResult),
         ("generate_metadata", GenerateMetadata),
     ]
 )
