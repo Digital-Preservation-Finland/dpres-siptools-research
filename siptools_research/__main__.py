@@ -89,10 +89,7 @@ def list_datasets(ctx, enabled, disabled, show_target):
     if workflows:
         for workflow in workflows:
             if show_target:
-                try:
-                    target = workflow.target.value
-                except AttributeError:
-                    target = "None"
+                target = workflow.target
 
                 click.echo(f"{workflow.dataset.identifier} (target: {target})")
             else:

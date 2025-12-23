@@ -117,7 +117,7 @@ def test_dataset_preserve(client, config, requests_mock):
 
     workflow = Workflow("test_dataset_id", config=config)
     assert workflow.enabled is True
-    assert workflow.target.value == "preservation"
+    assert workflow.target == "preservation"
 
 
 def test_dataset_generate_metadata(client, config, requests_mock):
@@ -139,7 +139,7 @@ def test_dataset_generate_metadata(client, config, requests_mock):
 
     workflow = Workflow("test_dataset_id", config=config)
     assert workflow.enabled is True
-    assert workflow.target.value == "metadata_generation"
+    assert workflow.target == "metadata_generation"
 
 
 def test_dataset_confirm(client, requests_mock, workspace):
@@ -233,7 +233,7 @@ def test_propose_dataset(client, config, requests_mock):
     workflow = Workflow("test_dataset_id", config=config)
     assert workflow.proposed is True
     assert workflow.enabled
-    assert workflow.target.value == "validation"
+    assert workflow.target == "validation"
 
 
 def test_dataset_reject(client, requests_mock):

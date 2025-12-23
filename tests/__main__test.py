@@ -85,12 +85,19 @@ def test_main_list(config, cli_runner, requests_mock):
         workflow = Workflow(f"aineisto_{i}", config=config)
         workflow.generate_metadata()
 
+    # Test without --show-target
     result = cli_runner([
         "--config", config, "dataset", "list"
     ])
-
     for i in range(10):
-        assert f"aineisto_{i}" in result.output
+        assert f"aineisto_{i}\n" in result.output
+
+    # Test with --show-target
+    result = cli_runner([
+        "--config", config, "dataset", "list", "--show-target",
+    ])
+    for i in range(10):
+        assert f"aineisto_{i} (target: metadata_generation)\n" in result.output
 
 
 @pytest.mark.parametrize(

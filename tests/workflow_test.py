@@ -128,7 +128,7 @@ def test_generate_metadata(config, requests_mock):
     assert len(active_workflows) == 1
     workflow = active_workflows[0]
     assert workflow.dataset.identifier == "test_dataset_id"
-    assert workflow.target.value == 'metadata_generation'
+    assert workflow.target == "metadata_generation"
 
     # Metadata generation workspace should be created
     assert workflow.workspace.metadata_generation.exists()
@@ -207,7 +207,7 @@ def test_validate_dataset(config, requests_mock):
     assert len(active_workflows) == 1
     workflow = active_workflows[0]
     assert workflow.dataset.identifier == "test_dataset_id"
-    assert workflow.target.value == 'validation'
+    assert workflow.target == "validation"
 
     # Validation workspace should be created
     assert workflow.workspace.validation.exists()
@@ -291,7 +291,7 @@ def test_preserve(config, requests_mock):
     assert len(active_workflows) == 1
     workflow = active_workflows[0]
     assert workflow.dataset.identifier == "test_dataset_id"
-    assert workflow.target.value == 'preservation'
+    assert workflow.target == "preservation"
 
     # Preservation workspace should be created
     assert workflow.workspace.preservation.exists()
@@ -537,7 +537,7 @@ def test_workflow_conflict(config, requests_mock):
     # should not be changed
     active_workflows = find_workflows(enabled=True, config=config)
     assert len(active_workflows) == 1
-    assert active_workflows[0].target.value == "metadata_generation"
+    assert active_workflows[0].target == "metadata_generation"
     assert active_workflows[0].dataset.identifier == "test_dataset_id"
 
     # New workflow can be started when the previous workflow is
@@ -549,7 +549,7 @@ def test_workflow_conflict(config, requests_mock):
     # should be enabled
     active_workflows = find_workflows(enabled=True, config=config)
     assert len(active_workflows) == 1
-    assert active_workflows[0].target.value == 'preservation'
+    assert active_workflows[0].target == "preservation"
     assert active_workflows[0].dataset.identifier == "test_dataset_id"
 
 

@@ -69,7 +69,7 @@ def status(dataset_id: str) -> Response:
     return jsonify({
         "dataset_id": dataset_id,
         "enabled": workflow.enabled,
-        "target": None if workflow.target is None else workflow.target.value,
+        "target": workflow.target,
         "metadata_confirmed": workflow.metadata_confirmed,
         "proposed": workflow.proposed,
         "actions": actions,

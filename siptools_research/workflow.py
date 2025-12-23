@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import contextlib
-import enum
 import shutil
 from typing import TYPE_CHECKING
 
@@ -37,18 +36,10 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-class Target(enum.Enum):
-    """Target of a workflow."""
-
-    METADATA_GENERATION = "metadata_generation"
-    VALIDATION = "validation"
-    PRESERVATION = "preservation"
-
-
 TARGET_TASKS = {
-    Target.PRESERVATION: Cleanup,
-    Target.METADATA_GENERATION: GenerateMetadata,
-    Target.VALIDATION: ReportDatasetValidationResult
+    "preservation": Cleanup,
+    "metadata_generation": GenerateMetadata,
+    "validation": ReportDatasetValidationResult,
 }
 
 
@@ -90,14 +81,9 @@ class Workflow:
                 )
 
     @property
-    def target(self) -> Target | None:
+    def target(self) -> str | None:
         """Target of the workflow."""
-        if self._document.target:
-            target = Target(self._document["target"])
-        else:
-            target = None
-
-        return target
+        return self._document.target
 
     @property
     def enabled(self) -> bool:
@@ -124,12 +110,12 @@ class Workflow:
         """Whether dataset has been proposed for preservation."""
         return self._document.proposed
 
-    def _set_target(self, target: Target) -> None:
+    def _set_target(self, target: str) -> None:
         """Set target of workflow.
 
         :param target: The target of the workflow
         """
-        self._document.target = target.value
+        self._document.target = target
         self._document.enabled = True
         self._document.save()
 
@@ -188,7 +174,7 @@ class Workflow:
 
         self.workspace.metadata_generation.mkdir(parents=True)
 
-        self._set_target(Target.METADATA_GENERATION)
+        self._set_target("metadata_generation")
 
     def require_validate_allowed(self) -> None:
         """Ensure that metadata validation is allowed.
@@ -229,7 +215,7 @@ class Workflow:
 
         self.workspace.validation.mkdir(parents=True)
 
-        self._set_target(Target.VALIDATION)
+        self._set_target("validation")
 
     def require_preserve_allowed(self) -> None:
         """Ensure that preservation is allowed.
@@ -260,7 +246,7 @@ class Workflow:
 
         self.workspace.preservation.mkdir(parents=True)
 
-        self._set_target(Target.PRESERVATION)
+        self._set_target("preservation")
 
     def require_confirm_allowed(self) -> None:
         """Ensure that confirming metadata is allowed.
@@ -270,7 +256,7 @@ class Workflow:
         """
         # Dataset metadata can not be confirmed if has not even been
         # generated yet
-        metadata_generation_task = TARGET_TASKS[Target.METADATA_GENERATION](
+        metadata_generation_task = TARGET_TASKS["metadata_generation"](
             dataset_id=self.dataset.identifier,
             config=self.config,
         )
