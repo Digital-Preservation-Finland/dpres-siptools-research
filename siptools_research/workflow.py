@@ -140,8 +140,8 @@ class Workflow:
     def require_generate_metadata_allowed(self) -> None:
         """Ensure that metadata generation is allowed.
 
-        Raises ActionNotAllowedError if metadata generation is not
-        allowed for some reason.
+        :raises ActionNotAllowedError: if metadata generation is not
+            allowed for some reason.
         """
         if self.active:
             raise WorkflowExistsError
@@ -180,8 +180,8 @@ class Workflow:
     def require_preserve_allowed(self) -> None:
         """Ensure that preservation is allowed.
 
-        Raises ActionNotAllowedError if preservation is not allowed for
-        some reason.
+        :raises ActionNotAllowedError: If preservation is not allowed
+            for some reason.
         """
         if self.active:
             raise WorkflowExistsError
@@ -211,8 +211,8 @@ class Workflow:
     def require_confirm_allowed(self) -> None:
         """Ensure that confirming metadata is allowed.
 
-        Raises ActionNotAllowedError if confirming metadata is not
-        allowed for some reason.
+        :raises ActionNotAllowedError: If confirming metadata is not
+            allowed for some reason.
         """
         # Confirming metadata of dataset is pointless, if dataset is
         # already preserved
@@ -242,8 +242,8 @@ class Workflow:
     def require_reset_allowed(self) -> None:
         """Ensure that reset is allowed.
 
-        Raises ActionNotAllowedError if reset is not allowed for some
-        reason.
+        :raises ActionNotAllowedError: If reset is not allowed for some
+            reason.
         """
         if self.active:
             raise WorkflowExistsError
@@ -279,8 +279,8 @@ class Workflow:
     def require_propose_allowed(self) -> None:
         """Ensure that proposing dataset for preservation is allowed.
 
-        Raises ActionNotAllowedError if propsing is not allowed for some
-        reason.
+        :raises ActionNotAllowedError: If propsing is not allowed for
+            some reason.
         """
         if self.active:
             raise WorkflowExistsError
@@ -330,8 +330,8 @@ class Workflow:
     def require_reject_allowed(self) -> None:
         """Ensure that rejecting proposal is allowed.
 
-        Raises ActionNotAllowedError if rejection is not allowed for
-        some reason.
+        :raises ActionNotAllowedError: If rejection is not allowed for
+            some reason.
         """
         if self.active:
             raise WorkflowExistsError
