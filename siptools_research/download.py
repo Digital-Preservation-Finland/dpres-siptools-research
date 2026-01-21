@@ -3,8 +3,6 @@ import hashlib
 import os
 from pathlib import Path
 
-import requests
-from requests.exceptions import HTTPError
 from upload_rest_api.models.file_entry import FileEntry
 
 from siptools_research.config import Configuration
@@ -62,57 +60,32 @@ def _download_ida_file(file_metadata, dataset_id, path, conf):
     :param conf: Configuration object
     :returns: Path to the file
     """
-    fd_download_service_token = conf.get('fd_download_service_token')
-    verify = conf.getboolean('fd_download_service_ssl_verification')
 
-    auth_base_url = conf.get('fd_download_service_authorize_url')
-    download_base_url = conf.get('fd_download_service_url')
-
-    try:
-        # Retrieve a single-use download token
-        response = requests.post(
-            f"{auth_base_url}/authorize",
-            headers={
-                "Authorization": f"Bearer {fd_download_service_token}"
-            },
-            verify=verify,
-            json={
-                "dataset": dataset_id,
-                "file": file_metadata["pathname"]
-            }
-        )
-        response.raise_for_status()
-
-        token = response.json()["token"]
-
-    except HTTPError as error:
-        if error.response.status_code == 404:
-            raise FileNotAvailableError(
-                f"File '{file_metadata['pathname']}' not found in Ida"
-            )
-        if error.response.status_code == 502:
-            raise FileAccessError("Ida service temporarily unavailable. "
-                                  "Please, try again later.")
-
-        raise
-
-    response = requests.get(
-        f"{download_base_url}/download",
-        params={
-            "token": token
-        },
-        verify=verify,
-        stream=True
-    )
-    response.raise_for_status()
+    project = file_metadata["csc_project"]
 
     checksum_algo, checksum_value = file_metadata["checksum"].split(":")
     hasher = CHECKSUM_ALGO_TO_CONSTRUCTOR[checksum_algo]()
 
     # Write the stream to disk and calculate checksum
     tmp_path = path.parent / (path.name + '.tmp')
-    with open(tmp_path, 'wb') as new_file:
-        for chunk in response.iter_content(chunk_size=1024):
+
+    # Project name is provided twice in the path.
+    # The second part can also be suffixed with '+' to refer to the staging
+    # directory. But we always download the frozen file.
+    if not Path(conf.get("ida_mount")).exists():
+        raise FileAccessError("Ida service temporarily unavailable. "
+                              "Please, try again later.")
+
+    mount_path = (
+        Path(conf.get("ida_mount")) / project / project
+        / file_metadata["pathname"].strip("/")
+    )
+
+    if not mount_path.exists():
+        raise FileNotAvailableError("File not available.")
+
+    with tmp_path.open('wb') as new_file, mount_path.open("rb") as src_file:
+        while chunk := src_file.read(4096):
             new_file.write(chunk)
             hasher.update(chunk)
 

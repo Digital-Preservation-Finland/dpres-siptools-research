@@ -27,7 +27,8 @@ DEFAULTS = {
     'access_rest_api_user': "organisaatio1",
     'access_rest_api_password': "csc123",
     'access_rest_api_base_path': "/",
-    'access_rest_api_ssl_verification': 'True'
+    'access_rest_api_ssl_verification': 'True',
+    'ida_mount': '/mnt/ida'
 }
 
 
