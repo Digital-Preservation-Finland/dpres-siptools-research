@@ -69,18 +69,17 @@ def _download_ida_file(file_metadata, dataset_id, path, conf):
     # Write the stream to disk and calculate checksum
     tmp_path = path.parent / (path.name + '.tmp')
 
-    # Project name is provided twice in the path.
-    # The second part can also be suffixed with '+' to refer to the staging
-    # directory. But we always download the frozen file.
     if not Path(conf.get("ida_mount")).exists():
         raise FileAccessError("Ida service temporarily unavailable. "
                               "Please, try again later.")
 
+    # Project name is provided twice in the path.
+    # The second part can also be suffixed with '+' to refer to the staging
+    # directory. But we always download the frozen file.
     mount_path = (
         Path(conf.get("ida_mount")) / project / project
         / file_metadata["pathname"].strip("/")
     )
-
     if not mount_path.exists():
         raise FileNotAvailableError("File not available.")
 

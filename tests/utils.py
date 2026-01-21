@@ -5,6 +5,8 @@ import uuid
 
 import lxml.etree
 
+from pathlib import Path
+
 from metax_access.template_data import CONTRACT, DATASET
 from tests.metax_data.datasets import BASE_DATACITE
 
@@ -75,6 +77,14 @@ def add_metax_dataset(
     requests_mock.post("/v3/files/patch-many")
 
     return dataset
+
+
+def add_mock_ida_file(ida_mount_path: Path, project_id: str, filename: str,
+                      content: bytes) -> None:
+    """Mock IDA file mount by adding a file to the location."""
+    path = ida_mount_path/project_id/project_id/filename.strip('/')
+    path.parent.mkdir(exist_ok=True, parents=True)
+    path.write_bytes(content)
 
 
 def add_mock_ida_download(requests_mock, dataset_id, filename, content):

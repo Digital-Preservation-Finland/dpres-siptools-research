@@ -56,7 +56,7 @@ def _luigi_config_fx(monkeypatch):
 
 
 @pytest.fixture(autouse=True, name="config")
-def _config(test_mongo, tmp_path, luigi_config_fx):
+def _config(test_mongo, tmp_path, luigi_config_fx, ida_mount_path):
     """Create temporary config file and mock Luigi configuration.
 
     A temporary packaging root directory is created, and configuration
@@ -84,6 +84,9 @@ def _config(test_mongo, tmp_path, luigi_config_fx):
     )
     parser.set(
         "siptools_research", "sip_sign_key", "tests/data/sip_sign_pas.pem"
+    )
+    parser.set(
+        "siptools_research", "ida_mount", str(ida_mount_path)
     )
 
     # Use test MongoDB database
@@ -157,6 +160,19 @@ def upload_projects_path(tmp_path, monkeypatch):
     path = tmp_path / "upload_projects"
     path.mkdir()
     monkeypatch.setitem(CONFIG, 'UPLOAD_PROJECTS_PATH', path)
+    return path
+
+
+@pytest.fixture(scope="function")
+def ida_mount_path(tmp_path):
+    """
+    Create a temporary path for Ida mountpoin.
+
+    :returns: Path to the Ida mountpoint
+    :rtype: pathlib.Path
+    """
+    path = tmp_path/'mnt'/'ida'
+    path.mkdir(parents=True)
     return path
 
 

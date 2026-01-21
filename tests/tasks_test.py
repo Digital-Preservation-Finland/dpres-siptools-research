@@ -99,7 +99,7 @@ def _get_schematrons():
     ]
 )
 def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
-                  sftp_dir):
+                  sftp_dir, ida_mount_path):
     """Test workflow dependency tree.
 
     Each workflow task should be able complete if it is directly called
@@ -114,6 +114,9 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
                         contains Task to be tested
     :param task: Task class name
     :param requests_mock: HTTP request mocker
+    :param mock_ssh_config: Mock SHH configuration file
+    :param sftp_dir: Path to mock SFTP directory
+    :param ida_mount_path: Path to mock IDA mountpoin
     """
     # Create transfer directory to PAS
     (sftp_dir / "transfer").mkdir(parents=True, exist_ok=True)
@@ -131,9 +134,9 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
                       json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
     # Mock Ida
-    tests.utils.add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id=workspace.name,
+    tests.utils.add_mock_ida_file(
+        ida_mount_path=ida_mount_path,
+        project_id=TXT_FILE['csc_project'],
         filename="/path/to/file",
         content=b"foo\n"
     )
@@ -283,7 +286,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     ]
 )
 def test_mets_creation(config, tmp_path, workspace, requests_mock,
-                       monkeypatch, files, upload_projects_path):
+                       monkeypatch, files, upload_projects_path, ida_mount_path):
     """Test SIP validity.
 
     Run CompressSIP task (and all tasks it requires) and check that:
@@ -298,6 +301,8 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
     :param requests_mock: Mocker object
     :param monkeypatch: Monkeypatch object
     :param files: list of files to be added to dataset
+    :param upload_projects_path: Path to mock upload project
+    :param ida_mount_path: Path to mock IDA mountpoint
     """
     # Mock Metax
     dataset = copy.deepcopy(DATASET)
@@ -325,9 +330,9 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
         else:
             # Mock Ida
             with open(file['path'], 'rb') as open_file:
-                tests.utils.add_mock_ida_download(
-                    requests_mock=requests_mock,
-                    dataset_id=workspace.name,
+                tests.utils.add_mock_ida_file(
+                    ida_mount_path=ida_mount_path,
+                    project_id=file['metadata']['csc_project'],
                     filename=file['metadata']["pathname"],
                     content=open_file.read()
                 )

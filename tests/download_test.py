@@ -8,7 +8,7 @@ from siptools_research.download import (
     FileNotAvailableError,
     download_file,
 )
-from tests.utils import add_mock_ida_download
+from tests.utils import add_mock_ida_file
 
 TEST_DATA = b"foo\n"
 TEST_CHECKSUM = \
@@ -21,34 +21,22 @@ def _get_file_metadata(identifier, checksum):
         "pathname": "/path/to/file",
         "id": identifier,
         "storage_service": "ida",
-        "checksum": checksum
+        "checksum": checksum,
+        "csc_project": "test_project_id"
     }
 
 
-@pytest.mark.parametrize("request_verified", [False, True])
-def test_download_file(config, tmp_path, requests_mock, request_verified):
+def test_download_file(config, tmp_path, ida_mount_path):
     """Test downloading a file to a temporary directory.
 
     :param config: Configuration file
     :param tmp_path: Temporary directory
-    :param requests_mock: HTTP request mocker
-    :param request_verified: should HTTP request to Ida be verified?
+    :param ida_mount_path: Path to mock IDA mountpoint.
     """
-    # Modify configuration file
-    parser = configparser.ConfigParser()
-    parser.read(config)
-    parser.set(
-        "siptools_research",
-        "fd_download_service_ssl_verification",
-        str(request_verified)
-    )
-    with open(config, "w") as file:
-        parser.write(file)
-
     # Mock ida
-    add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id="dataset_id",
+    add_mock_ida_file(
+        ida_mount_path=ida_mount_path,
+        project_id='test_project_id',
         filename="/path/to/file",
         content=TEST_DATA
     )
@@ -67,21 +55,17 @@ def test_download_file(config, tmp_path, requests_mock, request_verified):
     # The file should be a text file that says: "foo\n"
     assert new_file_path.read_bytes() == TEST_DATA
 
-    # Request should be verified if verification was enabled in
-    # configuration file
-    assert requests_mock.last_request.verify is request_verified
 
-
-def test_download_file_invalid_checksum(config, tmp_path, requests_mock):
+def test_download_file_invalid_checksum(config, tmp_path, ida_mount_path):
     """Try to download a file from IDA with a non-matching checksum.
 
     :param config: Configuration file
     :param tmp_path: Temporary path
-    :param requests_mock: HTTP request mocker
+    :param ida_mount_path: Path to mock IDA mount.
     """
-    add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id="dataset_id",
+    add_mock_ida_file(
+        ida_mount_path=ida_mount_path,
+        project_id="test_project_id",
         filename="/path/to/file",
         content=TEST_DATA
     )
@@ -103,16 +87,12 @@ def test_download_file_invalid_checksum(config, tmp_path, requests_mock):
     assert "got b5bb9d8014" in str(exc.value)
 
 
-def test_download_file_404(config, tmp_path, requests_mock):
+def test_download_file_404(config, tmp_path):
     """Try to download non-existing file from IDA.
 
     :param config: Configuration file
     :param tmp_path: Temporary directory
-    :param requests_mock: HTTP request mocker
     """
-    requests_mock.post('https://download.localhost:4431/authorize',
-                       status_code=404)
-
     new_file_path = tmp_path / 'new_file'
     with pytest.raises(FileNotAvailableError):
         download_file(
@@ -120,20 +100,26 @@ def test_download_file_404(config, tmp_path, requests_mock):
                 'pid:urn:does_not_exist', checksum=TEST_CHECKSUM
             ),
             "fake_dataset",
-            str(new_file_path),
+            new_file_path,
             config
         )
 
 
-def test_download_file_502(config, tmp_path, requests_mock):
-    """Try to download from Ida when Ida returns 502.
+def test_download_file_502(config, tmp_path):
+    """Try to download from Ida when Ida mount is unavailable.
 
     :param config: Configuration file
     :param tmp_path: Temporary directory fixture
-    :param requests_mock: HTTP request mocker
     """
-    requests_mock.post('https://download.localhost:4431/authorize',
-                       status_code=502)
+    parser = configparser.ConfigParser()
+    parser.read(config)
+    parser.set(
+        "siptools_research",
+        "ida_mount",
+        "/path/not/existing/"
+    )
+    with open(config, "w") as file:
+        parser.write(file)
 
     new_file_path = tmp_path / 'new_file'
     with pytest.raises(FileAccessError) as exc_info:
@@ -143,7 +129,7 @@ def test_download_file_502(config, tmp_path, requests_mock):
                 checksum=TEST_CHECKSUM
             ),
             "fake_dataset",
-            str(new_file_path),
+            new_file_path,
             config
         )
     assert str(exc_info.value) == ("Ida service temporarily unavailable. "

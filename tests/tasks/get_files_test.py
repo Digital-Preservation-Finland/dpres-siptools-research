@@ -16,11 +16,11 @@ from tests.metax_data.files import (
 )
 from tests.utils import (
     add_metax_dataset,
-    add_mock_ida_download,
+    add_mock_ida_file,
 )
 
 
-def test_getfiles(config, workspace, requests_mock):
+def test_getfiles(config, workspace, requests_mock, ida_mount_path):
     """Tests for ``GetFiles`` task for IDA and local files.
 
     - ``Task.complete()`` is true after ``Task.run()``
@@ -29,6 +29,7 @@ def test_getfiles(config, workspace, requests_mock):
     :param config: Configuration file
     :param workspace: Test workspace directory fixture
     :param requests_mock: Mocker object
+    :param ida_mount_path: Path to mock IDA mountpoint.
     :returns: ``None``
     """
     # Mock Metax. Create a dataset that contains two text files.
@@ -44,15 +45,15 @@ def test_getfiles(config, workspace, requests_mock):
     add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
     # Mock Ida. Add the two text files to Ida.
-    add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id=workspace.name,
+    add_mock_ida_file(
+        ida_mount_path=ida_mount_path,
+        project_id=TXT_FILE['csc_project'],
         filename="/path/to/file1",
         content=b"foo\n"
     )
-    add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id=workspace.name,
+    add_mock_ida_file(
+        ida_mount_path=ida_mount_path,
+        project_id=TXT_FILE['csc_project'],
         filename="/path/to/file2",
         content=b"bar\n"
     )
@@ -76,7 +77,8 @@ def test_file_cache(config, workspace, requests_mock):
     """Test that files are downloaded only once.
 
     If files have already been been downloaded to file cache, they
-    should not be downloaded from Ida again.
+    should not be downloaded from IDA again, therefore IDA is not
+    mocked in this test.
 
     :param config: Configuration file
     :param workspace: Test workspace directory fixture
@@ -86,14 +88,6 @@ def test_file_cache(config, workspace, requests_mock):
     dataset = copy.deepcopy(DATASET)
     dataset["id"] = workspace.name
     add_metax_dataset(requests_mock, dataset=dataset, files=[TXT_FILE])
-
-    # Mock Ida
-    mock_download = add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id=workspace.name,
-        filename="path/to/file",
-        content=b"Content of Ida file\n"
-    )
 
     # Create file to file cache directory
     cached_file = workspace / "file_cache" / TXT_FILE["id"]
@@ -112,11 +106,8 @@ def test_file_cache(config, workspace, requests_mock):
     path = workspace / "metadata_generation/dataset_files/path/to/file"
     assert path.read_text() == "Content of cached file"
 
-    # Requests to Ida should not be made
-    assert not mock_download.called
 
-
-def test_missing_ida_files(config, workspace, requests_mock):
+def test_missing_ida_files(config, workspace, requests_mock, ida_mount_path):
     """Test task when a file can not be found from Ida.
 
     The first file should successfully downloaded, but the second file
@@ -125,6 +116,7 @@ def test_missing_ida_files(config, workspace, requests_mock):
     :param config: Configuration file
     :param workspace: Temporary workspace directory fixture
     :param requests_mock: Mocker object
+    :param ida_mount_path: Path to mock IDA mountpoint
     """
     # Mock Metax. Create a dataset that contains two text files.
     files = [copy.deepcopy(TXT_FILE), copy.deepcopy(TXT_FILE)]
@@ -137,16 +129,11 @@ def test_missing_ida_files(config, workspace, requests_mock):
 
     # Mock Ida. First file can be downloaded, but requesting the second
     # file will cause 404 "Not found" error.
-    add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id=workspace.name,
+    add_mock_ida_file(
+        ida_mount_path=ida_mount_path,
+        project_id=TXT_FILE['csc_project'],
         filename="/path/to/file1",
         content=b"foo\n"
-    )
-    requests_mock.post(
-        'https://download.localhost:4431/authorize',
-        status_code=404,
-        additional_matcher=lambda req: req.json()["file"] == "/path/to/file2"
     )
 
     # Init task
@@ -276,13 +263,14 @@ def test_forbidden_relative_path(config, workspace, requests_mock, path):
                                   "./file1",
                                   "././file1",
                                   "/./file1"])
-def test_allowed_relative_paths(config, workspace, requests_mock, path):
+def test_allowed_relative_paths(config, workspace, requests_mock, path, ida_mount_path):
     """Test that file is downloaded to correct location.
 
     :param config: Configuration file
     :param workspace: Temporary workspace path fixture
     :param requests_mock: Request mocker
     :param path: sample file path
+    :param ida_mount_path: Path to mock IDA mountpoint.
     """
     # Mock Metax
     file = copy.deepcopy(FILE)
@@ -293,10 +281,9 @@ def test_allowed_relative_paths(config, workspace, requests_mock, path):
     add_metax_dataset(requests_mock, dataset=dataset, files=[file])
 
     # Mock Ida
-    requests_mock.get('https://ida.test/files/pid:urn:identifier/download')
-    add_mock_ida_download(
-        requests_mock=requests_mock,
-        dataset_id=workspace.name,
+    add_mock_ida_file(
+        ida_mount_path=ida_mount_path,
+        project_id=FILE['csc_project'],
         filename=path,
         content=b"foo\n"
     )
