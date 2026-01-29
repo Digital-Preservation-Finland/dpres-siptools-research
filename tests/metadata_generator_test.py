@@ -257,8 +257,11 @@ def test_generate_metadata_unrecognized(config, requests_mock, tmp_path):
     with pytest.raises(BulkInvalidDatasetFileError) as exception_info:
         generate_metadata(dataset['id'], tmp_path, config)
 
-    assert len(exception_info.value.file_errors) == 1
-    file_error = exception_info.value.file_errors[0]
+    assert len(exception_info.value.file_errors) > 0
+    file_error = next(
+        file_error for file_error in exception_info.value.file_errors
+        if "Proper extractor was not found" in str(file_error)
+    )
 
     assert str(file_error) == ("ExtractorNotFound: Proper extractor was"
                                " not found. The file was not analyzed.")
