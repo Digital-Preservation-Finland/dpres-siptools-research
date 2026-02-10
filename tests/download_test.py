@@ -105,21 +105,16 @@ def test_download_file_404(config, tmp_path):
         )
 
 
-def test_download_file_502(config, tmp_path):
+def test_download_file_502(config, tmp_path, ida_mount_path):
     """Try to download from Ida when Ida mount is unavailable.
 
     :param config: Configuration file
     :param tmp_path: Temporary directory fixture
+    :param ida_mount_path: Path to IDA mount.
     """
-    parser = configparser.ConfigParser()
-    parser.read(config)
-    parser.set(
-        "siptools_research",
-        "ida_mount",
-        "/path/not/existing/"
-    )
-    with open(config, "w") as file:
-        parser.write(file)
+    offline_file = ida_mount_path / 'OFFLINE'
+    offline_text = "information from the offline file."
+    offline_file.write_text(offline_text)
 
     new_file_path = tmp_path / 'new_file'
     with pytest.raises(FileAccessError) as exc_info:
@@ -132,5 +127,5 @@ def test_download_file_502(config, tmp_path):
             new_file_path,
             config
         )
-    assert str(exc_info.value) == ("Ida service temporarily unavailable. "
-                                   "Please, try again later.")
+    assert str(exc_info.value) == (f"IDA service offline with message: {offline_text}. "
+                                   "Please try again later.")

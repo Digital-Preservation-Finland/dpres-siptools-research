@@ -69,9 +69,15 @@ def _download_ida_file(file_metadata, dataset_id, path, conf):
     # Write the stream to disk and calculate checksum
     tmp_path = path.parent / (path.name + '.tmp')
 
-    if not Path(conf.get("ida_mount")).exists():
-        raise FileAccessError("Ida service temporarily unavailable. "
-                              "Please, try again later.")
+    try:
+        offline_message = Path(conf.get("ida_mount"), "OFFLINE").read_text()
+
+        raise FileAccessError(
+            f"IDA service offline with message: {offline_message}. "
+            "Please try again later."
+        )
+    except FileNotFoundError:
+        pass  # No service break active
 
     # Project name is provided twice in the path.
     # The second part can also be suffixed with '+' to refer to the staging
