@@ -13,11 +13,6 @@ DEFAULTS = {
     'metax_url': 'https://metax-test.csc.fi',
     'metax_token': '',
     'metax_ssl_verification': 'True',
-    'fd_download_service_authorize_url':
-        'https://download.fd-test.csc.fi:4431',
-    'fd_download_service_url': 'https://download.fd-test.csc.fi:4430',
-    'fd_download_service_token': '',
-    'fd_download_service_ssl_verification': 'True',
     'dp_host': '86.50.168.218',
     'dp_port': '22',
     'dp_user': 'tpas',
