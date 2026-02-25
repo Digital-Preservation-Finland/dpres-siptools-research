@@ -337,7 +337,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
     """
     # Mock Metax
     file_metadata = copy.deepcopy(FILE)
-    file_metadata["characteristics"]["encoding"] = "user_defined"
+    file_metadata["characteristics"]["encoding"] = "ISO-8859-15"
     dataset = add_metax_dataset(requests_mock, files=[file_metadata])
     patch_file_mock = requests_mock.patch("/v3/files/pid:urn:identifier",
                                           json={})
@@ -347,7 +347,9 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
     requests_mock.get("/v3/reference-data/file-format-versions",
                       json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
 
-    # Create text file in temporary directory
+    # Create text file in temporary directory. The text file contains
+    # only ASCII characters, so file-scraper would detect charset as
+    # UTF-8 by default. However, ISO-8859-15 is also valid charset.
     tmp_file_path = tmp_path / 'path/to/file'
     tmp_file_path.parent.mkdir(parents=True)
     tmp_file_path.write_text('foo')
@@ -362,7 +364,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
             "url": "url-for-txt",
         },
         # user defined value is not overwritten
-        "encoding": "user_defined",
+        "encoding": "ISO-8859-15",
     }
 
     # Check that user defined value is copied also to file
@@ -370,7 +372,7 @@ def test_generate_metadata_predefined(config, requests_mock, tmp_path):
     json = patch_file_mock.last_request.json()
     assert json["characteristics_extension"]["streams"] == {
         '0': {
-            'charset': 'user_defined',
+            'charset': 'ISO-8859-15',
             'index': 0,
             'mimetype': 'text/plain',
             'stream_type': 'text',
@@ -594,7 +596,7 @@ def test_overwriting_user_defined_metadata(config, requests_mock, tmp_path,
         (
             "application/pdf",
             "1.3",
-            "The Extractors produced a different version",
+            "The stream has conflicting version 1.7",
         ),
     ]
 )
