@@ -24,18 +24,8 @@ class InitWorkflows(luigi.WrapperTask):
             port=configuration.get("mongodb_port"),
         )
 
-        for workflow in find_workflows(enabled=True, config=self.config):
-            task = TARGET_TASKS[workflow.target](
+        for workflow in find_workflows(active=True, config=self.config):
+            yield TARGET_TASKS[workflow.target](
                 dataset_id=workflow.dataset.identifier,
                 config=self.config
             )
-
-            # Skip completed workflows
-            if task.complete():
-                continue
-
-            # Skip invalid datasets
-            if workflow.dataset.errors:
-                continue
-
-            yield task

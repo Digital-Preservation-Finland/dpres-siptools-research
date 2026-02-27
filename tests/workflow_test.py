@@ -164,7 +164,7 @@ def test_generate_metadata(config, requests_mock):
         == {"pas_process_running": True}
 
     # Check that workflow was added to database.
-    active_workflows = find_workflows(enabled=True, config=config)
+    active_workflows = find_workflows(active=True, config=config)
     assert len(active_workflows) == 1
     workflow = active_workflows[0]
     assert workflow.dataset.identifier == "test_dataset_id"
@@ -243,7 +243,7 @@ def test_preserve(config, requests_mock):
     workflow = Workflow("test_dataset_id", config=config).preserve()
 
     # Check that dataset was added to database.
-    active_workflows = find_workflows(enabled=True, config=config)
+    active_workflows = find_workflows(active=True, config=config)
     assert len(active_workflows) == 1
     workflow = active_workflows[0]
     assert workflow.dataset.identifier == "test_dataset_id"
@@ -438,7 +438,7 @@ def test_propose(requests_mock, config):
     assert workflow.proposed is True
 
     # Check that dataset was added to database.
-    active_workflows = find_workflows(enabled=True, config=config)
+    active_workflows = find_workflows(active=True, config=config)
     assert len(active_workflows) == 1
     workflow = active_workflows[0]
     assert workflow.dataset.identifier == "test_dataset_id"
@@ -557,7 +557,7 @@ def test_workflow_conflict(config, requests_mock):
 
     # New workflows should not be created and the existing workflow
     # should not be changed
-    active_workflows = find_workflows(enabled=True, config=config)
+    active_workflows = find_workflows(active=True, config=config)
     assert len(active_workflows) == 1
     assert active_workflows[0].target == "metadata_generation"
     assert active_workflows[0].dataset.identifier == "test_dataset_id"
@@ -569,7 +569,7 @@ def test_workflow_conflict(config, requests_mock):
 
     # The target of the workflow should be updated, and workflow
     # should be enabled
-    active_workflows = find_workflows(enabled=True, config=config)
+    active_workflows = find_workflows(active=True, config=config)
     assert len(active_workflows) == 1
     assert active_workflows[0].target == "preservation"
     assert active_workflows[0].dataset.identifier == "test_dataset_id"
@@ -614,10 +614,10 @@ def test_already_preserved(config, requests_mock, method_name, arguments):
     [
         # Search without parameters should return all datasets
         ({}, ["ds1", "ds2", "ds3", "ds4", "ds5", "ds6"]),
-        # Only enabled datasets
-        ({"enabled": True}, ["ds1", "ds3", "ds5"]),
+        # Only active datasets
+        ({"active": True}, ["ds1", "ds3", "ds5"]),
         # Only disabled  datasets
-        ({"enabled": False}, ["ds2", "ds4", "ds6"]),
+        ({"disabled": True}, ["ds2", "ds4", "ds6"]),
     ]
 )
 def test_find_workflows(config, requests_mock, kwargs, expected_datasets):

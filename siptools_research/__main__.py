@@ -26,20 +26,6 @@ def _get_workflow(dataset_id, config):
     return workflows[0] if workflows else None
 
 
-def _get_workflows(enabled, disabled, config):
-    """Find workflows with filters."""
-    if disabled:
-        enabled = False
-    elif enabled:
-        enabled = True
-    else:
-        enabled = None
-
-    workflows = find_workflows(enabled=enabled, config=config)
-
-    return workflows
-
-
 class Context:
     """Context class for the Click application"""
     config: str = ""
@@ -72,19 +58,32 @@ def dataset():
     pass
 
 
-@dataset.command("list", help="List datasets based on various filters")
-@click.option("--enabled", is_flag=True, default=None)
-@click.option("--disabled", is_flag=True, default=None)
+@dataset.command("list", help="List datasets")
+@click.option(
+    "--active",
+    is_flag=True,
+    default=False,
+    help="List only active workflows. Workflow is active if it has not "
+         "been manually disabled, errors have not been found from the "
+         "dataset, and the workflow has not completed. Active workflows "
+         "will be automatically restarted until they complete."
+)
+@click.option(
+    "--disabled",
+    is_flag=True,
+    default=False,
+    help="List only manually disabled workflows."
+)
 @click.option("--show-target", is_flag=True, default=False)
 @click.pass_obj
-def list_datasets(ctx, enabled, disabled, show_target):
-    if enabled and disabled:
-        raise click.UsageError(
-            "'enabled' and 'disabled' are mutually exclusive"
-        )
-
-    workflows = _get_workflows(
-        enabled=enabled, disabled=disabled, config=ctx.config
+def list_datasets(ctx, active, disabled, show_target) -> None:
+    """List datasets."""
+    if active and disabled:
+        raise click.UsageError("'disabled' workflows are never 'active'")
+    workflows = find_workflows(
+        active=active,
+        disabled=disabled,
+        config=ctx.config
     )
     if workflows:
         for workflow in workflows:
