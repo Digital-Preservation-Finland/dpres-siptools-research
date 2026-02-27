@@ -63,8 +63,8 @@ def test_enable_disable(config):
     assert workflow.enabled is False
 
 
-def test_active(config, requests_mock, workspace):
-    """Test checking if workflow is active.
+def test_active_incomplete(config, requests_mock, workspace):
+    """Test checking if incomplete workflow is active.
 
     :param config: Configuration file
     """
@@ -75,26 +75,66 @@ def test_active(config, requests_mock, workspace):
 
     workflow = Workflow(workspace.name, config=config)
     workflow.generate_metadata()
+    assert workflow.active is True
 
-    # Disabled incomplete workflow
+    # Disable workflow
     workflow.disable()
     assert workflow.active is False
 
-    # Enabled incomplete workflow
+    # Re-enabled workflow
     workflow.enable()
     assert workflow.active is True
 
-    # Enabled complete workflow
-    workflow.enable()
+
+def test_active_complete(config, requests_mock, workspace):
+    """Test that complete workflow is never active.
+
+    :param config: Configuration file
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset)
+
+    workflow = Workflow(workspace.name, config=config)
+    workflow.generate_metadata()
     # Create fake fake output file for the target task
     output_path = (workspace
-     / "metadata_generation"
-     / "generate-metadata.finished")
+                   / "metadata_generation"
+                   / "generate-metadata.finished")
     output_path.write_text("foo")
     assert workflow.active is False
 
-    # Disabled complete workflow
+    # Disable workflow
     workflow.disable()
+    assert workflow.active is False
+
+    # Re-enabled workflow
+    workflow.enable()
+    assert workflow.active is False
+
+
+def test_active_errors(config, requests_mock, workspace):
+    """Test that workflow of invalid dataset is never active.
+
+    :param config: Configuration file
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset)
+
+    workflow = Workflow(workspace.name, config=config)
+    workflow.generate_metadata()
+    workflow.dataset.add_error("Something wrong with the dataset")
+    assert workflow.active is False
+
+    # Disable workflow
+    workflow.disable()
+    assert workflow.active is False
+
+    # Re-enabled workflow
+    workflow.enable()
     assert workflow.active is False
 
 

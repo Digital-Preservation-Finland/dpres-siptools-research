@@ -124,10 +124,13 @@ class Workflow:
     def active(self) -> bool:
         """Check if workflow is active.
 
-        The workflow is active if it is enabled and the target task is
-        not complete.
+        The workflow is active if it is enabled, errors have not been
+        found from dataset, and the target task is not complete.
         """
         if not self.enabled:
+            return False
+
+        if self.dataset.errors:
             return False
 
         target_task = TARGET_TASKS[self.target](
