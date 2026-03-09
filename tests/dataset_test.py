@@ -321,7 +321,9 @@ def test_unlock_dataset(requests_mock, config):
         },
     ]
 
-    # Dataset errors should be cleared
+    # Reinitialize dataset to fetch the data from database, and check
+    # that errors have been cleared.
+    dataset = Dataset("test_dataset_id", config=config)
     assert dataset.errors == []
 
     # File errors for the two files are removed

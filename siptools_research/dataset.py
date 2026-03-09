@@ -158,8 +158,10 @@ class Dataset:
 
         # When dataset is unlocked, it can be edited by users.
         # Therefore, the previously found errors might not exist
-        # anymore.
-        self._document.errors.clear()
+        # anymore. Note that self._document.clear() can not be used
+        # because of a bug in mongoengine<=29.1:
+        # https://github.com/MongoEngine/mongoengine/issues/2808
+        self._document.errors = []
         self._document.save()
 
         # Also the file metadata can be edited, and files could be even
