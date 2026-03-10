@@ -357,19 +357,17 @@ def test_confirm_metadata_not_generated(requests_mock, config):
 def test_reset(requests_mock, config):
     """Test resetting workflow.
 
-    Tests that resetting dataset
+    Tests that resetting workflow
 
     * updates preservation state of dataset in Metax
-    * unlocks datataset metadat in Metax
-    * revokes metadata confirmation
-    * cancel proposal to preservation
+    * unlocks dataset metadata in Metax
+    * resets state of the workflow
 
     :param requests_mock: HTTP request mocker
     :param config: Configuration file
     """
     # Mock Metax
     add_metax_dataset(requests_mock)
-
     preservation_patch = requests_mock.patch(
         "/v3/datasets/test_dataset_id/preservation", json={}
     )
@@ -389,7 +387,7 @@ def test_reset(requests_mock, config):
         reason_description="Why this dataset was reset"
     )
 
-    # Preservation state set to INITIALIZED and dataset is unlocked
+    # Preservation state is set to INITIALIZED and dataset is unlocked
     assert any(
         req for req in preservation_patch.request_history
         if req.json().get("state", None) == DS_STATE_INITIALIZED
@@ -399,10 +397,25 @@ def test_reset(requests_mock, config):
         if req.json().get("pas_process_running", None) is False
     )
 
-    # Metadata confirmation should be revoked and  proposal should be
-    # cancelled
+    # As the dataset is unlocked, the metadata might change. The
+    # metadata confirmation must therefore be revoked.
     assert workflow.metadata_confirmed is False
+
+    # Proposal should be cancelled
     assert workflow.proposed is False
+
+    # Target should be removed
+    assert workflow.target is None
+
+    # Workflow should not be enabled
+    assert workflow.enabled is False
+
+    # Workflow should not be active
+    assert workflow.active is False
+
+    # Workflow should be removed from database, so the workflow database
+    # should be empty
+    assert not find_workflows(config=config)
 
 
 def test_propose(requests_mock, config):

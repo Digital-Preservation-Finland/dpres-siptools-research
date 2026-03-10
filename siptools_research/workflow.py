@@ -260,8 +260,8 @@ class Workflow:
     def reset(self, description: str, reason_description: str) -> None:
         """Reset dataset.
 
-        This sets its state to INITIALIZED and removes any existing file
-        errors.
+        Sets dataset state to INITIALIZED, unlocks the dataset, and
+        resets workflow state.
         """
         self.require_reset_allowed()
 
@@ -274,10 +274,11 @@ class Workflow:
         # Unlock dataset
         self.dataset.unlock()
 
-        # Because the metadata might change, user has to confirm the
-        # metadata again.
-        self._document.metadata_confirmed = False
-        self._document.save()
+        # Delete workflow document from database
+        self._document.delete()
+
+        # Reset state of the current workflow object
+        self._document = WorkflowEntry(id=self.dataset.identifier)
 
     def require_propose_allowed(self) -> None:
         """Ensure that proposing dataset for preservation is allowed.
