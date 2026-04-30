@@ -1,6 +1,4 @@
 """Tests for :mod:`siptools_research.download` module."""
-import configparser
-
 import pytest
 
 from siptools_research.download import (
@@ -70,11 +68,11 @@ def test_download_file_invalid_checksum(config, tmp_path, ida_mount_path):
     )
 
     new_file_path = tmp_path / 'new_file'
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ValueError, match="checksum was different") as exc:
         download_file(
             _get_file_metadata(
                 'pid:urn:1',
-                checksum="sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+                checksum="sha256:fffffffffffffffffffffffffffffffffffffffffffff"
             ),
             new_file_path,
             config
@@ -123,5 +121,6 @@ def test_download_file_502(config, tmp_path, ida_mount_path):
             new_file_path,
             config
         )
-    assert str(exc_info.value) == (f"IDA service offline with message: {offline_text}. "
-                                   "Please try again later.")
+    assert str(exc_info.value) \
+        == (f"IDA service offline with message: {offline_text}. "
+            "Please try again later.")

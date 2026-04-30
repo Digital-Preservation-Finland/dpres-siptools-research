@@ -1,4 +1,4 @@
-"""IDA and upload-rest-api interface module"""
+"""IDA and upload-rest-api interface module."""
 import hashlib
 import os
 from pathlib import Path
@@ -59,7 +59,6 @@ def _download_ida_file(file_metadata, path, conf):
     :param conf: Configuration object
     :returns: Path to the file
     """
-
     project = file_metadata["csc_project"]
 
     checksum_algo, checksum_value = file_metadata["checksum"].split(":")
@@ -78,9 +77,9 @@ def _download_ida_file(file_metadata, path, conf):
     except FileNotFoundError:
         pass  # No service break active
 
-    # Project name is provided twice in the path.
-    # The second part can also be suffixed with '+' to refer to the staging
-    # directory. But we always download the frozen file.
+    # Project name is provided twice in the path. The second part can
+    # also be suffixed with '+' to refer to the staging directory. But
+    # we always download the frozen file.
     mount_path = (
         Path(conf.get("ida_mount")) / project / project
         / file_metadata["pathname"].strip("/")
