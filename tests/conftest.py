@@ -5,9 +5,7 @@ from pathlib import Path
 from io import StringIO
 
 import luigi.configuration
-import mongoengine
 import pytest
-from upload_rest_api.config import CONFIG
 from click.testing import CliRunner
 from mongobox import MongoBox
 
@@ -56,7 +54,8 @@ def _luigi_config_fx(monkeypatch):
 
 
 @pytest.fixture(autouse=True, name="config")
-def _config(test_mongo, tmp_path, luigi_config_fx, ida_mount_path):
+def _config(test_mongo, tmp_path, luigi_config_fx, ida_mount_path,
+            upload_projects_path):
     """Create temporary config file and mock Luigi configuration.
 
     A temporary packaging root directory is created, and configuration
@@ -87,6 +86,9 @@ def _config(test_mongo, tmp_path, luigi_config_fx, ida_mount_path):
     )
     parser.set(
         "siptools_research", "ida_mount", str(ida_mount_path)
+    )
+    parser.set(
+        "siptools_research", "upload_rest_api_path", str(upload_projects_path)
     )
 
     # Use test MongoDB database
@@ -130,36 +132,11 @@ def mongo_cleanup(test_mongo):
     return
 
 
-@pytest.fixture(autouse=True)
-def upload_database(test_mongo):
-    """
-    Connect to upload-rest-api database
-    """
-    # TODO: upload-rest-api connects implicitly when the model class is
-    # imported instead of siptools-research which connects explicitly
-    # with a function call. It also doesn't have an explicit DB alias,
-    # defaulting to 'default' instead.
-    #
-    # upload-rest-api should be updated to work similarly to siptools-research
-    # to reduce confusion.
-    #
-    # Also see TPASPKT-516
-    mongoengine.disconnect()
-    mongoengine.connect(
-        "upload", host=f"mongodb://localhost:{test_mongo.PORT}",
-        tz_aware=True,
-        uuidRepresentation="standard",  # Added to avoid DeprecationWarnings
-    )
-
-
 @pytest.fixture
-# TODO: This hack can be removed when TPASPKT-516 is resolved
-def upload_projects_path(tmp_path, monkeypatch):
-    """Configure UPLOAD_PROJECTS_PATH for upload-rest-api."""
-    # Mock upload-rest-api configuration
-    path = tmp_path / "upload_projects"
+def upload_projects_path(tmp_path):
+    """Create a temporary directory for upload-rest-api files."""
+    path = tmp_path / "upload_rest_api"
     path.mkdir()
-    monkeypatch.setitem(CONFIG, 'UPLOAD_PROJECTS_PATH', path)
     return path
 
 

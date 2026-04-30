@@ -25,7 +25,6 @@ git+https://gitlab.ci.csc.fi/dpres/dpx-validator.git@develop
 git+https://gitlab.ci.csc.fi/dpres/dpres-siptools-ng.git@develop#eggs=dpres_siptools_ng
 git+https://gitlab.ci.csc.fi/dpres/dpres-mets-builder.git@develop#egg=dpres_mets_builder
 git+https://gitlab.ci.csc.fi/dpres/metax-access.git@develop#egg=metax_access
-git+https://gitlab.ci.csc.fi/dpres/upload-rest-api.git@develop#egg=upload_rest_api
 git+https://gitlab.ci.csc.fi/dpres/dpres-rest-api-client.git@develop
 git+https://gitlab.ci.csc.fi/dpres/dpres-file-formats.git@develop#egg=dpres_file_formats
 

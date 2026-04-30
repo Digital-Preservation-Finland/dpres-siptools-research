@@ -23,7 +23,8 @@ DEFAULTS = {
     'access_rest_api_password': "csc123",
     'access_rest_api_base_path': "/",
     'access_rest_api_ssl_verification': 'True',
-    'ida_mount': '/mnt/ida'
+    'ida_mount': '/mnt/ida',
+    'upload_rest_api_path': '/var/spool/upload/projects',
 }
 
 

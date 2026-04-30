@@ -39,7 +39,6 @@ BuildRequires:  %{py3_dist setuptools}
 BuildRequires:  %{py3_dist setuptools_scm}
 BuildRequires:  %{py3_dist wheel}
 BuildRequires:  %{py3_dist xmltodict}
-BuildRequires:  %{py3_dist upload_rest_api}
 
 %global _description %{expand:
 Digital Preservation Packaging Service for Research datasets
@@ -54,7 +53,6 @@ Summary:  %{summary}
 Requires: python3-file-scraper-full
 Requires: %{py3_dist dpres-siptools-ng}
 Requires: %{py3_dist metax_access}
-Requires: %{py3_dist upload_rest_api}
 Requires: %{py3_dist dpres_rest_api_client}
 Requires: %{py3_dist mongoengine}
 

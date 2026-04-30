@@ -2,7 +2,6 @@
 import copy
 
 import pytest
-from upload_rest_api.models.file_entry import FileEntry
 
 from siptools_research.exceptions import (
     InvalidFileMetadataError,
@@ -182,23 +181,10 @@ def test_missing_local_files(config, workspace, requests_mock,
     dataset["id"] = workspace.name
     add_metax_dataset(requests_mock, dataset=dataset, files=files)
 
-    # Init mocked upload.files collection
-    mongo_files = [
-        ("pid:urn:get_files_1_local",
-         str(upload_projects_path / "path/to/file1")),
-        ("pid:urn:does_not_exist_local",
-         str(upload_projects_path / "path/to/file4"))
-    ]
-    for identifier, fpath in mongo_files:
-        FileEntry(
-            path=str(fpath),
-            identifier=identifier,
-            checksum="2eeecd72c567401e6988624b179d0b14"
-        ).save()
-
     # Create only the first file in test directory
-    (upload_projects_path / "path/to/file1").parent.mkdir(parents=True)
-    (upload_projects_path / "path/to/file1").write_text("foo\n")
+    test_path = (upload_projects_path / "test_project/path/to/file1")
+    test_path.parent.mkdir(parents=True)
+    test_path.write_text("foo\n")
 
     # Init task
     task = get_files.GetFiles(dataset_id=workspace.name, config=config)

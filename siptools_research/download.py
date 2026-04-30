@@ -3,8 +3,6 @@ import hashlib
 import os
 from pathlib import Path
 
-from upload_rest_api.models.file_entry import FileEntry
-
 from siptools_research.config import Configuration
 
 CHECKSUM_ALGO_TO_CONSTRUCTOR = {
@@ -25,24 +23,21 @@ class FileAccessError(Exception):
     """Raised when file cannot be accessed."""
 
 
-def _link_local_file(file_metadata, path):
+def _link_local_file(file_metadata, path, conf):
     """Create a hard link to upload-rest-api file.
 
     :param file_metadata: Metax file metadata
     :param path: Path where file is downloaded
     :param conf: Configuration object
     """
-    identifier = file_metadata["storage_identifier"]
-    try:
-        filepath = FileEntry.objects.get(identifier=identifier).path
-    except FileEntry.DoesNotExist:
-        filepath = None
+    filepath = Path(conf.get("upload_rest_api_path")) \
+        / file_metadata["csc_project"] \
+        / file_metadata["pathname"].strip("/")
 
-    # Even if FileEntry (which should not be used for this purpose
-    # anyway: TPASPKT-516) exists it does not mean that the file
-    # actually exists in upload-rest-api. Therefore we must check that
-    # file really exists.
-    if (filepath is None) or (not Path(filepath).is_file()):
+    # Even if file_metadata exists it currently does not mean that the
+    # file actually exists in upload-rest-api. See TPASPKT-749 for more
+    # information. Therefore we must check that file really exists.
+    if not filepath.is_file():
         raise FileNotAvailableError(
             f"File '{file_metadata['pathname']}' not found in pre-ingest "
             f"file storage"
@@ -124,6 +119,7 @@ def download_file(
         _link_local_file(
             file_metadata=file_metadata,
             path=path,
+            conf=conf,
         )
     else:
         _download_ida_file(

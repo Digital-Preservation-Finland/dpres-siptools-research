@@ -10,7 +10,6 @@ import luigi
 import lxml.etree
 import pytest
 from lxml.isoschematron import Schematron
-from upload_rest_api.models.file_entry import FileEntry
 
 import siptools_research.tasks.compress
 import tests.metax_data.reference_data
@@ -317,15 +316,11 @@ def test_mets_creation(config, tmp_path, workspace, requests_mock,
     for file in files:
         if file['metadata']['storage_service'] == PAS_STORAGE_SERVICE:
             # Mock upload-rest-api
-            file_storage_path = (upload_projects_path / "project_id"
-                                 / file["metadata"]["id"])
+            file_storage_path = (upload_projects_path
+                                 / "test_project"
+                                 / file["metadata"]["pathname"].strip("/"))
 
-            FileEntry(
-                id=str(file_storage_path),
-                checksum="2eeecd72c567401e6988624b179d0b14",
-                identifier=file["metadata"]["storage_identifier"]
-            ).save()
-            file_storage_path.parent.mkdir()
+            file_storage_path.parent.mkdir(parents=True)
             shutil.copy(file['path'], file_storage_path)
         else:
             # Mock Ida
