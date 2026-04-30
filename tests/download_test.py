@@ -47,7 +47,6 @@ def test_download_file(config, tmp_path, ida_mount_path):
             'pid:urn:1',
             checksum=TEST_CHECKSUM
         ),
-        "dataset_id",
         new_file_path,
         config
     )
@@ -77,7 +76,6 @@ def test_download_file_invalid_checksum(config, tmp_path, ida_mount_path):
                 'pid:urn:1',
                 checksum="sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
             ),
-            "dataset_id",
             new_file_path,
             config
         )
@@ -99,7 +97,6 @@ def test_download_file_404(config, tmp_path):
             _get_file_metadata(
                 'pid:urn:does_not_exist', checksum=TEST_CHECKSUM
             ),
-            "fake_dataset",
             new_file_path,
             config
         )
@@ -123,7 +120,6 @@ def test_download_file_502(config, tmp_path, ida_mount_path):
                 'pid:urn:502',
                 checksum=TEST_CHECKSUM
             ),
-            "fake_dataset",
             new_file_path,
             config
         )

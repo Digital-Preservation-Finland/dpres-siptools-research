@@ -51,11 +51,10 @@ def _link_local_file(file_metadata, path):
     os.link(filepath, path)
 
 
-def _download_ida_file(file_metadata, dataset_id, path, conf):
+def _download_ida_file(file_metadata, path, conf):
     """Download file from IDA.
 
     :param file_metadata: Metax file metadata
-    :param dataset_id: Identifier for the dataset containing the file
     :param path: Path where file is downloaded
     :param conf: Configuration object
     :returns: Path to the file
@@ -109,7 +108,6 @@ def _download_ida_file(file_metadata, dataset_id, path, conf):
 
 def download_file(
         file_metadata,
-        dataset_id,
         path,
         config_file="/etc/siptools_research.conf",
 ):
@@ -117,7 +115,6 @@ def download_file(
     link to linkpath.
 
     :param file_metadata: File metadata from Metax
-    :param dataset_id: Identifier for the dataset containing the file
     :param path: Path where the file is downloaded
     :param config_file: Configuration file
     """
@@ -133,6 +130,5 @@ def download_file(
         _download_ida_file(
             file_metadata=file_metadata,
             path=path,
-            dataset_id=dataset_id,
             conf=conf
         )

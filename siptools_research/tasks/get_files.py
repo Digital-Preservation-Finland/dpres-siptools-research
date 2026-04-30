@@ -73,7 +73,6 @@ class GetFiles(WorkflowTask):
                     try:
                         download_file(
                             file_metadata=dataset_file,
-                            dataset_id=self.dataset_id,
                             path=cached_file,
                             config_file=self.config
                         )
