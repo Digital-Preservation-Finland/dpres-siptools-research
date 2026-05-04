@@ -35,7 +35,7 @@ git+https://gitlab.ci.csc.fi/dpres/fido.git@develop#egg=opf_fido
 
 lxml
 luigi
-pymongo
+mongoengine
 requests
 flask
 Werkzeug
