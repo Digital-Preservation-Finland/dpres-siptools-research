@@ -3,6 +3,8 @@ import hashlib
 import os
 from pathlib import Path
 
+from metax_access.response import MetaxFile
+
 from siptools_research.config import Configuration
 
 CHECKSUM_ALGO_TO_CONSTRUCTOR = {
@@ -23,48 +25,53 @@ class FileAccessError(Exception):
     """Raised when file cannot be accessed."""
 
 
-def _link_local_file(file_metadata, path, conf):
+def _link_local_file(upload_rest_api_path: Path,
+                     file_metadata: MetaxFile,
+                     path: Path) -> None:
     """Create a hard link to upload-rest-api file.
 
+    `upload_rest_api_path` and `path` are expected to be on same
+    filesystem, so hard link can be used to save some disk space.
+
+    :param upload_rest_api_path: Root directory for files in
+        upload-rest-api
     :param file_metadata: Metax file metadata
-    :param path: Path where file is downloaded
-    :param conf: Configuration object
+    :param path: Path where file is copied
     """
-    filepath = Path(conf.get("upload_rest_api_path")) \
+    source_path = upload_rest_api_path \
         / file_metadata["csc_project"] \
         / file_metadata["pathname"].strip("/")
 
     # Even if file_metadata exists it currently does not mean that the
     # file actually exists in upload-rest-api. See TPASPKT-749 for more
     # information. Therefore we must check that file really exists.
-    if not filepath.is_file():
+    if not source_path.is_file():
         raise FileNotAvailableError(
             f"File '{file_metadata['pathname']}' not found in pre-ingest "
             f"file storage"
         )
 
-    os.link(filepath, path)
+    os.link(source_path, path)
 
 
-def _download_ida_file(file_metadata, path, conf):
+def _download_ida_file(ida_path: Path,
+                       file_metadata: MetaxFile,
+                       path: Path) -> None:
     """Download file from IDA.
 
+    Ida files are expected to be on some kind of network mount. The file
+    is copied to local disk, and the checksum of copied file is
+    verified.
+
+    :param ida_path: Root directory for files in Ida
     :param file_metadata: Metax file metadata
-    :param path: Path where file is downloaded
-    :param conf: Configuration object
-    :returns: Path to the file
+    :param path: Path where file is copied
     """
     project = file_metadata["csc_project"]
-
     checksum_algo, checksum_value = file_metadata["checksum"].split(":")
-    hasher = CHECKSUM_ALGO_TO_CONSTRUCTOR[checksum_algo]()
-
-    # Write the stream to disk and calculate checksum
-    tmp_path = path.parent / (path.name + '.tmp')
 
     try:
-        offline_message = Path(conf.get("ida_mount"), "OFFLINE").read_text()
-
+        offline_message = (ida_path / "OFFLINE").read_text()
         raise FileAccessError(
             f"IDA service offline with message: {offline_message}. "
             "Please try again later."
@@ -75,13 +82,14 @@ def _download_ida_file(file_metadata, path, conf):
     # Project name is provided twice in the path. The second part can
     # also be suffixed with '+' to refer to the staging directory. But
     # we always download the frozen file.
-    mount_path = (
-        Path(conf.get("ida_mount")) / project / project
-        / file_metadata["pathname"].strip("/")
-    )
+    mount_path \
+        = ida_path / project / project / file_metadata["pathname"].strip("/")
     if not mount_path.exists():
         raise FileNotAvailableError("File not available.")
 
+    # Write the stream to disk and calculate checksum
+    tmp_path = path.parent / (path.name + '.tmp')
+    hasher = CHECKSUM_ALGO_TO_CONSTRUCTOR[checksum_algo]()
     with tmp_path.open('wb') as new_file, mount_path.open("rb") as src_file:
         while chunk := src_file.read(4096):
             new_file.write(chunk)
@@ -101,12 +109,11 @@ def _download_ida_file(file_metadata, path, conf):
 
 
 def download_file(
-        file_metadata,
-        path,
-        config_file="/etc/siptools_research.conf",
-):
-    """Get file from IDA or upload-rest-api and create a hard
-    link to linkpath.
+    file_metadata: MetaxFile,
+    path: Path,
+    config_file: str = "/etc/siptools_research.conf",
+) -> None:
+    """Get file from IDA or upload-rest-api.
 
     :param file_metadata: File metadata from Metax
     :param path: Path where the file is downloaded
@@ -117,13 +124,13 @@ def download_file(
 
     if file_storage == PAS_STORAGE_SERVICE:
         _link_local_file(
+            upload_rest_api_path=Path(conf.get("upload_rest_api_path")),
             file_metadata=file_metadata,
             path=path,
-            conf=conf,
         )
     else:
         _download_ida_file(
+            ida_path=Path(conf.get("ida_path")),
             file_metadata=file_metadata,
             path=path,
-            conf=conf
         )

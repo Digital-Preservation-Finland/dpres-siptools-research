@@ -85,7 +85,7 @@ def _config(test_mongo, tmp_path, luigi_config_fx, ida_mount_path,
         "siptools_research", "sip_sign_key", "tests/data/sip_sign_pas.pem"
     )
     parser.set(
-        "siptools_research", "ida_mount", str(ida_mount_path)
+        "siptools_research", "ida_path", str(ida_mount_path)
     )
     parser.set(
         "siptools_research", "upload_rest_api_path", str(upload_projects_path)
