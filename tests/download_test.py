@@ -1,11 +1,10 @@
 """Tests for :mod:`siptools_research.download` module."""
+import shutil
+
 import pytest
 
-from siptools_research.download import (
-    FileAccessError,
-    FileNotAvailableError,
-    download_file,
-)
+from siptools_research.download import (FileAccessError, FileNotAvailableError,
+                                        download_file)
 from tests.utils import add_mock_ida_file
 
 TEST_DATA = b"foo\n"
@@ -124,3 +123,44 @@ def test_download_file_502(config, tmp_path, ida_mount_path):
     assert str(exc_info.value) \
         == (f"IDA service offline with message: {offline_text}. "
             "Please try again later.")
+
+
+@pytest.mark.parametrize(
+    "hide_project_dir,expected",
+    [
+        (True, "Project directory not available"),
+        (False, "Project directory exists, but file is missing")
+    ]
+)
+def test_download_ida_missing_file(
+        config, tmp_path, ida_mount_path, hide_project_dir, expected):
+    """
+    Try to download file from Ida while either the project directory
+    or only the file is missing. Both cases should result in different
+    error messages.
+    """
+    add_mock_ida_file(
+        ida_mount_path=ida_mount_path,
+        project_id='test_project_id',
+        filename="/path/to/file",
+        content=TEST_DATA
+    )
+
+
+    if hide_project_dir:
+        shutil.rmtree(ida_mount_path / "test_project_id")
+    else:
+        (ida_mount_path \
+            / "test_project_id/test_project_id/path/to/file").unlink()
+
+    with pytest.raises(FileNotAvailableError) as exc:
+        download_file(
+            _get_file_metadata(
+                'pid:urn:1',
+                checksum=TEST_CHECKSUM
+            ),
+            "/dev/null",
+            config
+        )
+
+    assert expected in str(exc.value)

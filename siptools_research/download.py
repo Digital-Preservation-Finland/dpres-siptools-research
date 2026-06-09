@@ -82,10 +82,20 @@ def _download_ida_file(ida_path: Path,
     # Project name is provided twice in the path. The second part can
     # also be suffixed with '+' to refer to the staging directory. But
     # we always download the frozen file.
-    mount_path \
-        = ida_path / project / project / file_metadata["pathname"].strip("/")
+    project_path = ida_path / project / project
+    mount_path = project_path / file_metadata["pathname"].strip("/")
     if not mount_path.exists():
-        raise FileNotAvailableError("File not available.")
+        if project_path.exists():
+            raise FileNotAvailableError(
+                "Project directory exists, but file is missing. "
+                "IDA filesystem might be in an inconsistent state."
+            )
+        else:
+            raise FileNotAvailableError(
+                "Project directory not available. "
+                "IDA NFS mount might require reconfiguration "
+                "to allow access to project."
+            )
 
     # Write the stream to disk and calculate checksum
     tmp_path = path.parent / (path.name + '.tmp')
