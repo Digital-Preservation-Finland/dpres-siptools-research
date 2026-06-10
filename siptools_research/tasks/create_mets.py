@@ -1,13 +1,16 @@
 """Luigi task that creates METS document."""
+import datetime
 from collections import defaultdict
 
 import luigi.format
 import siptools_ng.sip
 from luigi import LocalTarget
+from metax_access.response import MetaxDataset
 from mets_builder import (METS, AgentRole, AgentType, MetsProfile,
                           StructuralMap, StructuralMapDiv)
 from mets_builder.metadata import (DigitalProvenanceEventMetadata,
-                                   ImportedMetadata)
+                                   ImportedMetadata, OtherRightsInformation,
+                                   RightsStatementMetadata, StatuteInformation)
 from siptools_ng.file import File
 
 from siptools_research.exceptions import (InvalidDatasetMetadataError,
@@ -29,6 +32,18 @@ EVENT_OUTCOME = {
     "failure",
     "http://uri.suomi.fi/codelist/fairdata/event_outcome/code/unknown":
     "(:unkn)",
+}
+
+
+# Sensitivity rationales that will result in 'statuteInformation'
+# PREMIS elements. The rest will use 'otherRightsInformation' instead.
+STATUTE_RATIONALE_URLS = {
+    "http://uri.suomi.fi/codelist/fairdata/sensitivity_rationale/code/"
+    "tietosuojalaki-1050-2018"
+}
+OTHER_RIGHTS_RATIONALE_URLS = {
+    "http://uri.suomi.fi/codelist/fairdata/sensitivity_rationale/code/"
+    "tutkimukseen-liittyva-arkaluonteisuus"
 }
 
 
@@ -116,6 +131,9 @@ class CreateMets(WorkflowTask):
         descriptive_metadata = ImportedMetadata.from_string(datacite)
         sip.add_metadata([descriptive_metadata])
         logical_structural_map.root_div.add_metadata([descriptive_metadata])
+
+        if rights_metadatas := self._create_rights_metadata(metadata):
+            sip.add_metadata(rights_metadatas)
 
         # Write METS to file
         mets.generate_file_references()
@@ -387,3 +405,55 @@ class CreateMets(WorkflowTask):
             )
 
         return provenance_metadatas
+
+    def _create_rights_metadata(
+            self, metadata: MetaxDataset) -> list[RightsStatementMetadata]:
+        if not metadata["data_sensitivity"]["is_sensitive"]:
+            return []
+
+        rights_metadatas = []
+        rationales = metadata["data_sensitivity"]["rationales"]
+
+        now = datetime.datetime.now(datetime.timezone.utc)
+
+        for rationale in rationales:
+            expiration_date = rationale["expiration_date"]
+            ref_rationale = rationale["rationale"]
+
+            rights_kwargs = {
+                "rights_identifier_type": "preservation-rights",
+                "basis": "fi-dpres-sensitive-data"
+            }
+
+            if ref_rationale["url"] in STATUTE_RATIONALE_URLS:
+                rights_metadatas.append(
+                    RightsStatementMetadata(
+                        **rights_kwargs,
+                        # We can collect multiple 'statuteInformation' elements
+                        # into a single 'rightsMD' block, but it probably makes
+                        # more sense to keep each instance separate.
+                        statute_informations=[
+                            StatuteInformation(
+                                jurisdiction="fi",
+                                citation=ref_rationale["pref_label"]["en"],
+                                start_date=now,
+                                end_date=expiration_date
+                            )
+                        ]
+                    )
+                )
+            elif ref_rationale["url"] in OTHER_RIGHTS_RATIONALE_URLS:
+                rights_metadatas.append(
+                    RightsStatementMetadata(
+                        **rights_kwargs,
+                        other_rights_information=OtherRightsInformation(
+                            basis=ref_rationale["pref_label"]["en"],
+                            start_date=now,
+                            end_date=expiration_date
+                        ),
+                    )
+                )
+            else:
+                raise ValueError(f"Unknown rationale: {ref_rationale['url']}")
+
+        return rights_metadatas

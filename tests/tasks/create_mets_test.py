@@ -826,6 +826,153 @@ def test_create_filesec_and_structmap(config, workspace, requests_mock):
     assert len(structmap.xpath('*//mets:fptr', namespaces=NAMESPACES)) == 3
 
 
+def test_rights_information(config, workspace, requests_mock):
+    """Test rightsMD creation when sensitive dataset is packaged."""
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    dataset["data_sensitivity"] = {
+        "is_sensitive": True,
+        "rationales": [
+            {
+                "id": "a4950799-09f5-4d4e-a650-1c644d4e6078",
+                "rationale": {
+                    "url": "http://uri.suomi.fi/codelist/fairdata/sensitivity_rationale/code/tietosuojalaki-1050-2018",
+                    "pref_label": {
+                        "en": "Data Protection Act (1050/2018)",
+                        "fi": "Tietosuojalaki (1050/2018)",
+                        "sv": "Dataskyddslag (1050/2018)"
+                    }
+                },
+                "expiration_date": "2050-01-01"
+            },
+            {
+                "id": "5c4eb674-9461-441e-8e30-9ad75302ccbe",
+                "rationale": {
+                    "url": "http://uri.suomi.fi/codelist/fairdata/sensitivity_rationale/code/tutkimukseen-liittyva-arkaluonteisuus",
+                    "pref_label": {
+                        "en": "Research-related sensitivity",
+                        "fi": "Tutkimukseen liittyvä arkaluonteisuus",
+                        "sv": "Forskningsrelaterad känslighet"
+                    }
+                },
+                "expiration_date": "2075-01-01"
+            }
+        ]
+    }
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[TXT_FILE]
+    )
+
+    # Create workspace that already contains the dataset files
+    filepath = workspace / "metadata_generation/dataset_files" \
+        / TXT_FILE["pathname"].strip('/')
+    filepath.parent.mkdir(parents=True)
+    filepath.touch()
+
+    # Init and run task
+    CreateMets(dataset_id=workspace.name, config=config).run()
+
+    # Read created METS
+    mets = lxml.etree.parse(str(workspace / "preservation/mets.xml"))
+
+    # Retrieve first rights statement
+    # ('Data Protection Act' uses 'statuteInformation')
+    rights_a = next(
+        el for el
+        in mets.xpath(
+            "/mets:mets/mets:amdSec/mets:rightsMD", namespaces=NAMESPACES
+        )
+        if el.xpath(".//premis:statuteInformation", namespaces=NAMESPACES)
+    )
+
+    # Retrieve second rights statement
+    # ('Research-related sensitivity' uses 'otherRightsInformation')
+    rights_b = next(
+        el for el
+        in mets.xpath(
+            "/mets:mets/mets:amdSec/mets:rightsMD", namespaces=NAMESPACES
+        )
+        if el.xpath(".//premis:otherRightsInformation", namespaces=NAMESPACES)
+    )
+
+    assert rights_a.xpath(
+        ".//premis:statuteApplicableDates/premis:endDate",
+        namespaces=NAMESPACES
+    )[0].text == "2050-01-01"
+    assert rights_a.xpath(
+        ".//premis:statuteInformation/premis:statuteCitation",
+        namespaces=NAMESPACES
+    )[0].text == "Data Protection Act (1050/2018)"
+
+    assert rights_b.xpath(
+        ".//premis:otherRightsApplicableDates/premis:endDate",
+        namespaces=NAMESPACES
+    )[0].text == "2075-01-01"
+    assert rights_b.xpath(
+        ".//premis:otherRightsInformation/premis:otherRightsBasis",
+        namespaces=NAMESPACES
+    )[0].text == "Research-related sensitivity"
+
+
+def test_rights_information_unknown_rationale(config, workspace, requests_mock):
+    """
+    Test that rightsMD creation fails when an unrecognized rationale is used.
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    dataset["data_sensitivity"] = {
+        "is_sensitive": True,
+        "rationales": [
+            {
+                "id": "a4950799-09f5-4d4e-a650-1c644d4e6078",
+                "rationale": {
+                    "url": "http://uri.suomi.fi/codelist/fairdata/sensitivity_rationale/code/tietosuojalaki-1050-2018",
+                    "pref_label": {
+                        "en": "Data Protection Act (1050/2018)",
+                        "fi": "Tietosuojalaki (1050/2018)",
+                        "sv": "Dataskyddslag (1050/2018)"
+                    }
+                },
+                "expiration_date": "2050-01-01"
+            },
+            {
+                "id": "5c4eb674-9461-441e-8e30-9ad75302ccbe",
+                "rationale": {
+                    "url": "http://uri.suomi.fi/codelist/fairdata/sensitivity_rationale/code/melts-eyes",
+                    "pref_label": {
+                        "en": "Hazardous to eye sight",
+                    }
+                },
+                "expiration_date": "2075-01-01"
+            }
+        ]
+    }
+    tests.utils.add_metax_dataset(
+        requests_mock,
+        dataset=dataset,
+        files=[TXT_FILE]
+    )
+
+    # Create workspace that already contains the dataset files
+    filepath = workspace / "metadata_generation/dataset_files" \
+        / TXT_FILE["pathname"].strip('/')
+    filepath.parent.mkdir(parents=True)
+    filepath.touch()
+
+    # Init and run task
+    with pytest.raises(ValueError) as exc:
+        CreateMets(dataset_id=workspace.name, config=config).run()
+
+    assert (
+        "Unknown rationale: http://uri.suomi.fi/codelist/fairdata/"
+        "sensitivity_rationale/code/melts-eyes" in str(exc.value)
+    )
+
+
 def test_create_logical_structmap(config, workspace, requests_mock):
     """Test creating logical structure map.
 
