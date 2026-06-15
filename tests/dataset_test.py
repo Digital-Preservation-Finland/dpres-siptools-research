@@ -9,6 +9,9 @@ from siptools_research.dataset import Dataset
 from siptools_research.models.file_error import FileError
 
 
+PRESERVATION = DATASET["preservation"]
+
+
 @pytest.mark.parametrize(
     "metadata",
     [
@@ -26,10 +29,7 @@ from siptools_research.models.file_error import FileError
         # Ida dataset
         {
             "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
-            "preservation": {
-                "state": -1,
-                "description": None,
-                "reason_description": None,
+            "preservation": PRESERVATION | {
                 "dataset_version": {
                     "id": "pas-version-uuid",
                     # This is the DOI of the PAS version of the
@@ -99,44 +99,32 @@ def test_unknown_data_catalog(config, requests_mock):
         # Pottumonttu dataset
         {
             "data_catalog": "urn:nbn:fi:att:data-catalog-pas",
-            "preservation": {
+            "preservation": PRESERVATION | {
                 "state": "correct-state",
-                "description": None,
-                "reason_description": None,
-                "contract": "contract_identifier",
-                "pas_package_created": None,
             },
         },
         # Ida dataset that has not been copied to PAS data catalog
         {
             "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
-            "preservation": {
+            "preservation": PRESERVATION | {
                 "state": "correct-state",
-                "description": None,
-                "reason_description": None,
                 "dataset_version": {
                     "id": None,
                     "persistent_identifier": None,
                     "preservation_state": -1,
                 },
-                "contract": "contract_identifier",
-                "pas_package_created": None,
             },
         },
         # Ida dataset that has been copied to PAS data catalog
         {
             "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
-            "preservation": {
+            "preservation": PRESERVATION | {
                 "state": "wrong-state",
-                "description": None,
-                "reason_description": None,
                 "dataset_version": {
                     "id": "pas-version-id",
                     "persistent_identifier": "pas-version-doi",
                     "preservation_state": "correct-state",
                 },
-                "contract": "contract_identifier",
-                "pas_package_created": None,
             },
         },
     ]
@@ -169,30 +157,22 @@ def test_preservation_state(config, requests_mock, metadata):
         {
             "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
             "id": "correct-id",
-            "preservation": {
+            "preservation": PRESERVATION | {
                 "dataset_version": None,
                 "state": 0,
-                "description": None,
-                "reason_description": None,
-                "contract": None,
-                "pas_package_created": None,
             }
         },
         # Ida dataset that has been copied to PAS data catalog
         {
             "data_catalog": "urn:nbn:fi:att:data-catalog-ida",
             "id": "wrong-id",
-            "preservation": {
+            "preservation": PRESERVATION | {
                 "dataset_version": {
                     "id": "correct-id",
                     "persistent_identifier": None,
                     "preservation_state": 0
                 },
                 "state": 0,
-                "description": None,
-                "reason_description": None,
-                "contract": None,
-                "pas_package_created": None,
             }
         },
     ]

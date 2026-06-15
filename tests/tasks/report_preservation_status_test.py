@@ -9,6 +9,9 @@ from siptools_research.tasks import report_preservation_status
 from metax_access.template_data import DATASET
 
 
+PRESERVATION = DATASET["preservation"]
+
+
 @pytest.mark.parametrize(
     ("dataset_metadata", "patched_dataset_id"),
     [
@@ -17,17 +20,13 @@ from metax_access.template_data import DATASET
         (
             {
                 "id": "original-version-id",
-                "preservation": {
+                "preservation": PRESERVATION | {
                     "state": 0,
-                    "description": None,
-                    "reason_description": None,
-                    "contract": None,
                     "dataset_version": {
                         "id": "pas-version-id",
                         "persistent_identifier": None,
                         "preservation_state": 0
                     },
-                    "pas_package_created": None,
                 },
             },
             "pas-version-id"
@@ -37,17 +36,13 @@ from metax_access.template_data import DATASET
         (
             {
                 "id": "original-version-id",
-                "preservation": {
+                "preservation": PRESERVATION | {
                     "state": 0,
-                    "description": None,
-                    "reason_description": None,
-                    "contract": None,
                     "dataset_version": {
                         "id": None,
                         "persistent_identifier": None,
                         "preservation_state": 0
                     },
-                    "pas_package_created": None,
                 },
             },
             'original-version-id'
