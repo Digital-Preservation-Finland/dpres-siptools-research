@@ -104,8 +104,8 @@ def test_main_list(config, cli_runner, requests_mock):
     "command",
     [
         ["dataset", "status", "1"],
-        ["dataset", "enable", "1"],
-        ["dataset", "disable", "1"]
+        ["dataset", "resume", "1"],
+        ["dataset", "pause", "1"]
     ]
 )
 def test_main_status_no_match(config, cli_runner, command):
@@ -120,9 +120,8 @@ def test_main_status_no_match(config, cli_runner, command):
     assert "Dataset not found" in result.output
 
 
-def test_main_disabled(config, cli_runner, requests_mock):
-    """Test that the disable and enable commands set the correct dataset as
-    disabled and enabled respectively.
+def test_main_pause(config, cli_runner, requests_mock):
+    """Test pausing and resuming workflow.
 
     :param config: Configuration file
     :param cli_runner: Click CLI runner
@@ -135,22 +134,22 @@ def test_main_disabled(config, cli_runner, requests_mock):
     workflow = Workflow("test_dataset_id", config=config)
     workflow.generate_metadata()
 
-    # Disable the dataset using CLI
+    # Pause the workflow using CLI
     result = cli_runner([
         "--config", config,
-        "dataset", "disable", "test_dataset_id"
+        "dataset", "pause", "test_dataset_id"
     ])
 
-    assert not Workflow("test_dataset_id", config=config).enabled
-    assert "The Workflow of the dataset test_dataset_id was disabled" \
+    assert Workflow("test_dataset_id", config=config).paused
+    assert "The Workflow of the dataset test_dataset_id was paused" \
         in result.output
 
-    # Enable the dataset using CLI
+    # Resume the workflow using CLI
     result = cli_runner([
         "--config", config,
-        "dataset", "enable", "test_dataset_id"
+        "dataset", "resume", "test_dataset_id"
     ])
 
-    assert Workflow("test_dataset_id", config=config).enabled
-    assert "The Workflow of the dataset test_dataset_id was enabled" \
+    assert not Workflow("test_dataset_id", config=config).paused
+    assert "The Workflow of the dataset test_dataset_id was resumed" \
         in result.output

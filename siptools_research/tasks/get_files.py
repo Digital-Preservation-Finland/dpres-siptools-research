@@ -105,7 +105,7 @@ class GetFiles(WorkflowTask):
                 # TODO: If files are missing, there is something wrong
                 # in Ida, Metax, or upload-rest-api. The user can not do
                 # anything about it. Currently MissingFileError is
-                # raised which means that the workflow is disabled and
+                # raised which means that the workflow is stopped and
                 # the dataset will be marked invalid, which is
                 # misleading for the user.
                 raise MissingFileError(

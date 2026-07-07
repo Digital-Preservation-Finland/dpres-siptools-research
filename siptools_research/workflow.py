@@ -87,18 +87,18 @@ class Workflow:
         return self._document.target
 
     @property
-    def enabled(self) -> bool:
-        """Check if workflow is enabled."""
-        return self._document.enabled
+    def paused(self) -> bool:
+        """Check if workflow is paused."""
+        return self._document.paused
 
-    def disable(self) -> None:
-        """Disable workflow."""
-        self._document.enabled = False
+    def pause(self) -> None:
+        """Pause workflow."""
+        self._document.paused = True
         self._document.save()
 
-    def enable(self) -> None:
-        """Enable workflow."""
-        self._document.enabled = True
+    def resume(self) -> None:
+        """Resume paused workflow."""
+        self._document.paused = False
         self._document.save()
 
     @property
@@ -117,17 +117,16 @@ class Workflow:
         :param target: The target of the workflow
         """
         self._document.target = target
-        self._document.enabled = True
         self._document.save()
 
     @property
     def active(self) -> bool:
         """Check if workflow is active.
 
-        The workflow is active if it is enabled, errors have not been
-        found from dataset, and the target task is not complete.
+        The workflow is active if errors have not been found from
+        dataset, and the target task is not complete.
         """
-        if not self.enabled:
+        if not self.target:
             return False
 
         if self.dataset.errors:
@@ -375,20 +374,20 @@ def _delete_directory(path: Path) -> None:
 def find_workflows(
     *,
     active: bool | None = None,
-    disabled: bool | None = None,
+    paused: bool | None = None,
     identifier: str | None = None,
     config: str = "/etc/siptools_research.conf",
 ) -> list[Workflow]:
     """Find workflows by search criteria.
 
     :param active: If `True`, show only active workflows
-    :param disabled: If `True`, show only disabled workflows
+    :param paused: If `True`, show only paused workflows
     :param identifier: Show only workflows with this dataset identifier
     :param config: Path to configuration file
     """
     search = {}
-    if disabled:
-        search["enabled"] = False
+    if paused:
+        search["paused"] = True
     if identifier is not None:
         search["id"] = identifier
 

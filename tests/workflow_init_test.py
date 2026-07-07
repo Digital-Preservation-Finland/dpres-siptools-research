@@ -40,7 +40,7 @@ def test_initworkflows(config, requests_mock):
     Workflow("dataset1", config=config).generate_metadata()
     dataset_2 = Workflow("dataset2", config=config)
     dataset_2.generate_metadata()
-    dataset_2.disable()
+    dataset_2.pause()
     Workflow("dataset3", config=config).generate_metadata()
 
     # Get list of tasks required by InitWorkflows task

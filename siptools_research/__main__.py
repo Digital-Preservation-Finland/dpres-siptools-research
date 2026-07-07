@@ -2,21 +2,19 @@
 
 Workflow status can be changed and queried with commands::
 
-   siptools-research dataset {disable,enable,status} <dataset_id>
+   siptools-research dataset pause <dataset_id>
+   siptools-research dataset resume <dataset_id>
+   siptools-research dataset status <dataset_id>
    siptools-research dataset list
-
-and::
-
-   siptools-research command --help
-
 """
-import click
 import pprint
 
+import click
+
 from siptools_research.config import Configuration
+from siptools_research.database import connect_mongoengine
 from siptools_research.dataset import Dataset
 from siptools_research.workflow import find_workflows
-from siptools_research.database import connect_mongoengine
 
 
 def _get_workflow(dataset_id, config):
@@ -64,25 +62,23 @@ def dataset():
     is_flag=True,
     default=False,
     help="List only active workflows. Workflow is active if it has not "
-         "been manually disabled, errors have not been found from the "
-         "dataset, and the workflow has not completed. Active workflows "
-         "will be automatically restarted until they complete."
+         "completed and errors have not been found from the "
+         "dataset. Active workflows will be automatically restarted "
+         "until they complete, unless they are manually paused."
 )
 @click.option(
-    "--disabled",
+    "--paused",
     is_flag=True,
     default=False,
-    help="List only manually disabled workflows."
+    help="List only paused workflows."
 )
 @click.option("--show-target", is_flag=True, default=False)
 @click.pass_obj
-def list_datasets(ctx, active, disabled, show_target) -> None:
+def list_datasets(ctx, active, paused, show_target) -> None:
     """List datasets."""
-    if active and disabled:
-        raise click.UsageError("'disabled' workflows are never 'active'")
     workflows = find_workflows(
         active=active,
-        disabled=disabled,
+        paused=paused,
         config=ctx.config
     )
     if workflows:
@@ -97,33 +93,33 @@ def list_datasets(ctx, active, disabled, show_target) -> None:
         dataset_not_found_echo()
 
 
-@dataset.command("disable", help="Disable dataset workflow")
+@dataset.command("pause", help="Pause dataset workflow")
 @click.argument("dataset_id")
 @click.pass_obj
-def disable_workflow(ctx, dataset_id):
-    """Disable dataset workflow"""
+def pause_workflow(ctx, dataset_id):
+    """Pause dataset workflow."""
     workflow = _get_workflow(dataset_id, config=ctx.config)
     if workflow:
-        workflow.disable()
+        workflow.pause()
         click.echo(
             f"The Workflow of the dataset {workflow.dataset.identifier} was"
-            " disabled"
+            " paused"
         )
     else:
         dataset_not_found_echo()
 
 
-@dataset.command("enable", help="Enable dataset workflow")
+@dataset.command("resume", help="Resume paused dataset workflow")
 @click.argument("dataset_id")
 @click.pass_obj
-def enable_workflow(ctx, dataset_id):
-    """Enable dataset workflow"""
+def resume_workflow(ctx, dataset_id):
+    """Resume dataset workflow."""
     workflow = _get_workflow(dataset_id, config=ctx.config)
     if workflow:
-        workflow.enable()
+        workflow.resume()
         click.echo(
             f"The Workflow of the dataset {workflow.dataset.identifier} was "
-            "enabled"
+            "resumed"
         )
     else:
         dataset_not_found_echo()
@@ -133,7 +129,7 @@ def enable_workflow(ctx, dataset_id):
 @click.argument("dataset_id")
 @click.pass_obj
 def workflow_status(ctx, dataset_id):
-    """Show status for dataset workflow"""
+    """Show status for dataset workflow."""
     workflow = _get_workflow(dataset_id, config=ctx.config)
     if workflow:
         workflow_dict = workflow._document.to_mongo().to_dict()

@@ -155,8 +155,8 @@ def test_run_workflowtask(config, workspace, requests_mock):
     # Check 'result' field
     assert tasks['DummyTask']['result'] == 'success'
 
-    # Workflow should not be disabled
-    assert workflow.enabled
+    # Workflow should not be paused
+    assert not workflow.paused
 
     # Check that there is no extra workflows in database
     assert len(find_workflows(config=config)) == 1

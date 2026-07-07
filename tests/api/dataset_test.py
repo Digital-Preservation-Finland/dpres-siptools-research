@@ -39,7 +39,7 @@ def test_dataset_status(client, requests_mock, mocker):
     assert response.status_code == 200
     assert response.json == {
         "dataset_id": "test_dataset_id",
-        "enabled": False,
+        "paused": False,
         "target": None,
         "metadata_confirmed": False,
         "proposed": False,
@@ -116,7 +116,6 @@ def test_dataset_preserve(client, config, requests_mock):
     }
 
     workflow = Workflow("test_dataset_id", config=config)
-    assert workflow.enabled is True
     assert workflow.target == "preservation"
 
 
@@ -138,7 +137,6 @@ def test_dataset_generate_metadata(client, config, requests_mock):
     }
 
     workflow = Workflow("test_dataset_id", config=config)
-    assert workflow.enabled is True
     assert workflow.target == "metadata_generation"
 
 
@@ -232,7 +230,6 @@ def test_propose_dataset(client, config, requests_mock):
 
     workflow = Workflow("test_dataset_id", config=config)
     assert workflow.proposed is True
-    assert workflow.enabled
     assert workflow.target == "validation"
 
 

@@ -1,9 +1,13 @@
 """A wrapper task that starts/restarts all incomplete workflows."""
+import logging
+
 import luigi
 
-from siptools_research.database import connect_mongoengine
 from siptools_research.config import Configuration
+from siptools_research.database import connect_mongoengine
 from siptools_research.workflow import TARGET_TASKS, find_workflows
+
+logger = logging.getLogger(__name__)
 
 
 class InitWorkflows(luigi.WrapperTask):
@@ -25,7 +29,13 @@ class InitWorkflows(luigi.WrapperTask):
         )
 
         for workflow in find_workflows(active=True, config=self.config):
-            yield TARGET_TASKS[workflow.target](
-                dataset_id=workflow.dataset.identifier,
-                config=self.config
-            )
+            if workflow.paused:
+                logger.info(
+                    "Workflow %s is not run because it is paused",
+                    workflow.dataset.identifier
+                )
+            else:
+                yield TARGET_TASKS[workflow.target](
+                    dataset_id=workflow.dataset.identifier,
+                    config=self.config
+                )

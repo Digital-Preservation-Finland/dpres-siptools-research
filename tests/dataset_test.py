@@ -8,7 +8,6 @@ from metax_access.template_data import DATASET, FILE
 from siptools_research.dataset import Dataset
 from siptools_research.models.file_error import FileError
 
-
 PRESERVATION = DATASET["preservation"]
 
 

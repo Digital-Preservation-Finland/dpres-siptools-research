@@ -45,49 +45,26 @@ def test_workspace_paths(config, workspace):
         == workspace / 'preservation'
 
 
-def test_enable_disable(config):
-    """Test enabling and disabling workflow.
+def test_pause_resume(config):
+    """Test pausing and resuming workflow.
 
     :param config: Configuration file
     """
-    # Initially the workflow should be disabled
+    # Initially the workflow should not be paused
     workflow = Workflow('foo', config=config)
-    assert workflow.enabled is False
+    assert workflow.paused is False
 
-    # Worklfow can be enabled
-    workflow.enable()
-    assert workflow.enabled is True
+    # Worklfow can be paused
+    workflow.pause()
+    assert workflow.paused is True
 
-    # Worklfow can be disabled
-    workflow.disable()
-    assert workflow.enabled is False
-
-
-def test_active_incomplete(config, requests_mock, workspace):
-    """Test checking if incomplete workflow is active.
-
-    :param config: Configuration file
-    """
-    # Mock Metax
-    dataset = copy.deepcopy(DATASET)
-    dataset["id"] = workspace.name
-    add_metax_dataset(requests_mock, dataset=dataset)
-
-    workflow = Workflow(workspace.name, config=config)
-    workflow.generate_metadata()
-    assert workflow.active is True
-
-    # Disable workflow
-    workflow.disable()
-    assert workflow.active is False
-
-    # Re-enabled workflow
-    workflow.enable()
-    assert workflow.active is True
+    # Worklfow can be resumed
+    workflow.resume()
+    assert workflow.paused is False
 
 
-def test_active_complete(config, requests_mock, workspace):
-    """Test that complete workflow is never active.
+def test_active(config, requests_mock, workspace):
+    """Test checking if workflow is active.
 
     :param config: Configuration file
     """
@@ -96,26 +73,22 @@ def test_active_complete(config, requests_mock, workspace):
     dataset["id"] = workspace.name
     add_metax_dataset(requests_mock, dataset=dataset)
 
+    # Workflow should be active once it is created
     workflow = Workflow(workspace.name, config=config)
     workflow.generate_metadata()
-    # Create fake fake output file for the target task
+    assert workflow.active is True
+
+    # Create fake fake output file for the target task. The worfklow
+    # should not be active once the target task is complete.
     output_path = (workspace
                    / "metadata_generation"
                    / "generate-metadata.finished")
     output_path.write_text("foo")
     assert workflow.active is False
 
-    # Disable workflow
-    workflow.disable()
-    assert workflow.active is False
-
-    # Re-enabled workflow
-    workflow.enable()
-    assert workflow.active is False
-
 
 def test_active_errors(config, requests_mock, workspace):
-    """Test that workflow of invalid dataset is never active.
+    """Test that workflow of invalid dataset is not active.
 
     :param config: Configuration file
     """
@@ -126,16 +99,16 @@ def test_active_errors(config, requests_mock, workspace):
 
     workflow = Workflow(workspace.name, config=config)
     workflow.generate_metadata()
+
+    # Add error to dataset. The dataset should not be active.
     workflow.dataset.add_error("Something wrong with the dataset")
     assert workflow.active is False
 
-    # Disable workflow
-    workflow.disable()
-    assert workflow.active is False
-
-    # Re-enabled workflow
-    workflow.enable()
-    assert workflow.active is False
+    # Unlock the dataset to clear errors. The workflow should be active
+    # again.
+    workflow.dataset.unlock()
+    assert not workflow.dataset.errors
+    assert workflow.active is True
 
 
 def test_generate_metadata(config, requests_mock):
@@ -407,9 +380,6 @@ def test_reset(requests_mock, config):
     # Target should be removed
     assert workflow.target is None
 
-    # Workflow should not be enabled
-    assert workflow.enabled is False
-
     # Workflow should not be active
     assert workflow.active is False
 
@@ -558,7 +528,6 @@ def test_workflow_conflict(config, requests_mock):
 
     # Add a sample workflow to database
     workflow_entry = WorkflowEntry(id="test_dataset_id")
-    workflow_entry.enabled = True
     workflow_entry.target = "metadata_generation"
     workflow_entry.metadata_confirmed = True
     workflow_entry.save()
@@ -575,17 +544,12 @@ def test_workflow_conflict(config, requests_mock):
     assert active_workflows[0].target == "metadata_generation"
     assert active_workflows[0].dataset.identifier == "test_dataset_id"
 
-    # New workflow can be started when the previous workflow is
-    # disabled
-    workflow.disable()
-    workflow.preserve()
+    # New workflow can not be started even when the previous workflow is
+    # paused
+    workflow.pause()
+    with pytest.raises(WorkflowExistsError):
+        workflow.preserve()
 
-    # The target of the workflow should be updated, and workflow
-    # should be enabled
-    active_workflows = find_workflows(active=True, config=config)
-    assert len(active_workflows) == 1
-    assert active_workflows[0].target == "preservation"
-    assert active_workflows[0].dataset.identifier == "test_dataset_id"
 
 
 @pytest.mark.parametrize(
@@ -626,11 +590,13 @@ def test_already_preserved(config, requests_mock, method_name, arguments):
     ("kwargs", "expected_datasets"),
     [
         # Search without parameters should return all datasets
-        ({}, ["ds1", "ds2", "ds3", "ds4", "ds5", "ds6"]),
+        ({}, ["ds1", "ds2", "ds3", "ds4"]),
         # Only active datasets
-        ({"active": True}, ["ds1", "ds3", "ds5"]),
-        # Only disabled  datasets
-        ({"disabled": True}, ["ds2", "ds4", "ds6"]),
+        ({"active": True}, ["ds1", "ds2"]),
+        # Only paused datasets
+        ({"paused": True}, ["ds2", "ds4"]),
+        # Datasets that are active but paused
+        ({"active": True, "paused": True}, ["ds2"]),
     ]
 )
 def test_find_workflows(config, requests_mock, kwargs, expected_datasets):
@@ -645,45 +611,32 @@ def test_find_workflows(config, requests_mock, kwargs, expected_datasets):
                               found
     """
     # Mock Metax
-    for dataset_id in ["ds1", "ds2", "ds3", "ds4", "ds5", "ds6"]:
+    for dataset_id in ["ds1", "ds2", "ds3", "ds4"]:
         metadata = copy.deepcopy(DATASET)
         metadata["id"] = dataset_id
         add_metax_dataset(requests_mock=requests_mock, dataset=metadata)
 
     # Add some workflows to database
-    workflow1 = Workflow('ds1', config=config)
+    # active, not paused
+    workflow1 = Workflow("ds1", config=config)
     workflow1.generate_metadata()
-    workflow2 = Workflow('ds2', config=config)
+    # active, paused
+    workflow2 = Workflow("ds2", config=config)
     workflow2.generate_metadata()
-    workflow2.disable()
-    workflowentry3 = WorkflowEntry(id="ds3")
-    workflowentry3.metadata_confirmed = True
-    workflowentry3.save()
-    workflow3 = Workflow('ds3', config=config)
-    workflow3.propose()
-    workflowentry4 = WorkflowEntry(id="ds4")
-    workflowentry4.metadata_confirmed = True
-    workflowentry4.save()
-    workflow4 = Workflow('ds4', config=config)
-    workflow4.propose()
-    workflow4.disable()
-    workflowentry5 = WorkflowEntry(id="ds5")
-    workflowentry5.metadata_confirmed = True
-    workflowentry5.save()
-    workflow5 = Workflow('ds5', config=config)
-    workflow5.preserve()
-    workflowentry6 = WorkflowEntry(id="ds6")
-    workflowentry6.metadata_confirmed = True
-    workflowentry6.save()
-    workflow6 = Workflow('ds6', config=config)
-    workflow6.preserve()
-    workflow6.disable()
+    workflow2.pause()
+    # inactive, not paused
+    workflow3 = Workflow("ds3", config=config)
+    workflow3.generate_metadata()
+    workflow3.dataset.add_error("fake error")
+    # inactive, paused
+    workflow4 = Workflow("ds4", config=config)
+    workflow4.generate_metadata()
+    workflow4.pause()
+    workflow4.dataset.add_error("fake error")
 
-    # Check that there is no extra workflows in database
-    dataset_identifiers = [
+    # Check that find_workflows finds expceted workflows
+    assert [
         workflow.dataset.identifier
         for workflow
         in find_workflows(**kwargs, config=config)
-    ]
-
-    assert dataset_identifiers == expected_datasets
+    ] == expected_datasets

@@ -9,7 +9,7 @@ class WorkflowEntry(Document):
 
     id = StringField(db_field="_id", primary_key=True)
 
-    enabled: bool = BooleanField(default=False)
+    paused: bool = BooleanField(default=False)
 
     target: str | None = StringField()
 
