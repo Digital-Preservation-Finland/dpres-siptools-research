@@ -70,6 +70,7 @@ def status(dataset_id: str) -> Response:
         "dataset_id": dataset_id,
         "paused": workflow.paused,
         "target": workflow.target,
+        "active": workflow.active,
         "metadata_confirmed": workflow.metadata_confirmed,
         "proposed": workflow.proposed,
         "actions": actions,

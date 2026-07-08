@@ -41,6 +41,7 @@ def test_dataset_status(client, requests_mock, mocker):
         "dataset_id": "test_dataset_id",
         "paused": False,
         "target": None,
+        "active": False,
         "metadata_confirmed": False,
         "proposed": False,
         "errors": [],
