@@ -20,6 +20,7 @@ from siptools_research.exceptions import (
     AlreadyProposedError,
     AlreadyPreservedError,
     CopiedToPasDataCatalogError,
+    DatasetHasErrorsError,
     MetadataNotConfirmedError,
     MetadataNotGeneratedError,
     NotProposedError,
@@ -194,6 +195,9 @@ class Workflow:
         if not self.metadata_confirmed:
             raise MetadataNotConfirmedError
 
+        if self.dataset.errors:
+            raise DatasetHasErrorsError
+
     def preserve(self) -> None:
         """Initialize preservation workflow."""
         self.require_preserve_allowed()
@@ -229,6 +233,9 @@ class Workflow:
         )
         if not metadata_generation_task.complete():
             raise MetadataNotGeneratedError
+
+        if self.dataset.errors:
+            raise DatasetHasErrorsError
 
     def confirm(self) -> None:
         """Confirm dataset metadata."""
@@ -296,6 +303,9 @@ class Workflow:
 
         if self.proposed:
             raise AlreadyProposedError
+
+        if self.dataset.errors:
+            raise DatasetHasErrorsError
 
     def propose(self) -> None:
         """Propose dataset for preservation.

@@ -162,6 +162,16 @@ class AlreadyProposedError(ActionNotAllowedError):
     _default_message = "Dataset has already been proposed for preservation."
 
 
+class DatasetHasErrorsError(ActionNotAllowedError):
+    """Raised when errors have been found in dataset.
+
+    Preservation process can not be continued, if there is known errors
+    in the dataset.
+    """
+
+    _default_message = "Errors have been found in the dataset."
+
+
 class BulkInvalidDatasetFileError(InvalidDatasetError):
     """Exception consisting of multiple file errors"""
     def __init__(
