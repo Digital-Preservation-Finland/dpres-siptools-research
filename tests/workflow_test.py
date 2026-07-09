@@ -14,6 +14,7 @@ from metax_access.template_data import DATASET
 
 from siptools_research.exceptions import (
     AlreadyPreservedError,
+    DatasetHasErrorsError,
     MetadataNotGeneratedError,
     WorkflowExistsError,
 )
@@ -325,6 +326,74 @@ def test_confirm_metadata_not_generated(requests_mock, config):
 
     with pytest.raises(MetadataNotGeneratedError):
         Workflow(dataset["id"], config=config).confirm()
+
+
+def test_preserve_dataset_has_errors(config, requests_mock):
+    """Test that preservation is blocked when dataset has errors.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    """
+    # Mock Metax
+    add_metax_dataset(requests_mock)
+
+    # Metadata must be confirmed before preservation
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
+
+    workflow = Workflow("test_dataset_id", config=config)
+    workflow.dataset.add_error("Something is wrong")
+
+    with pytest.raises(DatasetHasErrorsError):
+        workflow.preserve()
+
+
+def test_confirm_dataset_has_errors(config, requests_mock, workspace):
+    """Test that confirming metadata is blocked when dataset has errors.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    :param workspace: Workspace directory
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
+
+    # Add a fake output for metadata generation so it looks complete
+    output_path = (workspace
+                   / "metadata_generation"
+                   / "generate-metadata.finished")
+    output_path.parent.mkdir()
+    output_path.write_text("foo")
+
+    workflow = Workflow(dataset["id"], config=config)
+    workflow.dataset.add_error("Something is wrong")
+
+    with pytest.raises(DatasetHasErrorsError):
+        workflow.confirm()
+
+
+def test_propose_dataset_has_errors(config, requests_mock):
+    """Test that proposing for preservation is blocked when dataset has errors.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    """
+    # Mock Metax
+    add_metax_dataset(requests_mock)
+
+    # Metadata must be confirmed before proposing
+    workflow_entry = WorkflowEntry(id="test_dataset_id")
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
+
+    workflow = Workflow("test_dataset_id", config=config)
+    workflow.dataset.add_error("Something is wrong")
+
+    with pytest.raises(DatasetHasErrorsError):
+        workflow.propose()
 
 
 def test_reset(requests_mock, config):
