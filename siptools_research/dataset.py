@@ -133,15 +133,14 @@ class Dataset:
         that the dataset is in digital preservation.
 
         If dataset has been copied to PAS data catalog, the value is
-        updated in PAS version, not in the original version.
+        set on both the original version and the PAS version.
         """
-        if self.has_been_copied_to_pas_datacatalog:
-            preserved_dataset_id = self._metadata["preservation"][
-                "dataset_version"]["id"]
-        else:
-            preserved_dataset_id = self._metadata["id"]
+        self._metax_client.set_pas_package_created(self._metadata["id"])
 
-        self._metax_client.set_pas_package_created(preserved_dataset_id)
+        if self.has_been_copied_to_pas_datacatalog:
+            self._metax_client.set_pas_package_created(
+                self._metadata["preservation"]["dataset_version"]["id"]
+            )
 
     @property
     def is_preserved(self):

@@ -13,10 +13,11 @@ PRESERVATION = DATASET["preservation"]
 
 
 @pytest.mark.parametrize(
-    ("dataset_metadata", "patched_dataset_id"),
+    ("dataset_metadata", "preserved_dataset_ids", "patched_dataset_id"),
     [
-        # Ida dataset has been copied to PAS catalog. The preservation
-        # state of the dataset in PAS catalog should be updated.
+        # Ida dataset has been copied to PAS catalog. Both versions
+        # should be marked preserved, and the preservation state of the
+        # dataset in PAS catalog should be updated.
         (
             {
                 "id": "original-version-id",
@@ -29,6 +30,7 @@ PRESERVATION = DATASET["preservation"]
                     },
                 },
             },
+            ["original-version-id", "pas-version-id"],
             "pas-version-id"
         ),
         # Pottumounttu dataset is originally created in PAS catalog, so
@@ -45,12 +47,14 @@ PRESERVATION = DATASET["preservation"]
                     },
                 },
             },
+            ["original-version-id"],
             'original-version-id'
         )
     ]
 )
 def test_reportpreservationstatus(config, workspace, requests_mock,
-                                  dataset_metadata, patched_dataset_id):
+                                  dataset_metadata, preserved_dataset_ids,
+                                  patched_dataset_id):
     """Test reporting status of accepted SIP.
 
     Creates the GetSIPStatus output file with "accepted"
@@ -62,6 +66,8 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     :param workspace: Temporary directory fixture
     :param requests_mock: HTTP request mocker
     :param dataset_metadata: Dataset metadata in Metax
+    :param preserved_dataset_ids: Dataset identifiers that should be
+                                  marked preserved.
     :param patched_dataset_id: Dataset identifier that should be used
                                when preservation state is updated.
     """
@@ -94,20 +100,22 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     task.run()
     assert task.complete()
 
-    assert len(metax_mock.request_history) == 3
-    # The dataset should be marked preserved
-    assert patched_dataset_id in metax_mock.request_history[0].url
-    assert metax_mock.request_history[0].json() == {
-        "pas_package_created": True
-    }
+    assert len(metax_mock.request_history) == len(preserved_dataset_ids) + 2
+    # Every version of the dataset should be marked preserved
+    for request, dataset_id in zip(metax_mock.request_history,
+                                   preserved_dataset_ids):
+        assert dataset_id in request.url
+        assert request.json() == {
+            "pas_package_created": True
+        }
     # The original dataset should be unlocked
-    assert workspace.name in metax_mock.request_history[1].url
-    assert metax_mock.request_history[1].json() == {
+    assert workspace.name in metax_mock.request_history[-2].url
+    assert metax_mock.request_history[-2].json() == {
         "pas_process_running": False
     }
     # The preservation state should be updated
-    assert patched_dataset_id in metax_mock.request_history[2].url
-    assert metax_mock.request_history[2].json() == {
+    assert patched_dataset_id in metax_mock.request_history[-1].url
+    assert metax_mock.request_history[-1].json() == {
         "state": 120,
         "description": {"en": "In digital preservation"}
     }
