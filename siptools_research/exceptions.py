@@ -104,6 +104,16 @@ class MetadataNotConfirmedError(ActionNotAllowedError):
     _default_message = "Metadata has not been confirmed."
 
 
+class MetadataAlreadyConfirmedError(ActionNotAllowedError):
+    """Raised when metadata has already been confirmed.
+
+    Metadata can not be confirmed again. The dataset must be reset or
+    the metadata regenerated to revoke the confirmation.
+    """
+
+    _default_message = "Metadata has already been confirmed."
+
+
 class WorkflowExistsError(ActionNotAllowedError):
     """Raised when conflicting workflow exists.
 

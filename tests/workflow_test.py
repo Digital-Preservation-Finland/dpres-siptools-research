@@ -15,6 +15,7 @@ from metax_access.template_data import DATASET
 from siptools_research.exceptions import (
     AlreadyPreservedError,
     DatasetHasErrorsError,
+    MetadataAlreadyConfirmedError,
     MetadataNotGeneratedError,
     WorkflowExistsError,
 )
@@ -373,6 +374,65 @@ def test_confirm_dataset_has_errors(config, requests_mock, workspace):
 
     with pytest.raises(DatasetHasErrorsError):
         workflow.confirm()
+
+
+def test_confirm_workflow_active(config, requests_mock, workspace):
+    """Test that confirming metadata is blocked while workflow is running.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    :param workspace: Workspace directory
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
+
+    # Add a fake output for metadata generation so it looks complete
+    output_path = (workspace
+                   / "metadata_generation"
+                   / "generate-metadata.finished")
+    output_path.parent.mkdir()
+    output_path.write_text("foo")
+
+    # Simulate a running validation workflow
+    workflow_entry = WorkflowEntry(id=workspace.name)
+    workflow_entry.target = "validation"
+    workflow_entry.save()
+
+    workflow = Workflow(workspace.name, config=config)
+    assert workflow.active is True
+
+    with pytest.raises(WorkflowExistsError):
+        workflow.confirm()
+
+
+def test_confirm_already_confirmed(config, requests_mock, workspace):
+    """Test that confirmed metadata can not be confirmed again.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    :param workspace: Workspace directory
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    requests_mock.get(f"/v3/datasets/{dataset['id']}", json=dataset)
+
+    # Add a fake output for metadata generation so it looks complete
+    output_path = (workspace
+                   / "metadata_generation"
+                   / "generate-metadata.finished")
+    output_path.parent.mkdir()
+    output_path.write_text("foo")
+
+    # Metadata has already been confirmed
+    workflow_entry = WorkflowEntry(id=workspace.name)
+    workflow_entry.metadata_confirmed = True
+    workflow_entry.save()
+
+    with pytest.raises(MetadataAlreadyConfirmedError):
+        Workflow(workspace.name, config=config).confirm()
 
 
 def test_propose_dataset_has_errors(config, requests_mock):

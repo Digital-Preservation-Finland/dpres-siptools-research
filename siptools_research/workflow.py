@@ -21,6 +21,7 @@ from siptools_research.exceptions import (
     AlreadyPreservedError,
     CopiedToPasDataCatalogError,
     DatasetHasErrorsError,
+    MetadataAlreadyConfirmedError,
     MetadataNotConfirmedError,
     MetadataNotGeneratedError,
     NotProposedError,
@@ -220,6 +221,9 @@ class Workflow:
         :raises ActionNotAllowedError: If confirming metadata is not
             allowed for some reason.
         """
+        if self.active:
+            raise WorkflowExistsError
+
         # Confirming metadata of dataset is pointless, if dataset is
         # already preserved
         if self.dataset.is_preserved:
@@ -233,6 +237,9 @@ class Workflow:
         )
         if not metadata_generation_task.complete():
             raise MetadataNotGeneratedError
+
+        if self.metadata_confirmed:
+            raise MetadataAlreadyConfirmedError
 
         if self.dataset.errors:
             raise DatasetHasErrorsError
