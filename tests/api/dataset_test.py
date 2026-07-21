@@ -45,44 +45,38 @@ def test_dataset_status(client, requests_mock, mocker):
         "metadata_confirmed": False,
         "proposed": False,
         "errors": [],
-        "actions": [
-            {
-                "name": "reset",
+        "actions": {
+            "reset": {
                 "allowed": True,
                 "reason": None,
                 "url": "/dataset/test_dataset_id/reset",
             },
-            {
-                "name": "generate_metadata",
+            "generate_metadata": {
                 "allowed": True,
                 "reason": None,
                 "url": "/dataset/test_dataset_id/generate-metadata",
             },
-            {
-                "name": "confirm",
+            "confirm": {
                 "allowed": False,
                 "reason": "Metadata has not been generated.",
                 "url": "/dataset/test_dataset_id/confirm",
             },
-            {
-                "name": "propose",
+            "propose": {
                 "allowed": False,
                 "reason": "Metadata has not been confirmed.",
                 "url": "/dataset/test_dataset_id/propose",
             },
-            {
-                "name": "preserve",
+            "preserve": {
                 "allowed": False,
                 "reason": "Metadata has not been confirmed.",
                 "url": "/dataset/test_dataset_id/preserve",
             },
-            {
-                "name": "reject",
+            "reject": {
                 "allowed": False,
                 "reason": "Dataset has not been proposed for preservation.",
                 "url": "/dataset/test_dataset_id/reject",
             },
-        ]
+        }
     }
 
     # It would be laborious to test that preconditions are correctly

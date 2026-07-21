@@ -17,7 +17,7 @@ def status(dataset_id: str) -> Response:
         dataset_id=dataset_id,
         config=current_app.config.get("SIPTOOLS_RESEARCH_CONF"),
     )
-    actions = []
+    actions = {}
     for action in [
             {
                 "name": "reset",
@@ -59,12 +59,11 @@ def status(dataset_id: str) -> Response:
             allowed = False
             reason = str(error)
 
-        actions.append({
-            "name": action["name"],
+        actions[action["name"]] = {
             "url": url_for(action["endpoint"], dataset_id=dataset_id),
             "allowed": allowed,
             "reason": reason,
-        })
+        }
 
     return jsonify({
         "dataset_id": dataset_id,
