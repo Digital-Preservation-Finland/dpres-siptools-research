@@ -517,6 +517,36 @@ def test_reset(requests_mock, config):
     assert not find_workflows(config=config)
 
 
+def test_reset_clears_workspaces(requests_mock, config):
+    """Test that resetting workflow clears the workspaces.
+
+    :param requests_mock: HTTP request mocker
+    :param config: Configuration file
+    """
+    # Mock Metax
+    add_metax_dataset(requests_mock)
+
+    workflow = Workflow("test_dataset_id", config=config)
+
+    # Create workspaces
+    workflow.workspace.metadata_generation.mkdir(parents=True)
+    (workflow.workspace.metadata_generation / 'test').write_text('foo')
+    workflow.workspace.validation.mkdir(parents=True)
+    (workflow.workspace.validation / 'test').write_text('bar')
+    workflow.workspace.preservation.mkdir(parents=True)
+    (workflow.workspace.preservation / 'test').write_text('baz')
+
+    workflow.reset(
+        description="Reset by user",
+        reason_description="Why this dataset was reset"
+    )
+
+    # All workspaces should be removed
+    assert not workflow.workspace.metadata_generation.exists()
+    assert not workflow.workspace.validation.exists()
+    assert not workflow.workspace.preservation.exists()
+
+
 def test_propose(requests_mock, config):
     """Test proposing dataset for digital preservation.
 

@@ -281,8 +281,14 @@ class Workflow:
         self.dataset.set_preservation_state(DS_STATE_INITIALIZED, description)
         self.dataset.set_preservation_reason(reason_description)
 
-        self._document.proposed = False
-        self._document.save()
+        # Clear the workspaces. This ensures that metadata
+        # generation and validation are reset.
+        for path in [
+            self.workspace.metadata_generation,
+            self.workspace.validation,
+            self.workspace.preservation,
+        ]:
+            _delete_directory(path)
 
         # Unlock dataset
         self.dataset.unlock()
