@@ -201,7 +201,7 @@ def _update_db_errors(
         FileError.objects.filter(
             file_id__in=list(file_id2dataset_errors.keys()),
             dataset_id=task.dataset.identifier
-        )
+        ).delete()
 
     # Insert new errors
     new_file_errors = [
