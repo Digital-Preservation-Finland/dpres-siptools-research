@@ -4,6 +4,7 @@ import shutil
 import pytest
 
 from siptools_research.download import (FileAccessError, FileNotAvailableError,
+                                        IDAFileAccessError,
                                         download_file)
 from tests.utils import add_mock_ida_file
 
@@ -136,7 +137,7 @@ def test_download_ida_missing_file(
         (ida_mount_path \
             / "test_project_id/test_project_id/path/to/file").unlink()
 
-    with pytest.raises(FileNotAvailableError) as exc:
+    with pytest.raises(IDAFileAccessError) as exc:
         download_file(
             _get_file_metadata(
                 'pid:urn:1',

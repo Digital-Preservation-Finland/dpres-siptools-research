@@ -25,6 +25,10 @@ class FileAccessError(Exception):
     """Raised when file cannot be accessed."""
 
 
+class IDAFileAccessError(FileAccessError):
+    """File on IDA is not accessible due to a temporary fault"""
+
+
 def _link_local_file(upload_rest_api_path: Path,
                      file_metadata: MetaxFile,
                      path: Path) -> None:
@@ -72,7 +76,7 @@ def _download_ida_file(ida_path: Path,
 
     try:
         offline_message = (ida_path / "OFFLINE").read_text()
-        raise FileAccessError(
+        raise IDAFileAccessError(
             f"IDA service offline with message: {offline_message}. "
             "Please try again later."
         )
@@ -86,12 +90,12 @@ def _download_ida_file(ida_path: Path,
     mount_path = project_path / file_metadata["pathname"].strip("/")
     if not mount_path.exists():
         if project_path.exists():
-            raise FileNotAvailableError(
+            raise IDAFileAccessError(
                 "Project directory exists, but file is missing. "
                 "IDA filesystem might be in an inconsistent state."
             )
         else:
-            raise FileNotAvailableError(
+            raise IDAFileAccessError(
                 "Project directory not available. "
                 "IDA NFS mount might require reconfiguration "
                 "to allow access to project."
