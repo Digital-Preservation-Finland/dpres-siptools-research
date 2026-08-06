@@ -40,7 +40,8 @@ class FileError(Document):
     meta = {
         "indexes": [
             {
-                "fields": ("file_id",),
+                # Uniquely identifies a single error
+                "fields": ("file_id", "dataset_id"),
                 "unique": True
             }
         ],
