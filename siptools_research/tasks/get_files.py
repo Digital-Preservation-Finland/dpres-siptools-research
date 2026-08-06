@@ -1,13 +1,16 @@
 """Luigi task that gets files from Ida."""
+import logging
 import os
 
 import luigi
 
-from siptools_research.exceptions import (InvalidFileMetadataError,
+from siptools_research.exceptions import (InaccessibleIDAFileError,
+                                          InvalidFileMetadataError,
                                           MissingFileError)
 from siptools_research.metax import get_metax_client
 from siptools_research.download import (download_file,
-                                        FileNotAvailableError)
+                                        FileNotAvailableError,
+                                        IDAFileAccessError)
 from siptools_research.workflowtask import WorkflowTask
 
 
@@ -43,6 +46,7 @@ class GetFiles(WorkflowTask):
         # moved to output target path when all files have been
         # downloaded
         missing_files = []
+        ida_fault_files = []
         with self.output().temporary_path() as target_path:
             os.mkdir(target_path)
 
@@ -76,12 +80,27 @@ class GetFiles(WorkflowTask):
                             path=cached_file,
                             config_file=self.config
                         )
+                    except IDAFileAccessError:
+                        ida_fault_files.append(dataset_file)
+                        continue
                     except FileNotAvailableError:
                         missing_files.append(identifier)
                         continue
 
                 os.link(cached_file, full_path)
 
+            if ida_fault_files:
+                logging.error(
+                    f"IDA files in {dataset_file['csc_project']} are not "
+                    "accessible. Mount configuration might be broken or "
+                    "incomplete!"
+                )
+                raise InaccessibleIDAFileError(
+                    "IDA files could not be processed due to a fault with the "
+                    "IDA service. This is not an user error; service "
+                    "administration is investigating the issue.",
+                    ida_fault_files
+                )
             if missing_files:
                 # TODO: If files are missing, there is something wrong
                 # in Ida, Metax, or upload-rest-api. The user can not do

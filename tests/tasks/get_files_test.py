@@ -4,6 +4,7 @@ import copy
 import pytest
 
 from siptools_research.exceptions import (
+    InaccessibleIDAFileError,
     InvalidFileMetadataError,
     MissingFileError,
 )
@@ -140,10 +141,10 @@ def test_missing_ida_files(config, workspace, requests_mock, ida_mount_path):
     assert not task.complete()
 
     # Run task.
-    with pytest.raises(MissingFileError) as excinfo:
+    with pytest.raises(InaccessibleIDAFileError) as excinfo:
         task.run()
 
-    assert str(excinfo.value) == "1 files are missing"
+    assert "IDA files could not be processed " in str(excinfo.value)
 
     # Task should not be completed
     assert not task.complete()

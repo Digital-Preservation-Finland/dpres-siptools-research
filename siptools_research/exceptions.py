@@ -67,6 +67,13 @@ class MissingFileError(InvalidDatasetFileError):
     """Exception raised when some files are not available."""
 
 
+class InaccessibleIDAFileError(InvalidDatasetFileError):
+    """
+    Exception raised when IDA files are temporarily inaccessible due to
+    a fault with the service (eg. mount issues)
+    """
+
+
 class ActionNotAllowedError(Exception):
     """Exception raised when action is not allowed for the dataset."""
 
