@@ -89,17 +89,12 @@ install -D -m 0644 include/etc/luigi/research_logging.cfg %{buildroot}%{_sysconf
 install -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/siptools-research.service
 install -D -m 0644 %{SOURCE2} %{buildroot}%{_unitdir}/siptools-research.timer
 
-# TODO: executables with "-3" suffix are added to maintain compatibility with our systems.
-# executables with "-3" suffix should be deprecated.
-cp %{buildroot}%{_bindir}/siptools-research %{buildroot}%{_bindir}/siptools-research-3
-
 %post -n python3-dpres-siptools-research
 chown %{user_name}:%{user_group} /var/lib/%{user_name}
 chmod 770 /var/lib/%{user_name}
 
 %files -n python3-dpres-siptools-research -f %{pyproject_files}
 %{_bindir}/siptools-research
-%{_bindir}/siptools-research-3
 %config(noreplace) %{_sysconfdir}/siptools_research.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/siptools_research
 %config %{_sysconfdir}/luigi/research_logging.cfg
