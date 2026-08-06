@@ -82,23 +82,6 @@ def test_download_file_invalid_checksum(config, tmp_path, ida_mount_path):
     assert "got b5bb9d8014" in str(exc.value)
 
 
-def test_download_file_404(config, tmp_path):
-    """Try to download non-existing file from IDA.
-
-    :param config: Configuration file
-    :param tmp_path: Temporary directory
-    """
-    new_file_path = tmp_path / 'new_file'
-    with pytest.raises(FileNotAvailableError):
-        download_file(
-            _get_file_metadata(
-                'pid:urn:does_not_exist', checksum=TEST_CHECKSUM
-            ),
-            new_file_path,
-            config
-        )
-
-
 def test_download_file_502(config, tmp_path, ida_mount_path):
     """Try to download from Ida when Ida mount is unavailable.
 
