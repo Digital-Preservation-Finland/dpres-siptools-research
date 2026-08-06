@@ -1,6 +1,7 @@
 """Test the :mod:`siptools_research.tasks.get_files` module."""
 import copy
 
+import luigi
 import pytest
 
 from siptools_research.exceptions import (
@@ -8,6 +9,7 @@ from siptools_research.exceptions import (
     InvalidFileMetadataError,
     MissingFileError,
 )
+from siptools_research.models.file_error import FileError
 from siptools_research.tasks import get_files
 from metax_access.template_data import DATASET, FILE
 from tests.metax_data.files import (
@@ -144,6 +146,9 @@ def test_missing_ida_files(config, workspace, requests_mock, ida_mount_path):
     with pytest.raises(InaccessibleIDAFileError) as excinfo:
         task.run()
 
+    # Run the task failure event handler manually
+    task.trigger_event(luigi.Event.FAILURE, task, excinfo.value)
+
     assert "IDA files could not be processed " in str(excinfo.value)
 
     # Task should not be completed
@@ -155,6 +160,12 @@ def test_missing_ida_files(config, workspace, requests_mock, ida_mount_path):
     # But the first file should be cached
     assert [path.name for path in (workspace / 'file_cache').iterdir()] \
         == ['pid:urn:identifier']
+
+    # Single file error was generated
+    assert FileError.objects.count() == 1
+    error = FileError.objects.first()
+    assert error.file_id == "pid:urn:not-found-in-ida"
+    assert "IDA files could not be processed" in error.errors[0]
 
 
 def test_missing_local_files(config, workspace, requests_mock,
@@ -195,6 +206,9 @@ def test_missing_local_files(config, workspace, requests_mock,
     with pytest.raises(MissingFileError) as excinfo:
         task.run()
 
+    # Run the task failure event handler manually
+    task.trigger_event(luigi.Event.FAILURE, task, excinfo.value)
+
     # Check exception message
     assert "1 files are missing" in str(excinfo.value)
 
@@ -207,6 +221,12 @@ def test_missing_local_files(config, workspace, requests_mock,
     # But the first file should be cached
     assert [path.name for path in (workspace / 'file_cache').iterdir()] \
         == ['file_id_1']
+
+    # Single file error was generated
+    assert FileError.objects.count() == 1
+    error = FileError.objects.first()
+    assert error.file_id == "file_id_2"
+    assert "1 files are missing. " in error.errors[0]
 
 
 @pytest.mark.parametrize('path', ["../../file1",
