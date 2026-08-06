@@ -196,7 +196,7 @@ def test_missing_local_files(config, workspace, requests_mock,
         task.run()
 
     # Check exception message
-    assert str(excinfo.value) == "1 files are missing"
+    assert "1 files are missing" in str(excinfo.value)
 
     # Task should not be completed
     assert not task.complete()

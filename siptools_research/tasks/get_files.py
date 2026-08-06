@@ -84,7 +84,7 @@ class GetFiles(WorkflowTask):
                         ida_fault_files.append(dataset_file)
                         continue
                     except FileNotAvailableError:
-                        missing_files.append(identifier)
+                        missing_files.append(dataset_file)
                         continue
 
                 os.link(cached_file, full_path)
@@ -109,5 +109,7 @@ class GetFiles(WorkflowTask):
                 # the dataset will be marked invalid, which is
                 # misleading for the user.
                 raise MissingFileError(
-                    f"{len(missing_files)} files are missing", missing_files
+                    f"{len(missing_files)} files are missing. "
+                    "This is not an user error; service administration is "
+                    "investigating the issue.", missing_files
                 )
