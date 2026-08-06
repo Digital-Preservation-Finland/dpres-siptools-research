@@ -21,8 +21,6 @@ def get_file_errors():
     Following parameters can be given to filter the results:
     * ids = comma-separated list of file ID
     * storage_service = storage service of the file
-    * storage_identifiers = comma-separated list of file storage
-      identifiers
     * dataset_id = optional dataset identifier
     """
     filter_kwargs = {}
@@ -33,10 +31,6 @@ def get_file_errors():
     if storage_service := request.form.get("storage_service"):
         filter_kwargs["storage_service"] = storage_service
 
-    if storage_identifiers := request.form.get("storage_identifiers"):
-        filter_kwargs["storage_identifier__in"] = \
-            storage_identifiers.split(",")
-
     if dataset_id := request.form.get("dataset_id"):
         filter_kwargs["dataset_id"] = dataset_id
 
@@ -45,7 +39,6 @@ def get_file_errors():
     return jsonify([
         {
             "id": error.file_id,
-            "storage_identifier": error.storage_identifier,
             "storage_service": error.storage_service.value,
             "dataset_id": error.dataset_id,
             "errors": error.errors,

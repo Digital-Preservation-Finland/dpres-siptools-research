@@ -20,11 +20,6 @@ class FileError(Document):
     file_id = StringField(required=True)
     """File identifier, corresponding to the `id` file field in Metax"""
 
-    storage_identifier = StringField(
-        required=True,
-    )
-    """Storage identifier of the file"""
-
     storage_service = EnumField(StorageService, required=True)
     """Storage service of the file"""
 
@@ -44,13 +39,6 @@ class FileError(Document):
 
     meta = {
         "indexes": [
-            {
-                "fields": (
-                    # These fields uniquely identify an error
-                    "storage_identifier", "storage_service", "dataset_id"
-                ),
-                "unique": True
-            },
             {
                 "fields": ("file_id",),
                 "unique": True

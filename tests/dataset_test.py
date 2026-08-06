@@ -263,20 +263,17 @@ def test_unlock_dataset(requests_mock, config):
     FileError.objects.insert([
         FileError(
             file_id="file-id-1",
-            storage_identifier="storage-identifier-1",
             storage_service="pas",
             dataset_id=None
         ),
         FileError(
             file_id="file-id-2",
-            storage_identifier="storage-identifier-2",
             storage_service="pas",
             dataset_id="test_dataset_id"
         ),
         # This one won't be deleted
         FileError(
             file_id="file-id-3",
-            storage_identifier="storage-identifier-3",
             storage_service="pas",
         )
     ])

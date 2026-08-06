@@ -207,7 +207,6 @@ def _update_db_errors(
     new_file_errors = [
         FileError(
             file_id=file_id,
-            storage_identifier=file_id2data[file_id]["storage_identifier"],
             storage_service=file_id2data[file_id]["storage_service"],
             dataset_id=task.dataset.identifier,
             errors=errors
@@ -216,7 +215,6 @@ def _update_db_errors(
     new_file_errors += [
         FileError(
             file_id=file_id,
-            storage_identifier=file_id2data[file_id]["storage_identifier"],
             storage_service=file_id2data[file_id]["storage_service"],
             dataset_id=None,
             errors=errors

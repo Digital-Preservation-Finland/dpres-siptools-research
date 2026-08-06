@@ -262,7 +262,6 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
                 files=[
                     {
                         "id": "file-id",
-                        "storage_identifier": "storage-id",
                         "storage_service": "pas"
                     }
                 ]
@@ -287,7 +286,6 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
     file_error = FileError.objects.all()[0]
 
     assert file_error.file_id == "file-id"
-    assert file_error.storage_identifier == "storage-id"
     assert file_error.storage_service.value == "pas"
     assert file_error.dataset_id is None
     assert file_error.created_at.isoformat()  # 'created_at' is a date
@@ -302,7 +300,6 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
                 files=[
                     {
                         "id": "file-id",
-                        "storage_identifier": "storage-id",
                         "storage_service": "pas"
                     }
                 ]
@@ -310,7 +307,6 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
             [
                 {
                     "file_id": "file-id",
-                    "storage_identifier": "storage-id",
                     "storage_service": "pas",
                     "dataset_id": None,
                     "errors": ["Failed to reticulate splines"]
@@ -323,12 +319,10 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
                 files=[
                     {
                         "id": "file-id-1",
-                        "storage_identifier": "storage-id-1",
                         "storage_service": "pas"
                     },
                     {
                         "id": "file-id-2",
-                        "storage_identifier": "storage-id-2",
                         "storage_service": "ida"
                     }
                 ],
@@ -337,14 +331,12 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
             [
                 {
                     "file_id": "file-id-1",
-                    "storage_identifier": "storage-id-1",
                     "storage_service": "pas",
                     "dataset_id": "dataset-id",
                     "errors": ["Failed to reticulate splines"]
                 },
                 {
                     "file_id": "file-id-2",
-                    "storage_identifier": "storage-id-2",
                     "storage_service": "ida",
                     "dataset_id": "dataset-id",
                     "errors": ["Failed to reticulate splines"]
@@ -361,7 +353,6 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
                         files=[
                             {
                                 "id": f"file-id-{i}",
-                                "storage_identifier": f"storage-id-{i}",
                                 "storage_service": "pas"
                             } for i in range(1, 3)
                         ],
@@ -372,7 +363,6 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
                         files=[
                             {
                                 "id": f"file-id-{i}",
-                                "storage_identifier": f"storage-id-{i}",
                                 "storage_service": "pas"
                             } for i in range(3, 5)
                         ],
@@ -383,7 +373,6 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
                         files=[
                             {
                                 "id": "file-id-1",
-                                "storage_identifier": "storage-id-1",
                                 "storage_service": "pas"
                             }
                         ],
@@ -394,7 +383,6 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
             [
                 {
                     "file_id": "file-id-1",
-                    "storage_identifier": "storage-id-1",
                     "storage_service": "pas",
                     "dataset_id": "dataset-id",
                     "errors": [
@@ -404,21 +392,18 @@ def test_file_error_saved_fields(config, workspace, requests_mock):
                 },
                 {
                     "file_id": "file-id-2",
-                    "storage_identifier": "storage-id-2",
                     "storage_service": "pas",
                     "dataset_id": "dataset-id",
                     "errors": ["Failed to reticulate splines"]
                 },
                 {
                     "file_id": "file-id-3",
-                    "storage_identifier": "storage-id-3",
                     "storage_service": "pas",
                     "dataset_id": None,
                     "errors": ["PC LOAD LETTER"]
                 },
                 {
                     "file_id": "file-id-4",
-                    "storage_identifier": "storage-id-4",
                     "storage_service": "pas",
                     "dataset_id": None,
                     "errors": ["PC LOAD LETTER"]
