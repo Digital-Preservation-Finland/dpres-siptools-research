@@ -15,8 +15,7 @@ class ReportPreservationStatus(WorkflowTask):
     """Task that reports preservation status after SIP ingestion.
 
     A workflowtask that updates the preservation status of dataset in
-    Metax based on the directory where ingest report was found in
-    digital preservation system.
+    Metax based on the transfer status resolved by GetValidationReports.
 
     A false target `report-preservation-status.finished` is created into
     preservation workspace directory to notify luigi that this task has
@@ -54,27 +53,16 @@ class ReportPreservationStatus(WorkflowTask):
     def run(self):
         """Report preservation status to Metax.
 
-        Checks the path of ingest report file in digital preservation
-        service. If the ingest report is in ~/accepted/.../ directory,
-        the dataset has passed validation.If the report is found in
-        ~/rejected/.../ directory, or somewhere else, an exception is
-        risen. The event handlers will deal with the exceptions.
+        Checks the transfer status resolved by GetValidationReports.
+        If the status is "accepted", the dataset has passed
+        validation. If the status is "rejected", an exception is
+        raised. The event handlers will deal with the exceptions.
 
         :returns: ``None``
         """
-        # List of all matching paths ValidateSIP found
-        ingest_report_paths = [
-            str(path) for path in Path(self.input()[0].path).rglob('*.xml')
-        ]
+        status = Path(self.input()[0].path).read_text().strip()
 
-        # Only one ingest report should be found
-        if len(ingest_report_paths) != 1:
-            raise ValueError(
-                f"Expected 1 ingest report, found {len(ingest_report_paths)}"
-            )
-
-        # 'accepted' or 'rejected'?
-        if 'accepted' in ingest_report_paths[0]:
+        if status == 'accepted':
 
             # Mark the dataset as preserved
             self.dataset.mark_preserved()
@@ -90,12 +78,10 @@ class ReportPreservationStatus(WorkflowTask):
             with self.output().open('w') as output:
                 output.write('Dataset id=' + self.dataset_id)
 
-        elif 'rejected' in ingest_report_paths[0]:
+        elif status == 'rejected':
             # Raise exception that informs event handler that dataset
             # did not pass validation
             raise InvalidSIPError("SIP was rejected")
 
         else:
-            raise ValueError(
-                f'Report was found in incorrect path: {ingest_report_paths[0]}'
-            )
+            raise ValueError(f'Unexpected transfer status: {status}')

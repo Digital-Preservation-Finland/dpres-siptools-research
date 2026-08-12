@@ -18,7 +18,6 @@ def main():
             "luigi",
             "pymongo",
             "requests",
-            "paramiko",
             "jsonschema",
             "iso-639",
             "python-dateutil",

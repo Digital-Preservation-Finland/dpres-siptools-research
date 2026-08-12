@@ -6,7 +6,6 @@ pytest-mock
 requests_mock
 mongobox @ git+https://github.com/theorm/mongobox@aba4175ed4fd60ea1259be7aa49102a06f488b1c
 xmltodict
-mock-ssh-server
 pytest-mock
 
 git+https://gitlab.ci.csc.fi/dpres/mets.git@develop#egg=mets
@@ -39,7 +38,6 @@ mongoengine
 requests
 flask
 Werkzeug
-paramiko
 jsonschema
 iso-639
 python-dateutil

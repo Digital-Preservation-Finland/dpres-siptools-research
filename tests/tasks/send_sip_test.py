@@ -1,19 +1,24 @@
 """Unit tests for :mod:`siptools_research.tasks.send_sip` module."""
+import copy
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 
+from metax_access.template_data import DATASET
+
 from siptools_research.tasks.send_sip import SendSIPToDP
+from tests.utils import add_dps_upload_mock
 
 
-def test_send_sip(workspace, mock_ssh_config, sftp_dir):
+def test_send_sip(config, workspace, requests_mock):
     """Test the SendSipToDP task.
 
-    Run task and check that .tar is copied to digital preservation
-    server.
+    Run task and check that the SIP is uploaded to the digital
+    preservation system, and that the returned transfer ID is stored
+    in the output file.
 
+    :param config: Configuration file
     :param workspace: Temporary workspace directory
-    :returns: ``None``
+    :param requests_mock: Mocker object
     """
     tar_file_name = f"{workspace.name}.tar"
     shutil.copy(
@@ -21,21 +26,21 @@ def test_send_sip(workspace, mock_ssh_config, sftp_dir):
         workspace / "preservation" / tar_file_name
     )
 
-    transfer_dir = sftp_dir / "transfer"
-    transfer_dir.mkdir()
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    requests_mock.get(f"/v3/datasets/{workspace.name}", json=dataset)
+
+    # Mock DPS
+    transfer_id = f"{tar_file_name}-00000000-0000-0000-0000-000000000001"
+    add_dps_upload_mock(requests_mock, transfer_id)
 
     # Init and run task
-    task = SendSIPToDP(dataset_id=workspace.name, config=str(mock_ssh_config))
+    task = SendSIPToDP(dataset_id=workspace.name, config=config)
     task.run()
     assert task.complete()
 
-    # Check that tar-file is created on the SFTP server
-    assert (transfer_dir / tar_file_name).is_file()
-
-    # Check that a timestamp exists and has at least todays date
+    # Check that the transfer ID is stored in the output file
     log_file_path \
         = Path(workspace / "preservation" / "task-send-sip-to-dp.finished")
-    sip_to_dp_str = log_file_path.read_text().split(',')[-1]
-    assert sip_to_dp_str
-    sip_to_dp_date = datetime.fromisoformat(sip_to_dp_str)
-    assert sip_to_dp_date.date() == datetime.now(timezone.utc).date()
+    assert log_file_path.read_text() == transfer_id

@@ -53,10 +53,10 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
                                   dataset_metadata, patched_dataset_id):
     """Test reporting status of accepted SIP.
 
-    Creates new ''ingest-reports/accepted'' directory in local workspace
-    and runs ReportPreservationStatus task. Tests
-    that task is complete after it has been run and that the
-    preservation status of correct dataset is updated.
+    Creates the GetValidationReports output file with "accepted"
+    status, and runs ReportPreservationStatus task. Tests that task is
+    complete after it has been run and that the preservation status of
+    correct dataset is updated.
 
     :param config: Configuration file
     :param workspace: Temporary directory fixture
@@ -78,13 +78,12 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     matcher = re.compile("/v3/datasets/.*/preservation")
     metax_mock = requests_mock.patch(matcher, json={})
 
-    # Create directory with name of the workspace to the local
-    # workspace directory, so that the ReportPreservationStatus thinks
-    # that validation has completed.
-    ingest_report = (workspace / "preservation" / "ingest-reports" / "accepted"
-                     / "doi:test.xml")
-    ingest_report.parent.mkdir(parents=True, exist_ok=True)
-    ingest_report.write_text('foo')
+    # Create the GetValidationReports output file, so that the
+    # ReportPreservationStatus thinks that validation has completed.
+    validation_status = (
+        workspace / "preservation" / "task-get-validation-reports.finished"
+    )
+    validation_status.write_text('accepted')
 
     # Init and run task
     task = report_preservation_status.ReportPreservationStatus(
@@ -117,18 +116,18 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
 def test_reportpreservationstatus_rejected(config, workspace):
     """Test reporting status of rejected SIP.
 
-    Creates new directory with a report file to "rejected" directory.
-    Runs ReportPreservationStatus task,
-    which should raise an exception.
+    Creates the GetValidationReports output file with "rejected"
+    status. Runs ReportPreservationStatus task, which should raise an
+    exception.
 
     :param config: Configuration file
     :param workspace: Temporary worpspace directory
     :param requests_mock: HTTP request mocker
     """
-    ingest_report = (workspace / "preservation" / "ingest-reports" / "rejected"
-                     / "doi:test.xml")
-    ingest_report.parent.mkdir(parents=True, exist_ok=True)
-    ingest_report.write_text('foo')
+    validation_status = (
+        workspace / "preservation" / "task-get-validation-reports.finished"
+    )
+    validation_status.write_text('rejected')
 
     # Init task
     task = report_preservation_status.ReportPreservationStatus(
@@ -146,30 +145,20 @@ def test_reportpreservationstatus_rejected(config, workspace):
 
 
 # pylint: disable=invalid-name
-def test_reportpreservationstatus_rejected_int_error(config, workspace):
-    """Test handling conflicting ingest reports.
+def test_reportpreservationstatus_unexpected_status(config, workspace):
+    """Test handling an unexpected transfer status.
 
-    Creates ingest report files to "rejected" and "accepted"
-    directories. Runs ReportPreservationStatus task, and tests that the
+    Creates the GetValidationReports output file with an unexpected
+    status. Runs ReportPreservationStatus task, and tests that the
     report file is NOT sent.
 
     :param config: Configuration file
     :param workspace: Temporary workspace directory
     """
-    # Create directory with name of the workspace to digital
-    # preservation server over SSH, so that the ReportPreservationStatus
-    # thinks that validation has been rejected.
-
-    accepted_report_path = (workspace / "preservation" / "ingest-reports" /
-                            "accepted" / "doi:test.xml")
-    rejected_report_path = (workspace / "preservation" / "ingest-reports" /
-                            "rejected" / "doi:test.xml")
-
-    accepted_report_path.parent.mkdir(parents=True)
-    accepted_report_path.write_bytes(b"Accepted")
-
-    rejected_report_path.parent.mkdir(parents=True)
-    rejected_report_path.write_bytes(b"Rejected")
+    validation_status = (
+        workspace / "preservation" / "task-get-validation-reports.finished"
+    )
+    validation_status.write_text('unknown')
 
     # Run task like it would be run from command line
     task = report_preservation_status.ReportPreservationStatus(
@@ -179,5 +168,7 @@ def test_reportpreservationstatus_rejected_int_error(config, workspace):
     assert not task.complete()
 
     # Running task should raise exception
-    with pytest.raises(ValueError, match="Expected 1 ingest report, found 2"):
+    with pytest.raises(
+            ValueError, match="Unexpected transfer status: unknown"
+    ):
         task.run()

@@ -13,10 +13,6 @@ import siptools_research.config
 from siptools_research.app import create_app
 from siptools_research.__main__ import Context, cli
 from siptools_research.database import connect_mongoengine
-from tests.sftp import HomeDirMockServer, HomeDirSFTPServer
-
-
-SSH_KEY_PATH = Path("tests/data/ssh/test_ssh_key")
 
 
 @pytest.fixture(name="luigi_config_fx")
@@ -171,45 +167,6 @@ def workspace(config):
     workspace_.mkdir()
     (workspace_ / "preservation").mkdir()
     return workspace_
-
-
-@pytest.fixture(name="sftp_dir")
-def _sftp_dir(tmpdir):
-    """Local directory that corresponds to the DPS' SFTP server."""
-    sftp_dir_ = tmpdir.mkdir("sftp_server")
-    return Path(str(sftp_dir_))
-
-
-@pytest.fixture(name="sftp_server")
-def _sftp_server(sftp_dir, monkeypatch):
-    """Return a directory in the test SFTP filesystem."""
-    users = {
-        "tpas": SSH_KEY_PATH
-    }
-
-    monkeypatch.setattr("mockssh.sftp.SFTPServer", HomeDirSFTPServer)
-
-    with HomeDirMockServer(users, home_dir=str(sftp_dir)) as server:
-        yield server
-
-
-@pytest.fixture
-def mock_ssh_config(tmpdir, config, sftp_server):
-    """Create modified configuration file to use mocked DPS SFTP server
-    instead of a real instance.
-
-    :returns: Configuration file path
-    """
-    parser = ConfigParser()
-    parser.read(config)
-    parser.set("siptools_research", "dp_host", "127.0.0.1")
-    parser.set("siptools_research", "dp_port", str(sftp_server.port))
-    parser.set("siptools_research", "dp_ssh_key", str(SSH_KEY_PATH))
-    mocked_ssh_config = tmpdir / "siptools_research_mock_ssh.conf"
-    with mocked_ssh_config.open('w') as file:
-        parser.write(file)
-
-    return mocked_ssh_config
 
 
 @pytest.fixture

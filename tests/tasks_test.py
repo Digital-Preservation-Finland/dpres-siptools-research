@@ -4,7 +4,6 @@ import filecmp
 import importlib
 import shutil
 import tarfile
-from datetime import datetime, timedelta
 
 import luigi
 import lxml.etree
@@ -19,6 +18,7 @@ from metax_access.template_data import DATASET
 from tests.metax_data.files import (AUDIO_FILE, CSV_FILE, MKV_FILE,
                                     PAS_STORAGE_SERVICE, PDF_FILE, SEG_Y_FILE,
                                     TIFF_FILE, TXT_FILE, VIDEO_FILE)
+from tests.utils import add_dps_transfer_mock, add_dps_upload_mock
 
 DPRES_XML_SCHEMAS_CATALOG = "/etc/xml/dpres-xml-schemas/schema_catalogs/catalog_main.xml"
 METS_XSD = "/etc/xml/dpres-xml-schemas/schema_catalogs/schemas/mets/mets.xsd"
@@ -97,8 +97,8 @@ def _get_schematrons():
         # ("poll_reports", "GetValidationReports"),
     ]
 )
-def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
-                  sftp_dir, ida_mount_path):
+def test_workflow(workspace, module_name, task, requests_mock, config,
+                  ida_mount_path):
     """Test workflow dependency tree.
 
     Each workflow task should be able complete if it is directly called
@@ -106,20 +106,16 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     to complete before it itself can be run. This test runs a task (and
     all tasks it requires) and checks that report of successful task is
     added to mongodb. The output of task is NOT examined. Metax, Ida,
-    mongodb, paramiko.SSHClient and RemoteAnyTarget are mocked.
+    mongodb and the DPS REST API are mocked.
 
     :param workspace: temporary workspace directory
     :param module_name: submodule of siptools_research.tasks that
                         contains Task to be tested
     :param task: Task class name
     :param requests_mock: HTTP request mocker
-    :param mock_ssh_config: Mock SHH configuration file
-    :param sftp_dir: Path to mock SFTP directory
+    :param config: Configuration file
     :param ida_mount_path: Path to mock IDA mountpoin
     """
-    # Create transfer directory to PAS
-    (sftp_dir / "transfer").mkdir(parents=True, exist_ok=True)
-
     # Mock Metax
     dataset = copy.deepcopy(DATASET)
     dataset["id"] = workspace.name
@@ -131,6 +127,7 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     )
     requests_mock.get("/v3/reference-data/file-format-versions",
                       json=tests.metax_data.reference_data.FILE_FORMAT_VERSIONS)
+    contract_id = dataset['preservation']['contract']
 
     # Mock Ida
     tests.utils.add_mock_ida_file(
@@ -141,28 +138,14 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     )
 
     # Mock DPS
-    requests_mock.get(
-        "https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest",
-        json={
-            "data": {
-                "results": [
-                    {
-                        "download": {
-                            "html": "foo?type=html",
-                            "xml": "foo?type=xml"
-                        },
-                        "id": "doi:test",
-                        "date": (datetime.now()+timedelta(minutes=1)).strftime('%Y-%m-%dT%H:%M:%SZ'),
-                        "status": "accepted"
-                    }
-                ]
-            }
-        }
+    transfer_id = f"{workspace.name}.tar-00000000-0000-0000-0000-000000000001"
+    add_dps_upload_mock(requests_mock, transfer_id)
+    add_dps_transfer_mock(
+        requests_mock,
+        contract_id=contract_id,
+        transfer_id=transfer_id,
+        status="accepted",
     )
-    requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=xml',
-                      content=b'<hello world/>')
-    requests_mock.get('https://access.localhost/api/2.0/urn:uuid:abcd1234-abcd-1234-5678-abcd1234abcd/ingest/report/doi%3Atest/doi%3Atest?type=html',
-                      content=b'<hello world/>')
 
     module = importlib.import_module('siptools_research.tasks.'
                                      + module_name)
@@ -173,14 +156,14 @@ def test_workflow(workspace, module_name, task, requests_mock, mock_ssh_config,
     luigi.build(
         [task_class(
             dataset_id=workspace.name,
-            config=str(mock_ssh_config)
+            config=config
         )],
         local_scheduler=True
     )
     luigi.build(
         [task_class(
             dataset_id=workspace.name,
-            config=str(mock_ssh_config)
+            config=config
         )],
         local_scheduler=True
     )

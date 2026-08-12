@@ -87,6 +87,70 @@ def add_mock_ida_file(ida_mount_path: Path, project_id: str, filename: str,
     path.write_bytes(content)
 
 
+def add_dps_upload_mock(requests_mock, transfer_id,
+                        access_rest_api_host="https://access.localhost"):
+    """Mock the DPS REST API v3 TUS endpoint used for uploading SIPs.
+
+    :param requests_mock: Mocker object used for creating responses
+    :param transfer_id: Transfer ID assigned to the uploaded SIP
+    :param access_rest_api_host: Base URL of DPS REST API
+    """
+    tus_url = f"{access_rest_api_host}/api/3.0/transfers"
+
+    def patch_response(request, context):
+        context.headers = {
+            "Tus-Resumable": "1.0.0",
+            "Upload-Offset": request.headers["Content-Length"],
+        }
+        return b""
+
+    requests_mock.post(
+        tus_url,
+        headers={
+            "Location": f"{tus_url}/{transfer_id}",
+            "Tus-Resumable": "1.0.0",
+        },
+        status_code=201,
+    )
+    requests_mock.patch(
+        f"{tus_url}/{transfer_id}",
+        content=patch_response,
+        status_code=204,
+    )
+
+
+def add_dps_transfer_mock(requests_mock, contract_id, transfer_id, status,
+                          access_rest_api_host="https://access.localhost"):
+    """Mock the DPS REST API v3 endpoint used to poll a transfer's
+    status.
+
+    :param requests_mock: Mocker object used for creating responses
+    :param contract_id: Contract identifier
+    :param transfer_id: Transfer ID to mock
+    :param status: Status reported for the transfer, e.g. "accepted",
+        "rejected" or "in_progress"
+    :param access_rest_api_host: Base URL of DPS REST API
+    """
+    transfer_url = (
+        f"{access_rest_api_host}/api/3.0/{contract_id}/transfers/"
+        f"{transfer_id}"
+    )
+
+    requests_mock.get(
+        transfer_url,
+        json={
+            "data": {
+                "transfer_id": transfer_id,
+                "filename": f"{transfer_id}.tar",
+                "status": status,
+                "actions": {},
+                "sip": {},
+                "timestamp": "2000-01-01T00:00:00Z",
+            }
+        }
+    )
+
+
 def add_mock_ida_download(requests_mock, dataset_id, filename, content):
     """Mock IDA requests for downloading a file from IDA."""
     # In reality the returned token would have the dataset id and file
