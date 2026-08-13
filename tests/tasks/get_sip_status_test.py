@@ -1,13 +1,32 @@
 """Unit tests for :mod:`siptools_research.tasks.validate_sip`."""
 import copy
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
-from siptools_research.tasks.poll_reports import GetValidationReports
+from siptools_research.tasks.get_sip_status import GetSIPStatus
 from metax_access.template_data import DATASET
 from tests.utils import add_dps_transfer_mock
+
+
+def _mock_list_transfers(requests_mock, contract_id, transfers_by_status):
+    """Mock the /transfers listing endpoint.
+
+    :param transfers_by_status: Mapping of status to the list of
+        transfers that should be returned when that status is
+        requested.
+    """
+    def callback(request, _context):
+        status = request.qs.get("status", [""])[0]
+        results = transfers_by_status.get(status, [])
+        return json.dumps({"data": {"links": {}, "results": results}})
+
+    requests_mock.get(
+        f"https://access.localhost/api/3.0/{contract_id}/transfers",
+        text=callback,
+    )
 
 
 @pytest.mark.parametrize(
@@ -20,9 +39,9 @@ from tests.utils import add_dps_transfer_mock
 @pytest.mark.parametrize("api_version", [2, 3])
 def test_getvalidationreports(
         config, workspace, requests_mock, status, api_version):
-    """Initializes GetValidationReports task with the input files of the task.
+    """Initializes GetSIPStatus task with the input files of the task.
 
-    After the input files are created, the GetValidationReports is
+    After the input files are created, the GetSIPStatus is
     triggered automatically. Checks that the transfer status was
     resolved and written to the output file, and that the task is
     completed.
@@ -72,7 +91,7 @@ def test_getvalidationreports(
         )
 
     # Init task
-    task = GetValidationReports(dataset_id=workspace.name, config=config)
+    task = GetSIPStatus(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # Task is run when the input file is created.
@@ -114,7 +133,7 @@ def test_getvalidationreports_not_completed_while_in_progress(
         status="in_progress",
     )
 
-    task = GetValidationReports(dataset_id=workspace.name, config=config)
+    task = GetSIPStatus(dataset_id=workspace.name, config=config)
     assert not task.complete()
 
     # This should complete the task but because the transfer is still

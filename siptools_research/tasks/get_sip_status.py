@@ -13,7 +13,7 @@ from siptools_research.workflowtask import WorkflowExternalTask
 PROCESSED_STATUSES = ("accepted", "rejected")
 
 
-class GetValidationReports(WorkflowExternalTask):
+class GetSIPStatus(WorkflowExternalTask):
     """Task that completes when SIP has been validated.
 
     The SIP is validated when the transfer created by SendSIPToDP has

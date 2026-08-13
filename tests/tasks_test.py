@@ -2,6 +2,7 @@
 import copy
 import filecmp
 import importlib
+import json
 import shutil
 import tarfile
 
@@ -89,12 +90,12 @@ def _get_schematrons():
         ("sign", "SignSIP"),
         ("validate_files", "ValidateFiles"),
         ("validate_metadata", "ValidateMetadata"),
-        # TODO: GetValidationReports can not be tested like other tasks,
+        # TODO: GetSIPStatus can not be tested like other tasks,
         # because this tets assumes that timestamp is added to database
         # once the task has finished, which currently is not true for
-        # GetValidationReports task. See TPASPKT-435 for more
+        # GetSIPStatus task. See TPASPKT-435 for more
         # information. Therefore, this test case is disabled.
-        # ("poll_reports", "GetValidationReports"),
+        # ("get_sip_status", "GetSIPStatus"),
     ]
 )
 def test_workflow(workspace, module_name, task, requests_mock, config,
@@ -151,7 +152,7 @@ def test_workflow(workspace, module_name, task, requests_mock, config,
                                      + module_name)
     task_class = getattr(module, task)
 
-    # The workflow is run twice because GetValidationReports in poll_reports.py
+    # The workflow is run twice because GetSIPStatus in get_sip_status.py
     # is an external task and triggers only with the second run.
     luigi.build(
         [task_class(

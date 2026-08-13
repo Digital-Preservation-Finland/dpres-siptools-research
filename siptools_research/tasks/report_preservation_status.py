@@ -6,7 +6,7 @@ from luigi import LocalTarget
 from metax_access import DS_STATE_IN_DIGITAL_PRESERVATION
 
 from siptools_research.exceptions import InvalidSIPError
-from siptools_research.tasks.poll_reports import GetValidationReports
+from siptools_research.tasks.get_sip_status import GetSIPStatus
 from siptools_research.tasks.send_sip import SendSIPToDP
 from siptools_research.workflowtask import WorkflowTask
 
@@ -15,7 +15,7 @@ class ReportPreservationStatus(WorkflowTask):
     """Task that reports preservation status after SIP ingestion.
 
     A workflowtask that updates the preservation status of dataset in
-    Metax based on the transfer status resolved by GetValidationReports.
+    Metax based on the transfer status resolved by GetSIPStatus.
 
     A false target `report-preservation-status.finished` is created into
     preservation workspace directory to notify luigi that this task has
@@ -33,8 +33,8 @@ class ReportPreservationStatus(WorkflowTask):
 
         :returns: list of required tasks
         """
-        return [GetValidationReports(dataset_id=self.dataset_id,
-                                     config=self.config),
+        return [GetSIPStatus(dataset_id=self.dataset_id,
+                             config=self.config),
                 SendSIPToDP(dataset_id=self.dataset_id,
                             config=self.config)]
 
@@ -53,7 +53,7 @@ class ReportPreservationStatus(WorkflowTask):
     def run(self):
         """Report preservation status to Metax.
 
-        Checks the transfer status resolved by GetValidationReports.
+        Checks the transfer status resolved by GetSIPStatus.
         If the status is "accepted", the dataset has passed
         validation. If the status is "rejected", an exception is
         raised. The event handlers will deal with the exceptions.

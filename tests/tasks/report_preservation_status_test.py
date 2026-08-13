@@ -53,7 +53,7 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
                                   dataset_metadata, patched_dataset_id):
     """Test reporting status of accepted SIP.
 
-    Creates the GetValidationReports output file with "accepted"
+    Creates the GetSIPStatus output file with "accepted"
     status, and runs ReportPreservationStatus task. Tests that task is
     complete after it has been run and that the preservation status of
     correct dataset is updated.
@@ -78,7 +78,7 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
     matcher = re.compile("/v3/datasets/.*/preservation")
     metax_mock = requests_mock.patch(matcher, json={})
 
-    # Create the GetValidationReports output file, so that the
+    # Create the GetSIPStatus output file, so that the
     # ReportPreservationStatus thinks that validation has completed.
     validation_status = (
         workspace / "preservation" / "task-get-validation-reports.finished"
@@ -116,7 +116,7 @@ def test_reportpreservationstatus(config, workspace, requests_mock,
 def test_reportpreservationstatus_rejected(config, workspace):
     """Test reporting status of rejected SIP.
 
-    Creates the GetValidationReports output file with "rejected"
+    Creates the GetSIPStatus output file with "rejected"
     status. Runs ReportPreservationStatus task, which should raise an
     exception.
 
@@ -148,7 +148,7 @@ def test_reportpreservationstatus_rejected(config, workspace):
 def test_reportpreservationstatus_unexpected_status(config, workspace):
     """Test handling an unexpected transfer status.
 
-    Creates the GetValidationReports output file with an unexpected
+    Creates the GetSIPStatus output file with an unexpected
     status. Runs ReportPreservationStatus task, and tests that the
     report file is NOT sent.
 
