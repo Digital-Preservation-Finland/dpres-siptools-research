@@ -28,7 +28,6 @@ BuildRequires:  dpres-xml-schemas
 BuildRequires:  python3-devel
 BuildRequires:  pyproject-rpm-macros
 BuildRequires:  %{py3_dist metax_access}
-BuildRequires:  %{py3_dist mock-ssh-server}
 BuildRequires:  %{py3_dist mongoengine}
 BuildRequires:  %{py3_dist mongobox}
 BuildRequires:  %{py3_dist pip}
