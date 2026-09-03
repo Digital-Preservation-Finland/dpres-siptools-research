@@ -22,6 +22,7 @@ from siptools_research.exceptions import (
     CopiedToPasDataCatalogError,
     DatasetHasErrorsError,
     MetadataAlreadyConfirmedError,
+    MetadataAlreadyGeneratedError,
     MetadataNotConfirmedError,
     MetadataNotGeneratedError,
     NotProposedError,
@@ -155,6 +156,13 @@ class Workflow:
 
         if self.dataset.is_preserved:
             raise AlreadyPreservedError
+
+        metadata_generation_task = TARGET_TASKS["metadata_generation"](
+            dataset_id=self.dataset.identifier,
+            config=self.config,
+        )
+        if metadata_generation_task.complete():
+            raise MetadataAlreadyGeneratedError
 
     def generate_metadata(self) -> None:
         """Initialize metadata generation workflow."""

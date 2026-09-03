@@ -114,6 +114,17 @@ class MetadataAlreadyConfirmedError(ActionNotAllowedError):
     _default_message = "Metadata has already been confirmed."
 
 
+class MetadataAlreadyGeneratedError(ActionNotAllowedError):
+    """Raised when metadata has already been generated.
+
+    Metadata generation can not be started again, since it would
+    discard the results of the previous metadata generation. The
+    dataset must be reset first.
+    """
+
+    _default_message = "Metadata has already been generated."
+
+
 class WorkflowExistsError(ActionNotAllowedError):
     """Raised when conflicting workflow exists.
 

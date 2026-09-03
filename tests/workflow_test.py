@@ -16,6 +16,7 @@ from siptools_research.exceptions import (
     AlreadyPreservedError,
     DatasetHasErrorsError,
     MetadataAlreadyConfirmedError,
+    MetadataAlreadyGeneratedError,
     MetadataNotGeneratedError,
     WorkflowExistsError,
 )
@@ -190,6 +191,33 @@ def test_restart_generate_metadata(config, requests_mock):
 
     # Dataset metadata confirmation should be revoked
     assert workflow.metadata_confirmed is False
+
+
+def test_generate_metadata_already_generated(config, requests_mock, workspace):
+    """Test that metadata generation is blocked if already generated.
+
+    Starting metadata generation again would clear the workspace and
+    reset metadata confirmation, discarding the results of the
+    previous metadata generation.
+
+    :param config: Configuration file
+    :param requests_mock: HTTP request mocker
+    :param workspace: Workspace directory
+    """
+    # Mock Metax
+    dataset = copy.deepcopy(DATASET)
+    dataset["id"] = workspace.name
+    add_metax_dataset(requests_mock, dataset=dataset)
+
+    # Add a fake output for metadata generation so it looks complete
+    output_path = (workspace
+                   / "metadata_generation"
+                   / "generate-metadata.finished")
+    output_path.parent.mkdir()
+    output_path.write_text("foo")
+
+    with pytest.raises(MetadataAlreadyGeneratedError):
+        Workflow(workspace.name, config=config).generate_metadata()
 
 
 def test_preserve(config, requests_mock):
